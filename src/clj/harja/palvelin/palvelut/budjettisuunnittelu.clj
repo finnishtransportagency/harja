@@ -55,7 +55,8 @@
    :rahavaraus-lupaukseen-1                    "muut-rahavaraukset"
    :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
    :akilliset-hoitotyot                        "akillinen-hoitotyo"
-   :toimenpiteen-maaramitattavat-tyot          "laskutettava-tyo"})
+   :toimenpiteen-maaramitattavat-tyot          "laskutettava-tyo"
+   :tilaajan-varaukset "laskutettava-tyo"})
 
 (defn- tyyppi->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tyyppi v))
@@ -76,7 +77,8 @@
 (def ^{:private true} tallennettava-asia->tehtavaryhma
   ;; TODO TIlaajan varaus tänne
   {:erillishankinnat        "37d3752c-9951-47ad-a463-c1704cf22f4c"
-   :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"})
+   :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"
+   :tilaajan-varaukset "a6614475-1950-4a61-82c6-fda0fd19bb54"})
 
 (defn- tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))

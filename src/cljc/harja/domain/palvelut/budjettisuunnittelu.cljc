@@ -7,7 +7,8 @@
                           :rahavaraus-lupaukseen-1
                           :kolmansien-osapuolten-aiheuttamat-vahingot
                           :akilliset-hoitotyot
-                          :toimenpiteen-maaramitattavat-tyot})
+                          :toimenpiteen-maaramitattavat-tyot
+                          :tilaajan-varaukset})
 
 (def toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto})
 

@@ -119,19 +119,8 @@
   {:erillishankinnat "erillishankinnat"
    :johto-ja-hallintokorvaus "johto-ja-hallintokorvaus"
    :toimistokulut "toimistokulut"
-   :hoidonjohtopalkkio "hoidonjohtopalkkio"})
-
-(def jh-korvaukset
-  [{:toimenkuva "sopimusvastaava" :kk-v 12}
-   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12}
-   {:toimenkuva "päätoiminen apulainen" :kk-v 7}
-   {:toimenkuva "päätoiminen apulainen" :kk-v 5}
-   {:toimenkuva "apulainen/työnjohtaja" :kk-v 7}
-   {:toimenkuva "apulainen/työnjohtaja" :kk-v 5}
-   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5}
-   {:toimenkuva "hankintavastaava" :kk-v 4.5}
-   {:toimenkuva "hankintavastaava" :kk-v 12}
-   {:toimenkuva "harjoittelija" :kk-v 4}])
+   :hoidonjohtopalkkio "hoidonjohtopalkkio"
+   :tilaajan-varaukset "tilaajan-varaukset"})
 
 
 (defn toimenpiteen-rahavaraukset [toimenpide]
@@ -1323,6 +1312,18 @@
                                                 :aseta-hoidonjohtopalkkio-yhteenveto!
                                                 arvo
                                                 (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                args)
+        :aseta-tilaajan-varaukset! (apply grid/aseta-rajapinnan-data!
+                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                     :aseta-tilaajan-varaukset!
+                                     arvo
+                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                     args)
+        :aseta-tilaajan-varaukset-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                :aseta-tilaajan-varaukset-yhteenveto!
+                                                arvo
+                                                (grid/solun-asia solu :tunniste-rajapinnan-dataan)
                                                 args)))))
 
 (defn triggeroi-seuranta! [solu seurannan-nimi]
@@ -1417,7 +1418,8 @@
     (let [tilan-hallinnollisten-nimet {:erillishankinnat "Erillishankinnat"
                                        :johto-ja-hallintokorvaus "Johto- ja hallintokorvaus"
                                        :toimistokulut "Toimistokulut"
-                                       :hoidonjohtopalkkio "Hoidonjohtopalkkio"}
+                                       :hoidonjohtopalkkio "Hoidonjohtopalkkio"
+                                       :tilaajan-varaukset "Tilaajan varaukset"}
           kuluva-hoitokauden-numero (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])
           viimeinen-vuosi? (= 5 kuluva-hoitokauden-numero)
           app (reduce (fn [app [h-avain _]]
@@ -1457,6 +1459,10 @@
                                               :kuukausitasolla? false})
           (assoc-in [:gridit :hoidonjohtopalkkio] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
                                                    :yhteenveto {:nimi "Hoidonjohtopalkkio"}
+                                                   :yhteensa {:nimi "Yhteensä"}
+                                                   :kuukausitasolla? false})
+          (assoc-in [:gridit :tilaajan-varaukset] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                                   :yhteenveto {:nimi "Tilaajan varaukset"}
                                                    :yhteensa {:nimi "Yhteensä"}
                                                    :kuukausitasolla? false}))))
   FiltereidenAloitusarvot
@@ -1620,6 +1626,7 @@
           erillishankinnat (maara-kk-taulukon-data hoidon-johto-kustannukset :erillishankinnat)
           jh-toimistokulut (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut)
           johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
+          tilaajan-varaukset (maara-kk-taulukon-data hoidon-johto-kustannukset :tilaajan-varaukset)
           jh-korvaukset (reduce (fn [korvaukset {:keys [toimenkuva kk-v maksukausi hoitokaudet]}]
                                   (let [asia-kannasta (reverse (sort-by :osa-kuukaudesta (filter (fn [jh-korvaus]
                                                                                                    (and (= (:toimenkuva jh-korvaus) toimenkuva)
@@ -1677,7 +1684,8 @@
                                                             data)))))
           erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)
           toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn jh-toimistokulut)
-          hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn johtopalkkio)]
+          hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn johtopalkkio)
+          tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn tilaajan-varaukset)]
       (-> app
           (assoc-in [:domain :suunnittellut-hankinnat] hankinnat-hoitokausille)
           (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
@@ -1686,6 +1694,7 @@
           (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
           (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain)
           (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain)
+          (assoc-in [:domain :tilaajan-varaukset] tilaajan-varaukset-hoitokausittain)
           (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat] (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                                                                                                    (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
                                                                                                                                     (reduce #(+ %1 (:maara %2)) 0 summat-kuukausittain))
@@ -1819,7 +1828,8 @@
                   :rahavaraus-lupaukseen-1 (get-in app [:domain :rahavaraukset valittu-toimenpide "muut-rahavaraukset" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
                   :erillishankinnat (get-in app [:domain :erillishankinnat (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
                   :toimistokulut (get-in app [:domain :toimistokulut (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
-                  :hoidonjohtopalkkio (get-in app [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+                  :hoidonjohtopalkkio (get-in app [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :tilaajan-varaukset (get-in app [:domain :tilaajan-varaukset (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
           ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
                               (mapv (fn [hoitokauden-numero]
                                       (let [polku (case tallennettava-asia
@@ -1828,7 +1838,8 @@
                                                         :rahavaraus-lupaukseen-1 [:domain :rahavaraukset valittu-toimenpide "muut-rahavaraukset" (dec hoitokauden-numero) (first osan-paikka)]
                                                         :erillishankinnat [:domain :erillishankinnat (dec hoitokauden-numero) (first osan-paikka)]
                                                         :toimistokulut [:domain :toimistokulut (dec hoitokauden-numero) (first osan-paikka)]
-                                                        :hoidonjohtopalkkio [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (first osan-paikka)])]
+                                                        :hoidonjohtopalkkio [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (first osan-paikka)]
+                                                        :tilaajan-varaukset [:domain :tilaajan-varaukset (dec hoitokauden-numero) (first osan-paikka)])]
                                         (select-keys (get-in app polku)
                                                      #{:vuosi :kuukausi})))
                                     paivitettavat-hoitokauden-numerot))
@@ -1844,7 +1855,8 @@
                                                           :ajat ajat}
                              (:erillishankinnat
                                :toimistokulut
-                               :hoidonjohtopalkkio) {:urakka-id urakka-id
+                               :hoidonjohtopalkkio
+                               :tilaajan-varaukset) {:urakka-id urakka-id
                                                      :toimenpide-avain :mhu-johto
                                                      :tallennettava-asia tallennettava-asia
                                                      :summa summa
