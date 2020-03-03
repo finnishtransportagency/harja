@@ -5,7 +5,8 @@
             [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :as loki]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.string :as str]))
 
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
                                                                   :toimenpide     nil
@@ -31,8 +32,7 @@
 
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
-    (if-not (or (nil? arvo)
-                (empty? arvo))
+    (if-not (str/blank? arvo)
       (v-fn arvo)
       true)))
 
@@ -95,7 +95,7 @@
                    uusi-paino)))))))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
-                  :kulut/viite                 [(ei-pakollinen viite)]
+                  :kulut/viite                 [viite]
                   :kulut/laskun-numero         [(ei-pakollinen numero)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]

@@ -135,7 +135,7 @@
                                 :paivitys-fn   paivitys-fn
                                 :erapaiva-meta erapaiva-meta}]
       [kentat/vayla-lomakekentta
-       "Laskun viite"
+       "Laskun viite *"
        :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? viite-meta) "" "-error") "-default") "komponentin-input"}
        :arvo viite
        :on-change #(paivitys-fn
@@ -145,8 +145,11 @@
        "Koontilaskun numero"
        :arvo laskun-numero
        :on-change #(paivitys-fn
-                     {:validoitava? true}
-                     :laskun-numero (-> % .-target .-value))]
+                    {:validoitava? true}
+                    :laskun-numero (let [num (-> % .-target .-value js/parseInt)]
+                                     (if (js/isNaN num)
+                                       nil
+                                       num)))]
       [kentat/vayla-lomakekentta
        "Kustannus € *"
        :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
@@ -160,8 +163,7 @@
                  (get-in lomake [:kohdistukset 0 :summa])
                  0)
        :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
-       :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))])
-    ))
+       :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))])))
 
 (defn kohdistuksen-poisto [indeksi kohdistukset]
   (apply conj
