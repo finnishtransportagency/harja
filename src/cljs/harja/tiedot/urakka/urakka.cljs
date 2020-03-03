@@ -106,44 +106,45 @@
   [lomake]
   (if (nil? (meta lomake))
     lomake
-    (let [lomake (vary-meta
-                   lomake
-                   (fn [{:keys [validius validi?] :as lomake-meta} lomake]
-                     (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
-                               (as-> kaikki kaikki
-                                     (update
-                                       kaikki
-                                       :validius
-                                       (fn [vs]
-                                         (update vs
-                                                 polku (fn [kentta]
-                                                         (assoc kentta
-                                                           :tarkistettu? true
-                                                           :validointi validointi
-                                                           :validi? (validointi
-                                                                      (get-in lomake polku)))))))
-                                     (update
-                                       kaikki
-                                       :validi?
-                                       (fn [v?]
-                                         (not
-                                           (some (fn [[avain {validi? :validi?}]]
-                                                   (false? validi?)) (:validius kaikki)))))))
-                             lomake-meta
-                             validius))
-                   lomake)]
-      lomake)))
+    (vary-meta
+     lomake
+     (fn [{:keys [validius validi?] :as lomake-meta} lomake]
+       (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
+                 (as-> kaikki kaikki
+                   (update kaikki :validius
+                           (fn [vs]
+                             (update vs polku
+                                     (fn [kentta]
+                                       (.log js/console "validoi kenttä " (pr-str kentta) ", validointi: " (pr-str validointi))
+                                       (assoc kentta
+                                              :tarkistettu? true
+                                              :validointi validointi
+                                              :validi? (validointi
+                                                        (get-in lomake polku)))))))
+                   (update kaikki :validi?
+                           (fn [v?]
+                             (not
+                              (some (fn [[avain {validi? :validi?}]]
+                                      (false? validi?)) (:validius kaikki)))))))
+               lomake-meta
+               validius))
+     lomake)))
+
+(defn luo-validointi-fn
+  "Yhdistää monta validointifunktiota yhdeksi"
+  [validointi-fns]
+  (fn [arvo]
+    (let [validointi-fn (apply comp validointi-fns)]
+      (not
+       (nil?
+        (validointi-fn arvo))))))
 
 (defn luo-validius-meta
   "Ajatus, että lomake tietää itse, miten se validoidaan"
   [& kentat-ja-validaatiot]
   (assoc {} :validius
             (reduce (fn [k [polku validointi-fns]]
-                      (assoc k polku {:validointi   (fn [arvo]
-                                                      (let [validointi-fn (apply comp validointi-fns)]
-                                                        (not
-                                                          (nil?
-                                                            (validointi-fn arvo)))))
+                      (assoc k polku {:validointi   (luo-validointi-fn validointi-fns)
                                       :validi?      false
                                       :koskettu?    false
                                       :tarkistettu? false}))
@@ -151,6 +152,20 @@
                     (partition 2 kentat-ja-validaatiot))
             :validi? false
             :validoi validoi-fn))
+
+(def kulun-oletus-validoinnit
+  [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
+   [:erapaiva] (:kulut/erapaiva validoinnit)
+   [:laskun-numero] (:kulut/laskun-numero validoinnit)
+   [:viite] (:kulut/viite validoinnit)])
+
+(defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
+  (apply luo-validius-meta
+         (concat kulun-oletus-validoinnit
+                 (mapcat (fn [i]
+                           [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                            [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)])
+                         (range (count kohdistukset))))))
 
 (def kulut-lomake-default (with-meta {:kohdistukset          [{:tehtavaryhma        nil
                                                                :toimenpideinstanssi nil
@@ -164,13 +179,7 @@
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil
                                       :paivita               0}
-                                     (luo-validius-meta
-                                       [:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
-                                       [:erapaiva] (:kulut/erapaiva validoinnit)
-                                       [:laskun-numero] (:kulut/laskun-numero validoinnit)
-                                       [:viite] (:kulut/viite validoinnit)
-                                       [:kohdistukset 0 :summa] (:kulut/summa validoinnit)
-                                       [:kohdistukset 0 :tehtavaryhma] (:kulut/tehtavaryhma validoinnit))))
+                            (luo-validius-meta {:kohdistukset [{}]})))
 
 (def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
                                         :taulukko    nil

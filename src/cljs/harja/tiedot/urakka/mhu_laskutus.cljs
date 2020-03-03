@@ -3,6 +3,7 @@
     [clojure.string :as string]
     [tuck.core :as tuck]
     [harja.loki :as loki]
+    harja.ui.taulukko.taulukko
     [harja.ui.taulukko.protokollat :as p]
     [harja.ui.taulukko.osa :as osa]
     [harja.ui.taulukko.jana :as jana]
@@ -91,7 +92,7 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn lasku->lomake [{:keys [kohdistukset] :as lasku}]
+(defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
   (let [{aliurakoitsija :suorittaja} lasku]
     (-> lasku
         (dissoc :suorittaja)
@@ -99,7 +100,8 @@
                                                  (->
                                                    kohdistukset
                                                    (dissoc :suorittaja-id :suorittaja-nimi))) ks)))
-        (assoc :aliurakoitsija aliurakoitsija))))
+        (assoc :aliurakoitsija aliurakoitsija)
+        (with-meta (tila/kulun-validointi-meta lasku)))))
 
 (defn- luo-paivitys-fn
   [& avain-arvot]
@@ -432,7 +434,7 @@
   AvaaLasku
   (process-event [{lasku :lasku} app]
     (assoc app :syottomoodi true
-               :lomake (lasku->lomake lasku)))
+               :lomake (kulu->lomake lasku)))
 
   ;; VIENNIT
 

@@ -227,10 +227,10 @@
          {:vayla-tyyli? true}]])]))
 
 (defn lisaa-validointi [lomake-meta validoinnit]
-  (reduce (fn [kaikki {:keys [polku validointi-fn]}]
+  (reduce (fn [kaikki {:keys [polku validoinnit]}]
             (assoc-in kaikki [:validius polku] {:validi?    false
                                                 :koskettu?  false
-                                                :validointi validointi-fn}))
+                                                :validointi (tila/luo-validointi-fn validoinnit)}))
           lomake-meta
           validoinnit))
 
@@ -272,9 +272,9 @@
                                                       lomake
                                                       lisaa-validointi
                                                       [{:polku         [:kohdistukset kohdistukset-lkm :summa]
-                                                        :validointi-fn (:kulut/summa tila/validoinnit)}
+                                                        :validoinnit (:kulut/summa tila/validoinnit)}
                                                        {:polku         [:kohdistukset kohdistukset-lkm :tehtavaryhma]
-                                                        :validointi-fn (:kulut/tehtavaryhma tila/validoinnit)}]))
+                                                        :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
                                                   (fn [lomake]
                                                     (vary-meta
                                                       lomake
