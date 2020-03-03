@@ -39,6 +39,13 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
+(defn laskutukseen-perustuvan-taulukon-nakyvyys! []
+  (let [{:keys [toimenpide laskutukseen-perustuen-valinta]} (-> @tiedot/suunnittelu-kustannussuunnitelma :suodattimet :hankinnat)
+        laskutukseen-perustuvat-hankinnat-taulukko (get-in @tiedot/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid])]
+    (if (contains? laskutukseen-perustuen-valinta toimenpide)
+      (grid/nayta! laskutukseen-perustuvat-hankinnat-taulukko)
+      (grid/piillota! laskutukseen-perustuvat-hankinnat-taulukko))))
+
 (defn toimenpiteiden-jarjestys
   [toimenpide]
   (case toimenpide
@@ -405,7 +412,45 @@
                                                     (reduce (fn [rahavarauksien-haut rahavaraus]
                                                               (merge rahavarauksien-haut
                                                                      {(keyword (str "rahavaraus-" rahavaraus "-" toimenpide "-seuranta")) (case rahavaraus
-                                                                                                                                            :kokonaishintainen-ja-lisatyo (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :suunnittellut-hankinnat toimenpide])
+                                                                                                                                            :kokonaishintainen-ja-lisatyo {:polut (cond-> [[:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
+                                                                                                                                                                                           [:domain :suunnittellut-hankinnat toimenpide (dec ensimmainen-hoitokauden-numero)]
+                                                                                                                                                                                           [:domain :laskutukseen-perustuvat-hankinnat toimenpide (dec ensimmainen-hoitokauden-numero)]]
+                                                                                                                                                                                          (not viimeinen-hoitokausi?) (conj [:domain :suunnittellut-hankinnat toimenpide (dec toisen-hoitokauden-numero)]
+                                                                                                                                                                                                                            [:domain :laskutukseen-perustuvat-hankinnat toimenpide (dec toisen-hoitokauden-numero)]))
+                                                                                                                                                                           :init (fn [tila]
+                                                                                                                                                                                   (assoc-in tila
+                                                                                                                                                                                             [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus]
+                                                                                                                                                                                             (cond-> {:kuluva-hoitokausi :aloittamatta}
+                                                                                                                                                                                                     (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
+                                                                                                                                                                           :aseta (if viimeinen-hoitokausi?
+                                                                                                                                                                                    (fn [tila laskutukseen-perustuen-valinta ensimmaisen-hoitokauden-data laskutukseen-perustuen-data]
+                                                                                                                                                                                      (let [suunnitellaan-laskutukseen-perustuen? (contains? laskutukseen-perustuen-valinta toimenpide)
+                                                                                                                                                                                            kuluvan-hoitokauden-tila (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
+                                                                                                                                                                                            laskutukseen-perustuvan-hoitokauden-tila (when suunnitellaan-laskutukseen-perustuen?
+                                                                                                                                                                                                                                       (suunnitelman-tila laskutukseen-perustuen-data :maara))]
+                                                                                                                                                                                        (assoc-in tila
+                                                                                                                                                                                                  [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus :kuluva-hoitokausi]
+                                                                                                                                                                                                  (if suunnitellaan-laskutukseen-perustuen?
+                                                                                                                                                                                                    (aggregaatin-tila [{:kuluva-hoitokausi kuluvan-hoitokauden-tila} {:kuluva-hoitokausi laskutukseen-perustuvan-hoitokauden-tila}])
+                                                                                                                                                                                                    kuluvan-hoitokauden-tila))))
+                                                                                                                                                                                    (fn [tila laskutukseen-perustuen-valinta ensimmaisen-hoitokauden-data laskutukseen-perustuen-data toisen-hoitokauden-data toisen-laskutukseen-perustuen-data]
+                                                                                                                                                                                      (let [suunnitellaan-laskutukseen-perustuen? (contains? laskutukseen-perustuen-valinta toimenpide)
+                                                                                                                                                                                            kuluvan-hoitokauden-tila (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
+                                                                                                                                                                                            seuraavan-hoitokauden-tila (suunnitelman-tila toisen-hoitokauden-data :maara)
+                                                                                                                                                                                            laskutukseen-perustuvan-hoitokauden-tila (when suunnitellaan-laskutukseen-perustuen?
+                                                                                                                                                                                                                                       (suunnitelman-tila laskutukseen-perustuen-data :maara))
+                                                                                                                                                                                            seuraavan-laskutukseen-perustuvan-hoitokauden-tila (when suunnitellaan-laskutukseen-perustuen?
+                                                                                                                                                                                                                                                 (suunnitelman-tila toisen-laskutukseen-perustuen-data :maara))
+                                                                                                                                                                                            hoitokausien-tilat (if suunnitellaan-laskutukseen-perustuen?
+                                                                                                                                                                                                                 (aggregaatin-tila [{:kuluva-hoitokausi kuluvan-hoitokauden-tila :seuraava-hoitokausi seuraavan-hoitokauden-tila}
+                                                                                                                                                                                                                                    {:kuluva-hoitokausi laskutukseen-perustuvan-hoitokauden-tila :seuraava-hoitokausi seuraavan-laskutukseen-perustuvan-hoitokauden-tila}])
+                                                                                                                                                                                                                 {:kuluva-hoitokausi kuluvan-hoitokauden-tila
+                                                                                                                                                                                                                  :seuraava-hoitokausi seuraavan-hoitokauden-tila})]
+                                                                                                                                                                                        (update-in tila
+                                                                                                                                                                                                   [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus]
+                                                                                                                                                                                                   (fn [hoitokausien-tila]
+                                                                                                                                                                                                     (merge hoitokausien-tila
+                                                                                                                                                                                                            hoitokausien-tilat))))))}
                                                                                                                                             :akillinen-hoitotyo (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "akillinen-hoitotyo"])
                                                                                                                                             :vahinkojen-korjaukset (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "vahinkojen-korjaukset"])
                                                                                                                                             :muut-rahavaraukset (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "muut-rahavaraukset"]))}))
@@ -1447,11 +1492,6 @@
                            {:onnistui ->HaeIndeksitOnnistui
                             :epaonnistui ->HaeIndeksitEpaonnistui
                             :paasta-virhe-lapi? true})
-        #_(tuck-apurit/post! app :budjettitavoite
-                           {:urakka-id urakka-id}
-                           {:onnistui ->HaeTavoiteJaKattohintaOnnistui
-                            :epaonnistui ->HaeTavoiteJaKattohintaEpaonnistui
-                            :paasta-virhe-lapi? true})
         (tuck-apurit/post! app :budjetoidut-tyot
                            {:urakka-id urakka-id}
                            {:onnistui ->HaeHankintakustannuksetOnnistui
@@ -1497,6 +1537,7 @@
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
                                                    (:kustannusarvioidut-tyot vastaus))
+          toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia (into #{} (distinct (map :toimenpide-avain hankinnat-laskutukseen-perustuen)))
           rahavaraukset (distinct (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} (:haettu-asia %))
                                            (select-keys % #{:tyyppi :summa :toimenpide-avain :vuosi :kuukausi}))
                                         (:kustannusarvioidut-tyot vastaus)))
@@ -1677,6 +1718,7 @@
           (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat] (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
           (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut] (mapv #(summaa-mapin-arvot % :maara) toimistokulut-hoitokausittain))
           (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio] (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
+          (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta] toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia)
           (assoc :kantahaku-valmis? true))))
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
