@@ -5,6 +5,8 @@ describe('Aikataulunäkymien avaaminen tiemerkintäurakassa', function () {
 
     it("Aikataulun avaaminen toimii tiemerkinnässä", function () {
         cy.contains('.klikattava', 'Aikataulu').click()
+        cy.get('.alasveto-vuosi').click()
+        cy.get('a').contains('2018').click()
         cy.get('.livicon-chevron.livicon-chevron-right', {timeout: 20000}).first().click()
         // Pitää näkyä alikohteet omassa taulukossaan
         cy.contains('.panel-title', 'Kohteen tierekisteriosoitteet')
