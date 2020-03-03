@@ -29,6 +29,7 @@
    :erapaiva      #inst "2021-12-15T21:00:00.000-00:00"
    :kokonaissumma 1332
    :tyyppi        "laskutettava"
+   :suorittaja-nimi "Ali Urakoitsija Ky"
    :kohdistukset  [{:kohdistus-id        nil
                     :rivi                1
                     :summa               666
@@ -160,19 +161,33 @@
 
 
 (deftest tallenna-lasku-testi
-  (let [tallennettu-lasku (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                :laskuerittely uusi-lasku})
-        paivitetty-lasku (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                               :laskuerittely (assoc uusi-lasku :kokonaissumma 9876.54)})
-        paivitetty-kohdistus (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                   :laskuerittely laskun-paivitys})
-        lisatty-kohdistus (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                :laskuerittely (assoc uusi-lasku :kohdistukset (merge (uusi-lasku :kohdistukset) uusi-kohdistus))})
-        poistettu-kohdistus (kutsu-http-palvelua :poista-laskurivi (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                    :laskun-viite "6666668"
-                                                                                                                    :laskuerittelyn-rivi 3})
-        poistettu-lasku (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                            :viite     "2019080035"})]
+  (let [tallennettu-lasku
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely uusi-lasku})
+        paivitetty-lasku
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely (assoc uusi-lasku :kokonaissumma 9876.54)})
+        paivitetty-kohdistus
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely laskun-paivitys})
+        lisatty-kohdistus
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely (assoc uusi-lasku
+                                                    :kohdistukset (merge (uusi-lasku :kohdistukset)
+                                                                         uusi-kohdistus))})
+        poistettu-kohdistus
+        (kutsu-http-palvelua :poista-laskurivi (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskun-viite "6666668"
+                              :laskuerittelyn-rivi 3})
+        poistettu-lasku
+        (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :viite     "2019080035"})]
 
     ;; Tallennus
     (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")
