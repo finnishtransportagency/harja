@@ -365,7 +365,7 @@
     (lomakkeen-osio
       "Lisätiedot"
       [kentat/vayla-lomakekentta
-       "Aliurakoitsija"
+       "Aliurakoitsija *"
        :komponentti (fn []
                       [yleiset/alasveto-toiminnolla
                        lisaa-aliurakoitsija
