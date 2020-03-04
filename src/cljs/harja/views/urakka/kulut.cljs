@@ -446,7 +446,7 @@
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (fn [e! {:keys [taulukko syottomoodi] :as app}]
-      [:div
+      [:div#kustannussuunnitelma
        (if syottomoodi
          [kulujen-syottolomake e! app]
          [:div
