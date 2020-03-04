@@ -1,0 +1,9 @@
+{:linters
+ {:unresolved-symbol
+  {:exclude [(cljs.core.async.macros/go [<! >! alts!])
+             (cljs.core.async.macros/go-loop [<! >! alts!])
+             (harja.domain.tilannekuva.makrot/maarittele-suodattimet)]}}
+ :lint-as {harja.tyokalut.ui/for* clojure.core/for
+           harja.atom/reaction<! clojure.core/let
+           harja.makrot/fnc clojure.core/fn
+           harja.makrot/with-items-from-channel clojure.core/let}}
