@@ -350,7 +350,10 @@
            {:vayla-tyyli? true
             :ikoni        ikonit/remove}]]]))))
 
-(defn lisatiedot [paivitys-fn {:keys [aliurakoitsija liite-id liite-nimi liite-tyyppi liite-koko] :as lomake} e! aliurakoitsijat]
+(defn lisatiedot [paivitys-fn
+                  {:keys [aliurakoitsija liite-id liite-nimi liite-tyyppi liite-koko
+                          lisatieto] :as _lomake}
+                  e! aliurakoitsijat]
   (let [lisaa-aliurakoitsija (fn [{sulje :sulje}]
                                [:div
                                 {:on-click #(do
@@ -380,7 +383,8 @@
                  "Y-tunnus puuttuu")]
       [kentat/vayla-lomakekentta
        "Kirjoita tähän halutessasi lisätietoa"
-       :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))]
+       :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
+       :arvo lisatieto]
       [kentat/vayla-lomakekentta
        "Liite" :komponentti (fn [_]
                               [:div.liiterivi
