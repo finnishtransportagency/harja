@@ -76,9 +76,12 @@
                                   (* tarkasteltava paino))
               vertailu-summa (+ lopullinen-summa
                                 (- 10
-                                   (js/parseInt
-                                     (last
-                                       (str lopullinen-summa)))))]
+                                    (let [viimeinen-numero (js/parseInt
+                                                             (last
+                                                               (str lopullinen-summa)))]
+                                        (if (zero? viimeinen-numero)
+                                          10
+                                          viimeinen-numero))))]
           (when
             (= tarkistusnumero
                (- vertailu-summa
