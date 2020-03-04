@@ -418,7 +418,9 @@
       (let [{:keys [nayta]} lomake]
         [:div
          [:div.row
-          [:h1 "Uusi kulu"]
+          [:h1 (str (if-not (nil? (:id lomake))
+                      "Muokkaa kulua"
+                      "Uusi kulu"))]
           [tehtavien-syotto paivitys-fn lomake tehtavaryhmat]]
          [:div.row
           [laskun-tiedot paivitys-fn lomake]
