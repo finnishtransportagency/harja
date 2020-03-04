@@ -84,7 +84,7 @@ SELECT l.id            as "id",
        l.laskun_numero as "laskun-numero",
        l.tyyppi        as "tyyppi",
        l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
-       l.suorittaja    as "suorittaja-id",
+       l.suorittaja    as "suorittaja",
        l.lisatieto     as "lisatieto",
        a.nimi          as "suorittaja-nimi"
 
