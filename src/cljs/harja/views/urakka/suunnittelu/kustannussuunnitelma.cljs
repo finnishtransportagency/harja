@@ -384,7 +384,7 @@
                                                                              (when (instance? solu/Syote osa)
                                                                                :maara))
                                                                            (grid/hae-grid osat :lapset)))}
-        g (g-pohjat/uusi-taulukko {:header [{:tyyppi :laajenna
+        g (g-pohjat/uusi-taulukko {:header [{:tyyppi :teksti
                                              :leveys 3
                                              :luokat #{"table-default" "table-default-header" "lihavoitu"}}
                                             {:tyyppi :teksti
@@ -610,7 +610,7 @@
                                                                :nimi id
                                                                :luokat #{"suunnitelma-rivi"}
                                                                :osat [{:tyyppi :nappi
-                                                                       :toiminnot {:on-click (fn [_] (mene-idlle id))}
+                                                                       :toiminnot {:on-click (fn [_] (mene-idlle (str id "-osio")))}
                                                                        :luokat #{"table-default" "linkki" "solu-sisenna-1"}}
                                                                       {:tyyppi :ikoni
                                                                        :luokat #{"table-default" "keskita"}}
@@ -1981,7 +1981,7 @@
 (defn erillishankinnat-sisalto [erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
-     [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
+     [:h3 {:id (str (get t/hallinnollisten-idt :erillishankinnat) "-osio")} "Erillishankinnat"]
      [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi kantahaku-valmis?]
      [yleis-suodatin suodattimet]
      (when nayta-erillishankinnat-grid?
@@ -2013,7 +2013,7 @@
                                 indeksit
                                 kantahaku-valmis?]
   [:<>
-   [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
+   [:h3 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [:h3 "Tuntimäärät ja -palkat"]
    [yleis-suodatin suodattimet]
@@ -2023,7 +2023,7 @@
    (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]
      [yleiset/ajax-loader])
-   [:h3 "Johto ja hallinto: muut kulut"]
+   [:h3 {:id (str (get t/hallinnollisten-idt :toimistokulut) "-osio")} "Johto ja hallinto: muut kulut"]
    [yleis-suodatin suodattimet]
    (if (and toimistokulut-grid kantahaku-valmis?)
      [grid/piirra toimistokulut-grid]
@@ -2052,7 +2052,7 @@
 
 (defn hoidonjohtopalkkio-sisalto [hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
   [:<>
-   [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
+   [:h3 {:id (str (get t/hallinnollisten-idt :hoidonjohtopalkkio) "-osio")} "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [yleis-suodatin suodattimet]
    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
@@ -2096,7 +2096,7 @@
 (defn tilaajan-varaukset [tilaajan-varaukset-grid suodattimet kantahaku-valmis?]
   (let [nayta-tilaajan-varaukset-grid? (and kantahaku-valmis? tilaajan-varaukset-grid)]
     [:<>
-     [:h2#tilaajan-varaukset "Tilaajan varaukset mm. bonuksien maksamista varten"]
+     [:h2 {:id (str (get t/hallinnollisten-idt :tilaajan-varaukset) "-osio")} "Tilaajan varaukset mm. bonuksien maksamista varten"]
      [:div "Näitä varauksia " [:span.lihavoitu "ei lasketa mukaan tavoitehintaan"]]
      [yleis-suodatin suodattimet]
      (if nayta-tilaajan-varaukset-grid?
@@ -2122,7 +2122,7 @@
                                 g-jhly (johto-ja-hallintokorvaus-laskulla-yhteenveto-grid)
                                 g-t (maarataulukko "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                 g-hjp (maarataulukko "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset])
-                                g-tv (maarataulukko "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset])]
+                                g-tv (maarataulukko "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false)]
                             (t/paivita-raidat! (grid/osa-polusta g-s [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-sh [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-hlp [::g-pohjat/data]))
@@ -2190,7 +2190,6 @@
         (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
         (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
         (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
-        #_(get-in app [:gridit :erillishankinnat :yhteensa :yhteensa])
         (:kantahaku-valmis? app)]
        [:span.viiva-alas.sininen]
        [tilaajan-varaukset

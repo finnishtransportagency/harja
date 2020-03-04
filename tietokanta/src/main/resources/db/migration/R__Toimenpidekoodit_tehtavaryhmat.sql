@@ -946,6 +946,8 @@ UPDATE tehtavaryhma SET yksiloiva_tunniste = '1b374802-dbe7-430b-bfc5-4635383d18
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'df612065-20d5-47b9-8cca-51ffd250e1f8' WHERE nimi = 'Vahinkojen korjaukset, Soratiet (T2)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c' WHERE nimi = 'Erillishankinnat (W)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' WHERE nimi = 'Tilaajan rahavaraus (T3)';
+-- TODO Tarkista tämä
+UPDATE tehtavaryhma SET yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' WHERE nimi = 'Johto- ja hallintokorvaus (J)';
 
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
@@ -961,8 +963,6 @@ UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1ed5d0bb-13c7-4f52-91ee-5051bb0
                                                                                    tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658');
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'd373c08b-32eb-4ac2-b817-04106b862fb1' WHERE nimi = 'Äkillinen hoitotyö' AND
                                                                                    tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '5a6760e8-6494-4db2-80bc-c06df391a5b6');
-                                                                                   -- TODO Tarkista tämä
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' WHERE nimi = 'Johto- ja hallintokorvaus (J)';
 
 -- Päivitetään api-tunnus tehtävähierarkian tehtäville, joilla sitä ei entuudestaan ole. Sama tunnus kaikkiin ympäristöihin (prod, stg, test, local). Huom. osa tehtävistä puuttuu kehitysympäristöstä.
 -- Api-tunnuksen olemassa olo ei tarkoita sitä, että tehtävälle kirjataan apin kautta toteumia. Api-käyttöä määrittää seurataan-apin-kautta-sarake.

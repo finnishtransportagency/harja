@@ -71,18 +71,6 @@
                               "vahinkojen-korjaukset" 1
                               "akillinen-hoitotyo" 2})
 
-(def jh-toimenkuva-jarjestys {"sopimusvastaava" 0
-                              "vastuunalainen työnjohtaja" 1
-                              "päätoiminen apulainen" 2
-                              "apulainen/työnjohtaja" 3
-                              "viherhoidosta vastaava henkilö" 4
-                              "hankintavastaava" 5
-                              "harjoittelija" 6})
-
-(def jh-maksukausi-jarjestys {:molemmat 0
-                              :kesa 1
-                              :talvi 2})
-
 (defn toimenpide-koskee-ennen-urakkaa? [hoitokaudet]
   (= #{0} hoitokaudet))
 
@@ -121,6 +109,8 @@
    :toimistokulut "toimistokulut"
    :hoidonjohtopalkkio "hoidonjohtopalkkio"
    :tilaajan-varaukset "tilaajan-varaukset"})
+
+(def alimman-taulukon-id (hallinnollisten-idt :tilaajan-varaukset))
 
 
 (defn toimenpiteen-rahavaraukset [toimenpide]
@@ -872,26 +862,27 @@
                                                                                             (fn [tyyppien-data]
                                                                                               (dissoc tyyppien-data tyyppi))))
                                                                   :aseta (fn [tila maarat valittu-toimenpide tyyppi]
-                                                                           (let [yhteensa (summaa-mapin-arvot maarat :maara)
-                                                                                 hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
-                                                                                 kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
-                                                                                                               maarat))
-                                                                                 kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
-                                                                                 paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
-                                                                                                                     (range hoitokauden-numero 6)
-                                                                                                                     [hoitokauden-numero])
-                                                                                 tila (assoc-in tila
-                                                                                                [:gridit :rahavaraukset :seurannat tyyppi]
-                                                                                                {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
-                                                                                                 :yhteensa yhteensa
-                                                                                                 :indeksikorjattu (indeksikorjaa yhteensa)
-                                                                                                 :maara (if kuukausitasolla?
-                                                                                                          vaihtelua-teksti
-                                                                                                          (:maara (first maarat)))})]
-                                                                             (reduce (fn [tila hoitokauden-numero]
-                                                                                       (assoc-in tila [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)] yhteensa))
-                                                                                     tila
-                                                                                     paivitettavat-hoitokauden-numerot)))}
+                                                                           (when (contains? toimenpiteet-rahavarauksilla valittu-toimenpide)
+                                                                             (let [yhteensa (summaa-mapin-arvot maarat :maara)
+                                                                                   hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+                                                                                   kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
+                                                                                                                 maarat))
+                                                                                   kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+                                                                                   paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                                                                                       (range hoitokauden-numero 6)
+                                                                                                                       [hoitokauden-numero])
+                                                                                   tila (assoc-in tila
+                                                                                                  [:gridit :rahavaraukset :seurannat tyyppi]
+                                                                                                  {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
+                                                                                                   :yhteensa yhteensa
+                                                                                                   :indeksikorjattu (indeksikorjaa yhteensa)
+                                                                                                   :maara (if kuukausitasolla?
+                                                                                                            vaihtelua-teksti
+                                                                                                            (:maara (first maarat)))})]
+                                                                               (reduce (fn [tila hoitokauden-numero]
+                                                                                         (assoc-in tila [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)] yhteensa))
+                                                                                       tila
+                                                                                       paivitettavat-hoitokauden-numerot))))}
                            :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
                                                              :init (fn [tila]
                                                                      (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] nil))
@@ -1355,24 +1346,23 @@
                    (inc index))))))))
 
 (defn laajenna-solua-klikattu
-  ([solu auki? dom-id polku-dataan] (laajenna-solua-klikattu solu auki? dom-id polku-dataan nil false))
-  ([solu auki? dom-id polku-dataan osien-polut] (laajenna-solua-klikattu solu auki? dom-id polku-dataan osien-polut false))
+  ([solu auki? dom-id polku-dataan] (laajenna-solua-klikattu solu auki? dom-id polku-dataan nil))
   ([solu auki? dom-id polku-dataan
     {:keys [aukeamis-polku sulkemis-polku]
      :or {aukeamis-polku [:.. :.. 1]
-          sulkemis-polku [:.. :.. 1]}}
-    scroll?]
-   (if auki?
-     (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
-         (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
-         (r/flush)
-         (when scroll?
-           (r/after-render
-             (fn []
-               (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))))
-     (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
-         (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
-         (r/flush)))))
+          sulkemis-polku [:.. :.. 1]}}]
+   (let [alin-taulukko? (= dom-id alimman-taulukon-id)]
+     (if auki?
+       (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
+           (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
+           (r/flush)
+           (when alin-taulukko?
+             (r/after-render
+               (fn []
+                 (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))))
+       (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
+           (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
+           (r/flush))))))
 
 
 (defrecord TaulukoidenVakioarvot [])

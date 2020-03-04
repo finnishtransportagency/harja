@@ -346,8 +346,6 @@
                                                                    (= kuukausi (::bs/kuukausi %)))
                                                              olemassa-olevat-jhkt))
                                                      jhk-tiedot)]
-                              (println "olemassa-olevat-jhkt " olemassa-olevat-jhkt)
-                              (println "uudet-jhkt " uudet-jhkt)
                               (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (when-not (empty? olemassa-olevat-jhkt)
                                 (doseq [jhk olemassa-olevat-jhkt
