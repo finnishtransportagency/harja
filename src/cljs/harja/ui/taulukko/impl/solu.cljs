@@ -4,6 +4,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [warn]]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.impl.grid :as grid]
@@ -198,7 +199,7 @@
                                                                         e)})
                                                (:kayttaytymiset this))]
       (fn [this]
-        (let [{:keys [id class type name readonly? required? tabindex disabled?
+        (let [{:keys [id class style type name readonly? required? tabindex disabled?
                       checked? default-checked? indeterminate?
                       alt height src width
                       autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
@@ -210,6 +211,7 @@
                                        {;; Inputin parametrit
                                         :class (when class
                                                  (apply str (interpose " " class)))
+                                        :style style
                                         :data-cy (:id this)
                                         :id id
                                         :type type
@@ -462,3 +464,29 @@
              (nil? fmt) (sp/lisaa-fmt identity)
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
+
+(defrecord Pudotusvalikko [id livi-pudotusvalikko-asetukset vaihtoehdot]
+  gop/IPiirrettava
+  (-piirra [this]
+    (let [taman-data (taman-derefable this)
+          valinta @taman-data]
+      [yleiset/livi-pudotusvalikko (assoc livi-pudotusvalikko-asetukset :valinta valinta) vaihtoehdot]))
+  gop/IGridOsa
+  (-id [this]
+    (:id this))
+  (-id? [this id]
+    (= (:id this) id))
+  (-nimi [this]
+    (::nimi this))
+  (-aseta-nimi [this nimi]
+    (assoc this ::nimi nimi))
+  sp/ISolu
+  sp/IFmt
+  (-lisaa-fmt [this f]
+    (assoc-in this [:livi-pudotusvalikko-asetukset :format-fn] f)))
+
+(defn pudotusvalikko
+  [asetukset vaihtoehdot]
+  {:post [(instance? Pudotusvalikko %)]}
+  (let [id (gensym "pudotusvalikko")]
+    (->Pudotusvalikko id asetukset vaihtoehdot)))

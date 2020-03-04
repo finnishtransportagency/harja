@@ -277,10 +277,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                                 (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                                   ^{:key (hash vaihtoehto)}
-                                  [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
+                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
                              (for [vaihtoehto vaihtoehdot]
                                ^{:key (hash vaihtoehto)}
-                               [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
+                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
@@ -310,13 +310,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :type "button"
              :disabled (if disabled "disabled" "")
              :title title
-             :on-click (r/partial on-click-fn vaihtoehdot)
+             :on-click (partial on-click-fn vaihtoehdot)
              :on-focus on-focus
-             :on-key-down (r/partial {:on-key-down-fn on-key-down-fn
-                                      :vaihtoehdot vaihtoehdot
-                                      :valinta valinta
-                                      :valitse-fn valitse-fn
-                                      :format-fn format-fn})}
+             :on-key-down (partial on-key-down-fn
+                            {:vaihtoehdot vaihtoehdot
+                             :valinta valinta
+                             :valitse-fn valitse-fn
+                             :format-fn format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if (and @auki? vayla-tyyli?)
               ^{:key :auki}

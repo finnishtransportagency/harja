@@ -81,6 +81,44 @@
                                :on-change (partial (:vaihda-fn this) this)}]
        [:label {:for osan-id} (:txt this)]])))
 
+(defsolu LaajennaSyote
+  [aukaise-fn auki-alussa? toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
+  (fn [this]
+    (let [auki? (r/atom auki-alussa?)
+          input-osa (solu/syote {:toiminnot (into {}
+                                                  (map (fn [[k f]]
+                                                         [k (fn [x]
+                                                              (binding [solu/*this* (::tama-komponentti solu/*this*)]
+                                                                (f x)))])
+                                                       toiminnot))
+                                 :kayttaytymiset kayttaytymiset
+                                 :parametrit parametrit
+                                 :fmt fmt
+                                 :fmt-aktiivinen fmt-aktiivinen})]
+      (fn [this]
+        (let [ikoni-auki ikonit/livicon-chevron-up
+              ikoni-kiinni ikonit/livicon-chevron-down]
+          [:div {:style {:position "relative"}}
+           [grid/piirra (assoc input-osa ::tama-komponentti this
+                               :parametrit (update (:parametrit this) :style assoc :width "100%" :height "100%")
+                               :harja.ui.taulukko.impl.grid/osan-derefable (grid/solun-asia this :osan-derefable))]
+           [:span {:style {:position "absolute"
+                           :display "flex"
+                           :right "0px"
+                           :top "0px"
+                           :height "100%"
+                           :align-items "center"}
+                   :class "solu-laajenna klikattava"
+                   :on-click
+                   #(do (.preventDefault %)
+                        (swap! auki? not)
+                        (aukaise-fn this @auki?))}
+            (if @auki?
+              ^{:key "laajenna-auki"}
+              [ikoni-auki]
+              ^{:key "laajenna-kiini"}
+              [ikoni-kiinni])]])))))
+
 (defonce ^{:mutable true
           :doc "Jos halutaan estää blur event focus eventin jälkeen, niin tätä voi käyttää"}
          esta-blur_ false)
@@ -1243,6 +1281,183 @@
                                                                                         (conj tunnisteet tunniste)]))
                                                                                    [false []]
                                                                                    (grid/hae-grid osat :lapset))))}))
+        muokkausrivien-rajapinta-asetukset (fn [nimi]
+                                             {:rajapinta (keyword (str "yhteenveto-" nimi))
+                                              :solun-polun-pituus 1
+                                              :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
+                                              :datan-kasittely (fn [yhteenveto]
+                                                                 (mapv (fn [[_ v]]
+                                                                         v)
+                                                                       yhteenveto))
+                                              :tunnisteen-kasittely (fn [osat data]
+                                                                      (println "data " data)
+                                                                      (mapv (fn [index osa data]
+                                                                              (case index
+                                                                                0 {:osa :toimenkuva :toimenkuva (:toimenkuva data)}
+                                                                                1 {:osa :tunnit :tunnit (:tunnit data)}
+                                                                                2 {:osa :tuntipalkka :tuntipalkka (:tuntipalkka data)}
+                                                                                3 {:osa :yhteensa :yhteensa (:yhteensa data)}
+                                                                                4 {:osa :kk-v :kk-v (:kk-v data)}))
+                                                                            (range)
+                                                                            (grid/hae-grid osat :lapset)
+                                                                            data))})
+        vakiorivit (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
+                           (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                             (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
+                               {:tyyppi :rivi
+                                :nimi ::data-yhteenveto
+                                :osat [{:tyyppi :teksti
+                                        :luokat #{"table-default"}}
+                                       (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                                    :tallenna :johto-ja-hallintokorvaus})
+                                       (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                                    :tallenna :johto-ja-hallintokorvaus})
+                                       {:tyyppi :teksti
+                                        :luokat #{"table-default"}
+                                        :fmt yhteenveto-format}
+                                       {:tyyppi :teksti
+                                        :luokat #{"table-default"}
+                                        :fmt (fn [teksti]
+                                               (if (nil? teksti)
+                                                 ""
+                                                 (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
+                                                   (if sisaltaa-erottimen?
+                                                     (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
+                                                     teksti))))}]}
+                               {:tyyppi :taulukko
+                                :nimi (str toimenkuva "-" maksukausi "-taulukko")
+                                :osat [{:tyyppi :rivi
+                                        :nimi ::data-yhteenveto
+                                        :osat [{:tyyppi :laajenna
+                                                :aukaise-fn (fn [this auki?]
+                                                              (if auki?
+                                                                (rivi-kuukausifiltterilla! this
+                                                                                           true
+                                                                                           (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
+                                                                                           [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]
+                                                                                           [:. ::t/yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false)
+                                                                                           [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
+                                                                                                             :solun-polun-pituus 1
+                                                                                                             :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                [kuukausitasolla? nil nil nil])})
+                                                                (do
+                                                                  (rivi-ilman-kuukausifiltteria! this
+                                                                                                 [:.. ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false))
+                                                                  (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi] false))))
+                                                              (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
+                                                :auki-alussa? false
+                                                :luokat #{"table-default"}}
+                                               (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                                            :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
+                                                            :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
+                                               (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                                            :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
+                                                            :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
+                                               {:tyyppi :teksti
+                                                :luokat #{"table-default"}
+                                                :fmt yhteenveto-format}
+                                               {:tyyppi :teksti
+                                                :luokat #{"table-default"}
+                                                :fmt (fn [teksti]
+                                                       (if (nil? teksti)
+                                                         ""
+                                                         (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
+                                                           (if sisaltaa-erottimen?
+                                                             (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
+                                                             teksti))))}]}
+                                       {:tyyppi :taulukko
+                                        :nimi ::data-sisalto
+                                        :luokat #{"piillotettu"}
+                                        :osat (vec (repeatedly (t/kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus)
+                                                               (fn []
+                                                                 {:tyyppi :rivi
+                                                                  :osat [{:tyyppi :teksti
+                                                                          :luokat #{"table-default"}
+                                                                          :fmt (fn [paivamaara]
+                                                                                 (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                                       mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                                    (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                                        (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                                   (if mennyt?
+                                                                                     (str teksti " (mennyt)")
+                                                                                     teksti)))}
+                                                                         (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                                      :solun-index 1 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? false
+                                                                                      :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
+                                                                         {:tyyppi :tyhja}
+                                                                         {:tyyppi :tyhja}
+                                                                         {:tyyppi :tyhja}]})))}]})))
+                         t/johto-ja-hallintokorvaukset-pohjadata)
+        muokattavat-rivit (mapv (fn [index]
+                                  (let [rivin-nimi (str "muokattava-johto-ja-hallintokorvausrivi-" index)]
+                                    {:tyyppi :taulukko
+                                     :nimi rivin-nimi
+                                     :osat [{:tyyppi :rivi
+                                             :nimi ::data-yhteenveto
+                                             :osat [{:tyyppi :oma
+                                                     ;[aukaise-fn auki-alussa? toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
+                                                     :constructor (fn [_] (laajenna-syote (fn [_] (println "AUKAISE")) false nil nil {:class #{"input-default"}} identity identity))
+                                                     #_#_:aukaise-fn (fn [this auki?]
+                                                                       (if auki?
+                                                                         (rivi-kuukausifiltterilla! this
+                                                                                                    true
+                                                                                                    (keyword (str "kuukausitasolla?" rivin-nimi))
+                                                                                                    [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi]
+                                                                                                    [:. ::t/yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
+                                                                                                    [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?" rivin-nimi))
+                                                                                                                      :solun-polun-pituus 1
+                                                                                                                      :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                         [kuukausitasolla? nil nil nil])})
+                                                                         (do
+                                                                           (rivi-ilman-kuukausifiltteria! this
+                                                                                                          [:.. ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi))
+                                                                           (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi] false))))
+                                                                       (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
+                                                     :auki-alussa? false
+                                                     :luokat #{"table-default"}}
+                                                    (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                                                 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
+                                                                 :etsittava-osa rivin-nimi})
+                                                    (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                                                 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
+                                                                 :etsittava-osa rivin-nimi})
+                                                    {:tyyppi :teksti
+                                                     :luokat #{"table-default"}
+                                                     :fmt yhteenveto-format}
+                                                    {:tyyppi :pudotusvalikko
+                                                     #_#_:valitse-fn valitse-toimenpide
+                                                     :format-fn (fn [teksti]
+                                                                  (if (nil? teksti)
+                                                                    ""
+                                                                    (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
+                                                                      (if sisaltaa-erottimen?
+                                                                        (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
+                                                                        teksti))))
+                                                     :vayla-tyyli? true
+                                                     :valinnat t/kk-v-valinnat}]}
+                                            {:tyyppi :taulukko
+                                             :nimi ::data-sisalto
+                                             :luokat #{"piillotettu"}
+                                             :osat (vec (repeatedly 12
+                                                                    (fn []
+                                                                      {:tyyppi :rivi
+                                                                       :osat [{:tyyppi :teksti
+                                                                               :luokat #{"table-default"}
+                                                                               #_#_:fmt (fn [paivamaara]
+                                                                                          (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                                                mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                                             (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                                                 (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                                            (if mennyt?
+                                                                                              (str teksti " (mennyt)")
+                                                                                              teksti)))}
+                                                                              (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                                           :solun-index 1 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? false
+                                                                                           :etsittava-osa rivin-nimi})
+                                                                              {:tyyppi :tyhja}
+                                                                              {:tyyppi :tyhja}
+                                                                              {:tyyppi :tyhja}]})))}]}))
+                                (range 1 3))
         g (g-pohjat/uusi-taulukko {:header [{:tyyppi :teksti
                                              :leveys 4
                                              :luokat #{"table-default" "table-default-header" "lihavoitu"}}
@@ -1258,93 +1473,8 @@
                                             {:tyyppi :teksti
                                              :leveys 1
                                              :luokat #{"table-default" "table-default-header" "lihavoitu"}}]
-                                   :body (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
-                                                 (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
-                                                   (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
-                                                     {:tyyppi :rivi
-                                                      :nimi ::data-yhteenveto
-                                                      :osat [{:tyyppi :teksti
-                                                              :luokat #{"table-default"}}
-                                                             (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
-                                                                          :tallenna :johto-ja-hallintokorvaus})
-                                                             (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
-                                                                          :tallenna :johto-ja-hallintokorvaus})
-                                                             {:tyyppi :teksti
-                                                              :luokat #{"table-default"}
-                                                              :fmt yhteenveto-format}
-                                                             {:tyyppi :teksti
-                                                              :luokat #{"table-default"}
-                                                              :fmt (fn [teksti]
-                                                                     (if (nil? teksti)
-                                                                       ""
-                                                                       (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
-                                                                         (if sisaltaa-erottimen?
-                                                                           (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
-                                                                           teksti))))}]}
-                                                     {:tyyppi :taulukko
-                                                      :nimi (str toimenkuva "-" maksukausi "-taulukko")
-                                                      :osat [{:tyyppi :rivi
-                                                              :nimi ::data-yhteenveto
-                                                              :osat [{:tyyppi :laajenna
-                                                                      :aukaise-fn (fn [this auki?]
-                                                                                    (if auki?
-                                                                                      (rivi-kuukausifiltterilla! this
-                                                                                                                 true
-                                                                                                                 (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
-                                                                                                                 [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]
-                                                                                                                 [:. ::t/yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false)
-                                                                                                                 [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
-                                                                                                                                   :solun-polun-pituus 1
-                                                                                                                                   :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                                      [kuukausitasolla? nil nil nil])})
-                                                                                      (do
-                                                                                        (rivi-ilman-kuukausifiltteria! this
-                                                                                                                       [:.. ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false))
-                                                                                        (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi] false))))
-                                                                                    (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
-                                                                      :auki-alussa? false
-                                                                      :luokat #{"table-default"}}
-                                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
-                                                                                  :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
-                                                                                  :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
-                                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
-                                                                                  :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
-                                                                                  :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
-                                                                     {:tyyppi :teksti
-                                                                      :luokat #{"table-default"}
-                                                                      :fmt yhteenveto-format}
-                                                                     {:tyyppi :teksti
-                                                                      :luokat #{"table-default"}
-                                                                      :fmt (fn [teksti]
-                                                                             (if (nil? teksti)
-                                                                               ""
-                                                                               (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
-                                                                                 (if sisaltaa-erottimen?
-                                                                                   (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
-                                                                                   teksti))))}]}
-                                                             {:tyyppi :taulukko
-                                                              :nimi ::data-sisalto
-                                                              :luokat #{"piillotettu"}
-                                                              :osat (vec (repeatedly (t/kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus)
-                                                                                     (fn []
-                                                                                       {:tyyppi :rivi
-                                                                                        :osat [{:tyyppi :teksti
-                                                                                                :luokat #{"table-default"}
-                                                                                                :fmt (fn [paivamaara]
-                                                                                                       (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                                                                             mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                                                                          (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                                                                              (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                                                                         (if mennyt?
-                                                                                                           (str teksti " (mennyt)")
-                                                                                                           teksti)))}
-                                                                                               (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
-                                                                                                            :solun-index 1 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? false
-                                                                                                            :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
-                                                                                               {:tyyppi :tyhja}
-                                                                                               {:tyyppi :tyhja}
-                                                                                               {:tyyppi :tyhja}]})))}]})))
-                                               t/johto-ja-hallintokorvaukset-pohjadata)
+                                   :body (vec (concat vakiorivit
+                                                      muokattavat-rivit))
                                    :taulukon-id taulukon-id
                                    :root-asetus! (fn [g]
                                                    (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :grid] g)))
@@ -1352,7 +1482,89 @@
                                                     :paivita! (fn [f]
                                                                 (swap! tila/suunnittelu-kustannussuunnitelma
                                                                        (fn [tila]
-                                                                         (update-in tila [:gridit :johto-ja-hallintokorvaukset :grid] f))))}})]
+                                                                         (update-in tila [:gridit :johto-ja-hallintokorvaukset :grid] f))))}})
+        [vakio-viimeinen-index vakiokasittelijat] (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi hoitokaudet]}]
+                                                             (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                                                               [(inc index) (merge grid-kasittelijat
+                                                                                   (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
+                                                                                     {[::g-pohjat/data ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi true)}
+                                                                                     {[::g-pohjat/data index ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false)
+                                                                                      [::g-pohjat/data index ::data-sisalto] {:rajapinta (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate))
+                                                                                                                              :solun-polun-pituus 2
+                                                                                                                              :jarjestys [{:keyfn :aika
+                                                                                                                                           :comp (fn [aika-1 aika-2]
+                                                                                                                                                   (pvm/ennen? aika-1 aika-2))}
+                                                                                                                                          ^{:nimi :mapit} [:aika :tunnit :tuntipalkka :yhteensa :kk-v]]
+                                                                                                                              :datan-kasittely (fn [vuoden-jh-korvaukset]
+                                                                                                                                                 (mapv (fn [rivi]
+                                                                                                                                                         (mapv (fn [[_ v]]
+                                                                                                                                                                 v)
+                                                                                                                                                               rivi))
+                                                                                                                                                       vuoden-jh-korvaukset))
+                                                                                                                              :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                                                      (vec
+                                                                                                                                                        (map-indexed (fn [i rivi]
+                                                                                                                                                                       (vec
+                                                                                                                                                                         (map-indexed (fn [j osa]
+                                                                                                                                                                                        (when (instance? g-pohjat/SyoteTaytaAlas osa)
+                                                                                                                                                                                          {:osa :tunnit
+                                                                                                                                                                                           :osan-paikka [i j]
+                                                                                                                                                                                           :toimenkuva toimenkuva
+                                                                                                                                                                                           :maksukausi maksukausi}))
+                                                                                                                                                                                      (grid/hae-grid rivi :lapset))))
+                                                                                                                                                                     (grid/hae-grid data-sisalto-grid :lapset))))}}))]))
+                                                           [0 {}]
+                                                           t/johto-ja-hallintokorvaukset-pohjadata)
+        muokkauskasittelijat (second
+                               (reduce (fn [[rivi-index grid-kasittelijat] nimi-index]
+                                         (let [rivin-nimi (str "muokattava-johto-ja-hallintokorvausrivi-" nimi-index)]
+                                           [(inc rivi-index) (merge grid-kasittelijat
+                                                                    {[::g-pohjat/data rivi-index ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
+                                                                     [::g-pohjat/data rivi-index ::data-sisalto] {:rajapinta (keyword (str "johto-ja-hallintokorvaus-" rivin-nimi))
+                                                                                                                  :solun-polun-pituus 2
+                                                                                                                  :jarjestys [{:keyfn :aika
+                                                                                                                               :comp (fn [aika-1 aika-2]
+                                                                                                                                       (pvm/ennen? aika-1 aika-2))}
+                                                                                                                              ^{:nimi :mapit} [:aika :tunnit :tuntipalkka :yhteensa :kk-v]]
+                                                                                                                  :datan-kasittely (fn [vuoden-jh-korvaukset]
+                                                                                                                                     (mapv (fn [rivi]
+                                                                                                                                             (mapv (fn [[_ v]]
+                                                                                                                                                     v)
+                                                                                                                                                   rivi))
+                                                                                                                                           vuoden-jh-korvaukset))
+                                                                                                                  :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                                          (println "DATA SISÄLTÖ DATA")
+                                                                                                                                          (println data)
+                                                                                                                                          (vec
+                                                                                                                                            (map-indexed (fn [i rivi]
+                                                                                                                                                           (vec
+                                                                                                                                                             (map (fn [j osa data]
+                                                                                                                                                                    (when (instance? g-pohjat/SyoteTaytaAlas osa)
+                                                                                                                                                                      {:osa :tunnit
+                                                                                                                                                                       :osan-paikka [i j]
+                                                                                                                                                                       :toimenkuva (:toimenkuva data)
+                                                                                                                                                                       :maksukausi (:maksukausi data)}))
+                                                                                                                                                                  (range)
+                                                                                                                                                                  (grid/hae-grid rivi :lapset)
+                                                                                                                                                                  data)))
+                                                                                                                                                         (grid/hae-grid data-sisalto-grid :lapset))))}})]))
+                                       [vakio-viimeinen-index {}]
+                                       (range 1 3)))]
+
+    (println "KÄSITTELIJÄT")
+    (println (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
+                                           :solun-polun-pituus 1
+                                           :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
+                                           :datan-kasittely (fn [otsikot]
+                                                              (mapv (fn [otsikko]
+                                                                      otsikko)
+                                                                    (vals otsikot)))}}
+
+                    vakiokasittelijat
+                    muokkauskasittelijat))
+
+    (println "JOHTO JA HALLINTOKORVAUKS DR")
+    (println (t/johto-ja-hallintokorvaus-dr))
 
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/johto-ja-hallintokorvaus-rajapinta
@@ -1365,39 +1577,8 @@
                                                                                                 otsikko)
                                                                                               (vals otsikot)))}}
 
-                                              (second
-                                                (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi hoitokaudet]}]
-                                                          (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
-                                                            [(inc index) (merge grid-kasittelijat
-                                                                                (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
-                                                                                  {[::g-pohjat/data ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi true)}
-                                                                                  {[::g-pohjat/data index ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi false)
-                                                                                   [::g-pohjat/data index ::data-sisalto] {:rajapinta (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate))
-                                                                                                                           :solun-polun-pituus 2
-                                                                                                                           :jarjestys [{:keyfn :aika
-                                                                                                                                        :comp (fn [aika-1 aika-2]
-                                                                                                                                                (pvm/ennen? aika-1 aika-2))}
-                                                                                                                                       ^{:nimi :mapit} [:aika :tunnit :tuntipalkka :yhteensa :kk-v]]
-                                                                                                                           :datan-kasittely (fn [vuoden-jh-korvaukset]
-                                                                                                                                              (mapv (fn [rivi]
-                                                                                                                                                      (mapv (fn [[_ v]]
-                                                                                                                                                              v)
-                                                                                                                                                            rivi))
-                                                                                                                                                    vuoden-jh-korvaukset))
-                                                                                                                           :tunnisteen-kasittely (fn [data-sisalto-grid data]
-                                                                                                                                                   (vec
-                                                                                                                                                     (map-indexed (fn [i rivi]
-                                                                                                                                                                    (vec
-                                                                                                                                                                      (map-indexed (fn [j osa]
-                                                                                                                                                                                     (when (instance? g-pohjat/SyoteTaytaAlas osa)
-                                                                                                                                                                                       {:osa :tunnit
-                                                                                                                                                                                        :osan-paikka [i j]
-                                                                                                                                                                                        :toimenkuva toimenkuva
-                                                                                                                                                                                        :maksukausi maksukausi}))
-                                                                                                                                                                                   (grid/hae-grid rivi :lapset))))
-                                                                                                                                                                  (grid/hae-grid data-sisalto-grid :lapset))))}}))]))
-                                                        [0 {}]
-                                                        t/johto-ja-hallintokorvaukset-pohjadata))))
+                                              vakiokasittelijat
+                                              muokkauskasittelijat))
     (grid/grid-tapahtumat g
                           tila/suunnittelu-kustannussuunnitelma
                           {:johto-ja-hallintokorvaukset-disablerivit {:polut [[:gridit :johto-ja-hallintokorvaukset :kuukausitasolla?]]
