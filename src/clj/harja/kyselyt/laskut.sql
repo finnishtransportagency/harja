@@ -81,8 +81,10 @@ SELECT l.id            as "id",
        l.erapaiva      as "erapaiva",
        l.laskun_numero as "laskun-numero",
        l.tyyppi        as "tyyppi",
+       l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
        l.suorittaja    as "suorittaja-id",
        a.nimi          as "suorittaja-nimi"
+
 FROM lasku l
   left join aliurakoitsija a on l.suorittaja = a.id
 where l.urakka = :urakka
