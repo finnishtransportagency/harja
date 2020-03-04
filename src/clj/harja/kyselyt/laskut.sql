@@ -115,16 +115,16 @@ INSERT
         laskun_numero, koontilaskun_kuukausi)
 VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI,
         current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi)
-ON CONFLICT (viite) DO UPDATE
-  SET erapaiva = :erapaiva,
-    lisatieto = :lisatieto,
-    laskun_numero = :numero,
-    kokonaissumma = :kokonaissumma,
-    suorittaja = :suorittaja,
-    tyyppi = :tyyppi ::LASKUTYYPPI,
-    muokattu = current_timestamp,
-    muokkaaja = :kayttaja,
-    koontilaskun_kuukausi = :koontilaskun-kuukausi;
+ON CONFLICT (urakka, viite) DO
+UPDATE SET erapaiva = :erapaiva,
+           lisatieto = :lisatieto,
+           laskun_numero = :numero,
+           kokonaissumma = :kokonaissumma,
+           suorittaja = :suorittaja,
+           tyyppi = :tyyppi ::LASKUTYYPPI,
+           muokattu = current_timestamp,
+           muokkaaja = :kayttaja,
+           koontilaskun_kuukausi = :koontilaskun-kuukausi;
 
 -- name: luo-tai-paivita-laskun-kohdistus<!
 INSERT
