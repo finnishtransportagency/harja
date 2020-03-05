@@ -3,13 +3,15 @@
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.taulukko.impl.datan-kasittely :as dk]
+            [harja.ui.taulukko.impl.asetukset :as asetukset]
             [harja.virhekasittely :as virhekasittely]
             [harja.loki :refer [log warn error]]
             [cljs.spec.alpha :as s]
             [clojure.string :as clj-str]
             [reagent.core :as r]
             [harja.ui.grid-debug :as g-debug]
-            [reagent.ratom :as ratom])
+            [reagent.ratom :as ratom]
+            [reagent.dom :as dom])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
@@ -1366,6 +1368,9 @@
                (if-let [error (.. this -state -error)]
                  [virhekasittely/rendaa-virhe error]
                  (let [[_ grid] (r/argv this)
+                       ;; Tätä domNodeHaku funktiota voi sitten käyttää jossain muualla, jos haluaa esim. muuttaa dom noden attribuutin arvoa
+                       ;; ilman, että se triggeröi reactin renderöintiä.
+                       _ (set! (.-domNodeHaku grid) (fn [] (dom/dom-node this)))
                        _ (when (instance? DynaaminenGrid grid)
                            @(get-in grid [:osien-maara-muuttui :trigger]))
                        {luokat :class dom-id :id} @(:parametrit grid)
@@ -1381,6 +1386,7 @@
                    #_(when aseta-koko-uusiksi?
                        (aseta-seurattava-koko! grid))
                    [:div.grid-taulukko {:class (apply str (interpose " " luokat))
+                                        :style {:z-index asetukset/default-z-index}
                                         :id dom-id}
 
 

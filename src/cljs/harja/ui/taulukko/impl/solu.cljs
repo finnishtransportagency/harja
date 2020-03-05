@@ -8,7 +8,9 @@
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.impl.grid :as grid]
-            [harja.ui.taulukko.kaytokset :as kaytokset]))
+            [harja.ui.taulukko.kaytokset :as kaytokset]
+            [harja.ui.taulukko.impl.asetukset :as asetukset]
+            [clojure.string :as clj-str]))
 
 (def ^:dynamic *this* nil)
 
@@ -465,12 +467,37 @@
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
 
-(defrecord Pudotusvalikko [id livi-pudotusvalikko-asetukset vaihtoehdot]
+(defrecord Pudotusvalikko [id livi-pudotusvalikko-asetukset vaihtoehdot rivin-haku]
   gop/IPiirrettava
-  (-piirra [this]
-    (let [taman-data (taman-derefable this)
-          valinta @taman-data]
-      [yleiset/livi-pudotusvalikko (assoc livi-pudotusvalikko-asetukset :valinta valinta) vaihtoehdot]))
+  (-piirra [_]
+    (let [nosta-z-index! (fn [this]
+                           (let [style-arvot (.getAttribute ((.-domNodeHaku (rivin-haku this))) "style")]
+                             (.setAttribute ((.-domNodeHaku (rivin-haku this)))
+                                            "style"
+                                            (clj-str/replace style-arvot
+                                                             #"z-index:.*([0-9]+)"
+                                                             (str "z-index: " (inc asetukset/default-z-index))))))
+          palauta-z-index! (fn [this]
+                             (let [style-arvot (.getAttribute ((.-domNodeHaku (rivin-haku this))) "style")]
+                               (.setAttribute ((.-domNodeHaku (rivin-haku this)))
+                                              "style"
+                                              (clj-str/replace style-arvot
+                                                               #"z-index:.*([0-9]+)"
+                                                               (str "z-index: " asetukset/default-z-index)))))
+          auki-fn! (if (contains? livi-pudotusvalikko-asetukset :auki-fn!)
+                     #(do (nosta-z-index! %) ((:auki-fn! livi-pudotusvalikko-asetukset)))
+                     nosta-z-index!)
+          kiinni-fn! (if (contains? livi-pudotusvalikko-asetukset :kiinni-fn!)
+                       #(do (palauta-z-index! %) ((:kiinni-fn! livi-pudotusvalikko-asetukset)))
+                       palauta-z-index!)]
+      (fn [this]
+        (let [taman-data (taman-derefable this)
+              valinta @taman-data]
+          [yleiset/livi-pudotusvalikko
+           (assoc livi-pudotusvalikko-asetukset :valinta valinta
+                  :auki-fn! (r/partial auki-fn! this)
+                  :kiinni-fn! (r/partial kiinni-fn! this))
+           vaihtoehdot]))))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -486,7 +513,7 @@
     (assoc-in this [:livi-pudotusvalikko-asetukset :format-fn] f)))
 
 (defn pudotusvalikko
-  [asetukset vaihtoehdot]
+  [asetukset vaihtoehdot rivin-haku]
   {:post [(instance? Pudotusvalikko %)]}
   (let [id (gensym "pudotusvalikko")]
-    (->Pudotusvalikko id asetukset vaihtoehdot)))
+    (->Pudotusvalikko id asetukset vaihtoehdot rivin-haku)))

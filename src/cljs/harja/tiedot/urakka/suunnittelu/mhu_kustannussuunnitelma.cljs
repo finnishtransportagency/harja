@@ -1024,7 +1024,7 @@
                                                 :aseta-tuntipalkka-yhteenveto! any?
                                                 :aseta-tunnit! any?}
                                                (reduce (fn [rajapinnat index]
-                                                         (let [nimi (str "muokattava-johto-ja-hallintokorvausrivi-" index)]
+                                                         (let [nimi (str "oma-" index)]
                                                            (merge rajapinnat
                                                                   {(keyword (str "johto-ja-hallintokorvaus-" nimi)) any?
                                                                    (keyword (str "yhteenveto-" nimi)) any?})))
@@ -1084,7 +1084,7 @@
                                        :haku identity}}
                             (apply merge
                                    (reduce (fn [rajapinnat index]
-                                             (let [nimi (str "muokattava-johto-ja-hallintokorvausrivi-" index)]
+                                             (let [nimi (str "oma-" index)]
                                                (merge rajapinnat
                                                       {(keyword (str "yhteenveto-" nimi)) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi]]
                                                                                           :haku identity}
@@ -1200,7 +1200,7 @@
                                          {}
                                          johto-ja-hallintokorvaukset-pohjadata)
                                  (reduce (fn [seurannat index]
-                                           (let [nimi (str "muokattava-johto-ja-hallintokorvausrivi-" index)]
+                                           (let [nimi (str "oma-" index)]
                                              (merge seurannat
                                                     {(keyword (str "yhteenveto-" nimi "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
                                                                                                              [:suodattimet :hoitokauden-numero]]
@@ -1446,6 +1446,7 @@
 (defrecord TallennaJaPaivitaTavoiteSekaKattohinta [])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohintaOnnistui [vastaus])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui [vastaus])
+(defrecord MuutaOmanJohtoJaHallintokorvauksenArvoa [nimi sarake arvo])
 (defrecord Hoitokausi [])
 (defrecord YleisSuodatinArvot [])
 (defrecord HaeIndeksitOnnistui [vastaus])
@@ -1822,6 +1823,10 @@
       (nakyvyydet-fn! g-sh)
       (nakyvyydet-fn! g-hlp)
       app))
+  MuutaOmanJohtoJaHallintokorvauksenArvoa
+  (process-event [{:keys [nimi sarake arvo]} app]
+    (let [hoitokauden-numero (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])]
+      (assoc-in app [:domain :johto-ja-hallintokorvaukset nimi hoitokauden-numero sarake] arvo)))
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)

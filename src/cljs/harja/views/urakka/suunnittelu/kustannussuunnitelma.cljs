@@ -1389,7 +1389,7 @@
                                                                          {:tyyppi :tyhja}]})))}]})))
                          t/johto-ja-hallintokorvaukset-pohjadata)
         muokattavat-rivit (mapv (fn [index]
-                                  (let [rivin-nimi (str "muokattava-johto-ja-hallintokorvausrivi-" index)]
+                                  (let [rivin-nimi (str "oma-" index)]
                                     {:tyyppi :taulukko
                                      :nimi rivin-nimi
                                      :osat [{:tyyppi :rivi
@@ -1425,7 +1425,8 @@
                                                      :luokat #{"table-default"}
                                                      :fmt yhteenveto-format}
                                                     {:tyyppi :pudotusvalikko
-                                                     #_#_:valitse-fn valitse-toimenpide
+                                                     :valitse-fn (fn [kk-v]
+                                                                   (e! (t/->MuutaOmanJohtoJaHallintokorvauksenArvoa rivin-nimi :kk-v kk-v)))
                                                      :format-fn (fn [teksti]
                                                                   (if (nil? teksti)
                                                                     ""
@@ -1433,8 +1434,10 @@
                                                                       (if sisaltaa-erottimen?
                                                                         (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                                         teksti))))
+                                                     :rivin-haku (fn [pudotusvalikko]
+                                                                   (grid/osa-polusta pudotusvalikko [:.. :..]))
                                                      :vayla-tyyli? true
-                                                     :valinnat t/kk-v-valinnat}]}
+                                                     :vaihtoehdot t/kk-v-valinnat}]}
                                             {:tyyppi :taulukko
                                              :nimi ::data-sisalto
                                              :luokat #{"piillotettu"}
@@ -1517,7 +1520,7 @@
                                                            t/johto-ja-hallintokorvaukset-pohjadata)
         muokkauskasittelijat (second
                                (reduce (fn [[rivi-index grid-kasittelijat] nimi-index]
-                                         (let [rivin-nimi (str "muokattava-johto-ja-hallintokorvausrivi-" nimi-index)]
+                                         (let [rivin-nimi (str "oma-" nimi-index)]
                                            [(inc rivi-index) (merge grid-kasittelijat
                                                                     {[::g-pohjat/data rivi-index ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
                                                                      [::g-pohjat/data rivi-index ::data-sisalto] {:rajapinta (keyword (str "johto-ja-hallintokorvaus-" rivin-nimi))
@@ -1550,21 +1553,6 @@
                                                                                                                                                          (grid/hae-grid data-sisalto-grid :lapset))))}})]))
                                        [vakio-viimeinen-index {}]
                                        (range 1 3)))]
-
-    (println "KÄSITTELIJÄT")
-    (println (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
-                                           :solun-polun-pituus 1
-                                           :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
-                                           :datan-kasittely (fn [otsikot]
-                                                              (mapv (fn [otsikko]
-                                                                      otsikko)
-                                                                    (vals otsikot)))}}
-
-                    vakiokasittelijat
-                    muokkauskasittelijat))
-
-    (println "JOHTO JA HALLINTOKORVAUKS DR")
-    (println (t/johto-ja-hallintokorvaus-dr))
 
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/johto-ja-hallintokorvaus-rajapinta

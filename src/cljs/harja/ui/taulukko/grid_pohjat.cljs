@@ -72,7 +72,7 @@
                                     :harja.ui.taulukko.impl.grid/osan-derefable (grid/solun-asia this :osan-derefable))]]))))
 
 (defn tee-osa [{:keys [tyyppi id luokat parametrit fmt fmt-aktiivinen nimi aukaise-fn auki-alussa? toiminnot kayttaytymiset
-                       nappi-nakyvilla? nappia-painettu! ikoni linkki sisalto constructor vaihtoehdot] :as asetukset}]
+                       nappi-nakyvilla? nappia-painettu! ikoni linkki sisalto constructor vaihtoehdot rivin-haku] :as asetukset}]
   (case tyyppi
     :teksti (solu/teksti {:parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
     :laajenna (solu/laajenna {:aukaise-fn aukaise-fn
@@ -90,7 +90,8 @@
     :ikoni (solu/ikoni {:parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
     :pudotusvalikko (solu/pudotusvalikko (select-keys asetukset #{:valinta :format-fn :valitse-fn :class :disabled :itemit-komponentteja? :naytettava-arvo
                                                                   :on-focus :title :li-luokka-fn :ryhmittely :nayta-ryhmat :ryhman-otsikko :data-cy :vayla-tyyli?})
-                                         vaihtoehdot)
+                                         vaihtoehdot
+                                         rivin-haku)
     :tyhja (solu/tyhja luokat)
     :oma (constructor asetukset)
     (solu/tyhja)))
