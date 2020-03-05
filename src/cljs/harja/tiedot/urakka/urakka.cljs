@@ -76,12 +76,12 @@
                                   (* tarkasteltava paino))
               vertailu-summa (+ lopullinen-summa
                                 (- 10
-                                    (let [viimeinen-numero (js/parseInt
-                                                             (last
-                                                               (str lopullinen-summa)))]
-                                        (if (zero? viimeinen-numero)
-                                          10
-                                          viimeinen-numero))))]
+                                   (let [viimeinen-numero (js/parseInt
+                                                            (last
+                                                              (str lopullinen-summa)))]
+                                     (if (zero? viimeinen-numero)
+                                       10
+                                       viimeinen-numero))))]
           (when
             (= tarkistusnumero
                (- vertailu-summa
@@ -101,7 +101,9 @@
                   :kulut/viite                 [viite]
                   :kulut/laskun-numero         [(ei-pakollinen numero)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
+                  :kulut/aliurakoitsija        [ei-nil]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
+                  :kulut/suorittaja-nimi       [ei-nil]
                   :kulut/koontilaskun-kuukausi [ei-nil]})
 
 (defn validoi-fn
@@ -110,28 +112,28 @@
   (if (nil? (meta lomake))
     lomake
     (vary-meta
-     lomake
-     (fn [{:keys [validius validi?] :as lomake-meta} lomake]
-       (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
-                 (as-> kaikki kaikki
-                   (update kaikki :validius
-                           (fn [vs]
-                             (update vs polku
-                                     (fn [kentta]
-                                       (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
-                                       (assoc kentta
+      lomake
+      (fn [{:keys [validius validi?] :as lomake-meta} lomake]
+        (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
+                  (as-> kaikki kaikki
+                        (update kaikki :validius
+                                (fn [vs]
+                                  (update vs polku
+                                          (fn [kentta]
+                                            (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
+                                            (assoc kentta
                                               :tarkistettu? true
                                               :validointi validointi
                                               :validi? (validointi
-                                                        (get-in lomake polku)))))))
-                   (update kaikki :validi?
-                           (fn [v?]
-                             (not
-                              (some (fn [[avain {validi? :validi?}]]
-                                      (false? validi?)) (:validius kaikki)))))))
-               lomake-meta
-               validius))
-     lomake)))
+                                                         (get-in lomake polku)))))))
+                        (update kaikki :validi?
+                                (fn [v?]
+                                  (not
+                                    (some (fn [[avain {validi? :validi?}]]
+                                            (false? validi?)) (:validius kaikki)))))))
+                lomake-meta
+                validius))
+      lomake)))
 
 (defn luo-validointi-fn
   "Yhdistää monta validointifunktiota yhdeksi"
@@ -139,8 +141,8 @@
   (fn [arvo]
     (let [validointi-fn (apply comp validointi-fns)]
       (not
-       (nil?
-        (validointi-fn arvo))))))
+        (nil?
+          (validointi-fn arvo))))))
 
 (defn luo-validius-meta
   "Ajatus, että lomake tietää itse, miten se validoidaan"
@@ -160,7 +162,9 @@
   [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
    [:erapaiva] (:kulut/erapaiva validoinnit)
    [:laskun-numero] (:kulut/laskun-numero validoinnit)
-   [:viite] (:kulut/viite validoinnit)])
+   [:viite] (:kulut/viite validoinnit)
+   [:aliurakoitsija] (:kulut/aliurakoitsija validoinnit)
+   [:suorittaja-nimi] (:kulut/suorittaja-nimi validoinnit)])
 
 (defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
   (apply luo-validius-meta
@@ -182,7 +186,7 @@
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil
                                       :paivita               0}
-                            (kulun-validointi-meta {:kohdistukset [{}]})))
+                                     (kulun-validointi-meta {:kohdistukset [{}]})))
 
 (def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
                                         :taulukko    nil

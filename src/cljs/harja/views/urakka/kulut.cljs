@@ -352,9 +352,10 @@
 
 (defn lisatiedot [paivitys-fn
                   {:keys [aliurakoitsija liite-id liite-nimi liite-tyyppi liite-koko
-                          lisatieto] :as _lomake}
+                          lisatieto] :as lomake}
                   e! aliurakoitsijat]
-  (let [lisaa-aliurakoitsija (fn [{sulje :sulje}]
+  (let [aliurakoitsija-meta (-> lomake meta :validius (get [:aliurakoitsija]))
+        lisaa-aliurakoitsija (fn [{sulje :sulje}]
                                [:div
                                 {:on-click #(do
                                               (sulje)
@@ -371,9 +372,12 @@
                        lisaa-aliurakoitsija
                        {:valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
                         :valinnat     aliurakoitsijat
-                        :valinta-fn   #(paivitys-fn :aliurakoitsija (:id %)
-                                                    :suorittaja-nimi (:nimi %))
-                        :formaatti-fn #(get % :nimi)}])]
+                        :valinta-fn   #(paivitys-fn
+                                         {:validoitava? true}
+                                         :aliurakoitsija (:id %)
+                                         :suorittaja-nimi (:nimi %))
+                        :formaatti-fn #(get % :nimi)
+                        :virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? aliurakoitsija-meta))}])]
       [kentat/vayla-lomakekentta
        "Aliurakoitsijan y-tunnus"
        :disabled true
