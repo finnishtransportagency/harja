@@ -339,8 +339,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   (let [auki? (r/atom false)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki? false))
-      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn]}]
-        [:div {:class #{(str "select-default") (when @auki? "open")}}
+      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn virhe?]}]
+        [:div {:class #{(str "select-" (if virhe?
+                                         "error-"
+                                         "") "default") (when @auki? "open")}}
          [:button.nappi-alasveto {:on-click #(swap! auki? not)}
           [:div.valittu
            (or (formaatti-fn valittu) "Ei valittu")]]
