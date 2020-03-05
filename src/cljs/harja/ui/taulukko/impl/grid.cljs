@@ -3,7 +3,6 @@
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.taulukko.impl.datan-kasittely :as dk]
-            [harja.ui.taulukko.impl.asetukset :as asetukset]
             [harja.virhekasittely :as virhekasittely]
             [harja.loki :refer [log warn error]]
             [cljs.spec.alpha :as s]
@@ -1386,7 +1385,6 @@
                    #_(when aseta-koko-uusiksi?
                        (aseta-seurattava-koko! grid))
                    [:div.grid-taulukko {:class (apply str (interpose " " luokat))
-                                        :style {:z-index asetukset/default-z-index}
                                         :id dom-id}
 
 

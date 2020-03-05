@@ -160,7 +160,7 @@
               :osat (mapv tee-osa footer)}
              [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}]))
 
-(defn uusi-taulukko [{:keys [taulukon-id root-asetukset root-asetus! header body footer header-korkeus header-luokat body-luokat]}]
+(defn uusi-taulukko [{:keys [taulukon-id root-luokat root-asetukset root-asetus! header body footer header-korkeus header-luokat body-luokat]}]
   {:pre [(vector? header)
          (every? map? header)
 
@@ -179,6 +179,7 @@
                                      :luokat (clj-set/union #{"salli-ylipiirtaminen"} body-luokat)
                                      :osat (mapv #(data-pohja % sarakkeiden-maara) body)})]
         g (grid/grid {:nimi ::root
+                      :luokat root-luokat
                       :alueet [{:sarakkeet [0 1] :rivit [0 3]}]
                       :koko (update konf/auto :rivi (fn [rivi-koko]
                                                       (-> rivi-koko

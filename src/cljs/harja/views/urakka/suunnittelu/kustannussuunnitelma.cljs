@@ -1286,18 +1286,24 @@
                                               :solun-polun-pituus 1
                                               :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
                                               :datan-kasittely (fn [yhteenveto]
+                                                                 (println "DATAN KÄSITTELY DATALLE: " yhteenveto)
+                                                                 (println (mapv (fn [[_ v]]
+                                                                                  v)
+                                                                                yhteenveto))
                                                                  (mapv (fn [[_ v]]
                                                                          v)
                                                                        yhteenveto))
                                               :tunnisteen-kasittely (fn [osat data]
                                                                       (println "data " data)
                                                                       (mapv (fn [index osa data]
-                                                                              (case index
-                                                                                0 {:osa :toimenkuva :toimenkuva (:toimenkuva data)}
-                                                                                1 {:osa :tunnit :tunnit (:tunnit data)}
-                                                                                2 {:osa :tuntipalkka :tuntipalkka (:tuntipalkka data)}
-                                                                                3 {:osa :yhteensa :yhteensa (:yhteensa data)}
-                                                                                4 {:osa :kk-v :kk-v (:kk-v data)}))
+                                                                              (assoc
+                                                                                (case index
+                                                                                  0 {:osa :toimenkuva :toimenkuva (:toimenkuva data)}
+                                                                                  1 {:osa :tunnit :tunnit (:tunnit data)}
+                                                                                  2 {:osa :tuntipalkka :tuntipalkka (:tuntipalkka data)}
+                                                                                  3 {:osa :yhteensa :yhteensa (:yhteensa data)}
+                                                                                  4 {:osa :kk-v :kk-v (:kk-v data)})
+                                                                                :oma-nimi nimi))
                                                                             (range)
                                                                             (grid/hae-grid osat :lapset)
                                                                             data))})
@@ -1308,9 +1314,9 @@
                                 :nimi ::data-yhteenveto
                                 :osat [{:tyyppi :teksti
                                         :luokat #{"table-default"}}
-                                       (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                       (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                     :tallenna :johto-ja-hallintokorvaus})
-                                       (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                       (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                     :tallenna :johto-ja-hallintokorvaus})
                                        {:tyyppi :teksti
                                         :luokat #{"table-default"}
@@ -1347,10 +1353,10 @@
                                                               (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                 :auki-alussa? false
                                                 :luokat #{"table-default"}}
-                                               (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                               (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                             :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
                                                             :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
-                                               (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                               (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                             :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
                                                             :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
                                                {:tyyppi :teksti
@@ -1415,10 +1421,10 @@
                                                                        (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                      :auki-alussa? false
                                                      :luokat #{"table-default"}}
-                                                    (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                                    (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                                  :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
                                                                  :etsittava-osa rivin-nimi})
-                                                    (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                                    (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                                  :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
                                                                  :etsittava-osa rivin-nimi})
                                                     {:tyyppi :teksti
@@ -1426,7 +1432,12 @@
                                                      :fmt yhteenveto-format}
                                                     {:tyyppi :pudotusvalikko
                                                      :valitse-fn (fn [kk-v]
-                                                                   (e! (t/->MuutaOmanJohtoJaHallintokorvauksenArvoa rivin-nimi :kk-v kk-v)))
+                                                                   (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                          :arvo kk-v
+                                                                                          :solu solu/*this*
+                                                                                          :ajettavat-jarejestykset true
+                                                                                          :triggeroi-seuranta? true}
+                                                                                         true))
                                                      :format-fn (fn [teksti]
                                                                   (if (nil? teksti)
                                                                     ""
@@ -1479,6 +1490,7 @@
                                    :body (vec (concat vakiorivit
                                                       muokattavat-rivit))
                                    :taulukon-id taulukon-id
+                                   :root-luokat #{"salli-ylipiirtaminen"}
                                    :root-asetus! (fn [g]
                                                    (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :grid] g)))
                                    :root-asetukset {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :johto-ja-hallintokorvaukset :grid]))
