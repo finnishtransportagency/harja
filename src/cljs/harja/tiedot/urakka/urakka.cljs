@@ -46,7 +46,7 @@
     (or
       (number? arvo)
       (pvm/pvm? arvo)
-      (not (empty? arvo)))
+      (not (str/blank? arvo)))
     arvo))
 
 (defn numero [arvo]
@@ -98,7 +98,7 @@
                    uusi-paino)))))))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
-                  :kulut/viite                 [viite]
+                  :kulut/viite                 [(ei-pakollinen viite)]
                   :kulut/laskun-numero         [(ei-pakollinen numero)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/aliurakoitsija        [ei-nil]

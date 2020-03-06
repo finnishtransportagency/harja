@@ -495,7 +495,10 @@
                                                                         (:nimi %))
                                                                      aliurakoitsijat)
                                             :kokonaissumma         kokonaissumma
-                                            :laskun-numero         (js/parseFloat laskun-numero)
+                                            :laskun-numero         (let [laskun-numero (-> laskun-numero js/parseFloat)]
+                                                                     (if (js/isNaN laskun-numero)
+                                                                       nil
+                                                                       laskun-numero))
                                             :lisatieto             lisatieto
                                             :tyyppi                tyyppi
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
