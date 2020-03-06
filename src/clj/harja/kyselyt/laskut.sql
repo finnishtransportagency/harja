@@ -113,15 +113,18 @@ SELECT lk.id                  as "kohdistus-id",
    AND lk.poistettu IS NOT TRUE
  ORDER by lk.id;
 
--- name: luo-tai-paivita-lasku<!
+-- name: luo-lasku<!
 INSERT
   INTO lasku
        (viite, erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto,
         laskun_numero, koontilaskun_kuukausi)
 VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI,
-        current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi)
-ON CONFLICT (urakka, viite) DO
-UPDATE SET erapaiva = :erapaiva,
+        current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
+
+-- name: paivita-lasku<!
+update
+  lasku
+      SET erapaiva = :erapaiva,
            lisatieto = :lisatieto,
            laskun_numero = :numero,
            kokonaissumma = :kokonaissumma,
@@ -129,7 +132,8 @@ UPDATE SET erapaiva = :erapaiva,
            tyyppi = :tyyppi ::LASKUTYYPPI,
            muokattu = current_timestamp,
            muokkaaja = :kayttaja,
-           koontilaskun_kuukausi = :koontilaskun-kuukausi;
+           koontilaskun_kuukausi = :koontilaskun-kuukausi
+          where id = :laskun-id;
 
 -- name: luo-tai-paivita-laskun-kohdistus<!
 INSERT

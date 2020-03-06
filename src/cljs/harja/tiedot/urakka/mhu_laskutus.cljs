@@ -1,18 +1,18 @@
 (ns harja.tiedot.urakka.mhu-laskutus
   (:require
-   [clojure.string :as string]
-   [tuck.core :as tuck]
-   [harja.loki :as loki]
-   harja.ui.taulukko.taulukko
-   [harja.ui.taulukko.protokollat :as p]
-   [harja.ui.taulukko.osa :as osa]
-   [harja.ui.taulukko.jana :as jana]
-   [harja.tyokalut.tuck :as tuck-apurit]
-   [harja.tiedot.urakka.urakka :as tila]
-   [harja.pvm :as pvm]
-   [harja.fmt :as fmt]
-   [reagent.core :as r]
-   [clojure.string :as str])
+    [clojure.string :as string]
+    [tuck.core :as tuck]
+    [harja.loki :as loki]
+    harja.ui.taulukko.taulukko
+    [harja.ui.taulukko.protokollat :as p]
+    [harja.ui.taulukko.osa :as osa]
+    [harja.ui.taulukko.jana :as jana]
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.pvm :as pvm]
+    [harja.fmt :as fmt]
+    [reagent.core :as r]
+    [clojure.string :as str])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
                    [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
@@ -116,25 +116,25 @@
 
 (def kulutaulukon-paivitysfunktiot
   {"Pvm"          (luo-paivitys-fn
-                   :id :pvm
-                   :arvo "Pvm"
-                   :class #{"col-xs-1"})
+                    :id :pvm
+                    :arvo "Pvm"
+                    :class #{"col-xs-1"})
    "Maksuerä"     (luo-paivitys-fn
-                   :id :maksuera
-                   :arvo "Maksuerä"
-                   :class #{"col-xs-2"})
+                    :id :maksuera
+                    :arvo "Maksuerä"
+                    :class #{"col-xs-2"})
    "Toimenpide"   (luo-paivitys-fn
-                   :id :toimenpide
-                   :arvo "Toimenpide"
-                   :class #{"col-xs-4"})
+                    :id :toimenpide
+                    :arvo "Toimenpide"
+                    :class #{"col-xs-4"})
    "Tehtäväryhmä" (luo-paivitys-fn
-                   :id :tehtavaryhma
-                   :arvo "Tehtäväryhmä"
-                   :class #{"col-xs-4"})
+                    :id :tehtavaryhma
+                    :arvo "Tehtäväryhmä"
+                    :class #{"col-xs-4"})
    "Määrä"        (luo-paivitys-fn
-                   :id :maara
-                   :arvo "Määrä"
-                   :class #{"col-xs-1"})})
+                    :id :maara
+                    :arvo "Määrä"
+                    :class #{"col-xs-1"})})
 
 (defn- hae-avaimella-fn [verrattava haettava palautettava]
   (fn [kohde]
@@ -180,27 +180,27 @@
                                                                             (if (true? parillinen?)
                                                                               "even"
                                                                               "odd"))}}}
-                        [osa/->Teksti
-                         (keyword (gensym "erapv-"))
-                         (str
-                          (when (= 1 (count rivit)) (pvm/pvm erapaiva)))
-                         {:class #{"col-xs-1"}}]
-                        [osa/->Teksti
-                         (keyword (gensym "maksuera-"))
-                         (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
-                         {:class #{"col-xs-2"}}]
-                        [osa/->Teksti
-                         (keyword (gensym "toimenpideinstanssi-"))
-                         (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
-                         {:class #{"col-xs-4"}}]
-                        [osa/->Teksti
-                         (keyword (gensym "tehtavaryhma-"))
-                         (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
-                         {:class #{"col-xs-4"}}]
-                        [osa/->Teksti
-                         (keyword (gensym "summa-"))
-                         (fmt/euro summa)
-                         {:class #{"col-xs-1"}}])
+                              [osa/->Teksti
+                               (keyword (gensym "erapv-"))
+                               (str
+                                 #_(when (= 1 (count rivit))) (pvm/pvm erapaiva))
+                               {:class #{"col-xs-1"}}]
+                              [osa/->Teksti
+                               (keyword (gensym "maksuera-"))
+                               (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
+                               {:class #{"col-xs-2"}}]
+                              [osa/->Teksti
+                               (keyword (gensym "toimenpideinstanssi-"))
+                               (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
+                               {:class #{"col-xs-4"}}]
+                              [osa/->Teksti
+                               (keyword (gensym "tehtavaryhma-"))
+                               (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
+                               {:class #{"col-xs-4"}}]
+                              [osa/->Teksti
+                               (keyword (gensym "summa-"))
+                               (fmt/euro summa)
+                               {:class #{"col-xs-1"}}])
                (not parillinen?)
                rivit)))))
 
@@ -258,19 +258,20 @@
                                          {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-offset-7" "col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
-                                 ;; pvm tulee muodossa kk/vv (esim. huhtikuu 2020 on "04/20")
-                                 (let [[kk vv] (map #(js/parseInt %) (str/split pvm #"/"))]
+                                 ;; pvm tulee muodossa pp.kk.vvvv
+                                 (loki/log "PVM" (pr-str pvm) (str/split pvm #"\."))
+                                 (let [[kk vvvv] (map #(js/parseInt %) (str/split pvm #"\."))]
                                    (reduce luo-laskun-nro-otsikot
                                            (valiotsikko-rivi
-                                            (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
-                                                                           :pelkka-palautus? true
-                                                                           :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin-strong"}}})
-                                            {:otsikko ""
-                                             :arvo (str (pvm/kk-fmt kk) "kuu " (+ 2000 vv)
-                                                        " yhteensä") :luokka #{"col-xs-4"}}
-                                            {:otsikko ""
-                                             :arvo (fmt/euro summa)
-                                             :luokka #{"col-xs-offset-7" "col-xs-1"}})
+                                             (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
+                                                                            :pelkka-palautus? true
+                                                                            :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin-strong"}}})
+                                             {:otsikko ""
+                                              :arvo (str (pvm/kk-fmt kk) "kuu " vvvv
+                                                         " yhteensä") :luokka #{"col-xs-4"}}
+                                             {:otsikko ""
+                                              :arvo    (fmt/euro summa)
+                                              :luokka  #{"col-xs-offset-7" "col-xs-1"}})
                                            rivit)))
         jaottele-riveiksi-taulukkoon (fn [taulukko rivit]
                                        (let [taulukko-rivit (reduce luo-paivamaara-otsikot
@@ -312,6 +313,7 @@
                                                                                     (group-by #(or (:laskun-numero %)
                                                                                                    0) (:rivit rivit-ja-summa))))])
                                  pvm-mukaan))]
+    (loki/log "nro-mukaan" (pr-str nro-mukaan))
     nro-mukaan))
 
 (extend-protocol tuck/Event
@@ -337,6 +339,7 @@
 
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
+    (loki/log (pr-str tulos))
     (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
@@ -359,8 +362,8 @@
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
-                          (luo-kulutaulukko app)
-                          (formatoi-tulos tulos)))
+                           (luo-kulutaulukko app)
+                           (formatoi-tulos tulos)))
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -464,29 +467,34 @@
     app)
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat :aliurakoitsijat {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
-                                                 laskun-numero lisatieto viite erapaiva] :as lomake} :lomake :as app}]
+    [_ {aliurakoitsijat                                             :aliurakoitsijat
+        {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
+                laskun-numero lisatieto viite erapaiva laskun-id] :as lomake} :lomake
+        maksuerat                                                   :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
-          {validi? :validi?} (meta validoitu-lomake)]
+          {validi? :validi?} (meta validoitu-lomake)
+          tyyppi (or "laskutettava" "kiinteasti-hinnoiteltu")]
       ; { :toimenpideinstanssi :tehtavaryhma
       ;   :tehtava :maksueratyyppi
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
+      (loki/log "Tallennan " validi?)
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-lasku
                            {:urakka-id     urakka
-                            :laskuerittely {:kohdistukset    kohdistukset
-                                            :viite           viite
-                                            :erapaiva        erapaiva
-                                            :urakka          urakka
-                                            :suorittaja-nimi (some #(when (= aliurakoitsija (:id %)) (:nimi %)) aliurakoitsijat)
-                                            :kokonaissumma   kokonaissumma
-                                            :laskun-numero   (js/parseFloat laskun-numero)
-                                            :lisatieto       lisatieto
-                                            :tyyppi          "laskutettava"
+                            :laskuerittely {:kohdistukset          kohdistukset
+                                            :viite                 viite
+                                            :erapaiva              erapaiva
+                                            :laskun-id             (when-not (nil? laskun-id) laskun-id)
+                                            :urakka                urakka
+                                            :suorittaja-nimi       (some #(when (= aliurakoitsija (:id %)) (:nimi %)) aliurakoitsijat)
+                                            :kokonaissumma         kokonaissumma
+                                            :laskun-numero         (js/parseFloat laskun-numero)
+                                            :lisatieto             lisatieto
+                                            :tyyppi                tyyppi
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
@@ -498,8 +506,8 @@
                                                                                                      kulut)
                                                                                                    tulos)))
                                                                               (assoc a :taulukko (p/paivita-taulukko!
-                                                                                                  (luo-kulutaulukko a)
-                                                                                                  (formatoi-tulos (:kulut a)))
+                                                                                                   (luo-kulutaulukko a)
+                                                                                                   (formatoi-tulos (:kulut a)))
                                                                                        :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))

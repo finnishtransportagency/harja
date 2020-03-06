@@ -372,10 +372,12 @@
                        lisaa-aliurakoitsija
                        {:valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
                         :valinnat     aliurakoitsijat
-                        :valinta-fn   #(paivitys-fn
-                                         {:validoitava? true}
-                                         :aliurakoitsija (:id %)
-                                         :suorittaja-nimi (:nimi %))
+                        :valinta-fn   #(do
+                                         (paivitys-fn
+                                           :suorittaja-nimi (:nimi %))
+                                         (paivitys-fn
+                                           {:validoitava? true}
+                                           :aliurakoitsija (:id %)))
                         :formaatti-fn #(get % :nimi)
                         :virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? aliurakoitsija-meta))}])]
       [kentat/vayla-lomakekentta
@@ -419,6 +421,7 @@
                             opts (when (odd? (count opts-polut-ja-arvot)) (first opts-polut-ja-arvot))]
                         (e! (tiedot/->PaivitaLomake polut-ja-arvot opts))))]
     (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
+      (.log js/console (pr-str lomake))
       (let [{:keys [nayta]} lomake]
         [:div
          [:div.row

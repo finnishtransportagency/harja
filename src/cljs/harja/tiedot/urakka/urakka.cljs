@@ -103,7 +103,6 @@
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/aliurakoitsija        [ei-nil]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
-                  :kulut/suorittaja-nimi       [ei-nil]
                   :kulut/koontilaskun-kuukausi [ei-nil]})
 
 (defn validoi-fn
@@ -163,8 +162,7 @@
    [:erapaiva] (:kulut/erapaiva validoinnit)
    [:laskun-numero] (:kulut/laskun-numero validoinnit)
    [:viite] (:kulut/viite validoinnit)
-   [:aliurakoitsija] (:kulut/aliurakoitsija validoinnit)
-   [:suorittaja-nimi] (:kulut/suorittaja-nimi validoinnit)])
+   [:aliurakoitsija] (:kulut/aliurakoitsija validoinnit)])
 
 (defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
   (apply luo-validius-meta
