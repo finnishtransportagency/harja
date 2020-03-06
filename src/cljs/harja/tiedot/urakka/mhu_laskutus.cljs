@@ -467,10 +467,10 @@
     app)
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                                             :aliurakoitsijat
+    [_ {aliurakoitsijat                                                       :aliurakoitsijat
         {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
                 laskun-numero lisatieto viite erapaiva laskun-id] :as lomake} :lomake
-        maksuerat                                                   :maksuerat :as app}]
+        maksuerat                                                             :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
@@ -499,16 +499,12 @@
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
                                                                         (as-> app a
-                                                                              (update a :kulut (fn [kulut]
-                                                                                                 (conj
-                                                                                                   (filter
-                                                                                                     #(not= (:id tulos) (:id %))
-                                                                                                     kulut)
-                                                                                                   tulos)))
-                                                                              (assoc a :taulukko (p/paivita-taulukko!
-                                                                                                   (luo-kulutaulukko a)
-                                                                                                   (formatoi-tulos (:kulut a)))
-                                                                                       :syottomoodi false)
+                                                                              (assoc a
+                                                                                :kulut tulos
+                                                                                :taulukko (p/paivita-taulukko!
+                                                                                            (luo-kulutaulukko a)
+                                                                                            (formatoi-tulos tulos))
+                                                                                :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))
       (assoc app :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))))

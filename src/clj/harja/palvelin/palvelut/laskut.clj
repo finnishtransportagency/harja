@@ -157,8 +157,7 @@
                                               (:urakka laskuerittely)
                                               (:id lasku)
                                               r))))
-  (hae-laskuerittely db user {:urakka-id (:urakka laskuerittely)
-                              :viite     (:viite laskuerittely)}))
+  (hae-kaikki-urakan-laskuerittelyt db user {:urakka-id (:urakka laskuerittely)}))
 
 (defn poista-lasku
   "Merkitsee laskun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
@@ -170,8 +169,7 @@
   (q/poista-laskun-kohdistukset! db {:urakka   urakka-id
                                      :viite    viite
                                      :kayttaja (:id user)})
-  (hae-laskuerittely db user {:urakka urakka-id
-                              :viite  viite}))
+  (hae-kaikki-urakan-laskuerittelyt db user {:urakka urakka-id}))
 
 (defn poista-laskun-kohdistus
   "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."
@@ -181,8 +179,7 @@
                                   :urakka   urakka-id
                                   :rivi     laskuerittelyn-rivi
                                   :kayttaja (:id user)})
-  (hae-laskuerittely db user {:urakka-id urakka-id
-                              :viite     laskun-viite}))
+  (hae-laskuerittely db user {:urakka-id urakka-id}))
 
 (defn tallenna-lasku
   "Funktio tallentaa laskun ja laskuerittelyn (laskun kohdistuksen). Käytetään teiden hoidon urakoissa (MHU)."
