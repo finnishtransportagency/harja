@@ -490,7 +490,10 @@
                                             :erapaiva              erapaiva
                                             :laskun-id             (when-not (nil? laskun-id) laskun-id)
                                             :urakka                urakka
-                                            :suorittaja-nimi       (some #(when (= aliurakoitsija (:id %)) (:nimi %)) aliurakoitsijat)
+                                            :suorittaja-nimi       (some
+                                                                     #(when (= aliurakoitsija (:id %))
+                                                                        (:nimi %))
+                                                                     aliurakoitsijat)
                                             :kokonaissumma         kokonaissumma
                                             :laskun-numero         (js/parseFloat laskun-numero)
                                             :lisatieto             lisatieto

@@ -141,7 +141,7 @@
                                 :paivitys-fn   paivitys-fn
                                 :erapaiva-meta erapaiva-meta}]
       [kentat/vayla-lomakekentta
-       "Laskun viite *"
+       "Laskun viite"
        :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? viite-meta) "" "-error") "-default") "komponentin-input"}
        :arvo viite
        :on-change #(paivitys-fn
