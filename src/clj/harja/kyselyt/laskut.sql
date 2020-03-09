@@ -87,7 +87,6 @@ SELECT l.id            as "id",
        l.suorittaja    as "suorittaja",
        l.lisatieto     as "lisatieto",
        a.nimi          as "suorittaja-nimi"
-
 FROM lasku l
   left join aliurakoitsija a on l.suorittaja = a.id
 where l.id = :laskun-id
