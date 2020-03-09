@@ -190,7 +190,7 @@
         poistettu-lasku
         (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :viite     "2019080035"})]
+                              :laskun-id (:id tallennettu-lasku)})]
 
     ;; Tallennus
     (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")

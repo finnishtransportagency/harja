@@ -505,11 +505,12 @@
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
                                                                         (as-> app a
+                                                                              (update a :kulut (fn [kulut]
+                                                                                                 (conj kulut tulos)))
                                                                               (assoc a
-                                                                                :kulut tulos
                                                                                 :taulukko (p/paivita-taulukko!
                                                                                             (luo-kulutaulukko a)
-                                                                                            (formatoi-tulos tulos))
+                                                                                            (formatoi-tulos (:kulut a)))
                                                                                 :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))

@@ -156,22 +156,21 @@ UPDATE lasku
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE urakka = :urakka
-  AND viite = :viite;
+WHERE id = :laskun_id;
 
 -- name: poista-laskun-kohdistukset!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = (select id from lasku where viite = :viite and urakka = :urakka);
+WHERE lasku = :laskun_id;
 
 -- name: poista-laskun-kohdistus!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = (select id from lasku where viite = :viite and urakka = :urakka)
+WHERE lasku = :laskun_id
   AND rivi = :rivi;
 
 -- name: hae-tehtavan-nimi
