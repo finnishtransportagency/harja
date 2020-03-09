@@ -985,6 +985,7 @@
                                                                     (mapv (fn [tyyppi]
                                                                             (with-meta
                                                                               (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
+                                                                                          :nimi ::datarivi
                                                                                           :koko (-> konf/auto
                                                                                                     (assoc-in [:rivi :nimet]
                                                                                                               {::data-yhteenveto 0
@@ -1060,10 +1061,15 @@
                                                                                                                                                                                             :ajettavat-jarejestykset true
                                                                                                                                                                                             :triggeroi-seuranta? true}
                                                                                                                                                                                            true)
-                                                                                                                                                                     (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
-                                                                                                                                                                                                                                                        :tunniste-rajapinnan-dataan)
-                                                                                                                                                                                                                                      (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset))))
-                                                                                                                                                                     (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                                                                                                                                                                     (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
+                                                                                                                                                                           tallennettavien-arvojen-osat (if (= ::datarivi (grid/hae-osa vanhempiosa :nimi))
+                                                                                                                                                                                                          (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
+                                                                                                                                                                                                          (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))
+                                                                                                                                                                           tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                                                                                                                                              :tunniste-rajapinnan-dataan)
+                                                                                                                                                                                            tallennettavien-arvojen-osat)]
+                                                                                                                                                                       (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet))
+                                                                                                                                                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
                                                                                                                                                         :on-key-down (fn [event]
                                                                                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                                                                                          (.. event -target blur)))}

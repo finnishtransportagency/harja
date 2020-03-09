@@ -334,7 +334,7 @@
                 (r/next-tick (fn []
                                (binding [*seuranta-muutos?* true]
                                  (when-let [seurannan-tila (get-in @seurannan-valitila [data-atom-hash ::tila])]
-                                   (swap! seurannan-valitila dissoc data-atom-hash)
+                                   (swap! seurannan-valitila #(update % data-atom-hash dissoc ::kaytavan-datan-hash))
                                    (swap! seurannan-vanha-cache dissoc data-atom-hash)
                                    (swap! data-atom (fn [entinen-tila]
                                                       seurannan-tila))
