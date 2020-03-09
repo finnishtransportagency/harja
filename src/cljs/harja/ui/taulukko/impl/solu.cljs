@@ -469,30 +469,20 @@
 (defrecord Pudotusvalikko [id livi-pudotusvalikko-asetukset vaihtoehdot rivin-haku]
   gop/IPiirrettava
   (-piirra [_]
-    (let [vanha-z-index (atom nil)
-          iso-z-numero 200
+    (let [vanhat-stylet (atom nil)
+          iso-z-numero 500
           nosta-z-index! (fn [this]
-                           (let [stylearvot (or (.getAttribute ((.-domNodeHaku (rivin-haku this))) "style") "")
-                                 uudet-stylearvot (if (re-find #"z-index" stylearvot)
-                                                    (clj-str/replace stylearvot
-                                                                     #"z-index:.*([0-9]+)"
-                                                                     (fn [[_ vanha-z]]
-                                                                       (reset! vanha-z-index vanha-z)
-                                                                       (str "z-index: " (inc (js/Number vanha-z)))))
-                                                    (do (reset! vanha-z-index nil)
-                                                        (str "z-index: " iso-z-numero ";" stylearvot)))]
-                             (.setAttribute ((.-domNodeHaku (rivin-haku this)))
-                                            "style"
-                                            uudet-stylearvot)))
+                           (let [stylearvot (.-style ((.-domNodeHaku (rivin-haku this))))]
+                             (swap! vanhat-stylet
+                                    (fn [arvot]
+                                      (assoc arvot "zIndex" (aget stylearvot "zIndex")
+                                             "overflow" (aget stylearvot "overflow"))))
+                             (doto (.-style ((.-domNodeHaku (rivin-haku this))))
+                               (aset "zIndex" iso-z-numero)
+                               (aset "overflow" "visible"))))
           palauta-z-index! (fn [this]
-                             (let [stylearvot (or (.getAttribute ((.-domNodeHaku (rivin-haku this))) "style") "")]
-                               (.setAttribute ((.-domNodeHaku (rivin-haku this)))
-                                              "style"
-                                              (if (nil? @vanha-z-index)
-                                                (clj-str/replace stylearvot (re-pattern (str "z-index: " iso-z-numero ";")) "")
-                                                (clj-str/replace stylearvot
-                                                                 #"z-index:.*([0-9]+)"
-                                                                 (str "z-index: " @vanha-z-index))))))
+                             (doseq [[tyyli arvo] @vanhat-stylet]
+                               (aset (.-style ((.-domNodeHaku (rivin-haku this)))) tyyli arvo)))
           auki-fn! (if (contains? livi-pudotusvalikko-asetukset :auki-fn!)
                      #(do (nosta-z-index! %)
                           (binding [*this* %]

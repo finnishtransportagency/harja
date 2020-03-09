@@ -640,7 +640,6 @@
 (defn- osan-data-yhdistaminen [datan-kasittelija grid-rajapintakasittelijat osa]
   (assoc (if-let [loydetty-osa (some (fn [[grid-polku {:keys [rajapintakasittelija osien-tunnisteet solun-polun-pituus seuranta rajapinta]}]]
                                        (let [grid-polku-sopii-osaan? (grid-polku-sopii-osaan? grid-polku osa)
-                                             nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
                                              osan-polku-dataan (vec (take-last solun-polun-pituus (::index-polku osa)))
                                              solun-polun-pituus-oikein? (solun-polun-pituus-oikein? grid-polku solun-polun-pituus osa)
                                              yhdista-derefable-tahan-osaan? (or (and grid-polku-sopii-osaan?
@@ -679,30 +678,6 @@
                (assoc m polku (rajapinnan-grid-kasittelija (::datan-kasittelija grid) (root grid) polku kasittelija)))
              {}
              grid-kasittelijat))
-
-(defn kasittele-koot! [grid lisatyt-osat lisattyjen-osien-idt]
-  (let [lisattavien-osien-koot (transduce (comp
-                                            (filter (fn [osa]
-                                                      (satisfies? p/IGrid osa)))
-                                            (map (fn [osa]
-                                                   (p/koot osa))))
-                                          merge
-                                          {}
-                                          lisatyt-osat)
-
-        lisattavat-tiedot (select-keys grid #{::root-fn ::paivita-root! ::root-id ::koko-fn ::datan-kasittelija})
-        osan-kasittely (fn [osa]
-                         (let [osa (merge osa lisattavat-tiedot)]
-                           (if (satisfies? p/IGrid osa)
-                             (assoc osa :koko nil)
-                             osa)))
-        _ (swap! ((::koko-fn grid))
-                 (fn [koot]
-                   (merge koot lisattavien-osien-koot)))]
-    (paivita-kaikki-lapset! (osan-kasittely grid)
-                            (fn [osa]
-                              (contains? lisattyjen-osien-idt (gop/id osa)))
-                            osan-kasittely)))
 
 (defn lisaa-osia! [grid uudet-grid-kasittelijat toistettavan-osan-data]
   (p/paivita-lapset! grid
@@ -1089,11 +1064,13 @@
 (defn aseta-alueet! [grid alueet]
   (swap! (:alueet grid)
          (fn [_]
-           alueet)))
+           alueet))
+  grid)
 (defn paivita-alueet! [grid f]
   (swap! (:alueet grid)
          (fn [alueet]
-           (f alueet))))
+           (f alueet)))
+  grid)
 
 (defn grid-parametrit [grid]
   @(:parametrit grid))
@@ -1101,11 +1078,13 @@
 (defn aseta-parametrit! [grid parametrit]
   (swap! (:parametrit grid)
          (fn [_]
-           parametrit)))
+           parametrit))
+  grid)
 (defn paivita-parametrit! [grid f]
   (swap! (:parametrit grid)
          (fn [parametrit]
-           (f parametrit))))
+           (f parametrit)))
+  grid)
 
 (defn grid-kopioi [kopioitava-grid konstruktori]
   (let [koko (r/atom (select-keys (p/koot kopioitava-grid) #{(gop/id kopioitava-grid)}))
@@ -1398,7 +1377,7 @@
                        _ (set! (.-domNodeHaku grid) (fn [] (dom/dom-node this)))
                        _ (when (instance? DynaaminenGrid grid)
                            @(get-in grid [:osien-maara-muuttui :trigger]))
-                       {luokat :class dom-id :id} @(:parametrit grid)
+                       {luokat :class dom-id :id style :style} @(:parametrit grid)
                        #_#__ (when-let [koko-fn (:koko-fn grid)]
                                @(koko-fn))
                        #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
@@ -1411,7 +1390,8 @@
                    #_(when aseta-koko-uusiksi?
                        (aseta-seurattava-koko! grid))
                    [:div.grid-taulukko {:class (apply str (interpose " " luokat))
-                                        :id dom-id}
+                                        :id dom-id
+                                        :style style}
 
 
 

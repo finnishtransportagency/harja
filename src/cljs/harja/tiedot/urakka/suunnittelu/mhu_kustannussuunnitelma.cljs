@@ -1031,6 +1031,7 @@
                                                          (let [nimi (str "oma-" index)]
                                                            (merge rajapinnat
                                                                   {(keyword (str "johto-ja-hallintokorvaus-" nimi)) any?
+                                                                   (keyword (str "kuukausitasolla?-" nimi)) any?
                                                                    (keyword (str "yhteenveto-" nimi)) any?})))
                                                        {}
                                                        (range 1 3))
@@ -1127,6 +1128,10 @@
                                                (merge rajapinnat
                                                       {(keyword (str "yhteenveto-" nimi)) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi]]
                                                                                            :haku identity}
+                                                       (keyword (str "kuukausitasolla?-" nimi)) {:polut [[:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? nimi]]
+                                                                                                                 :luonti-init (fn [tila _]
+                                                                                                                                (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? nimi] false))
+                                                                                                                 :haku identity}
                                                        (keyword (str "johto-ja-hallintokorvaus-" nimi)) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
                                                                                                                  [:suodattimet :hoitokauden-numero]
                                                                                                                  [:gridit :johto-ja-hallintokorvaukset :johdettu nimi]

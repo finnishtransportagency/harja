@@ -249,14 +249,18 @@
                                 [:rivi :nimet]
                                 {::t/yhteenveto 0
                                  ::t/valinta 1})
-                :osat [(grid/paivita-grid! (grid/aseta-nimi rivi ::t/yhteenveto)
-                                           :lapset
-                                           (fn [osat]
-                                             (mapv (fn [osa]
-                                                     (if (instance? solu/Laajenna osa)
-                                                       (assoc osa :auki-alussa? true)
-                                                       osa))
-                                                   osat)))
+                :osat [(-> rivi
+                           (grid/aseta-nimi ::t/yhteenveto)
+                           (grid/paivita-grid! :parametrit
+                                               (fn [parametrit]
+                                                 (assoc parametrit :style {:z-index 10})))
+                           (grid/paivita-grid! :lapset
+                                               (fn [osat]
+                                                 (mapv (fn [osa]
+                                                         (if (instance? solu/Laajenna osa)
+                                                           (assoc osa :auki-alussa? true)
+                                                           osa))
+                                                       osat))))
                        (grid/rivi {:osat (vec
                                            (cons (vayla-checkbox (fn [this event]
                                                                    (.preventDefault event)
@@ -1313,6 +1317,13 @@
                                                                             (range)
                                                                             (grid/hae-grid osat :lapset)
                                                                             data))})
+        rividisable! (fn [g index kuukausitasolla?]
+                       (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
+                                               (not kuukausitasolla?))
+                       (maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0 1])]
+                                                 osa
+                                                 (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 1]))
+                                               kuukausitasolla?))
         vakiorivit (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                            (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                              (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
@@ -1408,23 +1419,28 @@
                                              :nimi ::data-yhteenveto
                                              :osat [{:tyyppi :oma
                                                      ;[aukaise-fn auki-alussa? toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
-                                                     :constructor (fn [_] (laajenna-syote (fn [_] (println "AUKAISE")) false nil nil {:class #{"input-default"}} identity identity))
-                                                     #_#_:aukaise-fn (fn [this auki?]
-                                                                       (if auki?
-                                                                         (rivi-kuukausifiltterilla! this
-                                                                                                    true
-                                                                                                    (keyword (str "kuukausitasolla?" rivin-nimi))
-                                                                                                    [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi]
-                                                                                                    [:. ::t/yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
-                                                                                                    [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?" rivin-nimi))
-                                                                                                                      :solun-polun-pituus 1
-                                                                                                                      :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                         [kuukausitasolla? nil nil nil])})
-                                                                         (do
-                                                                           (rivi-ilman-kuukausifiltteria! this
-                                                                                                          [:.. ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi))
-                                                                           (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi] false))))
-                                                                       (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
+                                                     :constructor (fn [_] (laajenna-syote (fn [this auki?]
+                                                                                            (if auki?
+                                                                                              (rivi-kuukausifiltterilla! this
+                                                                                                                         true
+                                                                                                                         (keyword (str "kuukausitasolla?-" rivin-nimi))
+                                                                                                                         [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi]
+                                                                                                                         [:. ::t/yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
+                                                                                                                         [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?-" rivin-nimi))
+                                                                                                                                           :solun-polun-pituus 1
+                                                                                                                                           :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                                              [kuukausitasolla? nil nil nil])})
+                                                                                              (do
+                                                                                                (rivi-ilman-kuukausifiltteria! this
+                                                                                                                               [:.. ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi))
+                                                                                                (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi] false))))
+                                                                                            (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
+                                                                                          false
+                                                                                          nil
+                                                                                          nil
+                                                                                          {:class #{"input-default"}}
+                                                                                          identity
+                                                                                          identity))
                                                      :auki-alussa? false
                                                      :luokat #{"table-default"}}
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
@@ -1590,18 +1606,19 @@
                           {:johto-ja-hallintokorvaukset-disablerivit {:polut [[:gridit :johto-ja-hallintokorvaukset :kuukausitasolla?]]
                                                                       :toiminto! (fn [g _ kuukausitasolla-kaikki-toimenkuvat]
                                                                                    (doseq [[toimenkuva maksukaudet-kuukausitasolla?] kuukausitasolla-kaikki-toimenkuvat]
-                                                                                     (doseq [[maksukausi kuukausitasolla?] maksukaudet-kuukausitasolla?
-                                                                                             :let [index (first (keep-indexed (fn [index jh-pohjadata]
-                                                                                                                                (when (and (= toimenkuva (:toimenkuva jh-pohjadata))
-                                                                                                                                           (= maksukausi (:maksukausi jh-pohjadata)))
-                                                                                                                                  index))
-                                                                                                                              t/johto-ja-hallintokorvaukset-pohjadata))]]
-                                                                                       (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
-                                                                                                               (not kuukausitasolla?))
-                                                                                       (maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0 1])]
-                                                                                                                 osa
-                                                                                                                 (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 1]))
-                                                                                                               kuukausitasolla?))))}})))
+                                                                                     ;; Jos totta, niin kyseessä on oma/itsetäytettävärivi
+                                                                                     (if-let [itsetaytettavan-rivinumero (and (string? toimenkuva) (re-find #"\d$" toimenkuva))]
+                                                                                       (rividisable! g
+                                                                                                     (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
+                                                                                                             (js/Number itsetaytettavan-rivinumero)))
+                                                                                                     maksukaudet-kuukausitasolla?)
+                                                                                       (doseq [[maksukausi kuukausitasolla?] maksukaudet-kuukausitasolla?
+                                                                                               :let [index (first (keep-indexed (fn [index jh-pohjadata]
+                                                                                                                                  (when (and (= toimenkuva (:toimenkuva jh-pohjadata))
+                                                                                                                                             (= maksukausi (:maksukausi jh-pohjadata)))
+                                                                                                                                    index))
+                                                                                                                                t/johto-ja-hallintokorvaukset-pohjadata))]]
+                                                                                         (rividisable! g index kuukausitasolla?)))))}})))
 
 (defn johto-ja-hallintokorvaus-laskulla-yhteenveto-grid []
   (let [taulukon-id "johto-ja-hallintokorvaus-yhteenveto-taulukko"
