@@ -261,7 +261,6 @@
                                  ;; pvm tulee muodossa vvvv/kk
                                  (loki/log "PVM" (pr-str pvm) (str/split pvm #"/"))
                                  (let [[vvvv kk] (map #(js/parseInt %) (str/split pvm #"/"))]
-                                   (loki/log vvvv kk)
                                    (reduce luo-laskun-nro-otsikot
                                            (valiotsikko-rivi
                                              (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
@@ -327,7 +326,6 @@
                                                                                     (group-by #(or (:laskun-numero %)
                                                                                                    0) (:rivit rivit-ja-summa))))])
                                  pvm-mukaan)))]
-    (loki/log "nro-mukaan" (pr-str nro-mukaan))
     nro-mukaan))
 
 (extend-protocol tuck/Event
@@ -353,7 +351,6 @@
 
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
-    (loki/log (pr-str tulos))
     (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
@@ -495,7 +492,7 @@
       ;   :tehtava :maksueratyyppi
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
-      (loki/log "Tallennan " validi?)
+      (loki/log "Tallennan " validi? laskun-id (pr-str lomake))
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-lasku
                            {:urakka-id     urakka
@@ -517,12 +514,13 @@
                                             :tyyppi                tyyppi
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
-                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :id :as tulos}]
+                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :laskun-id :as tulos}]
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
                                                                                                  (as-> kulut ks
-                                                                                                   (filter (fn [{:keys [id] :as _kulu}]
-                                                                                                             (not= id uusi-id)) ks)
+                                                                                                   (filter (fn [{:keys [laskun-id] :as _kulu}]
+                                                                                                             (loki/log "vertailen " laskun-id uusi-id)
+                                                                                                             (not= laskun-id uusi-id)) ks)
                                                                                                    (conj ks tulos))))
                                                                               (assoc a
                                                                                 :taulukko (p/paivita-taulukko!

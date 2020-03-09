@@ -87,7 +87,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [lasku (first (q/hae-lasku db {:urakka urakka-id
                                       :laskun-id laskun-id}))
-        laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))]
+        laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:laskun-id lasku)}))]
     (assoc lasku :kohdistukset laskun-kohdistukset)))
 
 (defn- laskuerittelyn-maksueratyyppi

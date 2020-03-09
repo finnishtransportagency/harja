@@ -76,7 +76,7 @@ WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-lasku
-SELECT l.id            as "id",
+SELECT l.id            as "laskun-id",
        l.viite         as "viite",
        l.urakka        as "urakka",
        l.kokonaissumma as "kokonaissumma",
@@ -122,7 +122,7 @@ VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKU
 -- name: paivita-lasku<!
 update
   lasku
-      SET erapaiva = :erapaiva,
+      SET  erapaiva = :erapaiva,
            lisatieto = :lisatieto,
            laskun_numero = :numero,
            kokonaissumma = :kokonaissumma,
