@@ -506,6 +506,7 @@
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
+                                                                                                 (loki/log "KT" (pr-str kulut) (pr-str tulos))
                                                                                                  (conj kulut tulos)))
                                                                               (assoc a
                                                                                 :taulukko (p/paivita-taulukko!

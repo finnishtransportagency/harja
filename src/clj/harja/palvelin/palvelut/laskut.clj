@@ -83,10 +83,10 @@
 
 (defn hae-laskuerittely
   "Hakee yksittäisen laskun tiedot laskuerittelyineen."
-  [db user {:keys [urakka-id viite]}]
+  [db user {:keys [urakka-id laskun-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [lasku (first (q/hae-lasku db {:urakka urakka-id
-                                      :viite  viite}))
+                                      :laskun-id laskun-id}))
         laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))]
     (assoc lasku :kohdistukset laskun-kohdistukset)))
 

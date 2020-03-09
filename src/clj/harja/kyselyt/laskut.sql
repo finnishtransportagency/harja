@@ -90,8 +90,7 @@ SELECT l.id            as "id",
 
 FROM lasku l
   left join aliurakoitsija a on l.suorittaja = a.id
-where l.urakka = :urakka
-  AND l.viite = :viite
+where l.id = :laskun-id
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-laskun-kohdistukset
@@ -156,21 +155,21 @@ UPDATE lasku
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE id = :laskun_id;
+WHERE id = :laskun-id;
 
 -- name: poista-laskun-kohdistukset!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = :laskun_id;
+WHERE lasku = :laskun-id;
 
 -- name: poista-laskun-kohdistus!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = :laskun_id
+WHERE lasku = :laskun-id
   AND rivi = :rivi;
 
 -- name: hae-tehtavan-nimi
