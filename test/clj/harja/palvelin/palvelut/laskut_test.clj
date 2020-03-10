@@ -144,14 +144,14 @@
                                                             :loppupvm  "2020-09-30"})
         laskuerittely (kutsu-http-palvelua :lasku +kayttaja-jvh+
                                            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                            :viite     "2019080019"})
+                                            :laskun-id 1})
         laskut-urakan-vastaavalle (kutsu-http-palvelua :laskut (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                                                        {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                                         :alkupvm   "2019-10-01"
                                                         :loppupvm  "2020-09-30"})
         laskuerittely-urakan-vastaavalle (kutsu-http-palvelua :lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                                                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                               :viite     "2019080019"})]
+                                                               :laskun-id 1})]
 
     (is (= laskut laskut-urakan-vastaavalle) "Urakan vastuuhenkilö saa samat tiedot laskuista kuin järjestelmävalvoja.")
     (is (= laskuerittely laskuerittely-urakan-vastaavalle) "Urakan vastuuhenkilö saa samat tiedot laskusta kuin järjestelmävalvoja.")
