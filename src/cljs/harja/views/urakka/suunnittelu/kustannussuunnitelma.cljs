@@ -198,7 +198,7 @@
                                                      :ajettavat-jarejestykset true
                                                      :triggeroi-seuranta? true}
                                                     true)
-                              (if tallenna-kaikki?
+                              #_(if tallenna-kaikki?
                                 (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) solun-index)
                                                                                                             :tunniste-rajapinnan-dataan)
                                                                                           ;(grid/osa-polusta solu/*this* [:.. :.. 1])
@@ -208,7 +208,7 @@
                                                                                                  1)
                                                                                             :lapset))))
                                 (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)])))
-                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                              #_(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                  :on-key-down (fn [event]
                                 (when (= "Enter" (.. event -key))
                                   (.. event -target blur)))}
@@ -231,14 +231,14 @@
                                                         :arvo arvo
                                                         :solu maara-solu}
                                                        true)))
-                             (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna
+                             #_(e! (t/->TallennaJohtoJaHallintokorvaukset tallenna
                                                                         (vec (keep (fn [rivi]
                                                                                      (let [haettu-solu (grid/get-in-grid rivi [solun-index])
                                                                                            piillotettu? (grid/piillotettu? rivi)]
                                                                                        (when-not piillotettu?
                                                                                          (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
                                                                                    rivit-alla))))
-                             (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                             #_(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
        :nappi-nakyvilla? false})))
 
 
@@ -1313,7 +1313,7 @@
                                                                                   2 {:osa :tuntipalkka :tuntipalkka (:tuntipalkka data)}
                                                                                   3 {:osa :yhteensa :yhteensa (:yhteensa data)}
                                                                                   4 {:osa :kk-v :kk-v (:kk-v data)})
-                                                                                :oma-nimi nimi))
+                                                                                :omanimi nimi))
                                                                             (range)
                                                                             (grid/hae-grid osat :lapset)
                                                                             data))})
@@ -1412,35 +1412,36 @@
                                                                          {:tyyppi :tyhja}]})))}]})))
                          t/johto-ja-hallintokorvaukset-pohjadata)
         muokattavat-rivit (mapv (fn [index]
-                                  (let [rivin-nimi (str "oma-" index)]
+                                  (let [rivin-nimi (t/jh-omienrivien-nimi index)]
                                     {:tyyppi :taulukko
                                      :nimi rivin-nimi
                                      :osat [{:tyyppi :rivi
                                              :nimi ::data-yhteenveto
                                              :osat [{:tyyppi :oma
                                                      ;[aukaise-fn auki-alussa? toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
-                                                     :constructor (fn [_] (laajenna-syote (fn [this auki?]
-                                                                                            (if auki?
-                                                                                              (rivi-kuukausifiltterilla! this
-                                                                                                                         true
-                                                                                                                         (keyword (str "kuukausitasolla?-" rivin-nimi))
-                                                                                                                         [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi]
-                                                                                                                         [:. ::t/yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
-                                                                                                                         [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?-" rivin-nimi))
-                                                                                                                                           :solun-polun-pituus 1
-                                                                                                                                           :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                                              [kuukausitasolla? nil nil nil])})
-                                                                                              (do
-                                                                                                (rivi-ilman-kuukausifiltteria! this
-                                                                                                                               [:.. ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi))
-                                                                                                (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi] false))))
-                                                                                            (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
-                                                                                          false
-                                                                                          nil
-                                                                                          nil
-                                                                                          {:class #{"input-default"}}
-                                                                                          identity
-                                                                                          identity))
+                                                     :constructor (fn [_]
+                                                                    (laajenna-syote (fn [this auki?]
+                                                                                      (if auki?
+                                                                                        (rivi-kuukausifiltterilla! this
+                                                                                                                   true
+                                                                                                                   (keyword (str "kuukausitasolla?-" rivin-nimi))
+                                                                                                                   [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi]
+                                                                                                                   [:. ::t/yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
+                                                                                                                   [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?-" rivin-nimi))
+                                                                                                                                     :solun-polun-pituus 1
+                                                                                                                                     :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                                        [kuukausitasolla? nil nil nil])})
+                                                                                        (do
+                                                                                          (rivi-ilman-kuukausifiltteria! this
+                                                                                                                         [:.. ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi))
+                                                                                          (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? rivin-nimi] false))))
+                                                                                      (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
+                                                                                    false
+                                                                                    nil
+                                                                                    nil
+                                                                                    {:class #{"input-default"}}
+                                                                                    identity
+                                                                                    identity))
                                                      :auki-alussa? false
                                                      :luokat #{"table-default"}}
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
@@ -1479,7 +1480,7 @@
                                                                       {:tyyppi :rivi
                                                                        :osat [{:tyyppi :teksti
                                                                                :luokat #{"table-default"}
-                                                                               #_#_:fmt (fn [paivamaara]
+                                                                               :fmt (fn [paivamaara]
                                                                                           (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
                                                                                                 mennyt? (and (pvm/ennen? paivamaara nyt)
                                                                                                              (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
@@ -1493,7 +1494,7 @@
                                                                               {:tyyppi :tyhja}
                                                                               {:tyyppi :tyhja}
                                                                               {:tyyppi :tyhja}]})))}]}))
-                                (range 1 3))
+                                (range 1 (inc t/jh-korvausten-omiariveja-lkm)))
         g (g-pohjat/uusi-taulukko {:header [{:tyyppi :teksti
                                              :leveys 4
                                              :luokat #{"table-default" "table-default-header" "lihavoitu"}}
@@ -1554,7 +1555,7 @@
                                                            t/johto-ja-hallintokorvaukset-pohjadata)
         muokkauskasittelijat (second
                                (reduce (fn [[rivi-index grid-kasittelijat] nimi-index]
-                                         (let [rivin-nimi (str "oma-" nimi-index)]
+                                         (let [rivin-nimi (t/jh-omienrivien-nimi nimi-index)]
                                            [(inc rivi-index) (merge grid-kasittelijat
                                                                     {[::g-pohjat/data rivi-index ::data-yhteenveto] (muokkausrivien-rajapinta-asetukset rivin-nimi)
                                                                      [::g-pohjat/data rivi-index ::data-sisalto] {:rajapinta (keyword (str "johto-ja-hallintokorvaus-" rivin-nimi))
@@ -1586,7 +1587,7 @@
                                                                                                                                                                   data)))
                                                                                                                                                          (grid/hae-grid data-sisalto-grid :lapset))))}})]))
                                        [vakio-viimeinen-index {}]
-                                       (range 1 3)))]
+                                       (range 1 (inc t/jh-korvausten-omiariveja-lkm))))]
 
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/johto-ja-hallintokorvaus-rajapinta

@@ -167,12 +167,12 @@
                (dissoc :toimenpiteen-koodi :tehtavan-tunniste :tehtavaryhman-tunniste)))
          kustannusarvoidut-tyot)))
 
-(defn hae-urakan-johto-ja-hallintokorvaukset [db urakka-id]
+(defn urakan-johto-ja-hallintokorvausten-datan-rikastaminen [data]
   (let [johto-ja-hallintokorvaukset (map (fn [johto-ja-hallintokorvaus]
                                            (-> johto-ja-hallintokorvaus
                                                (update :tunnit float)
                                                (update :tuntipalkka float)))
-                                         (q/hae-johto-ja-hallintokorvaukset db {:urakka-id urakka-id}))
+                                         data)
         hoitokauden-numero-lisatty (apply concat
                                           (map-indexed (fn [index [_ tiedot]]
                                                          (map (fn [data]
@@ -204,13 +204,32 @@
                           maksukausi-lisatty)]
     kk-v-lisatty))
 
+(defn hae-urakan-johto-ja-hallintokorvaukset [db urakka-id]
+  (urakan-johto-ja-hallintokorvausten-datan-rikastaminen (q/hae-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})))
+
+(defn hae-urakan-omat-johto-ja-hallintokorvaukset [db urakka-id]
+  (urakan-johto-ja-hallintokorvausten-datan-rikastaminen (q/hae-omat-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})))
+
+(defn kasittele-urakan-johto-ja-hallintokorvauksien-haku! [db urakka-id]
+  (jdbc/with-db-transaction [db db]
+    (let [jh-korvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)
+          omat-jh-korvaukset (hae-urakan-omat-johto-ja-hallintokorvaukset db urakka-id)
+          urakan-omat-jh-korvaukset (q/hae-urakan-omat-jh-korvaukset db {:urakka-id urakka-id})
+          jh-korvausten-omiariveja-lkm 2
+          luotujen-toimenkuvien-idt (when (> jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset))
+                                      (for [_ (range 0 (- jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset)))]
+                                        (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db {:toimenkuva nil :urakka-id urakka-id}))))]
+      {:vakiot jh-korvaukset
+       :omat omat-jh-korvaukset
+       :omien-idt (vec (concat (map :toimenkuva-id urakan-omat-jh-korvaukset) luotujen-toimenkuvien-idt))})))
+
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   {:kiinteahintaiset-tyot       (hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot     (hae-urakan-kustannusarvoidut-tyot db user urakka-id)
-   :johto-ja-hallintokorvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)})
+   :johto-ja-hallintokorvaukset (kasittele-urakan-johto-ja-hallintokorvauksien-haku! db urakka-id)})
 
 (defn- mudosta-ajat
   "Oletuksena, että jos pelkästään vuosi on annettuna kuukauden sijasta, kyseessä on hoitokauden aloitusvuosi"
@@ -284,44 +303,6 @@
                                               ::bs/luotu               (pvm/nyt)
                                               ::bs/luoja               (:id user)}))))
                               {:onnistui? true})))
-
-(defn muunna-jhkn-ajat
-  [toimenkuva maksukausi jhkt urakan-aloitusvuosi]
-  (let [urakan-aikaiset-jhkt (fn [jhkt kuukaudet]
-                               (mapcat (fn [{:keys [tunnit tuntipalkka hoitokausi]}]
-                                         (map (fn [kuukausi]
-                                                (let [vuosi (if (<= 10 kuukausi 12)
-                                                              (dec (+ urakan-aloitusvuosi hoitokausi))
-                                                              (+ urakan-aloitusvuosi hoitokausi))]
-                                                  {:kuukausi kuukausi
-                                                   :vuosi vuosi
-                                                   :tunnit tunnit
-                                                   :tuntipalkka tuntipalkka}))
-                                              kuukaudet))
-                                       jhkt))]
-    (cond
-      (= toimenkuva "harjoittelija") (urakan-aikaiset-jhkt jhkt (range 5 9))
-      (= toimenkuva "viherhoidosta vastaava henkilö") (urakan-aikaiset-jhkt jhkt (range 4 9))
-      (= toimenkuva "hankintavastaava") (mapcat (fn [{:keys [tunnit tuntipalkka hoitokausi kk-v]}]
-                                                  (if (= 0 hoitokausi)
-                                                    [{:kuukausi 10
-                                                      :vuosi urakan-aloitusvuosi
-                                                      :tunnit (* tunnit kk-v)
-                                                      :tuntipalkka tuntipalkka
-                                                      :ennen-urakkaa? true
-                                                      :kk-v kk-v}]
-                                                    (map (fn [kuukausi]
-                                                           {:kuukausi kuukausi
-                                                            :vuosi (if (<= 10 kuukausi 12)
-                                                                     (dec (+ urakan-aloitusvuosi hoitokausi))
-                                                                     (+ urakan-aloitusvuosi hoitokausi))
-                                                            :tunnit tunnit
-                                                            :tuntipalkka tuntipalkka})
-                                                         (range 1 13))))
-                                                jhkt)
-      (= maksukausi :kesa) (urakan-aikaiset-jhkt jhkt (range 5 10))
-      (= maksukausi :talvi) (urakan-aikaiset-jhkt jhkt (concat (range 10 13) (range 1 5)))
-      :else (urakan-aikaiset-jhkt jhkt (range 1 13)))))
 
 (defn tallenna-johto-ja-hallintokorvaukset
   [db user {:keys [urakka-id toimenkuva ennen-urakkaa? jhk-tiedot]}]
