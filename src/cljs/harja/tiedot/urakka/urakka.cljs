@@ -62,7 +62,7 @@
 (defn y-tunnus [arvo]
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
-(defn viite [arvo]                                          ;11
+#_(defn viite [arvo]                                          ;11
   (let [tarkistusnumero (js/parseInt
                           (last arvo))                      ;1
         tarkastettavat-luvut (butlast arvo)]                ;1
@@ -98,7 +98,7 @@
                    uusi-paino)))))))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
-                  :kulut/viite                 [(ei-pakollinen viite)]
+                  ;:kulut/viite                 [(ei-pakollinen viite)]
                   :kulut/laskun-numero         [(ei-pakollinen numero)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/aliurakoitsija        [ei-nil]
@@ -161,7 +161,7 @@
   [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
    [:erapaiva] (:kulut/erapaiva validoinnit)
    [:laskun-numero] (:kulut/laskun-numero validoinnit)
-   [:viite] (:kulut/viite validoinnit)
+   ; [:viite] (:kulut/viite validoinnit)
    [:aliurakoitsija] (:kulut/aliurakoitsija validoinnit)])
 
 (defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
@@ -178,7 +178,7 @@
                                                                :rivi                0}]
                                       :aliurakoitsija        nil
                                       :koontilaskun-kuukausi nil
-                                      :viite                 nil
+                                      ;         :viite                 nil
                                       :laskun-numero         nil
                                       :lisatieto             nil
                                       :suorittaja-nimi       nil

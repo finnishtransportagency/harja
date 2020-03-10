@@ -38,7 +38,6 @@
     (fn [[id kohdistukset]]
       (let [lasku (first kohdistukset)]
         (into {} {:id                    id
-                  :viite                 (:viite lasku)
                   :tyyppi                (:tyyppi lasku)
                   :kokonaissumma         (:kokonaissumma lasku)
                   :erapaiva              (:erapaiva lasku)
@@ -50,7 +49,7 @@
                   :liite-tyyppi          (:liite-tyyppi lasku)
                   :liite-koko            (:liite-koko lasku)
                   :liite-oid             (:liite-oid lasku)
-                  :kohdistukset          (mapv #(dissoc % :viite
+                  :kohdistukset          (mapv #(dissoc %
                                                         :tyyppi
                                                         :kokonaissumma
                                                         :erapaiva
@@ -127,8 +126,7 @@
   [db user urakka-id laskuerittely]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [lasku (if (nil? (:laskun-id laskuerittely))
-                (q/luo-lasku<! db {:viite                 (:viite laskuerittely)
-                                   :erapaiva              (konv/sql-date (:erapaiva laskuerittely))
+                (q/luo-lasku<! db {:erapaiva              (konv/sql-date (:erapaiva laskuerittely))
                                    :kokonaissumma         (:kokonaissumma laskuerittely)
                                    :urakka                (:urakka laskuerittely)
                                    :suorittaja            (kasittele-suorittaja db user (:suorittaja-nimi laskuerittely))
@@ -139,7 +137,6 @@
                                    :koontilaskun-kuukausi (:koontilaskun-kuukausi laskuerittely)})
                 (q/paivita-lasku<!
                   db {:laskun-id             (:laskun-id laskuerittely)
-                      :viite                 (:viite laskuerittely)
                       :erapaiva              (konv/sql-date (:erapaiva laskuerittely))
                       :kokonaissumma         (:kokonaissumma laskuerittely)
                       :urakka                (:urakka laskuerittely)

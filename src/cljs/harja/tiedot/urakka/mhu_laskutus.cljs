@@ -322,10 +322,10 @@
                                  (> kk1 kk2)
                                  (> vvvv1 vvvv2))))
                            (map (fn [[paivamaara rivit-ja-summa]]
-                                   [paivamaara (assoc rivit-ja-summa :rivit (reduce reduseri {}
-                                                                                    (group-by #(or (:laskun-numero %)
-                                                                                                   0) (:rivit rivit-ja-summa))))])
-                                 pvm-mukaan)))]
+                                  [paivamaara (assoc rivit-ja-summa :rivit (reduce reduseri {}
+                                                                                   (group-by #(or (:laskun-numero %)
+                                                                                                  0) (:rivit rivit-ja-summa))))])
+                                pvm-mukaan)))]
     nro-mukaan))
 
 (extend-protocol tuck/Event
@@ -478,10 +478,10 @@
     app)
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                                                       :aliurakoitsijat
+    [_ {aliurakoitsijat                                                 :aliurakoitsijat
         {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
-                laskun-numero lisatieto viite erapaiva laskun-id] :as lomake} :lomake
-        maksuerat                                                             :maksuerat :as app}]
+                laskun-numero lisatieto erapaiva laskun-id] :as lomake} :lomake
+        maksuerat                                                       :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
@@ -497,7 +497,6 @@
         (tuck-apurit/post! :tallenna-lasku
                            {:urakka-id     urakka
                             :laskuerittely {:kohdistukset          kohdistukset
-                                            :viite                 viite
                                             :erapaiva              erapaiva
                                             :laskun-id             (when-not (nil? laskun-id) laskun-id)
                                             :urakka                urakka
@@ -518,10 +517,10 @@
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
                                                                                                  (as-> kulut ks
-                                                                                                   (filter (fn [{:keys [laskun-id] :as _kulu}]
-                                                                                                             (loki/log "vertailen " laskun-id uusi-id)
-                                                                                                             (not= laskun-id uusi-id)) ks)
-                                                                                                   (conj ks tulos))))
+                                                                                                       (filter (fn [{:keys [laskun-id] :as _kulu}]
+                                                                                                                 (loki/log "vertailen " laskun-id uusi-id)
+                                                                                                                 (not= laskun-id uusi-id)) ks)
+                                                                                                       (conj ks tulos))))
                                                                               (assoc a
                                                                                 :taulukko (p/paivita-taulukko!
                                                                                             (luo-kulutaulukko a)

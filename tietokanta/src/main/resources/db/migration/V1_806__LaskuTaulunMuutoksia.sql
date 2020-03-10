@@ -5,7 +5,6 @@ DROP TABLE lasku;
 CREATE TABLE lasku (
                      id serial primary key,    -- sisäinen ID
                      tyyppi LASKUTYYPPI not null,
-                     viite text,      -- viite tai muu ulkoisen järjestelmän tunniste laskulle
                      kokonaissumma numeric not null, -- summa voi olla nolla, mutta se ei voi olla tyhjä
                      erapaiva date not null,
                      urakka integer not null references urakka(id),
@@ -14,7 +13,7 @@ CREATE TABLE lasku (
                      muokattu timestamp,
                      muokkaaja integer references kayttaja(id),
                      poistettu boolean default false,
-                     laskun_numero integer,
+                     laskun_numero text,
                      lisatieto text,
                      koontilaskun_kuukausi text,
                      suorittaja integer references aliurakoitsija(id));

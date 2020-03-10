@@ -120,10 +120,9 @@
          kk kuukaudet]
      (str (name kk) "/" hv "-hoitovuosi"))])
 
-(defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
+(defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva kohdistukset] :as lomake}]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
-        viite-meta (get validius [:viite])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
         summa-meta (get validius [:kohdistukset 0 :summa])]
     (lomakkeen-osio
@@ -140,13 +139,6 @@
        :komponentin-argumentit {:erapaiva      erapaiva
                                 :paivitys-fn   paivitys-fn
                                 :erapaiva-meta erapaiva-meta}]
-      [kentat/vayla-lomakekentta
-       "Laskun viite"
-       :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? viite-meta) "" "-error") "-default") "komponentin-input"}
-       :arvo viite
-       :on-change #(paivitys-fn
-                     {:validoitava? true}
-                     :viite (-> % .-target .-value))]
       [kentat/vayla-lomakekentta
        "Koontilaskun numero"
        :arvo laskun-numero

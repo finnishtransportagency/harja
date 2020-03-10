@@ -1,7 +1,6 @@
 -- name: hae-urakan-laskut
 -- Hakee urakan laskut annetulta aikaväliltä
 SELECT l.id            as "laskun-id",
-       l.viite         as "viite",
        l.kokonaissumma as "kokonaissumma",
        l.erapaiva      as "erapaiva",
        l.tyyppi        as "tyyppi",
@@ -16,7 +15,6 @@ WHERE l.urakka = :urakka
 -- name: hae-kaikki-urakan-laskuerittelyt
 -- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
 SELECT l.id                   as "laskun-id",
-       l.viite                as "viite",
        l.kokonaissumma        as "kokonaissumma",
        l.erapaiva             as "erapaiva",
        l.tyyppi               as "tyyppi",
@@ -47,7 +45,6 @@ WHERE l.urakka = :urakka
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT l.id                   as "laskun-id",
-       l.viite                as "viite",
        l.kokonaissumma        as "kokonaissumma",
        l.erapaiva             as "erapaiva",
        l.tyyppi               as "tyyppi",
@@ -77,7 +74,6 @@ WHERE l.urakka = :urakka
 
 -- name: hae-lasku
 SELECT l.id            as "laskun-id",
-       l.viite         as "viite",
        l.urakka        as "urakka",
        l.kokonaissumma as "kokonaissumma",
        l.erapaiva      as "erapaiva",
@@ -114,9 +110,9 @@ SELECT lk.id                  as "kohdistus-id",
 -- name: luo-lasku<!
 INSERT
   INTO lasku
-       (viite, erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto,
+       (erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto,
         laskun_numero, koontilaskun_kuukausi)
-VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI,
+VALUES (:erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI,
         current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
 
 -- name: paivita-lasku<!
