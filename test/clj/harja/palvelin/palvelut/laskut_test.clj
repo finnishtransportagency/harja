@@ -125,7 +125,7 @@
                     :rivi                1
                     :summa               666.66
                     :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
-                    :suorittaja-id       nil
+                    :suorittaja-id       1
                     :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                     :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                     :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -158,7 +158,7 @@
     (is (count (distinct (map :laskun-id laskuerittely))) "Urakan laskujen haku palauttaa kolme laskua.")
     (is (apply = (map :laskun-id laskuerittely)) "Laskuerittelyssä on vain yhden laskun tietoja.")
     (is (count (map :kohdistus-id laskuerittely)) "Laskun erittely sisältää kolme kohdistusta.")
-    (is (= (:suorittaja-nimi (first (:kohdistukset laskuerittely))) "Kaarinan Kadunkiillotus Oy") "Aliurakoitsijan nimi palautuu." )
+    (is (= (:suorittaja laskuerittely) 1) "Aliurakoitsijan id palautuu." )
     (is (= (:kokonaissumma laskuerittely) 666.66M) "Kokonaissumma palautuu.")
     (is (= (:summa (first (filter #(= #inst "2019-11-21T22:00:00.000000000-00:00" (:suoritus-alku %)) (:kohdistukset laskuerittely)))) 222.22M) "Yksittäisen rivin summatieto palautuu.")))
 
@@ -171,7 +171,7 @@
         paivitetty-lasku
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely (assoc uusi-lasku :kokonaissumma 9876.54)})
+                              :laskuerittely (assoc uusi-lasku :kokonaissumma 9876.54 :laskun-id (:laskun-id tallennettu-lasku))})
         paivitetty-kohdistus
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -193,7 +193,7 @@
                               :laskun-id (:id tallennettu-lasku)})]
 
     ;; Tallennus
-    (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")
+    (is (not (nil? (:laskun-id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")
     (is (= (count (:kohdistukset tallennettu-lasku)) 2) "Kohdistuksia tallentui kaksi (tallennettu-lasku).")
 
     ;; Päivitys: arvon muuttaminen

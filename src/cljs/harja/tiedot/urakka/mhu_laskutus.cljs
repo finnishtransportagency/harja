@@ -310,7 +310,7 @@
                            {} (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))
         nro-mukaan (into {}
                          (sort-by
-                           #(let [[pp _] %] pp)
+                           first
                            (fn [pvm1 pvm2]
                              (let [[vvvv1 kk1] (str/split pvm1 #"/")
                                    [vvvv2 kk2] (str/split pvm2 #"/")
