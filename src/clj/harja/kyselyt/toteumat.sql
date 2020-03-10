@@ -448,6 +448,15 @@ UPDATE toteuma_tehtava
 SET poistettu = TRUE
 WHERE id = :id;
 
+-- name: merkitse-maksuera-likaiseksi!
+UPDATE maksuera
+SET likainen = TRUE,
+    muokattu = current_timestamp
+WHERE toimenpideinstanssi IN (SELECT id
+                              FROM toimenpideinstanssi
+                              WHERE id = :toimenpideinstanssi
+                                AND loppupvm > current_timestamp - INTERVAL '3 months');
+
 -- name: merkitse-toteuman-maksuera-likaiseksi!
 -- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera

@@ -3,7 +3,8 @@
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt
              [laskut :as q]
-             [aliurakoitsijat :as ali-q]]
+             [aliurakoitsijat :as ali-q]
+             [toteumat :as toteumat-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
@@ -86,6 +87,10 @@
         :default
         "kokonaishintainen"))
 
+(defn- paivita-maksuera-likaiseksi
+  [db toimenpideinstanssi]
+  (toteumat-q/merkitse-maksuera-likaiseksi! db toimenpideinstanssi))
+
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
   [db user urakka-id lasku-id laskurivi]
@@ -101,7 +106,8 @@
                                             :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
-                                            :kayttaja            (:id user)}))
+                                            :kayttaja            (:id user)})
+  (paivita-maksuera-likaiseksi db (:toimenpideinstanssi laskurivi)))
 
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
