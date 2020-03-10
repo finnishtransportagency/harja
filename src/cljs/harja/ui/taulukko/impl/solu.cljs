@@ -502,13 +502,15 @@
                       :auki-fn! (r/partial auki-fn! this)
                       :kiinni-fn! (r/partial kiinni-fn! this))
                (update :on-focus (fn [f]
-                                   (r/partial (fn [& args]
-                                                (binding [*this* this]
-                                                  (apply f args))))))
-               (update :valitse-fn (fn [f]
+                                   (when f
                                      (r/partial (fn [& args]
                                                   (binding [*this* this]
                                                     (apply f args)))))))
+               (update :valitse-fn (fn [f]
+                                     (when f
+                                       (r/partial (fn [& args]
+                                                    (binding [*this* this]
+                                                      (apply f args))))))))
            vaihtoehdot]))))
   gop/IGridOsa
   (-id [this]

@@ -1084,9 +1084,10 @@
                                                              {:kk-v arvo :kuukausi kuukausi :vuosi (vuosi-kuukaudelle kuukausi) :aika (pvm/luo-pvm (vuosi-kuukaudelle kuukausi) (dec kuukausi) 15)}))
                                                          hoitokauden-kuukaudet)
                                                    (mapv (fn [{:keys [osa-kuukaudesta] :as jh-korvaus}]
-                                                           (assoc jh-korvaus osa (if (and data-koskee-ennen-urakkaa? osa-kuukaudesta-vaikuttaa?)
-                                                                                   (* osa-kuukaudesta (js/Number arvo))
-                                                                                   (js/Number arvo))))
+                                                           (assoc jh-korvaus osa (cond
+                                                                                   (= osa :toimenkuva) arvo
+                                                                                   (and data-koskee-ennen-urakkaa? osa-kuukaudesta-vaikuttaa?) (* osa-kuukaudesta (js/Number arvo))
+                                                                                   :else (js/Number arvo))))
                                                          hoitokauden-jh-korvaukset)))))
                                   tila
                                   paivitettavat-hoitokauden-numerot))
