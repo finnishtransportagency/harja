@@ -76,7 +76,7 @@ WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-lasku
-SELECT l.id            as "id",
+SELECT l.id            as "laskun-id",
        l.viite         as "viite",
        l.urakka        as "urakka",
        l.kokonaissumma as "kokonaissumma",
@@ -87,11 +87,9 @@ SELECT l.id            as "id",
        l.suorittaja    as "suorittaja",
        l.lisatieto     as "lisatieto",
        a.nimi          as "suorittaja-nimi"
-
 FROM lasku l
   left join aliurakoitsija a on l.suorittaja = a.id
-where l.urakka = :urakka
-  AND l.viite = :viite
+where l.id = :laskun-id
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-laskun-kohdistukset
@@ -124,7 +122,7 @@ VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKU
 -- name: paivita-lasku<!
 update
   lasku
-      SET erapaiva = :erapaiva,
+      SET  erapaiva = :erapaiva,
            lisatieto = :lisatieto,
            laskun_numero = :numero,
            kokonaissumma = :kokonaissumma,
@@ -156,22 +154,21 @@ UPDATE lasku
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE urakka = :urakka
-  AND viite = :viite;
+WHERE id = :laskun-id;
 
 -- name: poista-laskun-kohdistukset!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = (select id from lasku where viite = :viite and urakka = :urakka);
+WHERE lasku = :laskun-id;
 
 -- name: poista-laskun-kohdistus!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = (select id from lasku where viite = :viite and urakka = :urakka)
+WHERE lasku = :laskun-id
   AND rivi = :rivi;
 
 -- name: hae-tehtavan-nimi

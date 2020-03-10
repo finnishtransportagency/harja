@@ -258,9 +258,9 @@
                                          {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-offset-7" "col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
-                                 ;; pvm tulee muodossa pp.kk.vvvv
-                                 (loki/log "PVM" (pr-str pvm) (str/split pvm #"\."))
-                                 (let [[kk vvvv] (map #(js/parseInt %) (str/split pvm #"\."))]
+                                 ;; pvm tulee muodossa vvvv/kk
+                                 (loki/log "PVM" (pr-str pvm) (str/split pvm #"/"))
+                                 (let [[vvvv kk] (map #(js/parseInt %) (str/split pvm #"/"))]
                                    (reduce luo-laskun-nro-otsikot
                                            (valiotsikko-rivi
                                              (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
@@ -307,13 +307,25 @@
                                  (assoc :rivit arvo :summa
                                         (reduce #(+ %1 (:kokonaissumma %2)) 0 arvo))))))
         pvm-mukaan (reduce reduseri
-                           {} (group-by #(pvm/kuukausi-ja-vuosi (:erapaiva %)) uudet-rivit))
-        nro-mukaan (into {} (map (fn [[paivamaara rivit-ja-summa]]
+                           {} (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %)) uudet-rivit))
+        nro-mukaan (into {}
+                         (sort-by
+                           first
+                           (fn [pvm1 pvm2]
+                             (let [[vvvv1 kk1] (str/split pvm1 #"/")
+                                   [vvvv2 kk2] (str/split pvm2 #"/")
+                                   vvvv1 (js/parseInt vvvv1)
+                                   vvvv2 (js/parseInt vvvv2)
+                                   kk1 (js/parseInt kk1)
+                                   kk2 (js/parseInt kk2)]
+                               (if (= vvvv1 vvvv2)
+                                 (> kk1 kk2)
+                                 (> vvvv1 vvvv2))))
+                           (map (fn [[paivamaara rivit-ja-summa]]
                                    [paivamaara (assoc rivit-ja-summa :rivit (reduce reduseri {}
                                                                                     (group-by #(or (:laskun-numero %)
                                                                                                    0) (:rivit rivit-ja-summa))))])
-                                 pvm-mukaan))]
-    (loki/log "nro-mukaan" (pr-str nro-mukaan))
+                                 pvm-mukaan)))]
     nro-mukaan))
 
 (extend-protocol tuck/Event
@@ -339,7 +351,6 @@
 
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
-    (loki/log (pr-str tulos))
     (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
@@ -481,7 +492,7 @@
       ;   :tehtava :maksueratyyppi
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
-      (loki/log "Tallennan " validi?)
+      (loki/log "Tallennan " validi? laskun-id (pr-str lomake))
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-lasku
                            {:urakka-id     urakka
@@ -503,13 +514,18 @@
                                             :tyyppi                tyyppi
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
-                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
+                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :laskun-id :as tulos}]
                                                                         (as-> app a
+                                                                              (update a :kulut (fn [kulut]
+                                                                                                 (as-> kulut ks
+                                                                                                   (filter (fn [{:keys [laskun-id] :as _kulu}]
+                                                                                                             (loki/log "vertailen " laskun-id uusi-id)
+                                                                                                             (not= laskun-id uusi-id)) ks)
+                                                                                                   (conj ks tulos))))
                                                                               (assoc a
-                                                                                :kulut tulos
                                                                                 :taulukko (p/paivita-taulukko!
                                                                                             (luo-kulutaulukko a)
-                                                                                            (formatoi-tulos tulos))
+                                                                                            (formatoi-tulos (:kulut a)))
                                                                                 :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))
