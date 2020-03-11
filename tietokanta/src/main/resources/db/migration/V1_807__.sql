@@ -7,10 +7,10 @@ DECLARE
     tpi_id INTEGER;
 BEGIN
     IF TG_OP != 'DELETE' THEN
-        alku := NEW.kuukausi;
+        alku := make_date(NEW.vuosi, NEW.kuukausi, 1);
         tpi_id := NEW.toimenpideinstanssi;
     ELSE
-        alku := OLD.kuukausi;
+        alku := make_date(OLD.vuosi, OLD.kuukausi, 1);
         tpi_id := OLD.toimenpideinstanssi;
     END IF;
 
