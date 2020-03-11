@@ -4,7 +4,7 @@
             [harja.kyselyt
              [laskut :as q]
              [aliurakoitsijat :as ali-q]
-             [toteumat :as toteumat-q]]
+             [kustannusarvioidut-tyot :as kust-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
@@ -89,7 +89,7 @@
 
 (defn- paivita-maksuera-likaiseksi
   [db toimenpideinstanssi]
-  (toteumat-q/merkitse-maksuera-likaiseksi! db toimenpideinstanssi))
+  (kust-q/merkitse-maksuera-likaiseksi! db toimenpideinstanssi))
 
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
