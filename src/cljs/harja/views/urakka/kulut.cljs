@@ -100,7 +100,8 @@
                                                :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
                                                :pvm           erapaiva
                                                :pakota-suunta false
-                                               :valittava?-fn #(pvm/jalkeen? % (pvm/nyt))}])
+                                               :valittava?-fn #(true? true)}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+
 
 (defn koontilaskun-kk-droppari
   [{:keys [koontilaskun-kuukausi paivitys-fn koontilaskun-kuukausi-meta]}]
