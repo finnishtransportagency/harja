@@ -284,8 +284,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                ^{:key (hash vaihtoehto)}
                                [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(do (reset! auki? false)
-                                       (when kiinni-fn! (kiinni-fn!)))
+      (komp/klikattu-ulkopuolelle #(when @auki?
+                                     (reset! auki? false)
+                                     (when kiinni-fn! (kiinni-fn!)))
                                   klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn

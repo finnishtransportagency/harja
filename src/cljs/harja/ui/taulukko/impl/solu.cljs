@@ -470,7 +470,7 @@
   gop/IPiirrettava
   (-piirra [_]
     (let [vanhat-stylet (atom nil)
-          iso-z-numero 500
+          iso-z-numero 521
           nosta-z-index! (fn [this]
                            (let [stylearvot (.-style ((.-domNodeHaku (rivin-haku this))))]
                              (swap! vanhat-stylet
