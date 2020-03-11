@@ -28,6 +28,7 @@
 (s/def ::kk-v (s/and number?
                      #(not= % ##Inf)
                      #(<= 1 % 12)))
+(s/def ::toimenkuva-id ::positive-int?)
 (s/def ::summa ::positive-number?)
 (s/def ::tavoitehinta ::positive-number?)
 (s/def ::kattohinta ::positive-number?)
@@ -75,7 +76,8 @@
 
 (s/def ::ennen-urakkaa? boolean?)
 
-(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva  ::ennen-urakkaa? ::jhk-tiedot]))
+(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::ennen-urakkaa? ::jhk-tiedot]
+                                                             :opt-un [::toimenkuva-id ::toimenkuva]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
 (s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::summa ::ajat]))
@@ -89,3 +91,7 @@
 
 (s/def ::budjettisuunnittelun-indeksit-kysely (s/keys :req-un [::urakka-id]))
 (s/def ::budjettisuunnittelun-indeksit-vastaus (s/coll-of ::indeksi :count 5))
+
+(s/def ::tallenna-toimenkuva-kysely (s/keys :req-un [::urakka-id ::toimenkuva-id ::toimenkuva]))
+(s/def ::tallenna-toimenkuva-vastaus #(or (contains? % :onnistui?)
+                                          (contains? % :virhe)))

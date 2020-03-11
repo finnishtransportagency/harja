@@ -221,7 +221,7 @@
                                         (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db {:toimenkuva nil :urakka-id urakka-id}))))]
       {:vakiot jh-korvaukset
        :omat omat-jh-korvaukset
-       :omien-idt (vec (concat (map :toimenkuva-id urakan-omat-jh-korvaukset) luotujen-toimenkuvien-idt))})))
+       :omat-toimenkuvat (vec (concat urakan-omat-jh-korvaukset (map #(:toimenkuva-id %) luotujen-toimenkuvien-idt)))})))
 
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
@@ -305,14 +305,23 @@
                               {:onnistui? true})))
 
 (defn tallenna-johto-ja-hallintokorvaukset
-  [db user {:keys [urakka-id toimenkuva ennen-urakkaa? jhk-tiedot]}]
+  [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot]}]
   {:pre [(integer? urakka-id)
-         (string? toimenkuva)]}
+         (or (and toimenkuva-id (integer? toimenkuva-id))
+             (and toimenkuva (string? toimenkuva)))]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [toimenkuva-id (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                                       #{::bs/id}
-                                                                       {::bs/toimenkuva toimenkuva})))
+                            (let [toimenkuva-id (or toimenkuva-id
+                                                    (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                                           #{::bs/id}
+                                                                           {::bs/toimenkuva toimenkuva}))))
+                                  toimenkuvan-urakka-id (::bs/urakka-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                                                      #{::bs/urakka-id}
+                                                                                      {::bs/id toimenkuva-id})))
+                                  _ (when-not (or (nil? toimenkuvan-urakka-id) (= urakka-id toimenkuvan-urakka-id))
+                                      (throw (Exception. "Yritetään tallentaa toisen urakan toimenkuvalle")))
+                                  _ (when (nil? toimenkuva-id)
+                                      (throw (Exception. (str "Annettu toimenkuva ei löydy kannasta!\n Toimenkuva: " toimenkuva))))
                                   toimenpideinstanssi-id (:id (first (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db {:urakka urakka-id
                                                                                                                                   :koodi  (toimenpide-avain->toimenpide :mhu-johto)})))
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
@@ -340,7 +349,6 @@
                                                                              (= kuukausi (::bs/kuukausi jhk)))
                                                                     tuntipalkka))
                                                                 jhk-tiedot)]]
-                                  (println "ID: " (::bs/id jhk))
                                   (update! db
                                            ::bs/johto-ja-hallintokorvaus
                                            {::bs/tunnit      tunnit
@@ -457,6 +465,18 @@
                                                                         :ajat         ajat
                                                                         :summa        summa}))))
 
+(defn tallenna-toimenkuva
+  [db user {:keys [urakka-id toimenkuva-id toimenkuva]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (let [paivitettyjen-rivien-maara (update! db
+                                            ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                            {::bs/toimenkuva toimenkuva}
+                                            {::bs/id toimenkuva-id
+                                             ::bs/urakka-id urakka-id})]
+    (if (= 0 paivitettyjen-rivien-maara)
+      {:virhe "Yhtään riviä ei päivitetty"}
+      {:onnistui? true})))
+
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
   (start [this]
@@ -498,7 +518,13 @@
             (fn [user tiedot]
               (tallenna-kustannusarvioitu-tyo db user tiedot))
             {:kysely-spec  ::bs-p/tallenna-kustannusarvioitu-tyo-kysely
-             :vastaus-spec ::bs-p/tallenna-kustannusarvioitu-tyo-vastaus}))))
+             :vastaus-spec ::bs-p/tallenna-kustannusarvioitu-tyo-vastaus})
+          (julkaise-palvelu
+            :tallenna-toimenkuva
+            (fn [user tiedot]
+              (tallenna-toimenkuva db user tiedot))
+            {:kysely-spec  ::bs-p/tallenna-toimenkuva-kysely
+             :vastaus-spec ::bs-p/tallenna-toimenkuva-vastaus}))))
     this)
 
   (stop [this]
@@ -509,5 +535,6 @@
                      :tallenna-budjettitavoite
                      :tallenna-kiinteahintaiset-tyot
                      :tallenna-johto-ja-hallintokorvaukset
-                     :tallenna-kustannusarvioitu-tyo)
+                     :tallenna-kustannusarvioitu-tyo
+                     :tallenna-toimenkuva)
     this))
