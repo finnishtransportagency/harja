@@ -62,46 +62,9 @@
 (defn y-tunnus [arvo]
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
-#_(defn viite [arvo]                                          ;11
-  (let [tarkistusnumero (js/parseInt
-                          (last arvo))                      ;1
-        tarkastettavat-luvut (butlast arvo)]                ;1
-    (loop [luvut (butlast tarkastettavat-luvut)             ;nil
-           tarkasteltava (js/parseInt
-                           (last tarkastettavat-luvut))     ;
-           tarkistussumma 0
-           paino 7]
-      (if (nil? luvut)
-        (let [lopullinen-summa (+ tarkistussumma
-                                  (* tarkasteltava paino))
-              vertailu-summa (+ lopullinen-summa
-                                (- 10
-                                   (let [viimeinen-numero (js/parseInt
-                                                            (last
-                                                              (str lopullinen-summa)))]
-                                     (if (zero? viimeinen-numero)
-                                       10
-                                       viimeinen-numero))))]
-          (when
-            (= tarkistusnumero
-               (- vertailu-summa
-                  lopullinen-summa))
-            arvo))
-        (recur (butlast luvut)
-               (js/parseInt
-                 (last luvut))
-               (+ tarkistussumma
-                  (* tarkasteltava paino))
-               (let [uusi-paino (/ (dec paino) 2)]
-                 (if (zero? uusi-paino)
-                   7
-                   uusi-paino)))))))
-
 (def validoinnit {:kulut/summa                 [ei-nil numero]
-                  ;:kulut/viite                 [(ei-pakollinen viite)]
                   :kulut/laskun-numero         [(ei-pakollinen numero)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
-                  :kulut/aliurakoitsija        [ei-nil]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil]})
 
@@ -160,9 +123,7 @@
 (def kulun-oletus-validoinnit
   [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
    [:erapaiva] (:kulut/erapaiva validoinnit)
-   [:laskun-numero] (:kulut/laskun-numero validoinnit)
-   ; [:viite] (:kulut/viite validoinnit)
-   [:aliurakoitsija] (:kulut/aliurakoitsija validoinnit)])
+   [:laskun-numero] (:kulut/laskun-numero validoinnit)])
 
 (defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
   (apply luo-validius-meta

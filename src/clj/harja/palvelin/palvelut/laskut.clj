@@ -84,7 +84,7 @@
   "Hakee yksittäisen laskun tiedot laskuerittelyineen."
   [db user {:keys [urakka-id laskun-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [lasku (first (q/hae-lasku db {:urakka urakka-id
+  (let [lasku (first (q/hae-lasku db {:urakka    urakka-id
                                       :laskun-id laskun-id}))
         laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:laskun-id lasku)}))]
     (assoc lasku :kohdistukset laskun-kohdistukset)))
@@ -123,35 +123,29 @@
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
   Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
-  [db user urakka-id laskuerittely]
+  [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi suorittaja-nimi laskun-numero
+                             lisatieto koontilaskun-kuukausi laskun-id kohdistukset] :as _laskuerittely}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [lasku (if (nil? (:laskun-id laskuerittely))
-                (q/luo-lasku<! db {:erapaiva              (konv/sql-date (:erapaiva laskuerittely))
-                                   :kokonaissumma         (:kokonaissumma laskuerittely)
-                                   :urakka                (:urakka laskuerittely)
-                                   :suorittaja            (kasittele-suorittaja db user (:suorittaja-nimi laskuerittely))
-                                   :tyyppi                (:tyyppi laskuerittely)
-                                   :numero                (:laskun-numero laskuerittely)
-                                   :lisatieto             (:lisatieto laskuerittely)
-                                   :kayttaja              (:id user)
-                                   :koontilaskun-kuukausi (:koontilaskun-kuukausi laskuerittely)})
-                (q/paivita-lasku<!
-                  db {:laskun-id             (:laskun-id laskuerittely)
-                      :erapaiva              (konv/sql-date (:erapaiva laskuerittely))
-                      :kokonaissumma         (:kokonaissumma laskuerittely)
-                      :urakka                (:urakka laskuerittely)
-                      :suorittaja            (kasittele-suorittaja db user (:suorittaja-nimi laskuerittely))
-                      :tyyppi                (:tyyppi laskuerittely)
-                      :numero                (:laskun-numero laskuerittely)
-                      :lisatieto             (:lisatieto laskuerittely)
-                      :kayttaja              (:id user)
-                      :koontilaskun-kuukausi (:koontilaskun-kuukausi laskuerittely)}))]
-    (doseq [kohdistusrivi (:kohdistukset laskuerittely)]
+  (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
+                         :kokonaissumma         kokonaissumma
+                         :urakka                urakka
+                         :suorittaja            (when suorittaja-nimi (kasittele-suorittaja db user suorittaja-nimi))
+                         :tyyppi                tyyppi
+                         :numero                laskun-numero
+                         :lisatieto             lisatieto
+                         :kayttaja              (:id user)
+                         :koontilaskun-kuukausi koontilaskun-kuukausi}
+        lasku (if (nil? laskun-id)
+                (q/luo-lasku<! db yhteiset-tiedot)
+                (q/paivita-lasku<! db (assoc yhteiset-tiedot
+                                        :laskun-id laskun-id)))]
+    (doseq [kohdistusrivi kohdistukset]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)
             (assoc r :lasku (:id lasku))
-            (luo-tai-paivita-laskun-kohdistus db user
-                                              (:urakka laskuerittely)
+            (luo-tai-paivita-laskun-kohdistus db
+                                              user
+                                              urakka
                                               (:id lasku)
                                               r)))
     (hae-laskuerittely db user {:laskun-id (:id lasku)})))
