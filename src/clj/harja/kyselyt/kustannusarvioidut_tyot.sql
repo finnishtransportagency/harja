@@ -27,7 +27,7 @@ WHERE maksuera IN (SELECT m.numero
                                JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                    WHERE tpi.id = :toimenpideinstanssi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
 
--- name: merkitse-maksuera-likaiseksi!
+-- name: merkitse-maksuerat-likaisiksi!
 UPDATE maksuera
 SET likainen = TRUE,
     muokattu = current_timestamp

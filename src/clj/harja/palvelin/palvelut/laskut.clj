@@ -87,10 +87,6 @@
         :default
         "kokonaishintainen"))
 
-(defn- paivita-maksuera-likaiseksi
-  [db toimenpideinstanssi]
-  (kust-q/merkitse-maksuera-likaiseksi! db toimenpideinstanssi))
-
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
   [db user urakka-id lasku-id laskurivi]
@@ -107,7 +103,7 @@
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
                                             :kayttaja            (:id user)})
-  (paivita-maksuera-likaiseksi db (:toimenpideinstanssi laskurivi)))
+  (kust-q/merkitse-maksuerat-likaisiksi! db (:toimenpideinstanssi laskurivi)))
 
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
