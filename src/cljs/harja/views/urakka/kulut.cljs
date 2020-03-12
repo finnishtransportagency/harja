@@ -36,36 +36,6 @@
          (true? tarkistettu?)) false
     :else true))
 
-(defn aliurakoitsija-modaali
-  [_ _]
-  (let [tila (r/atom {})]
-    (fn [tallennus-fn sulku-fn]
-      (let [{:keys [nimi ytunnus]} @tila]
-        [:div.peitto-modal
-         [:div.peitto-kontentti
-          [:h1 "Lisää aliurakoitsija"
-           [:button {:on-click sulku-fn}
-            [ikonit/remove]]]
-          [kentat/vayla-lomakekentta
-           "Yrityksen nimi"
-           :arvo nimi
-           :on-change #(swap! tila assoc :nimi (-> % .-target .-value))]
-          [kentat/vayla-lomakekentta
-           "Y-tunnus"
-           :arvo ytunnus
-           :on-change #(swap! tila assoc :ytunnus (-> % .-target .-value))]
-          [:div.napit
-           [napit/tallenna
-            "Tallenna"
-            #(tallennus-fn @tila)
-            {:ikoni        ikonit/ok
-             :vayla-tyyli? true}]
-           [napit/sulje
-            "Sulje"
-            sulku-fn
-            {:vayla-tyyli? true
-             :ikoni        ikonit/remove}]]]]))))
-
 (def kuukaudet-strs {:tammikuu  "Tammikuu"
                      :helmikuu  "Helmikuu"
                      :maaliskuu "Maaliskuu"
@@ -375,6 +345,9 @@
                 lisatieto] :as _lomake} :lomake
         aliurakoitsijat                 :aliurakoitsijat}]
       (let [{:keys [ytunnus]} @aliurakoitsija-atomi
+            ytunnus-validi? (if (not= ytunnus y-tunnus-puuttuu)
+                              (not (nil? (-> ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus)))
+                              true)
             lisaa-aliurakoitsija (fn [tallennus-fn {sulje :sulje}]
                                    [:div
                                     {:on-click #(do
@@ -411,6 +384,7 @@
           [kentat/vayla-lomakekentta
            "Aliurakoitsijan y-tunnus"
            :disabled (not= 0 haetaan)
+           :class #{(str "input" (if ytunnus-validi? "" "-error") "-default") "komponentin-input"}
            :arvo (or
                    ytunnus
                    (some
@@ -423,7 +397,9 @@
                        @aliurakoitsija-atomi
                        aliurakoitsijat
                        (fn [aliurakoitsija]
-                         (e! (tiedot/->PaivitaAliurakoitsija aliurakoitsija))))]
+                         (when
+                           ytunnus-validi?
+                           (e! (tiedot/->PaivitaAliurakoitsija aliurakoitsija)))))]
           [kentat/vayla-lomakekentta
            "Kirjoita tähän halutessasi lisätietoa"
            :disabled (not= 0 haetaan)
@@ -488,12 +464,6 @@
           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
           {:ikoni        ikonit/remove
            :vayla-tyyli? true}]
-         (when (= nayta :aliurakoitsija-modaali)
-           [aliurakoitsija-modaali
-            (fn [arvo]
-              (e! (tiedot/->LuoUusiAliurakoitsija arvo))
-              (paivitys-fn :nayta nil))
-            #(paivitys-fn :nayta nil)])
          (when (not= 0 haetaan)
            [:div.ajax-peitto [yleiset/ajax-loader "Odota"]])]))))
 
