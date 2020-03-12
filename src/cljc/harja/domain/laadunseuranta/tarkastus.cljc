@@ -82,14 +82,17 @@
   (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
 
 (defn- tyhja-mittaus?* [mittaus]
-  (if (and (string? mittaus) (> (count mittaus) 0))
-    false
-    (if (number? mittaus)
+  ;; VHAR-1104: On urakoitijoita jotka raportoivat vain hoitoluokan sisältäviä mittauksia
+  ;; nämä aiheuttivat tuotannossa räsähdykisä. Poistetaan hoitoluokka ennen tyhjyyden vertailua
+  (let [mittaus (dissoc mittaus :hoitoluokka)]
+    (if (and (string? mittaus) (> (count mittaus) 0))
       false
-      (every? #(if (map? %)
-                 (not-every? some? (vals %))
-                 (empty? %))
-              (vals mittaus)))))
+      (if (number? mittaus)
+        false
+        (every? #(if (map? %)
+                   (not-every? some? (vals %))
+                   (empty? %))
+                (vals mittaus))))))
 
 (defn tyhja-soratiemittaus? [data]
   (tyhja-mittaus?* (:soratiemittaus data)))
