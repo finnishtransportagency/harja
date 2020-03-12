@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
@@ -17,7 +18,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [cljs.core.async :refer [<! timeout]])
+            [cljs.core.async :refer [<! timeout]]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn paikkaukset-vetolaatikko
@@ -129,6 +131,7 @@
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
          :salli-valiotsikoiden-piilotus? true
+         :valiotsikon-komponentti-flowhun? true
          :tunniste ::paikkaus/id
          :sivuta 100
          :tyhja (if paikkauksien-haku-kaynnissa?
@@ -144,6 +147,56 @@
         skeema
         paikkaukset-grid]])))
 
+(def ohje-teksti-tarkistus-ja-yha
+  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Jos tiedoissa on virheitä, valitse Ilmoita virhe.")
+
+(defn otsikkokomponentti
+  [e! paikkaukset]
+  (let [paikkaus (first paikkaukset)
+        paikkauskohde-id (get-in paikkaus
+                                 [::paikkaus/paikkauskohde ::paikkaus/id])
+        alkupvm (get paikkaus ::paikkaus/alkuaika)
+        loppupvm (get paikkaus ::paikkaus/loppuaika)]
+    (log "paikkaus: " (pr-str paikkaus))
+    [{:tyyli {}
+      :sisalto
+      (fn [_]
+        [:div {:style {:margin-left "20px"
+                       :margin-right "20px"}}
+
+         ;Kun teet VHAR-1308 ota käyttöön
+         #_[:div {:style {:height "30px"
+                          :float "right"}}
+            [napit/yleinen-ensisijainen "Ilmoita virhe" #(log "do nada")]
+            [napit/yleinen-toissijainen "Merkitse tarkistetuksi" #(log "do nada 2")]]
+         #_[:div {:style {:font-size ".65rem"}}
+            [:span.bold "Ohje: "]
+            [:span ohje-teksti-tarkistus-ja-yha]]
+
+         ;; huom! jos koetat saada taulukon sarakkeet oikean levyisiksi vrt. varsinaiseen taulukkoon,
+         ;; joudut kuljettamaan taulukon sarakkeiden leveydet tänne asti. Tehdään VHAR-1308 osana
+         [:table
+          [:thead
+           [:tr {:stlye {:border "none"}}
+            [:td {:colSpan 2}
+             [:span.bold (str "Yhteensä: " (count paikkaukset))]]
+            [:td {:colSpan 3}]
+            [:td {:colSpan 1}
+             [:span.bold (when alkupvm
+                           (pvm/pvm alkupvm))]]
+            [:td {:colSpan 1}
+             [:span.bold (when loppupvm
+                           (pvm/pvm loppupvm))]]
+            [:td {:colSpan 7}]
+            [:td {:colSpan 1}
+             [:div {:style {:float "right"}}
+              [:a.livicon-arrow-right {:style {:float "right"}
+                                       :href "#"
+                                       :on-click #(do
+                                                    (.preventDefault %)
+                                                    (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
+               "Kustannukset"]]]]]]])}]))
+
 (defn toteumat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymaan))
@@ -157,12 +210,7 @@
     (komp/kun-muuttuu (fn [e! {haettu-uudet-paikkaukset? :haettu-uudet-paikkaukset?}]
                         (when haettu-uudet-paikkaukset?
                           (e! (tiedot/->LisaaOtsikotGridiin (fn [[otsikko paikkaukset]]
-                                                              (cons (grid/otsikko otsikko {:otsikkokomponentit (yhteinen-view/otsikkokomponentti
-                                                                                                                 "Siirry kustannuksiin"
-                                                                                                                 (fn [paikkauskohde-id]
-                                                                                                                   (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))
-                                                                                                                 (get-in (first paikkaukset)
-                                                                                                                         [::paikkaus/paikkauskohde ::paikkaus/id]))})
+                                                              (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
                                                                     (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
                                                                              paikkaukset))))))))
     (fn [e! app]

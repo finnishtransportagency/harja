@@ -157,9 +157,10 @@
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
     (cond
       (:ensimmainen-haku? tiedot) (jdbc/with-db-transaction [db db]
-                                      (let [kustannukset (if haetaan-nollalla-paikkauksella?
-                                                           []
-                                                           (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params))
+                                      (let [kustannukset [] ;; FIXME when implementing new cost logic
+                                            #_(if haetaan-nollalla-paikkauksella?
+                                                []
+                                                (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params))
                                             paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
                                             tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset

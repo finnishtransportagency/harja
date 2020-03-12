@@ -135,9 +135,6 @@ UPDATE yllapitokohteen_kustannukset
 -- name: hae-paikkaustoteumat-tierekisteriosoitteella
 SELECT pt.kirjattu,
        pt.selite,
-       pt.yksikko,
-       pt.yksikkohinta,
-       pt.maara,
        pt.hinta,
        pt.tyyppi,
        pt.id              AS "paikkaustoteuma-id",
