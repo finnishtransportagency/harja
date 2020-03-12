@@ -75,7 +75,6 @@
   (key-from-val tallennettava-asia->tehtava v))
 
 (def ^{:private true} tallennettava-asia->tehtavaryhma
-  ;; TODO TIlaajan varaus tänne
   {:erillishankinnat        "37d3752c-9951-47ad-a463-c1704cf22f4c"
    :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"
    :tilaajan-varaukset "a6614475-1950-4a61-82c6-fda0fd19bb54"})

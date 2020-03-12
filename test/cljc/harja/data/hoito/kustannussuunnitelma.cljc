@@ -192,7 +192,8 @@
     :mhu-korvausinvestointi #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-johto #{:hoidonjohtopalkkio
                  :toimistokulut
-                 :erillishankinnat}))
+                 :erillishankinnat
+                 :tilaajan-varaukset}))
 
 (defn validoi-toimenpiteen-tallennettavat-asiat! [toimenpide-avain tallennettavat-asiat]
   (when-not (clj-set/subset? tallennettavat-asiat (toimenpiteen-tallennettavat-asiat toimenpide-avain))

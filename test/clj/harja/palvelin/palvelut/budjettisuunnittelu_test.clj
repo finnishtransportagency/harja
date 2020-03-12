@@ -306,29 +306,38 @@
                           (into []
                                 (concat ensimmaisen-vuoden-ajat
                                         toisen-vuoden-ajat))))
-        tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma]}]
+        tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma tk_yt tr_yt]}]
                                   (case tallennettava-asia
                                     :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
-                                                             (= tehtava "Hoitourakan työnjohto")
+                                                             (= tk_yt "c9712637-fbec-4fbd-ac13-620b5619c744")
                                                              (nil? tehtavaryhma))
                                     :toimistokulut (and (= tyyppi "laskutettava-tyo")
-                                                        (= tehtava "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.")
+                                                        (= tk_yt "8376d9c4-3daf-4815-973d-cd95ca3bb388")
                                                         (nil? tehtavaryhma))
                                     :erillishankinnat (and (= tyyppi "laskutettava-tyo")
-                                                           (nil? tehtava)
-                                                           (= tehtavaryhma "ERILLISHANKINNAT (W)"))
+                                                           (= tr_yt "37d3752c-9951-47ad-a463-c1704cf22f4c")
+                                                           (nil? tehtava))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
-                                                                  (nil? tehtava)
-                                                                  (= tehtavaryhma "TILAAJAN RAHAVARAUS (T3)"))
+                                                                  (= tr_yt "0e78b556-74ee-437f-ac67-7a03381c64f6")
+                                                                  (nil? tehtava))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
-                                                                                     (= tehtava "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen")
+                                                                                     (contains? #{"49b7388b-419c-47fa-9b1b-3797f1fab21d"
+                                                                                                 "63a2585b-5597-43ea-945c-1b25b16a06e2"
+                                                                                                 "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+                                                                                                tk_yt)
                                                                                      (nil? tehtavaryhma))
                                     :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
-                                                              (= tehtava "Äkillinen hoitotyö")
+                                                              (contains? #{"1f12fe16-375e-49bf-9a95-4560326ce6cf"
+                                                                           "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
+                                                                           "d373c08b-32eb-4ac2-b817-04106b862fb1"}
+                                                                         tk_yt)
                                                               (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
                                                                             (nil? tehtava)
-                                                                            (nil? tehtavaryhma))))
+                                                                            (nil? tehtavaryhma))
+                                    :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
+                                                             (= tr_yt "a6614475-1950-4a61-82c6-fda0fd19bb54")
+                                                             (nil? tehtava))))
         tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
         paivitettava-data (mapv (fn [data]
                                   (-> data
@@ -352,11 +361,16 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
+              data-kannassa (map (fn [data]
+                                   (-> data
+                                       (update :tk_yt str)
+                                       (update :tr_yt str)))
+                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                                tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
                                            LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
-                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";"))
+                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)]
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
@@ -384,11 +398,16 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
-                                         FROM kustannusarvioitu_tyo kt
-                                           LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
-                                           LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
-                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (map (fn [data]
+                                   (-> data
+                                       (update :tk_yt str)
+                                       (update :tr_yt str)))
+                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                                     tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
+                                              FROM kustannusarvioitu_tyo kt
+                                                LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                                LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
+                                              WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)
 
 
