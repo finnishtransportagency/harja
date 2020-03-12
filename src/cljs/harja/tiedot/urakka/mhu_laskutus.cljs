@@ -24,7 +24,8 @@
 
 (defrecord LiiteLisatty [liite])
 
-(defrecord LuoUusiAliurakoitsija [aliurakoitsija])
+(defrecord LuoUusiAliurakoitsija [aliurakoitsija optiot])
+(defrecord PaivitaAliurakoitsija [aliurakoitsija])
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
@@ -96,7 +97,6 @@
 
 (defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
   (let [{aliurakoitsija :suorittaja} lasku]
-    (loki/log "Urakoitsija " aliurakoitsija)
     (-> lasku
         (dissoc :suorittaja)
         #_(update :kohdistukset (fn [ks] (mapv (fn [kohdistukset]
@@ -259,7 +259,6 @@
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
                                  ;; pvm tulee muodossa vvvv/kk
-                                 (loki/log "PVM" (pr-str pvm) (str/split pvm #"/"))
                                  (let [[vvvv kk] (map #(js/parseInt %) (str/split pvm #"/"))]
                                    (reduce luo-laskun-nro-otsikot
                                            (valiotsikko-rivi
@@ -351,16 +350,21 @@
 
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
-    (assoc app :maksuerat tulos))
+    (->
+      app
+      (update-in [:parametrit :haetaan] dec)
+      (assoc :maksuerat tulos)))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
     (let [tilan-paivitys-fn (or tilan-paivitys-fn
                                 #(identity %2))
           assoc-fn (cond
-                     (nil? avain) (fn [app & _] app)
+                     (nil? avain) (fn [app & _]
+                                    app)
                      (vector? avain) assoc-in
                      :else assoc)]
       (-> app
+          (update-in [:parametrit :haetaan] dec)
           (assoc-fn avain tulos)
           (tilan-paivitys-fn tulos))))
   AliurakoitsijahakuOnnistui
@@ -409,7 +413,7 @@
 
   KutsuEpaonnistui
   (process-event [{:keys [tulos]} app]
-    app)
+    (update-in app [:parametrit :haetaan] dec))
 
   ;; HAUT
 
@@ -426,7 +430,7 @@
                          {:onnistui           ->MaksueraHakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
                           :paasta-virhe-lapi? true}))
-    (update-in app [:parametrit :haetaan] inc))
+    (update-in app [:parametrit :haetaan] + 2))
   HaeAliurakoitsijat
   (process-event [_ app]
     (tuck-apurit/get! :aliurakoitsijat
@@ -450,7 +454,7 @@
                        {:onnistui           ->ToimenpidehakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
                         :paasta-virhe-lapi? true})
-    app)
+    (update-in app [:parametrit :haetaan] inc))
   AvaaLasku
   (process-event [{lasku :lasku} app]
     (loki/log "AVAA LASKU " (pr-str lasku))
@@ -463,25 +467,53 @@
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
     (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot))
   LuoUusiAliurakoitsija
-  (process-event [{aliurakoitsija :aliurakoitsija} app]
+  (process-event [{aliurakoitsija :aliurakoitsija {:keys [sivuvaikutus-tuloksella-fn]} :optiot} app]
     (tuck-apurit/post! :tallenna-aliurakoitsija
                        aliurakoitsija
                        {:onnistui            ->TallennusOnnistui
-                        :onnistui-parametrit [{:avain             :aliurakoitsijat
-                                               :tilan-paivitys-fn (fn [{:keys [aliurakoitsijat] :as app} _]
-                                                                    (let [alik-id (some #(when (= (:nimi aliurakoitsija) (:nimi %)) (:id %)) aliurakoitsijat)]
-                                                                      (update app :lomake (fn [lomake]
-                                                                                            (assoc lomake :aliurakoitsija alik-id
-                                                                                                          :suorittaja-nimi (:nimi aliurakoitsija))))))}]
+                        :onnistui-parametrit [{:tilan-paivitys-fn (fn [app aliurakoitsija]
+                                                                    (sivuvaikutus-tuloksella-fn aliurakoitsija)
+                                                                    (-> app
+                                                                        (update :aliurakoitsijat
+                                                                                (fn [as]
+                                                                                  (as-> as as
+                                                                                        (conj as aliurakoitsija)
+                                                                                        (sort-by :id as))))
+                                                                        (update :lomake
+                                                                                (fn [lomake]
+                                                                                  (assoc lomake
+                                                                                    :aliurakoitsija (:id aliurakoitsija)
+                                                                                    :suorittaja-nimi (:nimi aliurakoitsija))))))}]
                         :epaonnistui         ->KutsuEpaonnistui
                         :paasta-virhe-lapi?  true})
-    app)
+    (update-in app [:parametrit :haetaan] inc))
+  PaivitaAliurakoitsija
+  (process-event [{aliurakoitsija :aliurakoitsija} app]
+    (tuck-apurit/post! :paivita-aliurakoitsija
+                       aliurakoitsija
+                       {:onnistui            ->TallennusOnnistui
+                        :onnistui-parametrit [{:tilan-paivitys-fn (fn [{:keys [aliurakoitsijat] :as app} paivitetty-aliurakoitsija]
+                                                                    (update app :aliurakoitsijat
+                                                                            (fn [as]
+                                                                              (as-> as as
+                                                                                    (filter
+                                                                                      #(not
+                                                                                         (= (:id %)
+                                                                                            (:id paivitetty-aliurakoitsija)))
+                                                                                      as)
+                                                                                    (conj as paivitetty-aliurakoitsija)
+                                                                                    (sort-by :id as)))))}]
+                        :epaonnistui         ->KutsuEpaonnistui})
+    (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                                                 :aliurakoitsijat
-        {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
-                laskun-numero lisatieto erapaiva laskun-id] :as lomake} :lomake
-        maksuerat                                                       :maksuerat :as app}]
+    [_ {aliurakoitsijat                         :aliurakoitsijat
+        {:keys [kohdistukset
+                koontilaskun-kuukausi
+                aliurakoitsija
+                laskun-numero lisatieto
+                erapaiva laskun-id] :as lomake} :lomake
+        maksuerat                               :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
@@ -492,7 +524,6 @@
       ;   :tehtava :maksueratyyppi
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
-      (loki/log "Tallennan " validi? laskun-id (pr-str lomake))
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-lasku
                            {:urakka-id     urakka
@@ -518,7 +549,6 @@
                                                                               (update a :kulut (fn [kulut]
                                                                                                  (as-> kulut ks
                                                                                                        (filter (fn [{:keys [laskun-id] :as _kulu}]
-                                                                                                                 (loki/log "vertailen " laskun-id uusi-id)
                                                                                                                  (not= laskun-id uusi-id)) ks)
                                                                                                        (conj ks tulos))))
                                                                               (assoc a
@@ -528,7 +558,9 @@
                                                                                 :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))
-      (assoc app :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))))
+      (-> app
+          (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
+          (update-in [:parametrit :haetaan] inc))))
 
   ;; FORMITOIMINNOT
 

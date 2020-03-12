@@ -17,14 +17,24 @@
   [db user {:keys [nimi ytunnus]}]
   (q/tallenna-aliurakoitsija<! db {:kayttaja (:id user)
                                    :nimi     nimi
-                                   :ytunnus  ytunnus})
-  (hae-aliurakoitsijat db user))
+                                   :ytunnus  ytunnus}))
+
+(defn- paivita-aliurakoitsija
+  [db
+   {kayttaja-id :id :as _user}
+   {:keys [id nimi ytunnus] :as _aliurakoitsija}]
+  (q/paivita-aliurakoitsija<! db {:kayttaja kayttaja-id
+                                  :nimi nimi
+                                  :ytunnus ytunnus
+                                  :id id}))
 
 (defrecord Aliurakoitsijat
   []
   component/Lifecycle
   (start [this]
     (doto (:http-palvelin this)
+      (julkaise-palvelu :paivita-aliurakoitsija (fn [user aliurakoitsija]
+                                                  (paivita-aliurakoitsija (:db this) user aliurakoitsija)))
       (julkaise-palvelu :tallenna-aliurakoitsija (fn [user aliurakoitsija]
                                                    (tallenna-aliurakoitsija (:db this) user aliurakoitsija)))
       (julkaise-palvelu :aliurakoitsijat (fn [user]
@@ -36,4 +46,5 @@
     (poista-palvelu (:http-palvelin this) :tallenna-aliurakoitsija)
     (poista-palvelu (:http-palvelin this) :aliurakoitsijat)
     (poista-palvelu (:http-palvelin this) :aliurakoitsija)
+    (poista-palvelu (:http-palvelin this) :paivita-aliurakoitsija)
     this))

@@ -339,11 +339,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   (let [auki? (r/atom false)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki? false))
-      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn virhe?]}]
+      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn virhe? disabled]}]
         [:div {:class #{(str "select-" (if virhe?
                                          "error-"
                                          "") "default") (when @auki? "open")}}
-         [:button.nappi-alasveto {:on-click #(swap! auki? not)}
+         [:button.nappi-alasveto {:on-click #(swap! auki? not) :disabled disabled}
           [:div.valittu
            (or (formaatti-fn valittu) "Ei valittu")]]
          [:ul {:style {:display (if @auki?
