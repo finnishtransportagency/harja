@@ -1707,17 +1707,17 @@
           johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
           tilaajan-varaukset (maara-kk-taulukon-data hoidon-johto-kustannukset :tilaajan-varaukset)
 
-          omat-jh-korvaukset (vec (sort-by first
-                                           (group-by :toimenkuva (get-in vastaus [:johto-ja-hallintokorvaukset :omat]))))
+          omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
+                                                    (group-by :toimenkuva-id (get-in vastaus [:johto-ja-hallintokorvaukset :omat])))))
           vapaat-omien-toimekuvien-idt (clj-set/difference (into #{} (map :toimenkuva-id (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat])))
                                                            (into #{} (distinct (map :toimenkuva-id (get-in vastaus [:johto-ja-hallintokorvaukset :omat])))))
-          _ (println "OMAT TOIMENKUVAT " (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat]))
           _ (when (> (count omat-jh-korvaukset) 2)
               (modal/nayta! {:otsikko "Omia toimenkuvia liikaa!"}
                             [:div
                              [:span (str "Löytyi seuraavat omat toimenkuvat kannasta vaikka maksimi määrä on " jh-korvausten-omiariveja-lkm ". Ota yhteyttä Harja-tiimiin.")]
                              [:ul
-                              (doall (for [[toimenkuva _] omat-jh-korvaukset]
+                              (doall (for [[_ data] omat-jh-korvaukset
+                                           :let [toimenkuva (get-in data [0 :toimenkuva])]]
                                        ^{:key toimenkuva}
                                        [:li (str toimenkuva)]))]]))
           jh-korvaukset (merge (reduce (fn [korvaukset {:keys [toimenkuva kk-v maksukausi hoitokaudet]}]
@@ -1771,11 +1771,20 @@
                                (first (reduce (fn [[omat-korvaukset vapaat-omien-toimekuvien-idt] jarjestysnumero]
                                                 (let [omanimi (jh-omienrivien-nimi jarjestysnumero)
                                                       asia-kannasta (get-in omat-jh-korvaukset [(dec jarjestysnumero) 1])
-                                                      toimenkuva-id (or (get-in asia-kannasta [0 :toimenkuva-id]) (first vapaat-omien-toimekuvien-idt))
+                                                      toimenkuva-id (if-let [tallennetun-korvauksen-toimenkuva-id (get-in asia-kannasta [0 :toimenkuva-id])]
+                                                                      tallennetun-korvauksen-toimenkuva-id
+                                                                      ;; Jos kantaan on tallennettu vain toimenkuvan nimi, muttei yhtään korvauksia kaivetaan
+                                                                      ;; toimenkuva-id siten, että täytetty kenttä tulee ylimmäksi. Jos mitään ei olla tallennettu,
+                                                                      ;; otetaan vain ensimmäinen vapaa id.
+                                                                      (or (some (fn [{:keys [toimenkuva-id toimenkuva]}]
+                                                                                  (when (and (contains? vapaat-omien-toimekuvien-idt toimenkuva-id)
+                                                                                             (not (nil? toimenkuva)))
+                                                                                    toimenkuva-id))
+                                                                                (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat]))
+                                                                          (first vapaat-omien-toimekuvien-idt)))
                                                       toimenkuva (some #(when (= (:toimenkuva-id %) toimenkuva-id)
                                                                           (:toimenkuva %))
                                                                        (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat]))
-                                                      _ (println "toimenkuva: " toimenkuva)
                                                       taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
                                                                                              (constantly true)
                                                                                              (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
@@ -2023,7 +2032,7 @@
                                               (range hoitokauden-numero 6)
                                               [hoitokauden-numero])
           {tunnisteen-maksukausi :maksukausi tunnisteen-toimenkuva :toimenkuva
-           tunnisteen-osan-paikka :osan-paikka} (get tunnisteet 0)
+           tunnisteen-osan-paikka :osan-paikka tunnisteen-omanimi :omanimi} (get tunnisteet 0)
           jhk-tiedot (vec (mapcat (fn [{:keys [omanimi osan-paikka data-koskee-ennen-urakkaa?]}]
                                     (if data-koskee-ennen-urakkaa?
                                       (mapv (fn [m]
@@ -2044,7 +2053,8 @@
           toimenkuva-id (when-let [omanimi (get-in tunnisteet [0 :omanimi])]
                           (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first tunnisteen-osan-paikka) :toimenkuva-id]))
           lahetettava-data (merge {:urakka-id urakka-id
-                                   :ennen-urakkaa? (nil? tunnisteen-maksukausi)
+                                   :ennen-urakkaa? (and (nil? tunnisteen-maksukausi)
+                                                        (nil? tunnisteen-omanimi))
                                    :jhk-tiedot jhk-tiedot}
                                   ;; Itsetäytetyillä rivillä on id. Vakioilla ei.
                                   (if toimenkuva-id

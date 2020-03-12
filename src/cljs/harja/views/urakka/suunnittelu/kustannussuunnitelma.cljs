@@ -220,7 +220,9 @@
                                (when-not piillotettu?
                                  (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
                                                         :arvo arvo
-                                                        :solu maara-solu}
+                                                        :solu maara-solu
+                                                        :ajettavat-jarejestykset true
+                                                        :triggeroi-seuranta? true}
                                                        true)))
                              (nappia-painettu-tallenna! rivit-alla)
                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
@@ -1401,6 +1403,7 @@
                                                                                      (str teksti " (mennyt)")
                                                                                      teksti)))}
                                                                          (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                                      :solun-index 1
                                                                                       :blur-tallenna! (partial blur-tallenna! false (str toimenkuva "-" maksukausi "-taulukko"))
                                                                                       :nappia-painettu-tallenna! nappia-painettu-tallenna!})
                                                                          {:tyyppi :tyhja}
@@ -1502,6 +1505,7 @@
                                                                                           (str teksti " (mennyt)")
                                                                                           teksti)))}
                                                                               (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                                           :solun-index 1
                                                                                            :blur-tallenna! (partial blur-tallenna! false rivin-nimi)
                                                                                            :nappia-painettu-tallenna! nappia-painettu-tallenna!})
                                                                               {:tyyppi :tyhja}
