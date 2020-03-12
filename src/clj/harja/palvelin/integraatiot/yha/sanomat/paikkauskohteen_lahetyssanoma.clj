@@ -2,6 +2,7 @@
   (:require [harja.kyselyt.urakat :as q-urakka]
             [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.tyokalut.json-validointi :as json]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
             [namespacefy.core :refer [unnamespacefy]]
@@ -27,6 +28,8 @@
         kasittele-paikkaus (fn [p] {:paikkaus (-> p
                                                   (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id)
                                                   (rename-keys {:tierekisteriosoite :sijainti})
+                                                  (assoc :alkuaika (pvm/aika-iso8601 (:alkuaika p)))
+                                                  (assoc :loppuaika (pvm/aika-iso8601 (:loppuaika p)))
                                                   (conj {:kivi-ja-sideaineet (mapv kasittele-materiaali (:materiaalit p))})
                                                   (dissoc :materiaalit))})
         kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
@@ -38,11 +41,11 @@
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
-                                                         :harja.domain.paikkaus/urakka-id urakka-id
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
+                                                         :harja.domain.paikkaus/urakka-id        urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
-                                                                :harja.domain.paikkaus/urakka-id urakka-id
+                                                                :harja.domain.paikkaus/urakka-id        urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
         json (muodosta-sanoma-json urakka kohde paikkaukset)]
 

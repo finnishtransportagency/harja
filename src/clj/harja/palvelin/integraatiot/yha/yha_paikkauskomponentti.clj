@@ -6,10 +6,7 @@
             [harja.palvelin.integraatiot.yha.sanomat
              [paikkauskohteen-lahetyssanoma :as paikkauskohteen-lahetyssanoma]
              [paikkauskohteen-poistosanoma :as paikkauskohteen-poistosanoma]]
-            [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q-paikkaus]
-            [clojure.string :as clj-str]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 

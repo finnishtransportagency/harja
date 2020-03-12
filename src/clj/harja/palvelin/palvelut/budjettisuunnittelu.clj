@@ -61,14 +61,14 @@
   (key-from-val tallennettava-asia->tyyppi v))
 
 (def ^{:private true} tallennettava-asia->tehtava
-  {:hoidonjohtopalkkio "c9712637-fbec-4fbd-ac13-620b5619c744"
-   :toimistokulut "8376d9c4-3daf-4815-973d-cd95ca3bb388"
-   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito "49b7388b-419c-47fa-9b1b-3797f1fab21d"
+  {:hoidonjohtopalkkio                         "c9712637-fbec-4fbd-ac13-620b5619c744"
+   :toimistokulut                              "8376d9c4-3daf-4815-973d-cd95ca3bb388"
+   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito               "49b7388b-419c-47fa-9b1b-3797f1fab21d"
                                                 :liikenneympariston-hoito "63a2585b-5597-43ea-945c-1b25b16a06e2"
-                                                :sorateiden-hoito "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
-   :akilliset-hoitotyot {:talvihoito "1f12fe16-375e-49bf-9a95-4560326ce6cf"
-                         :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
-                         :sorateiden-hoito "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
+                                                :sorateiden-hoito         "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+   :akilliset-hoitotyot                        {:talvihoito               "1f12fe16-375e-49bf-9a95-4560326ce6cf"
+                                                :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
+                                                :sorateiden-hoito         "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
 
 (defn- tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
@@ -89,33 +89,33 @@
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
-          {::ur/keys [alkupvm loppupvm indeksi]} (first (fetch db
-                                                                   ::ur/urakka
-                                                                   #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
-                                                                   {::ur/id urakka-id}))
-          urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-          urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-          perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
-          indeksiluvut-urakan-aikana (sequence
-                                       (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                       (and (= 9 kuukausi)
-                                                            (>= vuosi (dec urakan-alkuvuosi)))))
-                                             (remove (fn [{:keys [vuosi]}]
-                                                       (>= vuosi (dec urakan-loppuvuosi))))
-                                             (map (fn [{:keys [arvo vuosi]}]
-                                                    ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
-                                                    {:vuosi (inc vuosi)
-                                                     :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
-                                       (i-q/hae-indeksi db {:nimi indeksi}))
-          urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
-      (if (= 5 urakan-indeksien-maara)
-        (vec indeksiluvut-urakan-aikana)
-        (mapv (fn [index]
-                (if (> (inc index) urakan-indeksien-maara)
-                  (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
-                  (nth indeksiluvut-urakan-aikana index)))
-              (range 0 5))))))
+                            (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
+                                  {::ur/keys [alkupvm loppupvm indeksi]} (first (fetch db
+                                                                                       ::ur/urakka
+                                                                                       #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                                                       {::ur/id urakka-id}))
+                                  urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+                                  urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+                                  perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
+                                  indeksiluvut-urakan-aikana (sequence
+                                                               (comp (filter (fn [{:keys [kuukausi vuosi]}]
+                                                                               (and (= 9 kuukausi)
+                                                                                    (>= vuosi (dec urakan-alkuvuosi)))))
+                                                                     (remove (fn [{:keys [vuosi]}]
+                                                                               (>= vuosi (dec urakan-loppuvuosi))))
+                                                                     (map (fn [{:keys [arvo vuosi]}]
+                                                                            ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
+                                                                            {:vuosi          (inc vuosi)
+                                                                             :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
+                                                               (i-q/hae-indeksi db {:nimi indeksi}))
+                                  urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
+                              (if (= 5 urakan-indeksien-maara)
+                                (vec indeksiluvut-urakan-aikana)
+                                (mapv (fn [index]
+                                        (if (> (inc index) urakan-indeksien-maara)
+                                          (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
+                                          (nth indeksiluvut-urakan-aikana index)))
+                                      (range 0 5))))))
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.
@@ -176,10 +176,10 @@
                                      (if (or (= toimenkuva "päätoiminen apulainen")
                                              (= toimenkuva "apulainen/työnjohtaja"))
                                        (if (<= 5 kuukausi 9)
-                                           (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
-                                           (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
+                                         (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
+                                         (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
                                        (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
-                                      [] hoitokauden-numero-lisatty)
+                                   [] hoitokauden-numero-lisatty)
         tunnit-korjattu (map (fn [{:keys [hoitokausi kk-v] :as johto-ja-hallintokorvaus}]
                                (if (= 0 hoitokausi)
                                  (update johto-ja-hallintokorvaus :tunnit (fn [tunnit]
@@ -260,8 +260,8 @@
                                                                                          (= kuukausi (::bs/smallint-kk %)))
                                                                                    olemassa-olevat-kiinteahintaiset-tyot))
                                                                            ajat)]
-                              (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:urakka              urakka-id
-                                                                                     :toimenpideinstanssi toimenpideinstanssi-id})
+                              (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+                              (kiin-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
                                   (update! db ::bs/kiinteahintainen-tyo
@@ -290,9 +290,9 @@
                                                 (let [vuosi (if (<= 10 kuukausi 12)
                                                               (dec (+ urakan-aloitusvuosi hoitokausi))
                                                               (+ urakan-aloitusvuosi hoitokausi))]
-                                                  {:kuukausi kuukausi
-                                                   :vuosi vuosi
-                                                   :tunnit tunnit
+                                                  {:kuukausi    kuukausi
+                                                   :vuosi       vuosi
+                                                   :tunnit      tunnit
                                                    :tuntipalkka tuntipalkka}))
                                               kuukaudet))
                                        jhkt))]
@@ -301,18 +301,18 @@
       (= toimenkuva "viherhoidosta vastaava henkilö") (urakan-aikaiset-jhkt jhkt (range 4 9))
       (= toimenkuva "hankintavastaava") (mapcat (fn [{:keys [tunnit tuntipalkka hoitokausi kk-v]}]
                                                   (if (= 0 hoitokausi)
-                                                    [{:kuukausi 10
-                                                      :vuosi urakan-aloitusvuosi
-                                                      :tunnit (* tunnit kk-v)
-                                                      :tuntipalkka tuntipalkka
+                                                    [{:kuukausi       10
+                                                      :vuosi          urakan-aloitusvuosi
+                                                      :tunnit         (* tunnit kk-v)
+                                                      :tuntipalkka    tuntipalkka
                                                       :ennen-urakkaa? true
-                                                      :kk-v kk-v}]
+                                                      :kk-v           kk-v}]
                                                     (map (fn [kuukausi]
-                                                           {:kuukausi kuukausi
-                                                            :vuosi (if (<= 10 kuukausi 12)
-                                                                     (dec (+ urakan-aloitusvuosi hoitokausi))
-                                                                     (+ urakan-aloitusvuosi hoitokausi))
-                                                            :tunnit tunnit
+                                                           {:kuukausi    kuukausi
+                                                            :vuosi       (if (<= 10 kuukausi 12)
+                                                                           (dec (+ urakan-aloitusvuosi hoitokausi))
+                                                                           (+ urakan-aloitusvuosi hoitokausi))
+                                                            :tunnit      tunnit
                                                             :tuntipalkka tuntipalkka})
                                                          (range 1 13))))
                                                 jhkt)
@@ -338,10 +338,10 @@
                                   jhkt (muunna-jhkn-ajat toimenkuva maksukausi jhkt (pvm/vuosi urakan-alkupvm))
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
                                                               #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi ::bs/ennen-urakkaa-id}
-                                                              {::bs/urakka-id urakka-id
-                                                               ::bs/toimenkuva-id toimenkuva-id
-                                                               ::bs/vuosi (op/in (map :vuosi jhkt))
-                                                               ::bs/kuukausi (op/in (map :kuukausi jhkt))
+                                                              {::bs/urakka-id        urakka-id
+                                                               ::bs/toimenkuva-id    toimenkuva-id
+                                                               ::bs/vuosi            (op/in (map :vuosi jhkt))
+                                                               ::bs/kuukausi         (op/in (map :kuukausi jhkt))
                                                                ::bs/ennen-urakkaa-id (if (some :ennen-urakkaa?
                                                                                                jhkt)
                                                                                        op/not-null?
@@ -373,15 +373,15 @@
                                                                               {::bs/kk-v kk-v}))]
                                     (insert! db
                                              ::bs/johto-ja-hallintokorvaus
-                                             {::bs/urakka-id urakka-id
-                                              ::bs/toimenkuva-id toimenkuva-id
-                                              ::bs/tunnit tunnit
-                                              ::bs/tuntipalkka tuntipalkka
-                                              ::bs/kuukausi kuukausi
-                                              ::bs/vuosi vuosi
+                                             {::bs/urakka-id        urakka-id
+                                              ::bs/toimenkuva-id    toimenkuva-id
+                                              ::bs/tunnit           tunnit
+                                              ::bs/tuntipalkka      tuntipalkka
+                                              ::bs/kuukausi         kuukausi
+                                              ::bs/vuosi            vuosi
                                               ::bs/ennen-urakkaa-id ennen-urakkaa-id
-                                              ::bs/luotu (pvm/nyt)
-                                              ::bs/luoja (:id user)}))))
+                                              ::bs/luotu            (pvm/nyt)
+                                              ::bs/luoja            (:id user)}))))
                               {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
@@ -395,7 +395,7 @@
                             (let [{tehtava-id ::tpk/id} (when tehtava
                                                           (first (fetch db ::tpk/toimenpidekoodi
                                                                         #{::tpk/id}
-                                                                        {::tpk/yksiloiva-tunniste                 tehtava})))
+                                                                        {::tpk/yksiloiva-tunniste tehtava})))
                                   {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                                                          #{::tpk/id}
                                                                          {::tpk/taso  3
@@ -493,7 +493,7 @@
           (julkaise-palvelu
             :budjettisuunnittelun-indeksit (fn [user tiedot]
                                              (hae-urakan-indeksikertoimet db user tiedot))
-            {:kysely-spec ::bs-p/budjettisuunnittelun-indeksit-kysely
+            {:kysely-spec  ::bs-p/budjettisuunnittelun-indeksit-kysely
              :vastaus-spec ::bs-p/budjettisuunnittelun-indeksit-vastaus})
           (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
