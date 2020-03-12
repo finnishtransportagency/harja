@@ -3,6 +3,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.set :as clj-set]
+            [clj-time.core :as t]
             [harja.pvm :as pvm]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
@@ -102,77 +103,118 @@
               :cljs (js/Error (str "Toimenkuvalla " toimenkuva " ei ole maksukausia " maksukaudet))))))
 
 (defn dg-tallenna-johto-ja-hallintokorvaus-data
-  [urakka-id toimenkuva hoitokaudet kk-kertoimet]
-  (loop [[maksukausi & l-mkt] (toimenkuvan-maksukaudet toimenkuva)
+  [{:keys [urakka-id toimenkuva toimenkuva-id kuukaudet ennen-urakkaa? oma? urakan-aloitusvuosi]}]
+  (loop [[[maksukausi kuukaudet-hoitokausille] & l-mkt] kuukaudet
          data []]
-    (if (nil? maksukausi)
+    (if (nil? kuukaudet-hoitokausille)
       data
       (recur l-mkt
              (conj data
-                   {:urakka-id urakka-id
-                    :toimenkuva toimenkuva
-                    :maksukausi maksukausi
-                    :jhkt (mapv (fn [hoitokausi kk-v]
-                                  {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs-p/tunnit))
-                                   :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka)) :kk-v kk-v})
-                                hoitokaudet (get kk-kertoimet maksukausi))})))))
+                   (merge {:urakka-id urakka-id
+                           :maksukausi maksukausi
+                           :ennen-urakkaa? ennen-urakkaa?
+                           :jhk-tiedot (if ennen-urakkaa?
+                                         (reduce (fn [data {:keys [kuukausi osa-kuukaudesta]}]
+                                                   (conj data
+                                                         {:vuosi urakan-aloitusvuosi
+                                                          :kuukausi kuukausi
+                                                          :osa-kuukaudesta osa-kuukaudesta
+                                                          :tunnit (gen/generate (s/gen ::bs-p/tunnit))
+                                                          :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))}))
+                                                 []
+                                                 kuukaudet-hoitokausille)
+                                         (second
+                                           (reduce (fn [[hoitokauden-numero data] hoitokauden-kuukaudet]
+                                                     [(inc hoitokauden-numero)
+                                                      (vec (concat
+                                                             data
+                                                             (map (fn [{:keys [kuukausi osa-kuukaudesta]}]
+                                                                    {:vuosi (dec (+ urakan-aloitusvuosi hoitokauden-numero))
+                                                                     :kuukausi kuukausi
+                                                                     :osa-kuukaudesta osa-kuukaudesta
+                                                                     :tunnit (gen/generate (s/gen ::bs-p/tunnit))
+                                                                     :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))})
+                                                                  hoitokauden-kuukaudet)))])
+                                                   [1 []]
+                                                   kuukaudet-hoitokausille)))}
+                          (if oma?
+                            {:toimenkuva-id toimenkuva-id}
+                            {:toimenkuva toimenkuva})))))))
 (defn tallenna-johto-ja-hallintokorvaus-data
-  ([urakka-id] (tallenna-johto-ja-hallintokorvaus-data urakka-id {}))
+  ([urakka-id urakan-aloitusvuosi] (tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitusvuosi {}))
   ([urakka-id
-    {:keys [toimenkuvat maksukaudet hoitokaudet]
-     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki}}]
+    urakan-aloitusvuosi
+    {:keys [toimenkuvat maksukaudet hoitokaudet ennen-urakkaa-mukaan?]
+     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}}]
    {:pre [(s/valid? ::toimenkuvat-arg toimenkuvat)
           (s/valid? ::maksukaudet-arg maksukaudet)
           (s/valid? ::hoitokaudet-arg hoitokaudet)]}
-   (transduce
-     (comp
-       (filter (fn [{toimenkuva :toimenkuva}]
-                 (or (= toimenkuvat :kaikki)
-                     (contains? toimenkuvat toimenkuva))))
-       (mapcat (fn [{:keys [urakka-id toimenkuva hoitokaudet kk-kertoimet]}]
-                 (dg-tallenna-johto-ja-hallintokorvaus-data urakka-id toimenkuva hoitokaudet kk-kertoimet)))
-       (filter (fn [{:keys [toimenkuva maksukausi]}]
-                 (validoi-toimenkuvan-maksukaudet! toimenkuva (get maksukaudet toimenkuva))
-                 (or (= maksukaudet :kaikki)
-                     (contains? (get maksukaudet toimenkuva) maksukausi))))
-       (map (fn [data]
-              (update data :jhkt (fn [jhkt]
-                                   (if (= hoitokaudet :kaikki)
-                                     jhkt
-                                     (filterv (fn [{hoitokausi :hoitokausi}]
-                                                (contains? hoitokaudet hoitokausi))
-                                              jhkt)))))))
-     conj []
-     [{:urakka-id urakka-id
-       :toimenkuva "hankintavastaava"
-       :hoitokaudet (range 0 6)
-       :kk-kertoimet {:molemmat (cons 4.5 (repeat 5 12))}}
-      {:urakka-id urakka-id
-       :toimenkuva "sopimusvastaava"
-       :hoitokaudet (range 1 6)
-       :kk-kertoimet {:molemmat (repeat 5 12)}}
-      {:urakka-id urakka-id
-       :toimenkuva "vastuunalainen työnjohtaja"
-       :hoitokaudet (range 1 6)
-       :kk-kertoimet {:molemmat (repeat 5 12)}}
-      {:urakka-id urakka-id
-       :toimenkuva "päätoiminen apulainen"
-       :hoitokaudet (range 1 6)
-       :kk-kertoimet {:kesa (repeat 5 5)
-                      :talvi (repeat 5 7)}}
-      {:urakka-id urakka-id
-       :toimenkuva "apulainen/työnjohtaja"
-       :hoitokaudet (range 1 6)
-       :kk-kertoimet {:kesa (repeat 5 5)
-                      :talvi (repeat 5 7)}}
-      {:urakka-id urakka-id
-       :toimenkuva "viherhoidosta vastaava henkilö"
-       :hoitokaudet (range 1 6)
-       :kk-kertoimet {:molemmat (repeat 5 5)}}
-      {:urakka-id urakka-id
-       :toimenkuva "harjoittelija"
-       :hoitokaudet (range 1 6)
-       :kk-kertoimet {:molemmat (repeat 5 4)}}])))
+   (let [kuukaudet-hoitokausille (fn [kuukaudet]
+                                   (vec (repeat 5 (mapv #(identity {:kuukausi % :osa-kuukaudesta 1})
+                                                        kuukaudet))))]
+     (transduce
+       (comp
+         (filter (fn [{toimenkuva :toimenkuva}]
+                   (or (= toimenkuvat :kaikki)
+                       (contains? toimenkuvat toimenkuva))))
+         (filter (fn [{:keys [ennen-urakkaa?] :as konf}]
+                   (or ennen-urakkaa-mukaan?
+                       (not ennen-urakkaa?))))
+         (mapcat (fn [konf]
+                   (dg-tallenna-johto-ja-hallintokorvaus-data (assoc konf :urakan-aloitusvuosi urakan-aloitusvuosi))))
+         (filter (fn [{:keys [toimenkuva maksukausi]}]
+                   (validoi-toimenkuvan-maksukaudet! toimenkuva (get maksukaudet toimenkuva))
+                   (or (= maksukaudet :kaikki)
+                       (contains? (get maksukaudet toimenkuva) maksukausi))))
+         (map (fn [params]
+                (if (= hoitokaudet :kaikki)
+                  params
+                  (update params
+                          :jhk-tiedot
+                          (fn [jhk-tiedot]
+                            (filterv #(contains? hoitokaudet
+                                                 (inc (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15))))
+                                                         (pvm/vuosi (pvm/hoitokauden-alkupvm urakan-aloitusvuosi)))))
+                                     jhk-tiedot)))))))
+       conj
+       []
+       [{:urakka-id urakka-id
+         :toimenkuva "hankintavastaava"
+         :ennen-urakkaa? false
+         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 1 13))}}
+        {:urakka-id urakka-id
+         :toimenkuva "hankintavastaava"
+         :ennen-urakkaa? true
+         :kuukaudet {nil (conj (mapv #(identity {:kuukausi % :osa-kuukaudesta 1})
+                                     (repeat 4 10))
+                               {:kuukausi 10
+                                :osa-kuukaudesta 0.5})}}
+        {:urakka-id urakka-id
+         :toimenkuva "sopimusvastaava"
+         :ennen-urakkaa? false
+         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 1 13))}}
+        {:urakka-id urakka-id
+         :toimenkuva "vastuunalainen työnjohtaja"
+         :ennen-urakkaa? false
+         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 1 13))}}
+        {:urakka-id urakka-id
+         :toimenkuva "päätoiminen apulainen"
+         :ennen-urakkaa? false
+         :kuukaudet {:kesa (kuukaudet-hoitokausille (range 5 10))
+                     :talvi (kuukaudet-hoitokausille (concat (range 1 5) (range 10 13)))}}
+        {:urakka-id urakka-id
+         :toimenkuva "apulainen/työnjohtaja"
+         :ennen-urakkaa? false
+         :kuukaudet {:kesa (kuukaudet-hoitokausille (range 5 10))
+                     :talvi (kuukaudet-hoitokausille (concat (range 1 5) (range 10 13)))}}
+        {:urakka-id urakka-id
+         :toimenkuva "viherhoidosta vastaava henkilö"
+         :ennen-urakkaa? false
+         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 4 9))}}
+        {:urakka-id urakka-id
+         :toimenkuva "harjoittelija"
+         :ennen-urakkaa? false
+         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 5 9))}}]))))
 
 (defn toimenpiteen-tallennettavat-asiat
   [toimenpide-avain]

@@ -220,7 +220,7 @@
                                         (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db {:toimenkuva nil :urakka-id urakka-id}))))]
       {:vakiot jh-korvaukset
        :omat omat-jh-korvaukset
-       :omat-toimenkuvat (vec (concat urakan-omat-jh-korvaukset (map #(:toimenkuva-id %) luotujen-toimenkuvien-idt)))})))
+       :omat-toimenkuvat (vec (concat urakan-omat-jh-korvaukset (map #(identity {:toimenkuva-id % :toimenkuva nil}) luotujen-toimenkuvien-idt)))})))
 
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
@@ -327,9 +327,14 @@
                                                               #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi ::bs/ennen-urakkaa}
                                                               {::bs/urakka-id urakka-id
                                                                ::bs/toimenkuva-id toimenkuva-id
-                                                               ::bs/vuosi (op/in (map :vuosi jhk-tiedot))
-                                                               ::bs/kuukausi (op/in (map :kuukausi jhk-tiedot))
+                                                               ::bs/vuosi (op/in (distinct (map :vuosi jhk-tiedot)))
                                                                ::bs/ennen-urakkaa ennen-urakkaa?})
+                                  olemassa-olevat-jhkt (filter (fn [{::bs/keys [vuosi kuukausi] :as jhk}]
+                                                                 (some #(when (and (= vuosi (:vuosi %))
+                                                                                   (= kuukausi (:kuukausi %)))
+                                                                          jhk)
+                                                                       jhk-tiedot))
+                                                               olemassa-olevat-jhkt)
                                   uudet-jhkt (remove (fn [{:keys [vuosi kuukausi]}]
                                                        (some #(and (= vuosi (::bs/vuosi %))
                                                                    (= kuukausi (::bs/kuukausi %)))
