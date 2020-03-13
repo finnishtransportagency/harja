@@ -1006,6 +1006,9 @@
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa)))))}
+                           :nollaa-johdetut-arvot {:polut [[:suodattimet :hoitokauden-numero]]
+                                                   :aseta (fn [tila _]
+                                                            (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))}
                            :yhteenveto-komponentin-seuranta {:polut [[:domain polun-osa]]
                                                              :aseta (fn [tila maarat]
                                                                       (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
@@ -1189,7 +1192,19 @@
                                                        [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka) osa]
                                                        [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero) (first osan-paikka) osa])))
                            :aseta-jh-yhteenveto! jh-yhteenvetopaivitys}
-                          (merge (reduce (fn [seurannat {:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
+                          (merge {:nollaa-johdetut-arvot {:polut [[:suodattimet :hoitokauden-numero]]
+                                                          :aseta (fn [tila _]
+                                                                   (as-> tila $
+                                                                         (reduce (fn [tila {:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
+                                                                                   (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi] (vec (repeat (kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus) {}))))
+                                                                                 $
+                                                                                 johto-ja-hallintokorvaukset-pohjadata)
+                                                                         (reduce (fn [tila jarjestysnumero]
+                                                                                   (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
+                                                                                     (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu nimi] (vec (repeat 12 {})))))
+                                                                                 $
+                                                                                 (range 1 (inc jh-korvausten-omiariveja-lkm)))))}}
+                                 (reduce (fn [seurannat {:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                                            (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
                                                  data-koskee-ennen-urakkaa? (toimenpide-koskee-ennen-urakkaa? hoitokaudet)]
                                              (merge seurannat
@@ -1223,8 +1238,8 @@
                                                                                                                                                                                                                                 :kk-v kk-v})))}})))
                                          {}
                                          johto-ja-hallintokorvaukset-pohjadata)
-                                 (reduce (fn [seurannat index]
-                                           (let [nimi (jh-omienrivien-nimi index)]
+                                 (reduce (fn [seurannat jarjestysnumero]
+                                           (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
                                              (merge seurannat
                                                     {(keyword (str "yhteenveto-" nimi "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
                                                                                                              [:suodattimet :hoitokauden-numero]]
