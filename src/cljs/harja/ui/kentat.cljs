@@ -1444,13 +1444,17 @@
                      (partition 2 params))
         {komponentti            :komponentti
          komponentin-argumentit :komponentin-argumentit
-         tyylit                 :tyylit} propit
-        propit (apply dissoc propit #{:komponentti :tyylit :komponentin-argumentit})]
+         tyylit                 :tyylit
+         otsikko-tag            :otsikko-tag
+         } propit
+        propit (apply dissoc propit #{:komponentti :tyylit :komponentin-argumentit :otsikko-tag})]
     [:div {:class (or (:kontti tyylit)
                       #{"kulukentta"})}
-     [:label {:id    id
-              :class (or (:otsikko tyylit)
-                         #{})} otsikko]
+     [(if-not (nil? otsikko-tag)
+        otsikko-tag
+        :label) {:id    id
+                 :class (or (:otsikko tyylit)
+                            #{})} otsikko]
      (if komponentti
        [komponentti (or komponentin-argumentit {})]
        [:input.input-default.komponentin-input

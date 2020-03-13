@@ -403,7 +403,7 @@ button > .ajax-loader {
   width:100%;
   padding:16px;
   background-color: @gray245;
-  margin: 4px 0px;
+  margin: 4px 14px;
   display:flex;
   flex-direction: column;
 
@@ -440,16 +440,51 @@ button > .ajax-loader {
 
 .ajax-peitto {
   &-kontti {
-    position:relative;
+    position: relative;
   }
-  position:absolute;
-  top:0px;
-  left:0px;
-  background-color:rgba(240, 240, 240, 0.8);
-  display:flex;
+
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: rgba(240, 240, 240, 0.8);
+  display: flex;
   justify-content: center;
   align-items: center;
-  width:100%;
-  height:100%;
+  width: 100%;
+  height: 100%;
 }
 
+.palstat {
+  margin-right:28px;
+  margin-left:28px;
+  display:flex;
+  flex-direction:row;
+  align-items: flex-start;
+  max-width: 960px;
+}
+
+.palsta {
+  padding-left:55px;
+  padding-right:55px;
+  flex-grow: 1;
+  flex-basis:50%;
+  max-width:50%;
+  &:first-child {
+    padding-left:0px;
+  }
+  &:last-child {
+    padding-right:0px;
+  }
+  &:only-child {
+    padding-right:55px;
+
+  }
+}
+
+.flex-row {
+  display:flex;
+  flex-direction:row;
+  justify-content: space-between;
+  align-items:center;
+  width:100%;
+}
