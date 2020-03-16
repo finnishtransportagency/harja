@@ -16,7 +16,7 @@
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log error]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [goog.dom :as dom])
@@ -1481,10 +1481,7 @@
                                                                                           :triggeroi-seuranta? true}
                                                                                          false))
                                                      :format-fn (fn [teksti]
-                                                                  (case teksti
-                                                                    :kesa "5"
-                                                                    :talvi "7"
-                                                                    :molemmat "12"))
+                                                                  (str (t/maksukausi-kuukausina teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]
                                                                    (grid/osa-polusta pudotusvalikko [:.. :..]))
                                                      :vayla-tyyli? true
@@ -1640,21 +1637,33 @@
                                                                         []
                                                                         (range 1 (inc t/jh-korvausten-omiariveja-lkm)))
                                                          :toiminto! (fn [_ data & oma-data]
-                                                                      (let [omien-rivien-tiedot (map ffirst oma-data)
+                                                                      (let [omien-rivien-tiedot (transduce (comp (map ffirst)
+                                                                                                                 (map-indexed #(assoc %2 :jarjestysnumero (inc %1))))
+                                                                                                           conj
+                                                                                                           []
+                                                                                                           oma-data)
                                                                             lisatyt-rivit (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit] #{})]
-                                                                        (doseq [{:keys [toimenkuva toimenkuva-id]} omien-rivien-tiedot
+                                                                        (doseq [{:keys [toimenkuva toimenkuva-id jarjestysnumero]} omien-rivien-tiedot
                                                                                 :when (and (not (contains? lisatyt-rivit toimenkuva-id))
                                                                                            (not (empty? toimenkuva)))]
-                                                                          (let [lisattava-rivi (grid/samanlainen-osa (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                                                                                                                                       [::g-pohjat/data 0]))]
+                                                                          (let [omanimi (t/jh-omienrivien-nimi jarjestysnumero)
+                                                                                lisattava-rivi (grid/samanlainen-osa (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                       [::g-pohjat/data 0]))
+                                                                                rivin-paikka-index (count (grid/hae-grid (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                           [::g-pohjat/data])
+                                                                                                                         :lapset))]
                                                                             (e! (tuck-apurit/->PaivitaTila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit]
-                                                                                                             (fn [lisatyt-rivit]
-                                                                                                               (conj (or lisatyt-rivit #{}) toimenkuva-id))))
+                                                                                                           (fn [lisatyt-rivit]
+                                                                                                             (conj (or lisatyt-rivit #{}) toimenkuva-id))))
                                                                             (grid/lisaa-rivi! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
                                                                                               lisattava-rivi
-                                                                                              [1 (count (grid/hae-grid (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                                                                                                                                         [::g-pohjat/data])
-                                                                                                                       :lapset))])
+                                                                                              [1 rivin-paikka-index])
+                                                                            (grid/lisaa-uuden-osan-rajapintakasittelijat (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                           [1 rivin-paikka-index])
+                                                                                                                         #_[::g-pohjat/data rivin-paikka-index ::yhteenveto]
+                                                                                                                         [:. ::yhteenveto] {:rajapinta (keyword (str "yhteenveto-" omanimi))
+                                                                                                                                            :solun-polun-pituus 1
+                                                                                                                                            :datan-kasittely identity})
                                                                             (t/paivita-raidat! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid]))))))}}
                                  (reduce (fn [polut jarjestysnumero]
                                            (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
@@ -1996,23 +2005,29 @@
 
 (defn indeksilaskuri
   ([hinnat indeksit] [indeksilaskuri hinnat indeksit nil])
-  ([hinnat indeksit dom-id]
-   (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
-                                    (let [hoitokauden-numero (inc index)
-                                          {:keys [vuosi]} (get indeksit index)
-                                          indeksikorjattu-summa (t/indeksikorjaa summa hoitokauden-numero)]
-                                      {:vuosi vuosi
-                                       :summa indeksikorjattu-summa
-                                       :hoitokauden-numero hoitokauden-numero}))
-                                  hinnat))]
-     [:div.hintalaskuri.indeksilaskuri {:id dom-id}
-      [:span "Indeksikorjattu"]
-      [:div.hintalaskuri-vuodet
-       (for [{:keys [vuosi summa hoitokauden-numero]} hinnat]
-         ^{:key hoitokauden-numero}
-         [hintalaskurisarake vuosi (fmt/euro summa)])
-       [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
-       [hintalaskurisarake " " (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
+  ([_ _ _]
+   (let [fmt-euro (fn [summa]
+                    (try (fmt/euro summa)
+                         (catch :default e
+                           (error (str "EURO FORMATOINTI EPÄONNISTUI SUMMALLE " summa "\n") e)
+                           summa)))]
+     (fn [hinnat indeksit dom-id]
+       (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
+                                        (let [hoitokauden-numero (inc index)
+                                              {:keys [vuosi]} (get indeksit index)
+                                              indeksikorjattu-summa (t/indeksikorjaa summa hoitokauden-numero)]
+                                          {:vuosi vuosi
+                                           :summa indeksikorjattu-summa
+                                           :hoitokauden-numero hoitokauden-numero}))
+                                      hinnat))]
+         [:div.hintalaskuri.indeksilaskuri {:id dom-id}
+          [:span "Indeksikorjattu"]
+          [:div.hintalaskuri-vuodet
+           (for [{:keys [vuosi summa hoitokauden-numero]} hinnat]
+             ^{:key hoitokauden-numero}
+             [hintalaskurisarake vuosi (fmt-euro summa)])
+           [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
+           [hintalaskurisarake " " (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))))
 
 (defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
   (if (and hoitokauden-numero pvmt)

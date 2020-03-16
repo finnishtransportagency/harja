@@ -753,6 +753,29 @@
                             ^{:key (gop/id osa)}
                             [gop/piirra osa]))])}))
 
+(defn lisaa-uuden-osan-rajapintakasittelijat [uusi-osa & gridkasittelijat]
+  (let [polun-alku (::index-polku uusi-osa)
+        uudet-gridkasittelijat (reduce (fn [m [polku kasittelija]]
+                                         (let [polku (muodosta-uusi-polku polku polun-alku)]
+                                           (assoc m polku (rajapinnan-grid-kasittelija (root uusi-osa) polku kasittelija))))
+                                       {}
+                                       (partition 2 gridkasittelijat))
+        osan-kasittely (fn [osa]
+                         (osan-data-yhdistaminen uudet-gridkasittelijat osa))
+        uusi-grid (paivita-root! uusi-osa (fn [vanha-grid]
+                                             (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
+                                                                                               (merge rk
+                                                                                                      uudet-gridkasittelijat)))))]
+    (paivita-kaikki-lapset! uusi-grid
+                            (fn [osa]
+                              (gop/id? osa (gop/id uusi-osa)))
+                            (fn [uusi-osa]
+                              (if (satisfies? p/IGrid uusi-osa)
+                                (paivita-kaikki-lapset! (osan-kasittely uusi-osa)
+                                                        (constantly true)
+                                                        osan-kasittely)
+                                (osan-kasittely uusi-osa))))))
+
 (defn kasittele-osien-ja-rajapintakasittelijoiden-muutos! [grid gridin-data entinen-toistettavan-osan-data uudet-grid-kasittelijat]
   (let [toistettavan-osan-data (:toistettavan-osan-data grid)
         toistettavan-osan-data (toistettavan-osan-data gridin-data)
@@ -1177,8 +1200,14 @@
                                                                                                        ;; Jos toiminnossa muutetaan itse atomia, niin halutaan, että seurannat huomioi sen muutoksen
                                                                                                        (binding [dk/*seuranta-muutos?* false]
                                                                                                          (let [data @data-atom
-                                                                                                               uusi-data (map #(get-in data %) polut)]
-                                                                                                           (apply toiminto! (root this) data uusi-data))))))]
+                                                                                                               uusi-data (map #(get-in data %) polut)
+                                                                                                               lisa-argumentit (:args (meta polut))]
+                                                                                                           (apply toiminto!
+                                                                                                                  (root this)
+                                                                                                                  data
+                                                                                                                  (if lisa-argumentit
+                                                                                                                    (concat uusi-data lisa-argumentit)
+                                                                                                                    uusi-data)))))))]
                                                                     (add-watch data-atom
                                                                                tapahtuman-nimi
                                                                                (fn [_ _ vanha uusi]

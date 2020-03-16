@@ -72,6 +72,9 @@
 (defn samanlainen-osa [osa]
   (g/samanlainen-osa osa))
 
+(defn lisaa-uuden-osan-rajapintakasittelijat [osa & gridkasittelijat]
+  (apply g/lisaa-uuden-osan-rajapintakasittelijat osa gridkasittelijat))
+
 ;; HAUT
 
 ; - gridiin liittyvät haut
