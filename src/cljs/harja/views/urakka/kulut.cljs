@@ -95,11 +95,10 @@
 
 (defn laskun-tiedot
   [{:keys [paivitys-fn haetaan]}
-   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva kohdistukset] :as lomake} :lomake}]
+   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva] :as lomake} :lomake}]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
-        koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
-        summa-meta (get validius [:kohdistukset 0 :summa])]
+        koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])]
     (lomakkeen-osio
       "Laskun tiedot"
       [kentat/vayla-lomakekentta
@@ -125,23 +124,7 @@
                      :laskun-numero (let [num (-> % .-target .-value js/parseInt)]
                                       (if (js/isNaN num)
                                         nil
-                                        num)))]
-      [kentat/vayla-lomakekentta
-       "Määrä € *"
-       :otsikko-tag :h5
-       :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
-       :disabled (or (> (count kohdistukset) 1)
-                     (not= 0 haetaan))
-       :arvo (or (when (> (count kohdistukset) 1)
-                   (gstring/format "%.2f" (reduce
-                                            (fn [a s]
-                                              (+ a (tiedot/parsi-summa (:summa s))))
-                                            0
-                                            kohdistukset)))
-                 (get-in lomake [:kohdistukset 0 :summa])
-                 0)
-       :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
-       :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))])))
+                                        num)))])))
 
 (defn kohdistuksen-poisto [indeksi kohdistukset]
   (apply conj
@@ -378,10 +361,8 @@
 (defn- lisatiedot [_ _]
   (let [y-tunnus-puuttuu "Y-tunnus puuttuu"
         aliurakoitsija-atomi (r/atom {:id nil :nimi nil :ytunnus y-tunnus-puuttuu})]
-    (fn
-      [{:keys [paivitys-fn haetaan e!]}
-       {{:keys [aliurakoitsija liite-id liite-nimi liite-tyyppi liite-koko
-                lisatieto] :as _lomake} :lomake
+    (fn [{:keys [paivitys-fn haetaan e!]}
+       {{:keys [aliurakoitsija lisatieto] :as _lomake} :lomake
         aliurakoitsijat                 :aliurakoitsijat}]
       (let [{:keys [ytunnus]} @aliurakoitsija-atomi
             ytunnus-validi? (if (not= ytunnus y-tunnus-puuttuu)
@@ -444,27 +425,56 @@
            :disabled (not= 0 haetaan)
            :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
            :arvo lisatieto]
-          [kentat/vayla-lomakekentta
-           "Liite"
-           :otsikko-tag :h5
-           :komponentti (fn [_]
-                          [:div.liiterivi
-                           [:div.liitelista
-                            (if-not (nil? liite-id) [liitteet/liitelinkki {:id     liite-id
-                                                                           :nimi   liite-nimi
-                                                                           :tyyppi liite-tyyppi
-                                                                           :koko   liite-koko} (str liite-nimi)]
-                                                    "Ei liitteitä")]
-                           (when-not (nil? liite-id) [:div.liitepoisto
-                                                      [napit/poista "Poista"
-                                                       #(e! (tiedot/->PoistaLiite liite-id))
-                                                       {:vayla-tyyli?  true
-                                                        :teksti-nappi? true}]])
-                           [:div.liitenappi
-                            [liitteet/lisaa-liite
-                             (-> @tila/yleiset :urakka :id)
-                             {:nayta-lisatyt-liitteet? false
-                              :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])])))))
+          )))))
+
+(defn- maara-summa
+  [{:keys [paivitys-fn haetaan]}
+   {{:keys [kohdistukset] :as lomake} :lomake}]
+  (let [validius (meta lomake)
+        summa-meta (get validius [:kohdistukset 0 :summa])]
+    [:div.palsta
+   [kentat/vayla-lomakekentta
+    "Määrä € *"
+    :otsikko-tag :h5
+    :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
+    :disabled (or (> (count kohdistukset) 1)
+                  (not= 0 haetaan))
+    :arvo (or (when (> (count kohdistukset) 1)
+                (gstring/format "%.2f" (reduce
+                                         (fn [a s]
+                                           (+ a (tiedot/parsi-summa (:summa s))))
+                                         0
+                                         kohdistukset)))
+              (get-in lomake [:kohdistukset 0 :summa])
+              0)
+    :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
+    :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
+
+(defn- liitteet
+  [{:keys [e!]}
+   {{:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _lomake} :lomake}]
+  [:div.palsta
+   [kentat/vayla-lomakekentta
+   "Liite"
+   :otsikko-tag :h5
+   :komponentti (fn [_]
+                  [:div.liiterivi
+                   [:div.liitelista
+                    (if-not (nil? liite-id) [liitteet/liitelinkki {:id     liite-id
+                                                                   :nimi   liite-nimi
+                                                                   :tyyppi liite-tyyppi
+                                                                   :koko   liite-koko} (str liite-nimi)]
+                                            "Ei liitteitä")]
+                   (when-not (nil? liite-id) [:div.liitepoisto
+                                              [napit/poista ""
+                                               #(e! (tiedot/->PoistaLiite liite-id))
+                                               {:vayla-tyyli?  true
+                                                :teksti-nappi? true}]])
+                   [:div.liitenappi
+                    [liitteet/lisaa-liite
+                     (-> @tila/yleiset :urakka :id)
+                     {:nayta-lisatyt-liitteet? false
+                      :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])]])
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -488,6 +498,8 @@
           {:lomake        lomake
            :tehtavaryhmat tehtavaryhmat}]
          [:div.palstat
+          {:style {:margin-top "56px"
+                   :margin-bottom "56px"}}
           [laskun-tiedot {:paivitys-fn paivitys-fn
                           :haetaan     haetaan}
            {:lomake lomake}]
@@ -496,18 +508,22 @@
                        :e!          e!} {:lomake          lomake
                                          :aliurakoitsijat aliurakoitsijat}]]
          [:div.palstat
-          [:div.palsta
-           [napit/tallenna
-            "Tallenna"
-            #(e! (tiedot/->TallennaKulu))
-            {:vayla-tyyli? true
-             :luokka       "suuri"}]
-           [napit/peruuta
-            "Peruuta"
-            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-            {:ikoni        ikonit/remove
-             :luokka       "suuri"
-             :vayla-tyyli? true}]]]
+          {:style {:margin-top "56px"}}
+          [maara-summa {:paivitys-fn paivitys-fn
+                        :haetaan     haetaan} {}]
+          [liitteet {:e! e!} {:lomake lomake}]]
+         [:div.kulu-napit
+          [napit/tallenna
+           "Tallenna"
+           #(e! (tiedot/->TallennaKulu))
+           {:vayla-tyyli? true
+            :luokka       "suuri"}]
+          [napit/peruuta
+           "Peruuta"
+           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+           {:ikoni        ikonit/remove
+            :luokka       "suuri"
+            :vayla-tyyli? true}]]
          (when (not= 0 haetaan)
            [:div.ajax-peitto [yleiset/ajax-loader "Odota"]])]))))
 
