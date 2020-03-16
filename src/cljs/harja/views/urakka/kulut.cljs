@@ -510,7 +510,7 @@
          [:div.palstat
           {:style {:margin-top "56px"}}
           [maara-summa {:paivitys-fn paivitys-fn
-                        :haetaan     haetaan} {}]
+                        :haetaan     haetaan} {:lomake lomake}]
           [liitteet {:e! e!} {:lomake lomake}]]
          [:div.kulu-napit
           [napit/tallenna
