@@ -984,8 +984,7 @@
                                                                                           :koko (-> konf/auto
                                                                                                     (assoc-in [:rivi :nimet]
                                                                                                               {::data-yhteenveto 0
-                                                                                                               ::data-sisalto 1})
-                                                                                                    #_(assoc-in [:rivi :korkeudet] {0 "40px"}))
+                                                                                                               ::data-sisalto 1}))
                                                                                           :luokat #{"salli-ylipiirtaminen"}
                                                                                           :osat [(with-meta (grid/rivi {:nimi ::data-yhteenveto
                                                                                                                         :koko {:seuraa {:seurattava ::otsikko
@@ -1634,7 +1633,29 @@
                                                                                                                                                     (= maksukausi (:maksukausi jh-pohjadata)))
                                                                                                                                            index))
                                                                                                                                        t/johto-ja-hallintokorvaukset-pohjadata))]]
-                                                                                                (rividisable! g index kuukausitasolla?)))))}}
+                                                                                                (rividisable! g index kuukausitasolla?)))))}
+                                  :lisaa-yhteenvetorivi {:polut (reduce (fn [polut jarjestysnumero]
+                                                                          (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
+                                                                            (conj polut [:domain :johto-ja-hallintokorvaukset nimi])))
+                                                                        []
+                                                                        (range 1 (inc t/jh-korvausten-omiariveja-lkm)))
+                                                         :toiminto! (fn [_ data & oma-data]
+                                                                      (let [omien-rivien-tiedot (map ffirst oma-data)
+                                                                            lisatyt-rivit (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit] #{})]
+                                                                        (doseq [{:keys [toimenkuva toimenkuva-id]} omien-rivien-tiedot
+                                                                                :when (and (not (contains? lisatyt-rivit toimenkuva-id))
+                                                                                           (not (empty? toimenkuva)))]
+                                                                          (let [lisattava-rivi (grid/samanlainen-osa (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                       [::g-pohjat/data 0]))]
+                                                                            (e! (tuck-apurit/->PaivitaTila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit]
+                                                                                                             (fn [lisatyt-rivit]
+                                                                                                               (conj (or lisatyt-rivit #{}) toimenkuva-id))))
+                                                                            (grid/lisaa-rivi! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                              lisattava-rivi
+                                                                                              [1 (count (grid/hae-grid (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                         [::g-pohjat/data])
+                                                                                                                       :lapset))])
+                                                                            (t/paivita-raidat! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid]))))))}}
                                  (reduce (fn [polut jarjestysnumero]
                                            (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
                                              (merge polut

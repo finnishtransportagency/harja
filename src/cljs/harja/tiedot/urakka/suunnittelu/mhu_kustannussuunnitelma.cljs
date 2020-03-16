@@ -1464,7 +1464,6 @@
            (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
            #_(r/flush))))))
 
-
 (defrecord TaulukoidenVakioarvot [])
 (defrecord FiltereidenAloitusarvot [])
 (defrecord TallennaHankintojenArvot [tallennettava-asia hoitokauden-numero tunnisteet])

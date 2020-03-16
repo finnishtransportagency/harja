@@ -66,7 +66,7 @@
 (def ^:dynamic *seuranta-muutos?* false)
 (def ^:dynamic *kaytava-data-atom-hash* nil)
 
-(def ^:mutable ^boolean ajetaan-seurannat? false)
+(def ^:mutable ^boolean ajetaan-seurannat #{})
 (def ^:mutable ^array ajettavat-fns (array))
 
 (defprotocol IKuuntelija
@@ -330,7 +330,7 @@
                 (doseq [[_ f] kuuntelija-lisaaja]
                   (f vanha-tila paivitetty-tila)))
               (when triggerit-kayty-lapi?
-                (set! ajetaan-seurannat? true)
+                (set! ajetaan-seurannat (conj ajetaan-seurannat data-atom-hash))
                 (r/next-tick (fn []
                                (binding [*seuranta-muutos?* true]
                                  (when-let [seurannan-tila (get-in @seurannan-valitila [data-atom-hash ::tila])]
@@ -338,12 +338,13 @@
                                    (swap! seurannan-vanha-cache dissoc data-atom-hash)
                                    (swap! data-atom (fn [entinen-tila]
                                                       seurannan-tila))
-                                   (when (and ajetaan-seurannat? ajettavat-fns)
+                                   (when (and (= 1 (count ajetaan-seurannat))
+                                              ajettavat-fns)
                                      (let [fs ajettavat-fns]
                                        (dotimes [i (alength fs)]
                                          ((aget fs i)))))
                                    (set! ajettavat-fns (array))
-                                   (set! ajetaan-seurannat? false))))))))))))
+                                   (set! ajetaan-seurannat (disj ajetaan-seurannat data-atom-hash)))))))))))))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
@@ -399,7 +400,7 @@
 
 (defn next-tick [f]
   (r/next-tick (fn []
-                 (if ajetaan-seurannat?
+                 (if-not (empty? ajetaan-seurannat)
                    (.push ajettavat-fns f)
                    (f)))))
 

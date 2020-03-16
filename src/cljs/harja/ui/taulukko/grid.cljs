@@ -69,13 +69,6 @@
 (defn kopio [osa]
   (gop/kopioi osa))
 
-(defn grid-pohjasta [grid-pohja root-asetus! root-asetukset]
-  (let [kopio (kopio grid-pohja)
-        g (g/muuta-id! kopio)
-        g (aseta-root-fn! g root-asetukset)]
-    (root-asetus! g)
-    g))
-
 (defn samanlainen-osa [osa]
   (g/samanlainen-osa osa))
 
@@ -269,8 +262,6 @@
 ;; DATAN KÄSITTELIJÄ
 
 (defn rajapinta-grid-yhdistaminen! [grid rajapinta datan-kasittelija grid-kasittelija]
-  (println "(satisfies? IGridDataYhdistaminen grid) " (satisfies? gp/IGridDataYhdistaminen grid))
-  (println "(satisfies? IGrid grid) " (satisfies? gp/IGrid grid))
   (gp/rajapinta-grid-yhdistaminen! grid rajapinta datan-kasittelija grid-kasittelija))
 
 (defn rajapinnan-kuuntelija [kasittelija rajapinnan-nimi]

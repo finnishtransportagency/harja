@@ -403,9 +403,7 @@
         root-grid? (gop/id? kopio (::root-id kopio))
         paivita-grid (fn [gridi]
                        (swap! ((get-in @taulukko-konteksti [(::root-id gridi) :koko-fn])) (fn [koot]
-                                                                                            (-> koot
-                                                                                                (dissoc (gop/id kopio))
-                                                                                                (assoc id (get koot (gop/id kopio))))))
+                                                                                            (assoc koot id (get koot (gop/id kopio)))))
                        (if root-grid?
                          (paivita-kaikki-lapset! (assoc gridi ::root-id id)
                                                  (constantly true)
@@ -590,14 +588,7 @@
                                                      (muuta-id! lapsi)))
                            (muuta-id! kopio))]
      (if kopioitava-grid?
-       (do
-         (swap! ((get-in @taulukko-konteksti [(::root-id tiedot-osa) :koko-fn]))
-                (fn [koot]
-                  (merge koot (p/koot kopio-eri-idlla))))
-         (paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil ::root-id (::root-id tiedot-osa))
-                                 (constantly true)
-                                 (fn [lapsi]
-                                   (assoc lapsi ::root-id (::root-id tiedot-osa)))))
+       kopio-eri-idlla
        (assoc kopio-eri-idlla ::root-id (::root-id tiedot-osa))))))
 
 (defn- rajapinnan-grid-kasittelija
@@ -1080,10 +1071,9 @@
   grid)
 
 (defn grid-kopioi [kopioitava-grid konstruktori]
-  (let [koko (r/atom (select-keys (p/koot kopioitava-grid) #{(gop/id kopioitava-grid)}))
-        grid (konstruktori (gop/id kopioitava-grid)
+  (let [grid (konstruktori (gop/id kopioitava-grid)
                            (r/atom (p/alueet kopioitava-grid))
-                           koko
+                           nil
                            (r/atom (p/lapset kopioitava-grid))
                            (r/atom (p/parametrit kopioitava-grid)))
         grid (paivita-kaikki-lapset! grid
@@ -1092,17 +1082,10 @@
                                        (if (satisfies? p/IGrid lapsi)
                                          (gop/kopioi lapsi)
                                          lapsi)))
-        grid (paivita-kaikki-lapset! grid
+        grid (paivita-kaikki-lapset! (dissoc grid ::osan-derefable ::tunniste-rajapinnan-dataan)
                                      (constantly true)
-                                     (fn [osa]
-                                       (let [grid? (satisfies? p/IGrid osa)
-                                             osan-koko (when grid?
-                                                    (p/koko osa))
-                                             id (gop/id osa)
-                                             _ (when osan-koko
-                                                 (swap! koko (fn [koko]
-                                                               (assoc koko id osan-koko))))]
-                                         (assoc osa :koko nil))))]
+                                     (fn [lapsi]
+                                       (dissoc lapsi ::osan-derefable ::tunniste-rajapinnan-dataan)))]
     (merge grid
            (dissoc kopioitava-grid :id :alueet :koko :osat :parametrit))))
 
@@ -1191,9 +1174,11 @@
                                                            (map (fn [[tapahtuman-nimi {:keys [polut toiminto!] :as tapahtuma}]]
                                                                   (let [kasittely-fn (fn []
                                                                                        (dk/next-tick (fn []
-                                                                                                      (let [data @data-atom
-                                                                                                            uusi-data (map #(get-in data %) polut)]
-                                                                                                        (apply toiminto! (root this) data uusi-data)))))]
+                                                                                                       ;; Jos toiminnossa muutetaan itse atomia, niin halutaan, että seurannat huomioi sen muutoksen
+                                                                                                       (binding [dk/*seuranta-muutos?* false]
+                                                                                                         (let [data @data-atom
+                                                                                                               uusi-data (map #(get-in data %) polut)]
+                                                                                                           (apply toiminto! (root this) data uusi-data))))))]
                                                                     (add-watch data-atom
                                                                                tapahtuman-nimi
                                                                                (fn [_ _ vanha uusi]
@@ -1334,64 +1319,63 @@
        :else osa))))
 
 (defn piirra-grid [grid]
-  (let [vanha (atom grid)]
-    (r/create-class
-      {:constructor (fn [this props]
-                      (when (= (gop/id grid) (::root-id grid))
-                        (aseta-koot! grid))
-                      (set! (.-state this) #js {:error nil}))
-       :get-derived-state-from-error (fn [error]
-                                       #js {:error error})
-       :component-did-catch (fn [error error-info]
-                              (warn (str "Komponentti kaatui virheeseen: "
-                                         error-info "\n"
-                                         (when g-debug/GRID_DEBUG
-                                           (apply str "\n---- VIIMEISIMMÄT DATA MUUTOKSET ----"
-                                                  (str "\nGRID: " (or (gop/nimi grid) "Nimetön") "(" (gop/id grid) ")")
-                                                  (for [lapsi (p/lapset grid)]
-                                                    (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
-                                                                     (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
-                                                      (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
-                                                           "\n" (with-out-str (cljs.pprint/pprint
-                                                                                {:data-rajapinnasta (first data)
-                                                                                 :grid-data (second data)
-                                                                                 :osan-derefable (get data 2)}))))))))))
-       :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
-       :render (fn [this]
-                 (if-let [error (.. this -state -error)]
-                   [virhekasittely/rendaa-virhe error]
-                   (let [[_ grid] (r/argv this)
-                         ;; Tätä domNodeHaku funktiota voi sitten käyttää jossain muualla, jos haluaa esim. muuttaa dom noden attribuutin arvoa
-                         ;; ilman, että se triggeröi reactin renderöintiä.
-                         _ (set! (.-domNodeHaku grid) (fn [] (dom/dom-node this)))
-                         _ (when (instance? DynaaminenGrid grid)
-                             @(get-in grid [:osien-maara-muuttui :trigger]))
-                         {luokat :class dom-id :id style :style} @(:parametrit grid)
-                         #_#__ (when-let [koko-fn (:koko-fn grid)]
-                                 @(koko-fn))
-                         #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
-                                               (seurattava-koko grid (:seurattava seuraa-asetukset)))
-                         #_#_aseta-koko-uusiksi? (and seurattava-koko
-                                                      (or (not= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
-                                                          (not= (:rivi @seurattava-koko) (:rivi (p/koko grid)))))
-                         {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
-                     ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
-                     #_(when aseta-koko-uusiksi?
-                         (aseta-seurattava-koko! grid))
-                     [:div.grid-taulukko {:class (apply str (interpose " " luokat))
-                                          :id dom-id
-                                          :style style}
-                      [:div {:style {:display "grid"
-                                     :position "relative"
-                                     :top top
-                                     :left left
-                                     :grid-template-columns leveydet
-                                     :grid-template-rows korkeudet}}
-                       (if (instance? DynaaminenGrid grid)
-                         ^{:key (or (-> grid meta :key) (str (:id grid) "-dynamic"))}
-                         [dynaaminen-grid grid]
-                         ^{:key (or (-> grid meta :key) (str (:id grid) "-static"))}
-                         [staattinen-grid grid])]])))})))
+  (r/create-class
+    {:constructor (fn [this props]
+                    (when (= (gop/id grid) (::root-id grid))
+                      (aseta-koot! grid))
+                    (set! (.-state this) #js {:error nil}))
+     :get-derived-state-from-error (fn [error]
+                                     #js {:error error})
+     :component-did-catch (fn [error error-info]
+                            (warn (str "Komponentti kaatui virheeseen: "
+                                       error-info "\n"
+                                       (when g-debug/GRID_DEBUG
+                                         (apply str "\n---- VIIMEISIMMÄT DATA MUUTOKSET ----"
+                                                (str "\nGRID: " (or (gop/nimi grid) "Nimetön") "(" (gop/id grid) ")")
+                                                (for [lapsi (p/lapset grid)]
+                                                  (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
+                                                                   (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
+                                                    (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
+                                                         "\n" (with-out-str (cljs.pprint/pprint
+                                                                              {:data-rajapinnasta (first data)
+                                                                               :grid-data (second data)
+                                                                               :osan-derefable (get data 2)}))))))))))
+     :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
+     :render (fn [this]
+               (if-let [error (.. this -state -error)]
+                 [virhekasittely/rendaa-virhe error]
+                 (let [[_ grid] (r/argv this)
+                       ;; Tätä domNodeHaku funktiota voi sitten käyttää jossain muualla, jos haluaa esim. muuttaa dom noden attribuutin arvoa
+                       ;; ilman, että se triggeröi reactin renderöintiä.
+                       _ (set! (.-domNodeHaku grid) (fn [] (dom/dom-node this)))
+                       _ (when (instance? DynaaminenGrid grid)
+                           @(get-in grid [:osien-maara-muuttui :trigger]))
+                       {luokat :class dom-id :id style :style} @(:parametrit grid)
+                       #_#__ (when-let [koko-fn (:koko-fn grid)]
+                               @(koko-fn))
+                       #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
+                                             (seurattava-koko grid (:seurattava seuraa-asetukset)))
+                       #_#_aseta-koko-uusiksi? (and seurattava-koko
+                                                    (or (not= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
+                                                        (not= (:rivi @seurattava-koko) (:rivi (p/koko grid)))))
+                       {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
+                   ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
+                   #_(when aseta-koko-uusiksi?
+                       (aseta-seurattava-koko! grid))
+                   [:div.grid-taulukko {:class (apply str (interpose " " luokat))
+                                        :id dom-id
+                                        :style style}
+                    [:div {:style {:display "grid"
+                                   :position "relative"
+                                   :top top
+                                   :left left
+                                   :grid-template-columns leveydet
+                                   :grid-template-rows korkeudet}}
+                     (if (instance? DynaaminenGrid grid)
+                       ^{:key (or (-> grid meta :key) (str (:id grid) "-dynamic"))}
+                       [dynaaminen-grid grid]
+                       ^{:key (or (-> grid meta :key) (str (:id grid) "-static"))}
+                       [staattinen-grid grid])]])))}))
 
 (defn vaihda-osa! [vaihdettava-osa vaihto-fn & datan-kasittelyt]
   (let [root-grid (root vaihdettava-osa)
