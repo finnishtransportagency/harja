@@ -13,7 +13,7 @@
   (-alueet [this])
   (-aseta-alueet! [this alueet])
   (-paivita-alueet! [this f])
-  (-aseta-root-fn [this f])
+  (-aseta-root-fn! [this f])
   (-parametrit [this])
   (-aseta-parametrit! [this parametrit])
   (-paivita-parametrit! [this f])
@@ -156,9 +156,11 @@
               (satisfies? IGrid grid))]}
   (-rajapinta-grid-yhdistaminen! grid rajapinta datan-kasittelija grid-kasittelija))
 
-(defn aseta-root-fn [this f]
-  ;; TODO :pre ja :post
-  (-aseta-root-fn this f))
+(defn aseta-root-fn! [this m]
+  {:pre [(fn? (:haku m))
+         (fn? (:paivita! m))]
+   :post [(satisfies? IGrid %)]}
+  (-aseta-root-fn! this m))
 
 (defn grid-tapahtumat [this data-atom tapahtuma-maaritelmat]
   ;; TODO :pre ja :post

@@ -70,8 +70,8 @@
   (-paivita-alueet! [this f]
     ;;TODO Rajoita alueiden asettamista
     (g/paivita-alueet! this f))
-  (-aseta-root-fn [this f]
-    (g/aseta-root-fn this f))
+  (-aseta-root-fn! [this f]
+    (g/aseta-root-fn! this f))
 
   (-parametrit [this]
     (g/grid-parametrit this))
@@ -153,8 +153,8 @@
     (g/aseta-alueet! this alueet))
   (-paivita-alueet! [this f]
     (g/paivita-alueet! this f))
-  (-aseta-root-fn [this f]
-    (g/aseta-root-fn this f))
+  (-aseta-root-fn! [this f]
+    (g/aseta-root-fn! this f))
 
   (-parametrit [this]
     (g/grid-parametrit this))

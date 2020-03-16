@@ -97,7 +97,7 @@
   sp/ISolu
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc this ::fmt f))
+    (assoc this ::fmt (r/partial f)))
   (-lisaa-fmt-aktiiviselle [this f]
     this))
 
@@ -160,7 +160,7 @@
     (assoc this ::nimi nimi))
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc this ::fmt f))
+    (assoc this ::fmt (r/partial f)))
   (-lisaa-fmt-aktiiviselle [this f]
     this))
 
@@ -271,9 +271,9 @@
     (assoc this ::nimi nimi))
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc this ::fmt f))
+    (assoc this ::fmt (r/partial f)))
   (-lisaa-fmt-aktiiviselle [this f]
-    (assoc this ::fmt-aktiivinen f)))
+    (assoc this ::fmt-aktiivinen (r/partial f))))
 
 (defn syote
   ([] (syote nil))
@@ -345,7 +345,7 @@
     (assoc this ::nimi nimi))
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc this ::fmt f))
+    (assoc this ::fmt (r/partial f)))
   (-lisaa-fmt-aktiiviselle [this f]
     this))
 
@@ -405,7 +405,7 @@
     (assoc this ::nimi nimi))
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc this ::fmt f))
+    (assoc this ::fmt (r/partial f)))
   (-lisaa-fmt-aktiiviselle [this f]
     this))
 
@@ -449,7 +449,7 @@
   sp/ISolu
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc this ::fmt f))
+    (assoc this ::fmt (r/partial f)))
   (-lisaa-fmt-aktiiviselle [this f]
     this))
 
@@ -524,7 +524,7 @@
   sp/ISolu
   sp/IFmt
   (-lisaa-fmt [this f]
-    (assoc-in this [:livi-pudotusvalikko-asetukset :format-fn] f)))
+    (assoc-in this [:livi-pudotusvalikko-asetukset :format-fn] (r/partial f))))
 
 (defn pudotusvalikko
   [asetukset vaihtoehdot rivin-haku]

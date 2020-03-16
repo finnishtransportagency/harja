@@ -1455,14 +1455,14 @@
      (if auki?
        (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
            (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
-           (r/flush)
+           #_(r/flush)
            (when alin-taulukko?
              (r/after-render
                (fn []
                  (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))))
        (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
            (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
-           (r/flush))))))
+           #_(r/flush))))))
 
 
 (defrecord TaulukoidenVakioarvot [])

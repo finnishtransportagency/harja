@@ -195,6 +195,6 @@
                               (conj otsikko-ja-data
                                     (footer-pohja footer sarakkeiden-maara))
                               otsikko-ja-data)})
-        g (grid/aseta-root-fn g root-asetukset)]
+        g (grid/aseta-root-fn! g root-asetukset)]
     (root-asetus! g)
     g))

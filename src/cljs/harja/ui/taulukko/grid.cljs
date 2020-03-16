@@ -7,7 +7,7 @@
             [harja.ui.taulukko.impl.datan-kasittely :as dk]
             [reagent.core :as r]))
 
-(declare aseta-root-fn)
+(declare aseta-root-fn!)
 
 ;; KONSTRUKTORIT
 
@@ -72,7 +72,7 @@
 (defn grid-pohjasta [grid-pohja root-asetus! root-asetukset]
   (let [kopio (kopio grid-pohja)
         g (g/muuta-id! kopio)
-        g (aseta-root-fn g root-asetukset)]
+        g (aseta-root-fn! g root-asetukset)]
     (root-asetus! g)
     g))
 
@@ -95,7 +95,7 @@
   [osa polku]
   {:pre [(satisfies? gop/IGridOsa osa)
          (vector? polku)]}
-  (let [osan-polku (::g/nimi-polku osa)]
+  (let [osan-polku (::g/index-polku osa)]
     (loop [[polun-osa & loput-polusta] polku
            lopullinen-polku osan-polku]
       (if (nil? polun-osa)
@@ -166,7 +166,7 @@
 
 (defn osien-yhteinen-asia [osa haettava-asia]
   (case haettava-asia
-    :datan-kasittelija (::g/datan-kasittelija osa)
+    :datan-kasittelija (get-in @g/taulukko-konteksti [(::g/root-id osa) :datan-kasittelija])
     :index-polku (::g/index-polku osa)
     :nimi-polku (::g/nimi-polku osa)))
 
@@ -252,8 +252,8 @@
 
 ;; PÄIVITYKSET ILMAN MUTAATIOTA
 ; - Grid päivitykset
-(defn aseta-root-fn [this m]
-  (gp/aseta-root-fn this m))
+(defn aseta-root-fn! [this m]
+  (gp/aseta-root-fn! this m))
 (defn grid-tapahtumat [this data-atom tapahtuma-maaritelmat]
   (gp/grid-tapahtumat this data-atom tapahtuma-maaritelmat))
 ; - Osa päivitykset
@@ -269,6 +269,8 @@
 ;; DATAN KÄSITTELIJÄ
 
 (defn rajapinta-grid-yhdistaminen! [grid rajapinta datan-kasittelija grid-kasittelija]
+  (println "(satisfies? IGridDataYhdistaminen grid) " (satisfies? gp/IGridDataYhdistaminen grid))
+  (println "(satisfies? IGrid grid) " (satisfies? gp/IGrid grid))
   (gp/rajapinta-grid-yhdistaminen! grid rajapinta datan-kasittelija grid-kasittelija))
 
 (defn rajapinnan-kuuntelija [kasittelija rajapinnan-nimi]

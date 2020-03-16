@@ -231,39 +231,41 @@
 
 (defn rivi->rivi-kuukausifiltterilla [pohja? kuukausitasolla?-rajapinta kuukausitasolla?-polku rivi]
   (let [sarakkeiden-maara (count (grid/hae-grid rivi :lapset))]
-    (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
-                :koko (assoc-in konf/auto
-                                [:rivi :nimet]
-                                {::t/yhteenveto 0
-                                 ::t/valinta 1})
-                :osat [(-> rivi
-                           (grid/aseta-nimi ::t/yhteenveto)
-                           (grid/paivita-grid! :parametrit
-                                               (fn [parametrit]
-                                                 (assoc parametrit :style {:z-index 10})))
-                           (grid/paivita-grid! :lapset
-                                               (fn [osat]
-                                                 (mapv (fn [osa]
-                                                         (if (or (instance? solu/Laajenna osa)
-                                                                 (instance? LaajennaSyote osa))
-                                                           (assoc osa :auki-alussa? true)
-                                                           osa))
-                                                       osat))))
-                       (grid/rivi {:osat (vec
-                                           (cons (vayla-checkbox (fn [this event]
-                                                                   (.preventDefault event)
-                                                                   (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
-                                                                                                                       kuukausitasolla?-rajapinta))]
-                                                                     (e! (tuck-apurit/->MuutaTila kuukausitasolla?-polku kuukausitasolla?))))
-                                                                 "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
-                                                 (repeatedly (dec sarakkeiden-maara) (fn [] (solu/tyhja)))))
-                                   :koko {:seuraa {:seurattava (if pohja?
-                                                                 ::g-pohjat/otsikko
-                                                                 ::otsikko)
-                                                   :sarakkeet :sama
-                                                   :rivit :sama}}
-                                   :nimi ::t/valinta}
-                                  [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})))
+    (with-meta
+      (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
+                  :koko (assoc-in konf/auto
+                                  [:rivi :nimet]
+                                  {::t/yhteenveto 0
+                                   ::t/valinta 1})
+                  :osat [(-> rivi
+                             (grid/aseta-nimi ::t/yhteenveto)
+                             (grid/paivita-grid! :parametrit
+                                                 (fn [parametrit]
+                                                   (assoc parametrit :style {:z-index 10})))
+                             (grid/paivita-grid! :lapset
+                                                 (fn [osat]
+                                                   (mapv (fn [osa]
+                                                           (if (or (instance? solu/Laajenna osa)
+                                                                   (instance? LaajennaSyote osa))
+                                                             (assoc osa :auki-alussa? true)
+                                                             osa))
+                                                         osat))))
+                         (grid/rivi {:osat (vec
+                                             (cons (vayla-checkbox (fn [this event]
+                                                                     (.preventDefault event)
+                                                                     (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
+                                                                                                                         kuukausitasolla?-rajapinta))]
+                                                                       (e! (tuck-apurit/->MuutaTila kuukausitasolla?-polku kuukausitasolla?))))
+                                                                   "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
+                                                   (repeatedly (dec sarakkeiden-maara) (fn [] (solu/tyhja)))))
+                                     :koko {:seuraa {:seurattava (if pohja?
+                                                                   ::g-pohjat/otsikko
+                                                                   ::otsikko)
+                                                     :sarakkeet :sama
+                                                     :rivit :sama}}
+                                     :nimi ::t/valinta}
+                                    [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})
+      {:key "foo"})))
 
 (defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
   (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::t/yhteenveto])
