@@ -2180,23 +2180,25 @@
 
 (defn arvioidaanko-laskutukseen-perustuen [_ _ _]
   (let [vaihda-fn (fn [toimenpide event]
-                    (let [valittu? (.. event -target -checked)]
+                    (let [valittu? (.. event -target -checked)
+                          piilota-modal! (fn []
+                                          (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
+                                                                         (fn [valinnat]
+                                                                           (disj valinnat toimenpide))))
+                                          (t/laskutukseen-perustuvan-taulukon-nakyvyys!)
+                                          (modal/piilota!))]
                       (if valittu?
                         (do (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
                                                            (fn [valinnat]
                                                              (conj valinnat toimenpide))))
                             (t/laskutukseen-perustuvan-taulukon-nakyvyys!))
                         (t/poista-laskutukseen-perustuen-data! toimenpide
+                                                               piilota-modal!
                                                                (r/partial (fn [data-hoitokausittain poista!]
                                                                             (poista-modal! :maaramitattava
                                                                                            data-hoitokausittain
                                                                                            (comp poista!
-                                                                                                 (fn []
-                                                                                                   (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
-                                                                                                                                  (fn [valinnat]
-                                                                                                                                    (disj valinnat toimenpide))))
-                                                                                                   (t/laskutukseen-perustuvan-taulukon-nakyvyys!)
-                                                                                                   (modal/piilota!)))
+                                                                                                 piilota-modal!)
                                                                                            {:toimenpide toimenpide})))))))]
     (fn [{:keys [toimenpide]} laskutukseen-perustuen? on-oikeus?]
       [:div#laskutukseen-perustuen-filter

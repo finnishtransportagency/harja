@@ -7,6 +7,7 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
@@ -47,7 +48,7 @@
       (grid/nayta! laskutukseen-perustuvat-hankinnat-taulukko)
       (grid/piillota! laskutukseen-perustuvat-hankinnat-taulukko))))
 
-(defn poista-laskutukseen-perustuen-data! [toimenpide modal-fn!]
+(defn poista-laskutukseen-perustuen-data! [toimenpide piilota-modal! modal-fn!]
   (let [data-hoitokausittain (keep (fn [hoitokauden-hankinnat]
                                         (let [hoitokauden-hankinnat (filterv (fn [{:keys [maara]}]
                                                                                (and maara (not= 0 maara)))
@@ -55,8 +56,37 @@
                                           (when-not (empty? hoitokauden-hankinnat)
                                             hoitokauden-hankinnat)))
                                       (-> @tiedot/suunnittelu-kustannussuunnitelma :domain :laskutukseen-perustuvat-hankinnat toimenpide))
-        poista! (fn [])]
-    (modal-fn! data-hoitokausittain poista!)))
+        poista! (fn []
+                  (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+
+                        lahetettava-data {:urakka-id urakka-id
+                                          :toimenpide-avain toimenpide
+                                          :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
+                                          :summa 0
+                                          :ajat (vec (mapcat (fn [hoitokauden-hankinnat]
+                                                               (map #(select-keys % #{:vuosi :kuukausi})
+                                                                    hoitokauden-hankinnat))
+                                                             data-hoitokausittain))}]
+                    (swap! tiedot/suunnittelu-kustannussuunnitelma
+                           (fn [tiedot]
+                             (update-in tiedot
+                                        [:domain :laskutukseen-perustuvat-hankinnat toimenpide]
+                                        (fn [laskutukseen-perustuvat-kustannukset]
+                                          (mapv (fn [hoitokausi-kohtaiset]
+                                                  (mapv (fn [kustannus]
+                                                          (assoc kustannus :maara 0))
+                                                        hoitokausi-kohtaiset))
+                                                laskutukseen-perustuvat-kustannukset)))))
+                    (go (let [vastaus (<! (k/post! :tallenna-kustannusarvioitu-tyo
+                                                   lahetettava-data
+                                                   nil
+                                                   true))]
+                          (when (k/virhe? vastaus)
+                            (viesti/nayta! "Poistaminen epäonnistui..."
+                                           :warning viesti/viestin-nayttoaika-pitka))))))]
+    (if-not (empty? data-hoitokausittain)
+      (modal-fn! data-hoitokausittain poista!)
+      (piilota-modal!))))
 
 (defn toimenpiteiden-jarjestys
   [toimenpide]
@@ -716,7 +746,16 @@
                                                                                (fn [kaikki-hankinnat]
                                                                                  (mapv (fn [hoitokauden-hankinnat]
                                                                                          (vec (repeat 12 {})))
-                                                                                       kaikki-hankinnat))))}}
+                                                                                       kaikki-hankinnat))))}
+                             :nollaa-johdetut-arvot {:polut [[:suodattimet :hankinnat :toimenpide]
+                                                             [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]]
+                                                     :aseta (fn [tila valittu-toimenpide laskutukseen-perustuen]
+                                                              (if-not (contains? laskutukseen-perustuen valittu-toimenpide)
+                                                                (reduce (fn [tila hoitokauden-numero]
+                                                                          (assoc-in tila [:gridit :laskutukseen-perustuvat-hankinnat :hankinnat (dec hoitokauden-numero)] (vec (repeat 12 {}))))
+                                                                        tila
+                                                                        (range 1 6))
+                                                                tila))}}
                             (doall
                               (reduce (fn [seurannat hoitokauden-numero]
                                         (merge seurannat
@@ -1705,7 +1744,10 @@
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
                                                    (:kustannusarvioidut-tyot vastaus))
-          toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia (into #{} (distinct (map :toimenpide-avain hankinnat-laskutukseen-perustuen)))
+          toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia (into #{} (distinct (sequence (comp
+                                                                                                   (remove #(= 0 (:summa %)))
+                                                                                                   (map :toimenpide-avain))
+                                                                                                 hankinnat-laskutukseen-perustuen)))
           rahavaraukset (distinct (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} (:haettu-asia %))
                                            (select-keys % #{:tyyppi :summa :toimenpide-avain :vuosi :kuukausi}))
                                         (:kustannusarvioidut-tyot vastaus)))

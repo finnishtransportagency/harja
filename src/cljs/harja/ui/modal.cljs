@@ -62,7 +62,7 @@
             [:button.close {:on-click sulje!
                             :type "button" :data-dismiss "modal" :aria-label "Sulje"}
              [:span {:aria-hidden "true"} "×"]]
-            [:h4.modal-title {:class (when (= otsikko-tyyli :virhe)
+            [:h2.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
              otsikko]])
          [:div.modal-body sisalto]
