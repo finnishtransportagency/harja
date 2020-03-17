@@ -187,6 +187,79 @@ FROM maksuera m
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
 WHERE tpi.urakka = :urakkaid;
 
+
+
+-- name: hae-teiden-hoidon-urakan-maksuerat
+-- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
+-- Huom! Maksuerän summat haetaan hae-urakan-maksueratiedot kyselyllä, joka
+-- muodostaa ne laskutusyhteenvetoa kutsumalla.
+SELECT
+    m.numero                 AS numero,
+    m.tyyppi                 AS maksuera_tyyppi,
+    m.nimi                   AS maksuera_nimi,
+    m.tila                   AS maksuera_tila,
+    m.lahetetty              AS maksuera_lahetetty,
+    tpi.id                   AS toimenpideinstanssi_id,
+    tpi.nimi                 AS toimenpideinstanssi_nimi,
+    tpi.alkupvm              AS toimenpideinstanssi_alkupvm,
+    tpi.loppupvm             AS toimenpideinstanssi_loppupvm,
+    s.sampoid                AS sopimus_sampoid,
+    k.tila                   AS kustannussuunnitelma_tila,
+    k.lahetetty              AS kustannussuunnitelma_lahetetty,
+    -- Tuotenumero
+    (SELECT emo.tuotenumero
+     FROM toimenpidekoodi emo
+     WHERE emo.id = tpk.emo) AS tuotenumero,
+
+    -- Kustannussuunnitelman summa
+    COALESCE(
+            CASE
+
+                -- Kokonaishintaiset maksuerät kaikille urakoille
+                WHEN m.tyyppi = 'kokonaishintainen'
+                    THEN (SELECT SUM(kht.summa)
+                          FROM kokonaishintainen_tyo kht
+                          WHERE kht.toimenpideinstanssi = tpi.id)
+
+                -- Yksikköhintaiset muiden kuin kanavaurakoiden
+                WHEN m.tyyppi = 'yksikkohintainen' AND
+                     NOT u.tyyppi = 'vesivayla-kanavien-hoito' AND
+                     NOT u.tyyppi = 'vesivayla-kanavien-korjaus'
+
+                    THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+                          FROM yksikkohintainen_tyo yht
+                          WHERE
+                                  yht.urakka = :urakkaid AND
+                                  yht.tehtava IN (SELECT id
+                                                  FROM toimenpidekoodi
+                                                  WHERE emo = tpk.id))
+
+                --  Kanavaurakoiden muutos ja lisätyöt
+                WHEN m.tyyppi = 'lisatyo' AND
+                     (u.tyyppi = 'vesivayla-kanavien-hoito' OR
+                      u.tyyppi = 'vesivayla-kanavien-korjaus')
+                    THEN
+                    (SELECT SUM(yht.arvioitu_kustannus)
+                     FROM yksikkohintainen_tyo yht
+                     WHERE
+                             yht.urakka = :urakkaid AND
+                             yht.tehtava IN (SELECT id
+                                             FROM toimenpidekoodi
+                                             WHERE emo = tpk.id))
+
+                -- Kaikki muut kustannussuunnitelmat
+                ELSE 1
+                END, 0)         AS kustannussuunnitelma_summa
+FROM maksuera m
+         JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+         JOIN urakka u ON u.id = tpi.urakka
+         JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
+         JOIN kustannussuunnitelma k ON m.numero = k.maksuera
+         JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+WHERE tpi.urakka = :urakkaid;
+
+
+
 -- name: hae-lahetettava-maksuera
 -- Hakee numeron perusteella maksueran lähettämiseen tarvittavat tiedot
 SELECT
