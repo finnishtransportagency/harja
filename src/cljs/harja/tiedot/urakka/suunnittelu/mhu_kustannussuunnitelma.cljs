@@ -47,6 +47,17 @@
       (grid/nayta! laskutukseen-perustuvat-hankinnat-taulukko)
       (grid/piillota! laskutukseen-perustuvat-hankinnat-taulukko))))
 
+(defn poista-laskutukseen-perustuen-data! [toimenpide modal-fn!]
+  (let [data-hoitokausittain (keep (fn [hoitokauden-hankinnat]
+                                        (let [hoitokauden-hankinnat (filterv (fn [{:keys [maara]}]
+                                                                               (and maara (not= 0 maara)))
+                                                                             hoitokauden-hankinnat)]
+                                          (when-not (empty? hoitokauden-hankinnat)
+                                            hoitokauden-hankinnat)))
+                                      (-> @tiedot/suunnittelu-kustannussuunnitelma :domain :laskutukseen-perustuvat-hankinnat toimenpide))
+        poista! (fn [])]
+    (modal-fn! data-hoitokausittain poista!)))
+
 (defn toimenpiteiden-jarjestys
   [toimenpide]
   (case toimenpide
@@ -106,6 +117,9 @@
         "akillinen hoitotyo" "äkillinen hoitotyö"}
        sana
        sana))
+
+(defn toimenpide-formatointi [toimenpide]
+  (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize))
 
 (defn toimenkuva-formatoitu [{:keys [toimenkuva maksukausi hoitokaudet]}]
   (str (clj-str/capitalize toimenkuva) " "
@@ -175,6 +189,9 @@
     (= toimenkuva "harjoittelija") 4
     (= toimenkuva "viherhoidosta vastaava henkilö") 5
     :else 12))
+
+(defn alin-taulukko? [taulukon-id]
+  (= taulukon-id alimman-taulukon-id))
 
 (defn aseta-maara!
   ([grid-polku-fn domain-polku-fn tila arvo tunniste paivitetaan-domain?] (aseta-maara! grid-polku-fn domain-polku-fn tila arvo tunniste paivitetaan-domain? nil :yleinen))
@@ -370,8 +387,8 @@
                                                     {(keyword (str "toimenpide-" toimenpide)) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]]
                                                                                                :haku (fn [{:keys [kuluva-hoitokausi seuraava-hoitokausi]}]
                                                                                                        (if viimeinen-hoitokausi?
-                                                                                                         [(-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize) {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]
-                                                                                                         [(-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize) {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]))}}
+                                                                                                         [(toimenpide-formatointi toimenpide) {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]
+                                                                                                         [(toimenpide-formatointi toimenpide) {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]))}}
                                                     (second (reduce (fn [[ensimmainen-rivi? rahavarauksien-haut] rahavaraus]
                                                                       (let [jakso (if ensimmainen-rivi?
                                                                                     "/kk**"
@@ -861,7 +878,7 @@
                           {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                  :aseta (fn [tila valittu-toimenpide]
                                                           (if valittu-toimenpide
-                                                            (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize))
+                                                            (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (toimenpide-formatointi valittu-toimenpide))
                                                             tila))}
                            ;; Hoitaa myös kuukausitasolla? filtterin asettamisen
                            :rahavaraukset-yhteenveto-asettaminen {:polut [[:domain :rahavaraukset]
@@ -1330,14 +1347,17 @@
                                  {:yhteensa-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]]
                                                       :aseta (fn [tila yhteenvedot]
                                                                (let [yhteensa-arvot (summaa-lehtivektorit (walk/postwalk (fn [x]
-                                                                                                                           (if (and (vector? x) (not= hoitokausien-maara-urakassa (count x)))
-                                                                                                                             (let [vektorin-koko (count x)]
-                                                                                                                               (reduce (fn [valivaihe index]
-                                                                                                                                         (if (>= index vektorin-koko)
-                                                                                                                                           (conj valivaihe 0)
-                                                                                                                                           (conj valivaihe (get x index))))
-                                                                                                                                       []
-                                                                                                                                       (range hoitokausien-maara-urakassa)))
+                                                                                                                           (if (vector? x)
+                                                                                                                             (let [arvot (mapv #(if (= :ei-aseteta %) 0 %) x)]
+                                                                                                                               (if (not= hoitokausien-maara-urakassa (count arvot))
+                                                                                                                                 (let [vektorin-koko (count arvot)]
+                                                                                                                                   (reduce (fn [valivaihe index]
+                                                                                                                                             (if (>= index vektorin-koko)
+                                                                                                                                               (conj valivaihe 0)
+                                                                                                                                               (conj valivaihe (get arvot index))))
+                                                                                                                                           []
+                                                                                                                                           (range hoitokausien-maara-urakassa)))
+                                                                                                                                 arvot))
                                                                                                                              x))
                                                                                                                          yhteenvedot))]
                                                                  (-> tila
@@ -1500,7 +1520,7 @@
     {:keys [aukeamis-polku sulkemis-polku]
      :or {aukeamis-polku [:.. :.. 1]
           sulkemis-polku [:.. :.. 1]}}]
-   (let [alin-taulukko? (= dom-id alimman-taulukon-id)]
+   (let [alin-taulukko? (alin-taulukko? dom-id)]
      (if auki?
        (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
            (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))

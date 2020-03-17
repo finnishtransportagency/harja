@@ -8,6 +8,7 @@
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.modal :as modal]
             [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.ui.taulukko.grid :as grid]
@@ -63,6 +64,27 @@
     (if numero?
       (fmt/desimaaliluku teksti 2 true)
       teksti)))
+
+(defn aika-fmt [paivamaara]
+  (when paivamaara
+    (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))
+
+(defn aika-tekstilla-fmt [paivamaara]
+  (when paivamaara
+    (let [teksti (aika-fmt paivamaara)
+          nyt (pvm/nyt)
+          mennyt? (and (pvm/ennen? paivamaara nyt)
+                       (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                           (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+      (if mennyt?
+        (str teksti " (mennyt)")
+        teksti))))
+
+(defn fmt-euro [summa]
+  (try (fmt/euro summa)
+       (catch :default e
+         (error (str "EURO FORMATOINTI EPÄONNISTUI SUMMALLE " summa "\n") e)
+         summa)))
 
 (defn poista-tyhjat [arvo]
   (clj-str/replace arvo #"\s" ""))
@@ -267,6 +289,43 @@
                                     [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})
       {:key "foo"})))
 
+(defn modal-aiheteksti [aihe {:keys [toimenpide toimenkuva]}]
+  [:h3 {:style {:padding-bottom "calc(1.0625em + 5px)"}}
+   (case aihe
+     :maaramitattava (str "Määrämitattavat: " (t/toimenpide-formatointi toimenpide))
+     :toimenkuva (str "Toimenkuva: " toimenkuva))])
+
+(defn modal-lista [data-hoitokausittain]
+  [:div {:style {:max-height "70vh"
+                 :overflow-y "auto"}}
+   (doall
+     (map-indexed (fn [index hoitokauden-data]
+                    ^{:key index}
+                    [:div
+                     [:span.lihavoitu (str (inc index) ". hoitovuosi")]
+                     (for [{:keys [aika maara]} hoitokauden-data]
+                       ^{:key (pvm/kuukausi aika)}
+                       [:div.map-lista
+                        [:div (aika-fmt aika)]
+                        [:div (str (summa-formatointi maara) " €/kk")]])])
+                  data-hoitokausittain))])
+
+(defn modal-napit [poista!]
+  (let [sulje! (r/partial modal/piilota!)]
+    (fn []
+      [:div
+       [napit/yleinen-toissijainen "Peruuta" sulje! {:ikoni [ikonit/remove]}]
+       [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]])))
+
+(defn poista-modal! [aihe data-hoitokausittain poista! tiedot]
+  (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"]
+    (println "data-hoitokausittain " data-hoitokausittain)
+    (modal/nayta! {:otsikko otsikko}
+                  [:div
+                   [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
+                   [modal-lista data-hoitokausittain]
+                   [modal-napit poista!]])))
+
 (defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
   (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::t/yhteenveto])
                                        :lapset
@@ -344,15 +403,7 @@
                                                                              {:tyyppi :rivi
                                                                               :osat [{:tyyppi :teksti
                                                                                       :luokat #{"table-default"}
-                                                                                      :fmt (fn [paivamaara]
-                                                                                             (when paivamaara
-                                                                                               (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                                                                     mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                                                                  (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                                                                      (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                                                                 (if mennyt?
-                                                                                                   (str teksti " (mennyt)")
-                                                                                                   teksti))))}
+                                                                                      :fmt aika-tekstilla-fmt}
                                                                                      {:tyyppi :syote-tayta-alas
                                                                                       :nappi-nakyvilla? false
                                                                                       :nappia-painettu! (partial nappia-painettu! hoitokauden-numero)
@@ -491,14 +542,7 @@
                                                                             {:tyyppi :rivi
                                                                              :osat [{:tyyppi :teksti
                                                                                      :luokat #{"table-default"}
-                                                                                     :fmt (fn [paivamaara]
-                                                                                            (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                                                                  mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                                                               (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                                                                   (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                                                              (if mennyt?
-                                                                                                (str teksti " (mennyt)")
-                                                                                                teksti)))}
+                                                                                     :fmt aika-tekstilla-fmt}
                                                                                     {:tyyppi :syote-tayta-alas
                                                                                      :nappi-nakyvilla? false
                                                                                      :nappia-painettu! nappia-painettu!
@@ -535,7 +579,9 @@
                                              :fmt yhteenveto-format}]
                                    :taulukon-id taulukon-id
                                    :root-asetus! root-asetus!
-                                   :root-asetukset root-asetukset})]
+                                   :root-asetukset root-asetukset
+                                   :root-luokat (when (t/alin-taulukko? taulukon-id)
+                                                  #{"viimeinen-taulukko"})})]
     g))
 
 
@@ -578,49 +624,49 @@
                                                             {:tyyppi :teksti
                                                              :luokat #{"table-default" "harmaa-teksti"}
                                                              :fmt yhteenveto-format}]}]
-                                                   (vec (map-indexed (fn [index toimenpide]
-                                                                       (let [rahavarausrivit (t/toimenpiteen-rahavaraukset toimenpide)]
-                                                                         {:tyyppi :taulukko
-                                                                          :nimi toimenpide
-                                                                          :osat [{:tyyppi :rivi
-                                                                                  :nimi ::toimenpide-yhteenveto
-                                                                                  :luokat #{"toimenpide-rivi"
-                                                                                            "suunnitelma-rivi"}
-                                                                                  :osat [{:tyyppi :laajenna
-                                                                                          :aukaise-fn (fn [this auki?]
-                                                                                                        (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
-                                                                                          :auki-alussa? false
-                                                                                          :ikoni "triangle"
-                                                                                          :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1"}}
-                                                                                         {:tyyppi :ikoni
-                                                                                          :luokat #{"table-default" "keskita"}}
-                                                                                         {:tyyppi :ikoni
-                                                                                          :luokat #{"table-default" "keskita"
-                                                                                                    (when-not viimeinen-vuosi?
-                                                                                                      "harmaa-teksti")}}
-                                                                                         {:tyyppi :teksti
-                                                                                          :luokat #{"table-default" "harmaa-teksti"}
-                                                                                          :fmt yhteenveto-format}]}
-                                                                                 {:tyyppi :taulukko
-                                                                                  :nimi ::data-sisalto
-                                                                                  :luokat #{"piillotettu"}
-                                                                                  :osat (mapv (fn [rahavaraus]
-                                                                                                {:tyyppi :rivi
-                                                                                                 :nimi rahavaraus
-                                                                                                 :luokat #{"suunnitelma-rivi"}
-                                                                                                 :osat [{:tyyppi :teksti
-                                                                                                         :luokat #{"table-default" "solu-sisenna-2"}}
-                                                                                                        {:tyyppi :ikoni
-                                                                                                         :luokat #{"table-default" "keskita"}}
-                                                                                                        {:tyyppi :ikoni
-                                                                                                         :luokat #{"table-default" "keskita"
-                                                                                                                   (when-not viimeinen-vuosi?
-                                                                                                                     "harmaa-teksti")}}
-                                                                                                        {:tyyppi :teksti
-                                                                                                         :luokat #{"table-default" "harmaa-teksti"}
-                                                                                                         :fmt yhteenveto-format}]})
-                                                                                              rahavarausrivit)}]}))
-                                                                     (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)))
+                                                   (mapv (fn [toimenpide]
+                                                           (let [rahavarausrivit (t/toimenpiteen-rahavaraukset toimenpide)]
+                                                             {:tyyppi :taulukko
+                                                              :nimi toimenpide
+                                                              :osat [{:tyyppi :rivi
+                                                                      :nimi ::toimenpide-yhteenveto
+                                                                      :luokat #{"toimenpide-rivi"
+                                                                                "suunnitelma-rivi"}
+                                                                      :osat [{:tyyppi :laajenna
+                                                                              :aukaise-fn (fn [this auki?]
+                                                                                            (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
+                                                                              :auki-alussa? false
+                                                                              :ikoni "triangle"
+                                                                              :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1"}}
+                                                                             {:tyyppi :ikoni
+                                                                              :luokat #{"table-default" "keskita"}}
+                                                                             {:tyyppi :ikoni
+                                                                              :luokat #{"table-default" "keskita"
+                                                                                        (when-not viimeinen-vuosi?
+                                                                                          "harmaa-teksti")}}
+                                                                             {:tyyppi :teksti
+                                                                              :luokat #{"table-default" "harmaa-teksti"}
+                                                                              :fmt yhteenveto-format}]}
+                                                                     {:tyyppi :taulukko
+                                                                      :nimi ::data-sisalto
+                                                                      :luokat #{"piillotettu"}
+                                                                      :osat (mapv (fn [rahavaraus]
+                                                                                    {:tyyppi :rivi
+                                                                                     :nimi rahavaraus
+                                                                                     :luokat #{"suunnitelma-rivi"}
+                                                                                     :osat [{:tyyppi :teksti
+                                                                                             :luokat #{"table-default" "solu-sisenna-2"}}
+                                                                                            {:tyyppi :ikoni
+                                                                                             :luokat #{"table-default" "keskita"}}
+                                                                                            {:tyyppi :ikoni
+                                                                                             :luokat #{"table-default" "keskita"
+                                                                                                       (when-not viimeinen-vuosi?
+                                                                                                         "harmaa-teksti")}}
+                                                                                            {:tyyppi :teksti
+                                                                                             :luokat #{"table-default" "harmaa-teksti"}
+                                                                                             :fmt yhteenveto-format}]})
+                                                                                  rahavarausrivit)}]}))
+                                                         (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet))
                                                    (vec
                                                      (cons
                                                        {:tyyppi :rivi
@@ -1096,15 +1142,7 @@
                                                                                                                                                     :rivit :sama}}
                                                                                                                                     :osat [(with-meta
                                                                                                                                              (solu/teksti {:parametrit {:class #{"table-default"}}
-                                                                                                                                                           :fmt (fn [paivamaara]
-                                                                                                                                                                  (when paivamaara
-                                                                                                                                                                    (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                                                                                                                                          mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                                                                                                                                       (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                                                                                                                                           (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                                                                                                                                      (if mennyt?
-                                                                                                                                                                        (str teksti " (mennyt)")
-                                                                                                                                                                        teksti))))})
+                                                                                                                                                           :fmt aika-tekstilla-fmt})
                                                                                                                                              {:key (str tyyppi "-" index "-otsikko")})
                                                                                                                                            (with-meta
                                                                                                                                              (g-pohjat/->SyoteTaytaAlas (gensym "rahavaraus")
@@ -1395,14 +1433,7 @@
                                                                  {:tyyppi :rivi
                                                                   :osat [{:tyyppi :teksti
                                                                           :luokat #{"table-default"}
-                                                                          :fmt (fn [paivamaara]
-                                                                                 (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                                                       mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                                                    (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                                                        (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                                                   (if mennyt?
-                                                                                     (str teksti " (mennyt)")
-                                                                                     teksti)))}
+                                                                          :fmt aika-tekstilla-fmt}
                                                                          (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
                                                                                       :solun-index 1
                                                                                       :blur-tallenna! (partial blur-tallenna! false (str toimenkuva "-" maksukausi "-taulukko"))
@@ -1458,7 +1489,8 @@
                                                                                                       (.. event -target blur)))}
                                                                                     {:on-change [:eventin-arvo]
                                                                                      :on-blur [:eventin-arvo]}
-                                                                                    {:class #{"input-default"}}
+                                                                                    {:class #{"input-default"}
+                                                                                     :placeholder "Kirjoita muu toimenkuva"}
                                                                                     identity
                                                                                     identity))
                                                      :auki-alussa? false
@@ -1494,14 +1526,7 @@
                                                                       {:tyyppi :rivi
                                                                        :osat [{:tyyppi :teksti
                                                                                :luokat #{"table-default"}
-                                                                               :fmt (fn [paivamaara]
-                                                                                      (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                                                            mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                                                         (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                                                             (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                                                        (if mennyt?
-                                                                                          (str teksti " (mennyt)")
-                                                                                          teksti)))}
+                                                                               :fmt aika-tekstilla-fmt}
                                                                               (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
                                                                                            :solun-index 1
                                                                                            :blur-tallenna! (partial blur-tallenna! false rivin-nimi)
@@ -1997,37 +2022,31 @@
                        (let [hoitokauden-numero (inc index)]
                          ^{:key hoitokauden-numero}
                          [hintalaskurisarake (or teksti (str hoitokauden-numero ". vuosi"))
-                          (fmt/euro summa)
+                          (fmt-euro summa)
                           (when (= hoitokauden-numero kuluva-hoitokauden-numero) {:wrapper-luokat "aktiivinen-vuosi"})]))
                      hinnat))
       [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
-      [hintalaskurisarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
+      [hintalaskurisarake "Yhteensä" (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
 
 (defn indeksilaskuri
   ([hinnat indeksit] [indeksilaskuri hinnat indeksit nil])
-  ([_ _ _]
-   (let [fmt-euro (fn [summa]
-                    (try (fmt/euro summa)
-                         (catch :default e
-                           (error (str "EURO FORMATOINTI EPÄONNISTUI SUMMALLE " summa "\n") e)
-                           summa)))]
-     (fn [hinnat indeksit dom-id]
-       (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
-                                        (let [hoitokauden-numero (inc index)
-                                              {:keys [vuosi]} (get indeksit index)
-                                              indeksikorjattu-summa (t/indeksikorjaa summa hoitokauden-numero)]
-                                          {:vuosi vuosi
-                                           :summa indeksikorjattu-summa
-                                           :hoitokauden-numero hoitokauden-numero}))
-                                      hinnat))]
-         [:div.hintalaskuri.indeksilaskuri {:id dom-id}
-          [:span "Indeksikorjattu"]
-          [:div.hintalaskuri-vuodet
-           (for [{:keys [vuosi summa hoitokauden-numero]} hinnat]
-             ^{:key hoitokauden-numero}
-             [hintalaskurisarake vuosi (fmt-euro summa)])
-           [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
-           [hintalaskurisarake " " (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))))
+  ([hinnat indeksit dom-id]
+   (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
+                                    (let [hoitokauden-numero (inc index)
+                                          {:keys [vuosi]} (get indeksit index)
+                                          indeksikorjattu-summa (t/indeksikorjaa summa hoitokauden-numero)]
+                                      {:vuosi vuosi
+                                       :summa indeksikorjattu-summa
+                                       :hoitokauden-numero hoitokauden-numero}))
+                                  hinnat))]
+     [:div.hintalaskuri.indeksilaskuri {:id dom-id}
+      [:span "Indeksikorjattu"]
+      [:div.hintalaskuri-vuodet
+       (for [{:keys [vuosi summa hoitokauden-numero]} hinnat]
+         ^{:key hoitokauden-numero}
+         [hintalaskurisarake vuosi (fmt-euro summa)])
+       [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
+       [hintalaskurisarake " " (fmt-euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
 
 (defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
   (if (and hoitokauden-numero pvmt)
@@ -2089,7 +2108,7 @@
 
 (defn hankintojen-filter [_ _ _]
   (let [toimenpide-tekstiksi (r/partial (fn [toimenpide]
-                                          (-> toimenpide name (clj-str/replace #"-" " ") t/aakkosta clj-str/upper-case)))
+                                          (-> toimenpide t/toimenpide-formatointi clj-str/upper-case)))
         valitse-toimenpide (r/partial (fn [toimenpide]
                                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :toimenpide] toimenpide))
                                         (t/laskutukseen-perustuvan-taulukon-nakyvyys!)))
@@ -2162,12 +2181,23 @@
 (defn arvioidaanko-laskutukseen-perustuen [_ _ _]
   (let [vaihda-fn (fn [toimenpide event]
                     (let [valittu? (.. event -target -checked)]
-                      (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
-                                                     (fn [valinnat]
-                                                       (if valittu?
-                                                         (conj valinnat toimenpide)
-                                                         (disj valinnat toimenpide)))))
-                      (t/laskutukseen-perustuvan-taulukon-nakyvyys!)))]
+                      (if valittu?
+                        (do (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
+                                                           (fn [valinnat]
+                                                             (conj valinnat toimenpide))))
+                            (t/laskutukseen-perustuvan-taulukon-nakyvyys!))
+                        (t/poista-laskutukseen-perustuen-data! toimenpide
+                                                               (r/partial (fn [data-hoitokausittain poista!]
+                                                                            (poista-modal! :maaramitattava
+                                                                                           data-hoitokausittain
+                                                                                           (comp poista!
+                                                                                                 (fn []
+                                                                                                   (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
+                                                                                                                                  (fn [valinnat]
+                                                                                                                                    (disj valinnat toimenpide))))
+                                                                                                   (t/laskutukseen-perustuvan-taulukon-nakyvyys!)
+                                                                                                   (modal/piilota!)))
+                                                                                           {:toimenpide toimenpide})))))))]
     (fn [{:keys [toimenpide]} laskutukseen-perustuen? on-oikeus?]
       [:div#laskutukseen-perustuen-filter
        [:input#lakutukseen-perustuen.vayla-checkbox
@@ -2175,7 +2205,7 @@
          :on-change (partial vaihda-fn toimenpide) :disabled (not on-oikeus?)}]
        [:label {:for "lakutukseen-perustuen"}
         "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle: "
-        [:b (-> toimenpide name (clj-str/replace #"-" " ") t/aakkosta clj-str/capitalize)]]])))
+        [:b (t/toimenpide-formatointi toimenpide)]]])))
 
 
 (defn laskutukseen-perustuen-wrapper [g nayta-laskutukseen-perustuva-taulukko?]
