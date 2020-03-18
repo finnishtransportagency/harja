@@ -85,8 +85,10 @@
 
 ;; TODO kuuntelijoiden tilan init samantapaiseksi kuin seurannan siivoa-tila. Eli muokataan annettua tilaa, eikä swapata valitilaa.
 ;; Pitäisikö laittaa siivoamis ja init funktiot molempiin (seurannat ja kuuntelijat)?
-(deftype DatanKasittelija [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
-                           ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
+(deftype DatanKasittelija
+  ;; Jos muutat argumentteja, tarkista -lookup metodi
+  [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
+   ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
   IKuuntelija
   (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
     (let [kursorit (mapv (fn [polku]
@@ -166,21 +168,21 @@
     (set! seurannat
           (assoc seurannat
                  seurannan-nimi
-                (assoc seuranta
-                       :seuranta-fn (fn [seuranta-lisatty? vanha uusi]
-                                      (let [vanha-data (doall (map #(get-in vanha %) polut))
-                                            uusi-data (doall (map #(get-in uusi %) polut))
+                 (assoc seuranta
+                        :seuranta-fn (fn [seuranta-lisatty? vanha uusi]
+                                       (let [vanha-data (doall (map #(get-in vanha %) polut))
+                                             uusi-data (doall (map #(get-in uusi %) polut))
 
-                                            seurattava-data-muuttunut? (not= vanha-data uusi-data)
-                                            asetetaan-uusi-data? (and (or seurattava-data-muuttunut?
-                                                                          seuranta-lisatty?)
-                                                                      *muutetaan-seurattava-arvo?*)]
-                                        (if asetetaan-uusi-data?
-                                          (let [arvot (mapv #(get-in uusi %) polut)]
-                                            (apply aseta uusi (if lisa-argumentit
-                                                                (concat arvot lisa-argumentit)
-                                                                arvot)))
-                                          uusi)))))))
+                                             seurattava-data-muuttunut? (not= vanha-data uusi-data)
+                                             asetetaan-uusi-data? (and (or seurattava-data-muuttunut?
+                                                                           seuranta-lisatty?)
+                                                                       *muutetaan-seurattava-arvo?*)]
+                                         (if asetetaan-uusi-data?
+                                           (let [arvot (mapv #(get-in uusi %) polut)]
+                                             (apply aseta uusi (if lisa-argumentit
+                                                                 (concat arvot lisa-argumentit)
+                                                                 arvot)))
+                                           uusi)))))))
   (poista-seuranta! [this seurannan-nimi tila]
     (let [{:keys [polut lisa-argumentit siivoa-tila]} (get seurannat seurannan-nimi)]
       (set! seurannat
@@ -195,43 +197,43 @@
     (set! seurannat-lisaaja
           (assoc seurannat-lisaaja
                  seurannan-nimi
-                (fn [vanha uusi]
-                  (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
-                        uudet-polut (apply luonti (map #(get-in uusi %) polut))
+                 (fn [vanha uusi]
+                   (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
+                         uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
-                        polut-muuttunut? (not= vanhat-polut uudet-polut)]
-                    (assert (or (nil? uudet-polut)
-                                (empty? uudet-polut)
-                                (every? map? uudet-polut))
-                            (str "Seurannan lisaaja: " seurannan-nimi " antamat polut eivät ole oikean muotoiset!\n"
-                                 "Polkujen tulisi olla vektori mappeja. Saatiin:\n"
-                                 uudet-polut))
-                    (when g-debug/GRID_DEBUG
-                      (when (some nil? (flatten (mapcat vals uudet-polut)))
-                        (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
-                              (str uudet-polut))))
-                    (if polut-muuttunut?
-                      (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen?]}]
-                                                                (let [seuranta-poistettava? (and dynaaminen?
-                                                                                                 (nil? (some #(= (ffirst %) seurannan-nimi)
-                                                                                                             uudet-polut)))]
-                                                                  (if seuranta-poistettava?
-                                                                    (poista-seuranta! this seurannan-nimi tila)
-                                                                    tila)))
-                                                              uusi
-                                                              seurannat)]
-                        (second (reduce (fn [[vanha uusi] m]
-                                             (let [[[seurannan-nimi polut]] (seq m)
-                                                   seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
-                                                                            seurannat)
-                                                   lisa-argumentit (:args (meta polut))]
-                                               (if-not seuranta-luotu-jo?
-                                                 (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :siivoa-tila siivoa-tila}])
-                                                     [uusi ((get-in seurannat [seurannan-nimi :seuranta-fn]) true vanha uusi)])
-                                                 [vanha uusi])))
-                                           [vanha poiston-jalkeinen-tila]
-                                           uudet-polut)))
-                      uusi))))))
+                         polut-muuttunut? (not= vanhat-polut uudet-polut)]
+                     (assert (or (nil? uudet-polut)
+                                 (empty? uudet-polut)
+                                 (every? map? uudet-polut))
+                             (str "Seurannan lisaaja: " seurannan-nimi " antamat polut eivät ole oikean muotoiset!\n"
+                                  "Polkujen tulisi olla vektori mappeja. Saatiin:\n"
+                                  uudet-polut))
+                     (when g-debug/GRID_DEBUG
+                       (when (some nil? (flatten (mapcat vals uudet-polut)))
+                         (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
+                               (str uudet-polut))))
+                     (if polut-muuttunut?
+                       (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen?]}]
+                                                                 (let [seuranta-poistettava? (and dynaaminen?
+                                                                                                  (nil? (some #(= (ffirst %) seurannan-nimi)
+                                                                                                              uudet-polut)))]
+                                                                   (if seuranta-poistettava?
+                                                                     (poista-seuranta! this seurannan-nimi tila)
+                                                                     tila)))
+                                                               uusi
+                                                               seurannat)]
+                         (second (reduce (fn [[vanha uusi] m]
+                                           (let [[[seurannan-nimi polut]] (seq m)
+                                                 seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
+                                                                          seurannat)
+                                                 lisa-argumentit (:args (meta polut))]
+                                             (if-not seuranta-luotu-jo?
+                                               (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :siivoa-tila siivoa-tila}])
+                                                   [uusi ((get-in seurannat [seurannan-nimi :seuranta-fn]) true vanha uusi)])
+                                               [vanha uusi])))
+                                         [vanha poiston-jalkeinen-tila]
+                                         uudet-polut)))
+                       uusi))))))
   IAsettaja
   (lisaa-asettaja! [this rajapinta [rajapinnan-nimi f]]
     (set! asettajat
@@ -362,16 +364,24 @@
   (-hash [_] (hash nimi))
   ILookup
   (-lookup [this k] (-lookup this k nil))
-  (-lookup [this ksym else]
-     (if-let [loytyi (and (keyword? ksym) (aget this (name ksym)))]
-       loytyi
-       else))
+  (-lookup [_ ksym else]
+    ; ei voi käyttää vain agetia, koska advanced compilation
+    (case ksym
+      :data-atom data-atom
+      :nimi nimi
+      :muuttuvien-seurantojen-polut muuttuvien-seurantojen-polut
+      :on-dispose on-dispose
+      :seurannat-lisaaja seurannat-lisaaja
+      :kuuntelija-lisaaja kuuntelija-lisaaja
+      :kuuntelijat kuuntelijat
+      :asettajat asettajat
+      :seurannat seurannat
+      else))
   IEquiv
   (-equiv [this other] (and (= (type this) (type other)) (identical? this other)))
   ratom/IDisposable
   (dispose! [this]
     (remove-watch nimi data-atom)
-    #_(set! tila nil)
     (set! muuttuvien-seurantojen-polut nil)
     (set! seurannat-lisaaja nil)
     (set! kuuntelija-lisaaja nil)
