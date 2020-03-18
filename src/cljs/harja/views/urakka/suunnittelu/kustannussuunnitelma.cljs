@@ -184,7 +184,7 @@
 
 (defn syote-solu
   [{:keys [nappi? fmt paivitettava-asia solun-index blur-tallenna!
-           nappia-painettu-tallenna!]}]
+           nappia-painettu-tallenna! parametrit]}]
   (merge
     {:tyyppi (if nappi?
                :syote-tayta-alas
@@ -230,7 +230,8 @@
                       :on-blur (if nappi?
                                  [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]
                                  [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}} {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}])}
-     :parametrit {:size 2}
+     :parametrit (merge {:size 2}
+                        parametrit)
      :fmt fmt
      :fmt-aktiivinen summa-formatointi-aktiivinen}
     (when nappi?
@@ -319,7 +320,6 @@
 
 (defn poista-modal! [aihe data-hoitokausittain poista! tiedot]
   (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"]
-    (println "data-hoitokausittain " data-hoitokausittain)
     (modal/nayta! {:otsikko otsikko}
                   [:div
                    [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
@@ -1293,8 +1293,7 @@
                                                                                                kuukausitasolla?)))}})))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
-  (let [nyt (pvm/nyt)
-        taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"
+  (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"
         yhteenveto-grid-rajapinta-asetukset (fn [toimenkuva maksukausi data-koskee-ennen-urakkaa?]
                                               (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                                                 {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
@@ -1363,6 +1362,17 @@
                                                  osa
                                                  (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 1]))
                                                kuukausitasolla?))
+        disable-osa-indexissa! (fn [rivi indexit disabled?]
+                                 (grid/paivita-grid! rivi
+                                                     :lapset
+                                                     (fn [osat]
+                                                       (vec (map-indexed (fn [index solu]
+                                                                           (if (contains? indexit index)
+                                                                             (if (grid/pudotusvalikko? solu)
+                                                                               (assoc-in solu [:livi-pudotusvalikko-asetukset :disabled?] disabled?)
+                                                                               (assoc-in solu [:parametrit :disabled?] disabled?))
+                                                                             solu))
+                                                                         osat)))))
         vakiorivit (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                            (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                              (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
@@ -1497,10 +1507,12 @@
                                                      :luokat #{"table-default"}}
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                                  :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
-                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!})
+                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!
+                                                                 #_#_:parametrit {:disabled? true}})
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
                                                                  :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
-                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!})
+                                                                 :nappia-painettu-tallenna! nappia-painettu-tallenna!
+                                                                 #_#_:parametrit {:disabled? true}})
                                                     {:tyyppi :teksti
                                                      :luokat #{"table-default"}
                                                      :fmt yhteenveto-format}
@@ -1512,6 +1524,7 @@
                                                                                           :ajettavat-jarejestykset true
                                                                                           :triggeroi-seuranta? true}
                                                                                          false))
+                                                     #_#_:disabled? true
                                                      :format-fn (fn [teksti]
                                                                   (str (t/maksukausi-kuukausina teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]
@@ -1644,11 +1657,7 @@
                                                                              :toiminto! (fn [g _ kuukausitasolla-kaikki-toimenkuvat]
                                                                                           (doseq [[toimenkuva maksukaudet-kuukausitasolla?] kuukausitasolla-kaikki-toimenkuvat]
                                                                                             ;; Jos totta, niin kyseessä on oma/itsetäytettävärivi
-                                                                                            (if-let [itsetaytettavan-rivinumero (and (string? toimenkuva) (re-find #"\d$" toimenkuva))]
-                                                                                              (rividisable! g
-                                                                                                            (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
-                                                                                                                    (js/Number itsetaytettavan-rivinumero)))
-                                                                                                            maksukaudet-kuukausitasolla?)
+                                                                                            (when-not (and (string? toimenkuva) (re-find #"\d$" toimenkuva))
                                                                                               (doseq [[maksukausi kuukausitasolla?] maksukaudet-kuukausitasolla?
                                                                                                       :let [index (first (keep-indexed (fn [index jh-pohjadata]
                                                                                                                                          (when (and (= toimenkuva (:toimenkuva jh-pohjadata))
@@ -1702,7 +1711,30 @@
                                                                                                                           (if piillotetaan?
                                                                                                                             (grid/piillota! rivi)
                                                                                                                             (grid/nayta! rivi))))
-                                                                                                                      (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))}})))
+                                                                                                                      (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))}
+                                                     (keyword "omarivi-disable-" nimi) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
+                                                                                                [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? nimi]]
+                                                                                        :toiminto! (fn [g tila oma-jh-korvausten-tila kuukausitasolla?]
+                                                                                                     (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+                                                                                                           toimenkuva (get-in oma-jh-korvausten-tila [(dec hoitokauden-numero) 0 :toimenkuva])
+                                                                                                           index (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
+                                                                                                                         jarjestysnumero))
+                                                                                                           yhteenvetorivi (if (grid/rivi? (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0]))
+                                                                                                                            (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0])
+                                                                                                                            (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto]))]
+                                                                                                       (if (empty? toimenkuva)
+                                                                                                         (do
+                                                                                                           (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
+                                                                                                                                   true)
+                                                                                                           (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true)
+                                                                                                           #_(disable-osa-indexissa! yhteenvetorivi 2 true)
+                                                                                                           #_(disable-osa-indexissa! yhteenvetorivi 4 true))
+                                                                                                         (do (rividisable! g
+                                                                                                                           (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
+                                                                                                                                   jarjestysnumero))
+                                                                                                                           kuukausitasolla?)
+                                                                                                             (disable-osa-indexissa! yhteenvetorivi #{2 4} false)
+                                                                                                             #_(disable-osa-indexissa! yhteenvetorivi 4 false)))))}})))
                                          {}
                                          (range 1 (inc t/jh-korvausten-omiariveja-lkm)))))))
 

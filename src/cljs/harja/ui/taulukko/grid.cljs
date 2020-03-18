@@ -1,6 +1,7 @@
 (ns harja.ui.taulukko.grid
   (:require [harja.ui.taulukko.impl.grid :as g]
             [harja.ui.taulukko.impl.alue :as alue]
+            [harja.ui.taulukko.impl.solu :as solu]
             [harja.ui.taulukko.protokollat.grid :as gp]
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
@@ -300,6 +301,14 @@
     (throw (js/Error. (str "triggeroi-tapahtuma! funktiolle ei annettu oikeaa tapahtuman-nimi avainta!\n"
                            "Saatiin: " tapahtuman-nimi "\n"
                            "Hyväksytyt avaimet: " (apply str (interpose ", " (keys (root-asia (root osa) :tapahtumat)))))))))
+
+;; PREDIKAATIT
+
+(defn rivi? [osa]
+  (instance? alue/Rivi osa))
+
+(defn pudotusvalikko? [osa]
+  (instance? solu/Pudotusvalikko osa))
 
 ;; PIIRRA
 

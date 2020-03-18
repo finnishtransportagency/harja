@@ -88,7 +88,7 @@
     :nappi (solu/nappi {:toiminnot toiminnot :kayttaytymiset kayttaytymiset :parametrit (merge {:id id :class luokat} parametrit)
                         :sisalto sisalto :fmt fmt :nimi nimi})
     :ikoni (solu/ikoni {:parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
-    :pudotusvalikko (solu/pudotusvalikko (select-keys asetukset #{:valinta :format-fn :valitse-fn :class :disabled :itemit-komponentteja? :naytettava-arvo
+    :pudotusvalikko (solu/pudotusvalikko (select-keys asetukset #{:valinta :format-fn :valitse-fn :class :disabled? :itemit-komponentteja? :naytettava-arvo
                                                                   :on-focus :title :li-luokka-fn :ryhmittely :nayta-ryhmat :ryhman-otsikko :data-cy :vayla-tyyli?})
                                          vaihtoehdot
                                          rivin-haku)

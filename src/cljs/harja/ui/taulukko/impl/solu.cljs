@@ -9,7 +9,7 @@
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.impl.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]
-            [clojure.string :as clj-str]))
+            [clojure.set :as clj-set]))
 
 (def ^:dynamic *this* nil)
 
@@ -497,7 +497,8 @@
         (let [taman-data (taman-derefable this)
               valinta @taman-data]
           [yleiset/livi-pudotusvalikko
-           (-> livi-pudotusvalikko-asetukset
+           (-> (:livi-pudotusvalikko-asetukset this)
+               (clj-set/rename-keys {:disabled? :disabled})
                (assoc :valinta valinta
                       :auki-fn! (r/partial auki-fn! this)
                       :kiinni-fn! (r/partial kiinni-fn! this))
