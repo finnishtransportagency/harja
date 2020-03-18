@@ -113,7 +113,8 @@
   (case maksukausi
     :kesa 5
     :talvi 7
-    :molemmat 12))
+    :molemmat 12
+    nil))
 
 (def kk-v-valinnat [:molemmat :talvi :kesa])
 
@@ -304,9 +305,8 @@
         datan-arvo (fn [data avain]
                      (if avain (get data avain) data))
         taytetty? (fn [arvo avain]
-                    (or (and (not (nil? (datan-arvo arvo avain)))
-                             (not= 0 (datan-arvo arvo avain)))
-                        (= :ei-aseteta (datan-arvo arvo avain))))
+                    (and (not (nil? (datan-arvo arvo avain)))
+                         (not= 0 (datan-arvo arvo avain))))
         valmis? (fn [data avain]
                   (every? #(taytetty? % avain)
                           data))
@@ -538,7 +538,9 @@
                                                                                                                                                                                                          (not viimeinen-hoitokausi?) (update :toinen concat maksukausien-arvot-seuraavalle-hoitokaudelle))))
                                                                                                                                                                                              {:ensimmainen []
                                                                                                                                                                                               :toinen []}
-                                                                                                                                                                                             johto-ja-hallintokorvauksien-yhteenvedot)]
+                                                                                                                                                                                             johto-ja-hallintokorvauksien-yhteenvedot)
+                                                                                                                        korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle (cond-> (update korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :ensimmainen (fn [arvot] (remove #(= % :ei-aseteta) arvot)))
+                                                                                                                                                                                          (not viimeinen-hoitokausi?) (update :toinen (fn [arvot] (remove #(= % :ei-aseteta) arvot))))]
                                                                                                                     (update-in tila
                                                                                                                                [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
                                                                                                                                (fn [hoitokausien-tila]
