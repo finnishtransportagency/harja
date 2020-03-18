@@ -1,4 +1,9 @@
-[ 
+[
+  {
+    "date": "2020-3-18",
+    "title": "HARJAn tukemat selaimet - Tuki IE 11 selaimelle loppuu",
+    "body": "Lopetamme tuen IE 11 selaimelle HARJAn toteutustyössä. Tuki muille selaimille (Googe Chrome, Firefox, Safari, Opera ja Microsoft Edge) jatkuu normaalisti." 
+  },
   {
     "date": "2020-3-3",
     "title": "Muutoksia HARJA päivystyksessä",
