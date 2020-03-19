@@ -68,13 +68,18 @@
           (fn [paikkauskohde valittu?]
             (e! (yhteiset-tiedot/->PaikkausValittu paikkauskohde valittu?)))
           [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Työmenetelmät"
-         :tyylit {:width "fit-content"}
-         :kentta-params {:tyyppi :checkbox-group
-                         :vaihtoehdot urakan-tyomenetelmat
-                         :nayta-rivina? true}
-         :arvo-atom tyomenetelmat-atom}]])))
+       [:span.label-ja-kentta
+        [:span.kentan-otsikko "Työmenetelmät"]
+        [:div.kentta
+         [valinnat/checkbox-pudotusvalikko
+          (vec
+              (map-indexed (fn [i tyomenetelma]
+                             {:id i :nimi tyomenetelma :valittu? (contains? (:tyomenetelmat valinnat) tyomenetelma)})
+                           (sort urakan-tyomenetelmat)))
+          (fn [tyomenetelma valittu?]
+            (e! (yhteiset-tiedot/->TyomenetelmaValittu tyomenetelma valittu?)))
+          [" työmenetelmä valittu" " työmenetelmää valittu"]]]]
+       ])))
 
 (defn hakuehdot-pohja [e! app]
   (komp/luo

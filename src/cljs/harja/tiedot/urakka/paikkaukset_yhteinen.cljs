@@ -36,6 +36,7 @@
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
+(defrecord TyomenetelmaValittu [tyomenetelma valittu?])
 (defrecord PaivitaValinnat [uudet])
 (defrecord Nakymaan [])
 ;; Haut
@@ -98,6 +99,13 @@
                                       (get-in app [:valinnat :urakan-paikkauskohteet]))]
       (tuck/process-event (->PaivitaValinnat {:urakan-paikkauskohteet uudet-paikkausvalinnat}) app)
       (assoc-in app [:valinnat :urakan-paikkauskohteet] uudet-paikkausvalinnat)))
+  TyomenetelmaValittu
+  (process-event [{{:keys [nimi]} :tyomenetelma valittu? :valittu?} app]
+      (update-in app [:valinnat :tyomenetelmat] (fn [valitut-tyomenetelmat]
+                                                  (if valittu?
+                                                    (conj valitut-tyomenetelmat nimi)
+                                                    (disj valitut-tyomenetelmat nimi)
+                                                    ))))
   HaeItemit
   (process-event [{:keys [uudet-valinnat]} {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
     (if-not haku-kaynnissa?
