@@ -3,7 +3,6 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.set :as clj-set]
-            [clj-time.core :as t]
             [harja.pvm :as pvm]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
