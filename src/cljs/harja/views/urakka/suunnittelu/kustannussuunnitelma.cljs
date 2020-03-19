@@ -311,16 +311,21 @@
                         [:div (str (summa-formatointi maara) " €/kk")]])])
                   data-hoitokausittain))])
 
-(defn modal-napit [poista!]
+(defn modal-napit [_]
   (let [sulje! (r/partial modal/piilota!)]
-    (fn []
-      [:div
-       [napit/yleinen-toissijainen "Peruuta" sulje! {:ikoni [ikonit/remove]}]
-       [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]])))
+    (fn [poista!]
+      (let [poista! (r/partial (fn []
+                                 (binding [t/*e!* e!]
+                                   (poista!))))]
+        [:div {:style {:padding-top "15px"}}
+         [napit/yleinen-toissijainen "Peruuta" sulje! {:ikoni [ikonit/remove]}]
+         [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]]))))
 
 (defn poista-modal! [aihe data-hoitokausittain poista! tiedot]
   (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"]
-    (modal/nayta! {:otsikko otsikko}
+    (modal/nayta! {:otsikko otsikko
+                   :content-tyyli {:overflow "hidden"}
+                   :body-tyyli {:padding-right "0px"}}
                   [:div
                    [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
                    [modal-lista data-hoitokausittain]
@@ -1518,13 +1523,25 @@
                                                      :fmt yhteenveto-format}
                                                     {:tyyppi :pudotusvalikko
                                                      :valitse-fn (fn [maksukausi]
-                                                                   (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
-                                                                                          :arvo maksukausi
-                                                                                          :solu solu/*this*
-                                                                                          :ajettavat-jarejestykset true
-                                                                                          :triggeroi-seuranta? true}
-                                                                                         false))
-                                                     #_#_:disabled? true
+                                                                   (let [solu solu/*this*
+                                                                         paivita-ui! (fn []
+                                                                                       (r/next-tick
+                                                                                         (fn []
+                                                                                             (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                                                    :arvo maksukausi
+                                                                                                                    :solu solu
+                                                                                                                    :ajettavat-jarejestykset true
+                                                                                                                    :triggeroi-seuranta? true}
+                                                                                                                   false))))]
+                                                                     (e! (t/->PoistaOmaJHDdata rivin-nimi
+                                                                                               maksukausi
+                                                                                               modal/piilota!
+                                                                                               paivita-ui!
+                                                                                               (r/partial (fn [toimenkuva data-hoitokausittain poista!]
+                                                                                                            (poista-modal! :toimenkuva
+                                                                                                                           data-hoitokausittain
+                                                                                                                           poista!
+                                                                                                                           {:toimenkuva toimenkuva})))))))
                                                      :format-fn (fn [teksti]
                                                                   (str (t/maksukausi-kuukausina teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]
@@ -2213,7 +2230,7 @@
 (defn arvioidaanko-laskutukseen-perustuen [_ _ _]
   (let [vaihda-fn (fn [toimenpide event]
                     (let [valittu? (.. event -target -checked)
-                          piilota-modal! (fn []
+                          paivita-ui! (fn []
                                           (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
                                                                          (fn [valinnat]
                                                                            (disj valinnat toimenpide))))
@@ -2225,12 +2242,12 @@
                                                              (conj valinnat toimenpide))))
                             (t/laskutukseen-perustuvan-taulukon-nakyvyys!))
                         (t/poista-laskutukseen-perustuen-data! toimenpide
-                                                               piilota-modal!
+                                                               paivita-ui!
                                                                (r/partial (fn [data-hoitokausittain poista!]
                                                                             (poista-modal! :maaramitattava
                                                                                            data-hoitokausittain
                                                                                            (comp poista!
-                                                                                                 piilota-modal!)
+                                                                                                 paivita-ui!)
                                                                                            {:toimenpide toimenpide})))))))]
     (fn [{:keys [toimenpide]} laskutukseen-perustuen? on-oikeus?]
       [:div#laskutukseen-perustuen-filter

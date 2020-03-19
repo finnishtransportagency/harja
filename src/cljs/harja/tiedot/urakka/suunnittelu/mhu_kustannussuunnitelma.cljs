@@ -41,6 +41,12 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
+(def ^{:dynamic true
+       :doc "Käytännössä modaalin nappeja varten. Eli, jos tuckin process-event:issä käsitellään
+            jokin eventti, joka aiheuttaa modaalin näkymisen ja tästä modaalista halutaan nakata uusi
+            eventti voi olla mahdollista, että e!:tä tarvii tässäkin ns:ssa."}
+  *e!* nil)
+
 (defn laskutukseen-perustuvan-taulukon-nakyvyys! []
   (let [{:keys [toimenpide laskutukseen-perustuen-valinta]} (-> @tiedot/suunnittelu-kustannussuunnitelma :suodattimet :hankinnat)
         laskutukseen-perustuvat-hankinnat-taulukko (get-in @tiedot/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid])]
@@ -48,7 +54,7 @@
       (grid/nayta! laskutukseen-perustuvat-hankinnat-taulukko)
       (grid/piillota! laskutukseen-perustuvat-hankinnat-taulukko))))
 
-(defn poista-laskutukseen-perustuen-data! [toimenpide piilota-modal! modal-fn!]
+(defn poista-laskutukseen-perustuen-data! [toimenpide paivita-ui! modal-fn!]
   (let [data-hoitokausittain (keep (fn [hoitokauden-hankinnat]
                                         (let [hoitokauden-hankinnat (filterv (fn [{:keys [maara]}]
                                                                                (and maara (not= 0 maara)))
@@ -86,7 +92,7 @@
                                            :warning viesti/viestin-nayttoaika-pitka))))))]
     (if-not (empty? data-hoitokausittain)
       (modal-fn! data-hoitokausittain poista!)
-      (piilota-modal!))))
+      (paivita-ui!))))
 
 (defn toimenpiteiden-jarjestys
   [toimenpide]
@@ -1316,12 +1322,15 @@
                                            (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
                                              (merge seurannat
                                                     {(keyword (str "yhteenveto-" nimi "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
+                                                                                                             [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]
                                                                                                              [:suodattimet :hoitokauden-numero]]
                                                                                                      :init (fn [tila]
                                                                                                              (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu nimi] (vec (repeat 12 {}))))
-                                                                                                     :aseta (fn [tila jh-korvaukset hoitokauden-numero]
+                                                                                                     :aseta (fn [tila jh-korvaukset maksukausi hoitokauden-numero]
                                                                                                               (let [korvauksien-index (dec hoitokauden-numero)
-                                                                                                                    maksukauden-jh-tunnit (get jh-korvaukset korvauksien-index)
+                                                                                                                    maksukauden-jh-tunnit (filterv (fn [{:keys [kuukausi]}]
+                                                                                                                                                     (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))
+                                                                                                                                                   (get jh-korvaukset korvauksien-index))
                                                                                                                     tuntipalkka (get-in maksukauden-jh-tunnit [0 :tuntipalkka])
                                                                                                                     kk-v (get-in maksukauden-jh-tunnit [0 :kk-v])
                                                                                                                     tunnit-samoja? (apply = (map :tunnit maksukauden-jh-tunnit))
@@ -1591,6 +1600,9 @@
 (defrecord TallennaToimenkuva [rivin-nimi])
 (defrecord TallennaToimenkuvaOnnistui [vastaus])
 (defrecord TallennaToimenkuvaEpaonnistui [vastaus])
+(defrecord PoistaOmaJHDdata [nimi maksukausi piilota-modal! paivita-ui! modal-fn!])
+(defrecord PoistaOmaJHDdataOnnistui [vastaus])
+(defrecord PoistaOmaJHDdataEpaonnistui [vastaus])
 (defrecord MuutaOmanJohtoJaHallintokorvauksenArvoa [nimi sarake arvo])
 (defrecord Hoitokausi [])
 (defrecord YleisSuodatinArvot [])
@@ -2245,6 +2257,75 @@
   (process-event [_ app]
     app)
   TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  PoistaOmaJHDdata
+  (process-event [{:keys [nimi maksukausi piilota-modal! paivita-ui! modal-fn!]} app]
+    (let [poistettava-kustannus? (fn [{:keys [tunnit kuukausi]}]
+                                   (and tunnit
+                                        (not= 0 tunnit)
+                                        (not (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))))
+          data-hoitokausittain (vec
+                                 (keep (fn [hoitokauden-korvaukset]
+                                         (let [hoitokauden-korvaukset (filterv (fn [kustannus]
+                                                                                 (poistettava-kustannus? kustannus))
+                                                                               hoitokauden-korvaukset)]
+                                           (when-not (empty? hoitokauden-korvaukset)
+                                             hoitokauden-korvaukset)))
+                                       (get-in app [:domain :johto-ja-hallintokorvaukset nimi])))
+          toimenkuva (get-in data-hoitokausittain [0 0 :toimenkuva])
+          poista! (fn []
+                    (*e!* (reify tuck/Event
+                            (process-event [_ app]
+                              (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+                                    jhk-tiedot (vec (mapcat (fn [hoitokauden-data]
+                                                              (map (fn [data]
+                                                                     (assoc (select-keys data #{:vuosi :kuukausi :toimenkuva-id})
+                                                                            :osa-kuukaudesta 1
+                                                                            :tunnit 0
+                                                                            :tuntipalkka 0))
+                                                                   hoitokauden-data))
+                                                            data-hoitokausittain))
+                                    toimenkuva-id (get-in jhk-tiedot [0 :toimenkuva-id])
+                                    lahetettava-data {:urakka-id urakka-id
+                                                      :ennen-urakkaa? false
+                                                      :jhk-tiedot jhk-tiedot
+                                                      :toimenkuva-id toimenkuva-id}
+                                    app (update-in app
+                                                   [:domain :johto-ja-hallintokorvaukset nimi]
+                                                   (fn [jh-korvaukset]
+                                                     (mapv (fn [hoitokausikohtaiset]
+                                                             (mapv (fn [kustannus]
+                                                                     (if (poistettava-kustannus? kustannus)
+                                                                       (assoc kustannus :tunnit 0 :tuntipalkka 0)
+                                                                       kustannus))
+                                                                   hoitokausikohtaiset))
+                                                           jh-korvaukset)))]
+                                (piilota-modal!)
+                                (paivita-ui!)
+                                (tuck-apurit/post! app
+                                                   :tallenna-johto-ja-hallintokorvaukset
+                                                   lahetettava-data
+                                                   {:onnistui ->PoistaOmaJHDdataOnnistui
+                                                    :epaonnistui ->PoistaOmaJHDdataEpaonnistui
+                                                    :paasta-virhe-lapi? true}))))))]
+      (if-not (empty? data-hoitokausittain)
+        (modal-fn! toimenkuva
+                   (mapv (fn [hoitokauden-korvaukset]
+                           (mapv (fn [korvaus]
+                                   (clj-set/rename-keys korvaus {:tunnit :maara}))
+                                 hoitokauden-korvaukset))
+                         data-hoitokausittain)
+                   poista!)
+        (do (piilota-modal!)
+            (paivita-ui!)))
+      app))
+  PoistaOmaJHDdataOnnistui
+  (process-event [_ app]
+    app)
+  PoistaOmaJHDdataEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)
