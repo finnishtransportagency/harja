@@ -30,6 +30,15 @@ VALUES ((SELECT id
    (SELECT id
     FROM urakka
     WHERE sampoid = '1242141-OULU2')),
+   ((SELECT id
+       FROM kayttaja
+      WHERE kayttajanimi = 'destia'
+      LIMIT 1),
+    1338,
+    'Testikohde 3',
+    (SELECT id
+       FROM urakka
+      WHERE sampoid = '1242141-OULU2')),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
@@ -73,6 +82,11 @@ DO $$ DECLARE
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 1337
                                            LIMIT 1);
+  hoito_paikkauskohde_3_id     INTEGER := (SELECT id
+                                             FROM paikkauskohde
+                                            WHERE "ulkoinen-id" = 1338
+                                            LIMIT 1);
+
   hoito_paikkauskohde_22_id    INTEGER := (SELECT id
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 221337
@@ -136,6 +150,10 @@ BEGIN
      'massapintaus', 'asfalttibetoni', 1.3, 2, 1, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 3, 400, 3, 450))),
     (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
                       224, NOW() - INTERVAL '1 day', NOW() + INTERVAL '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
+     'massapintaus', 'asfalttibetoni', 1.3, 2, 1, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1))),
+ -- Tehdään paikkaus jolle ei ole paikkaustoteumaa
+    (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_3_id,
+     225, NOW() - INTERVAL '1 day', NOW() + INTERVAL '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
      'massapintaus', 'asfalttibetoni', 1.3, 2, 1, 'AN7', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1)));
   --- Laitetaan iso kasa paikkauksia Muhoksen päällystysurakkaan. Näkee sivutuksen tällä tapaa.
   FOR counter IN 1..250 LOOP

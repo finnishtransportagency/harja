@@ -177,7 +177,7 @@
          ;; joudut kuljettamaan taulukon sarakkeiden leveydet tänne asti. Tehdään VHAR-1308 osana
          [:table
           [:thead
-           [:tr {:style {:border "none"}}
+           [:tr#paikkauksien-yhteenveto
             [:td {:colSpan 2}
              [:span.bold (str "Yhteensä: " (count paikkaukset))]]
             [:td {:colSpan 3}]
