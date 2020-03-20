@@ -76,6 +76,9 @@
 (defn lisaa-uuden-osan-rajapintakasittelijat [osa & gridkasittelijat]
   (apply g/lisaa-uuden-osan-rajapintakasittelijat osa gridkasittelijat))
 
+(defn poista-osan-rajapintakasittelijat [osa]
+  (g/poista-osan-rajapintakasittelijat osa))
+
 ;; HAUT
 
 ; - gridiin liittyvät haut

@@ -29,9 +29,9 @@
 (defonce e! nil)
 
 (defn summa-formatointi [teksti]
-  (let [teksti (clj-str/replace (str teksti) "," ".")]
-    (if (or (= "" teksti) (js/isNaN teksti))
-      "0,00"
+  (if (or (nil? teksti) (= "" teksti) (js/isNaN teksti))
+    "0,00"
+    (let [teksti (clj-str/replace (str teksti) "," ".")]
       (fmt/desimaaliluku teksti 2 true))))
 
 (defn summa-formatointi-uusi [teksti]
@@ -536,14 +536,14 @@
                                                                                       {:eventin-arvo {:f poista-tyhjat}}
                                                                                       {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}]}
                                                            :parametrit {:size 2}
-                                                           :fmt yhteenveto-format
+                                                           :fmt summa-formatointi
                                                            :fmt-aktiivinen summa-formatointi-aktiivinen}
                                                           {:tyyppi :teksti
                                                            :luokat #{"table-default"}
-                                                           :fmt yhteenveto-format}
+                                                           :fmt summa-formatointi}
                                                           {:tyyppi :teksti
                                                            :luokat #{"table-default" "harmaa-teksti"}
-                                                           :fmt yhteenveto-format}]}
+                                                           :fmt summa-formatointi}]}
                                                   {:tyyppi :taulukko
                                                    :nimi ::data-sisalto
                                                    :luokat #{"piillotettu"}
@@ -570,7 +570,7 @@
                                                                                                       :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                                                                      :parametrit {:size 2}
                                                                                      :luokat #{"input-default"}
-                                                                                     :fmt summa-formatointi-uusi
+                                                                                     :fmt summa-formatointi
                                                                                      :fmt-aktiivinen summa-formatointi-aktiivinen}
                                                                                     {:tyyppi :teksti
                                                                                      :luokat #{"table-default"}
@@ -1130,12 +1130,12 @@
                                                                                                                                                                        {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}]}
                                                                                                                                             :parametrit {:size 2
                                                                                                                                                          :class #{"input-default"}}
-                                                                                                                                            :fmt yhteenveto-format
+                                                                                                                                            :fmt summa-formatointi
                                                                                                                                             :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                                                                                                (solu/teksti {:parametrit {:class #{"table-default"}}
-                                                                                                                                             :fmt yhteenveto-format})
+                                                                                                                                             :fmt summa-formatointi})
                                                                                                                                (solu/teksti {:parametrit {:class #{"table-default" "harmaa-teksti"}}
-                                                                                                                                             :fmt yhteenveto-format})]
+                                                                                                                                             :fmt summa-formatointi})]
                                                                                                                         :luokat #{"salli-ylipiirtaminen"}}
                                                                                                                        [{:sarakkeet [0 4] :rivit [0 1]}])
                                                                                                             {:key (str tyyppi "-yhteenveto")})
@@ -1193,7 +1193,7 @@
                                                                                                                                                                          :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                                                                                                                                                         {:size 2
                                                                                                                                                                          :class #{"input-default"}}
-                                                                                                                                                                        summa-formatointi-uusi
+                                                                                                                                                                        summa-formatointi
                                                                                                                                                                         summa-formatointi-aktiivinen)
                                                                                                                                              {:key (str tyyppi "-" index "-maara")})
                                                                                                                                            (with-meta
@@ -1505,23 +1505,26 @@
                                                                                                                                              :triggeroi-seuranta? true}
                                                                                                                                             true))
                                                                                                         paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
+                                                                                                        paivita! (fn []
+                                                                                                                   (paivita-ui!)
+                                                                                                                   (paivita-kanta!))
                                                                                                         peruuta! (fn [vanha-arvo]
                                                                                                                    (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :yhteenveto rivin-nimi :toimenkuva] vanha-arvo)))]
                                                                                                     (if (= "" (clj-str/trim arvo))
-                                                                                                      (let [paivita-ui-seuraavalla-tickilla! (fn []
-                                                                                                                                               (r/next-tick paivita-ui!))]
-                                                                                                        (e! (t/->PoistaOmaJHDdata rivin-nimi
-                                                                                                                                  :poista-kaikki
+                                                                                                      (let [paivita-seuraavalla-tickilla! (fn []
+                                                                                                                                               (r/next-tick paivita!))]
+                                                                                                        (e! (t/->PoistaOmaJHDdata :toimenkuva
+                                                                                                                                  rivin-nimi
+                                                                                                                                  nil
                                                                                                                                   modal/piilota!
-                                                                                                                                  paivita-ui-seuraavalla-tickilla!
+                                                                                                                                  paivita-seuraavalla-tickilla!
                                                                                                                                   (r/partial (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
                                                                                                                                                (poista-modal! :toimenkuva
                                                                                                                                                               data-hoitokausittain
                                                                                                                                                               poista!
                                                                                                                                                               {:toimenkuva toimenkuva}
                                                                                                                                                               (partial peruuta! (get-in vanhat-arvot [0 :toimenkuva]))))))))
-                                                                                                      (do (paivita-ui!)
-                                                                                                          (paivita-kanta!))))))
+                                                                                                      (paivita!)))))
                                                                                      :on-key-down (fn [event]
                                                                                                     (when (= "Enter" (.. event -key))
                                                                                                       (.. event -target blur)))}
@@ -1556,7 +1559,8 @@
                                                                                                                   :ajettavat-jarejestykset true
                                                                                                                   :triggeroi-seuranta? true}
                                                                                                                  false))))]
-                                                                     (e! (t/->PoistaOmaJHDdata rivin-nimi
+                                                                     (e! (t/->PoistaOmaJHDdata :maksukausi
+                                                                                               rivin-nimi
                                                                                                maksukausi
                                                                                                modal/piilota!
                                                                                                paivita-ui!
@@ -1717,28 +1721,42 @@
                                                                                                            []
                                                                                                            oma-data)
                                                                             lisatyt-rivit (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit] #{})]
-                                                                        (doseq [{:keys [toimenkuva toimenkuva-id jarjestysnumero]} omien-rivien-tiedot
-                                                                                :when (and (not (contains? lisatyt-rivit toimenkuva-id))
-                                                                                           (not (empty? toimenkuva)))]
-                                                                          (let [omanimi (t/jh-omienrivien-nimi jarjestysnumero)
-                                                                                lisattava-rivi (grid/samanlainen-osa (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                                                                                                                                       [::g-pohjat/data 0]))
-                                                                                rivin-paikka-index (count (grid/hae-grid (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                                                                                                                                           [::g-pohjat/data])
-                                                                                                                         :lapset))]
-                                                                            (e! (tuck-apurit/->PaivitaTila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit]
-                                                                                                           (fn [lisatyt-rivit]
-                                                                                                             (conj (or lisatyt-rivit #{}) toimenkuva-id))))
-                                                                            (grid/lisaa-rivi! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                                                                                              lisattava-rivi
-                                                                                              [1 rivin-paikka-index])
-                                                                            (grid/lisaa-uuden-osan-rajapintakasittelijat (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                                                                                                                                           [1 rivin-paikka-index])
-                                                                                                                         #_[::g-pohjat/data rivin-paikka-index ::yhteenveto]
-                                                                                                                         [:. ::yhteenveto] {:rajapinta (keyword (str "yhteenveto-" omanimi))
-                                                                                                                                            :solun-polun-pituus 1
-                                                                                                                                            :datan-kasittely identity})
-                                                                            (t/paivita-raidat! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid]))))))}}
+                                                                        (doseq [{:keys [toimenkuva toimenkuva-id jarjestysnumero]} omien-rivien-tiedot]
+                                                                          (cond
+                                                                            (and (not (contains? lisatyt-rivit toimenkuva-id))
+                                                                                 (not (empty? toimenkuva)))
+                                                                            (let [omanimi (t/jh-omienrivien-nimi jarjestysnumero)
+                                                                                  lisattava-rivi (grid/aseta-nimi (grid/samanlainen-osa (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                                            [::g-pohjat/data 0]))
+                                                                                                                    omanimi)
+                                                                                  rivin-paikka-index (count (grid/hae-grid (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                             [::g-pohjat/data])
+                                                                                                                           :lapset))]
+                                                                              (e! (tuck-apurit/->PaivitaTila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit]
+                                                                                                             (fn [lisatyt-rivit]
+                                                                                                               (conj (or lisatyt-rivit #{}) toimenkuva-id))))
+                                                                              (grid/lisaa-rivi! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                lisattava-rivi
+                                                                                                [1 rivin-paikka-index])
+                                                                              (grid/lisaa-uuden-osan-rajapintakasittelijat (grid/get-in-grid (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                                                                             [1 rivin-paikka-index])
+                                                                                                                           #_[::g-pohjat/data rivin-paikka-index ::yhteenveto]
+                                                                                                                           [:. ::yhteenveto] {:rajapinta (keyword (str "yhteenveto-" omanimi))
+                                                                                                                                              :solun-polun-pituus 1
+                                                                                                                                              :datan-kasittely identity})
+                                                                              (t/paivita-raidat! (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])))
+                                                                            (and (contains? lisatyt-rivit toimenkuva-id)
+                                                                                 (empty? toimenkuva))
+                                                                            (let [omanimi (t/jh-omienrivien-nimi jarjestysnumero)
+                                                                                  g (get-in data [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+                                                                                  poistettava-rivi (grid/get-in-grid g
+                                                                                                                     [::g-pohjat/data omanimi])]
+                                                                              (e! (tuck-apurit/->PaivitaTila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :lisatyt-rivit]
+                                                                                                             (fn [lisatyt-rivit]
+                                                                                                               (disj (or lisatyt-rivit #{}) toimenkuva-id))))
+                                                                              (grid/poista-osan-rajapintakasittelijat poistettava-rivi)
+                                                                              (grid/poista-rivi! g poistettava-rivi))
+                                                                            :else nil))))}}
                                  (reduce (fn [polut jarjestysnumero]
                                            (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
                                              (merge polut

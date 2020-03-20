@@ -1600,7 +1600,7 @@
 (defrecord TallennaToimenkuva [rivin-nimi])
 (defrecord TallennaToimenkuvaOnnistui [vastaus])
 (defrecord TallennaToimenkuvaEpaonnistui [vastaus])
-(defrecord PoistaOmaJHDdata [nimi maksukausi piilota-modal! paivita-ui! modal-fn!])
+(defrecord PoistaOmaJHDdata [sarake nimi maksukausi piilota-modal! paivita-ui! modal-fn!])
 (defrecord PoistaOmaJHDdataOnnistui [vastaus])
 (defrecord PoistaOmaJHDdataEpaonnistui [vastaus])
 (defrecord MuutaOmanJohtoJaHallintokorvauksenArvoa [nimi sarake arvo])
@@ -2262,11 +2262,11 @@
                    :warning viesti/viestin-nayttoaika-pitka)
     app)
   PoistaOmaJHDdata
-  (process-event [{:keys [nimi maksukausi piilota-modal! paivita-ui! modal-fn!]} app]
+  (process-event [{:keys [sarake nimi maksukausi piilota-modal! paivita-ui! modal-fn!]} app]
     (let [poistettava-kustannus? (fn [{:keys [tunnit kuukausi]}]
                                    (and tunnit
                                         (not= 0 tunnit)
-                                        (or (= :poista-kaikki maksukausi)
+                                        (or (= sarake :toimenkuva)
                                             (not (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi)))))
           data-hoitokausittain (vec
                                  (keep (fn [hoitokauden-korvaukset]
@@ -2323,8 +2323,7 @@
                          data-hoitokausittain)
                    poista!
                    vanhat-arvot)
-        (do (piilota-modal!)
-            (paivita-ui!)))
+        (paivita-ui!))
       app))
   PoistaOmaJHDdataOnnistui
   (process-event [_ app]
