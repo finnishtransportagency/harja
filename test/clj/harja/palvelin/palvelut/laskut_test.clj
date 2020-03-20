@@ -62,8 +62,7 @@
                       :liite_oid    nil}]})
 
 (def uusi-kohdistus
-  {:kohdistus-id        nil
-   :rivi                3
+  {:rivi                3
    :summa               987
    :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
    :suorittaja-id       1
@@ -172,7 +171,7 @@
         paivitetty-lasku
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely (assoc uusi-lasku :kokonaissumma 9876.54 :id tallennettu-id)})
+                              :laskuerittely (assoc tallennettu-lasku :kokonaissumma 9876.54 :id tallennettu-id)})
         paivitetty-kohdistus
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -180,21 +179,22 @@
         lisatty-kohdistus
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely (assoc uusi-lasku
+                              :laskuerittely (assoc paivitetty-lasku
                                                :id tallennettu-id
-                                               :kohdistukset (merge (uusi-lasku :kohdistukset)
+                                               :kohdistukset (merge (paivitetty-lasku :kohdistukset)
                                                                     uusi-kohdistus))})
         poistettu-kohdistus
         (kutsu-http-palvelua :poista-laskurivi (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id           (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id
-                              :kohdistuksen-id 3})
+                              :kohdistuksen-id (-> lisatty-kohdistus
+                                                   :kohdistukset
+                                                   first
+                                                   :kohdistus-id)})
         poistettu-lasku
         (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id})]
-    (println "LASKASK" tallennettu-lasku)
-    (println "LASKASK" paivitetty-lasku)
 
     ;; Tallennus
     (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")

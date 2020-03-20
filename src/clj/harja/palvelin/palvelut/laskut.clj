@@ -69,7 +69,6 @@
   [db user hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
   (let [laskukohdistukset (group-by :id (q/hae-kaikki-urakan-laskuerittelyt db {:urakka (:urakka-id hakuehdot)}))]
-    (println "LK" laskukohdistukset)
     (kasittele-kohdistukset laskukohdistukset)))
 
 (defn hae-urakan-laskuerittelyt
@@ -88,8 +87,6 @@
   (let [lasku (first (q/hae-lasku db {:urakka    urakka-id
                                       :id id}))
         laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))]
-    (println "HAEN " lasku)
-    (println "HAIN " laskun-kohdistukset)
     (assoc lasku :kohdistukset laskun-kohdistukset)))
 
 (defn- laskuerittelyn-maksueratyyppi
@@ -111,7 +108,6 @@
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
   [db user urakka-id lasku-id laskurivi]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (println "LUODAAN" laskurivi (nil? (:kohdistus-id laskurivi)))
   (if (nil? (:kohdistus-id laskurivi))
     (q/luo-laskun-kohdistus<! db {:lasku               lasku-id
                                   :id                  (:kohdistus-id laskurivi)
@@ -141,7 +137,6 @@
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi suorittaja-nimi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset] :as _laskuerittely}]
-  (println "TYLI " kohdistukset)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
                          :kokonaissumma         kokonaissumma
@@ -157,7 +152,6 @@
                 (q/paivita-lasku<! db (assoc yhteiset-tiedot
                                         :id id)))]
     (doseq [kohdistusrivi kohdistukset]
-      (println "KOHDISTUSRIVI" kohdistusrivi)
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)
             (assoc r :lasku (:id lasku))
