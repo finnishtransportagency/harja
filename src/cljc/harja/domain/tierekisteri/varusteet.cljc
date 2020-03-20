@@ -241,14 +241,14 @@
 (defn varusteen-liikennemerkki-skeema
   [tietolaji]
   (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
-        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "lmnumero") ominaisuudet)))
-        lmnumero->teksti (fn [numero]
+        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
+        asetusnr->teksti (fn [numero]
                            (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
     {:otsikko "Liikennemerkki"
      :tyyppi :string
      :hae (fn [rivi]
-            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "lmnumero"])]
-              (str numero " - " (lmnumero->teksti numero))))
+            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "asetusnr"])]
+              (str numero " - " (asetusnr->teksti numero))))
      :leveys 2}))
 
 (def varusteen-perustiedot-skeema

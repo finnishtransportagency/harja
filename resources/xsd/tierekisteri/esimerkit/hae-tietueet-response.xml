@@ -33,7 +33,7 @@
             </sijainti>
             <tietolaji>
                 <tietolajitunniste>tl506</tietolajitunniste>
-                <arvot>1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
+                <arvot>1234567890          ASETUSNR    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
             </tietolaji>
         </ns2:tietue>
         <ns2:tietue>
@@ -67,7 +67,7 @@
             </sijainti>
             <tietolaji>
                 <tietolajitunniste>tl506</tietolajitunniste>
-                <arvot>1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
+                <arvot>1234567890          ASETUSNR    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
             </tietolaji>
         </ns2:tietue>
         <ns2:tietue>
@@ -101,7 +101,7 @@
             </sijainti>
             <tietolaji>
                 <tietolajitunniste>tl506</tietolajitunniste>
-                <arvot>1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
+                <arvot>1234567890          ASETUSNR    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
             </tietolaji>
         </ns2:tietue>
     </ns2:tietueet>

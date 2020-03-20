@@ -389,7 +389,7 @@
                    :tierekisteriosoite {:numero 22 :alkuosa 1 :alkuetaisyys 3}
                    :urakka-id 4
                    :loppupvm nil
-                   :arvot {:x 428025 :y 7210432 :lmnumero "11"}
+                   :arvot {:x 428025 :y 7210432 :asetusnr "11"}
                    :puoli 1
                    :tietolaji "tl506"
                    :id nil
