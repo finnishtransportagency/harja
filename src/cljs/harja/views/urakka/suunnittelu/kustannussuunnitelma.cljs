@@ -313,23 +313,28 @@
 
 (defn modal-napit [_]
   (let [sulje! (r/partial modal/piilota!)]
-    (fn [poista!]
+    (fn [poista! peruuta!]
       (let [poista! (r/partial (fn []
                                  (binding [t/*e!* e!]
-                                   (poista!))))]
+                                   (poista!))))
+            peruuta! (if peruuta!
+                       (r/partial (comp sulje! peruuta!))
+                       sulje!)]
         [:div {:style {:padding-top "15px"}}
-         [napit/yleinen-toissijainen "Peruuta" sulje! {:ikoni [ikonit/remove]}]
+         [napit/yleinen-toissijainen "Peruuta" peruuta! {:ikoni [ikonit/remove]}]
          [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]]))))
 
-(defn poista-modal! [aihe data-hoitokausittain poista! tiedot]
-  (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"]
-    (modal/nayta! {:otsikko otsikko
-                   :content-tyyli {:overflow "hidden"}
-                   :body-tyyli {:padding-right "0px"}}
-                  [:div
-                   [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
-                   [modal-lista data-hoitokausittain]
-                   [modal-napit poista!]])))
+(defn poista-modal!
+  ([aihe data-hoitokausittain poista! tiedot] (poista-modal! aihe data-hoitokausittain poista! tiedot nil))
+  ([aihe data-hoitokausittain poista! tiedot peruuta!]
+   (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"]
+     (modal/nayta! {:otsikko otsikko
+                    :content-tyyli {:overflow "hidden"}
+                    :body-tyyli {:padding-right "0px"}}
+                   [:div
+                    [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
+                    [modal-lista data-hoitokausittain]
+                    [modal-napit poista! peruuta!]]))))
 
 (defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
   (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::t/yhteenveto])
@@ -1464,7 +1469,6 @@
                                      :osat [{:tyyppi :rivi
                                              :nimi ::data-yhteenveto
                                              :osat [{:tyyppi :oma
-                                                     ;[aukaise-fn auki-alussa? toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
                                                      :constructor (fn [_]
                                                                     (laajenna-syote (fn [this auki?]
                                                                                       (if auki?
@@ -1492,13 +1496,32 @@
                                                                                                                           false)))
                                                                                      :on-blur (fn [arvo]
                                                                                                 (when arvo
-                                                                                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
-                                                                                                                         :arvo arvo
-                                                                                                                         :solu solu/*this*
-                                                                                                                         :ajettavat-jarejestykset true
-                                                                                                                         :triggeroi-seuranta? true}
-                                                                                                                        true)
-                                                                                                  (e! (t/->TallennaToimenkuva rivin-nimi))))
+                                                                                                  (let [solu solu/*this*
+                                                                                                        paivita-ui! (fn []
+                                                                                                                      (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                                                                             :arvo arvo
+                                                                                                                                             :solu solu
+                                                                                                                                             :ajettavat-jarejestykset true
+                                                                                                                                             :triggeroi-seuranta? true}
+                                                                                                                                            true))
+                                                                                                        paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
+                                                                                                        peruuta! (fn [vanha-arvo]
+                                                                                                                   (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :yhteenveto rivin-nimi :toimenkuva] vanha-arvo)))]
+                                                                                                    (if (= "" (clj-str/trim arvo))
+                                                                                                      (let [paivita-ui-seuraavalla-tickilla! (fn []
+                                                                                                                                               (r/next-tick paivita-ui!))]
+                                                                                                        (e! (t/->PoistaOmaJHDdata rivin-nimi
+                                                                                                                                  :poista-kaikki
+                                                                                                                                  modal/piilota!
+                                                                                                                                  paivita-ui-seuraavalla-tickilla!
+                                                                                                                                  (r/partial (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
+                                                                                                                                               (poista-modal! :toimenkuva
+                                                                                                                                                              data-hoitokausittain
+                                                                                                                                                              poista!
+                                                                                                                                                              {:toimenkuva toimenkuva}
+                                                                                                                                                              (partial peruuta! (get-in vanhat-arvot [0 :toimenkuva]))))))))
+                                                                                                      (do (paivita-ui!)
+                                                                                                          (paivita-kanta!))))))
                                                                                      :on-key-down (fn [event]
                                                                                                     (when (= "Enter" (.. event -key))
                                                                                                       (.. event -target blur)))}
@@ -1527,17 +1550,17 @@
                                                                          paivita-ui! (fn []
                                                                                        (r/next-tick
                                                                                          (fn []
-                                                                                             (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
-                                                                                                                    :arvo maksukausi
-                                                                                                                    :solu solu
-                                                                                                                    :ajettavat-jarejestykset true
-                                                                                                                    :triggeroi-seuranta? true}
-                                                                                                                   false))))]
+                                                                                           (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                                                  :arvo maksukausi
+                                                                                                                  :solu solu
+                                                                                                                  :ajettavat-jarejestykset true
+                                                                                                                  :triggeroi-seuranta? true}
+                                                                                                                 false))))]
                                                                      (e! (t/->PoistaOmaJHDdata rivin-nimi
                                                                                                maksukausi
                                                                                                modal/piilota!
                                                                                                paivita-ui!
-                                                                                               (r/partial (fn [toimenkuva data-hoitokausittain poista!]
+                                                                                               (r/partial (fn [toimenkuva data-hoitokausittain poista! _]
                                                                                                             (poista-modal! :toimenkuva
                                                                                                                            data-hoitokausittain
                                                                                                                            poista!

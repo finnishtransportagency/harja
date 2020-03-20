@@ -2266,7 +2266,8 @@
     (let [poistettava-kustannus? (fn [{:keys [tunnit kuukausi]}]
                                    (and tunnit
                                         (not= 0 tunnit)
-                                        (not (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))))
+                                        (or (= :poista-kaikki maksukausi)
+                                            (not (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi)))))
           data-hoitokausittain (vec
                                  (keep (fn [hoitokauden-korvaukset]
                                          (let [hoitokauden-korvaukset (filterv (fn [kustannus]
@@ -2310,7 +2311,9 @@
                                                    lahetettava-data
                                                    {:onnistui ->PoistaOmaJHDdataOnnistui
                                                     :epaonnistui ->PoistaOmaJHDdataEpaonnistui
-                                                    :paasta-virhe-lapi? true}))))))]
+                                                    :paasta-virhe-lapi? true}))))))
+          valittu-hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
+          vanhat-arvot (get-in app [:domain :johto-ja-hallintokorvaukset nimi valittu-hoitokauden-numero])]
       (if-not (empty? data-hoitokausittain)
         (modal-fn! toimenkuva
                    (mapv (fn [hoitokauden-korvaukset]
@@ -2318,7 +2321,8 @@
                                    (clj-set/rename-keys korvaus {:tunnit :maara}))
                                  hoitokauden-korvaukset))
                          data-hoitokausittain)
-                   poista!)
+                   poista!
+                   vanhat-arvot)
         (do (piilota-modal!)
             (paivita-ui!)))
       app))
