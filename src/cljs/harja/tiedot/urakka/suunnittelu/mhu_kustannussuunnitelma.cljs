@@ -1417,7 +1417,7 @@
                                                              :aseta (fn [tila yhteensa]
                                                                       (assoc-in tila
                                                                                 [:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu]
-                                                                                (mapv indeksikorjaa yhteensa)))}}
+                                                                                (mapv indeksikorjaa yhteensa (range 1 6))))}}
                                  (reduce (fn [rajapinnat index]
                                            (let [nimi (jh-omienrivien-nimi index)]
                                              (merge rajapinnat
