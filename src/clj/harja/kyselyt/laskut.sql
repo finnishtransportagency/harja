@@ -1,6 +1,6 @@
 -- name: hae-urakan-laskut
 -- Hakee urakan laskut annetulta aikaväliltä
-SELECT l.id            as "laskun-id",
+SELECT l.id            as "id",
        l.kokonaissumma as "kokonaissumma",
        l.erapaiva      as "erapaiva",
        l.tyyppi        as "tyyppi",
@@ -14,13 +14,14 @@ WHERE l.urakka = :urakka
 
 -- name: hae-kaikki-urakan-laskuerittelyt
 -- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
-SELECT l.id                   as "laskun-id",
+SELECT l.id                   as "id",
        l.kokonaissumma        as "kokonaissumma",
        l.erapaiva             as "erapaiva",
        l.tyyppi               as "tyyppi",
        l.laskun_numero        as "laskun-numero",
        l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
        l.lisatieto            as "lisatieto",
+       lk.id                  as "kohdistus-id",
        lk.rivi                as "rivi",
        lk.summa               as "summa",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
@@ -38,13 +39,13 @@ from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
        LEFT JOIN lasku_liite ll on l.id = ll.lasku
        LEFT JOIN liite liite on ll.liite = liite.id
-       JOIN aliurakoitsija a on l.suorittaja = a.id
+       left JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
-SELECT l.id                   as "laskun-id",
+SELECT l.id                   as "id",
        l.kokonaissumma        as "kokonaissumma",
        l.erapaiva             as "erapaiva",
        l.tyyppi               as "tyyppi",
@@ -73,7 +74,7 @@ WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-lasku
-SELECT l.id            as "laskun-id",
+SELECT l.id            as "id",
        l.urakka        as "urakka",
        l.kokonaissumma as "kokonaissumma",
        l.erapaiva      as "erapaiva",
@@ -85,7 +86,7 @@ SELECT l.id            as "laskun-id",
        a.nimi          as "suorittaja-nimi"
 FROM lasku l
   left join aliurakoitsija a on l.suorittaja = a.id
-where l.id = :laskun-id
+where l.id = :id
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-laskun-kohdistukset
@@ -127,45 +128,48 @@ update
            muokattu = current_timestamp,
            muokkaaja = :kayttaja,
            koontilaskun_kuukausi = :koontilaskun-kuukausi
-          where id = :laskun-id;
+          where id = :id;
 
--- name: luo-tai-paivita-laskun-kohdistus<!
+-- name: luo-laskun-kohdistus<!
 INSERT
 INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
                       suoritus_loppu, luotu, luoja)
 VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
-        current_timestamp, :kayttaja)
-ON CONFLICT (lasku, rivi) DO UPDATE
-  SET summa = :summa,
+        current_timestamp, :kayttaja);
+
+-- name: paivita-laskun-kohdistus<!
+update lasku_kohdistus
+set summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
     suoritus_alku = :alkupvm,
     suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
-    muokkaaja = :kayttaja;
+    muokkaaja = :kayttaja
+where id = :id;
 
 -- name: poista-lasku!
 UPDATE lasku
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE id = :laskun-id;
+WHERE id = :id;
 
 -- name: poista-laskun-kohdistukset!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = :laskun-id;
+WHERE lasku = :id;
 
 -- name: poista-laskun-kohdistus!
 UPDATE lasku_kohdistus
 SET poistettu = TRUE,
     muokattu  = current_timestamp,
     muokkaaja = :kayttaja
-WHERE lasku = :laskun-id
-  AND rivi = :rivi;
+WHERE lasku = :id
+  AND id = :kohdistuksen-id;
 
 -- name: hae-tehtavan-nimi
 SELECT nimi FROM toimenpidekoodi

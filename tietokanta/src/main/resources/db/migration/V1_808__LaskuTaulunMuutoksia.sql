@@ -38,8 +38,7 @@ CREATE TABLE lasku_kohdistus(
                               luoja integer references kayttaja(id),
                               muokattu timestamp,
                               muokkaaja integer references kayttaja(id),
-                              poistettu boolean default false,
-                              unique (lasku, rivi));
+                              poistettu boolean default false);
 
 COMMENT ON table lasku_kohdistus IS
   E'Lasku-tauluun tallennettu lasku voidaan kohdistaa useaan toimenpiteeseen,tehtäväryhmään ja/tai tehtävään.

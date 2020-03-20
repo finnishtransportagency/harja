@@ -507,13 +507,13 @@
     (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                         :aliurakoitsijat
+    [_ {aliurakoitsijat                  :aliurakoitsijat
         {:keys [kohdistukset
                 koontilaskun-kuukausi
                 aliurakoitsija
                 laskun-numero lisatieto
-                erapaiva laskun-id] :as lomake} :lomake
-        maksuerat                               :maksuerat :as app}]
+                erapaiva id] :as lomake} :lomake
+        maksuerat                        :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
@@ -529,7 +529,7 @@
                            {:urakka-id     urakka
                             :laskuerittely {:kohdistukset          kohdistukset
                                             :erapaiva              erapaiva
-                                            :laskun-id             (when-not (nil? laskun-id) laskun-id)
+                                            :id                    (when-not (nil? id) id)
                                             :urakka                urakka
                                             :suorittaja-nimi       (some
                                                                      #(when (= aliurakoitsija (:id %))
@@ -544,12 +544,15 @@
                                             :tyyppi                tyyppi
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
-                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :laskun-id :as tulos}]
+                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :id :as tulos}]
+                                                                        (loki/log (pr-str tulos))
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
+                                                                                                 (loki/log (pr-str kulut))
                                                                                                  (as-> kulut ks
-                                                                                                       (filter (fn [{:keys [laskun-id] :as _kulu}]
-                                                                                                                 (not= laskun-id uusi-id)) ks)
+                                                                                                       (filter (fn [{:keys [id] :as _kulu}]
+                                                                                                                 (loki/log uusi-id id _kulu)
+                                                                                                                 (not= id uusi-id)) ks)
                                                                                                        (conj ks tulos))))
                                                                               (assoc a
                                                                                 :taulukko (p/paivita-taulukko!

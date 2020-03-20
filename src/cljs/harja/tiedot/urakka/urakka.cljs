@@ -136,6 +136,7 @@
 (def kulut-lomake-default (with-meta {:kohdistukset          [{:tehtavaryhma        nil
                                                                :toimenpideinstanssi nil
                                                                :summa               nil
+                                                               :poistettu           false
                                                                :rivi                0}]
                                       :aliurakoitsija        nil
                                       :koontilaskun-kuukausi nil
