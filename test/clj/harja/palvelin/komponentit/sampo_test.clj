@@ -132,7 +132,7 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= (+ (count kiinteahintaisten-toimenpideinstanssit)
+        (is (= (+ (* 2 (count kiinteahintaisten-toimenpideinstanssit)) ;; Jos kiinteähintainen kustannuserä on likainen, myös vastaava maksuerä on likainen.
                   1 ;; mhu-johto toimenpideinstanssi
                   )
                viestit-jonossa)
