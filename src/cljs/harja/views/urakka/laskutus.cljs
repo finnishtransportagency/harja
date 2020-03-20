@@ -8,6 +8,7 @@
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat]
+            [harja.views.urakka.kulut :as kohdistetut-kulut]
             [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -29,4 +30,9 @@
         :maksuerat
         ^{:key "maksuerat"}
         (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
-          [maksuerat/maksuerat-listaus])]])))
+          [maksuerat/maksuerat-listaus])
+
+        "Kohdistetut kulut"
+        :kohdistetut-kulut
+        ^{:keys "kohdistetut-kulut"}
+        [kohdistetut-kulut/kohdistetut-kulut]]])))

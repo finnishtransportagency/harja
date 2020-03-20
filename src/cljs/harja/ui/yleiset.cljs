@@ -296,7 +296,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli?] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -304,7 +304,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div (merge
                   {:class (str (if vayla-tyyli?
-                                 "select-default"
+                                 (str "select-" (if virhe? "error-" "") "default")
                                  "dropdown livi-alasveto")
                                (when class (str " " class))
                                (when @auki? " open"))}
@@ -338,6 +338,30 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko otsikko]
    [livi-pudotusvalikko optiot valinnat]])
+
+(defn alasveto-toiminnolla
+  [_ _]
+  (let [auki? (r/atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn virhe? disabled]}]
+        [:div {:class #{(str "select-" (if virhe?
+                                         "error-"
+                                         "") "default") (when @auki? "open")}}
+         [:button.nappi-alasveto {:on-click #(swap! auki? not) :disabled disabled}
+          [:div.valittu
+           (or (formaatti-fn valittu) "Ei valittu")]]
+         [:ul {:style {:display (if @auki?
+                                  "block"
+                                  "none")}}
+          (for [v valinnat]
+            ^{:key (gensym "alasveto-item-")}
+            [:li.harja-alasvetolistaitemi
+             {:on-click #(do
+                           (swap! auki? not)
+                           (valinta-fn v))}
+             [:span (formaatti-fn v)]])
+          [:li.harja-alasvetolistaitemi [toiminto {:sulje #(swap! auki? not)}]]]]))))
 
 
 (defn kaksi-palstaa-otsikkoja-ja-arvoja
