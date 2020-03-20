@@ -68,7 +68,8 @@ GROUP BY vuosi;
 -- Teiden hoidon urakoissa (MHU) kokonaishintainen Sampoon lähetettävä kustannussuunnitelma koostuu
 -- kaikista kiinteähintaisten, kustannusarvioitujen ja yksikköhintaisten töiden suunnittelutiedoista.
 -- Tieto äkillisiin hoitotöihin ja vahinkojen korjauksiin varatuista rahavaroista lähetetään myös tässä kustannussuunnitelmassa.
-SELECT
+SELECT vuosi, sum(summa)  FROM
+(SELECT
   kt.vuosi as vuosi,
   Sum(COALESCE(kt.summa, 0)) AS summa
 FROM maksuera m
@@ -86,11 +87,12 @@ WHERE m.numero = :maksuera GROUP BY ka.vuosi
 UNION ALL
 SELECT
   jhk.vuosi as vuosi,
-  Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa1
+  Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa
 FROM maksuera m
        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- hoidon johto
        JOIN johto_ja_hallintokorvaus jhk on tpi.urakka = jhk."urakka-id"
-WHERE m.numero = :maksuera GROUP BY jhk.vuosi;
+WHERE m.numero = :maksuera GROUP BY jhk.vuosi) t
+GROUP BY vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT

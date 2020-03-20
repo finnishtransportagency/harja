@@ -53,7 +53,7 @@
                                        (assoc-in maksuera
                                                  [:maksuera :summa]
                                                  (get-in summat [tpi tyyppi]))))))
-                        (q/hae-urakan-maksuerat db urakka-id))]
+                        (q/hae-maksuerat-urakassa db urakka-id))]
     maksuerat))
 
 (defn laheta-maksuerat-sampoon
