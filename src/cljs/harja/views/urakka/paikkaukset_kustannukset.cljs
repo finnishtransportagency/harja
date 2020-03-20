@@ -11,32 +11,47 @@
             [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]))
+            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defn paikkauksien-kokonaishinta-tyomenetelmittain [e! app]
-  (let [skeema [{:otsikko "Kohde"
-                 :leveys 15
-                 :nimi :kohde}
-                {:otsikko "Työmenetelmä"
-                 :leveys 5
-                 :nimi :selite}
-                {:otsikko "Valmistumispvm"
-                 :leveys 5
-                 :nimi :valmistumispvm}
-                {:otsikko "Kokonaishinta"
-                 :leveys 5
-                 :nimi :kokonaishinta}]]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkauksien-kokonaishinta-tyomenetelmittain-grid]}]
+  (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkauksien-kokonaishinta-tyomenetelmittain-grid]}]
+    (let [skeema [{:otsikko "Kohde"
+                   :leveys 15 :muokattava? (constantly false)
+                   :tyyppi :valinta
+                   :nimi :paikkauskohde-nimi}
+                  {:otsikko "Työmenetelmä"
+                   :leveys 5 :tyyppi :teksti
+                   :muokattava? (constantly false)
+                   :nimi :tyomenetelma}
+                  {:otsikko "Valmistumispvm"
+                   :leveys 5 :tyyppi :pvm :muokattava? (constantly false)
+                   :fmt pvm/pvm-opt
+                   :nimi :loppuaika}
+                  {:otsikko "Kokonaishinta"
+                   :fmt fmt/euro-opt
+                   :leveys 5 :tyyppi :numero
+                   :nimi :hinta}]
+          yhteissumma (->> paikkauksien-kokonaishinta-tyomenetelmittain-grid
+                           (map :hinta)
+                           (reduce +))]
       [:div
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien kokonaishintaiset kustannukset työmenetelmittäin - HUOM! ominaisuus on vasta työnalla!")
-         :tunniste :id
+         :tunniste :paikkaustoteuma-id
+         :tallenna #(tiedot/tallenna-kustannukset %)
          :sivuta 50
          :tyhja "Ei kustannuksia"}
         skeema
-        paikkauksien-kokonaishinta-tyomenetelmittain-grid]])))
+        (reverse
+          (sort-by :loppuaika paikkauksien-kokonaishinta-tyomenetelmittain-grid))]
+       [yleiset/taulukkotietonakyma {:table-style {:float "right"}}
+        "Yhteensä:"
+        (fmt/euro-opt yhteissumma)]])))
 
 (defn kustannukset* [e! app]
   (komp/luo
@@ -47,7 +62,7 @@
        [yhteinen-view/hakuehdot
         {:nakyma :kustannukset
          :palvelukutsu-onnistui-fn #(e! (tiedot/->KustannuksetHaettu %))}]
-      [paikkauksien-kokonaishinta-tyomenetelmittain e! app]])))
+       [paikkauksien-kokonaishinta-tyomenetelmittain e! app]])))
 
 (defn kustannukset [ur]
   (komp/luo

@@ -132,18 +132,21 @@ UPDATE yllapitokohteen_kustannukset
    SET toteutunut_hinta = :toteutunut_hinta
  WHERE yllapitokohde = :id;
 
--- name: hae-paikkaustoteumat-tierekisteriosoitteella
+-- name: hae-paikkauskohteen-mahdolliset-kustannukset
 SELECT pt.kirjattu,
-       pt.selite,
+       p.tyomenetelma,
        pt.hinta,
        pt.tyyppi,
        pt.id              AS "paikkaustoteuma-id",
        pk.id              AS "paikkauskohde-id",
-       pk.nimi
-FROM paikkaustoteuma pt
-  JOIN paikkauskohde pk ON pt."paikkauskohde-id"=pk.id
+       pk.nimi            AS "paikkauskohde-nimi",
+       p.loppuaika
+FROM paikkauskohde pk
+  LEFT JOIN paikkaustoteuma pt ON pt."paikkauskohde-id"=pk.id
   INNER JOIN paikkaus p ON p."ulkoinen-id"=pt."ulkoinen-id"
 WHERE pt."urakka-id"=:urakka-id AND
+      pt.poistettu IS NOT TRUE AND
+      pt.tyyppi = :tyyppi::paikkaustoteumatyyppi AND
       (:alkuaika :: TIMESTAMP IS NULL OR pt.kirjattu >= :alkuaika) AND
       (:loppuaika :: TIMESTAMP IS NULL OR pt.kirjattu <= :loppuaika) AND
       (:numero :: INTEGER IS NULL OR (p.tierekisteriosoite).tie = :numero) AND
@@ -161,3 +164,11 @@ WHERE pt."urakka-id"=:urakka-id AND
        (p.tierekisteriosoite).losa < :loppuosa) AND
       (:paikkaus-idt :: INTEGER [] IS NULL OR pk.id = ANY (:paikkaus-idt :: INTEGER [])) AND
       (:tyomenetelmat :: VARCHAR [] IS NULL OR p.tyomenetelma = ANY (:tyomenetelmat :: VARCHAR []));
+
+--name: paivita-paikkaustoteuma!
+UPDATE paikkaustoteuma SET hinta = :hinta, poistettu = :poistettu, "muokkaaja-id" = :muokkaaja, muokattu = NOW()
+ WHERE id = :paikkaustoteuma-id
+
+--name: luo-paikkaustoteuma!
+INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu, tyyppi, hinta)
+ VALUES(:"urakka-id", :"paikkauskohde-id", :luoja, NOW(), :tyyppi::paikkaustoteumatyyppi, :hinta)

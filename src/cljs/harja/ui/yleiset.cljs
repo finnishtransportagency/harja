@@ -391,10 +391,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
-  "Tekee geneerisen taulukko-tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
-  [optiot & otsikot-ja-arvot]
-  [:div.taulukko-tietonakyma
-   [:table
+  "Tekee geneerisen taulukko-tietonäkymän. Optioihin style tai table-style."
+  [{:keys [style table-style]} & otsikot-ja-arvot]
+  [:div.taulukko-tietonakyma {:style style}
+   [:table {:style table-style}
     [:tbody
      (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
            :when arvo]

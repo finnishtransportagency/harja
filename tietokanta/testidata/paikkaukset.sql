@@ -264,19 +264,12 @@ BEGIN
       LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL);
 
   INSERT INTO paikkaustoteuma ("ulkoinen-id", "urakka-id", "paikkauskohde-id", "toteuma-id", "luoja-id", tyyppi, selite,
-                               hinta, yksikko, yksikkohinta, maara)
+                               hinta)
   VALUES -- Kokonaishintaiset
     (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt', 3500, NULL, NULL, NULL),
+           'Liikennejärjestelyt', 3500),
     (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt 2', 400, NULL, NULL, NULL),
+           'Liikennejärjestelyt 2', 400),
     (133, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 700, NULL, NULL, NULL),
-    -- Yksikköhintaiset
-    (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'yksikkohintainen',
-           'Asfaltti', NULL, 'tonnia/€', 200, 13.2),
-    (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'yksikkohintainen',
-           'Selite', NULL, 'tonnia/€', 100, 2),
-    (133, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'yksikkohintainen',
-          'Asfaltti', NULL, 'tonnia/€', 50, 14);
+          'Liikennejärjestelyt', 700);
 END $$;
