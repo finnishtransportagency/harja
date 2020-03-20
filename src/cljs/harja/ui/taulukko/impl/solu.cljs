@@ -9,6 +9,8 @@
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.impl.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]
+            [harja.virhekasittely :as virhekasittely]
+            [reagent.dom :as dom]
             [clojure.set :as clj-set]))
 
 (def ^:dynamic *this* nil)
@@ -77,14 +79,28 @@
 (defrecord Teksti [id parametrit]
   gop/IPiirrettava
   (-piirra [this]
-    (let [{:keys [id class]} (:parametrit this)
-          taman-data (taman-derefable this)
-          arvo (korjaa-NaN @taman-data this)]
-      [:div.solu.solu-teksti {:class (when class
-                                       (apply str (interpose " " class)))
-                              :id id
-                              :data-cy (::nimi this)}
-       ((::fmt this) arvo)]))
+    (r/create-class
+      {:constructor (fn [this props]
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-state this) #js {:error nil}))
+       :get-derived-state-from-error (fn [error]
+                                       #js {:error error})
+       :component-did-catch (fn [error error-info]
+                              (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                         error-info "\n")))
+       :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Teksti")
+       :render (fn [this]
+                 (if-let [error (.. this -state -error)]
+                   [virhekasittely/rendaa-virhe error]
+                   (let [[_ this] (r/argv this)
+                         {:keys [id class]} (:parametrit this)
+                         taman-data (taman-derefable this)
+                         arvo (korjaa-NaN @taman-data this)]
+                     [:div.solu.solu-teksti {:class (when class
+                                                      (apply str (interpose " " class)))
+                                             :id id
+                                             :data-cy (::nimi this)}
+                      ((::fmt this) arvo)])))}))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -118,9 +134,23 @@
   sp/ISolu
   gop/IPiirrettava
   (-piirra [this]
-    [:div {:class (when class
-                    (apply str (interpose " " class)))}
-     ""])
+    (r/create-class
+      {:constructor (fn [this props]
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-state this) #js {:error nil}))
+       :get-derived-state-from-error (fn [error]
+                                       #js {:error error})
+       :component-did-catch (fn [error error-info]
+                              (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                         error-info "\n")))
+       :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Tyhja")
+       :render (fn [this]
+                 (if-let [error (.. this -state -error)]
+                   [virhekasittely/rendaa-virhe error]
+                   (let [[_ this] (r/argv this)]
+                     [:div {:class (when class
+                                     (apply str (interpose " " class)))}
+                      ""])))}))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -140,15 +170,29 @@
   sp/ISolu
   gop/IPiirrettava
   (-piirra [this]
-    (let [{:keys [id class]} (:parametrit this)
-          taman-data (taman-derefable this)
-          arvo (korjaa-NaN @taman-data this)]
-      [:a.solu.solu-linkki {:class (when class
-                                     (apply str (interpose " " class)))
-                            :href linkki
-                            :id id
-                            :data-cy (::nimi this)}
-       ((::fmt this) arvo)]))
+    (r/create-class
+      {:constructor (fn [this props]
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-state this) #js {:error nil}))
+       :get-derived-state-from-error (fn [error]
+                                       #js {:error error})
+       :component-did-catch (fn [error error-info]
+                              (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                         error-info "\n")))
+       :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Linkki")
+       :render (fn [this]
+                 (if-let [error (.. this -state -error)]
+                   [virhekasittely/rendaa-virhe error]
+                   (let [[_ this] (r/argv this)
+                         {:keys [id class]} (:parametrit this)
+                         taman-data (taman-derefable this)
+                         arvo (korjaa-NaN @taman-data this)]
+                     [:a.solu.solu-linkki {:class (when class
+                                                    (apply str (interpose " " class)))
+                                           :href linkki
+                                           :id id
+                                           :data-cy (::nimi this)}
+                      ((::fmt this) arvo)])))}))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -199,67 +243,80 @@
                                                                         (reset! aktiivinen? true)
                                                                         e)})
                                                (:kayttaytymiset this))]
-      (fn [this]
-        (let [{:keys [id class style type name readonly? required? tabindex disabled?
-                      checked? default-checked? indeterminate?
-                      alt height src width
-                      autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
-              taman-data (taman-derefable this)
-              arvo (korjaa-NaN @taman-data this)
-              parametrit (into {}
-                               (remove (fn [[_ arvo]]
-                                         (nil? arvo))
-                                       {;; Inputin parametrit
-                                        :class (when class
-                                                 (apply str (interpose " " class)))
-                                        :style style
-                                        :data-cy (:id this)
-                                        :id id
-                                        :type type
-                                        :value (if @aktiivinen?
-                                                 ((::fmt-aktiivinen this) arvo)
-                                                 ((::fmt this) arvo))
-                                        :name name
-                                        :read-only readonly?
-                                        :required required?
-                                        :tab-index tabindex
-                                        :disabled disabled?
-                                        ;; checkbox or radio paramterit
-                                        :checked checked?
-                                        :default-checked default-checked?
-                                        :indeterminate indeterminate?
-                                        ;; kuvan parametrit
-                                        :alt alt
-                                        :height height
-                                        :src src
-                                        :width width
-                                        ;; numero/teksti input
-                                        :auto-complete autocomplete
-                                        :max max
-                                        :max-length max-length
-                                        :min min
-                                        :min-length min-length
-                                        :pattern pattern
-                                        :placeholder placeholder
-                                        :size size
-                                        ;; GlobalEventHandlers
-                                        :on-blur (when on-blur
-                                                   (on-blur this))
-                                        :on-change (when on-change
-                                                     (on-change this))
-                                        :on-click (when on-click
-                                                    (on-click this))
-                                        :on-focus (when on-focus
-                                                    (on-focus this))
-                                        :on-input (when on-input
-                                                    (on-input this))
-                                        :on-key-down (when on-key-down
-                                                       (on-key-down this))
-                                        :on-key-press (when on-key-press
-                                                        (on-key-press this))
-                                        :on-key-up (when on-key-up
-                                                     (on-key-up this))}))]
-          [:input.solu.solu-syote parametrit]))))
+      (r/create-class
+        {:constructor (fn [this props]
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-state this) #js {:error nil}))
+         :get-derived-state-from-error (fn [error]
+                                         #js {:error error})
+         :component-did-catch (fn [error error-info]
+                                (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                           error-info "\n")))
+         :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Syote")
+         :render (fn [this]
+                   (if-let [error (.. this -state -error)]
+                     [virhekasittely/rendaa-virhe error]
+                     (let [[_ this] (r/argv this)
+                           {:keys [id class style type name readonly? required? tabindex disabled?
+                                   checked? default-checked? indeterminate?
+                                   alt height src width
+                                   autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
+                           taman-data (taman-derefable this)
+                           arvo (korjaa-NaN @taman-data this)
+                           parametrit (into {}
+                                            (remove (fn [[_ arvo]]
+                                                      (nil? arvo))
+                                                    {;; Inputin parametrit
+                                                     :class (when class
+                                                              (apply str (interpose " " class)))
+                                                     :style style
+                                                     :data-cy (:id this)
+                                                     :id id
+                                                     :type type
+                                                     :value (if @aktiivinen?
+                                                              ((::fmt-aktiivinen this) arvo)
+                                                              ((::fmt this) arvo))
+                                                     :name name
+                                                     :read-only readonly?
+                                                     :required required?
+                                                     :tab-index tabindex
+                                                     :disabled disabled?
+                                                     ;; checkbox or radio paramterit
+                                                     :checked checked?
+                                                     :default-checked default-checked?
+                                                     :indeterminate indeterminate?
+                                                     ;; kuvan parametrit
+                                                     :alt alt
+                                                     :height height
+                                                     :src src
+                                                     :width width
+                                                     ;; numero/teksti input
+                                                     :auto-complete autocomplete
+                                                     :max max
+                                                     :max-length max-length
+                                                     :min min
+                                                     :min-length min-length
+                                                     :pattern pattern
+                                                     :placeholder placeholder
+                                                     :size size
+                                                     ;; GlobalEventHandlers
+                                                     :on-blur (when on-blur
+                                                                (on-blur this))
+                                                     :on-change (when on-change
+                                                                  (on-change this))
+                                                     :on-click (when on-click
+                                                                 (on-click this))
+                                                     :on-focus (when on-focus
+                                                                 (on-focus this))
+                                                     :on-input (when on-input
+                                                                 (on-input this))
+                                                     :on-key-down (when on-key-down
+                                                                    (on-key-down this))
+                                                     :on-key-press (when on-key-press
+                                                                     (on-key-press this))
+                                                     :on-key-up (when on-key-up
+                                                                  (on-key-up this))}))]
+                       [:input.solu.solu-syote parametrit])))})))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -298,42 +355,55 @@
     (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
                   on-key-up]} (lisaa-kaytokset (:toiminnot this)
                                                (:kayttaytymiset this))]
-      (fn [this]
-        (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
-              taman-data (taman-derefable this)
-              arvo @taman-data
-              parametrit (into {}
-                               (remove (fn [[_ arvo]]
-                                         (nil? arvo))
-                                       {;; Inputin parametrit
-                                        :class (when class
-                                                 (apply str (interpose " " class)))
-                                        :data-cy (:id this)
-                                        :id id
-                                        :type type
-                                        #_#_:value ((::fmt this) arvo)
-                                        :name name
-                                        :tab-index tabindex
-                                        :disabled disabled?
-                                        :size size
-                                        ;; GlobalEventHandlers
-                                        :on-blur (when on-blur
-                                                   (on-blur this))
-                                        :on-change (when on-change
-                                                     (on-change this))
-                                        :on-click (when on-click
-                                                    (on-click this))
-                                        :on-focus (when on-focus
-                                                    (on-focus this))
-                                        :on-input (when on-input
-                                                    (on-input this))
-                                        :on-key-down (when on-key-down
-                                                       (on-key-down this))
-                                        :on-key-press (when on-key-press
-                                                        (on-key-press this))
-                                        :on-key-up (when on-key-up
-                                                     (on-key-up this))}))]
-          [:button.solu.solu-nappi parametrit arvo]))))
+      (r/create-class
+        {:constructor (fn [this props]
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-state this) #js {:error nil}))
+         :get-derived-state-from-error (fn [error]
+                                         #js {:error error})
+         :component-did-catch (fn [error error-info]
+                                (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                           error-info "\n")))
+         :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Nappi")
+         :render (fn [this]
+                   (if-let [error (.. this -state -error)]
+                     [virhekasittely/rendaa-virhe error]
+                     (let [[_ this] (r/argv this)
+                           {:keys [id class type value name tabindex disabled? size]} (:parametrit this)
+                           taman-data (taman-derefable this)
+                           arvo @taman-data
+                           parametrit (into {}
+                                            (remove (fn [[_ arvo]]
+                                                      (nil? arvo))
+                                                    {;; Inputin parametrit
+                                                     :class (when class
+                                                              (apply str (interpose " " class)))
+                                                     :data-cy (:id this)
+                                                     :id id
+                                                     :type type
+                                                     #_#_:value ((::fmt this) arvo)
+                                                     :name name
+                                                     :tab-index tabindex
+                                                     :disabled disabled?
+                                                     :size size
+                                                     ;; GlobalEventHandlers
+                                                     :on-blur (when on-blur
+                                                                (on-blur this))
+                                                     :on-change (when on-change
+                                                                  (on-change this))
+                                                     :on-click (when on-click
+                                                                 (on-click this))
+                                                     :on-focus (when on-focus
+                                                                 (on-focus this))
+                                                     :on-input (when on-input
+                                                                 (on-input this))
+                                                     :on-key-down (when on-key-down
+                                                                    (on-key-down this))
+                                                     :on-key-press (when on-key-press
+                                                                     (on-key-press this))
+                                                     :on-key-up (when on-key-up
+                                                                  (on-key-up this))}))]
+                       [:button.solu.solu-nappi parametrit arvo])))})))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -368,32 +438,45 @@
   gop/IPiirrettava
   (-piirra [this]
     (let [auki? (atom auki-alussa?)]
-      (fn [this]
-        (let [{:keys [id class ikoni]} (:parametrit this)
-              taman-data (taman-derefable this)
-              arvo (korjaa-NaN @taman-data this)
-              ikoni (or ikoni "chevron")
-              ikoni-auki (if (= ikoni "chevron")
-                           ikonit/livicon-chevron-up
-                           ikonit/oi-caret-top)
-              ikoni-kiinni (if (= ikoni "chevron")
-                             ikonit/livicon-chevron-down
-                             ikonit/oi-caret-bottom)]
-          [:span.solu.klikattava.solu-laajenna
-           {:class (when class
-                     (apply str (interpose " " class)))
-            :id id
-            :data-cy (:id this)
-            :on-click
-            #(do (.preventDefault %)
-                 (swap! auki? not)
-                 (aukaise-fn this @auki?))}
-           [:span.laajenna-teksti ((::fmt this) arvo)]
-           (if @auki?
-             ^{:key "laajenna-auki"}
-             [ikoni-auki]
-             ^{:key "laajenna-kiini"}
-             [ikoni-kiinni])]))))
+      (r/create-class
+        {:constructor (fn [this props]
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-state this) #js {:error nil}))
+         :get-derived-state-from-error (fn [error]
+                                         #js {:error error})
+         :component-did-catch (fn [error error-info]
+                                (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                           error-info "\n")))
+         :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Laajenna")
+         :render (fn [this]
+                   (if-let [error (.. this -state -error)]
+                     [virhekasittely/rendaa-virhe error]
+                     (let [[_ this] (r/argv this)
+                           {:keys [id class ikoni]} (:parametrit this)
+                           taman-data (taman-derefable this)
+                           arvo (korjaa-NaN @taman-data this)
+                           ikoni (or ikoni "chevron")
+                           ikoni-auki (if (= ikoni "chevron")
+                                        ikonit/livicon-chevron-up
+                                        ikonit/oi-caret-top)
+                           ikoni-kiinni (if (= ikoni "chevron")
+                                          ikonit/livicon-chevron-down
+                                          ikonit/oi-caret-bottom)]
+                       [:span.solu.klikattava.solu-laajenna
+                        {:class (when class
+                                  (apply str (interpose " " class)))
+                         :id id
+                         :data-cy (:id this)
+                         :on-click
+                         #(do (.preventDefault %)
+                              (swap! auki? not)
+                              (aukaise-fn this @auki?))}
+                        [:span.laajenna-teksti ((::fmt this) arvo)]
+                        (if @auki?
+                          ^{:key "laajenna-auki"}
+                          [ikoni-auki]
+                          ^{:key "laajenna-kiini"}
+                          [ikoni-kiinni])])))})))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -427,16 +510,30 @@
 (defrecord Ikoni [id parametrit]
   gop/IPiirrettava
   (-piirra [this]
-    (let [{:keys [id class]} (:parametrit this)
-          taman-data (taman-derefable this)
-          {:keys [ikoni teksti]} @taman-data]
-      [:div.solu.solu-ikoni {:class (when class
-                                      (apply str (interpose " " class)))
-                             :id id
-                             :data-cy (::nimi this)}
-       [:span (when (fn? ikoni)
-                [ikoni])
-        teksti]]))
+    (r/create-class
+      {:constructor (fn [this props]
+                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                      (set! (.-state this) #js {:error nil}))
+       :get-derived-state-from-error (fn [error]
+                                       #js {:error error})
+       :component-did-catch (fn [error error-info]
+                              (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                         error-info "\n")))
+       :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Ikoni")
+       :render (fn [this]
+                 (if-let [error (.. this -state -error)]
+                   [virhekasittely/rendaa-virhe error]
+                   (let [[_ this] (r/argv this)
+                         {:keys [id class]} (:parametrit this)
+                         taman-data (taman-derefable this)
+                         {:keys [ikoni teksti]} @taman-data]
+                     [:div.solu.solu-ikoni {:class (when class
+                                                     (apply str (interpose " " class)))
+                                            :id id
+                                            :data-cy (::nimi this)}
+                      [:span (when (fn? ikoni)
+                               [ikoni])
+                       teksti]])))}))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -468,21 +565,21 @@
 
 (defrecord Pudotusvalikko [id livi-pudotusvalikko-asetukset vaihtoehdot rivin-haku]
   gop/IPiirrettava
-  (-piirra [_]
+  (-piirra [this]
     (let [vanhat-stylet (atom nil)
           iso-z-numero 521
           nosta-z-index! (fn [this]
-                           (let [stylearvot (.-style ((.-domNodeHaku (rivin-haku this))))]
+                           (let [stylearvot (.-style ((.-domNode (rivin-haku this))))]
                              (swap! vanhat-stylet
                                     (fn [arvot]
                                       (assoc arvot "zIndex" (aget stylearvot "zIndex")
                                              "overflow" (aget stylearvot "overflow"))))
-                             (doto (.-style ((.-domNodeHaku (rivin-haku this))))
+                             (doto (.-style ((.-domNode (rivin-haku this))))
                                (aset "zIndex" iso-z-numero)
                                (aset "overflow" "visible"))))
           palauta-z-index! (fn [this]
                              (doseq [[tyyli arvo] @vanhat-stylet]
-                               (aset (.-style ((.-domNodeHaku (rivin-haku this)))) tyyli arvo)))
+                               (aset (.-style ((.-domNode (rivin-haku this)))) tyyli arvo)))
           auki-fn! (if (contains? livi-pudotusvalikko-asetukset :auki-fn!)
                      #(do (nosta-z-index! %)
                           (binding [*this* %]
@@ -493,26 +590,39 @@
                             (binding [*this* %]
                               ((:kiinni-fn! livi-pudotusvalikko-asetukset))))
                        palauta-z-index!)]
-      (fn [this]
-        (let [taman-data (taman-derefable this)
-              valinta @taman-data]
-          [yleiset/livi-pudotusvalikko
-           (-> (:livi-pudotusvalikko-asetukset this)
-               (clj-set/rename-keys {:disabled? :disabled})
-               (assoc :valinta valinta
-                      :auki-fn! (r/partial auki-fn! this)
-                      :kiinni-fn! (r/partial kiinni-fn! this))
-               (update :on-focus (fn [f]
-                                   (when f
-                                     (r/partial (fn [& args]
-                                                  (binding [*this* this]
-                                                    (apply f args)))))))
-               (update :valitse-fn (fn [f]
-                                     (when f
-                                       (r/partial (fn [& args]
-                                                    (binding [*this* this]
-                                                      (apply f args))))))))
-           vaihtoehdot]))))
+      (r/create-class
+        {:constructor (fn [this props]
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-state this) #js {:error nil}))
+         :get-derived-state-from-error (fn [error]
+                                         #js {:error error})
+         :component-did-catch (fn [error error-info]
+                                (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                           error-info "\n")))
+         :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Pudotusvalikko")
+         :render (fn [this]
+                   (if-let [error (.. this -state -error)]
+                     [virhekasittely/rendaa-virhe error]
+                     (let [[_ this] (r/argv this)
+                           taman-data (taman-derefable this)
+                           valinta @taman-data]
+                       [yleiset/livi-pudotusvalikko
+                        (-> (:livi-pudotusvalikko-asetukset this)
+                            (clj-set/rename-keys {:disabled? :disabled})
+                            (assoc :valinta valinta
+                                   :auki-fn! (r/partial auki-fn! this)
+                                   :kiinni-fn! (r/partial kiinni-fn! this))
+                            (update :on-focus (fn [f]
+                                                (when f
+                                                  (r/partial (fn [& args]
+                                                               (binding [*this* this]
+                                                                 (apply f args)))))))
+                            (update :valitse-fn (fn [f]
+                                                  (when f
+                                                    (r/partial (fn [& args]
+                                                                 (binding [*this* this]
+                                                                   (apply f args))))))))
+                        vaihtoehdot])))})))
   gop/IGridOsa
   (-id [this]
     (:id this))
