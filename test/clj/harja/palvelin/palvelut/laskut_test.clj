@@ -188,11 +188,13 @@
         (kutsu-http-palvelua :poista-laskurivi (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id           (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id
-                              :laskuerittelyn-rivi 3})
+                              :kohdistuksen-id 3})
         poistettu-lasku
         (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id})]
+    (println "LASKASK" tallennettu-lasku)
+    (println "LASKASK" paivitetty-lasku)
 
     ;; Tallennus
     (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")
