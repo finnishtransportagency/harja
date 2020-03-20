@@ -130,9 +130,9 @@
                                       :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
                                       :alkupvm             (:suoritus-alku laskurivi)
                                       :loppupvm            (:suoritus-loppu laskurivi)
-                                      :kayttaja            (:id user)})))
+                                      :kayttaja            (:id user)}))
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
-                                             (:toimenpideinstanssi laskurivi)})
+                                             (:toimenpideinstanssi laskurivi)}))
 
 
 (defn luo-tai-paivita-laskuerittely
