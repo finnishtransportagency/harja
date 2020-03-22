@@ -22,7 +22,7 @@
             [reagent.core :as r])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
-                   [cljs.core.async.macros :refer [go]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 (s/def ::maara #(re-matches (re-pattern (re/positiivinen-numero-re)) (str %)))
 (s/def ::aika #(pvm/pvm? %))
@@ -1574,14 +1574,55 @@
      (if auki?
        (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
            (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
-           #_(r/flush)
            (when alin-taulukko?
              (r/after-render
                (fn []
                  (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))))
        (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
-           (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
-           #_(r/flush))))))
+           (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan)))))))
+
+(defonce tallennus-kanava
+         ^{:doc "Jokainen muutos tallennetaan kantaan samantien. Se aiheuttaa ongelmia hitaan yhteyden tai kannan kanssa,
+          koska kaksi erillistä muutosta, joiden pitäisi tallentua samalle riville kannassa, voidaan lähettää lyhyellä aikavälillä.
+          Tämän kanavan kautta lähetetään kaikki tallennuuspyynnöt, ja varmistetaan, että niitä tulee vain yksi kerrallaan
+          yhdelle asialle."
+           :private true}
+         (chan 10))
+
+(defonce tallennus-jono
+         ^{:doc "Pidetään täällä odottelemassa ne post kutsut, joita ei voida vielä lähettää."
+           :private true}
+         (atom {}))
+
+(go-loop [{:keys [palvelu payload onnistui! epaonnistui!]} (async/<! tallennus-kanava)]
+  (let [vastaus (<! (k/post! palvelu payload nil true))]
+    (swap! tallennus-jono
+           update
+           palvelu
+           (fn [kutsut]
+             (vec (rest kutsut))))
+    (if (k/virhe? vastaus)
+      (epaonnistui! vastaus)
+      (onnistui! vastaus))
+    (when-let [args (get-in @tallennus-jono [palvelu 0])]
+      (async/put! tallennus-kanava
+                  args))
+    (recur (async/<! tallennus-kanava))))
+
+(defn laheta-ja-odota-vastaus [app {:keys [palvelu onnistui epaonnistui] :as args}]
+  (let [palvelujono-tyhja? (empty? (get @tallennus-jono palvelu))
+        onnistui! (tuck/send-async! onnistui)
+        epaonnistui! (tuck/send-async! epaonnistui)
+        args (-> args
+                 (assoc :onnistui! onnistui! :epaonnistui! epaonnistui!)
+                 (dissoc :onnistui :epaonnistui))]
+    (if palvelujono-tyhja?
+      (swap! tallennus-jono assoc palvelu [args])
+      (swap! tallennus-jono update palvelu conj args))
+    (when palvelujono-tyhja?
+      (async/put! tallennus-kanava
+                  args))
+    app))
 
 (defrecord TaulukoidenVakioarvot [])
 (defrecord FiltereidenAloitusarvot [])
@@ -2084,12 +2125,11 @@
                                                                :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                :summa summa
                                                                :ajat ajat})]
-      (tuck-apurit/post! app
-                         post-kutsu
-                         lahetettava-data
-                         {:onnistui ->TallennaHankintojenArvotOnnistui
-                          :epaonnistui ->TallennaHankintojenArvotEpaonnistui
-                          :paasta-virhe-lapi? true})))
+      (laheta-ja-odota-vastaus app
+                               {:palvelu post-kutsu
+                                :payload lahetettava-data
+                                :onnistui ->TallennaHankintojenArvotOnnistui
+                                :epaonnistui ->TallennaHankintojenArvotEpaonnistui})))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2147,12 +2187,11 @@
                                                      :tallennettava-asia tallennettava-asia
                                                      :summa summa
                                                      :ajat ajat})]
-      (tuck-apurit/post! app
-                         post-kutsu
-                         lahetettava-data
-                         {:onnistui ->TallennaKustannusarvoituOnnistui
-                          :epaonnistui ->TallennaKustannusarvoituEpaonnistui
-                          :paasta-virhe-lapi? true})))
+      (laheta-ja-odota-vastaus app
+                               {:palvelu post-kutsu
+                                :payload lahetettava-data
+                                :onnistui ->TallennaKustannusarvoituOnnistui
+                                :epaonnistui ->TallennaKustannusarvoituEpaonnistui})))
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2199,12 +2238,11 @@
                                   (if toimenkuva-id
                                     {:toimenkuva-id toimenkuva-id}
                                     {:toimenkuva tunnisteen-toimenkuva}))]
-      (tuck-apurit/post! app
-                         post-kutsu
-                         lahetettava-data
-                         {:onnistui ->TallennaKustannusarvoituOnnistui
-                          :epaonnistui ->TallennaKustannusarvoituEpaonnistui
-                          :paasta-virhe-lapi? true})))
+      (laheta-ja-odota-vastaus app
+                               {:palvelu post-kutsu
+                                :payload lahetettava-data
+                                :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
+                                :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui})))
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2221,12 +2259,11 @@
           lahetettava-data {:urakka-id urakka-id
                             :toimenkuva-id toimenkuva-id
                             :toimenkuva toimenkuva-nimi}]
-      (tuck-apurit/post! app
-                         :tallenna-toimenkuva
-                         lahetettava-data
-                         {:onnistui ->TallennaToimenkuvaOnnistui
-                          :epaonnistui ->TallennaToimenkuvaEpaonnistui
-                          :paasta-virhe-lapi? true})))
+      (laheta-ja-odota-vastaus app
+                               {:palvelu :tallenna-toimenkuva
+                                :payload lahetettava-data
+                                :onnistui ->TallennaToimenkuvaOnnistui
+                                :epaonnistui ->TallennaToimenkuvaEpaonnistui})))
   TallennaToimenkuvaOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2247,12 +2284,11 @@
                                                              :tavoitehinta summa
                                                              :kattohinta (* summa kattohinnan-kerroin)})
                                                           yhteenvedot))}]
-      (tuck-apurit/post! app
-                         :tallenna-budjettitavoite
-                         lahetettava-data
-                         {:onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
-                          :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
-                          :paasta-virhe-lapi? true})))
+      (laheta-ja-odota-vastaus app
+                               {:palvelu :tallenna-budjettitavoite
+                                :payload lahetettava-data
+                                :onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+                                :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui})))
   TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
   (process-event [_ app]
     app)
@@ -2306,12 +2342,11 @@
                                                            jh-korvaukset)))]
                                 (piilota-modal!)
                                 (paivita-ui!)
-                                (tuck-apurit/post! app
-                                                   :tallenna-johto-ja-hallintokorvaukset
-                                                   lahetettava-data
-                                                   {:onnistui ->PoistaOmaJHDdataOnnistui
-                                                    :epaonnistui ->PoistaOmaJHDdataEpaonnistui
-                                                    :paasta-virhe-lapi? true}))))))
+                                (laheta-ja-odota-vastaus app
+                                                         {:palvelu :tallenna-johto-ja-hallintokorvaukset
+                                                          :payload lahetettava-data
+                                                          :onnistui ->PoistaOmaJHDdataOnnistui
+                                                          :epaonnistui ->PoistaOmaJHDdataEpaonnistui}))))))
           valittu-hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
           vanhat-arvot (get-in app [:domain :johto-ja-hallintokorvaukset nimi valittu-hoitokauden-numero])]
       (if-not (empty? data-hoitokausittain)

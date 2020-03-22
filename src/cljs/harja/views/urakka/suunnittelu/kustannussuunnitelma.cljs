@@ -1784,15 +1784,12 @@
                                                                                                          (do
                                                                                                            (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
                                                                                                                                    true)
-                                                                                                           (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true)
-                                                                                                           #_(disable-osa-indexissa! yhteenvetorivi 2 true)
-                                                                                                           #_(disable-osa-indexissa! yhteenvetorivi 4 true))
+                                                                                                           (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true))
                                                                                                          (do (rividisable! g
                                                                                                                            (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
                                                                                                                                    jarjestysnumero))
                                                                                                                            kuukausitasolla?)
-                                                                                                             (disable-osa-indexissa! yhteenvetorivi #{2 4} false)
-                                                                                                             #_(disable-osa-indexissa! yhteenvetorivi 4 false)))))}})))
+                                                                                                             (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
                                          {}
                                          (range 1 (inc t/jh-korvausten-omiariveja-lkm)))))))
 
