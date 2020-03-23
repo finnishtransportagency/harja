@@ -78,7 +78,12 @@
                            (sort urakan-tyomenetelmat)))
           (fn [tyomenetelma valittu?]
             (e! (yhteiset-tiedot/->TyomenetelmaValittu tyomenetelma valittu?)))
-          [" työmenetelmä valittu" " työmenetelmää valittu"]]]]
+          [" työmenetelmä valittu" " työmenetelmää valittu"]
+          {:kaikki-valinta-fn (fn []
+                                (e! (yhteiset-tiedot/->PaivitaValinnat {:tyomenetelmat (if (empty? (:tyomenetelmat valinnat))
+                                                                                           urakan-tyomenetelmat
+                                                                                           (set nil))}))
+                                )}]]]
        ])))
 
 (defn hakuehdot-pohja [e! app]
