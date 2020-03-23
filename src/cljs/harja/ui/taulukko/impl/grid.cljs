@@ -1209,9 +1209,10 @@
                                                 grid-kasittelija)]
       (paivita-root! this
                      (fn [_]
-                       (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn []
-                                                                                                  (dk/poista-seurannat! datan-kasittelija)
-                                                                                                  (dk/lopeta-tilan-kuuntelu! datan-kasittelija))
+                       (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn [gridin-id]
+                                                                                                  (when-let [datan-kasittelija (get-in @taulukko-konteksti [gridin-id :datan-kasittelija])]
+                                                                                                    (dk/poista-seurannat! datan-kasittelija)
+                                                                                                    (dk/lopeta-tilan-kuuntelu! datan-kasittelija)))
                                                       ::grid-rajapintakasittelijat grid-rajapintakasittelijat)
                                                (fn [osa]
                                                  (not (dynaamisen-jalkelainen? osa)))
