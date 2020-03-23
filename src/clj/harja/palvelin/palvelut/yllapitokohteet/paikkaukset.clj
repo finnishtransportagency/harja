@@ -160,27 +160,47 @@
       (:ensimmainen-haku? tiedot) (jdbc/with-db-transaction [db db]
                                       (let [kustannukset (if haetaan-nollalla-paikkauksella?
                                                 []
-                                                (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params))
+                                                (into []
+                                                      (map konv/alaviiva->rakenne)
+                                                      (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params)))
                                             paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
                                             tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset
                                          :paikkauskohteet paikkauskohteet
                                          :tyomenetelmat tyomenetelmat}))
       haetaan-nollalla-paikkauksella? {:kustannukset []}
-      :else {:kustannukset (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params)})))
+      :else {:kustannukset (into []
+                                 (map konv/alaviiva->rakenne)
+                                 (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params))})))
 
-(defn- paivita-paikkaustoteuma [db user rivi]
+(defn- paivita-paikkaustoteuma! [db user rivi]
   (q/paivita-paikkaustoteuma! db {:hinta (:hinta rivi)
                                   :poistettu (boolean (:poistettu rivi))
+                                  :poistaja (when (:poistettu rivi)
+                                              (:id user))
                                   :muokkaaja (:id user)
+                                  :tie (:tie rivi)
+                                  :aosa (:aosa rivi)
+                                  :aet (:aet rivi)
+                                  :losa (:losa rivi)
+                                  :let (:let rivi)
+                                  :tyomenetelma (:tyomenetelma rivi)
+                                  :valmistumispvm (:valmistumispvm rivi)
                                   :paikkaustoteuma-id (:paikkaustoteuma-id rivi)}))
 
-(defn- luo-paikkaustoteuma [db user rivi urakka-id]
-  (q/luo-paikkaustoteuma db {:urakka-id urakka-id
-                             :paikkauskohde-id (:paikkauskohde-id rivi)
-                             :luoja (:id user)
-                             :tyyppi (:tyyppi rivi)
-                             :hinta (:hinta rivi)}))
+(defn- luo-paikkaustoteuma! [db user rivi urakka-id]
+  (q/luo-paikkaustoteuma! db {:urakka urakka-id
+                              :paikkauskohde (:paikkauskohde rivi)
+                              :tie (:tie rivi)
+                              :aosa (:aosa rivi)
+                              :aet (:aet rivi)
+                              :losa (:losa rivi)
+                              :let (:let rivi)
+                              :luoja (:id user)
+                              :tyyppi (or (:tyyppi rivi) "kokonaishintainen")
+                              :tyomenetelma (:tyomenetelma rivi)
+                              :valmistumispvm (:valmistumispvm rivi)
+                              :hinta (:hinta rivi)}))
 
 (defn tallenna-paikkauskustannukset!
   [db user {:keys [hakuparametrit rivit] :as tiedot}]
@@ -188,12 +208,12 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (jdbc/with-db-transaction [db db]
                             (doseq [rivi rivit]
-                              (if (:paikkaustoteuma-id rivi)
-                                (paivita-paikkaustoteuma db user rivi)
-                                (luo-paikkaustoteuma db
-                                                     user
-                                                     rivit
-                                                     (::paikkaus/urakka-id tiedot))))
+                              (if (pos-int? (:paikkaustoteuma-id rivi))
+                                (paivita-paikkaustoteuma! db user rivi)
+                                (luo-paikkaustoteuma! db
+                                                      user
+                                                      rivi
+                                                      (::paikkaus/urakka-id tiedot))))
 
                             ;; Palautetaan symmetrisesti käyttäjän hakuehtojen mukaisesti urakan kustannukset
                             (hae-paikkausurakan-kustannukset db user hakuparametrit)))

@@ -133,42 +133,57 @@ UPDATE yllapitokohteen_kustannukset
  WHERE yllapitokohde = :id;
 
 -- name: hae-paikkauskohteen-mahdolliset-kustannukset
-SELECT pt.kirjattu,
-       p.tyomenetelma,
+SELECT pk.id              AS "paikkauskohde_id",
+       pk.nimi            AS "paikkauskohde_nimi",
+       pt.tyomenetelma,
+       pt.valmistumispvm,
+       (pt.tierekisteriosoite).tie AS tie,
+       (pt.tierekisteriosoite).aosa AS aosa,
+       (pt.tierekisteriosoite).aet AS aet,
+       (pt.tierekisteriosoite).losa AS losa,
+       (pt.tierekisteriosoite).let AS let,
+       pt.kirjattu,
        pt.hinta,
-       pt.tyyppi,
        pt.id              AS "paikkaustoteuma-id",
-       pk.id              AS "paikkauskohde-id",
-       pk.nimi            AS "paikkauskohde-nimi",
-       p.loppuaika
-FROM paikkauskohde pk
-  LEFT JOIN paikkaustoteuma pt ON pt."paikkauskohde-id"=pk.id
-  INNER JOIN paikkaus p ON p."ulkoinen-id"=pt."ulkoinen-id"
+       pt.poistettu       AS "paikkaustoteuma-poistettu"
+FROM paikkaustoteuma pt
+     JOIN paikkauskohde pk ON (pt."paikkauskohde-id"=pk.id AND
+                                   pt.tyyppi = :tyyppi::paikkaustoteumatyyppi AND
+                                   pt.poistettu IS NOT TRUE)
 WHERE pt."urakka-id"=:urakka-id AND
-      pt.poistettu IS NOT TRUE AND
-      pt.tyyppi = :tyyppi::paikkaustoteumatyyppi AND
-      (:alkuaika :: TIMESTAMP IS NULL OR pt.kirjattu >= :alkuaika) AND
-      (:loppuaika :: TIMESTAMP IS NULL OR pt.kirjattu <= :loppuaika) AND
-      (:numero :: INTEGER IS NULL OR (p.tierekisteriosoite).tie = :numero) AND
-      (:alkuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).aosa >= :alkuosa) AND
+      (:alkuaika :: TIMESTAMP IS NULL OR pt.valmistumispvm >= :alkuaika) AND
+      (:loppuaika :: TIMESTAMP IS NULL OR pt.valmistumispvm <= :loppuaika) AND
+      (:numero :: INTEGER IS NULL OR (pt.tierekisteriosoite).tie = :numero) AND
+      (:alkuosa :: INTEGER IS NULL OR (pt.tierekisteriosoite).aosa >= :alkuosa) AND
       (:alkuetaisyys :: INTEGER IS NULL OR
-       ((p.tierekisteriosoite).aet >= :alkuetaisyys AND
-        ((p.tierekisteriosoite).aosa = :alkuosa OR
+       ((pt.tierekisteriosoite).aet >= :alkuetaisyys AND
+        ((pt.tierekisteriosoite).aosa = :alkuosa OR
          :alkuosa :: INTEGER IS NULL)) OR
-       (p.tierekisteriosoite).aosa > :alkuosa) AND
-      (:loppuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).losa <= :loppuosa) AND
+       (pt.tierekisteriosoite).aosa > :alkuosa) AND
+      (:loppuosa :: INTEGER IS NULL OR (pt.tierekisteriosoite).losa <= :loppuosa) AND
       (:loppuetaisyys :: INTEGER IS NULL OR
-       ((p.tierekisteriosoite).let <= :loppuetaisyys AND
-        ((p.tierekisteriosoite).losa = :loppuosa OR
+       ((pt.tierekisteriosoite).let <= :loppuetaisyys AND
+        ((pt.tierekisteriosoite).losa = :loppuosa OR
          :loppuosa :: INTEGER IS NULL)) OR
-       (p.tierekisteriosoite).losa < :loppuosa) AND
+       (pt.tierekisteriosoite).losa < :loppuosa) AND
       (:paikkaus-idt :: INTEGER [] IS NULL OR pk.id = ANY (:paikkaus-idt :: INTEGER [])) AND
-      (:tyomenetelmat :: VARCHAR [] IS NULL OR p.tyomenetelma = ANY (:tyomenetelmat :: VARCHAR []));
+      (:tyomenetelmat :: VARCHAR [] IS NULL OR pt.tyomenetelma = ANY (:tyomenetelmat :: VARCHAR []));
 
 --name: paivita-paikkaustoteuma!
-UPDATE paikkaustoteuma SET hinta = :hinta, poistettu = :poistettu, "muokkaaja-id" = :muokkaaja, muokattu = NOW()
+UPDATE paikkaustoteuma
+   SET hinta = :hinta,
+       poistettu = :poistettu,
+       "poistaja-id" = :poistaja,
+       "muokkaaja-id" = :muokkaaja,
+       muokattu = NOW(),
+       tierekisteriosoite = ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite,
+       valmistumispvm = :valmistumispvm
  WHERE id = :paikkaustoteuma-id
 
 --name: luo-paikkaustoteuma!
-INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu, tyyppi, hinta)
- VALUES(:"urakka-id", :"paikkauskohde-id", :luoja, NOW(), :tyyppi::paikkaustoteumatyyppi, :hinta)
+INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu,
+                            tyyppi, hinta, kirjattu,
+                            tyomenetelma, valmistumispvm, tierekisteriosoite)
+ VALUES(:urakka, :paikkauskohde, :luoja, NOW(),
+        :tyyppi::paikkaustoteumatyyppi, :hinta, NOW(),
+        :tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite)

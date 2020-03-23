@@ -281,13 +281,14 @@ BEGIN
       WHERE "ulkoinen-id" = 224
       LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL);
 
-  INSERT INTO paikkaustoteuma ("ulkoinen-id", "urakka-id", "paikkauskohde-id", "toteuma-id", "luoja-id", tyyppi, selite,
-                               hinta)
+  INSERT INTO paikkaustoteuma ("ulkoinen-id", "urakka-id", "paikkauskohde-id", "toteuma-id",
+                               "luoja-id", tyyppi, selite, hinta, tyomenetelma, valmistumispvm,
+                               tierekisteriosoite)
   VALUES -- Kokonaishintaiset
     (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt', 3500),
-    (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt 2', 400),
-    (133, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 700);
+           'Liikennejärjestelyt', 3500, 'massapintaus', NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
+    (6662, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
+           'Liikennejärjestelyt 2', 400, 'massapintaus', NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
+    (133, oulun_alueurakan_id, hoito_paikkauskohde_3_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;
