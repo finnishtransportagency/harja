@@ -20,6 +20,10 @@
       [:span.laskutus
        [bs/tabs {:style :tabs :classes "tabs-taso2"
                  :active (nav/valittu-valilehti-atom :laskutus)}
+        "Kulujen kohdistus"
+        :kohdistetut-kulut
+        ^{:keys "kohdistetut-kulut"}
+        [kohdistetut-kulut/kohdistetut-kulut]
 
         "Laskutusyhteenveto"
         :laskutusyhteenveto
@@ -30,9 +34,4 @@
         :maksuerat
         ^{:key "maksuerat"}
         (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
-          [maksuerat/maksuerat-listaus])
-
-        "Kohdistetut kulut"
-        :kohdistetut-kulut
-        ^{:keys "kohdistetut-kulut"}
-        [kohdistetut-kulut/kohdistetut-kulut]]])))
+          [maksuerat/maksuerat-listaus])]])))
