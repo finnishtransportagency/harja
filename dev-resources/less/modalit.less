@@ -64,3 +64,80 @@
 .modal-otsikko-virhe {
   color: @vaara;
 }
+
+.peitto-modal {
+  position:fixed;
+  background-color:rgba(200,200,200,.5);
+  top:0;
+  left:0;
+  min-width:100%;
+  min-height:100%;
+  z-index:300;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+
+  .peitto-kontentti {
+    padding: 0px;
+    background-color:#ffffff;
+    width:600px;
+    height:493px;
+    display: flex;
+    flex-direction:column;
+
+    h1 {
+      font-style: normal;
+      font-weight: 600;
+      font-size: 21px;
+      line-height: 36px;
+      /* identical to box height */
+      color: #000000;
+
+      padding:0px 32px;
+      margin:0px 0px 30px;
+      height:72px;
+      border-bottom: 1px solid lightgrey;
+      display:flex;
+      flex-direction:row;
+      align-items: center;
+
+      button {
+        margin-left: auto;
+        min-height: 27px;
+        min-width: 27px;
+        background: none;
+        border: none;
+      }
+    }
+    .kulukentta {
+      margin: 14px 32px;
+    }
+    .napit {
+      margin:auto 32px 42px;
+      button {
+        box-sizing: border-box;
+        width:160px;
+        height:40px;
+        font-size:14px;
+        margin: 0px 32px 0px 0px;
+        .glyphicon {
+          margin-right:11px;
+        }
+      }
+      .tallenna {
+        background-color:#008A00;
+        color: white;
+      }
+
+      .sulje {
+        border: 1px solid #0065AF;
+        color: #0065AF;
+
+      }
+
+    }
+    label {
+      display: block;
+    }
+  }
+}

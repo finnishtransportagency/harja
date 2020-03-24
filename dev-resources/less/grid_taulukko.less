@@ -1,0 +1,122 @@
+@import "vayla/tables.less";
+@import "vayla/colors.less";
+@import "vayla/buttons-navigation-and-links.less";
+@chevron-suunnat: up, right, down, left;
+@triangle-suunnat: top, right, bottom, left;
+@solu-padding: 5px;
+
+.suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
+  @suunta: extract(@suunnat, @i);
+  .@{ikoni}-@{suunta}{
+    color: @blue;
+  }
+  .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
+}
+
+.grid-taulukko {
+  overflow: hidden;
+  border: none;
+  word-break: break-all;
+  z-index: 1;
+  .piillotettu, &.piillotettu {
+    display:none;
+  }
+
+  &.salli-ylipiirtaminen {
+    overflow: visible;
+  }
+
+  /* TAULUKON ELEMENTIT */
+
+  input {
+    border: none;
+  }
+
+  /* SOLUT */
+  .solu {
+    border-left: none;
+    padding-left: @solu-padding;
+    display: flex;
+    align-items: center;
+    &.keskita {
+      justify-content: center;
+      align-items: center;
+    }
+    &.alas {
+      align-items: end;
+    }
+  }
+  .solu-laajenna {
+    display: flex;
+    justify-content: space-between;
+    span {
+      align-self: center;
+      &:first-child {
+        flex: 1;
+      }
+    }
+    margin-right: 10px;
+    &.ikoni-vasemmalle {
+      .laajenna-teksti {
+        order: 1;
+        padding-left: @solu-padding;
+      }
+    }
+    .suunta-ikoni-loop(@chevron-suunnat; livicon-chevron);
+    .suunta-ikoni-loop(@triangle-suunnat; glyphicon-triangle);
+  }
+  .solu-otsikko {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .otsikon-jarjestys {
+
+    }
+  }
+  .solu-syote {
+    &.ei-validi {
+      border: 1px solid red;
+      color: red;
+      box-shadow: 0px 0px 2px 2px #ff2200;
+    }
+  }
+
+  .solu-teksti {
+  }
+  .solu-ikoni {
+    display: flex;
+    align-items: center;
+  }
+  .solu-nappi {
+    &.linkki {
+      background: transparent;
+      border: none;
+      color: blue;
+      text-align: left;
+      .a-link();
+      &:visited {
+        .a-visited();
+      }
+      &:hover {
+        .a-hover();
+      }
+      &:focus {
+        .a-focus();
+      }
+      &:active {
+        .a-active();
+      }
+    }
+  }
+  /* YLEISTÄ */
+  .solu-sisenna-1 {
+    padding-left: (@solu-padding + 20px);
+  }
+  .solu-sisenna-2 {
+    padding-left: (@solu-padding + 40px);
+  }
+  .solu-sisenna-3 {
+    padding-left: (@solu-padding + 60px);
+  }
+}

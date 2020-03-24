@@ -3,8 +3,8 @@
    joku rivi näyttää vaan jätetään se käyttäjän vastuulle"
   (:require [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko-debug :as debug]
-            [clojure.spec.alpha :as s]))
-
+            [clojure.spec.alpha :as s]
+            [harja.loki :as loki]))
 
 (defonce tyhja-arvo (gensym))
 
@@ -40,10 +40,24 @@
                           %1)
                        rivit)))
 
+(defn tee-rivi [jana args]
+  (let [jana-fn #(jana (keyword (gensym "jana-")) % #{"jana" "janan-rivi" "table-default"})]
+    (loop [rivi []
+           args (vec args)]
+      (if (= 0 (count args))
+        (jana-fn rivi)
+        (let [a (first args)
+              osa-fn (first a)
+              [osa-id osa-arvo osa-params] (vec (rest a))]
+          (recur (conj rivi (apply
+                              osa-fn
+                              [osa-id osa-arvo (merge {:class #{"osa" "osa-teksti"}} osa-params)]))
+                 (rest args)))))))
+
 (defonce muuta-avain
-         {:id [:taulukon-id]
+         {:id     [:taulukon-id]
           :lapset [:rivit]
-          :class [:parametrit :class]})
+          :class  [:parametrit :class]})
 
 ; {:taulukon-id 1 :skeema-rivi .. :skeema-sarake :rivit [] :parametrit}
 (defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
@@ -53,8 +67,8 @@
     (let [luokat (-> this :parametrit :class)
           dom-id (-> this :parametrit :id)]
       [:div.taulukko {:data-cy "taulukko"
-                      :id dom-id
-                      :class (apply str (interpose " " luokat))}
+                      :id      dom-id
+                      :class   (apply str (interpose " " luokat))}
        (when debug/TAULUKKO_DEBUG
          [debug/debug this])
        (for [rivi (:rivit this)]
@@ -106,6 +120,48 @@
   (paivita-taulukko! [this]
     (p/paivita-taulukko! this tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
 
+  (lisaa-rivi! [this rivin-tiedot a1 a2 a3 a4 a5 a6 a7]
+    (let [paivita-taulukko! (:taulukon-paivitys-fn! parametrit)
+          {:keys [rivi alkuun? pelkka-palautus? rivin-parametrit]} rivin-tiedot
+          {:keys [on-click class]} rivin-parametrit
+          args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])
+          aseta-arvot (fn [rivi & params]
+                        (let [filtteroitu (->> params
+                                               (partition 2)
+                                               (filter #(not (nil? (second %))))
+                                               flatten)]
+                          (if (empty? filtteroitu)
+                            rivi
+                            (apply p/aseta-arvo rivi filtteroitu))))
+          paivitetty-taulukko (update this
+                                      :rivit
+                                      (fn [m]
+                                        (into []
+                                              (let [rivi (-> rivi
+                                                             (tee-rivi args)
+                                                             (aseta-arvot :on-click on-click
+                                                                          :class class))]
+                                                (if alkuun?
+                                                  (cons rivi m)
+                                                  (conj m rivi))))))]
+      (if pelkka-palautus?
+        paivitetty-taulukko
+        (paivita-taulukko! paivitetty-taulukko))))
+  (lisaa-rivi! [this rivin-avain a1 a2 a3 a4 a5 a6]
+    (p/lisaa-rivi! this rivin-avain a1 a2 a3 a4 a5 a6 tyhja-arvo))
+  (lisaa-rivi! [this rivin-avain a1 a2 a3 a4 a5]
+    (p/lisaa-rivi! this rivin-avain a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
+  (lisaa-rivi! [this rivin-avain a1 a2 a3 a4]
+    (p/lisaa-rivi! this rivin-avain a1 a2 a3 a4 tyhja-arvo tyhja-arvo tyhja-arvo))
+  (lisaa-rivi! [this rivin-avain a1 a2 a3]
+    (p/lisaa-rivi! this rivin-avain a1 a2 a3 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (lisaa-rivi! [this rivin-avain a1 a2]
+    (p/lisaa-rivi! this rivin-avain a1 a2 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (lisaa-rivi! [this rivin-avain a1]
+    (p/lisaa-rivi! this rivin-avain a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (lisaa-rivi! [this rivin-avain]
+    (p/lisaa-rivi! this rivin-avain tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           rivin-polku (into [] (apply concat (p/osan-polku-taulukossa this paivitetty-rivi)))
@@ -117,7 +173,7 @@
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5 a6]
     (p/paivita-rivi! this paivitetty-rivi a1 a2 a3 a4 a5 a6 tyhja-arvo))
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5]
-    (p/paivita-rivi! this paivitetty-rivi  a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
+    (p/paivita-rivi! this paivitetty-rivi a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4]
     (p/paivita-rivi! this paivitetty-rivi a1 a2 a3 a4 tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3]
@@ -140,7 +196,7 @@
   (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5 a6]
     (p/paivita-solu! this paivitetty-solu a1 a2 a3 a4 a5 a6 tyhja-arvo))
   (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5]
-    (p/paivita-solu! this paivitetty-solu  a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
+    (p/paivita-solu! this paivitetty-solu a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
   (paivita-solu! [this paivitetty-solu a1 a2 a3 a4]
     (p/paivita-solu! this paivitetty-solu a1 a2 a3 a4 tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-solu! [this paivitetty-solu a1 a2 a3]
@@ -203,7 +259,7 @@
    {:pre [(sequential? tila)
           (every? #(satisfies? p/Jana %) tila)]}
    [:div.taulukko {:data-cy "taulukko"
-                   :class (apply str (interpose " " luokat))}
+                   :class   (apply str (interpose " " luokat))}
     (for [jana tila]
       (with-meta [p/piirra-jana jana]
                  {:key (:janan-id jana)}))]))

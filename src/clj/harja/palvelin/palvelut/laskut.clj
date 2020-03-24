@@ -32,6 +32,46 @@
                            :alkupvm  (:alkupvm hakuehdot)
                            :loppupvm (:loppupvm hakuehdot)}))
 
+
+(defn kasittele-kohdistukset
+  [laskukohdistukset]
+  (map
+    (fn [[id kohdistukset]]
+      (let [lasku (first kohdistukset)]
+        (into {} {:id                    id
+                  :tyyppi                (:tyyppi lasku)
+                  :kokonaissumma         (:kokonaissumma lasku)
+                  :erapaiva              (:erapaiva lasku)
+                  :laskun-numero         (:laskun-numero lasku)
+                  :koontilaskun-kuukausi (:koontilaskun-kuukausi lasku)
+                  :suorittaja            (:suorittaja-id lasku)
+                  :liite-id              (:liite-id lasku)
+                  :liite-nimi            (:liite-nimi lasku)
+                  :liite-tyyppi          (:liite-tyyppi lasku)
+                  :liite-koko            (:liite-koko lasku)
+                  :liite-oid             (:liite-oid lasku)
+                  :kohdistukset          (mapv #(dissoc %
+                                                        :tyyppi
+                                                        :kokonaissumma
+                                                        :erapaiva
+                                                        :suorittaja-id
+                                                        :liite-id
+                                                        :liite-nimi
+                                                        :liite-tyyppi
+                                                        :liite-koko
+                                                        :liite-oid
+                                                        :koontilaskun-kuukausi)
+                                               kohdistukset)})))
+    laskukohdistukset))
+
+
+(defn hae-kaikki-urakan-laskuerittelyt
+  "Palauttaa urakan laskut laskuerittelyineen."
+  [db user hakuehdot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
+  (let [laskukohdistukset (group-by :laskun-id (q/hae-kaikki-urakan-laskuerittelyt db {:urakka (:urakka-id hakuehdot)}))]
+    (kasittele-kohdistukset laskukohdistukset)))
+
 (defn hae-urakan-laskuerittelyt
   "Palauttaa urakan laskut valitulta ajanjaksolta laskuerittelyineen."
   [db user hakuehdot]
@@ -39,37 +79,15 @@
   (let [laskukohdistukset (group-by :laskun-id (q/hae-urakan-laskuerittelyt db {:urakka   (:urakka-id hakuehdot)
                                                                                 :alkupvm  (:alkupvm hakuehdot)
                                                                                 :loppupvm (:loppupvm hakuehdot)}))]
-    (map #(into {} {:id            (first %)
-                    :viite         (:viite (second %))
-                    :tyyppi        (:tyyppi (second %))
-                    :kokonaissumma (:kokonaissumma (second %))
-                    :erapaiva      (:erapaiva (second %))
-                    :liite-id      (:liite-id (second %))
-                    :liite-nimi    (:liite-nimi (second %))
-                    :liite-tyyppi  (:liite-tyyppi (second %))
-                    :liite-koko    (:liite-koko (second %))
-                    :liite-oid     (:liite-oid (second %))
-                    :kohdistukset  (into []
-                                         (map (fn [v]
-                                                (dissoc v :viite
-                                                        :tyyppi
-                                                        :kokonaissumma
-                                                        :erapaiva
-                                                        :liite-id
-                                                        :liite-nimi
-                                                        :liite-tyyppi
-                                                        :liite-koko
-                                                        :liite-oid))
-                                              (second %)))})
-         laskukohdistukset)))
+    (kasittele-kohdistukset laskukohdistukset)))
 
 (defn hae-laskuerittely
   "Hakee yksittäisen laskun tiedot laskuerittelyineen."
-  [db user {:keys [urakka-id viite]}]
+  [db user {:keys [urakka-id laskun-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [lasku (first (q/hae-lasku db {:urakka urakka-id
-                                      :viite  viite}))
-        laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))]
+  (let [lasku (first (q/hae-lasku db {:urakka    urakka-id
+                                      :laskun-id laskun-id}))
+        laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:laskun-id lasku)}))]
     (assoc lasku :kohdistukset laskun-kohdistukset)))
 
 (defn- laskuerittelyn-maksueratyyppi
@@ -97,9 +115,7 @@
                                             :summa               (:summa laskurivi)
                                             :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
                                             :tehtavaryhma        (:tehtavaryhma laskurivi)
-                                            :tehtava             (:tehtava laskurivi)
-                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtava laskurivi) (:tehtava laskurivi))
-                                            :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
+                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
                                             :kayttaja            (:id user)})
@@ -110,48 +126,54 @@
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
   Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
-  [db user urakka-id laskuerittely]
+  [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi suorittaja-nimi laskun-numero
+                             lisatieto koontilaskun-kuukausi laskun-id kohdistukset] :as _laskuerittely}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [lasku (q/luo-tai-paivita-lasku<! db {:viite         (:viite laskuerittely)
-                                             :erapaiva      (konv/sql-date (:erapaiva laskuerittely))
-                                             :kokonaissumma (:kokonaissumma laskuerittely)
-                                             :urakka        (:urakka laskuerittely)
-                                             :tyyppi        (:tyyppi laskuerittely)
-                                             :kayttaja      (:id user)})]
-    (doseq [kohdistusrivi (:kohdistukset laskuerittely)]
+  (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
+                         :kokonaissumma         kokonaissumma
+                         :urakka                urakka
+                         :suorittaja            (when suorittaja-nimi (kasittele-suorittaja db user suorittaja-nimi))
+                         :tyyppi                tyyppi
+                         :numero                laskun-numero
+                         :lisatieto             lisatieto
+                         :kayttaja              (:id user)
+                         :koontilaskun-kuukausi koontilaskun-kuukausi}
+        lasku (if (nil? laskun-id)
+                (q/luo-lasku<! db yhteiset-tiedot)
+                (q/paivita-lasku<! db (assoc yhteiset-tiedot
+                                        :laskun-id laskun-id)))]
+    (doseq [kohdistusrivi kohdistukset]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)
             (assoc r :lasku (:id lasku))
-            (luo-tai-paivita-laskun-kohdistus db user
-                                              (:urakka laskuerittely)
+            (luo-tai-paivita-laskun-kohdistus db
+                                              user
+                                              urakka
                                               (:id lasku)
-                                              r))))
-  (hae-laskuerittely db user {:urakka-id (:urakka laskuerittely)
-                              :viite     (:viite laskuerittely)}))
+                                              r)))
+    (hae-laskuerittely db user {:laskun-id (:id lasku)})))
 
 (defn poista-lasku
   "Merkitsee laskun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
-  [db user {:keys [urakka-id viite]}]
+  [db user {:keys [urakka-id laskun-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-lasku! db {:urakka   urakka-id
-                       :viite    viite
-                       :kayttaja (:id user)})
-  (q/poista-laskun-kohdistukset! db {:urakka   urakka-id
-                                     :viite    viite
-                                     :kayttaja (:id user)})
-  (hae-laskuerittely db user {:urakka urakka-id
-                              :viite  viite}))
+  (q/poista-lasku! db {:urakka    urakka-id
+                       :laskun-id laskun-id
+                       :kayttaja  (:id user)})
+  (q/poista-laskun-kohdistukset! db {:urakka    urakka-id
+                                     :laskun-id laskun-id
+                                     :kayttaja  (:id user)})
+  (hae-laskuerittely db user {:laskun-id laskun-id}))
 
 (defn poista-laskun-kohdistus
   "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."
-  [db user {:keys [urakka-id laskun-viite laskuerittelyn-rivi]}]
+  [db user {:keys [urakka-id laskun-id laskuerittelyn-rivi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-laskun-kohdistus! db {:viite    laskun-viite
-                                  :urakka   urakka-id
-                                  :rivi     laskuerittelyn-rivi
-                                  :kayttaja (:id user)})
-  (hae-laskuerittely db user {:urakka-id urakka-id
-                              :viite     laskun-viite}))
+  (q/poista-laskun-kohdistus! db {:laskun-id laskun-id
+                                  :urakka    urakka-id
+                                  :rivi      laskuerittelyn-rivi
+                                  :kayttaja  (:id user)})
+  (hae-laskuerittely db user {:laskun-id laskun-id}))
 
 (defn tallenna-lasku
   "Funktio tallentaa laskun ja laskuerittelyn (laskun kohdistuksen). Käytetään teiden hoidon urakoissa (MHU)."
@@ -169,6 +191,12 @@
       (julkaise-palvelu http :laskut
                         (fn [user hakuehdot]
                           (hae-urakan-laskut db user hakuehdot)))
+      (julkaise-palvelu http :laskuerittelyt
+                        (fn [user hakuehdot]
+                          (hae-urakan-laskuerittelyt db user hakuehdot)))
+      (julkaise-palvelu http :kaikki-laskuerittelyt
+                        (fn [user hakuehdot]
+                          (hae-kaikki-urakan-laskuerittelyt db user hakuehdot)))
       (julkaise-palvelu http :lasku
                         (fn [user hakuehdot]
                           (hae-laskuerittely db user hakuehdot)))
@@ -184,8 +212,10 @@
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :hae-laskut)
-    (poista-palvelut (:http-palvelin this) :hae-lasku)
+    (poista-palvelut (:http-palvelin this) :laskut)
+    (poista-palvelut (:http-palvelin this) :lasku)
+    (poista-palvelut (:http-palvelin this) :laskuerittelyt)
+    (poista-palvelut (:http-palvelin this) :kaikki-laskuerittelyt)
     (poista-palvelut (:http-palvelin this) :tallenna-lasku)
     (poista-palvelut (:http-palvelin this) :poista-lasku)
     (poista-palvelut (:http-palvelin this) :poista-laskurivi)

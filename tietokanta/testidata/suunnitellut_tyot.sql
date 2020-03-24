@@ -765,7 +765,6 @@ DECLARE
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Pellon MHU testiurakan sopimus');
   i INTEGER;
   vuosi_ INTEGER;
-  ennen_urakkaa_id INTEGER;
 BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
   FOR i IN 1..6 LOOP
@@ -1041,11 +1040,13 @@ BEGIN
   ----------------------------------
   -- URAKAN YKSIKKÖHINTAISET TYÖT --
   ----------------------------------
-  INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
-     RETURNING id
-     INTO ennen_urakkaa_id;
-  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
-    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  FOR i IN 1..3
+  LOOP
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  END LOOP;
+  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id", "osa-kuukaudesta")
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 2250, 40, (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
   FOR i IN 10..12 LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
@@ -1112,7 +1113,6 @@ DECLARE
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Kemin MHU testiurakan sopimus');
-  ennen_urakkaa_id INTEGER;
   i INTEGER;
   vuosi_ INTEGER;
 BEGIN
@@ -1394,11 +1394,13 @@ BEGIN
   -- URAKAN YKSIKKÖHINTAISET TYÖT --
   ----------------------------------
 
-  INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
-     RETURNING id
-     INTO ennen_urakkaa_id;
-  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
-    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  FOR i IN 1..3
+  LOOP
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  END LOOP;
+  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id", "osa-kuukaudesta")
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 2250, 40, (SELECT extract(year from NOW())), 10, TRUE, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'), 0.5);
 
   FOR i IN 10..12 LOOP
     INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
