@@ -473,26 +473,37 @@
       :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
       :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
 
+(defn- liitteen-naytto
+  [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
+  (loki/log "Liite" _liite)
+  [:div.liiterivi
+   [:div.liitelista
+    [liitteet/liitelinkki {:id     liite-id
+                           :nimi   liite-nimi
+                           :tyyppi liite-tyyppi
+                           :koko   liite-koko} (str liite-nimi)]]
+   [:div.liitepoisto
+    [napit/poista ""
+     #(e! (tiedot/->PoistaLiite liite-id))
+     {:vayla-tyyli?  true
+      :teksti-nappi? true}]]])
+
 (defn- liitteet
   [{:keys [e!]}
-   {{:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _lomake} :lomake}]
+   {{liitteet :liitteet :as _lomake} :lomake}]
+  (loki/log "Liitteet" liitteet (empty? liitteet))
   [:div.palsta
    [kentat/vayla-lomakekentta
     "Liite"
     :otsikko-tag :h5
     :komponentti (fn [_]
-                   [:div.liiterivi
-                    [:div.liitelista
-                     (if-not (nil? liite-id) [liitteet/liitelinkki {:id     liite-id
-                                                                    :nimi   liite-nimi
-                                                                    :tyyppi liite-tyyppi
-                                                                    :koko   liite-koko} (str liite-nimi)]
-                                             "Ei liitteitä")]
-                    (when-not (nil? liite-id) [:div.liitepoisto
-                                               [napit/poista ""
-                                                #(e! (tiedot/->PoistaLiite liite-id))
-                                                {:vayla-tyyli?  true
-                                                 :teksti-nappi? true}]])
+                   [:div.liitelaatikko
+                    [:div.liiterivit
+                     (if-not (empty? liitteet)
+                       (into [:<>] (mapv
+                                     (r/partial liitteen-naytto e!)
+                                     liitteet))
+                       [:div.liitelista "Ei liitteitä"])]
                     [:div.liitenappi
                      [liitteet/lisaa-liite
                       (-> @tila/yleiset :urakka :id)
@@ -511,6 +522,7 @@
              tehtavaryhmat :tehtavaryhmat {haetaan :haetaan} :parametrit}]
       (let [{:keys [nayta]} lomake]
         [:div.ajax-peitto-kontti
+         [debug/debug lomake]
          [:div.palstat
           [:div.palsta
            [:h2 (str (if-not (nil? (:id lomake))
@@ -556,6 +568,7 @@
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
+    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! {:keys [taulukko syottomoodi] :as app}]
       [:div#vayla
        (if syottomoodi

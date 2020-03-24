@@ -12,6 +12,18 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-liitteet
+-- Haetaan liitteet laskulle
+select liite.id               AS "liite-id",
+       liite.nimi             AS "liite-nimi",
+       liite.tyyppi           AS "liite-tyyppi",
+       liite.koko             AS "liite-koko",
+       liite.liite_oid        AS "liite-oid"
+       from lasku l
+       left join lasku_liite ll on l.id = ll.lasku and ll.poistettu is not true
+       left join liite liite on ll.liite = liite.id
+       where l.id = :lasku-id;
+
 -- name: hae-kaikki-urakan-laskuerittelyt
 -- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
 SELECT l.id                   as "id",
@@ -29,19 +41,22 @@ SELECT l.id                   as "id",
        lk.tehtava             as "tehtava",
        l.suorittaja           as "suorittaja-id",
        lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu",
-       liite.id               AS "liite-id",
-       liite.nimi             AS "liite-nimi",
-       liite.tyyppi           AS "liite-tyyppi",
-       liite.koko             AS "liite-koko",
-       liite.liite_oid        AS "liite-oid"
+       lk.suoritus_loppu      as "suoritus-loppu"
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-       LEFT JOIN lasku_liite ll on l.id = ll.lasku
-       LEFT JOIN liite liite on ll.liite = liite.id
        left JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
+
+-- name: linkita-lasku-ja-liite<!
+-- Linkittää liitteen ja laskun
+insert into lasku_liite (lasku, liite, luotu, luoja, poistettu)
+values (:lasku-id, :liite-id, current_timestamp, :kayttaja, false)
+on conflict do nothing;
+
+-- name: poista-laskun-ja-liitteen-linkitys<!
+-- Merkkaa liitteen poistetuksi
+update lasku_liite ll set poistettu = true where ll.lasku = :lasku-id and ll.liite = :liite-id;
 
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
@@ -58,16 +73,9 @@ SELECT l.id                   as "id",
        l.suorittaja           as "suorittaja-id",
        a.nimi                 as "suorittaja-nimi",
        lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu",
-       liite.id               AS "liite-id",
-       liite.nimi             AS "liite-nimi",
-       liite.tyyppi           AS "liite-tyyppi",
-       liite.koko             AS "liite-koko",
-       liite.liite_oid        AS "liite-oid"
+       lk.suoritus_loppu      as "suoritus-loppu"
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-       LEFT JOIN lasku_liite ll on l.id = ll.lasku
-       LEFT JOIN liite liite on ll.liite = liite.id
        JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND lk.suoritus_alku BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE

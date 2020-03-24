@@ -23,6 +23,24 @@
   border: 1px solid @red;
 }
 
+.liitelaatikko {
+  display:flex;
+  flex-direction:row;
+  align-items: center;
+
+  .liiterivit {
+    display:flex;
+    flex-direction:column;
+    flex:3;
+  }
+
+  .liitenappi {
+    flex:1;
+    align-self: start;
+  }
+}
+
+
 .liiterivi {
   height:40px;
   display:flex;
@@ -34,10 +52,6 @@
   }
 
   .liitepoisto {
-    flex:1;
-  }
-
-  .liitenappi {
     flex:1;
   }
 }
