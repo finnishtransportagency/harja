@@ -15,11 +15,6 @@
 
 (def app (atom nil))
 
-(defn kiinnostavat-tiedot-grid [paikkaus]
-  (select-keys paikkaus #{:tyomenetelma :yksikko :yksikkohinta :paikkaustoteuma-id
-                          :maara :hinta :tyyppi :paikkauskohde-id :nimi
-                          :kirjattu :loppuaika}))
-
 ;; Muokkaukset
 (defrecord Nakymaan [otsikkokomponentti])
 (defrecord NakymastaPois [])
