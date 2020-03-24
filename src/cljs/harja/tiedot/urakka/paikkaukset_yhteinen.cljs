@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.domain.paikkaus :as paikkaus])

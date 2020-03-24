@@ -20,16 +20,6 @@
       (pvm/pvm aika)]
      [:span (str "klo. " (pvm/aika aika))]]))
 
-(defn otsikkokomponentti
-  [napin-teksti siirry-toimenpiteisiin-fn id]
-  [{:tyyli {:float "right"
-            :position "relative"}
-    :sisalto
-    (fn [_]
-      [napit/yleinen-ensisijainen
-       napin-teksti
-       #(siirry-toimenpiteisiin-fn id)])}])
-
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as yhteinen-tila}]
   (let [tr-atom (atom (:tr valinnat))
         aikavali-atom (atom (:aikavali valinnat))
