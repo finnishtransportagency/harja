@@ -325,26 +325,26 @@
                         [:div (str (summa-formatointi maara) " €/kk")]])])
                   data-hoitokausittain))])
 
-(defn modal-napit [_]
-  (let [sulje! (r/partial modal/piilota!)]
-    (fn [poista! peruuta!]
-      (let [poista! (r/partial (fn []
-                                 (binding [t/*e!* e!]
-                                   (poista!))))
-            peruuta! (if peruuta!
-                       (r/partial (comp sulje! peruuta!))
-                       sulje!)]
-        [:div {:style {:padding-top "15px"}}
-         [napit/yleinen-toissijainen "Peruuta" peruuta! {:ikoni [ikonit/remove]}]
-         [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]]))))
+(defn modal-napit [poista! peruuta!]
+  (let [poista! (r/partial (fn []
+                             (binding [t/*e!* e!]
+                               (poista!))))]
+    [:div {:style {:padding-top "15px"}}
+     [napit/yleinen-toissijainen "Peruuta" peruuta! {:ikoni [ikonit/remove]}]
+     [napit/kielteinen "Poista tiedot" poista! {:ikoni [ikonit/livicon-trash]}]]))
 
 (defn poista-modal!
   ([aihe data-hoitokausittain poista! tiedot] (poista-modal! aihe data-hoitokausittain poista! tiedot nil))
   ([aihe data-hoitokausittain poista! tiedot peruuta!]
-   (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"]
+   (let [otsikko "Haluatko varmasti poistaa seuraavat tiedot?"
+         sulje! (r/partial modal/piilota!)
+         peruuta! (if peruuta!
+                    (r/partial (comp sulje! peruuta!))
+                    sulje!)]
      (modal/nayta! {:otsikko otsikko
                     :content-tyyli {:overflow "hidden"}
-                    :body-tyyli {:padding-right "0px"}}
+                    :body-tyyli {:padding-right "0px"}
+                    :sulje-fn peruuta!}
                    [:div
                     [modal-aiheteksti aihe (select-keys tiedot #{:toimenpide :toimenkuva})]
                     [modal-lista data-hoitokausittain]
@@ -389,83 +389,82 @@
                          nappia-painettu!
                          on-change
                          on-blur]
-  (let [nyt (pvm/nyt)]
-    (g-pohjat/uusi-taulukko {:header [{:tyyppi :teksti
-                                       :leveys 3
-                                       :luokat #{"table-default" "table-default-header" "lihavoitu"}}
-                                      {:tyyppi :teksti
-                                       :leveys 2
-                                       :luokat #{"table-default" "table-default-header" "lihavoitu"}}
-                                      {:tyyppi :teksti
-                                       :leveys 2
-                                       :luokat #{"table-default" "table-default-header" "lihavoitu"}}
-                                      {:tyyppi :teksti
-                                       :leveys 1
-                                       :luokat #{"table-default" "table-default-header" "harmaa-teksti" "lihavoitu"}}]
-                             :body (mapv (fn [hoitokauden-numero]
-                                           {:tyyppi :taulukko
-                                            :osat [{:tyyppi :rivi
-                                                    :nimi ::data-yhteenveto
-                                                    :osat [{:tyyppi :laajenna
-                                                            :aukaise-fn (fn [this auki?]
-                                                                          (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
-                                                            :auki-alussa? false
-                                                            :luokat #{"table-default" "lihavoitu"}}
-                                                           {:tyyppi :teksti
-                                                            :luokat #{"table-default"}}
-                                                           {:tyyppi :teksti
-                                                            :luokat #{"table-default"}
-                                                            :fmt yhteenveto-format}
-                                                           {:tyyppi :teksti
-                                                            :luokat #{"table-default" "harmaa-teksti"}
-                                                            :fmt yhteenveto-format}]}
-                                                   {:tyyppi :taulukko
-                                                    :nimi ::data-sisalto
-                                                    :luokat #{"piillotettu"}
-                                                    :osat (vec (repeatedly 12
-                                                                           (fn []
-                                                                             {:tyyppi :rivi
-                                                                              :osat [{:tyyppi :teksti
-                                                                                      :luokat #{"table-default"}
-                                                                                      :fmt aika-tekstilla-fmt}
-                                                                                     {:tyyppi :syote-tayta-alas
-                                                                                      :nappi-nakyvilla? false
-                                                                                      :nappia-painettu! (partial nappia-painettu! hoitokauden-numero)
-                                                                                      :toiminnot {:on-change (partial on-change hoitokauden-numero)
-                                                                                                  :on-focus (fn [_]
-                                                                                                              (grid/paivita-osa! solu/*this*
-                                                                                                                                 (fn [solu]
-                                                                                                                                   (assoc solu :nappi-nakyvilla? true))))
-                                                                                                  :on-blur (partial on-blur hoitokauden-numero)
-                                                                                                  :on-key-down (fn [event]
-                                                                                                                 (when (= "Enter" (.. event -key))
-                                                                                                                   (.. event -target blur)))}
-                                                                                      :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                   {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                       :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
-                                                                                      :parametrit {:size 2}
-                                                                                      :luokat #{"input-default"}
-                                                                                      :fmt summa-formatointi-uusi
-                                                                                      :fmt-aktiivinen summa-formatointi-aktiivinen}
-                                                                                     {:tyyppi :teksti
-                                                                                      :luokat #{"table-default"}
-                                                                                      :fmt summa-formatointi}
-                                                                                     {:tyyppi :teksti
-                                                                                      :luokat #{"table-default" "harmaa-teksti"}}]})))}]})
-                                         (range 1 6))
-                             :footer [{:tyyppi :teksti
-                                       :luokat #{"table-default" "table-default-sum"}}
-                                      {:tyyppi :teksti
-                                       :luokat #{"table-default" "table-default-sum"}}
-                                      {:tyyppi :teksti
-                                       :luokat #{"table-default" "table-default-sum"}
-                                       :fmt yhteenveto-format}
-                                      {:tyyppi :teksti
-                                       :luokat #{"table-default" "table-default-sum" "harmaa-teksti"}
-                                       :fmt yhteenveto-format}]
-                             :taulukon-id taulukon-id
-                             :root-asetus! root-asetus!
-                             :root-asetukset root-asetukset})))
+  (g-pohjat/uusi-taulukko {:header [{:tyyppi :teksti
+                                     :leveys 3
+                                     :luokat #{"table-default" "table-default-header" "lihavoitu"}}
+                                    {:tyyppi :teksti
+                                     :leveys 2
+                                     :luokat #{"table-default" "table-default-header" "lihavoitu"}}
+                                    {:tyyppi :teksti
+                                     :leveys 2
+                                     :luokat #{"table-default" "table-default-header" "lihavoitu"}}
+                                    {:tyyppi :teksti
+                                     :leveys 1
+                                     :luokat #{"table-default" "table-default-header" "harmaa-teksti" "lihavoitu"}}]
+                           :body (mapv (fn [hoitokauden-numero]
+                                         {:tyyppi :taulukko
+                                          :osat [{:tyyppi :rivi
+                                                  :nimi ::data-yhteenveto
+                                                  :osat [{:tyyppi :laajenna
+                                                          :aukaise-fn (fn [this auki?]
+                                                                        (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
+                                                          :auki-alussa? false
+                                                          :luokat #{"table-default" "lihavoitu"}}
+                                                         {:tyyppi :teksti
+                                                          :luokat #{"table-default"}}
+                                                         {:tyyppi :teksti
+                                                          :luokat #{"table-default"}
+                                                          :fmt yhteenveto-format}
+                                                         {:tyyppi :teksti
+                                                          :luokat #{"table-default" "harmaa-teksti"}
+                                                          :fmt yhteenveto-format}]}
+                                                 {:tyyppi :taulukko
+                                                  :nimi ::data-sisalto
+                                                  :luokat #{"piillotettu"}
+                                                  :osat (vec (repeatedly 12
+                                                                         (fn []
+                                                                           {:tyyppi :rivi
+                                                                            :osat [{:tyyppi :teksti
+                                                                                    :luokat #{"table-default"}
+                                                                                    :fmt aika-tekstilla-fmt}
+                                                                                   {:tyyppi :syote-tayta-alas
+                                                                                    :nappi-nakyvilla? false
+                                                                                    :nappia-painettu! (partial nappia-painettu! hoitokauden-numero)
+                                                                                    :toiminnot {:on-change (partial on-change hoitokauden-numero)
+                                                                                                :on-focus (fn [_]
+                                                                                                            (grid/paivita-osa! solu/*this*
+                                                                                                                               (fn [solu]
+                                                                                                                                 (assoc solu :nappi-nakyvilla? true))))
+                                                                                                :on-blur (partial on-blur hoitokauden-numero)
+                                                                                                :on-key-down (fn [event]
+                                                                                                               (when (= "Enter" (.. event -key))
+                                                                                                                 (.. event -target blur)))}
+                                                                                    :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                 {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                     :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                                    :parametrit {:size 2}
+                                                                                    :luokat #{"input-default"}
+                                                                                    :fmt summa-formatointi-uusi
+                                                                                    :fmt-aktiivinen summa-formatointi-aktiivinen}
+                                                                                   {:tyyppi :teksti
+                                                                                    :luokat #{"table-default"}
+                                                                                    :fmt summa-formatointi}
+                                                                                   {:tyyppi :teksti
+                                                                                    :luokat #{"table-default" "harmaa-teksti"}}]})))}]})
+                                       (range 1 6))
+                           :footer [{:tyyppi :teksti
+                                     :luokat #{"table-default" "table-default-sum"}}
+                                    {:tyyppi :teksti
+                                     :luokat #{"table-default" "table-default-sum"}}
+                                    {:tyyppi :teksti
+                                     :luokat #{"table-default" "table-default-sum"}
+                                     :fmt yhteenveto-format}
+                                    {:tyyppi :teksti
+                                     :luokat #{"table-default" "table-default-sum" "harmaa-teksti"}
+                                     :fmt yhteenveto-format}]
+                           :taulukon-id taulukon-id
+                           :root-asetus! root-asetus!
+                           :root-asetukset root-asetukset}))
 
 (defn maarataulukon-pohja [taulukon-id
                            polun-osa
@@ -661,7 +660,7 @@
                                                                                             (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
                                                                               :auki-alussa? false
                                                                               :ikoni "triangle"
-                                                                              :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1"}}
+                                                                              :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1" "lihavoitu"}}
                                                                              {:tyyppi :ikoni
                                                                               :luokat #{"table-default" "keskita"}}
                                                                              {:tyyppi :ikoni
@@ -2181,7 +2180,7 @@
       kuluva-hoitokausi]
      [indeksilaskuri kattohinnat indeksit]]))
 
-(defn suunnitelman-selitteet [this luokat _]
+#_(defn suunnitelman-selitteet [this luokat _]
   [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
    [:span [ikonit/ok] "Kaikki kentät täytetty"]
    [:span [ikonit/livicon-question] "Keskeneräinen"]
@@ -2547,8 +2546,6 @@
     (fn [e*! {:keys [suodattimet] :as app}]
       (set! e! e*!)
       [:div#kustannussuunnitelma
-       ;[debug/debug app]
-       [:h1 "Kustannussuunnitelma"]
        [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
        [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
        [haitari-laatikko

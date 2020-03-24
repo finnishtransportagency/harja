@@ -114,7 +114,8 @@
                                                               header-korkeus
                                                               korkeudet))))
                 :osat (mapv tee-osa otsikkorivi)
-                :luokat (clj-set/union #{"salli-ylipiirtaminen"} header-luokat)}
+                :luokat (clj-set/union #{"salli-ylipiirtaminen"} header-luokat)
+                :data-cy "otsikko-rivi"}
                [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])))
 
 (defn data-pohja [{:keys [nimi tyyppi osat luokat] :as body} sarakkeiden-maara]

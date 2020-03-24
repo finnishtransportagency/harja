@@ -24,6 +24,47 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
+// komentoja taulukkokomponenttia varten
+import * as f from '../support/taulukkoFns.js';
+
+Cypress.Commands.add("taulukonRiviTekstilla", { prevSubject: 'element'}, ($taulukko, teksti) => {
+    return f.taulukonRiviTekstillaSync($taulukko, teksti);
+});
+Cypress.Commands.add("rivinSarake", { prevSubject: 'element'}, ($rivi, index) => {
+    return f.rivinSarakeSync($rivi, index);
+});
+
+Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element'}, ($taulukko, otsikoidenArvot) => {
+    cy.wrap($taulukko).find('[data-cy=otsikko-rivi]').then(($otsikkoRivi) => {
+        for (let i = 0; i < otsikoidenArvot.length - 1; i++) {
+            cy.wrap($otsikkoRivi).rivinSarake(i).contains(otsikoidenArvot[i]).should('exist');
+        }
+    }).then(() => {
+        return $taulukko;
+    });
+});
+
+Cypress.Commands.add("testaaSarakkeenArvot", { prevSubject: 'element'}, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot) => {
+    cy.wrap($taulukko.clone()).then(($taulukko) => {
+        let $sisaTaulukko = $taulukko;
+        polkuTaulukkoon.forEach((polunOsa) => {
+            $sisaTaulukko = f.taulukonOsaSync($sisaTaulukko, polunOsa);
+        });
+        let $sarakkeenSolut = f.taulukonOsatSync($sisaTaulukko);
+        polkuSarakkeeseen.forEach((polunOsa) => {
+            $sarakkeenSolut = $sarakkeenSolut.map((i, element) => {
+                return f.taulukonOsaSync(Cypress.$(element), polunOsa).get(0);
+            });
+        });
+        for (let i = 0; i < arvot.length; i++) {
+            expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length).to.equal(1);
+        }
+    }).then(() => {
+        return $taulukko;
+    });
+});
+
+// Komentoja gridkomponenttia varten
 Cypress.Commands.add("gridOtsikot", { prevSubject: 'element'}, (grid) => {
     let $otsikkoRivit = grid.find('th')
     let otsikotIndekseineen = new Map();

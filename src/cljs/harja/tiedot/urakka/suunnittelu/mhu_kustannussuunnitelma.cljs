@@ -149,14 +149,20 @@
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
         "liikenneympariston hoito" "liikenneympäristön hoito"
-        "mhu yllapito" "mhu-ylläpito"
+        "mhu yllapito" "mhu ylläpito"
         "paallystepaikkaukset" "päällystepaikkaukset"
         "akillinen hoitotyo" "äkillinen hoitotyö"}
        sana
        sana))
 
+(defn mhu-isoksi [sana]
+  (clj-str/replace sana
+                   #"^Mhu (.)"
+                   (fn [[_ ensimmainen-kirjain]]
+                     (str "MHU " (clj-str/upper-case ensimmainen-kirjain)))))
+
 (defn toimenpide-formatointi [toimenpide]
-  (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize))
+  (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize mhu-isoksi))
 
 (defn toimenkuva-formatoitu [{:keys [toimenkuva maksukausi hoitokaudet]}]
   (str (clj-str/capitalize toimenkuva) " "
@@ -2104,8 +2110,8 @@
                                               (range hoitokauden-numero 6)
                                               [hoitokauden-numero])
           summa (case tallennettava-asia
-                  :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide hoitokauden-numero (get-in tunnisteet [0 :osan-paikka 0]) :maara])
-                  :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide hoitokauden-numero (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+                  :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
           ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
                               (mapv (fn [hoitokauden-numero]
                                       (let [polun-osa (case tallennettava-asia
@@ -2348,7 +2354,7 @@
                                                           :onnistui ->PoistaOmaJHDdataOnnistui
                                                           :epaonnistui ->PoistaOmaJHDdataEpaonnistui}))))))
           valittu-hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
-          vanhat-arvot (get-in app [:domain :johto-ja-hallintokorvaukset nimi valittu-hoitokauden-numero])]
+          vanhat-arvot (get-in app [:domain :johto-ja-hallintokorvaukset nimi (dec valittu-hoitokauden-numero)])]
       (if-not (empty? data-hoitokausittain)
         (modal-fn! toimenkuva
                    (mapv (fn [hoitokauden-korvaukset]
