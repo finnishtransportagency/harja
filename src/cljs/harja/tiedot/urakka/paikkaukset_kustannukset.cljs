@@ -3,19 +3,17 @@
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
+            [harja.loki :refer [log]]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.grid :as grid]
-            [harja.domain.paikkaus :as paikkaus])
+            [harja.domain.paikkaus :as paikkaus]
+            [taoensso.timbre :as log]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom nil))
-
-(defn kiinnostavat-tiedot-grid [paikkaus]
-  (select-keys paikkaus #{:selite :yksikko :yksikkohinta :paikkaustoteuma-id
-                          :maara :hinta :tyyppi :paikkauskohde-id :nimi
-                          :kirjattu}))
 
 ;; Muokkaukset
 (defrecord Nakymaan [otsikkokomponentti])
@@ -32,49 +30,21 @@
     (cons otsikkorivi (conj paikkaukset yhteenvetorivi))))
 
 (defn kasittele-haettu-tulos
-  [tulos {otsikkokomponentti :otsikkokomponentti}]
-  (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
-                                 tulos)
-        kokonaishintaiset-tiedot (filter #(= (:tyyppi %) "kokonaishintainen") kiinnostavat-tiedot)
-        yksikkohintaiset-tiedot (filter #(= (:tyyppi %) "yksikkohintainen") kiinnostavat-tiedot)
-        kokonaishintaiset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                         ;; Yhteenvetorivin pitää sopeutua gridissä määritettyyn skeemaan. Sen takia
-                                         ;; arvot ovat ehkä hieman outojen avaimien takana
-                                         (lisaa-otsikko-ja-yhteenveto otsikko otsikkokomponentti paikkaukset {:lihavoi true
-                                                                                                              :hinta (apply + (map :hinta paikkaukset))
-                                                                                                              :selite "Yhteensä: "
-                                                                                                              :colspan {:selite 2 :hinta 1}
-                                                                                                              :oikealle? #{:selite}}))
-                                       (group-by :nimi kokonaishintaiset-tiedot))
-        ;; Lisätään kokonaishintaisiin kaikkien hinnat yhteen laskeva rivi
-        kokonaishintaiset-grid (conj kokonaishintaiset-grid
-                                     {:yhteenveto true
-                                      :hinta (apply + (map :hinta kokonaishintaiset-tiedot))
-                                      :paikkaustoteuma-id :yhteenveto
-                                      :colspan {:selite 2 :hinta 1}
-                                      :oikealle? #{:selite}
-                                      :selite "Kokonaishintaiset yhteensä: "})
-        yksikkohintaset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                       (lisaa-otsikko-ja-yhteenveto otsikko otsikkokomponentti paikkaukset {:lihavoi true
-                                                                                                            :yksikkohinta (apply + (map #(* (:yksikkohinta %)
-                                                                                                                                            (:maara %))
-                                                                                                                                        paikkaukset))
-                                                                                                            :colspan {:yksikko 4 :yksikkohinta 1}
-                                                                                                            :oikealle? #{:yksikko}
-                                                                                                            :yksikko "Yhteensä: "}))
-                                     (group-by :nimi yksikkohintaiset-tiedot))
-        yksikkohintaset-grid (conj yksikkohintaset-grid
-                                   {:yhteenveto true
-                                    :yksikkohinta (apply + (map #(* (:yksikkohinta %)
-                                                                    (:maara %))
-                                                                yksikkohintaiset-tiedot))
-                                    :paikkaustoteuma-id :yhteenveto
-                                    :colspan {:yksikko 4 :yksikkohinta 1}
-                                    :oikealle? #{:yksikko}
-                                    :yksikko "Yksikköhintaiset yhteensä: "})]
-    {:yksikkohintaiset-grid yksikkohintaset-grid
-     :kokonaishintaiset-grid kokonaishintaiset-grid}))
+  [tulos app]
+  {:paikkauksien-kokonaishinta-tyomenetelmittain-grid tulos})
 
+(defn- paivita-kustannukset-gridiin!
+  [kustannukset]
+  (swap! app assoc :paikkauksien-kokonaishinta-tyomenetelmittain-grid kustannukset))
+
+(defn tallenna-kustannukset [rivit]
+  (go (let [vastaus (<! (k/post! :tallenna-paikkauskustannukset
+                                 {::paikkaus/urakka-id (:id @nav/valittu-urakka)
+                                  :rivit rivit
+                                  :hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila))}))]
+        (if (k/virhe? vastaus)
+          (harja.ui.yleiset/virheviesti-sailio "Tallennus epäonnistui")
+          (paivita-kustannukset-gridiin! (:kustannukset vastaus))))))
 
 (extend-protocol tuck/Event
   Nakymaan
