@@ -348,6 +348,7 @@
                        (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value) :koskettu-nimi? true))]
          [kentat/vayla-lomakekentta
           "Y-tunnus *"
+          :placeholder "Muotoa 1234567-1"
           :disabled (not= 0 haetaan)
           :class #{(str "input" (if (or
                                       (false? koskettu-ytunnus?)
@@ -434,6 +435,7 @@
                      #(when (= aliurakoitsija (:id %)) (:ytunnus %))
                      aliurakoitsijat)
                    y-tunnus-puuttuu)
+           :placeholder "Muotoa 1234567-1"
            :on-focus #(when (= y-tunnus-puuttuu (-> % .-target .-value)) (swap! aliurakoitsija-atomi assoc :ytunnus ""))
            :on-change #(swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value))
            :on-blur #(paivita-aliurakoitsija-jos-ytunnusta-muokattu
