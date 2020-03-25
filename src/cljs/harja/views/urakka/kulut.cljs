@@ -60,9 +60,13 @@
         {:tehtavaryhma        nil
          :toimenpideinstanssi nil
          :summa               nil
+         :poistettu           false
          :rivi                (count m)}))
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
+
+(defn- muokattava? [lomake]
+  (not (nil? (:id lomake))))
 
 (defn paivamaaran-valinta
   [{:keys [paivitys-fn erapaiva erapaiva-meta disabled]}]
@@ -161,10 +165,18 @@
                               :disabled          disabled}]]])
 
 (defn useampi-kohdistus
-  [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi summa-meta summa disabled]}]
+  [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi summa-meta summa disabled poistettu muokataan?]}]
   [:div.palstat
    [:div.palsta
-    [:h3 (str "Kohdistus " indeksi)]
+    (apply conj [:h3]
+           (filter #(not (nil? %))
+                   [(when (and muokataan?
+                               poistettu)
+                      {:style {:color "#ff0000"}})
+                    (when (and muokataan?
+                               poistettu) "Poistetaan ")
+                    (str "Kohdistus " (inc indeksi))]))     ; indeksi alkaa nollasta, mutta se ei ole paras tässä
+    [:div (pr-str poistettu) (pr-str muokataan?)]
     [kentat/vayla-lomakekentta
      "Tehtäväryhmä *"
      :tyylit {:kontti #{"kulukentta"}}
@@ -174,11 +186,13 @@
                               :tehtavaryhmat     tehtavaryhmat
                               :tehtavaryhma-meta tehtavaryhma-meta
                               :indeksi           indeksi
-                              :disabled          disabled}]
+                              :disabled          (or poistettu
+                                                     disabled)}]
     [kentat/vayla-lomakekentta
      "Kustannus € *"
      :arvo summa
-     :disabled disabled
+     :disabled (or poistettu
+                   disabled)
      :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
      :on-change #(paivitys-fn
                    [:kohdistukset indeksi :summa]
@@ -189,23 +203,28 @@
                  (-> % .-target .-value tiedot/parsi-summa))]]
    [:div.palsta
     [:h3.kohdistuksen-poisto
-     [napit/poista "" #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
-                                                             (vary-meta lomake update :validius (fn [validius]
-                                                                                                  (dissoc validius
-                                                                                                          [:kohdistukset indeksi :summa]
-                                                                                                          [:kohdistukset indeksi :tehtavaryhma]))))}
-                                    :kohdistukset (r/partial kohdistuksen-poisto indeksi))
+     [napit/poista "" (cond
+                        (and muokataan? poistettu)
+                        #(paivitys-fn [:kohdistukset indeksi :poistettu] false)
+                        (and muokataan? (not poistettu))
+                        #(paivitys-fn [:kohdistukset indeksi :poistettu] true)
+                        :else #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
+                                                                     (vary-meta lomake update :validius (fn [validius]
+                                                                                                          (dissoc validius
+                                                                                                                  [:kohdistukset indeksi :summa]
+                                                                                                                  [:kohdistukset indeksi :tehtavaryhma]))))}
+                                            :kohdistukset (r/partial kohdistuksen-poisto indeksi)))
       {:teksti-nappi? true
        :vayla-tyyli?  true}]]]])
 
 (defn tehtavaryhma-maara
-  [{:keys [tehtavaryhmat kohdistukset-lkm paivitys-fn validius disabled]} indeksi t]
-  (let [{:keys [tehtavaryhma summa]} t
+  [{:keys [tehtavaryhmat kohdistukset-lkm paivitys-fn validius disabled muokataan?]} indeksi t]
+  (let [{:keys [tehtavaryhma summa poistettu]} t
         useampia-kohdistuksia? (> kohdistukset-lkm 1)
         summa-meta (get validius [:kohdistukset indeksi :summa])
         tehtavaryhma-meta (get validius [:kohdistukset indeksi :tehtavaryhma])]
     [:div (merge {} (when useampia-kohdistuksia?
-                      {:class #{"lomake-sisempi-osio"}}))
+                      {:class (apply conj #{"lomake-sisempi-osio"} (when poistettu #{"kohdistus-poistetaan"}))}))
      (if useampia-kohdistuksia?
        [useampi-kohdistus {:paivitys-fn       paivitys-fn
                            :tehtavaryhma      tehtavaryhma
@@ -214,7 +233,9 @@
                            :indeksi           indeksi
                            :summa             summa
                            :summa-meta        summa-meta
-                           :disabled          disabled}]
+                           :disabled          disabled
+                           :poistettu         poistettu
+                           :muokataan?        muokataan?}]
        [yksittainen-kohdistus {:paivitys-fn       paivitys-fn
                                :tehtavaryhma      tehtavaryhma
                                :tehtavaryhmat     tehtavaryhmat
@@ -256,13 +277,14 @@
   (let [kohdistukset-lkm (count kohdistukset)
         resetoi-kohdistukset (fn [kohdistukset]
                                [(first kohdistukset)])]
-    [:div.row
+    [:div.row {:style {:max-width "960px"}}
      [:div.palstat
       [:h3 {:style {:width "100%"}}
        [:span.flex-row "Mihin työhön kulu liittyy?"
         [:input#kulut-kohdistuvat-useammalle.vayla-checkbox
          {:type     :checkbox
           :disabled (not= 0 haetaan)
+          :checked  (> kohdistukset-lkm 1)
           :on-click #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                       lisaa-kohdistus
                                                       resetoi-kohdistukset)
@@ -288,6 +310,7 @@
                                     :kohdistukset-lkm kohdistukset-lkm
                                     :paivitys-fn      paivitys-fn
                                     :disabled         (not= 0 haetaan)
+                                    :muokataan?       (muokattava? lomake)
                                     :validius         (:validius (meta lomake))})
                         kohdistukset))
      (when (> kohdistukset-lkm 1)
@@ -362,8 +385,8 @@
   (let [y-tunnus-puuttuu "Y-tunnus puuttuu"
         aliurakoitsija-atomi (r/atom {:id nil :nimi nil :ytunnus y-tunnus-puuttuu})]
     (fn [{:keys [paivitys-fn haetaan e!]}
-       {{:keys [aliurakoitsija lisatieto] :as _lomake} :lomake
-        aliurakoitsijat                 :aliurakoitsijat}]
+         {{:keys [aliurakoitsija lisatieto] :as _lomake} :lomake
+          aliurakoitsijat                                :aliurakoitsijat}]
       (let [{:keys [ytunnus]} @aliurakoitsija-atomi
             ytunnus-validi? (if (not= ytunnus y-tunnus-puuttuu)
                               (not (nil? (-> ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus)))
@@ -433,48 +456,59 @@
   (let [validius (meta lomake)
         summa-meta (get validius [:kohdistukset 0 :summa])]
     [:div.palsta
-   [kentat/vayla-lomakekentta
-    "Määrä € *"
-    :otsikko-tag :h5
-    :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
-    :disabled (or (> (count kohdistukset) 1)
-                  (not= 0 haetaan))
-    :arvo (or (when (> (count kohdistukset) 1)
-                (gstring/format "%.2f" (reduce
-                                         (fn [a s]
-                                           (+ a (tiedot/parsi-summa (:summa s))))
-                                         0
-                                         kohdistukset)))
-              (get-in lomake [:kohdistukset 0 :summa])
-              0)
-    :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
-    :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
+     [kentat/vayla-lomakekentta
+      "Määrä € *"
+      :otsikko-tag :h5
+      :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
+      :disabled (or (> (count kohdistukset) 1)
+                    (not= 0 haetaan))
+      :arvo (or (when (> (count kohdistukset) 1)
+                  (gstring/format "%.2f" (reduce
+                                           (fn [a s]
+                                             (+ a (tiedot/parsi-summa (:summa s))))
+                                           0
+                                           kohdistukset)))
+                (get-in lomake [:kohdistukset 0 :summa])
+                0)
+      :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
+      :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
+
+(defn- liitteen-naytto
+  [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
+  (loki/log "Liite" _liite)
+  [:div.liiterivi
+   [:div.liitelista
+    [liitteet/liitelinkki {:id     liite-id
+                           :nimi   liite-nimi
+                           :tyyppi liite-tyyppi
+                           :koko   liite-koko} (str liite-nimi)]]
+   [:div.liitepoisto
+    [napit/poista ""
+     #(e! (tiedot/->PoistaLiite liite-id))
+     {:vayla-tyyli?  true
+      :teksti-nappi? true}]]])
 
 (defn- liitteet
   [{:keys [e!]}
-   {{:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _lomake} :lomake}]
+   {{liitteet :liitteet :as _lomake} :lomake}]
+  (loki/log "Liitteet" liitteet (empty? liitteet))
   [:div.palsta
    [kentat/vayla-lomakekentta
-   "Liite"
-   :otsikko-tag :h5
-   :komponentti (fn [_]
-                  [:div.liiterivi
-                   [:div.liitelista
-                    (if-not (nil? liite-id) [liitteet/liitelinkki {:id     liite-id
-                                                                   :nimi   liite-nimi
-                                                                   :tyyppi liite-tyyppi
-                                                                   :koko   liite-koko} (str liite-nimi)]
-                                            "Ei liitteitä")]
-                   (when-not (nil? liite-id) [:div.liitepoisto
-                                              [napit/poista ""
-                                               #(e! (tiedot/->PoistaLiite liite-id))
-                                               {:vayla-tyyli?  true
-                                                :teksti-nappi? true}]])
-                   [:div.liitenappi
-                    [liitteet/lisaa-liite
-                     (-> @tila/yleiset :urakka :id)
-                     {:nayta-lisatyt-liitteet? false
-                      :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])]])
+    "Liite"
+    :otsikko-tag :h5
+    :komponentti (fn [_]
+                   [:div.liitelaatikko
+                    [:div.liiterivit
+                     (if-not (empty? liitteet)
+                       (into [:<>] (mapv
+                                     (r/partial liitteen-naytto e!)
+                                     liitteet))
+                       [:div.liitelista "Ei liitteitä"])]
+                    [:div.liitenappi
+                     [liitteet/lisaa-liite
+                      (-> @tila/yleiset :urakka :id)
+                      {:nayta-lisatyt-liitteet? false
+                       :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])]])
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -488,6 +522,7 @@
              tehtavaryhmat :tehtavaryhmat {haetaan :haetaan} :parametrit}]
       (let [{:keys [nayta]} lomake]
         [:div.ajax-peitto-kontti
+         [debug/debug lomake]
          [:div.palstat
           [:div.palsta
            [:h2 (str (if-not (nil? (:id lomake))
@@ -498,7 +533,7 @@
           {:lomake        lomake
            :tehtavaryhmat tehtavaryhmat}]
          [:div.palstat
-          {:style {:margin-top "56px"
+          {:style {:margin-top    "56px"
                    :margin-bottom "56px"}}
           [laskun-tiedot {:paivitys-fn paivitys-fn
                           :haetaan     haetaan}
@@ -533,6 +568,7 @@
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
+    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! {:keys [taulukko syottomoodi] :as app}]
       [:div#vayla
        (if syottomoodi

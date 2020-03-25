@@ -21,8 +21,10 @@
 (defrecord TallennaKulu [])
 (defrecord PaivitaLomake [polut-ja-arvot optiot])
 (defrecord AvaaLasku [lasku])
+(defrecord NakymastaPoistuttiin [])
 
 (defrecord LiiteLisatty [liite])
+(defrecord LiitteenPoistoOnnistui [tulos parametrit])
 
 (defrecord LuoUusiAliurakoitsija [aliurakoitsija optiot])
 (defrecord PaivitaAliurakoitsija [aliurakoitsija])
@@ -96,6 +98,7 @@
               (partition 2 polut-ja-arvot)))))
 
 (defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
+  (loki/log lasku)
   (let [{aliurakoitsija :suorittaja} lasku]
     (-> lasku
         (dissoc :suorittaja)
@@ -233,16 +236,13 @@
                                                               "Otsikko") arvo)
                                                      (merge {} (when-not (nil? luokka) {:class luokka}))]))
                                                 solut)))
-        flattaus-fn (fn [perustiedot kaikki nykyinen]
+        flattaus-fn (fn [kaikki nykyinen]
                       ;; Yhdistä perustiedot ja kohdistukset
-                      (apply conj kaikki (map #(merge perustiedot (select-keys nykyinen [:kohdistukset]) %) (:kohdistukset nykyinen))))
+                      (apply conj kaikki (map #(merge nykyinen (select-keys nykyinen [:kohdistukset]) %) (:kohdistukset nykyinen))))
         flattaa (fn [flatattavat]
-                  (let [flatatut (reduce (r/partial flattaus-fn (dissoc (first flatattavat) :kohdistukset)) [] flatattavat)]
+                  (let [flatatut (reduce flattaus-fn [] flatattavat)]
                     (sort-by :toimenpideinstanssi flatatut)))
         even? (r/atom true)
-
-
-
         luo-laskun-nro-otsikot (fn [rs [laskun-nro {summa :summa rivit :rivit}]]
                                  (reset! even? true)
                                  (let [flatatut (flattaa rivit)]
@@ -298,6 +298,21 @@
 (defn resetoi-kulut []
   tila/kulut-lomake-default)
 
+(defn- resetoi-kulunakyma []
+  tila/kulut-default)
+
+(defn jarjesta-vuoden-ja-kuukauden-mukaan
+  [pvm1 pvm2]
+  (let [[vvvv1 kk1] (str/split pvm1 #"/")
+        [vvvv2 kk2] (str/split pvm2 #"/")
+        vvvv1 (js/parseInt vvvv1)
+        vvvv2 (js/parseInt vvvv2)
+        kk1 (js/parseInt kk1)
+        kk2 (js/parseInt kk2)]
+    (if (= vvvv1 vvvv2)
+      (> kk1 kk2)
+      (> vvvv1 vvvv2))))
+
 (defn formatoi-tulos [uudet-rivit]
   (let [reduseri (fn [k [avain arvo]]
                    (update k avain
@@ -310,16 +325,7 @@
         nro-mukaan (into {}
                          (sort-by
                            first
-                           (fn [pvm1 pvm2]
-                             (let [[vvvv1 kk1] (str/split pvm1 #"/")
-                                   [vvvv2 kk2] (str/split pvm2 #"/")
-                                   vvvv1 (js/parseInt vvvv1)
-                                   vvvv2 (js/parseInt vvvv2)
-                                   kk1 (js/parseInt kk1)
-                                   kk2 (js/parseInt kk2)]
-                               (if (= vvvv1 vvvv2)
-                                 (> kk1 kk2)
-                                 (> vvvv1 vvvv2))))
+                           jarjesta-vuoden-ja-kuukauden-mukaan
                            (map (fn [[paivamaara rivit-ja-summa]]
                                   [paivamaara (assoc rivit-ja-summa :rivit (reduce reduseri {}
                                                                                    (group-by #(or (:laskun-numero %)
@@ -328,9 +334,37 @@
     nro-mukaan))
 
 (extend-protocol tuck/Event
+  NakymastaPoistuttiin
+  (process-event [_ app]
+    (resetoi-kulunakyma))
+  LiitteenPoistoOnnistui
+  (process-event [{tulos :tulos {id :liite-id} :parametrit} app]
+    (loki/log "Poistettu" id )
+    (-> app
+        (update-in
+          [:lomake :liitteet]
+          (fn [liitteet]
+            (loki/log liitteet)
+            (filter #(not (= id (:liite-id %))) liitteet)))
+        (update-in [:parametrit :haetaan] dec)))
   PoistaLiite
-  (process-event [{id :id} app]
-    (update app :lomake dissoc :liite-id :liite-nimi :liite-tyyppi :liite-oid :liite-koko))
+  (process-event [{id :id} {:keys [lomake] :as app}]
+    (if (nil? (:id lomake))
+      (update-in app
+                 [:lomake :liitteet]
+                 (fn [liitteet]
+                   (filter #(not (= id (:liite-id %))) liitteet)))
+      (do
+        (loki/log "id" id)
+        (tuck-apurit/post! :poista-laskun-liite
+                           {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                            :lasku-id  (:id lomake)
+                            :liite-id  id}
+                           {:onnistui            ->LiitteenPoistoOnnistui
+                            :onnistui-parametrit [{:liite-id id}]
+                            :epaonnistui         ->KutsuEpaonnistui
+                            :paasta-virhe-lapi?  true})
+        (update-in app [:parametrit :haetaan] inc))))
   LataaLiite
   (process-event [{id :id} app]
     app)
@@ -338,13 +372,13 @@
   ;:id,:lahde,:tyyppi, :koko 65528
   LiiteLisatty
   (process-event [{{:keys [kuvaus nimi id tyyppi koko]} :liite} app]
-    (update app
-            :lomake
-            assoc
-            :liite-id id
-            :liite-nimi nimi
-            :liite-tyyppi tyyppi
-            :liite-koko koko))
+    (update-in app
+               [:lomake :liitteet]
+               conj
+               {:liite-id     id
+                :liite-nimi   nimi
+                :liite-tyyppi tyyppi
+                :liite-koko   koko}))
 
   ;; SUCCESS
 
@@ -374,6 +408,7 @@
         (update-in [:parametrit :haetaan] dec)))
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
+    (loki/log (pr-str "TULOS") tulos)
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
@@ -507,13 +542,13 @@
     (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                         :aliurakoitsijat
+    [_ {aliurakoitsijat                  :aliurakoitsijat
         {:keys [kohdistukset
                 koontilaskun-kuukausi
-                aliurakoitsija
+                aliurakoitsija liitteet
                 laskun-numero lisatieto
-                erapaiva laskun-id] :as lomake} :lomake
-        maksuerat                               :maksuerat :as app}]
+                erapaiva id] :as lomake} :lomake
+        maksuerat                        :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
@@ -529,7 +564,7 @@
                            {:urakka-id     urakka
                             :laskuerittely {:kohdistukset          kohdistukset
                                             :erapaiva              erapaiva
-                                            :laskun-id             (when-not (nil? laskun-id) laskun-id)
+                                            :id                    (when-not (nil? id) id)
                                             :urakka                urakka
                                             :suorittaja-nimi       (some
                                                                      #(when (= aliurakoitsija (:id %))
@@ -542,14 +577,18 @@
                                                                        laskun-numero))
                                             :lisatieto             lisatieto
                                             :tyyppi                tyyppi
+                                            :liitteet              liitteet
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
-                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :laskun-id :as tulos}]
+                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :id :as tulos}]
+                                                                        (loki/log (pr-str tulos))
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
+                                                                                                 (loki/log (pr-str kulut))
                                                                                                  (as-> kulut ks
-                                                                                                       (filter (fn [{:keys [laskun-id] :as _kulu}]
-                                                                                                                 (not= laskun-id uusi-id)) ks)
+                                                                                                       (filter (fn [{:keys [id] :as _kulu}]
+                                                                                                                 (loki/log uusi-id id _kulu)
+                                                                                                                 (not= id uusi-id)) ks)
                                                                                                        (conj ks tulos))))
                                                                               (assoc a
                                                                                 :taulukko (p/paivita-taulukko!
@@ -558,9 +597,9 @@
                                                                                 :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))
-      (-> app
-          (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
-          (update-in [:parametrit :haetaan] inc))))
+      (cond-> app
+              true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
+              (true? validi?) (update-in [:parametrit :haetaan] inc))))
 
   ;; FORMITOIMINNOT
 

@@ -62,8 +62,7 @@
                       :liite_oid    nil}]})
 
 (def uusi-kohdistus
-  {:kohdistus-id        nil
-   :rivi                3
+  {:rivi                3
    :summa               987
    :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
    :suorittaja-id       1
@@ -144,19 +143,19 @@
                                                             :loppupvm  "2020-09-30"})
         laskuerittely (kutsu-http-palvelua :lasku +kayttaja-jvh+
                                            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                            :laskun-id 1})
+                                            :id 1})
         laskut-urakan-vastaavalle (kutsu-http-palvelua :laskut (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                                                        {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                                         :alkupvm   "2019-10-01"
                                                         :loppupvm  "2020-09-30"})
         laskuerittely-urakan-vastaavalle (kutsu-http-palvelua :lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                                                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                               :laskun-id 1})]
+                                                               :id 1})]
 
     (is (= laskut laskut-urakan-vastaavalle) "Urakan vastuuhenkilö saa samat tiedot laskuista kuin järjestelmävalvoja.")
     (is (= laskuerittely laskuerittely-urakan-vastaavalle) "Urakan vastuuhenkilö saa samat tiedot laskusta kuin järjestelmävalvoja.")
-    (is (count (distinct (map :laskun-id laskuerittely))) "Urakan laskujen haku palauttaa kolme laskua.")
-    (is (apply = (map :laskun-id laskuerittely)) "Laskuerittelyssä on vain yhden laskun tietoja.")
+    (is (count (distinct (map :id laskuerittely))) "Urakan laskujen haku palauttaa kolme laskua.")
+    (is (apply = (map :id laskuerittely)) "Laskuerittelyssä on vain yhden laskun tietoja.")
     (is (count (map :kohdistus-id laskuerittely)) "Laskun erittely sisältää kolme kohdistusta.")
     (is (= (:suorittaja laskuerittely) 1) "Aliurakoitsijan id palautuu.")
     (is (= (:kokonaissumma laskuerittely) 666.66M) "Kokonaissumma palautuu.")
@@ -168,34 +167,37 @@
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :laskuerittely uusi-lasku})
-        tallennettu-id (:laskun-id tallennettu-lasku)
+        tallennettu-id (:id tallennettu-lasku)
         paivitetty-lasku
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely (assoc uusi-lasku :kokonaissumma 9876.54 :laskun-id tallennettu-id)})
+                              :laskuerittely (assoc tallennettu-lasku :kokonaissumma 9876.54 :id tallennettu-id)})
         paivitetty-kohdistus
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely (assoc laskun-paivitys :laskun-id tallennettu-id)})
+                              :laskuerittely (assoc laskun-paivitys :id tallennettu-id)})
         lisatty-kohdistus
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely (assoc uusi-lasku
-                                               :laskun-id tallennettu-id
-                                               :kohdistukset (merge (uusi-lasku :kohdistukset)
+                              :laskuerittely (assoc paivitetty-lasku
+                                               :id tallennettu-id
+                                               :kohdistukset (merge (paivitetty-lasku :kohdistukset)
                                                                     uusi-kohdistus))})
         poistettu-kohdistus
         (kutsu-http-palvelua :poista-laskurivi (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id           (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskun-id tallennettu-id
-                              :laskuerittelyn-rivi 3})
+                              :id tallennettu-id
+                              :kohdistuksen-id (-> lisatty-kohdistus
+                                                   :kohdistukset
+                                                   first
+                                                   :kohdistus-id)})
         poistettu-lasku
         (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskun-id tallennettu-id})]
+                              :id tallennettu-id})]
 
     ;; Tallennus
-    (is (not (nil? (:laskun-id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")
+    (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")
     (is (= (count (:kohdistukset tallennettu-lasku)) 2) "Kohdistuksia tallentui kaksi (tallennettu-lasku).")
 
     ;; Päivitys: arvon muuttaminen
