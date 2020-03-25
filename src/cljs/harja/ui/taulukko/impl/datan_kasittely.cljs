@@ -381,7 +381,7 @@
   (-equiv [this other] (and (= (type this) (type other)) (identical? this other)))
   ratom/IDisposable
   (dispose! [this]
-    (remove-watch nimi data-atom)
+    (remove-watch data-atom nimi)
     (set! muuttuvien-seurantojen-polut nil)
     (set! seurannat-lisaaja nil)
     (set! kuuntelija-lisaaja nil)
@@ -418,8 +418,8 @@
   (get-in kasittelija [:kuuntelijat rajapinnan-nimi :r]))
 
 (defn poista-seurannat! [kasittelija]
-  (doseq [[_ {seurannan-lopetus :seurannan-lopetus!}] (get kasittelija :seurannat)]
-    (seurannan-lopetus)))
+  (doseq [[seurannan-nimi {seurannan-lopetus :seurannan-lopetus!}] (get kasittelija :seurannat)]
+    (poista-seuranta! kasittelija seurannan-nimi nil)))
 
 (defn triggeroi-seuranta! [kasittelija seurannan-nimi]
   (binding [*muutetaan-seurattava-arvo?* true]

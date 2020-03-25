@@ -69,6 +69,20 @@
   (when paivamaara
     (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))
 
+(defn gridien-siivous []
+  (doseq [grid-polku [[:gridit :suunnitelmien-tila :grid]
+                      [:gridit :suunnittellut-hankinnat :grid]
+                      [:gridit :laskutukseen-perustuvat-hankinnat :grid]
+                      [:gridit :rahavaraukset :grid]
+                      [:gridit :erillishankinnat :grid]
+                      [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid]
+                      [:gridit :johto-ja-hallintokorvaukset :grid]
+                      [:gridit :toimistokulut :grid]
+                      [:gridit :hoidonjohtopalkkio :grid]
+                      [:gridit :tilaajan-varaukset :grid]]]
+    (grid/siivoa-grid! (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku)))
+  (grid/poista-data-kasittelija! tila/suunnittelu-kustannussuunnitelma))
+
 (defn aika-tekstilla-fmt [paivamaara]
   (when paivamaara
     (let [teksti (aika-fmt paivamaara)
@@ -1762,6 +1776,7 @@
                                              (merge polut
                                                     {(keyword "piillota-itsetaytettyja-riveja-" nimi) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
                                                                                                        :toiminto! (fn [g _ maksukausi]
+                                                                                                                    (println "maksukausi - " nimi ": " maksukausi)
                                                                                                                     (let [naytettavat-kuukaudet (into #{} (t/maksukauden-kuukaudet maksukausi))]
                                                                                                                       (doseq [rivi (grid/hae-grid (grid/get-in-grid (grid/etsi-osa g nimi) [1]) :lapset)]
                                                                                                                         (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
@@ -1784,15 +1799,12 @@
                                                                                                          (do
                                                                                                            (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
                                                                                                                                    true)
-                                                                                                           (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true)
-                                                                                                           #_(disable-osa-indexissa! yhteenvetorivi 2 true)
-                                                                                                           #_(disable-osa-indexissa! yhteenvetorivi 4 true))
+                                                                                                           (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true))
                                                                                                          (do (rividisable! g
                                                                                                                            (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
                                                                                                                                    jarjestysnumero))
                                                                                                                            kuukausitasolla?)
-                                                                                                             (disable-osa-indexissa! yhteenvetorivi #{2 4} false)
-                                                                                                             #_(disable-osa-indexissa! yhteenvetorivi 4 false)))))}})))
+                                                                                                             (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
                                          {}
                                          (range 1 (inc t/jh-korvausten-omiariveja-lkm)))))))
 
@@ -2505,7 +2517,6 @@
                       (e! (t/->FiltereidenAloitusarvot))
                       (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))
-                      (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
                       (go (let [g-s (suunnitelmien-tila-grid)
                                 g-sh (suunnittellut-hankinnat-grid)
                                 g-hlp (hankinnat-laskutukseen-perustuen-grid)
@@ -2530,7 +2541,9 @@
                             (grid/triggeroi-tapahtuma! g-hjp :hoidonjohtopalkkio-disablerivit)
                             (grid/triggeroi-tapahtuma! g-jhl :johto-ja-hallintokorvaukset-disablerivit)
                             (grid/triggeroi-tapahtuma! g-tv :tilaajan-varaukset-disablerivit)))
-                      (e! (t/->HaeKustannussuunnitelma))))
+                      (e! (t/->HaeKustannussuunnitelma))
+                      (tila/lisaa-urakan-vaihto-trigger! gridien-siivous)))
+    (komp/ulos gridien-siivous)
     (fn [e*! {:keys [suodattimet] :as app}]
       (set! e! e*!)
       [:div#kustannussuunnitelma
