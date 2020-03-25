@@ -15,8 +15,7 @@
                                             "oam_user_email" "testi.kayttaja@example.com"
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
-
-
+ 
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
