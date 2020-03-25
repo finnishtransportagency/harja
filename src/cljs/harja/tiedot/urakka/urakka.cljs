@@ -13,11 +13,6 @@
                                                                                          :maksetaan :molemmat
                                                                                          :kopioidaan-tuleville-vuosille? true
                                                                                          :laskutukseen-perustuen-valinta #{}}}
-                                                       :suodattimet {:hankinnat {:toimenpide :talvihoito
-                                                                                 :maksetaan :molemmat
-                                                                                 :kopioidaan-tuleville-vuosille? true
-                                                                                 :laskutukseen-perustuen-valinta #{}}
-                                                                     :kopioidaan-tuleville-vuosille? true}
                                                        :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}
                                                        :kaskytyskanava (chan)}})
 

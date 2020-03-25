@@ -33,14 +33,6 @@
                 [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9]
                 [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10]))
 
-(defprotocol CollectionKasittely
-  (lisaa-kokoelman-kasittely [this f] "Kutsuu annettua funktiota arvolle, jos coll? palauttaa true arvolle")
-  ;; Nämä eroaa Asia protokollasta siten, että Asia:n funktioiden tulisi palauttaa relevantti arvo kokoelmasta
-  ;; käyttäen kokoelman käsittely funktiota. Nämä alla olevat taasen koskee koko kokoelmaa.
-  (kokoelma [this] "Palauttaa kokoelman")
-  (aseta-kokoelma [this coll] "Asettaa uuden kokoelman")
-  (paivita-kokoelma [this f] "Päivittaa kokoelmaa funktiolla"))
-
 (defprotocol Jana
   (piirra-jana [this]
                "Tämän funktion pitäisi luoda html elementti, joka edustaa joko riviä tai saraketta.
@@ -87,4 +79,3 @@
 (defprotocol Fmt
   (lisaa-fmt [this f] "Lisää asiaan formatointi funktion")
   (lisaa-fmt-aktiiviselle [this f] "Jos osa on aktiivinen, minkälainen formatointi?"))
-

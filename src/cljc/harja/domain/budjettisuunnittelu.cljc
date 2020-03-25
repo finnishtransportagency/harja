@@ -27,12 +27,16 @@
     "vuosi" ::smallint-v}
    #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["johto_ja_hallintokorvaus_toimenkuva" ::johto-ja-hallintokorvaus-toimenkuva]
+  ["johto_ja_hallintokorvaus_ennen_urakkaa" ::johto-ja-hallintokorvaus-ennen-urakkaa
+   #?(:clj {::kk-v (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["johto_ja_hallintokorvaus" ::johto-ja-hallintokorvaus
    {::maksukausi (specql.transform/transform (specql.transform/to-keyword))
     ::toimenkuva (specql.rel/has-one ::toimenkuva-id
                                      ::johto-ja-hallintokorvaus-toimenkuva
-                                     ::id)}
+                                     ::id)
+    ::ennen-urakkaa (specql.rel/has-one ::ennen-urakkaa-id
+                                        ::johto-ja-hallintokorvaus-ennen-urakkaa
+                                        ::id)}
    #?(:clj {::tunnit (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
-            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
-            ::osa-kuukaudesta (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
+            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
 

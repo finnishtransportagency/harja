@@ -506,10 +506,6 @@
   [:img {:src "open-iconic/svg/caret-right.svg" :alt "caret-right"}])
 (defn oi-caret-top []
   [:img {:src "open-iconic/svg/caret-top.svg" :alt "caret-top"}])
-(defn oi-x []
-  [:img {:src "open-iconic/svg/x.svg" :alt "x"}])
-(defn oi-trash []
-  [:img {:src "open-iconic/svg/trash.svg" :alt "trash"}])
 
 ;; Livin ikonit
 

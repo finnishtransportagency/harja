@@ -36,7 +36,7 @@
   (swap! modal-sisalto assoc :nakyvissa? false))
 
 (defn- modal-container* [optiot sisalto]
-  (let [{:keys [otsikko otsikko-tyyli footer nakyvissa? luokka leveys sulje-fn content-tyyli body-tyyli]} optiot
+  (let [{:keys [otsikko otsikko-tyyli footer nakyvissa? luokka leveys sulje-fn]} optiot
         sulje!  #(do
                   ;; estää file-open dialogin poistamisen
                   #_(.preventDefault %)
@@ -56,17 +56,16 @@
                                           ;; estää file-open dialogin poistamisen
                                           #_(.preventDefault %)
                                           ;; syödään eventti että modalin sisällön click ei sulje
-                                          (.stopPropagation %))
-                             :style content-tyyli}
+                                          (.stopPropagation %))}
          (when otsikko
            [:div.modal-header
             [:button.close {:on-click sulje!
                             :type "button" :data-dismiss "modal" :aria-label "Sulje"}
              [:span {:aria-hidden "true"} "×"]]
-            [:h2.modal-title {:class (when (= otsikko-tyyli :virhe)
+            [:h4.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
              otsikko]])
-         [:div.modal-body {:style body-tyyli} sisalto]
+         [:div.modal-body sisalto]
          (when footer [:div.modal-footer footer])]]]
 
       ^{:key "ei-modaalia"}
@@ -78,7 +77,7 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko otsikko-tyyli footer luokka leveys content-tyyli body-tyyli]} sisalto]
+(defn nayta! [{:keys [sulje otsikko otsikko-tyyli footer luokka leveys]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikko-tyyli otsikko-tyyli
                          :footer footer
@@ -86,9 +85,7 @@
                          :luokka luokka
                          :sulje sulje
                          :nakyvissa? true
-                         :leveys leveys
-                         :content-tyyli content-tyyli
-                         :body-tyyli body-tyyli}))
+                         :leveys leveys}))
 
 (defn aloita-urln-kuuntelu []
   (t/kuuntele! :url-muuttui

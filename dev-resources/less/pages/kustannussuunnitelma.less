@@ -78,9 +78,6 @@
   position: relative;
   left: -(@valilehti-sivu-padding * 2);
   width: calc(~"100% + " @valilehti-sivu-padding ~" * 4");
-  &.sininen {
-    border-bottom-color: @blue-darker;
-  }
 }
 
 .hintalaskuri {
@@ -227,9 +224,6 @@
 }
 
 .suunnitelma-ikonien-varit {
-  .harmaa-teksti span {
-    color: @gray125;
-  }
   .glyphicon-ok {
     color: @green;
   }
@@ -256,17 +250,67 @@
   padding-top: 10px;
 }
 
-#johto-ja-hallintokorvaus-laskulla-taulukko {
-  z-index: 2;
+#jh-toimenkuva-laskulla {
+  padding-top: 10px;
+  .jana {
+    display: flex;
+    .osa:nth-child(1) {
+      flex: 4 4 0;
+    }
+    .osa:nth-child(2) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(3) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(4) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(5) {
+      flex: 1 1 0;
+    }
+  }
 }
 
-#johto-ja-hallintokorvaus-yhteenveto-taulukko {
-  z-index: 1;
+#jh-toimenkuva-yhteenveto {
+  padding-top: 10px;
+  .jana {
+    display: flex;
+    .osa:nth-child(1) {
+      flex: 6 6 0;
+    }
+    .osa:nth-child(2) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(3) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(4) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(5) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(6) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(7) {
+      flex: 2 2 0;
+    }
+  }
 }
 
-.pudotusvalikko-filter {
+.maksu-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  > div {
     display: flex;
     flex-direction: column;
+    &:nth-child(1) {
+      flex: 1;
+    }
+  }
 }
 
 #suunnitelmien-taulukko {
@@ -280,7 +324,6 @@
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: flex-end;
   > * {
     &:nth-child(1) {
       max-width: 400px;
@@ -316,8 +359,4 @@
       .teksti();
     }
   }
-}
-
-.viimeinen-taulukko {
-  padding-bottom: 160px;
 }
