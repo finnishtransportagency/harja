@@ -16,7 +16,6 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
-
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
