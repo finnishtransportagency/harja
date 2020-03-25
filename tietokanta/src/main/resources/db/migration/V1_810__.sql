@@ -30,24 +30,27 @@ DO $$
             i INTEGER;
             tunnit_ NUMERIC;
             puolikas_tunnit_ NUMERIC;
-BEGIN
-    FOR jh IN (SELECT *
-              FROM johto_ja_hallintokorvaus
-              WHERE "ennen-urakkaa" IS TRUE)
-    LOOP
-        tunnit_ = (SELECT round(jh.tunnit / 4.5, 2));
-        puolikas_tunnit_ = (SELECT round(tunnit_, 2));
+    BEGIN
+        FOR jh IN (SELECT *
+                   FROM johto_ja_hallintokorvaus
+                   WHERE "ennen-urakkaa" IS TRUE)
+            LOOP
+                tunnit_ = (SELECT round(jh.tunnit / 4.5, 2));
+                puolikas_tunnit_ = (SELECT round(tunnit_ / 2, 2));
 
-        FOR i IN 1..3
-        LOOP
-          INSERT INTO johto_ja_hallintokorvaus ("urakka-id", "toimenkuva-id", tunnit, tuntipalkka, luotu, luoja, muokattu, muokkaaja, vuosi, kuukausi, "ennen-urakkaa")
-          VALUES (jh."urakka-id", jh."toimenkuva-id", tunnit_, jh."tuntipalkka", jh.luotu, jh.luoja, now(), (SELECT id FROM kayttaja WHERE kayttajanimi='Integraatio'),
-                  jh.vuosi, jh.kuukausi, TRUE);
-        END LOOP;
-        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", "toimenkuva-id", tunnit, tuntipalkka, luotu, luoja, muokattu, muokkaaja, vuosi, kuukausi, "ennen-urakkaa", "osa-kuukaudesta")
-        VALUES (jh."urakka-id", jh."toimenkuva-id", puolikas_tunnit_, jh."tuntipalkka", jh.luotu, jh.luoja, now(), (SELECT id FROM kayttaja WHERE kayttajanimi='Integraatio'),
-                jh.vuosi, jh.kuukausi, TRUE, 0.5);
-    END LOOP;
-END $$;
+                FOR i IN 1..3
+                    LOOP
+                        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", "toimenkuva-id", tunnit, tuntipalkka, luotu, luoja, muokattu, muokkaaja, vuosi, kuukausi, "ennen-urakkaa")
+                        VALUES (jh."urakka-id", jh."toimenkuva-id", tunnit_, jh."tuntipalkka", jh.luotu, jh.luoja, now(), (SELECT id FROM kayttaja WHERE kayttajanimi='Integraatio'),
+                                jh.vuosi, jh.kuukausi, TRUE);
+                    END LOOP;
+                INSERT INTO johto_ja_hallintokorvaus ("urakka-id", "toimenkuva-id", tunnit, tuntipalkka, luotu, luoja, muokattu, muokkaaja, vuosi, kuukausi, "ennen-urakkaa", "osa-kuukaudesta")
+                VALUES (jh."urakka-id", jh."toimenkuva-id", puolikas_tunnit_, jh."tuntipalkka", jh.luotu, jh.luoja, now(), (SELECT id FROM kayttaja WHERE kayttajanimi='Integraatio'),
+                        jh.vuosi, jh.kuukausi, TRUE, 0.5);
+                UPDATE johto_ja_hallintokorvaus
+                SET tunnit = tunnit_
+                WHERE id = jh.id;
+            END LOOP;
+    END $$;
 
 DROP TABLE johto_ja_hallintokorvaus_ennen_urakkaa;
