@@ -138,7 +138,7 @@
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
                                 :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil
                                 :tyomenetelmat nil :tyyppi "kokonaishintainen"}
@@ -204,7 +204,7 @@
 (defn tallenna-paikkauskustannukset!
   [db user {:keys [hakuparametrit rivit] :as tiedot}]
   (assert (some? tiedot) "Tallenna-paikkauskustannukset tietoja puuttuu.")
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (jdbc/with-db-transaction [db db]
                             (doseq [rivi rivit]
                               (if (pos-int? (:paikkaustoteuma-id rivi))
