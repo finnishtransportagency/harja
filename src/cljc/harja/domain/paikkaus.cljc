@@ -106,9 +106,8 @@
     ::tyyppi
     ::selite
     ::hinta
-    ::yksikko
-    ::yksikkohinta
-    ::maara})
+    ::tyomenetelma
+    ::valmistumispvm})
 
 (s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
                               :date  #(instance? #?(:cljs js/Date
