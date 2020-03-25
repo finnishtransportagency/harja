@@ -33,6 +33,16 @@ Cypress.Commands.add("taulukonRiviTekstilla", { prevSubject: 'element'}, ($taulu
 Cypress.Commands.add("rivinSarake", { prevSubject: 'element'}, ($rivi, index) => {
     return f.rivinSarakeSync($rivi, index);
 });
+Cypress.Commands.add("taulukonOsa", { prevSubject: 'element'}, ($taulukko, index) => {
+    return f.taulukonOsaSync($taulukko, index);
+});
+Cypress.Commands.add("taulukonOsaPolussa", { prevSubject: 'element'}, ($taulukko, polku) => {
+    let $sisaOsa = $taulukko;
+    polku.forEach((polunOsa) => {
+        $sisaOsa = f.taulukonOsaSync($sisaOsa, polunOsa);
+    });
+    return $sisaOsa;
+});
 
 Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element'}, ($taulukko, otsikoidenArvot) => {
     cy.wrap($taulukko).find('[data-cy=otsikko-rivi]').then(($otsikkoRivi) => {
@@ -44,7 +54,7 @@ Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element'}, ($taulukko, ots
     });
 });
 
-Cypress.Commands.add("testaaSarakkeenArvot", { prevSubject: 'element'}, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot) => {
+Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element'}, ($taulukko, polkuTaulukkoon, polkuSarakkeeseen, arvot) => {
     cy.wrap($taulukko.clone()).then(($taulukko) => {
         let $sisaTaulukko = $taulukko;
         polkuTaulukkoon.forEach((polunOsa) => {
@@ -76,7 +86,7 @@ Cypress.Commands.add("gridOtsikot", { prevSubject: 'element'}, (grid) => {
         grid: grid,
         otsikot: otsikotIndekseineen
     }
-})
+});
 
 Cypress.Commands.add("terminaaliKomento", () => {
     cy.exec('/usr/local/bin/docker ps', {failOnNonZeroExit: false}).then((tulos) => {
@@ -94,44 +104,44 @@ Cypress.Commands.add("terminaaliKomento", () => {
             return terminaaliKomento
         })
     })
-})
+});
 
 Cypress.Commands.add("valinnatValitse", { prevSubject: 'element'}, ($valinnat, parametrit) => {
-    cy.wrap($valinnat).find('button').click()
+    cy.wrap($valinnat).find('button').click();
     // Pudotusvalikoissa pitää tarkistaa ensin, että onhan ne vaihtoehdot näkyvillä. Tämä siksi, että valikon
     // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,
     // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
     // poistaa DOM:ista.
-    cy.wrap($valinnat).should('have.class', 'open')
-    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('be.visible').click({force: true})
-})
+    cy.wrap($valinnat).should('have.class', 'open');
+    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('be.visible').click({force: true});
+});
 
 Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) => {
-    cy.wrap($pvm).clear()
-    cy.wrap($pvm).focus()
-    cy.wrap($pvm.parent()).find('table').should('exist')
+    cy.wrap($pvm).clear();
+    cy.wrap($pvm).focus();
+    cy.wrap($pvm.parent()).find('table').should('exist');
     cy.wrap($pvm).type(parametrit.pvm).then(($pvmUudestaan) => {
         // Joskus Cypress ei vain kirjoita koko tekstiä kenttään
         if ($pvmUudestaan.val() !== parametrit.pvm) {
             cy.wrap($pvmUudestaan).clear().type(parametrit.pvm)
         }
-    })
-    cy.wrap(Cypress.$('#app')).click('topRight', {force: true})
+    });
+    cy.wrap(Cypress.$('#app')).click('topRight', {force: true});
     cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
         return $pvm
     })
-})
+});
 
 Cypress.Commands.add("pvmTyhjenna", {prevSubject: 'element'}, ($pvm) => {
-    cy.wrap($pvm).clear()
-    cy.wrap(Cypress.$('#app')).click('topRight', {force: true})
+    cy.wrap($pvm).clear();
+    cy.wrap(Cypress.$('#app')).click('topRight', {force: true});
     cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
         return $pvm
     })
-})
+});
 
 Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
-    let vapaaYHANumero
+    let vapaaYHANumero;
     cy.terminaaliKomento().then((terminaaliKomento) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c "SELECT yha_kohdenumero FROM yllapitokohde;"').then((harjadbTulos) => {
             let yhaKohdenumerot = harjadbTulos.stdout.split('\n').map((tulos) => {
@@ -153,7 +163,7 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
                     vapaatNumerot.push(i);
             vapaaYHANumero = vapaatNumerot[Math.floor(Math.random() * vapaatNumerot.length)];
         })
-    })
+    });
     cy.terminaaliKomento().then((terminaaliKomento) => {
         let lisaaPallystyskohdeKomento = '"INSERT INTO yllapitokohde ' +
             '(yllapitoluokka, urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,' +
@@ -204,4 +214,4 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + lisaaPaallystyskohteenAlikohdeKomento)
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + lisaaPaallystyskohteenAikataulu)
     })
-})
+});

@@ -14,7 +14,7 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './fns'
+import './taulukkoFns'
 import './commands'
 
 // Alternatively you can use CommonJS syntax:

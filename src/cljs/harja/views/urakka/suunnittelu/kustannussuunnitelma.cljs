@@ -2107,12 +2107,12 @@
      [:div.hintalaskurisarake-ala ala]]]))
 
 (defn hintalaskuri
-  [{:keys [otsikko selite hinnat]} {kuluva-hoitokauden-numero :hoitokauden-numero}]
+  [{:keys [otsikko selite hinnat data-cy]} {kuluva-hoitokauden-numero :hoitokauden-numero}]
   (if (some #(or (nil? (:summa %))
                  (js/isNaN (:summa %)))
             hinnat)
     [:div ""]
-    [:div.hintalaskuri
+    [:div.hintalaskuri {:data-cy data-cy}
      (when otsikko
        [:h5 otsikko])
      (when selite
@@ -2131,7 +2131,7 @@
 
 (defn indeksilaskuri
   ([hinnat indeksit] [indeksilaskuri hinnat indeksit nil])
-  ([hinnat indeksit dom-id]
+  ([hinnat indeksit {:keys [dom-id data-cy]}]
    (let [hinnat (vec (map-indexed (fn [index {:keys [summa]}]
                                     (let [hoitokauden-numero (inc index)
                                           {:keys [vuosi]} (get indeksit index)
@@ -2140,7 +2140,8 @@
                                        :summa indeksikorjattu-summa
                                        :hoitokauden-numero hoitokauden-numero}))
                                   hinnat))]
-     [:div.hintalaskuri.indeksilaskuri {:id dom-id}
+     [:div.hintalaskuri.indeksilaskuri {:id dom-id
+                                        :data-cy data-cy}
       [:span "Indeksikorjattu"]
       [:div.hintalaskuri-vuodet
        (for [{:keys [vuosi summa hoitokauden-numero]} hinnat]
@@ -2171,20 +2172,16 @@
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
                     :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                    :hinnat (update tavoitehinnat 0 assoc :teksti "1. vuosi*")}
+                    :hinnat (update tavoitehinnat 0 assoc :teksti "1. vuosi*")
+                    :data-cy "tavoitehinnan-hintalaskuri"}
       kuluva-hoitokausi]
-     [indeksilaskuri tavoitehinnat indeksit "tavoitehinnan-indeksikorjaus"]
+     [indeksilaskuri tavoitehinnat indeksit {:dom-id "tavoitehinnan-indeksikorjaus"
+                                             :data-cy "tavoitehinnan-indeksilaskuri"}]
      [hintalaskuri {:otsikko "Kattohinta"
                     :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
                     :hinnat kattohinnat}
       kuluva-hoitokausi]
      [indeksilaskuri kattohinnat indeksit]]))
-
-#_(defn suunnitelman-selitteet [this luokat _]
-  [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
-   [:span [ikonit/ok] "Kaikki kentät täytetty"]
-   [:span [ikonit/livicon-question] "Keskeneräinen"]
-   [:span [ikonit/remove] "Suunnitelma puuttuu"]])
 
 (defn suunnitelmien-tila
   [suunnitelmien-tila-grid kantahaku-valmis?]
@@ -2233,10 +2230,10 @@
                                          :vayla-tyyli? true}
             (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
           [maksetaan-filter (r/partial valitse-kausi suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
-         [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
+         [:input#kopioi-hankinnat-tuleville-hoitovuosille.vayla-checkbox
           {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
            :on-change vaihda-fn}]
-         [:label {:for "kopioi-tuleville-hoitovuosille"}
+         [:label {:for "kopioi-hankinnat-tuleville-hoitovuosille"}
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
 
 (defn yleis-suodatin [_]
