@@ -20,7 +20,7 @@
                                    :palvelukutsu :hae-urakan-paikkauskohteet
                                    :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
                         :kustannukset {:itemit-avain :kustannukset
-                                       :aikavali-otsikko "Kirjausaika"
+                                       :aikavali-otsikko "Valmistumispäivämäärä"
                                        :voi-valita-trn-kartalta? false
                                        :palvelukutsu :hae-paikkausurakan-kustannukset
                                        :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
