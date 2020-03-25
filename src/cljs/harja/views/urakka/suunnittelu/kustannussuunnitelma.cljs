@@ -444,7 +444,7 @@
                                                                                                      :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                                                                     :parametrit {:size 2}
                                                                                     :luokat #{"input-default"}
-                                                                                    :fmt summa-formatointi-uusi
+                                                                                    :fmt summa-formatointi
                                                                                     :fmt-aktiivinen summa-formatointi-aktiivinen}
                                                                                    {:tyyppi :teksti
                                                                                     :luokat #{"table-default"}

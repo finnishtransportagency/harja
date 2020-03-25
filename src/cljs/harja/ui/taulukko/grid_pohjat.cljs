@@ -65,7 +65,8 @@
                  {:luokka (str "kopioi-nappi button-primary-default "
                                (when-not (:nappi-nakyvilla? this)
                                  "piillotettu"))
-                  :data-attributes {:data-kopioi-allaoleviin true}
+                  :data-attributes {:data-kopioi-allaoleviin true
+                                    :data-cy "kopioi-allaoleviin"}
                   :tabindex 0}]
                 [grid/piirra (assoc input-osa ::tama-komponentti this
                                     :parametrit (:parametrit this)
