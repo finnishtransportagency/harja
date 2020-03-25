@@ -140,22 +140,24 @@
                                                                :rivi                0}]
                                       :aliurakoitsija        nil
                                       :koontilaskun-kuukausi nil
-                                      ;         :viite                 nil
                                       :laskun-numero         nil
                                       :lisatieto             nil
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil
+                                      :liitteet              []
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
 
-(def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
-                                        :taulukko    nil
-                                        :lomake      kulut-lomake-default
-                                        :kulut       []
-                                        :syottomoodi false}})
+(def kulut-default {:parametrit  {:haetaan 0}
+                    :taulukko    nil
+                    :lomake      kulut-lomake-default
+                    :kulut       []
+                    :syottomoodi false})
+
+(def laskutus-default {:kohdistetut-kulut kulut-default})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
-                     :laskutus    kulut-default
+                     :laskutus    laskutus-default
                      :suunnittelu suunnittelu-default-arvot}))
 
 

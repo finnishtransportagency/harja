@@ -298,6 +298,9 @@
 (defn resetoi-kulut []
   tila/kulut-lomake-default)
 
+(defn- resetoi-kulunakyma []
+  tila/kulut-default)
+
 (defn jarjesta-vuoden-ja-kuukauden-mukaan
   [pvm1 pvm2]
   (let [[vvvv1 kk1] (str/split pvm1 #"/")
@@ -333,8 +336,7 @@
 (extend-protocol tuck/Event
   NakymastaPoistuttiin
   (process-event [_ app]
-    (loki/log "GTFO")
-    app)
+    (resetoi-kulunakyma))
   LiitteenPoistoOnnistui
   (process-event [{tulos :tulos {id :liite-id} :parametrit} app]
     (loki/log "Poistettu" id )
