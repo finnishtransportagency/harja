@@ -189,7 +189,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
+[{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn!]} _]
   (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
@@ -210,7 +210,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
-                        (swap! auki? not)
+                        (if (swap! auki? not)
+                          (when auki-fn! (auki-fn!))
+                          (when kiinni-fn! (kiinni-fn!)))
                         nil))
         on-key-down-fn (fn [{:keys [vaihtoehdot valinta valitse-fn format-fn]} event]
                          (let [kc (.-keyCode event)
@@ -277,12 +279,15 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                                 (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                                   ^{:key (hash vaihtoehto)}
-                                  [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
+                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
                              (for [vaihtoehto vaihtoehdot]
                                ^{:key (hash vaihtoehto)}
-                               [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
+                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
+      (komp/klikattu-ulkopuolelle #(when @auki?
+                                     (reset! auki? false)
+                                     (when kiinni-fn! (kiinni-fn!)))
+                                  klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
                            EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
@@ -310,13 +315,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :type "button"
              :disabled (if disabled "disabled" "")
              :title title
-             :on-click (r/partial on-click-fn vaihtoehdot)
+             :on-click (partial on-click-fn vaihtoehdot)
              :on-focus on-focus
-             :on-key-down (r/partial {:on-key-down-fn on-key-down-fn
-                                      :vaihtoehdot vaihtoehdot
-                                      :valinta valinta
-                                      :valitse-fn valitse-fn
-                                      :format-fn format-fn})}
+             :on-key-down (partial on-key-down-fn
+                            {:vaihtoehdot vaihtoehdot
+                             :valinta valinta
+                             :valitse-fn valitse-fn
+                             :format-fn format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if (and @auki? vayla-tyyli?)
               ^{:key :auki}

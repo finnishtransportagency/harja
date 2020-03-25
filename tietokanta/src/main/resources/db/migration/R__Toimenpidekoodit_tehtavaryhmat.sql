@@ -939,6 +939,8 @@ UPDATE tehtavaryhma SET yksiloiva_tunniste = '1b374802-dbe7-430b-bfc5-4635383d18
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'df612065-20d5-47b9-8cca-51ffd250e1f8' WHERE nimi = 'Vahinkojen korjaukset, Soratiet (T2)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c' WHERE nimi = 'Erillishankinnat (W)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' WHERE nimi = 'Tilaajan rahavaraus (T3)';
+-- TODO Tarkista tämä
+UPDATE tehtavaryhma SET yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' WHERE nimi = 'Johto- ja hallintokorvaus (J)';
 
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
