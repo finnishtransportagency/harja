@@ -57,6 +57,7 @@
                  (lue-skeemaresurssi skeemaresurssin-polku)
                  (cheshire/parse-string json)
                  {:draft3-required true
+                  :lax-date-time-format? true
                   :ref-resolver #(lue-skeemaresurssi
                                   (.substring % (count "file:resources/")))})]
     (if-not virheet

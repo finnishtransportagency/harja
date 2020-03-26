@@ -151,7 +151,7 @@
         tloik-kuittaukset (atom [])]
     (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
     ;; Ennen lähetystä, odotetaan, että api-kutsu on kerennyt jäädä kuuntelemaan
-    (<!! (timeout 1000))
+    (<!! (timeout 2000))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma ilmoitusaika lahetysaika))
 
     (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 30000)

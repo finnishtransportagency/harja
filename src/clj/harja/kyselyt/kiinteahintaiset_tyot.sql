@@ -8,7 +8,8 @@ SELECT kht.id,
        kht.tehtavaryhma,
        kht.toimenpideinstanssi,
        kht.sopimus,
-       tpik.nimi AS toimenpide
+       tpik.nimi AS toimenpide,
+       tpik.koodi AS "toimenpiteen-koodi"
 FROM kiinteahintainen_tyo kht
        LEFT JOIN toimenpideinstanssi tpi ON kht.toimenpideinstanssi = tpi.id
        LEFT JOIN toimenpidekoodi tpik ON tpik.id = tpi.toimenpide
@@ -24,3 +25,12 @@ WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                           JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                    WHERE tpi.id = :toimenpideinstanssi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
+
+-- name: merkitse-maksuerat-likaisiksi!
+UPDATE maksuera
+SET likainen = TRUE,
+    muokattu = current_timestamp
+WHERE toimenpideinstanssi IN (SELECT id
+                              FROM toimenpideinstanssi
+                              WHERE id = :toimenpideinstanssi
+                                AND loppupvm > current_timestamp - INTERVAL '3 months');

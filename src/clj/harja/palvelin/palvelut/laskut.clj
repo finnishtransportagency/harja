@@ -3,7 +3,8 @@
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt
              [laskut :as q]
-             [aliurakoitsijat :as ali-q]]
+             [aliurakoitsijat :as ali-q]
+             [kustannusarvioidut-tyot :as kust-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
@@ -101,7 +102,9 @@
                                             :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
-                                            :kayttaja            (:id user)}))
+                                            :kayttaja            (:id user)})
+  (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
+                                             (:toimenpideinstanssi laskurivi)}))
 
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).

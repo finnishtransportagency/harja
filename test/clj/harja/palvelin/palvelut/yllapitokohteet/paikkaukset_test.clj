@@ -44,7 +44,7 @@
     (is (contains? paikkaukset :paikkaukset))
     (is (contains? paikkaukset :paikkauskohteet))
     (is (not (contains? paikaukset-paikkauskohteet-filtteri :paikkauskohteet)))
-    (is (= (count (:paikkaukset paikkaukset)) 10))
+    (is (= (count (:paikkaukset paikkaukset)) 12))
     (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) (:paikkaukset paikaukset-paikkauskohteet-filtteri))))))
 
 (deftest hae-urakan-paikkauskohteet-ei-toimi-ilman-oikeuksia
