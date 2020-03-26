@@ -36,15 +36,14 @@ function testaaSuunnitelmienTila(polku, ensimmaisenVuodenTila, toisenVuodenTila)
 
     cy.get('#suunnitelmien-taulukko').then(($taulukko) => {
         let $rivi = $taulukko;
-        let osanIndex;
+        let indexLopusta;
         for (let i = 0; i < polku.length; i++) {
-            console.log('loop..');
-            console.log($rivi);
-            console.log(polku[i]);
             if (i !== (polku.length - 1)) {
-                osanIndex = $rivi.length - 2;
+                indexLopusta = -1;
+            } else {
+                indexLopusta = 0;
             }
-            $rivi = f.taulukonOsaTeksitllaSync($rivi, polku[i], osanIndex);
+            $rivi = f.taulukonOsaTeksitllaSync($rivi, polku[i], indexLopusta);
         }
         cy.wrap(f.rivinSarakeSync($rivi, 1).find('span.' + ensimmaisenVuodenLuokka))
             .should('exist');
@@ -67,17 +66,19 @@ function testaaSuunnitelmienTila(polku, ensimmaisenVuodenTila, toisenVuodenTila)
  * @param {number} rivinIndex Pitää olla int
  * @param {number} sarakkeenIndex Pitää olla int
  * @param {string} arvo
- * @param {boolean} [painaEnter=false]
+ * @param {boolean} [blurEvent=false]
  */
-function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, painaEnter=false) {
+function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent=false) {
     let kirjoitettavaArvo = '' + arvo;
-    if (painaEnter) {
-        kirjoitettavaArvo = kirjoitettavaArvo + '{enter}';
-    }
     cy.get('#' + taulukonId)
         .taulukonOsaPolussa([1, laajennaRivinIndex, 1, rivinIndex, sarakkeenIndex])
         .find('input')
-        .type(kirjoitettavaArvo);
+        .type(kirjoitettavaArvo)
+        .then(($input) => {
+            if (blurEvent) {
+                cy.wrap($input).blur();
+            }
+        });
 }
 
 function formatoiArvoDesimaalinumeroksi (arvo) {
@@ -133,7 +134,7 @@ function tarkastaIndeksilaskurinArvo (dataCy, hoitokaudenNumero, arvo) {
  * Näkyvissä pitäisi olla aina maksimissaan vain yksi "Kopioi allaoleviin" nappi. Tämän funktion avulla sitä klikataan.
  */
 function klikkaaTaytaAlas () {
-    cy.get('[data-cy=kopioi-allaoleviin]').click()
+    cy.get('[data-cy=kopioi-allaoleviin]:visible').click()
 }
 
 describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
@@ -141,7 +142,10 @@ describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () 
 
     it('Avaa näkymä', function () {
         cy.server();
-        cy.visit("/#urakat/yleiset?&hy=13&u=" + ivalonUrakkaId);
+        cy.visit("/");
+        cy.contains('.haku-lista-item', 'Lappi').click();
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible');
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Ivalon MHU testiurakka (uusi)', {timeout: 10000}).click();
         cy.route('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
         cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
         // Tässä otetaan indeksikertoimet talteen

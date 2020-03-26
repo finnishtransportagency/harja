@@ -4,12 +4,13 @@ export function taulukonRiviTekstillaSync($taulukko, teksti) {
     return $taulukko.find('.grid-taulukko').filter(':contains(' + teksti + ')').last();
 }
 
-export function taulukonOsaTeksitllaSync($taulukko, teksti, index) {
-    let i = index;
-    if ((data === undefined) || (data === null)) {
-        i = $taulukko.length;
+export function taulukonOsaTeksitllaSync($taulukko, teksti, indexLopusta) {
+    let i = indexLopusta;
+    if ((indexLopusta === undefined) || (indexLopusta === null)) {
+        i = 0;
     }
-    return $taulukko.find('.grid-taulukko').filter(':contains(' + teksti + ')').eq(i);
+    let $loydetytOsat = $taulukko.find('.grid-taulukko').filter(':contains(' + teksti + ')');
+    return $loydetytOsat.eq($loydetytOsat.length-1+i);
 }
 
 export function taulukonOsatSync($taulukko) {
