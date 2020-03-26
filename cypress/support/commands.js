@@ -67,7 +67,7 @@ Cypress.Commands.add("testaaRivienArvot", { prevSubject: 'element'}, ($taulukko,
             });
         });
         for (let i = 0; i < arvot.length; i++) {
-            expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length).to.equal(1);
+            expect($sarakkeenSolut.eq(i).filter(':contains(' + arvot[i] + ')').length, 'Oletettiin löytyvän arvo: ' + arvot[i] + ' indeksiltä: ' + i).to.equal(1);
         }
     }).then(() => {
         return $taulukko;

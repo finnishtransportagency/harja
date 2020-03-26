@@ -223,7 +223,7 @@
                                    (set! esta-blur_ true)
                                    (set! (.. event -target -value) nil)))))
                  :on-blur (fn [arvo]
-                            (when nappi?
+                            #_(when nappi?
                               (grid/paivita-osa! solu/*this*
                                                  (fn [solu]
                                                    (assoc solu :nappi-nakyvilla? false))))
@@ -813,7 +813,7 @@
                                                        hoitokauden-numero
                                                        :hankinnat)))
                              (fn [hoitokauden-numero arvo]
-                               (grid/paivita-osa! solu/*this*
+                               #_(grid/paivita-osa! solu/*this*
                                                   (fn [solu]
                                                     (assoc solu :nappi-nakyvilla? false)))
                                (when arvo
@@ -832,14 +832,14 @@
                                        (t/suunnittellut-hankinnat-dr)
                                        (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                                      :solun-polun-pituus 1
-                                                                     :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                     :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                      :datan-kasittely (fn [otsikot]
                                                                                         (mapv (fn [otsikko]
                                                                                                 otsikko)
                                                                                               (vals otsikot)))}
                                                [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
                                                                         :solun-polun-pituus 1
-                                                                        :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                        :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                         :datan-kasittely (fn [yhteensa]
                                                                                            (mapv (fn [[_ nimi]]
                                                                                                    nimi)
@@ -928,7 +928,7 @@
                                                              hoitokauden-numero
                                                              :hankinnat)))
                                    (fn [hoitokauden-numero arvo]
-                                     (grid/paivita-osa! solu/*this*
+                                     #_(grid/paivita-osa! solu/*this*
                                                         (fn [solu]
                                                           (assoc solu :nappi-nakyvilla? false)))
                                      (when arvo
@@ -1002,8 +1002,7 @@
                                                       (range 1 6))))))
 
 (defn rahavarausten-grid []
-  (let [nyt (pvm/nyt)
-        dom-id "rahavaraukset-taulukko"
+  (let [dom-id "rahavaraukset-taulukko"
         tyyppi->tallennettava-asia (fn [tyyppi]
                                      (case tyyppi
                                        "vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot
@@ -1186,7 +1185,7 @@
                                                                                                                                                                                                         (fn [solu]
                                                                                                                                                                                                           (assoc solu :nappi-nakyvilla? true))))
                                                                                                                                                                          :on-blur (fn [arvo]
-                                                                                                                                                                                    (grid/paivita-osa! solu/*this*
+                                                                                                                                                                                    #_(grid/paivita-osa! solu/*this*
                                                                                                                                                                                                        (fn [solu]
                                                                                                                                                                                                          (assoc solu :nappi-nakyvilla? false)))
                                                                                                                                                                                     (when arvo
@@ -1965,7 +1964,7 @@
                                                            :ajettavat-jarejestykset #{:mapit}}
                                                           false)))
                                 (fn [arvo]
-                                  (grid/paivita-osa! solu/*this*
+                                  #_(grid/paivita-osa! solu/*this*
                                                      (fn [solu]
                                                        (assoc solu :nappi-nakyvilla? false)))
                                   (when arvo

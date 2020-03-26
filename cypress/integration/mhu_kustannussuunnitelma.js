@@ -69,7 +69,7 @@ function testaaSuunnitelmienTila(polku, ensimmaisenVuodenTila, toisenVuodenTila)
  * @param {boolean} [blurEvent=false]
  */
 function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinIndex, sarakkeenIndex, arvo, blurEvent=false) {
-    let kirjoitettavaArvo = '' + arvo;
+    let kirjoitettavaArvo = '{selectall}{backspace}' + arvo;
     cy.get('#' + taulukonId)
         .taulukonOsaPolussa([1, laajennaRivinIndex, 1, rivinIndex, sarakkeenIndex])
         .find('input')
@@ -95,10 +95,32 @@ function indeksikorjaaArvo(arvo, hoitokaudenNumero) {
     return indeksit[hoitokaudenNumero - 1]*arvo;
 }
 
+function summaaJaIndeksikorjaaArvot(arvot) {
+    let yhteensaArvo = 0;
+    for (let i = 0; i < arvot.length; i++) {
+        yhteensaArvo += indeksikorjaaArvo(arvot[i], i+1);
+    }
+    return yhteensaArvo;
+}
+
+function summaaArvot(arvot) {
+    let yhteensaArvo = 0;
+    arvot.forEach((arvo) => {
+        yhteensaArvo += arvo;
+    });
+    return yhteensaArvo;
+}
+
 function hintalaskurinTarkastus (dataCy, hoitokaudenNumero, formatoituArvo) {
+    let index;
+    if (hoitokaudenNumero === 'yhteensa') {
+        index = 6;
+    } else {
+        index = hoitokaudenNumero - 1;
+    }
     cy.get('[data-cy=' + dataCy + ']')
         .find('.hintalaskurisarake-ala')
-        .eq(hoitokaudenNumero - 1)
+        .eq(index)
         .should('have.text', formatoituArvo)
 }
 
@@ -130,11 +152,36 @@ function tarkastaIndeksilaskurinArvo (dataCy, hoitokaudenNumero, arvo) {
     hintalaskurinTarkastus(dataCy, hoitokaudenNumero, formatoituArvo);
 }
 
+
+/**
+ *
+ * @param {string} dataCy
+ * @param {array} arvot
+ */
+function tarkastaHintalaskurinYhteensaArvo (dataCy, arvot) {
+    let yhteensaArvo = summaaArvot(arvot);
+    hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
+}
+
+/**
+ *
+ * @param {string} dataCy
+ * @param {array} arvot
+ */
+function tarkastaIndeksilaskurinYhteensaArvo (dataCy, arvot) {
+    let yhteensaArvo = summaaJaIndeksikorjaaArvot(arvot);
+    hintalaskurinTarkastus(dataCy, 'yhteensa', formatoiArvoEuromuotoiseksi(yhteensaArvo));
+}
+
 /**
  * Näkyvissä pitäisi olla aina maksimissaan vain yksi "Kopioi allaoleviin" nappi. Tämän funktion avulla sitä klikataan.
  */
 function klikkaaTaytaAlas () {
-    cy.get('[data-cy=kopioi-allaoleviin]:visible').click()
+    cy.get('[data-cy=kopioi-allaoleviin]:visible').scrollIntoView().click({force: true})
+    /*then(($nappi) => {
+        cy.wait(100);
+        cy.wrap($nappi).click();
+    })*/;
 }
 
 describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
@@ -193,7 +240,7 @@ describe('Testaa hankinnat taulukkoa', function () {
         testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'aloittamatta');
         testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'kesken', 'aloittamatta');
         cy.get('#suunnittellut-hankinnat-taulukko')
-            .testaaRivienArvot([2], [], ['Yhteensä', '', '2,00', formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(2, 1))]);
+            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(2), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(2, 1))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 2);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 2);
     });
@@ -205,16 +252,55 @@ describe('Testaa hankinnat taulukkoa', function () {
         testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'aloittamatta');
         testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'aloittamatta');
         cy.get('#suunnittellut-hankinnat-taulukko')
-            .testaaRivienArvot([2], [], ['Yhteensä', '', '111,00', formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
+            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(111), formatoiArvoDesimaalinumeroksi(indeksikorjaaArvo(111, 1))]);
         tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 1, 111);
         tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 1, 111);
     });
 
     it('Muokkaa toisen vuoden arvoja ilman kopiointia', function () {
+        cy.get('#suunnittellut-hankinnat-taulukko')
+            .taulukonOsaPolussa([1, 1, 0, 0])
+            .click();
+        muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 1, 0, 1, '2');
+        muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 1, 11, 1, '2', true);
+        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'kesken');
+        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'kesken');
+        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'kesken');
+        cy.get('#suunnittellut-hankinnat-taulukko')
+            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(115), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 4]))]);
+        tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 4);
+        tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 2, 4);
 
     });
 
-    it('Muokkaa arvot tuleville hoitokausille', function () {
+    it('Muokkaa toisen vuoden arvoja kopioinnin kanssa', function () {
+        muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 1, 1, 1, '20');
+        klikkaaTaytaAlas();
+        testaaSuunnitelmienTila(['Hankintakustannukset'], 'kesken', 'kesken');
+        testaaSuunnitelmienTila(['Talvihoito'], 'kesken', 'kesken');
+        testaaSuunnitelmienTila(['Talvihoito', 'Suunnitellut hankinnat'], 'valmis', 'valmis');
+        cy.get('#suunnittellut-hankinnat-taulukko')
+            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(333), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222]))]);
+        tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 2, 222);
+        tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 2, 222);
+    });
 
+    it('Muokkaa arvot tuleville hoitokausille', function () {
+        cy.get('#suunnittellut-hankinnat-taulukko')
+            .taulukonOsaPolussa([1, 2, 0, 0])
+            .click();
+        cy.get('label[for="kopioi-hankinnat-tuleville-hoitovuosille"]').click();
+        muokkaaLaajennaRivinArvoa('suunnittellut-hankinnat-taulukko', 2, 0, 1, '5');
+        klikkaaTaytaAlas();
+        cy.get('#suunnittellut-hankinnat-taulukko')
+            .testaaRivienArvot([2], [], ['Yhteensä', '', formatoiArvoDesimaalinumeroksi(513), formatoiArvoDesimaalinumeroksi(summaaJaIndeksikorjaaArvot([111, 222, 60, 60, 60]))]);
+        tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
+        tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 3, 60);
+        tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
+        tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 4, 60);
+        tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 60);
+        tarkastaIndeksilaskurinArvo('tavoitehinnan-indeksilaskuri', 5, 60);
+        tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [111, 222, 60, 60, 60]);
+        tarkastaIndeksilaskurinYhteensaArvo('tavoitehinnan-indeksilaskuri', [111, 222, 60, 60, 60]);
     });
 });

@@ -196,7 +196,8 @@
                      x))
                  puu))
 
-(defn summaa-mapin-arvot [arvot avain]
+(defn summaa-mapin-arvot
+  [arvot avain]
   (reduce (fn [summa arvo]
             (+ summa (get arvo avain 0)))
           0
@@ -640,9 +641,10 @@
                                                            :init (fn [tila]
                                                                    (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteensa :data] nil))
                                                            :aseta (fn [tila data]
-                                                                    (let [hoidonjohtopalkkiot-yhteensa (apply + (map :yhteensa data))]
+                                                                    (let [hoidonjohtopalkkiot-yhteensa (summaa-mapin-arvot data :yhteensa)
+                                                                          indeksikorjatut-arvot (summaa-mapin-arvot data :indeksikorjattu)]
                                                                       (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
-                                                                                                                                         :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)})))}
+                                                                                                                                         :indeksikorjattu indeksikorjatut-arvot})))}
                              :valittu-toimenpide-seuranta {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                            :init (fn [tila]
                                                                    (assoc-in tila [:gridit :suunnittellut-hankinnat :hankinnat] (vec (repeat 5 nil))))
@@ -669,7 +671,7 @@
                                                                                                                                                                                             :maara)]
                                                                                                                                 (-> tila
                                                                                                                                     (assoc-in [:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
-                                                                                                                                                                                                                             :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})
+                                                                                                                                                                                                                             :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
                                                                                                                                     ;; Päivitetään myös yhteenvedotkomponentti
                                                                                                                                     (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
                                       {}
@@ -749,9 +751,10 @@
                                                            :init (fn [tila]
                                                                    (assoc-in tila [:gridit :laskutukseen-perustuvat-hankinnat :yhteensa :data] nil))
                                                            :aseta (fn [tila data]
-                                                                    (let [hoidonjohtopalkkiot-yhteensa (apply + (map :yhteensa data))]
+                                                                    (let [hoidonjohtopalkkiot-yhteensa (summaa-mapin-arvot data :yhteensa)
+                                                                          indeksikorjattu (summaa-mapin-arvot data :indeksikorjattu)]
                                                                       (assoc-in tila [:gridit :laskutukseen-perustuvat-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
-                                                                                                                                                   :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)})))}
+                                                                                                                                                   :indeksikorjattu indeksikorjattu})))}
                              :valittu-toimenpide-seuranta {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                            :init (fn [tila]
                                                                    (assoc-in tila [:gridit :laskutukseen-perustuvat-hankinnat :hankinnat] (vec (repeat 5 nil))))
@@ -787,7 +790,7 @@
                                                                                                                                                                                                           :maara)]
                                                                                                                                               (-> tila
                                                                                                                                                   (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
-                                                                                                                                                                                                                                                     :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})
+                                                                                                                                                                                                                                                     :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
                                                                                                                                                   ;; Päivitetään myös yhteenvedotkomponentti
                                                                                                                                                   (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
                                       {}
@@ -971,7 +974,7 @@
                                                                                                   [:gridit :rahavaraukset :seurannat tyyppi]
                                                                                                   {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
                                                                                                    :yhteensa yhteensa
-                                                                                                   :indeksikorjattu (indeksikorjaa yhteensa)
+                                                                                                   :indeksikorjattu (indeksikorjaa yhteensa hoitokauden-numero)
                                                                                                    :maara (if kuukausitasolla?
                                                                                                             vaihtelua-teksti
                                                                                                             (:maara (first maarat)))})]
@@ -983,12 +986,12 @@
                                                              :init (fn [tila]
                                                                      (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] nil))
                                                              :aseta (fn [tila data]
-                                                                      (let [rahavaraukset-yhteensa (reduce (fn [summa [_ {yhteensa :yhteensa}]]
-                                                                                                             (+ summa yhteensa))
-                                                                                                           0
-                                                                                                           data)]
+                                                                      (let [[rahavaraukset-yhteensa indeksikorjatut-arvot] (reduce (fn [[summa indeksikorjattu-summa] [_ {:keys [yhteensa indeksikorjattu]}]]
+                                                                                                                                     [(+ summa yhteensa) (+ indeksikorjattu-summa indeksikorjattu)])
+                                                                                                                                   [0 0]
+                                                                                                                                   data)]
                                                                         (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] {:yhteensa rahavaraukset-yhteensa
-                                                                                                                                 :indeksikorjattu (indeksikorjaa rahavaraukset-yhteensa)})))}}))
+                                                                                                                                 :indeksikorjattu indeksikorjatut-arvot})))}}))
 
 
 (defn maarataulukon-rajapinta [polun-osa aseta-yhteenveto-avain aseta-avain]
@@ -1091,7 +1094,7 @@
                                                             (-> tila
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
-                                                                (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa)))))}
+                                                                (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa hoitokauden-numero)))))}
                            :nollaa-johdetut-arvot {:polut [[:suodattimet :hoitokauden-numero]]
                                                    :aseta (fn [tila _]
                                                             (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))}
@@ -1110,10 +1113,16 @@
                                                                                 paivitettavat-hoitokauden-numerot)))}
                            :yhteensa-seuranta {:polut [[:domain polun-osa]]
                                                :aseta (fn [tila maarat]
-                                                        (let [maarat-yhteensa (summaa-mapin-arvot (flatten maarat) :maara)]
+                                                        (let [maarat-yhteensa (mapv #(summaa-mapin-arvot % :maara)
+                                                                                    maarat)
+                                                              indeksikorjatut-arvot (second
+                                                                                      (reduce (fn [[hoitokauden-numero yhteensa] hoitokausi-yhteensa]
+                                                                                                [(inc hoitokauden-numero) (+ yhteensa (indeksikorjaa hoitokausi-yhteensa hoitokauden-numero))])
+                                                                                              [1 0]
+                                                                                              maarat-yhteensa))]
                                                           (-> tila
-                                                              (assoc-in [:gridit polun-osa :yhteensa :yhteensa] maarat-yhteensa)
-                                                              (assoc-in [:gridit polun-osa :yhteensa :indeksikorjattu] (indeksikorjaa maarat-yhteensa)))))}}))
+                                                              (assoc-in [:gridit polun-osa :yhteensa :yhteensa] (apply + maarat-yhteensa))
+                                                              (assoc-in [:gridit polun-osa :yhteensa :indeksikorjattu] indeksikorjatut-arvot))))}}))
 
 (def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
 
