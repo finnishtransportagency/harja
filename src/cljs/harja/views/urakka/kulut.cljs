@@ -367,13 +367,13 @@
                  (tallennus-fn (-> @aliurakoitsija-atomi (dissoc :virhe? :koskettu-nimi? :koskettu-ytunnus?)))
                  (modal/piilota!))
                (swap! aliurakoitsija-atomi assoc :virhe? true)))
-           {:ikoni        ikonit/ok
+           {:ikoni        [ikonit/ok]
             :vayla-tyyli? true}]
           [napit/sulje
            "Sulje"
            (fn [] (modal/piilota!))
            {:vayla-tyyli? true
-            :ikoni        ikonit/remove}]]]))))
+            :ikoni        [ikonit/remove]}]]]))))
 
 (defn- paivita-aliurakoitsija-jos-ytunnusta-muokattu
   [aliurakoitsija aliurakoitsijat paivitys-fn]
@@ -449,8 +449,7 @@
            "Kirjoita tähän halutessasi lisätietoa"
            :disabled (not= 0 haetaan)
            :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
-           :arvo lisatieto]
-          )))))
+           :arvo lisatieto])))))
 
 (defn- maara-summa
   [{:keys [paivitys-fn haetaan]}
@@ -527,6 +526,12 @@
          [debug/debug lomake]
          [:div.palstat
           [:div.palsta
+           [napit/takaisin
+            "Takaisin"
+            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+            {:vayla-tyyli?  true
+             :teksti-nappi? true
+             :style         {:font-size "14px"}}]
            [:h2 (str (if-not (nil? (:id lomake))
                        "Muokkaa kulua"
                        "Uusi kulu"))]]]
@@ -558,7 +563,7 @@
           [napit/peruuta
            "Peruuta"
            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-           {:ikoni        ikonit/remove
+           {:ikoni        [ikonit/remove]
             :luokka       "suuri"
             :vayla-tyyli? true}]]
          (when (not= 0 haetaan)
@@ -571,28 +576,35 @@
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {:keys [taulukko syottomoodi] :as app}]
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti]} :parametrit :as app}]
       [:div#vayla
        (if syottomoodi
          [kulujen-syottolomake e! app]
          [:div
-          [napit/yleinen-toissijainen
-           "Tallenna Excel"
-           #(loki/log "En tallenna vielä")
-           {:vayla-tyyli? true
-            :luokka       "suuri"
-            :disabled     true}]
-          [napit/yleinen-toissijainen
-           "Tallenna PDF"
-           #(loki/log "En tallenna vielä")
-           {:vayla-tyyli? true
-            :luokka       "suuri"
-            :disabled     true}]
-          [napit/yleinen-ensisijainen
-           "Uusi kulu"
-           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-           {:vayla-tyyli? true
-            :luokka       "suuri"}]
+          [debug/debug taulukko]
+          [:div
+           [:h2 "Kulujen kohdistus"]
+           [napit/yleinen-toissijainen
+            "Tallenna Excel"
+            #(loki/log "En tallenna vielä")
+            {:vayla-tyyli? true
+             :luokka       "suuri"
+             :disabled     true}]
+           [napit/yleinen-toissijainen
+            "Tallenna PDF"
+            #(loki/log "En tallenna vielä")
+            {:vayla-tyyli? true
+             :luokka       "suuri"
+             :disabled     true}]
+           [napit/yleinen-ensisijainen
+            "Uusi kulu"
+            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+            {:vayla-tyyli? true
+             :luokka       "suuri"}]]
+          #_[kentat/vayla-lomakekentta
+           "Kirjoita tähän halutessasi lisätietoa"
+           :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
+           :arvo hakuteksti]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 
