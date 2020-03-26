@@ -29,10 +29,11 @@
 (defonce e! nil)
 
 (defn summa-formatointi [teksti]
-  (if (or (nil? teksti) (= "" teksti) (js/isNaN teksti))
-    "0,00"
-    (let [teksti (clj-str/replace (str teksti) "," ".")]
-      (fmt/desimaaliluku teksti 2 true))))
+  (cond
+    (= t/vaihtelua-teksti teksti) t/vaihtelua-teksti
+    (or (nil? teksti) (= "" teksti) (js/isNaN teksti)) "0,00"
+    :else (let [teksti (clj-str/replace (str teksti) "," ".")]
+            (fmt/desimaaliluku teksti 2 true))))
 
 (defn summa-formatointi-uusi [teksti]
   (if (nil? teksti)
