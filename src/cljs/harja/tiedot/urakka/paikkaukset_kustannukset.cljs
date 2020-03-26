@@ -22,13 +22,6 @@
 ;; Haut
 (defrecord KustannuksetHaettu [tulos])
 
-(defn- lisaa-otsikko-ja-yhteenveto
-  [otsikko otsikkokomponentti paikkaukset skeema]
-  (let [otsikkorivi (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (:paikkauskohde-id (first paikkaukset)))})
-        yhteenveto-id (gensym "yhteenveto")
-        yhteenvetorivi (assoc skeema :paikkaustoteuma-id yhteenveto-id)]
-    (cons otsikkorivi (conj paikkaukset yhteenvetorivi))))
-
 (defn kasittele-haettu-tulos
   [tulos app]
   {:paikkauksien-kokonaishinta-tyomenetelmittain-grid tulos})
