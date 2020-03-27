@@ -1525,7 +1525,7 @@
                                                                                                                    (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :yhteenveto rivin-nimi :toimenkuva] vanha-arvo)))]
                                                                                                     (if (= "" (clj-str/trim arvo))
                                                                                                       (let [paivita-seuraavalla-tickilla! (fn []
-                                                                                                                                               (r/next-tick paivita!))]
+                                                                                                                                            (r/next-tick paivita!))]
                                                                                                         (e! (t/->PoistaOmaJHDdata :toimenkuva
                                                                                                                                   rivin-nimi
                                                                                                                                   nil
@@ -1572,16 +1572,18 @@
                                                                                                                   :ajettavat-jarejestykset true
                                                                                                                   :triggeroi-seuranta? true}
                                                                                                                  false))))]
-                                                                     (e! (t/->PoistaOmaJHDdata :maksukausi
-                                                                                               rivin-nimi
-                                                                                               maksukausi
-                                                                                               modal/piilota!
-                                                                                               paivita-ui!
-                                                                                               (r/partial (fn [toimenkuva data-hoitokausittain poista! _]
-                                                                                                            (poista-modal! :toimenkuva
-                                                                                                                           data-hoitokausittain
-                                                                                                                           poista!
-                                                                                                                           {:toimenkuva toimenkuva})))))))
+                                                                     (if (= :molemmat maksukausi)
+                                                                       (paivita-ui!)
+                                                                       (e! (t/->PoistaOmaJHDdata :maksukausi
+                                                                                                 rivin-nimi
+                                                                                                 maksukausi
+                                                                                                 modal/piilota!
+                                                                                                 paivita-ui!
+                                                                                                 (r/partial (fn [toimenkuva data-hoitokausittain poista! _]
+                                                                                                              (poista-modal! :toimenkuva
+                                                                                                                             data-hoitokausittain
+                                                                                                                             poista!
+                                                                                                                             {:toimenkuva toimenkuva}))))))))
                                                      :format-fn (fn [teksti]
                                                                   (str (t/maksukausi-kuukausina teksti)))
                                                      :rivin-haku (fn [pudotusvalikko]

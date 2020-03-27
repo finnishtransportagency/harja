@@ -1339,7 +1339,10 @@
                                  (reduce (fn [seurannat jarjestysnumero]
                                            (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
                                              (merge seurannat
-                                                    {(keyword (str "yhteenveto-" nimi "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
+                                                    {(keyword (str "nollaa-johdetut-arvot-" nimi)) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
+                                                                                                    :aseta (fn [tila _]
+                                                                                                             (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu nimi] (vec (repeat 12 {}))))}
+                                                     (keyword (str "yhteenveto-" nimi "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset nimi]
                                                                                                              [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]
                                                                                                              [:suodattimet :hoitokauden-numero]]
                                                                                                      :init (fn [tila]
