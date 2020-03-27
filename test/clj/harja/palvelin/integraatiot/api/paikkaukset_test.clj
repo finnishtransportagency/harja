@@ -100,21 +100,7 @@
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
         poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
         poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
-        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/yksikkohinta 200M,
-                                    :harja.domain.paikkaus/maara 12.5M,
-                                    :harja.domain.paikkaus/selite "asfaltti",
-                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen",
-                                    :harja.domain.paikkaus/ulkoinen-id 234531,
-                                    :harja.domain.paikkaus/urakka-id 4,
-                                    :harja.domain.paikkaus/yksikko "t"}
-                                   {:harja.domain.paikkaus/yksikkohinta 20.4M,
-                                    :harja.domain.paikkaus/maara 14.5M,
-                                    :harja.domain.paikkaus/selite "bitumi",
-                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen",
-                                    :harja.domain.paikkaus/ulkoinen-id 234531,
-                                    :harja.domain.paikkaus/urakka-id 4,
-                                    :harja.domain.paikkaus/yksikko "kg"}
-                                   {:harja.domain.paikkaus/selite "Lähtömaksu",
+        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/selite "Lähtömaksu",
                                     :harja.domain.paikkaus/urakka-id 4,
                                     :harja.domain.paikkaus/hinta 450.3M,
                                     :harja.domain.paikkaus/ulkoinen-id 234531,
