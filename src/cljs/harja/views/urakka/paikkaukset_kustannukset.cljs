@@ -22,6 +22,7 @@
                    :tyyppi :valinta
                    :valinnat (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet])
                    :nimi :paikkauskohde :fmt :nimi
+                   :validoi [[:ei-tyhja "Valitse kohde"]]
                    :muokattava? #(if (pos-int? (:paikkaustoteuma-id %))
                                    false
                                    true)}
@@ -32,10 +33,13 @@
                   {:nimi :let :otsikko "Let" :tyyppi :positiivinen-numero :leveys 2}
                   {:otsikko "Työmenetelmä"
                    :leveys 5 :tyyppi :valinta
+                   :validoi [[:ei-tyhja "Valitse työmenetelmä"]]
                    :valinnat (:urakan-tyomenetelmat @yhteiset-tiedot/tila)
                    :nimi :tyomenetelma}
-                  {:otsikko "Valmistumispvm" :leveys 5 :tyyppi :pvm :fmt pvm/pvm-opt :nimi :valmistumispvm}
-                  {:otsikko "Kokonaishinta" :fmt fmt/euro-opt :leveys 5 :tyyppi :numero :nimi :hinta}]
+                  {:otsikko "Valmistumispvm" :leveys 5 :tyyppi :pvm :fmt pvm/pvm-opt :nimi :valmistumispvm
+                   :validoi [[:ei-tyhja "Syötä valmistumispvm"]]}
+                  {:otsikko "Kokonaishinta" :fmt fmt/euro-opt :leveys 5 :tyyppi :numero :nimi :hinta
+                   :validoi [[:ei-tyhja "Syötä hinta"]]}]
           yhteissumma (->> paikkauksien-kokonaishinta-tyomenetelmittain-grid
                            (map :hinta)
                            (reduce +))]
