@@ -213,7 +213,10 @@ maksimi-linnuntien-etaisyys 200)
     (tallenna-yksittainen-reittitoteuma db db-replica
                                         urakka-id kirjaaja (:reittitoteuma toteuma)))
 
-  (paivita-materiaalicachet! db urakka-id data))
+  ;; Harjalla on ollut ongelmia (kevät 2020) - reittitoteumien kirjaaminen on alkanut tukkia tietokantaa.
+  ;; Tarkka syy on vielä epäselvä, ensi lääkkeeksi irrotetaan toistaiseksi materiaalicachejen päivittäminen
+  ;; toteuman kirjaamisesta, pitäisi helpottaa kovasti tietokannan kokemaa kuormaa
+  #_(paivita-materiaalicachet! db urakka-id data))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
