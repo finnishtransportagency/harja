@@ -1004,7 +1004,7 @@
    aseta-avain any?
    aseta-yhteenveto-avain any?})
 
-(defn maarataulukon-dr [rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain]
+(defn maarataulukon-dr [indeksikorjaus? rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain]
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                           rajapinta
                           {:otsikot {:polut [[:gridit polun-osa :otsikot]]
@@ -1090,11 +1090,13 @@
                                                                 maarat-samoja? (apply = (map :maara valitun-vuoden-maarat))
                                                                 maara (if maarat-samoja?
                                                                         (get-in valitun-vuoden-maarat [0 :maara])
-                                                                        vaihtelua-teksti)]
-                                                            (-> tila
-                                                                (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
-                                                                (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
-                                                                (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa hoitokauden-numero)))))}
+                                                                        vaihtelua-teksti)
+                                                                tila-ilman-indeksikorjausta (-> tila
+                                                                                                (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
+                                                                                                (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa))]
+                                                            (if indeksikorjaus?
+                                                              (assoc-in tila-ilman-indeksikorjausta [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa hoitokauden-numero))
+                                                              tila-ilman-indeksikorjausta)))}
                            :nollaa-johdetut-arvot {:polut [[:suodattimet :hoitokauden-numero]]
                                                    :aseta (fn [tila _]
                                                             (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))}
@@ -1119,10 +1121,11 @@
                                                                                       (reduce (fn [[hoitokauden-numero yhteensa] hoitokausi-yhteensa]
                                                                                                 [(inc hoitokauden-numero) (+ yhteensa (indeksikorjaa hoitokausi-yhteensa hoitokauden-numero))])
                                                                                               [1 0]
-                                                                                              maarat-yhteensa))]
-                                                          (-> tila
-                                                              (assoc-in [:gridit polun-osa :yhteensa :yhteensa] (apply + maarat-yhteensa))
-                                                              (assoc-in [:gridit polun-osa :yhteensa :indeksikorjattu] indeksikorjatut-arvot))))}}))
+                                                                                              maarat-yhteensa))
+                                                              tila-ilman-indeksikorjausta (assoc-in tila [:gridit polun-osa :yhteensa :yhteensa] (apply + maarat-yhteensa))]
+                                                          (if indeksikorjaus?
+                                                            (assoc-in tila-ilman-indeksikorjausta [:gridit polun-osa :yhteensa :indeksikorjattu] indeksikorjatut-arvot)
+                                                            tila-ilman-indeksikorjausta)))}}))
 
 (def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
 
