@@ -36,4 +36,4 @@ WHEN (NEW.kuittaustyyppi != 'vastaus' AND
       NEW.kuittaustyyppi != 'muutos' AND
       NEW.kuittaustyyppi != 'valitys' AND
       NEW.kuittaustyyppi IS NOT NULL)
-EXECUTE PROCEDURE aseta_ilmoituksen_tila();
+EXECUTE FUNCTION aseta_ilmoituksen_tila();

@@ -16,4 +16,4 @@ CREATE TRIGGER tg_lisaa_oletushinnoittelut_vesivaylaurakalle
 AFTER INSERT
   ON urakka
 FOR EACH ROW
-EXECUTE PROCEDURE lisaa_oletushinnoittelut();
+EXECUTE FUNCTION lisaa_oletushinnoittelut();

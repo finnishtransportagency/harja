@@ -27,4 +27,4 @@ DROP TRIGGER IF EXISTS toimenpide_kohteen_mukaan_trigger ON kan_liikennetapahtum
 CREATE TRIGGER toimenpide_kohteen_mukaan_trigger
 BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_toiminto
 FOR EACH ROW
-EXECUTE PROCEDURE toimenpide_kohteen_mukaan_proc();
+EXECUTE FUNCTION toimenpide_kohteen_mukaan_proc();

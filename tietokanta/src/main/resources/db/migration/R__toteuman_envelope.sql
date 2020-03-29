@@ -16,4 +16,4 @@ CREATE TRIGGER tg_muodosta_toteuman_envelope
 BEFORE INSERT OR UPDATE
   ON toteuma
 FOR EACH ROW
-EXECUTE PROCEDURE muodosta_toteuman_envelope();
+EXECUTE FUNCTION muodosta_toteuman_envelope();

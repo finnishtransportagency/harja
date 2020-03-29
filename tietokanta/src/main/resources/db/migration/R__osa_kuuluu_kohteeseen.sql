@@ -31,18 +31,18 @@ ON kan_hairio;
 CREATE TRIGGER hairion_kohteen_tarkastus
 BEFORE INSERT OR UPDATE ON kan_hairio
 FOR EACH ROW
-EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
+EXECUTE FUNCTION osa_kuuluu_kohteeseen();
 
 DROP TRIGGER IF EXISTS toimenpiteen_kohteen_tarkastus
 ON kan_toimenpide;
 CREATE TRIGGER toimenpiteen_kohteen_tarkastus
 BEFORE INSERT OR UPDATE ON kan_toimenpide
 FOR EACH ROW
-EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
+EXECUTE FUNCTION osa_kuuluu_kohteeseen();
 
 DROP TRIGGER IF EXISTS liikennetapahtuman_kohteen_tarkastus
 ON kan_liikennetapahtuma_toiminto;
 CREATE TRIGGER liikennetapahtuman_kohteen_tarkastus
 BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_toiminto
 FOR EACH ROW
-EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
+EXECUTE FUNCTION osa_kuuluu_kohteeseen();
