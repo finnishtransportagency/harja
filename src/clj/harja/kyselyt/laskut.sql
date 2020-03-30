@@ -20,8 +20,8 @@ select liite.id               AS "liite-id",
        liite.koko             AS "liite-koko",
        liite.liite_oid        AS "liite-oid"
        from lasku l
-       left join lasku_liite ll on l.id = ll.lasku and ll.poistettu is not true
-       left join liite liite on ll.liite = liite.id
+       join lasku_liite ll on l.id = ll.lasku and ll.poistettu is not true
+       join liite liite on ll.liite = liite.id
        where l.id = :lasku-id;
 
 -- name: hae-kaikki-urakan-laskuerittelyt
