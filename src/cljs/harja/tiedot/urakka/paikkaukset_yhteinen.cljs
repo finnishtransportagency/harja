@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.domain.paikkaus :as paikkaus])
@@ -19,7 +20,7 @@
                                    :palvelukutsu :hae-urakan-paikkauskohteet
                                    :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
                         :kustannukset {:itemit-avain :kustannukset
-                                       :aikavali-otsikko "Kirjausaika"
+                                       :aikavali-otsikko "Valmistumispäivämäärä"
                                        :voi-valita-trn-kartalta? false
                                        :palvelukutsu :hae-paikkausurakan-kustannukset
                                        :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
@@ -36,6 +37,7 @@
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
+(defrecord TyomenetelmaValittu [tyomenetelma valittu?])
 (defrecord PaivitaValinnat [uudet])
 (defrecord Nakymaan [])
 ;; Haut
@@ -98,6 +100,14 @@
                                       (get-in app [:valinnat :urakan-paikkauskohteet]))]
       (tuck/process-event (->PaivitaValinnat {:urakan-paikkauskohteet uudet-paikkausvalinnat}) app)
       (assoc-in app [:valinnat :urakan-paikkauskohteet] uudet-paikkausvalinnat)))
+  TyomenetelmaValittu
+  (process-event [{{:keys [nimi]} :tyomenetelma valittu? :valittu?} app]
+    (let [valitut-tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
+          uudet-tyomenetelmat (if valittu?
+                                (conj valitut-tyomenetelmat nimi)
+                                (disj valitut-tyomenetelmat nimi))]
+      (tuck/process-event (->PaivitaValinnat {:tyomenetelmat uudet-tyomenetelmat}) app)
+      (assoc-in app [:valinnat :tyomenetelmat] uudet-tyomenetelmat)))
   HaeItemit
   (process-event [{:keys [uudet-valinnat]} {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
     (if-not haku-kaynnissa?

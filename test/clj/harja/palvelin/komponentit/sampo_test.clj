@@ -14,7 +14,8 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [harja.data.hoito.kustannussuunnitelma :as ks-data]))
+            [harja.data.hoito.kustannussuunnitelma :as ks-data]
+            [harja.pvm :as pvm]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""
@@ -64,11 +65,11 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest merkataan-budjettitavotteita-likaiseksi-ja-lähetetään-ne-Sampoon
-  (let [{urakka-id :id} (first (q-map (str "SELECT id, alkupvm
+  (let [{urakka-id :id alkupvm :alkupvm} (first (q-map (str "SELECT id, alkupvm
                                             FROM   urakka
                                             WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
         kiinteahintaiset-data (ks-data/tallenna-kiinteahintaiset-tyot-data urakka-id)
-        jhk-data (ks-data/tallenna-johto-ja-hallintokorvaus-data urakka-id)
+        jhk-data (ks-data/tallenna-johto-ja-hallintokorvaus-data urakka-id (pvm/vuosi alkupvm))
         kustannusarvioitu-data (ks-data/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
 
         kokonaishintainen-maksuerantyyppi #{:toimenpiteen-maaramitattavat-tyot
