@@ -151,6 +151,12 @@
      :clj  (Date.)))
 
 #?(:clj
+   (defn eilinen
+     "Palauttaa eilisen Datena"
+     []
+     (dateksi (t/minus (t/now) (t/days 1)))))
+
+#?(:clj
    (defn nyt-suomessa []
      (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
 
