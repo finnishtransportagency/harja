@@ -156,46 +156,41 @@
         paikkauskohde-id (get-in paikkaus
                                  [::paikkaus/paikkauskohde ::paikkaus/id])
         alkupvm (get paikkaus ::paikkaus/alkuaika)
-        loppupvm (get paikkaus ::paikkaus/loppuaika)]
-    (log "paikkaus: " (pr-str paikkaus))
+        loppupvm (get paikkaus ::paikkaus/loppuaika)
+        pinta-ala-sum (->> paikkaukset
+                           (map :suirun-pinta-ala)
+                           (reduce +))
+        massamenekki-sum (->> paikkaukset
+                              (map ::paikkaus/massamenekki)
+                              (reduce +))
+        ]
     [{:tyyli {}
       :sisalto
-      (fn [_]
-        [:div {:style {:margin-left "20px"
-                       :margin-right "20px"}}
+             (fn [_]
+               [:tr.valiotsikko
 
-         ;Kun teet VHAR-1308 ota käyttöön
-         #_[:div {:style {:height "30px"
-                          :float "right"}}
-            [napit/yleinen-ensisijainen "Ilmoita virhe" #(log "do nada")]
-            [napit/yleinen-toissijainen "Merkitse tarkistetuksi" #(log "do nada 2")]]
-         #_[:div {:style {:font-size ".65rem"}}
-            [:span.bold "Ohje: "]
-            [:span ohje-teksti-tarkistus-ja-yha]]
-
-         ;; huom! jos koetat saada taulukon sarakkeet oikean levyisiksi vrt. varsinaiseen taulukkoon,
-         ;; joudut kuljettamaan taulukon sarakkeiden leveydet tänne asti. Tehdään VHAR-1308 osana
-         [:table
-          [:thead
-           [:tr#paikkauksien-yhteenveto
-            [:td {:colSpan 2}
-             [:span.bold (str "Yhteensä: " (count paikkaukset))]]
-            [:td {:colSpan 3}]
-            [:td {:colSpan 1}
-             [:span.bold (when alkupvm
-                           (pvm/pvm alkupvm))]]
-            [:td {:colSpan 1}
-             [:span.bold (when loppupvm
-                           (pvm/pvm loppupvm))]]
-            [:td {:colSpan 7}]
-            [:td {:colSpan 1}
-             [:div {:style {:float "right"}}
-              [:a.livicon-arrow-right {:style {:float "right"}
-                                       :href "#"
-                                       :on-click #(do
-                                                    (.preventDefault %)
-                                                    (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
-               "Kustannukset"]]]]]]])}]))
+                [:td.tasaa-oikealle {:colSpan 2}
+                 [:span.bold (str "Yhteensä: " (count paikkaukset))]]
+                [:td {:colSpan 5}]
+                [:td {:colSpan 1}
+                 [:span.bold (when alkupvm
+                               (clojure.string/replace (pvm/pvm-aika alkupvm) " " " klo "))]] ; replacella "klo" päivämäärän ja ajan väliin
+                [:td {:colSpan 1}
+                 [:span.bold (when loppupvm
+                               (clojure.string/replace (pvm/pvm-aika loppupvm) " " " klo "))]]
+                [:td {:colSpan 3}]
+                [:td
+                 [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
+                [:td
+                 [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
+                [:td {:colSpan 2}
+                 [:div {:style {:float "right"}}
+                  [:a.livicon-arrow-right {:style    {:float "right"}
+                                           :href     "#"
+                                           :on-click #(do
+                                                        (.preventDefault %)
+                                                        (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
+                   "Kustannukset"]]]])}]))
 
 (defn toteumat* [e! app]
   (komp/luo

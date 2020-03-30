@@ -459,25 +459,24 @@
                             piilotetut-valiotsikot valiotsikon-komponentti-flowhun?]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
         otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
-    [:tr.otsikko (when salli-valiotsikoiden-piilotus?
-                   {:class "gridin-collapsoitava-valiotsikko klikattava"
-                    :on-click #(toggle-valiotsikko valiotsikko-id
-                                                   piilotetut-valiotsikot)})
-     [:td {:colSpan colspan}
-      [:h5 teksti]
-      (when salli-valiotsikoiden-piilotus?
-        (if (@piilotetut-valiotsikot valiotsikko-id)
-          (ikonit/livicon-chevron-right)
-          (ikonit/livicon-chevron-down)))
-      (map-indexed
-        (fn [i {:keys [sijainti sisalto tyyli]}]
-          ^{:key i}
-          [:div {:style (or tyyli {:top -2 :left sijainti})
-                 :class (if-not valiotsikon-komponentti-flowhun?
-                          "grid-valiotsikko-custom-komponentti"
-                          "valiotsikko-flowssa")}
-           [sisalto {:id valiotsikko-id}]])
-        otsikkokomponentit)]]))
+    [:<>
+     [:tr.otsikko (when salli-valiotsikoiden-piilotus?
+                    {:class    "gridin-collapsoitava-valiotsikko klikattava"
+                     :on-click #(toggle-valiotsikko valiotsikko-id
+                                                    piilotetut-valiotsikot)})
+      [:td {:colSpan colspan}
+       [:h5 teksti]
+       (when salli-valiotsikoiden-piilotus?
+         (if (@piilotetut-valiotsikot valiotsikko-id)
+           (ikonit/livicon-chevron-right)
+           (ikonit/livicon-chevron-down)))
+       ]]
+     (when-not (empty? otsikkokomponentit)
+        (map-indexed
+          (fn [i {:keys [sisalto]}]
+            ^{:key i}
+            [sisalto {:id valiotsikko-id}])
+          otsikkokomponentit))]))
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
