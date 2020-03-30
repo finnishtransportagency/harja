@@ -198,7 +198,7 @@
   "Merkkaa laskun liitteen poistetuksi"
   [db user {:keys [urakka-id lasku-id liite-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (q/poista-laskun-ja-liitteen-linkitys<! db {:lasku-id lasku-id :liite-id liite-id})
+  (q/poista-laskun-ja-liitteen-linkitys<! db {:lasku-id lasku-id :liite-id liite-id :kayttaja (:id user)})
   (hae-laskuerittely db user {:id lasku-id}))
 
 (defn- kulu-pdf

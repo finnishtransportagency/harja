@@ -57,7 +57,11 @@ on conflict do nothing;
 
 -- name: poista-laskun-ja-liitteen-linkitys<!
 -- Merkkaa liitteen poistetuksi
-update lasku_liite ll set poistettu = true where ll.lasku = :lasku-id and ll.liite = :liite-id;
+update lasku_liite ll
+set poistettu = true
+ muokkaaja = :kayttaja
+ muokattu = current_timestamp
+ where ll.lasku = :lasku-id and ll.liite = :liite-id;
 
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
