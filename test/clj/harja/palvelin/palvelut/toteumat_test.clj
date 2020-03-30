@@ -377,7 +377,7 @@
 
 ;; circleci:stä ei saane yhteyttä +oikea-testi-tierekisteri-url+
 ;; Otetaan pois siksi aikaa, että on saatu muutokset tierekisteriin liittyen tuotantoon asti
-#_(when (not (circleci?))
+(when (not (circleci?))
   (deftest varusteiden-testit
     ;; Tässä haetaan liikennemerkin tiedot tierekisterin testipuolelta. Tierekisterikomponentti kakuttaa tuloksen, niin
     ;; tallennuksen aikana ei tarvitse enään tehdä uutta kutsua (jos tehtäisiin, niin se epäonnistuisi, koska annetun tierekisterikomponentin url
@@ -390,7 +390,7 @@
                    :tierekisteriosoite {:numero 22 :alkuosa 1 :alkuetaisyys 3}
                    :urakka-id 4
                    :loppupvm nil
-                   :arvot {:x 428025 :y 7210432 :lmnumero "11"}
+                   :arvot {:x 428025 :y 7210432 :asetusnr "11"}
                    :puoli 1
                    :tietolaji "tl506"
                    :id nil
