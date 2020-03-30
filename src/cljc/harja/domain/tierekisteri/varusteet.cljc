@@ -23,7 +23,8 @@
    "tl506" "Liikennemerkki"
    "tl522" "Reunakivet"
    "tl513" "Reunapaalut"
-   "tl519" "Puomit ja kulkuaukot"
+   "tl519" "Huoltoaukot"
+   "tl520" "Puomit"
    "tl505" "Jätehuolto"
    "tl504" "WC"
    "tl518" "Kivetyt alueet"
@@ -44,7 +45,8 @@
    "Liikennemerkki" "tl506"
    "Reunakivet" "tl522"
    "Reunapaalut" "tl513"
-   "Puomit ja kulkuaukot" "tl519"
+   "Huoltoaukot" "tl519"
+   "Puomit" "tl520"
    "Jätehuolto" "tl505"
    "WC" "tl504"
    "Kivetyt alueet" "tl518"
@@ -56,13 +58,14 @@
    "Hiekkalaatikot" "tl516"
    "Viherkuviot" "tl524"
    "Tekninen piste" "tl523"})
+
 (def puolet
   {0 "Määrittämätön"
    1 "Oikea"
    2 "Vasen"
-   3 "Ajoratojen välissä"
+   3 "Ajoratojen välissä (ajosuuntia erottavalla keskialueella)"
    7 "Tien päässä"
-   8 "Tien/ajoradan keskellä"
+   8 "Keskellä (ajoradalla tai sen yläpuolella)"
    9 "Tien päällä"})
 
 (defn puoli->selitys
@@ -82,6 +85,7 @@
     "tl513" [1 2 3]
     "tl196" [1 2 7]
     "tl519" [1 2 3]
+    "tl520" [1 2 3 9]
     "tl505" [1 2 7 9]
     "tl195" [1 2 7 9]
     "tl504" [1 2 7 9]
@@ -127,6 +131,7 @@
                "tl516",
                "tl517",
                "tl519",
+               "tl520",
                "tl523",
                "tl524",
                "tl703"} tietolaji))
@@ -236,14 +241,14 @@
 (defn varusteen-liikennemerkki-skeema
   [tietolaji]
   (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
-        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "lmnumero") ominaisuudet)))
-        lmnumero->teksti (fn [numero]
+        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
+        asetusnr->teksti (fn [numero]
                            (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
     {:otsikko "Liikennemerkki"
      :tyyppi :string
      :hae (fn [rivi]
-            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "lmnumero"])]
-              (str numero " - " (lmnumero->teksti numero))))
+            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "asetusnr"])]
+              (str numero " - " (asetusnr->teksti numero))))
      :leveys 2}))
 
 (def varusteen-perustiedot-skeema
