@@ -14,7 +14,8 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [harja.data.hoito.kustannussuunnitelma :as ks-data]))
+            [harja.data.hoito.kustannussuunnitelma :as ks-data]
+            [harja.pvm :as pvm]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""

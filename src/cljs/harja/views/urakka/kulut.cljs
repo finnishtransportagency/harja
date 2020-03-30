@@ -22,7 +22,9 @@
             [harja.loki :refer [log]]
             [harja.loki :as loki]
             [harja.ui.kentat :as kentat]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn- lomakkeen-osio [otsikko & osiot]
@@ -348,6 +350,7 @@
                        (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value) :koskettu-nimi? true))]
          [kentat/vayla-lomakekentta
           "Y-tunnus *"
+          :placeholder "Muotoa 1234567-1"
           :disabled (not= 0 haetaan)
           :class #{(str "input" (if (or
                                       (false? koskettu-ytunnus?)
@@ -366,13 +369,13 @@
                  (tallennus-fn (-> @aliurakoitsija-atomi (dissoc :virhe? :koskettu-nimi? :koskettu-ytunnus?)))
                  (modal/piilota!))
                (swap! aliurakoitsija-atomi assoc :virhe? true)))
-           {:ikoni        ikonit/ok
+           {:ikoni        [ikonit/ok]
             :vayla-tyyli? true}]
           [napit/sulje
            "Sulje"
            (fn [] (modal/piilota!))
            {:vayla-tyyli? true
-            :ikoni        ikonit/remove}]]]))))
+            :ikoni        [ikonit/remove]}]]]))))
 
 (defn- paivita-aliurakoitsija-jos-ytunnusta-muokattu
   [aliurakoitsija aliurakoitsijat paivitys-fn]
@@ -434,6 +437,7 @@
                      #(when (= aliurakoitsija (:id %)) (:ytunnus %))
                      aliurakoitsijat)
                    y-tunnus-puuttuu)
+           :placeholder "Muotoa 1234567-1"
            :on-focus #(when (= y-tunnus-puuttuu (-> % .-target .-value)) (swap! aliurakoitsija-atomi assoc :ytunnus ""))
            :on-change #(swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value))
            :on-blur #(paivita-aliurakoitsija-jos-ytunnusta-muokattu
@@ -447,8 +451,7 @@
            "Kirjoita tähän halutessasi lisätietoa"
            :disabled (not= 0 haetaan)
            :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
-           :arvo lisatieto]
-          )))))
+           :arvo lisatieto])))))
 
 (defn- maara-summa
   [{:keys [paivitys-fn haetaan]}
@@ -525,6 +528,12 @@
          [debug/debug lomake]
          [:div.palstat
           [:div.palsta
+           [napit/takaisin
+            "Takaisin"
+            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+            {:vayla-tyyli?  true
+             :teksti-nappi? true
+             :style         {:font-size "14px"}}]
            [:h2 (str (if-not (nil? (:id lomake))
                        "Muokkaa kulua"
                        "Uusi kulu"))]]]
@@ -556,7 +565,7 @@
           [napit/peruuta
            "Peruuta"
            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-           {:ikoni        ikonit/remove
+           {:ikoni        [ikonit/remove]
             :luokka       "suuri"
             :vayla-tyyli? true}]]
          (when (not= 0 haetaan)
@@ -569,28 +578,42 @@
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {:keys [taulukko syottomoodi] :as app}]
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti]} :parametrit :as app}]
       [:div#vayla
        (if syottomoodi
          [kulujen-syottolomake e! app]
          [:div
-          [napit/yleinen-toissijainen
-           "Tallenna Excel"
-           #(loki/log "En tallenna vielä")
-           {:vayla-tyyli? true
-            :luokka       "suuri"
-            :disabled     true}]
-          [napit/yleinen-toissijainen
-           "Tallenna PDF"
-           #(loki/log "En tallenna vielä")
-           {:vayla-tyyli? true
-            :luokka       "suuri"
-            :disabled     true}]
-          [napit/yleinen-ensisijainen
-           "Uusi kulu"
-           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-           {:vayla-tyyli? true
-            :luokka       "suuri"}]
+          [debug/debug taulukko]
+          [:div
+           [:h2 "Kulujen kohdistus"]
+           [napit/yleinen-toissijainen
+            "Tallenna Excel"
+            #(loki/log "En tallenna vielä")
+            {:vayla-tyyli? true
+             :luokka       "suuri"
+             :disabled     true}]
+           #_[napit/yleinen-toissijainen
+              "Tallenna PDF"
+              #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
+              {:vayla-tyyli? true
+               :luokka       "suuri"}]
+           ^{:key "raporttipdf"}
+           [:form {:target "_blank" :method "POST"
+                          :action (k/pdf-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {})}]
+            [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
+             {:type         "submit"
+              :vayla-tyyli? true}]]
+           [napit/yleinen-ensisijainen
+            "Uusi kulu"
+            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+            {:vayla-tyyli? true
+             :luokka       "suuri"}]]
+          #_[kentat/vayla-lomakekentta
+             "Kirjoita tähän halutessasi lisätietoa"
+             :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
+             :arvo hakuteksti]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 

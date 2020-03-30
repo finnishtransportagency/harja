@@ -76,6 +76,9 @@
 (defn lisaa-uuden-osan-rajapintakasittelijat [osa & gridkasittelijat]
   (apply g/lisaa-uuden-osan-rajapintakasittelijat osa gridkasittelijat))
 
+(defn poista-osan-rajapintakasittelijat [osa]
+  (g/poista-osan-rajapintakasittelijat osa))
+
 ;; HAUT
 
 ; - gridiin liittyvät haut
@@ -317,8 +320,25 @@
 
 ;; MISC
 
+(defn siivoa-grid! [grid]
+  (doseq [[_ {:keys [seurannan-lopetus!]}] (::g/grid-tapahtumat grid)]
+    (seurannan-lopetus!))
+  (when-let [f! (::g/lopeta-rajapinnan-kautta-kuuntelu! grid)]
+    (f! (gop/id grid)))
+  (doseq [[_ {:keys [rajapintakasittelija]}] (::g/grid-rajapintakasittelijat grid)
+          :when rajapintakasittelija]
+    (r/dispose! (:r rajapintakasittelija)))
+  (when-let [kasittelija (and grid (get-in @g/taulukko-konteksti [(gop/id grid) :datan-kasittelija]))]
+    (r/dispose! kasittelija))
+  (when-let [grid-id (and grid (gop/id grid))]
+    (swap! g/taulukko-konteksti dissoc grid-id)))
+
+(defn poista-data-kasittelija! [data-atom]
+  (let [data-atom-hash (str (hash data-atom))]
+    (swap! dk/seurannan-vanha-cache dissoc data-atom-hash)
+    (swap! dk/seurannan-valitila dissoc data-atom-hash)))
+
 (defn aseta-gridin-polut
   "Tätä ei tulisi tarvita kutsua erikseen. Kehityksessä voi olla ihan hyödyllinen, kun ei ole vielä liitetty dataa taulukkoon."
   [grid]
   (g/aseta-gridin-polut grid))
-

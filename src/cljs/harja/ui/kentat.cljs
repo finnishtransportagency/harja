@@ -690,6 +690,10 @@
 ;; HUOM: 0:0 ei siis ole validi kellonaika. Esim 0:00 on.
 (def +validi-aika-regex+ #"^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")
 
+
+(def key-code-tab 9)
+(def key-code-enter 13)
+
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi]} data]
@@ -752,7 +756,8 @@
                          :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
                          :on-change   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
-                         :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+                         :on-key-down #(when (or (= key-code-tab (-> % .-keyCode)) (= key-code-tab (-> % .-which))
+                                                 (= key-code-enter (-> % .-keyCode)) (= key-code-enter (-> % .-which)))
                                          (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                          (reset! auki false)
                                          true)

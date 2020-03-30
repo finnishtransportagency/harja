@@ -15,13 +15,13 @@
                                             "oam_user_email" "testi.kayttaja@example.com"
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
- 
+
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana "s_harja"}
+              :salasana "harja"}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
                       :portti 5432

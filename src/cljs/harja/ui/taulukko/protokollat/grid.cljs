@@ -134,15 +134,15 @@
   (when (satisfies? IGrid osa)
     (-alueet osa)))
 
-(defn aseta-alueet! [grid alueet]
+(defn aseta-alueet! [grid alueiden-arvot]
   {:pre [(satisfies? IGrid grid)
-         (vector? alueet)
+         (vector? alueiden-arvot)
          ;; TODO Tarkista alueet
          ]
    ;; TODO :post
    :post [
-          (= % alueet)]}
-  (-aseta-alueet! grid alueet))
+          (= (alueet %) alueiden-arvot)]}
+  (-aseta-alueet! grid alueiden-arvot))
 
 (defn paivita-alueet! [grid f]
   {:pre [(satisfies? IGrid grid)

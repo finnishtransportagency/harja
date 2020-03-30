@@ -20,8 +20,8 @@ select liite.id               AS "liite-id",
        liite.koko             AS "liite-koko",
        liite.liite_oid        AS "liite-oid"
        from lasku l
-       left join lasku_liite ll on l.id = ll.lasku and ll.poistettu is not true
-       left join liite liite on ll.liite = liite.id
+       join lasku_liite ll on l.id = ll.lasku and ll.poistettu is not true
+       join liite liite on ll.liite = liite.id
        where l.id = :lasku-id;
 
 -- name: hae-kaikki-urakan-laskuerittelyt
@@ -36,6 +36,7 @@ SELECT l.id                   as "id",
        lk.id                  as "kohdistus-id",
        lk.rivi                as "rivi",
        lk.summa               as "summa",
+       lk.lisatyo             as "lisatyo",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
@@ -56,7 +57,11 @@ on conflict do nothing;
 
 -- name: poista-laskun-ja-liitteen-linkitys<!
 -- Merkkaa liitteen poistetuksi
-update lasku_liite ll set poistettu = true where ll.lasku = :lasku-id and ll.liite = :liite-id;
+update lasku_liite ll
+set poistettu = true
+ muokkaaja = :kayttaja
+ muokattu = current_timestamp
+ where ll.lasku = :lasku-id and ll.liite = :liite-id;
 
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
@@ -70,6 +75,7 @@ SELECT l.id                   as "id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
+       lk.lisatyo             as "lisatyo",
        l.suorittaja           as "suorittaja-id",
        a.nimi                 as "suorittaja-nimi",
        lk.suoritus_alku       as "suoritus-alku",
@@ -107,6 +113,7 @@ SELECT lk.id                  as "kohdistus-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
        lk.luotu               as "luontiaika",
+       lk.lisatyo             as "lisatyo",
        lk.muokattu            as "muokkausaika",
        a.id                   as "suorittaja-id",
        a.nimi                 as "suorittaja-nimi"
@@ -141,9 +148,9 @@ update
 -- name: luo-laskun-kohdistus<!
 INSERT
 INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
-                      suoritus_loppu, luotu, luoja)
+                      suoritus_loppu, luotu, luoja, lisatyo)
 VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
-        current_timestamp, :kayttaja);
+        current_timestamp, :kayttaja, :lisatyo);
 
 -- name: paivita-laskun-kohdistus<!
 update lasku_kohdistus
@@ -152,6 +159,7 @@ set summa = :summa,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
     suoritus_alku = :alkupvm,
+    lisatyo = :lisatyo,
     suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja

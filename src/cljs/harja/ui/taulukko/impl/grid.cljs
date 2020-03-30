@@ -478,16 +478,21 @@
        (recur (first loydetyt-osat) polku koko-polku)))))
 
 (defn- grid-polku-sopii-osaan?
-  [grid-polku osa]
-  (let [nimi-polku (::nimi-polku osa)
-        index-polku (::index-polku osa)]
-    (and (every? true? (map (fn [gp np ip]
-                              (or (= gp np)
-                                  (= gp ip)))
-                            grid-polku
-                            nimi-polku
-                            index-polku))
-         (>= (count nimi-polku) (count grid-polku)))))
+  ([grid-polku osa] (grid-polku-sopii-osaan? grid-polku osa true))
+  ([grid-polku osa osan-polku-pitempi?]
+   (let [nimi-polku (::nimi-polku osa)
+         index-polku (::index-polku osa)
+         osan-polun-pituus-poikein? (fn []
+                                      (if osan-polku-pitempi?
+                                        (>= (count nimi-polku) (count grid-polku))
+                                        (<= (count nimi-polku) (count grid-polku))))]
+     (and (every? true? (map (fn [gp np ip]
+                               (or (= gp np)
+                                   (= gp ip)))
+                             grid-polku
+                             nimi-polku
+                             index-polku))
+          (osan-polun-pituus-poikein?)))))
 
 (defn- solun-polun-pituus-oikein?
   [grid-polku solun-polun-pituus osa]
@@ -775,6 +780,28 @@
                                                         (constantly true)
                                                         osan-kasittely)
                                 (osan-kasittely uusi-osa))))))
+
+(defn poista-osan-rajapintakasittelijat [osa]
+  (let [root-grid (root osa)
+        poistettavat-kasittelijat (keep (fn [[polku kasittelija]]
+                                          (let [oikea-polku? (grid-polku-sopii-osaan? polku osa false)]
+                                            (when oikea-polku?
+                                              [polku kasittelija])))
+                                        (::grid-rajapintakasittelijat root-grid))]
+    (when-not (empty? poistettavat-kasittelijat)
+      (paivita-kaikki-lapset! (assoc osa ::osan-derefable (r/atom nil))
+                              (constantly true)
+                              (fn [osa]
+                                (assoc osa ::osan-derefable (r/atom nil))))
+      (doseq [[_ {poistettava-kasittelija :rajapintakasittelija}] poistettavat-kasittelijat]
+        (if (= 0 (:n poistettava-kasittelija))
+          (ratom/dispose! (:r poistettava-kasittelija))
+          (while (> (:n poistettava-kasittelija) 0)
+            (poista-seuranta-derefable! poistettava-kasittelija))))
+      (paivita-root! root-grid
+                     (fn [vanha-grid]
+                       (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
+                                                                         (apply dissoc rk (map first poistettavat-kasittelijat)))))))))
 
 (defn kasittele-osien-ja-rajapintakasittelijoiden-muutos! [grid gridin-data entinen-toistettavan-osan-data uudet-grid-kasittelijat]
   (let [toistettavan-osan-data (:toistettavan-osan-data grid)
@@ -1182,9 +1209,10 @@
                                                 grid-kasittelija)]
       (paivita-root! this
                      (fn [_]
-                       (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn []
-                                                                                                  (dk/poista-seurannat! datan-kasittelija)
-                                                                                                  (dk/lopeta-tilan-kuuntelu! datan-kasittelija))
+                       (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn [gridin-id]
+                                                                                                  (when-let [datan-kasittelija (get-in @taulukko-konteksti [gridin-id :datan-kasittelija])]
+                                                                                                    (dk/poista-seurannat! datan-kasittelija)
+                                                                                                    (dk/lopeta-tilan-kuuntelu! datan-kasittelija)))
                                                       ::grid-rajapintakasittelijat grid-rajapintakasittelijat)
                                                (fn [osa]
                                                  (not (dynaamisen-jalkelainen? osa)))

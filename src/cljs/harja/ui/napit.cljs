@@ -149,7 +149,7 @@
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
                                     (r/dom-node %)))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type] :as optiot}]
          [:button
           (merge
             {:class     (str (when disabled "disabled ")
@@ -160,6 +160,8 @@
              :disabled  disabled
              :style     style
              :title     title
+             :type      (or type
+                            "button")
              :on-click  #(do
                            (.preventDefault %)
                            (.stopPropagation %)
@@ -181,10 +183,15 @@
 (defn takaisin
   ([toiminto] (takaisin "Takaisin" toiminto {}))
   ([teksti toiminto] (takaisin teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/livicon-chevron-left)})]))
 
 (defn uusi
