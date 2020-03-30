@@ -8,7 +8,9 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tyokalut.big :as big]))
+            [harja.tyokalut.big :as big]
+            [harja.palvelin.palvelut.kulut.pdf :as kpdf]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
 
 
 (defn kasittele-suorittaja
@@ -111,6 +113,7 @@
                   :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
                   :alkupvm             (:suoritus-alku laskurivi)
                   :loppupvm            (:suoritus-loppu laskurivi)
+                  :lisatyo             (:lisatyo laskurivi)
                   :kayttaja            (:id user)}]
     (if (nil? (:kohdistus-id laskurivi))
       (q/luo-laskun-kohdistus<! db (assoc yhteiset :lasku lasku-id
@@ -198,11 +201,23 @@
   (q/poista-laskun-ja-liitteen-linkitys<! db {:lasku-id lasku-id :liite-id liite-id})
   (hae-laskuerittely db user {:id lasku-id}))
 
+(defn- kulu-pdf
+  [db user params]
+  (println "Kulud")
+  (kpdf/kulu-pdf))
+
+(defn- luo-pdf
+  [pdf user hakuehdot]
+  (println "Luod")
+  (let [{:keys [tiedosto-bytet tiedostonimi]} (pdf-vienti/luo-pdf pdf :kulut user hakuehdot)]
+    tiedosto-bytet))
+
 (defrecord Laskut []
   component/Lifecycle
   (start [this]
     (let [db (:db this)
-          http (:http-palvelin this)]
+          http (:http-palvelin this)
+          pdf (:pdf-vienti this)]
       (julkaise-palvelu http :laskut
                         (fn [user hakuehdot]
                           (hae-urakan-laskut db user hakuehdot)))
@@ -227,15 +242,23 @@
       (julkaise-palvelu http :poista-laskun-liite
                         (fn [user hakuehdot]
                           (poista-laskun-liite db user hakuehdot)))
+      (julkaise-palvelu http :luo-pdf-kuluista
+                        (fn [user hakuehdot]
+                          (luo-pdf pdf user hakuehdot)))
+      (when pdf
+        (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :laskut)
-    (poista-palvelut (:http-palvelin this) :lasku)
-    (poista-palvelut (:http-palvelin this) :laskuerittelyt)
-    (poista-palvelut (:http-palvelin this) :kaikki-laskuerittelyt)
-    (poista-palvelut (:http-palvelin this) :tallenna-lasku)
-    (poista-palvelut (:http-palvelin this) :poista-lasku)
-    (poista-palvelut (:http-palvelin this) :poista-laskurivi)
-    (poista-palvelut (:http-palvelin this) :poista-laskun-liite)
+    (poista-palvelut (:http-palvelin this) :laskut
+                     :lasku
+                     :laskuerittelyt
+                     :kaikki-laskuerittelyt
+                     :tallenna-lasku
+                     :poista-lasku
+                     :poista-laskurivi
+                     :poista-laskun-liite
+                     :luo-pdf-kuluista)
+    (when (:pdf-vienti this)
+      (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     this))

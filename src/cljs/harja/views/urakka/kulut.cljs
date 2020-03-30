@@ -22,7 +22,9 @@
             [harja.loki :refer [log]]
             [harja.loki :as loki]
             [harja.ui.kentat :as kentat]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn- lomakkeen-osio [otsikko & osiot]
@@ -590,21 +592,28 @@
             {:vayla-tyyli? true
              :luokka       "suuri"
              :disabled     true}]
-           [napit/yleinen-toissijainen
-            "Tallenna PDF"
-            #(loki/log "En tallenna vielä")
-            {:vayla-tyyli? true
-             :luokka       "suuri"
-             :disabled     true}]
+           #_[napit/yleinen-toissijainen
+              "Tallenna PDF"
+              #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
+              {:vayla-tyyli? true
+               :luokka       "suuri"}]
+           ^{:key "raporttipdf"}
+           [:form {:target "_blank" :method "POST"
+                          :action (k/pdf-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {})}]
+            [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
+             {:type         "submit"
+              :vayla-tyyli? true}]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
             {:vayla-tyyli? true
              :luokka       "suuri"}]]
           #_[kentat/vayla-lomakekentta
-           "Kirjoita tähän halutessasi lisätietoa"
-           :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
-           :arvo hakuteksti]
+             "Kirjoita tähän halutessasi lisätietoa"
+             :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
+             :arvo hakuteksti]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 
