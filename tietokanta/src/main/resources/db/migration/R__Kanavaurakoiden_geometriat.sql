@@ -49,7 +49,7 @@ ON kan_kohteenosa;
 
 CREATE TRIGGER kohteenosat_muuttuneet_trigger
 AFTER INSERT OR UPDATE ON kan_kohteenosa
-FOR EACH STATEMENT EXECUTE FUNCTION paivita_osien_kohteiden_geometriat();
+FOR EACH STATEMENT EXECUTE PROCEDURE paivita_osien_kohteiden_geometriat();
 
 -- Kun urakkaan liitetään kohteita, päivitetään urakan geometria
 DROP TRIGGER IF EXISTS urakkalinkit_muuttuneet_trigger
@@ -57,5 +57,5 @@ ON kan_kohde_urakka;
 
 CREATE TRIGGER urakkalinkit_muuttuneet_trigger
 AFTER INSERT OR UPDATE ON kan_kohde_urakka
-FOR EACH STATEMENT EXECUTE FUNCTION paivita_kanavaurakoiden_geometriat();
+FOR EACH STATEMENT EXECUTE PROCEDURE paivita_kanavaurakoiden_geometriat();
 

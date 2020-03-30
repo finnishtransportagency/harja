@@ -19,4 +19,4 @@ DROP TRIGGER IF EXISTS sama_kohde_tapahtumalla_ja_osalla_trigger ON kan_liikenne
 CREATE TRIGGER sama_kohde_tapahtumalla_ja_osalla_trigger
 BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_toiminto
 FOR EACH ROW
-EXECUTE FUNCTION sama_kohde_tapahtumalla_ja_osalla();
+EXECUTE PROCEDURE sama_kohde_tapahtumalla_ja_osalla();

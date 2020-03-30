@@ -25,4 +25,4 @@ ON kan_liikennetapahtuma;
 CREATE CONSTRAINT TRIGGER kaikille_osille_palvelumuoto_trigger
 AFTER INSERT OR UPDATE ON kan_liikennetapahtuma
   DEFERRABLE
-FOR EACH ROW EXECUTE FUNCTION kaikille_osille_palvelumuoto();
+FOR EACH ROW EXECUTE PROCEDURE kaikille_osille_palvelumuoto();
