@@ -13,6 +13,7 @@
 #kustannussuunnitelma {
   display:flex;
   flex-direction: column;
+  padding-top: 32px;
 
   .body-text();
 
@@ -84,6 +85,7 @@
 }
 
 .hintalaskuri {
+  .small-text();
   background-color: @gray245;
   padding: 15px;
   > *:first-child {
@@ -91,6 +93,7 @@
   }
 }
 .indeksilaskuri {
+  .small-text();
   > span:first-child {
     font-weight: 700;
     .harmaa-teksti();
@@ -101,7 +104,6 @@
   .hintalaskurisarake-yla {
     text-align: center;
     padding: 5px 0px;
-    .small-text();
     .harmaa-teksti();
   }
   .hintalaskurisarake-ala {

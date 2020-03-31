@@ -4,6 +4,7 @@
             [harja.ui.taulukko.impl.solu :as solu]
             [harja.ui.taulukko.impl.grid :as g]
             [harja.ui.napit :as napit]
+            [reagent.core :as r]
             [clojure.set :as clj-set]
             [harja.ui.taulukko.impl.alue :as alue])
   (:require-macros [harja.ui.taulukko.grid :refer [defsolu]]
@@ -16,6 +17,8 @@
  käyttäytymisistä."}
          rivit-alla_ nil)
 
+(defonce ^{:mutable true} on-blur-arvo_ nil)
+
 (defsolu SyoteTaytaAlas
          [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
          {:pre [(boolean? nappi-nakyvilla?)]}
@@ -26,15 +29,19 @@
                                                        (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
                                                            (= (str (.getAttribute klikattu-elementti "data-id"))
                                                               (str (grid/hae-osa (::tama-komponentti solu/*this*) :id)))))
-                                 {osan-paikka :osan-paikka} (grid/solun-asia (::tama-komponentti solu/*this*) :tunniste-rajapinnan-dataan)
-                                 rivin-paikka (first osan-paikka)
-                                 rivit-alla (when klikattu-nappia?
+                                 #_#_{osan-paikka :osan-paikka} (grid/solun-asia (::tama-komponentti solu/*this*) :tunniste-rajapinnan-dataan)
+                                 #_#_rivin-paikka (first osan-paikka)
+                                 #_#_rivit-alla (when klikattu-nappia?
                                               (grid/gridin-rivit (grid/osa-polusta (::tama-komponentti solu/*this*) [:.. :..])
                                                                  (fn [osa]
                                                                    (and (instance? alue/Rivi osa)
                                                                         (> (last (grid/osien-yhteinen-asia osa :index-polku))
                                                                            rivin-paikka)))))]
-                             (when rivit-alla
+                             (when-not klikattu-nappia?
+                               (grid/paivita-osa! (::tama-komponentti solu/*this*)
+                                                  (fn [solu]
+                                                    (assoc solu :nappi-nakyvilla? false))))
+                             #_(when rivit-alla
                                (set! rivit-alla_ rivit-alla))
                              event))
                  input-osa (solu/syote {:toiminnot (into {}
@@ -42,10 +49,11 @@
                                                                 [k (fn [x]
                                                                      (binding [solu/*this* (::tama-komponentti solu/*this*)]
                                                                        (if (= k :on-blur)
-                                                                         (do (when rivit-alla_
-                                                                               (nappia-painettu! rivit-alla_ x)
-                                                                               (set! rivit-alla_ nil))
-                                                                             (f x))
+                                                                         (do #_(when rivit-alla_
+                                                                                 (nappia-painettu! rivit-alla_ x)
+                                                                                 (set! rivit-alla_ nil))
+                                                                           (set! on-blur-arvo_ x)
+                                                                           (f x))
                                                                          (f x))))])
                                                               toiminnot))
                                         :kayttaytymiset (into {}
@@ -57,15 +65,32 @@
                                         :parametrit parametrit
                                         :fmt fmt
                                         :fmt-aktiivinen fmt-aktiivinen})
-                 ala-tee-mitaan (fn [&_])]
+                 klikattu-fn! (fn [_]
+                                  (let [{osan-paikka :osan-paikka} (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)
+                                        rivin-paikka (first osan-paikka)
+                                        rivit-alla (grid/gridin-rivit (grid/osa-polusta solu/*this* [:.. :..])
+                                                                      (fn [osa]
+                                                                        (and (instance? alue/Rivi osa)
+                                                                             (> (last (grid/osien-yhteinen-asia osa :index-polku))
+                                                                                rivin-paikka))))]
+                                    (when rivit-alla
+                                      (nappia-painettu! rivit-alla on-blur-arvo_)
+                                      (set! on-blur-arvo_ nil))
+                                    (grid/paivita-osa! solu/*this*
+                                                       (fn [solu]
+                                                         (assoc solu :nappi-nakyvilla? false)))))]
              (fn [this]
                [:div.kustannus-syotto {:tab-index -1
                                        :data-id (str (grid/hae-osa this :id))}
-                [napit/yleinen-ensisijainen "Kopioi allaoleviin" ala-tee-mitaan
+                [napit/yleinen-ensisijainen "Kopioi allaoleviin"
+                 (r/partial (fn [event]
+                              (binding [solu/*this* this]
+                                (klikattu-fn! event))))
                  {:luokka (str "kopioi-nappi button-primary-default "
                                (when-not (:nappi-nakyvilla? this)
                                  "piillotettu"))
-                  :data-attributes {:data-kopioi-allaoleviin true}
+                  :data-attributes {:data-kopioi-allaoleviin true
+                                    :data-cy "kopioi-allaoleviin"}
                   :tabindex 0}]
                 [grid/piirra (assoc input-osa ::tama-komponentti this
                                     :parametrit (:parametrit this)
@@ -114,7 +139,8 @@
                                                               header-korkeus
                                                               korkeudet))))
                 :osat (mapv tee-osa otsikkorivi)
-                :luokat (clj-set/union #{"salli-ylipiirtaminen"} header-luokat)}
+                :luokat (clj-set/union #{"salli-ylipiirtaminen"} header-luokat)
+                :data-cy "otsikko-rivi"}
                [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])))
 
 (defn data-pohja [{:keys [nimi tyyppi osat luokat] :as body} sarakkeiden-maara]
