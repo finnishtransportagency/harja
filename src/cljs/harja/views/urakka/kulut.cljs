@@ -170,10 +170,9 @@
                    [(when (and muokataan?
                                poistettu)
                       {:style {:color "#ff0000"}})
-                    (when (and muokataan?
-                               poistettu) "Poistetaan ")
-                    (str "Kohdistus " (inc indeksi))]))     ; indeksi alkaa nollasta, mutta se ei ole paras tässä
-    [:div (pr-str poistettu) (pr-str muokataan?)]
+                    (str (if (and muokataan?
+                                  poistettu) "Poistetaan kohdistus " "Kohdistus ")
+                         (inc indeksi))]))     ; indeksi alkaa nollasta, mutta se ei ole paras tässä
     [kentat/vayla-lomakekentta
      "Tehtäväryhmä *"
      :tyylit {:kontti #{"kulukentta"}}
@@ -282,6 +281,7 @@
          {:type     :checkbox
           :disabled (not= 0 haetaan)
           :checked  (> kohdistukset-lkm 1)
+          :on-change #()
           :on-click #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                       lisaa-kohdistus
                                                       resetoi-kohdistukset)
