@@ -7,10 +7,6 @@
             [harja.tiedot.urakka.mhu-laskutus :as tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.ui.taulukko.taulukko :as taulukko]
-            [harja.ui.taulukko.jana :as jana]
-            [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.tyokalut :as tyokalu]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
@@ -18,7 +14,6 @@
             [harja.ui.napit :as napit]
             [harja.ui.modal :as modal]
             [harja.ui.liitteet :as liitteet]
-            [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.loki :as loki]
             [harja.ui.kentat :as kentat]
@@ -61,7 +56,7 @@
   (conj m
         {:tehtavaryhma        nil
          :toimenpideinstanssi nil
-         :summa               nil
+         :summa               0
          :poistettu           false
          :rivi                (count m)}))
 

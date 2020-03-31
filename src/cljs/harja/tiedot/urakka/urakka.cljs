@@ -145,7 +145,7 @@
 
 (def kulut-lomake-default (with-meta {:kohdistukset          [{:tehtavaryhma        nil
                                                                :toimenpideinstanssi nil
-                                                               :summa               nil
+                                                               :summa               0
                                                                :poistettu           false
                                                                :rivi                0}]
                                       :aliurakoitsija        nil
