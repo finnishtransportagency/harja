@@ -108,7 +108,7 @@
                                                 :losa 1
                                                 :numero 1
                                                 :puoli 1}}
-                               :tietolaji {:arvot ["1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
+                               :tietolaji {:arvot ["1234567890          ASETUSNR    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
                                            :tietolajitunniste "tl506"}
                                :tunniste "1245rgfsd"
                                :urakka 100}]
@@ -141,7 +141,7 @@
                                               :losa 1
                                               :numero 1
                                               :puoli 1}}
-                             :tietolaji {:arvot ["1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
+                             :tietolaji {:arvot ["1234567890          ASETUSNR    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
                                          :tietolajitunniste "tl506"}
                              :tunniste "1245rgfsd"
                              :urakka 100}

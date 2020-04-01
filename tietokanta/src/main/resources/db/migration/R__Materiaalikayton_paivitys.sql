@@ -71,3 +71,20 @@ BEGIN
 	GROUP BY t.sopimus, t.alkanut::date, tm.materiaalikoodi;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Allaoleva funktio päivittää sopimuksen käytetyn materiaalin cachen päivämääräväliltä
+-- Se voidaan suorittaa hätätilanteessa esim. SQL-tulkin avulla tuotantokantaa vasten AINA transaktion sisällä (BEGIN... do stuff; COMMIT/ROLLBACK;)
+-- Mahdolliset rivien deletoinnit tehtävä käsin ennen ajoa. Ks. VHAR-1691
+CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_pvm_aikavalille(alku DATE, loppu DATE)
+RETURNS void AS $$
+DECLARE
+BEGIN
+        INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
+        SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara)
+          FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
+         WHERE t.poistettu IS NOT TRUE and tm.poistettu IS NOT TRUE
+            AND t.alkanut BETWEEN alku AND (select date_trunc('day', loppu) + interval '1 day' - interval '1 second')
+         GROUP BY t.sopimus, t.alkanut::date, tm.materiaalikoodi;
+    RETURN;
+END;
+$$ LANGUAGE plpgsql;

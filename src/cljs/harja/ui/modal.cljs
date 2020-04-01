@@ -78,12 +78,13 @@
   (let [optiot-ja-sisalto @modal-sisalto]
     [modal-container* optiot-ja-sisalto (:sisalto optiot-ja-sisalto)]))
 
-(defn nayta! [{:keys [sulje otsikko otsikko-tyyli footer luokka leveys content-tyyli body-tyyli]} sisalto]
+(defn nayta! [{:keys [sulje otsikko sulje-fn otsikko-tyyli footer luokka leveys content-tyyli body-tyyli]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :otsikko-tyyli otsikko-tyyli
                          :footer footer
                          :sisalto sisalto
                          :luokka luokka
+                         :sulje-fn sulje-fn
                          :sulje sulje
                          :nakyvissa? true
                          :leveys leveys
