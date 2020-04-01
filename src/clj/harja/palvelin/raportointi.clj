@@ -147,7 +147,7 @@
     :paivitetty))
 
 (defn paivita-raportti-cache-oisin! [db]
-  (ajastettu-tehtava/ajasta-paivittain [0 1 0]
+  (ajastettu-tehtava/ajasta-paivittain [7 15 0]
                                        (fn [_]
                                          (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
                                          (raportit-q/paivita_raportti_cachet db))))
