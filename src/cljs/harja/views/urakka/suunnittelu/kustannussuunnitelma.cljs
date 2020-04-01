@@ -2545,7 +2545,8 @@
                             (grid/triggeroi-tapahtuma! g-tv :tilaajan-varaukset-disablerivit)))
                       (e! (t/->HaeKustannussuunnitelma))
                       (tila/lisaa-urakan-vaihto-trigger! gridien-siivous)))
-    (komp/ulos gridien-siivous)
+    (komp/ulos #(do (gridien-siivous)
+                    (swap! tila/suunnittelu-kustannussuunnitelma (fn [_] tila/kustannussuunnitelma-default))))
     (fn [e*! {:keys [suodattimet] :as app}]
       (set! e! e*!)
       [:div#kustannussuunnitelma
