@@ -12,6 +12,7 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
             [harja.ui.debug :as debug]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
@@ -19,8 +20,41 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
             [cljs.core.async :refer [<! timeout]]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+
+
+(defn ilmoita-virheesta-modal
+  "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
+  [e! {:keys [kohde-id urakka-id kohde-nimi lomakedata nakyvissa?] :as kohde}]
+  [modal/modal
+   {:otsikko (str "Lähetä sähköposti")
+    :luokka "ilmoita-virheesta-modal"
+    :nakyvissa? true
+    :sulje-fn #(e! (tiedot/->SuljeVirheModal))
+    :footer [:div
+             [napit/peruuta
+              "Peruuta"
+              #(e! (tiedot/->SuljeVirheModal))]
+
+             [napit/palvelinkutsu-nappi
+              "Ilmoita"
+              #(tiedot/->LahetaIlmoitusVirheesta
+                 {:kohde-id kohde-id
+                  :kohde-nimi kohde-nimi
+                  :kopio-itselle? (:kopio-itselle? lomakedata)
+                  :saate (:saate lomakedata)
+                  :urakka-id urakka-id})
+              {:disabled false
+               :luokka "nappi-myonteinen"
+               :ikoni (ikonit/check)
+               :kun-onnistuu (fn [vastaus]
+                               (log "Homma rokkasi, kerrotaan jotenkin käyttäjälle.")
+                               #(e! (tiedot/->SuljeVirheModal)))}]]}])
+
 
 (defn paikkaukset-vetolaatikko
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
@@ -166,31 +200,35 @@
         ]
     [{:tyyli {}
       :sisalto
-             (fn [_]
-               [:tr.valiotsikko
+      (fn [_]
+        [:<>
+         [:tr
+          [napit/yleinen-ensisijainen "Ilmoita virhe"
+           #(tiedot/->AvaaVirheModal paikkaus)]]
+         [:tr.valiotsikko
 
-                [:td.tasaa-oikealle {:colSpan 2}
-                 [:span.bold (str "Yhteensä: " (count paikkaukset))]]
-                [:td {:colSpan 5}]
-                [:td {:colSpan 1}
-                 [:span.bold (when alkupvm
-                               (clojure.string/replace (pvm/pvm-aika alkupvm) " " " klo "))]] ; replacella "klo" päivämäärän ja ajan väliin
-                [:td {:colSpan 1}
-                 [:span.bold (when loppupvm
-                               (clojure.string/replace (pvm/pvm-aika loppupvm) " " " klo "))]]
-                [:td {:colSpan 3}]
-                [:td
-                 [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
-                [:td
-                 [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
-                [:td {:colSpan 2}
-                 [:div {:style {:float "right"}}
-                  [:a.livicon-arrow-right {:style    {:float "right"}
-                                           :href     "#"
-                                           :on-click #(do
-                                                        (.preventDefault %)
-                                                        (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
-                   "Kustannukset"]]]])}]))
+          [:td.tasaa-oikealle {:colSpan 2}
+           [:span.bold (str "Yhteensä: " (count paikkaukset))]]
+          [:td {:colSpan 5}]
+          [:td {:colSpan 1}
+           [:span.bold (when alkupvm
+                         (clojure.string/replace (pvm/pvm-aika alkupvm) " " " klo "))]] ; replacella "klo" päivämäärän ja ajan väliin
+          [:td {:colSpan 1}
+           [:span.bold (when loppupvm
+                         (clojure.string/replace (pvm/pvm-aika loppupvm) " " " klo "))]]
+          [:td {:colSpan 3}]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
+          [:td {:colSpan 2}
+           [:div {:style {:float "right"}}
+            [:a.livicon-arrow-right {:style {:float "right"}
+                                     :href "#"
+                                     :on-click #(do
+                                                  (.preventDefault %)
+                                                  (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
+             "Kustannukset"]]]]])}]))
 
 (defn toteumat* [e! app]
   (komp/luo
@@ -216,6 +254,8 @@
         [yhteinen-view/hakuehdot
          {:nakyma :toteumat
           :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
+        (when (:modalin-paikkaus app)
+          [ilmoita-virheesta-modal e! (:modalin-paikkaus app)])
         [paikkaukset e! app]]])))
 
 (defn toteumat [ur]

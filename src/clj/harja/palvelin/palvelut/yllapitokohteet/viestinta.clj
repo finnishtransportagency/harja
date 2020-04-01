@@ -349,3 +349,64 @@
      :saate saate
      :muut-vastaanottajat muut-vastaanottajat
      :ilmoittaja kayttaja}))
+
+
+;; Lähetä viesti paikkauksien tarkastuksessa havaitusta virheestä
+(defn- viesti-paikkaustoteumassa-virhe [{:keys [kohde-nimi rivien-lkm pinta-ala massamenekki
+                                                saate ilmoittaja]}]
+  (let [tiivistelma (format "Virhe kohteen '%s' paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." kohde-nimi)]
+    (html
+      [:div
+       [:p (sanitoi tiivistelma)]
+       (when saate [:p (sanitoi saate)])
+       [:h5 "Kohteen tiedot"]
+       (html-tyokalut/tietoja [["Kohde" kohde-nimi]
+                               ["Rivejä" rivien-lkm]
+                               ["Pinta-ala yht." pinta-ala]
+                               ["Massamenekki yht." massamenekki]
+                               ["Ilmoittaja" (formatoi-ilmoittaja ilmoittaja)]])])))
+
+(defn- laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe
+  "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
+   ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
+
+   Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
+  [{:keys [fim email kohteen-tiedot kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
+  (let [{:keys [urakka-sampo-id kohde-nimi rivien-lkm pinta-ala massamenekki]} kohteen-tiedot
+        viestin-otsikko (format "Virhe kohteen '%s' paikkaustoteumassa. Tarkista ja korjaa tiedot."
+                                kohde-nimi)
+        viestin-params {:kohde-nimi kohde-nimi
+                        :rivien-lkm rivien-lkm
+                        :pinta-ala pinta-ala
+                        :massamenekki massamenekki
+                        :saate saate
+                        :ilmoittaja ilmoittaja}
+        viestin-vartalo (viesti-paikkaustoteumassa-virhe viestin-params)]
+
+    (when urakka-sampo-id ;; Kohteella ei välttämättä ole tiemerkintäurakkaa
+      (log/debug (format "Lähetetään sähköposti: paikkaustoteumassa %s virhe." kohde-nimi))
+      (viestinta/laheta-sposti-fim-kayttajarooleille
+        {:fim fim
+         :email email
+         :urakka-sampoid urakka-sampo-id
+         :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo})
+      (doseq [muu-vastaanottaja muut-vastaanottajat]
+        (try
+          (sahkoposti/laheta-viesti!
+            email
+            (sahkoposti/vastausosoite email)
+            muu-vastaanottaja
+            (str "Harja: " viestin-otsikko)
+            viestin-vartalo)
+          (catch Exception e
+            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                               muu-vastaanottaja (pr-str e))))))
+      (when (and kopio-itselle? (:sahkoposti ilmoittaja))
+        (viestinta/laheta-sahkoposti-itselle
+          {:email email
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakoitsijan vastuuhenkilölle."
+           :sahkoposti (:sahkoposti ilmoittaja)
+           :viesti-otsikko viestin-otsikko
+           :viesti-body viestin-vartalo})))))

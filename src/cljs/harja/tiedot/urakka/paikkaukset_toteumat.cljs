@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.paikkaukset-toteumat
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
+            [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
@@ -84,6 +85,11 @@
 ;; Haut
 (defrecord PaikkauksetHaettu [tulos])
 
+;; Modal (sähköpostin lähetys paikkaustoteumassa olevasta virheestä)
+(defrecord AvaaVirheModal [paikkaus])
+(defrecord SuljeVirheModal [])
+(defrecord LahetaIlmoitusVirheesta [tiedot])
+
 (extend-protocol tuck/Event
   Nakymaan
   (process-event [_ app]
@@ -115,4 +121,15 @@
     (assoc app
            :paikkaukset-grid (mapcat otsikon-lisays-fn
                                      (group-by ::paikkaus/nimi (:paikkaukset-grid app)))
-           :haettu-uudet-paikkaukset? false)))
+           :haettu-uudet-paikkaukset? false))
+
+  AvaaVirheModal
+  (process-event [{paikkaus :paikkaus} app]
+    (assoc app :modalin-paikkaus paikkaus))
+  SuljeVirheModal
+  (process-event [_ app]
+    (assoc app :modalin-paikkaus nil))
+  LahetaIlmoitusVirheesta
+  (process-event [{tiedot :tiedot} app]
+    (log "Lähetä ilmoitus virheestä, tiedot " (pr-str tiedot))
+    (assoc app :modalin-paikkaus nil)))
