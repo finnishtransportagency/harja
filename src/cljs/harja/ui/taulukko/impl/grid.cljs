@@ -1407,7 +1407,8 @@
                        _ (set! (.-domNode grid) (fn [] (dom/dom-node this)))
                        _ (when (instance? DynaaminenGrid grid)
                            @(get-in grid [:osien-maara-muuttui :trigger]))
-                       {luokat :class dom-id :id style :style} @(:parametrit grid)
+                       {luokat :class dom-id :id style :style
+                        data-cy :data-cy} @(:parametrit grid)
                        #_#__ (when-let [koko-fn (:koko-fn grid)]
                                @(koko-fn))
                        #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
@@ -1421,7 +1422,8 @@
                        (aseta-seurattava-koko! grid))
                    [:div.grid-taulukko {:class (apply str (interpose " " luokat))
                                         :id dom-id
-                                        :style style}
+                                        :style style
+                                        :data-cy data-cy}
                     [:div {:style {:display "grid"
                                    :position "relative"
                                    :top top
@@ -1600,7 +1602,8 @@
        (or (nil? koko) (s/valid? ::koko koko))
        (or (nil? osat) (s/valid? ::osat osat))))
 
-(defn grid-c [record {:keys [nimi alueet koko osat root-fn paivita-root! luokat dom-id toistettavan-osan-data toistettava-osa osien-maara-muuttui!] :as asetukset}]
+(defn grid-c [record {:keys [nimi alueet koko osat root-fn paivita-root! luokat dom-id data-cy
+                             toistettavan-osan-data toistettava-osa osien-maara-muuttui!] :as asetukset}]
   (let [root-id (gensym "grid")
         toistettavan-osan-data (when toistettavan-osan-data (r/partial toistettavan-osan-data))
         toistettava-osa (when toistettava-osa (r/partial toistettava-osa))
@@ -1609,7 +1612,8 @@
         osat (r/atom osat)
         alueet (r/atom alueet)
         parametrit (r/atom {:class (or luokat #{})
-                            :id dom-id})
+                            :id dom-id
+                            :data-cy data-cy})
         koko-fn (constantly koko)
         dynaaminen-grid? toistettava-osa
         gridi (cond-> (if dynaaminen-grid?

@@ -42,10 +42,10 @@
   (laheta-varustetoteuma [this varusteoteuma-id]))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
-                           "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
-                           "tl504" "tl198" "tl518" "tl514" "tl509" "tl515"
-                           "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"
-                           "tl323" "tl524"})
+                           "tl522" "tl513" "tl196" "tl519" "tl520" "tl505"
+                           "tl195" "tl504" "tl198" "tl518" "tl514" "tl509"
+                           "tl515" "tl503" "tl510" "tl512" "tl165" "tl516"
+                           "tl511" "tl323" "tl524"})
 
 (defn validoi-tietolajitunniste [tunniste]
   (log/debug "Validoidaan tunniste: " (pr-str tunniste))
