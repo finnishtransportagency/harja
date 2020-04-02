@@ -11,15 +11,15 @@
                                                                   :toimenpide     nil
                                                                   :valitaso       nil
                                                                   :noudetaan      0}}
-                                :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
-                                                                                         :maksetaan :molemmat
+                                :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
+                                                                                         :maksetaan                      :molemmat
                                                                                          :kopioidaan-tuleville-vuosille? true
                                                                                          :laskutukseen-perustuen-valinta #{}}}
-                                                       :suodattimet {:hankinnat {:toimenpide :talvihoito
-                                                                                 :maksetaan :molemmat
-                                                                                 :kopioidaan-tuleville-vuosille? true
-                                                                                 :laskutukseen-perustuen-valinta #{}}
-                                                                     :kopioidaan-tuleville-vuosille? true}}})
+                                                       :suodattimet          {:hankinnat                      {:toimenpide                     :talvihoito
+                                                                                                               :maksetaan                      :molemmat
+                                                                                                               :kopioidaan-tuleville-vuosille? true
+                                                                                                               :laskutukseen-perustuen-valinta #{}}
+                                                                              :kopioidaan-tuleville-vuosille? true}}})
 
 (defn hankinnat-testidata [maara]
   (into []
@@ -34,6 +34,7 @@
 
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
+    (loki/log "ei pakollinen " arvo)
     (if-not (str/blank? arvo)
       (v-fn arvo)
       true)))
@@ -62,13 +63,15 @@
     arvo))
 
 (defn y-tunnus [arvo]
+  (loki/log "ytunnus arvo" arvo)
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
                   :kulut/laskun-numero         [(ei-pakollinen numero)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
-                  :kulut/koontilaskun-kuukausi [ei-nil]})
+                  :kulut/koontilaskun-kuukausi [ei-nil]
+                  :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]})
 
 (defn validoi-fn
   "Kutsuu vain lomakkeen kaikki validointifunktiot ja päivittää koko lomakkeen validiuden"
@@ -133,7 +136,8 @@
 (def kulun-oletus-validoinnit
   [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
    [:erapaiva] (:kulut/erapaiva validoinnit)
-   [:laskun-numero] (:kulut/laskun-numero validoinnit)])
+   [:laskun-numero] (:kulut/laskun-numero validoinnit)
+   [:ytunnus] (:kulut/y-tunnus validoinnit)])
 
 (defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
   (apply luo-validius-meta

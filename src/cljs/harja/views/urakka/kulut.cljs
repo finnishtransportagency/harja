@@ -172,7 +172,7 @@
                       {:style {:color "#ff0000"}})
                     (str (if (and muokataan?
                                   poistettu) "Poistetaan kohdistus " "Kohdistus ")
-                         (inc indeksi))]))     ; indeksi alkaa nollasta, mutta se ei ole paras tässä
+                         (inc indeksi))]))                  ; indeksi alkaa nollasta, mutta se ei ole paras tässä
     [kentat/vayla-lomakekentta
      "Tehtäväryhmä *"
      :tyylit {:kontti #{"kulukentta"}}
@@ -278,28 +278,28 @@
       [:h3 {:style {:width "100%"}}
        [:span.flex-row "Mihin työhön kulu liittyy?"
         [:input#kulut-kohdistuvat-useammalle.vayla-checkbox
-         {:type     :checkbox
-          :disabled (not= 0 haetaan)
-          :checked  (> kohdistukset-lkm 1)
+         {:type      :checkbox
+          :disabled  (not= 0 haetaan)
+          :checked   (> kohdistukset-lkm 1)
           :on-change #()
-          :on-click #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
-                                                      lisaa-kohdistus
-                                                      resetoi-kohdistukset)
-                           jalkiprosessointi-fn (if (.. % -target -checked)
-                                                  (fn [lomake]
-                                                    (vary-meta
-                                                      lomake
-                                                      lisaa-validointi
-                                                      [{:polku       [:kohdistukset kohdistukset-lkm :summa]
-                                                        :validoinnit (:kulut/summa tila/validoinnit)}
-                                                       {:polku       [:kohdistukset kohdistukset-lkm :tehtavaryhma]
-                                                        :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
-                                                  (fn [lomake]
-                                                    (vary-meta
-                                                      lomake
-                                                      paivita-validoinnit
-                                                      lomake)))]
-                       (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
+          :on-click  #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
+                                                       lisaa-kohdistus
+                                                       resetoi-kohdistukset)
+                            jalkiprosessointi-fn (if (.. % -target -checked)
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       lisaa-validointi
+                                                       [{:polku       [:kohdistukset kohdistukset-lkm :summa]
+                                                         :validoinnit (:kulut/summa tila/validoinnit)}
+                                                        {:polku       [:kohdistukset kohdistukset-lkm :tehtavaryhma]
+                                                         :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       paivita-validoinnit
+                                                       lomake)))]
+                        (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
         [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]]]]
      (into [:div.row] (map-indexed
                         (r/partial tehtavaryhma-maara
@@ -376,19 +376,23 @@
   [aliurakoitsija aliurakoitsijat paivitys-fn]
   (let [{:keys [id ytunnus]} aliurakoitsija
         {tallennettu-ytunnus :ytunnus} (some #(when (= (:id %) id) %) aliurakoitsijat)]
-    (if-not (= tallennettu-ytunnus ytunnus)
+    (if-not (and (= tallennettu-ytunnus ytunnus))
       (paivitys-fn aliurakoitsija))))
 
-(defn- lisatiedot [_ _]
-  (let [y-tunnus-puuttuu "Y-tunnus puuttuu"
-        aliurakoitsija-atomi (r/atom {:id nil :nimi nil :ytunnus y-tunnus-puuttuu})]
+(defn- lisatiedot [_ {{:keys [aliurakoitsija] :as _lomake} :lomake
+                      aliurakoitsijat                      :aliurakoitsijat}]
+  (let [aliurakoitsija-atomi (r/atom
+                               (if aliurakoitsija
+                                 (some #(when (= (:id %) aliurakoitsija) %) aliurakoitsijat)
+                                 {:id nil :nimi nil :ytunnus ""}))]
     (fn [{:keys [paivitys-fn haetaan e!]}
          {{:keys [aliurakoitsija lisatieto] :as _lomake} :lomake
           aliurakoitsijat                                :aliurakoitsijat}]
       (let [{:keys [ytunnus]} @aliurakoitsija-atomi
-            ytunnus-validi? (if (not= ytunnus y-tunnus-puuttuu)
-                              (not (nil? (-> ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus)))
-                              true)
+            ytunnus-validi? (cond
+                              (str/blank? ytunnus) true
+                              (not (nil? (-> ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus))) true
+                              :else false)
             lisaa-aliurakoitsija (fn [tallennus-fn {sulje :sulje}]
                                    [:div
                                     {:on-click #(do
@@ -430,11 +434,11 @@
                    ytunnus
                    (some
                      #(when (= aliurakoitsija (:id %)) (:ytunnus %))
-                     aliurakoitsijat)
-                   y-tunnus-puuttuu)
-           :placeholder "Muotoa 1234567-1"
-           :on-focus #(when (= y-tunnus-puuttuu (-> % .-target .-value)) (swap! aliurakoitsija-atomi assoc :ytunnus ""))
-           :on-change #(swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value))
+                     aliurakoitsijat))
+           :placeholder "Y-tunnus puuttuu. Muotoa 1234567-1"
+           :on-change #(do
+                         (paivitys-fn {:validoitava? true} :ytunnus (-> % .-target .-value))
+                         (swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value)))
            :on-blur #(paivita-aliurakoitsija-jos-ytunnusta-muokattu
                        @aliurakoitsija-atomi
                        aliurakoitsijat
@@ -473,7 +477,6 @@
 
 (defn- liitteen-naytto
   [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
-  (loki/log "Liite" _liite)
   [:div.liiterivi
    [:div.liitelista
     [liitteet/liitelinkki {:id     liite-id
@@ -489,7 +492,6 @@
 (defn- liitteet
   [{:keys [e!]}
    {{liitteet :liitteet :as _lomake} :lomake}]
-  (loki/log "Liitteet" liitteet (empty? liitteet))
   [:div.palsta
    [kentat/vayla-lomakekentta
     "Liite"
@@ -587,19 +589,20 @@
             {:vayla-tyyli? true
              :luokka       "suuri"
              :disabled     true}]
-           #_[napit/yleinen-toissijainen
-              "Tallenna PDF"
-              #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
-              {:vayla-tyyli? true
-               :luokka       "suuri"}]
-           ^{:key "raporttipdf"}
-           [:form {:target "_blank" :method "POST"
-                          :action (k/pdf-url :kulut)}
-            [:input {:type  "hidden" :name "parametrit"
-                     :value (t/clj->transit {})}]
-            [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
-             {:type         "submit"
-              :vayla-tyyli? true}]]
+           [napit/yleinen-toissijainen
+            "Tallenna PDF"
+            #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
+            {:vayla-tyyli? true
+             :disabled     true
+             :luokka       "suuri"}]
+           ;^{:key "raporttipdf"}
+           #_[:form {:target "_blank" :method "POST"
+                     :action (k/pdf-url :kulut)}
+              [:input {:type  "hidden" :name "parametrit"
+                       :value (t/clj->transit {})}]
+              [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
+               {:type         "submit"
+                :vayla-tyyli? true}]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))

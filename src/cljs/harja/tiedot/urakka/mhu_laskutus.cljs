@@ -101,15 +101,10 @@
               (partition 2 polut-ja-arvot)))))
 
 (defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
-  (loki/log lasku)
-  (let [{aliurakoitsija :suorittaja} lasku]
+  (let [{suorittaja :suorittaja} lasku]
     (-> lasku
         (dissoc :suorittaja)
-        #_(update :kohdistukset (fn [ks] (mapv (fn [kohdistukset]
-                                                 (->
-                                                   kohdistukset
-                                                   (dissoc :suorittaja-id :suorittaja-nimi))) ks)))
-        (assoc :aliurakoitsija aliurakoitsija)
+        (assoc :aliurakoitsija suorittaja)
         (with-meta (tila/kulun-validointi-meta lasku)))))
 
 (defn- luo-paivitys-fn
@@ -357,12 +352,10 @@
     (resetoi-kulunakyma))
   LiitteenPoistoOnnistui
   (process-event [{tulos :tulos {id :liite-id} :parametrit} app]
-    (loki/log "Poistettu" id )
     (-> app
         (update-in
           [:lomake :liitteet]
           (fn [liitteet]
-            (loki/log liitteet)
             (filter #(not (= id (:liite-id %))) liitteet)))
         (update-in [:parametrit :haetaan] dec)))
   PoistaLiite
@@ -373,7 +366,6 @@
                  (fn [liitteet]
                    (filter #(not (= id (:liite-id %))) liitteet)))
       (do
-        (loki/log "id" id)
         (tuck-apurit/post! :poista-laskun-liite
                            {:urakka-id (-> @tila/tila :yleiset :urakka :id)
                             :lasku-id  (:id lomake)
@@ -426,7 +418,6 @@
         (update-in [:parametrit :haetaan] dec)))
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
-    (loki/log (pr-str "TULOS") tulos)
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
@@ -510,7 +501,6 @@
     (update-in app [:parametrit :haetaan] inc))
   AvaaLasku
   (process-event [{lasku :lasku} app]
-    (loki/log "AVAA LASKU " (pr-str lasku))
     (assoc app :syottomoodi true
                :lomake (kulu->lomake lasku)))
 
@@ -599,13 +589,10 @@
                                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app {uusi-id :id :as tulos}]
-                                                                        (loki/log (pr-str tulos))
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
-                                                                                                 (loki/log (pr-str kulut))
                                                                                                  (as-> kulut ks
                                                                                                        (filter (fn [{:keys [id] :as _kulu}]
-                                                                                                                 (loki/log uusi-id id _kulu)
                                                                                                                  (not= id uusi-id)) ks)
                                                                                                        (conj ks tulos))))
                                                                               (assoc a

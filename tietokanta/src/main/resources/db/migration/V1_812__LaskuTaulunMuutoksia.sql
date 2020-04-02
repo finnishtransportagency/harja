@@ -38,7 +38,6 @@ CREATE TABLE lasku_kohdistus(
                               luoja integer references kayttaja(id),
                               muokattu timestamp,
                               muokkaaja integer references kayttaja(id),
-                              lisatyo boolean default false,
                               poistettu boolean default false);
 
 COMMENT ON table lasku_kohdistus IS

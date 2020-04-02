@@ -11,7 +11,7 @@
 
 (defn- hae-aliurakoitsija-nimella
   [db user nimi]
-  (q/hae-aliurakoitsija-nimella db nimi))
+  (q/hae-aliurakoitsija-nimella db {:nimi nimi}))
 
 (defn- tallenna-aliurakoitsija
   [db user {:keys [nimi ytunnus]}]
@@ -26,7 +26,8 @@
   (q/paivita-aliurakoitsija<! db {:kayttaja kayttaja-id
                                   :nimi nimi
                                   :ytunnus ytunnus
-                                  :id id}))
+                                  :id id})
+  (first (q/hae-aliurakoitsija-nimella db {:nimi nimi})))
 
 (defrecord Aliurakoitsijat
   []

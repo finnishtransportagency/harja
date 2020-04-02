@@ -113,7 +113,6 @@
                   :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
                   :alkupvm             (:suoritus-alku laskurivi)
                   :loppupvm            (:suoritus-loppu laskurivi)
-                  :lisatyo             (:lisatyo laskurivi)
                   :kayttaja            (:id user)}]
     (if (nil? (:kohdistus-id laskurivi))
       (q/luo-laskun-kohdistus<! db (assoc yhteiset :lasku lasku-id

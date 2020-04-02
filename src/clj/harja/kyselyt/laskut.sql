@@ -36,7 +36,6 @@ SELECT l.id                   as "id",
        lk.id                  as "kohdistus-id",
        lk.rivi                as "rivi",
        lk.summa               as "summa",
-       lk.lisatyo             as "lisatyo",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
@@ -75,7 +74,6 @@ SELECT l.id                   as "id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
-       lk.lisatyo             as "lisatyo",
        l.suorittaja           as "suorittaja-id",
        a.nimi                 as "suorittaja-nimi",
        lk.suoritus_alku       as "suoritus-alku",
@@ -113,7 +111,6 @@ SELECT lk.id                  as "kohdistus-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
        lk.luotu               as "luontiaika",
-       lk.lisatyo             as "lisatyo",
        lk.muokattu            as "muokkausaika",
        a.id                   as "suorittaja-id",
        a.nimi                 as "suorittaja-nimi"
@@ -148,9 +145,9 @@ update
 -- name: luo-laskun-kohdistus<!
 INSERT
 INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
-                      suoritus_loppu, luotu, luoja, lisatyo)
+                      suoritus_loppu, luotu, luoja)
 VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
-        current_timestamp, :kayttaja, :lisatyo);
+        current_timestamp, :kayttaja);
 
 -- name: paivita-laskun-kohdistus<!
 update lasku_kohdistus
@@ -159,7 +156,6 @@ set summa = :summa,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
     suoritus_alku = :alkupvm,
-    lisatyo = :lisatyo,
     suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja
