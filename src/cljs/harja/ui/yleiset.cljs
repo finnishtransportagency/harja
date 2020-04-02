@@ -350,7 +350,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          "") "default") (when @auki? "open")}}
          [:button.nappi-alasveto {:on-click #(swap! auki? not) :disabled disabled}
           [:div.valittu
-           (or (formaatti-fn valittu) "Ei valittu")]]
+           (or (formaatti-fn valittu) "Ei valittu")]
+          [:div.livicon-chevron-down]]
          [:ul {:style {:display (if @auki?
                                   "block"
                                   "none")}}
