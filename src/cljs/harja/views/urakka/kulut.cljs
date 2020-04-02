@@ -522,7 +522,7 @@
              tehtavaryhmat :tehtavaryhmat {haetaan :haetaan} :parametrit}]
       (let [{:keys [nayta]} lomake]
         [:div.ajax-peitto-kontti
-         [debug/debug lomake]
+         #_[debug/debug lomake]
          [:div.palstat
           [:div.palsta
            [napit/takaisin
@@ -580,7 +580,7 @@
        (if syottomoodi
          [kulujen-syottolomake e! app]
          [:div
-          [debug/debug taulukko]
+          #_[debug/debug taulukko]
           [:div
            [:h2 "Kulujen kohdistus"]
            #_[napit/yleinen-toissijainen
