@@ -583,13 +583,13 @@
           [debug/debug taulukko]
           [:div
            [:h2 "Kulujen kohdistus"]
-           [napit/yleinen-toissijainen
+           #_[napit/yleinen-toissijainen
             "Tallenna Excel"
             #(loki/log "En tallenna vielä")
             {:vayla-tyyli? true
              :luokka       "suuri"
              :disabled     true}]
-           [napit/yleinen-toissijainen
+           #_[napit/yleinen-toissijainen
             "Tallenna PDF"
             #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
             {:vayla-tyyli? true
