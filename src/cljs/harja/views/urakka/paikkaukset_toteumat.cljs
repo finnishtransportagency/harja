@@ -27,30 +27,56 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
+(defn- pinta-alojen-summa [paikkaukset]
+  (->> paikkaukset
+       (map :suirun-pinta-ala)
+       (reduce +)))
+
+(defn- massamenekin-summa [paikkaukset]
+  (->> paikkaukset
+       (map ::paikkaus/massamenekki)
+       (reduce +)))
 
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
-  [e! {:keys [kohde-id urakka-id kohde-nimi lomakedata nakyvissa?] :as paikkaus}]
-  [modal/modal
-   {:otsikko (str "Lähetä sähköposti")
-    :luokka "ilmoita-virheesta-modal"
-    :nakyvissa? true
-    :sulje-fn #(e! (tiedot/->SuljeVirheModal))
-    :footer [:div
-             [napit/peruuta
-              "Peruuta"
-              #(e! (tiedot/->SuljeVirheModal))]
+  [e! paikkaukset]
+  (let [{::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
+        rivien-lkm (count paikkaukset)
+        pinta-ala (pinta-alojen-summa paikkaukset)
+        massamenekki (massamenekin-summa paikkaukset)]
+    (log "modaalin paikkaus " (pr-str paikkaus))
+    (log "modaalin paikkaus, kohteen nimi " nimi)
+    (log "modaalin paikkaus, kohteen pinta-ala " pinta-ala)
+    (log "modaalin paikkaus, kohteen massamenekki " massamenekki)
+    (log "modaalin paikkaus, rivien lkm" rivien-lkm)
+    [modal/modal
+    {:otsikko (str "Lähetä sähköposti")
+     :luokka "ilmoita-virheesta-modal"
+     :nakyvissa? true
+     :sulje-fn #(e! (tiedot/->SuljeVirheModal))
+     :footer [:div
+              [napit/peruuta
+               "Peruuta"
+               #(e! (tiedot/->SuljeVirheModal))]
 
-             [napit/palvelinkutsu-nappi
-              "Ilmoita"
-              #(tiedot/ilmoita-virheesta-paikkaustiedoissa paikkaus)
-              {:disabled false
-               :luokka "nappi-myonteinen"
-               :ikoni (ikonit/check)
-               :kun-onnistuu (fn [vastaus]
-                               (log "Homma rokkasi, kerrotaan jotenkin käyttäjälle. " (pr-str vastaus))
-                               (e! (tiedot/->VirheIlmoitusOnnistui vastaus)))
-               :kun-virhe #(viesti/nayta! "Virheilmoitus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)}]]}])
+              [napit/palvelinkutsu-nappi
+               "Ilmoita"
+               #(tiedot/ilmoita-virheesta-paikkaustiedoissa paikkaus)
+               {:disabled false
+                :luokka "nappi-myonteinen"
+                :ikoni (ikonit/check)
+                :kun-onnistuu (fn [vastaus]
+                                (log "Homma rokkasi, kerrotaan jotenkin käyttäjälle. " (pr-str vastaus))
+                                (e! (tiedot/->VirheIlmoitusOnnistui vastaus)))
+                :kun-virhe #(viesti/nayta! "Virheilmoitus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)}]]}
+
+     [:div
+      [:h5 (str "Tänne sisältöä, esim ")
+       (yleiset/tietoja {}
+                        "Kohde" nimi
+                        "Rivejä" rivien-lkm
+                        "Pinta-ala yht. " pinta-ala
+                             "Massamenekki" massamenekki)]]]))
 
 
 (defn paikkaukset-vetolaatikko
@@ -190,13 +216,8 @@
                                  [::paikkaus/paikkauskohde ::paikkaus/id])
         alkupvm (get paikkaus ::paikkaus/alkuaika)
         loppupvm (get paikkaus ::paikkaus/loppuaika)
-        pinta-ala-sum (->> paikkaukset
-                           (map :suirun-pinta-ala)
-                           (reduce +))
-        massamenekki-sum (->> paikkaukset
-                              (map ::paikkaus/massamenekki)
-                              (reduce +))
-        ]
+        pinta-ala-sum (pinta-alojen-summa paikkaukset)
+        massamenekki-sum (massamenekin-summa paikkaukset)]
     [{:tyyli {}
       :sisalto
       (fn [_]
@@ -210,7 +231,7 @@
           [:td {:colSpan 2
                 :style {:border "none"}}
            [napit/yleinen-toissijainen "Ilmoita virhe"
-            #(e! (tiedot/->AvaaVirheModal paikkaus))
+            #(e! (tiedot/->AvaaVirheModal paikkaukset))
             {:ikoni (ikonit/livicon-kommentti)}]]
           [:td {:colSpan 2}
            [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
