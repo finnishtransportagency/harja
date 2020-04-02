@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [taoensso.timbre :as log]))
 
 (defn- muodosta-tr-ehdot
   "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
@@ -217,6 +218,24 @@
                             ;; Palautetaan symmetrisesti käyttäjän hakuehtojen mukaisesti urakan kustannukset
                             (hae-paikkausurakan-kustannukset db user hakuparametrit)))
 
+(defn ilmoita-virheesta-paikkaustiedoissa!
+  [db user {::paikkaus/keys [id nimi urakka-id] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (log/debug "ilmoita-virheesta-paikkaustiedoissa!, paikkauskohteen id: " id ", kohteen nimi: " nimi "ja  urakka-id" urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
+  ;; TODO 1: Logiikka joka lähettää sähköpostin, ks. harja.palvelin.palvelut.yllapitokohteet.viestinta/ laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe
+  ;; TODO 2: Onnistuneen lähetyksen jälkeen merkitse tietokantaan että ilmoitus virheestä lähetetty (tila)
+  )
+
+(defn merkitse-paikkauskohde-tarkistetuksi!
+  [db user {::paikkaus/keys [id nimi urakka-id] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (log/debug "merkitse-paikkauskohde-tarkistetuksi!, paikkauskohteen id: " id ", kohteen nimi: " nimi "ja  urakka-id" urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
+  ;; TODO 1: Lähetä tarkistettu kohde yhaan
+  ;; TODO 2: Merkitse paikkauskohde tarkistetuksi (tila)
+  )
+
 (defrecord Paikkaukset []
   component/Lifecycle
   (start [this]
@@ -235,6 +254,12 @@
       (julkaise-palvelu http :tallenna-paikkauskustannukset
                         (fn [user tiedot]
                           (tallenna-paikkauskustannukset! db user tiedot)))
+      (julkaise-palvelu http :ilmoita-virheesta-paikkaustiedoissa
+                        (fn [user tiedot]
+                          (ilmoita-virheesta-paikkaustiedoissa! db user tiedot)))
+      (julkaise-palvelu http :merkitse-paikkauskohde-tarkistetuksi
+                        (fn [user tiedot]
+                          (merkitse-paikkauskohde-tarkistetuksi! db user tiedot)))
       this))
 
   (stop [this]
@@ -242,5 +267,7 @@
       (:http-palvelin this)
       :hae-urakan-paikkauskohteet
       :hae-paikkausurakan-kustannukset
-      :tallenna-paikkauskustannukset)
+      :tallenna-paikkauskustannukset
+      :ilmoita-virheesta-paikkaustiedoissa
+      :merkitse-paikkauskohde-tarkistetuksi)
     this))

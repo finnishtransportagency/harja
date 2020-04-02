@@ -7,9 +7,11 @@
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (def app (atom nil))
 
@@ -77,6 +79,19 @@
                            {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
                                          :teksti "Paikkaukset"}]})))))
 
+
+(defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
+  (log "ilmoita-virheesta-paikkaustiedoissa, " (pr-str paikkaus))
+  (k/post! :ilmoita-virheesta-paikkaustiedoissa
+           (merge paikkaus
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
+
+(defn merkitse-paikkaus-tarkistetuksi [paikkaus]
+  (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
+  (k/post! :merkitse-paikkauskohde-tarkistetuksi
+           (merge paikkaus
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
+
 ;; Muokkaukset
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
@@ -88,7 +103,8 @@
 ;; Modal (sähköpostin lähetys paikkaustoteumassa olevasta virheestä)
 (defrecord AvaaVirheModal [paikkaus])
 (defrecord SuljeVirheModal [])
-(defrecord LahetaIlmoitusVirheesta [tiedot])
+(defrecord VirheIlmoitusOnnistui [vastaus])
+(defrecord MerkitseTarkistetuksiOnnistui [vastaus])
 
 (extend-protocol tuck/Event
   Nakymaan
@@ -125,11 +141,17 @@
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
+    (log "jarno Avaa Virhe Modal, paikkaus: " (pr-str paikkaus))
     (assoc app :modalin-paikkaus paikkaus))
   SuljeVirheModal
   (process-event [_ app]
     (assoc app :modalin-paikkaus nil))
-  LahetaIlmoitusVirheesta
-  (process-event [{tiedot :tiedot} app]
-    (log "Lähetä ilmoitus virheestä, tiedot " (pr-str tiedot))
+  VirheIlmoitusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (log "VirheIlmoitusOnnistui " (pr-str vastaus))
+    ;; TODO: päivitä tilaa (app) siten että virhe ilmoitus onnistui näkyy UI:lla tmv
+    (assoc app :modalin-paikkaus nil))
+  MerkitseTarkistetuksiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
     (assoc app :modalin-paikkaus nil)))

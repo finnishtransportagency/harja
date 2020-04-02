@@ -22,14 +22,15 @@
             [cljs.core.async :refer [<! timeout]]
             [taoensso.timbre :as log]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
 
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
-  [e! {:keys [kohde-id urakka-id kohde-nimi lomakedata nakyvissa?] :as kohde}]
+  [e! {:keys [kohde-id urakka-id kohde-nimi lomakedata nakyvissa?] :as paikkaus}]
   [modal/modal
    {:otsikko (str "Lähetä sähköposti")
     :luokka "ilmoita-virheesta-modal"
@@ -42,18 +43,14 @@
 
              [napit/palvelinkutsu-nappi
               "Ilmoita"
-              #(tiedot/->LahetaIlmoitusVirheesta
-                 {:kohde-id kohde-id
-                  :kohde-nimi kohde-nimi
-                  :kopio-itselle? (:kopio-itselle? lomakedata)
-                  :saate (:saate lomakedata)
-                  :urakka-id urakka-id})
+              #(tiedot/ilmoita-virheesta-paikkaustiedoissa paikkaus)
               {:disabled false
                :luokka "nappi-myonteinen"
                :ikoni (ikonit/check)
                :kun-onnistuu (fn [vastaus]
-                               (log "Homma rokkasi, kerrotaan jotenkin käyttäjälle.")
-                               #(e! (tiedot/->SuljeVirheModal)))}]]}])
+                               (log "Homma rokkasi, kerrotaan jotenkin käyttäjälle. " (pr-str vastaus))
+                               (e! (tiedot/->VirheIlmoitusOnnistui vastaus)))
+               :kun-virhe #(viesti/nayta! "Virheilmoitus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)}]]}])
 
 
 (defn paikkaukset-vetolaatikko
@@ -130,11 +127,11 @@
                        [{:otsikko "Alku\u00ADaika"
                          :leveys 10
                          :nimi ::paikkaus/alkuaika
-                         :fmt yhteinen-view/aika-formatteri}
+                         :fmt pvm/pvm-aika-opt}
                         {:otsikko "Loppu\u00ADaika"
                          :leveys 10
                          :nimi ::paikkaus/loppuaika
-                         :fmt yhteinen-view/aika-formatteri}
+                         :fmt pvm/pvm-aika-opt}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
                          :leveys 10
                          :nimi ::paikkaus/tyomenetelma}
@@ -184,6 +181,8 @@
 (def ohje-teksti-tarkistus-ja-yha
   "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Jos tiedoissa on virheitä, valitse Ilmoita virhe.")
 
+(def vasen-margin "20px")
+
 (defn otsikkokomponentti
   [e! paikkaukset]
   (let [paikkaus (first paikkaukset)
@@ -202,20 +201,32 @@
       :sisalto
       (fn [_]
         [:<>
-         [:tr
-          [napit/yleinen-ensisijainen "Ilmoita virhe"
-           #(tiedot/->AvaaVirheModal paikkaus)]]
-         [:tr.valiotsikko
+         [:tr.grid-otsikkokomponentti {:style {:border "none"
+                                               :background-color "#C8C8C8"}}
+          [:td {:colSpan 12
+                :style {:border "none"}}
+           [:p {:style {:margin-left vasen-margin}}
+            [:span.bold "Ohje: "] ohje-teksti-tarkistus-ja-yha]]
+          [:td {:colSpan 2
+                :style {:border "none"}}
+           [napit/yleinen-toissijainen "Ilmoita virhe"
+            #(e! (tiedot/->AvaaVirheModal paikkaus))
+            {:ikoni (ikonit/livicon-kommentti)}]]
+          [:td {:colSpan 2}
+           [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
+            #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+            {:ikoni (ikonit/livicon-check)
+             :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}]]]
+         [:tr.valiotsikko.grid-otsikkokomponentti {:style {:background-color "#C8C8C8"}}
 
-          [:td.tasaa-oikealle {:colSpan 2}
-           [:span.bold (str "Yhteensä: " (count paikkaukset))]]
-          [:td {:colSpan 5}]
+          [:td {:colSpan 3}
+           [:span.bold {:style {:margin-left vasen-margin}}
+            (str "Yhteensä: " (count paikkaukset))]]
+          [:td {:colSpan 4}]
           [:td {:colSpan 1}
-           [:span.bold (when alkupvm
-                         (clojure.string/replace (pvm/pvm-aika alkupvm) " " " klo "))]] ; replacella "klo" päivämäärän ja ajan väliin
+           [:span.bold (pvm/pvm-aika-opt alkupvm)]]
           [:td {:colSpan 1}
-           [:span.bold (when loppupvm
-                         (clojure.string/replace (pvm/pvm-aika loppupvm) " " " klo "))]]
+           [:span.bold (pvm/pvm-aika-opt loppupvm)]]
           [:td {:colSpan 3}]
           [:td
            [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]

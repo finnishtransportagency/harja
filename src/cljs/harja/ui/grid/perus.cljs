@@ -461,9 +461,12 @@
         otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
     [:<>
      [:tr.otsikko (when salli-valiotsikoiden-piilotus?
-                    {:class    "gridin-collapsoitava-valiotsikko klikattava"
+                    {:class (str "gridin-collapsoitava-valiotsikko klikattava"
+                                 (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
                      :on-click #(toggle-valiotsikko valiotsikko-id
-                                                    piilotetut-valiotsikot)})
+                                                    piilotetut-valiotsikot)
+                     :style (merge {} (when (not (empty? otsikkokomponentit))
+                                        {:border-bottom "none"}))})
       [:td {:colSpan colspan}
        [:h5 teksti]
        (when salli-valiotsikoiden-piilotus?
