@@ -146,6 +146,8 @@
                                 (paivita-urakan-materiaalin-kayton-cachet-eiliselta db u)))
     :paivitetty))
 
+;; Asetetaan raportticachen päivitys klo 7:15, koska tietty urakoitsija lähettää usein jopa 7h pitkiä toteumia.
+;; Esim. t.alkanut klo 22, saapuu API:in klo 5. Näin saadaan ajettua nekin vielä tuoreeltaan raporteille
 (defn paivita-raportti-cache-oisin! [db]
   (ajastettu-tehtava/ajasta-paivittain [7 15 0]
                                        (fn [_]
