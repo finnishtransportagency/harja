@@ -167,6 +167,51 @@ maksimi-linnuntien-etaisyys 200)
                                (pr-str (:paattynyt toteuma)))))
           (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
 
+(defn- materiaalicachen-paivitys-ajettava?
+  "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
+  [toteuma-alkanut]
+  (not (pvm/tanaan? toteuma-alkanut)))
+
+(defn- paivita-materiaalicachet!
+  "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain"
+  [db urakka-id data]
+  (let [reittitoteumat (if (:reittitoteuma data)
+                         [data]
+                         (:reittitoteumat data))
+        materiaaleja-hyotykuormassa? (some #(get-in % [:reittitoteuma :toteuma :materiaalit])
+                                           reittitoteumat)
+        suolauksen-toimenpidekoodi (:id (first (materiaalit/hae-suolauksen-toimenpidekoodi db)))
+        tehtavissa-suolausta? (some #(some
+                                       (fn [tehtava]
+                                         (= (get-in tehtava [:tehtava :id]) suolauksen-toimenpidekoodi))
+                                       (get-in % [:reittitoteuma :toteuma :tehtavat]))
+                                    reittitoteumat)]
+    (assert (integer? urakka-id) "Oltava urakka-id kun päivitetään materiaalicachet.")
+    ;; HAR-7896 urakoitsijat joskus "poistavat" materiaalitoteumia lähettämällä toteuman uudestaan
+    ;; tehtävänä suolaus mutta kokonaan ilman materiaalit-payloadia. Tämä siksi käsiteltävä erikseen
+    ;; ja varmuuden vuoksi päivitettävä silloinkin materiaalicachet
+    (when (or materiaaleja-hyotykuormassa? tehtavissa-suolausta?)
+      (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))
+            ensimmainen-toteuma-alkanut-str (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut])
+            viimeinen-toteuma (last reittitoteumat)
+            viimeinen-toteuma-alkanut-str (get-in viimeinen-toteuma [:reittitoteuma :toteuma :alkanut])
+            ensimmainen-toteuman-alkanut-pvm (pvm-string->joda-date ensimmainen-toteuma-alkanut-str)
+            viimeinen-toteuman-paattynyt-pvm (pvm-string->joda-date (get-in viimeinen-toteuma [:reittitoteuma :toteuma :paattynyt]))
+            toteumien-eri-pvmt (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)]
+
+
+        ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
+        ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
+
+        (when (materiaalicachen-paivitys-ajettava? (aika-string->java-util-date ensimmainen-toteuma-alkanut-str))
+          (doseq [sopimus-id urakan-sopimus-idt]
+            (doseq [pvm toteumien-eri-pvmt]
+              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                     :alkupvm (pvm/dateksi pvm)})))
+          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                             :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
+                                                                             :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
+
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
     (tallenna-yksittainen-reittitoteuma db db-replica
@@ -174,7 +219,8 @@ maksimi-linnuntien-etaisyys 200)
 
   (doseq [toteuma (:reittitoteumat data)]
     (tallenna-yksittainen-reittitoteuma db db-replica
-                                        urakka-id kirjaaja (:reittitoteuma toteuma))))
+                                        urakka-id kirjaaja (:reittitoteuma toteuma)))
+  (paivita-materiaalicachet! db urakka-id data))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
