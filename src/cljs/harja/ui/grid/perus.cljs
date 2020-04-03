@@ -474,7 +474,7 @@
            (ikonit/livicon-chevron-right)
            (ikonit/livicon-chevron-down)))
        ]]
-     (when-not (empty? otsikkokomponentit)
+     (when (and (not(empty? otsikkokomponentit)) (not(contains? @piilotetut-valiotsikot valiotsikko-id)) )
         (map-indexed
           (fn [i {:keys [sisalto]}]
             ^{:key i}
