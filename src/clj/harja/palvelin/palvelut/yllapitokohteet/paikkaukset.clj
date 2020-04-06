@@ -5,11 +5,13 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]))
 
 (defn- muodosta-tr-ehdot
   "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
@@ -219,10 +221,16 @@
                             (hae-paikkausurakan-kustannukset db user hakuparametrit)))
 
 (defn ilmoita-virheesta-paikkaustiedoissa!
-  [db user {::paikkaus/keys [id nimi urakka-id] :as tiedot}]
+  [db fim email user {::paikkaus/keys [id nimi urakka-id] :as tiedot}]
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (log/debug "ilmoita-virheesta-paikkaustiedoissa!, paikkauskohteen id: " id ", kohteen nimi: " nimi "ja  urakka-id" urakka-id)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
+  (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)]
+
+    (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe (merge tiedot
+                                                                            {:email email
+                                                                             :fim fim
+                                                                             :urakka-sampo-id urakka-sampo-id})))
   ;; TODO 1: Logiikka joka lähettää sähköpostin, ks. harja.palvelin.palvelut.yllapitokohteet.viestinta/ laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe
   ;; TODO 2: Onnistuneen lähetyksen jälkeen merkitse tietokantaan että ilmoitus virheestä lähetetty (tila)
   )
@@ -240,6 +248,8 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
+          email (:sonja-sahkoposti this)
+          fim (:fim this)
           db (:db this)]
       (julkaise-palvelu http :hae-urakan-paikkauskohteet
                         (fn [user tiedot]
@@ -256,7 +266,7 @@
                           (tallenna-paikkauskustannukset! db user tiedot)))
       (julkaise-palvelu http :ilmoita-virheesta-paikkaustiedoissa
                         (fn [user tiedot]
-                          (ilmoita-virheesta-paikkaustiedoissa! db user tiedot)))
+                          (ilmoita-virheesta-paikkaustiedoissa! db fim email user tiedot)))
       (julkaise-palvelu http :merkitse-paikkauskohde-tarkistetuksi
                         (fn [user tiedot]
                           (merkitse-paikkauskohde-tarkistetuksi! db user tiedot)))
