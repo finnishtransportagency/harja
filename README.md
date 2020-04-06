@@ -46,7 +46,7 @@ Harja repon hakemistorakenne:
 <code>
 sh devdb_up.sh
 </code>
-4. Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+4. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 5. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:<br/>
 <code>
 lein do clean, compile, repl
