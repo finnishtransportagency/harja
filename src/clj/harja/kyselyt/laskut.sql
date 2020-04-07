@@ -54,11 +54,11 @@ insert into lasku_liite (lasku, liite, luotu, luoja, poistettu)
 values (:lasku-id, :liite-id, current_timestamp, :kayttaja, false)
 on conflict do nothing;
 
--- name: poista-laskun-ja-liitteen-linkitys<!
+-- name: poista-laskun-ja-liitteen-linkitys!
 -- Merkkaa liitteen poistetuksi
 update lasku_liite ll
-set poistettu = true
- muokkaaja = :kayttaja
+set poistettu = true,
+ muokkaaja = :kayttaja,
  muokattu = current_timestamp
  where ll.lasku = :lasku-id and ll.liite = :liite-id;
 
