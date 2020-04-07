@@ -735,6 +735,7 @@
                           component/start)))
     (aloita-sonja harja-jarjestelma)
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (status/aseta-kaynnistynyt! (:status harja-jarjestelma) true)
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
