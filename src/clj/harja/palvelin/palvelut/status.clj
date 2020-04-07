@@ -9,11 +9,8 @@
             [clojure.java.jdbc :as jdbc])
   (:import (com.mchange.v2.c3p0 C3P0ProxyConnection)))
 
-(defn aseta-status! [status koodi viesti]
-  (swap! (:status status) assoc :status koodi :viesti viesti))
-
-(defn aseta-kaynnistynyt! [status kaynnistynyt?]
-  (swap! (:status status) assoc :kaynnistynyt? kaynnistynyt?))
+(defn aseta-status! [komponentti status-komponentti koodi viesti]
+  (swap! (:status status-komponentti) update komponentti assoc :status koodi :viesti viesti))
 
 (defn tietokannan-tila! [status-komponentti db]
   (let [timeout-s 15
@@ -28,14 +25,14 @@
                        (= 1 (.getObject rs 1))
                        false))]
     (when-not yhteys-ok?
-      (aseta-status! status-komponentti 503 (str "Ei saatu yhteyttä kantaan " timeout-s " sekunnin kuluessa.")))
+      (aseta-status! :db status-komponentti 503 (str "Ei saatu yhteyttä kantaan " timeout-s " sekunnin kuluessa.")))
     {:yhteys-master-kantaan-ok? yhteys-ok?}))
 
 (defn replikoinnin-tila! [status-komponentti db-replica]
   (let [replikoinnin-viive (q/hae-replikoinnin-viive db-replica)
         replikoinnin-tila-ok? (not (and replikoinnin-viive (> replikoinnin-viive 100)))]
     (when-not replikoinnin-tila-ok?
-      (aseta-status! status-komponentti 503 (str "Replikoinnin viive on liian suuri: " replikoinnin-viive)))
+      (aseta-status! :db-replica status-komponentti 503 (str "Replikoinnin viive on liian suuri: " replikoinnin-viive)))
     {:replikoinnin-tila-ok? replikoinnin-tila-ok?}))
 
 (defn sonja-yhteyden-tila! [status-komponentti db kehitysmoodi?]
@@ -47,8 +44,28 @@
                                                  (recur (jarjestelman-tila/kaikki-yhteydet-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?))))))
                                          (async/timeout timeout-ms)]))]
     (when-not yhteys-ok?
-      (aseta-status! status-komponentti 503 (str "Ei saatu yhteyttä Sonjaan " (/ timeout-ms 1000) " sekunnin kuluessa.")))
+      (aseta-status! :sonja status-komponentti 503 (str "Ei saatu yhteyttä Sonjaan " (/ timeout-ms 1000) " sekunnin kuluessa.")))
     {:sonja-yhteys-ok? yhteys-ok?}))
+
+(defn status-ja-viesti [status-komponentti testattavat-komponentit]
+  (let [tilanne @(:status status-komponentti)
+        tilanteen-koonti (reduce-kv (fn [{edellinen-status :status
+                                          edelliset-viestit :viesti :as koottu} k {:keys [status viesti]}]
+                                      (if (contains? testattavat-komponentit k)
+                                        (assoc koottu
+                                               :status (if (= edellinen-status status 200)
+                                                         edellinen-status
+                                                         (max status edellinen-status))
+                                               :viesti (if viesti
+                                                         (conj edelliset-viestit viesti)
+                                                         edelliset-viestit))
+                                        koottu))
+                                    {:status 200 :viesti []}
+                                    tilanne)]
+    (update tilanteen-koonti
+            :viesti
+            (fn [viestit]
+              (apply str (interpose "\n" viestit))))))
 
 (defrecord Status [status kehitysmoodi?]
   component/Lifecycle
@@ -59,16 +76,11 @@
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
-          (let [testit (when (get @status :kaynnistynyt?)
-                         (merge
-                           (tietokannan-tila! this db)
-                           (replikoinnin-tila! this db-replica)
-                           (sonja-yhteyden-tila! this db kehitysmoodi?)))
-                tila-palautunut-ok? (and (not= 200 (:status @status))
-                                         (every? true? (vals testit)))
-                _ (when tila-palautunut-ok?
-                    (aseta-status! this 200 "Harja käynnistetty"))
-                {:keys [status viesti]} @status]
+          (let [testit (merge
+                         (tietokannan-tila! this db)
+                         (replikoinnin-tila! this db-replica)
+                         (sonja-yhteyden-tila! this db kehitysmoodi?))
+                {:keys [status viesti]} (status-ja-viesti this #{:db :db-replica :sonja :harja})]
             {:status status
              :headers {"Content-Type" "application/json; charset=UTF-8"}
              :body (encode
@@ -77,11 +89,23 @@
     (http-palvelin/julkaise-reitti
       http :app-status
       (GET "/app_status" _
-        (let [{:keys [status viesti] :as body} @status]
+        (let [{:keys [status viesti]} (status-ja-viesti this #{:harja})]
           {:status status
            :headers {"Content-Type" "application/json; charset=UTF-8"}
            :body (encode
                    {:viesti viesti})})))
+    #_(http-palvelin/julkaise-reitti
+      http :db-status
+      (GET "/db_status" _
+        (let [testit (merge
+                       (tietokannan-tila! this db)
+                       (replikoinnin-tila! this db-replica))
+              {:keys [status viesti]} (status-ja-viesti this #{:db :db-replica :harja})]
+          {:status status
+           :headers {"Content-Type" "application/json; charset=UTF-8"}
+           :body (encode
+                   (merge {:viesti viesti}
+                          testit))})))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -89,4 +113,4 @@
     this))
 
 (defn luo-status [kehitysmoodi?]
-  (->Status (atom {:status 503 :viesti "Harja käynnistyy" :kaynnistynyt? false}) kehitysmoodi?))
+  (->Status (atom {:harja {:status 503 :viesti "Harja käynnistyy"}}) kehitysmoodi?))
