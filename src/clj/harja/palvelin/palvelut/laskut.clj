@@ -168,17 +168,18 @@
   "Merkitsee laskun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [liitteet (into [] (q/hae-liitteet db {:lasku-id id}))]
+  (let [liitteet (into [] (q/hae-liitteet db {:lasku-id id}))
+        poistettu-lasku (hae-laskuerittely db user {:id id})]
     (when (not (empty? liitteet))
       (doseq [{liite :liite} liitteet]
-        (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite :kayttaja (:id user)}))))
-  (q/poista-lasku! db {:urakka   urakka-id
-                       :id       id
-                       :kayttaja (:id user)})
-  (q/poista-laskun-kohdistukset! db {:urakka   urakka-id
-                                     :id       id
-                                     :kayttaja (:id user)})
-  (hae-laskuerittely db user {:id id}))
+        (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite :kayttaja (:id user)})))
+    (q/poista-lasku! db {:urakka   urakka-id
+                         :id       id
+                         :kayttaja (:id user)})
+    (q/poista-laskun-kohdistukset! db {:urakka   urakka-id
+                                       :id       id
+                                       :kayttaja (:id user)})
+    poistettu-lasku))
 
 (defn poista-laskun-kohdistus
   "Poistaa yksittäisen rivin laskuerittelystä (kohdistuksista). Palauttaa päivittyneen kantatilanteen."

@@ -533,7 +533,15 @@
              :style         {:font-size "14px"}}]
            [:h2 (str (if-not (nil? (:id lomake))
                        "Muokkaa kulua"
-                       "Uusi kulu"))]]]
+                       "Uusi kulu"))]]
+          [:div.palsta.flex
+           (when-not (nil? (:id lomake))
+             [napit/peruuta "Poista kulu"
+              #(e! (tiedot/->PoistaKulu (:id lomake)))
+              {:vayla-tyyli?  true
+               :teksti-nappi? true
+               :style         {:font-size "14px"
+                               :margin-left "auto"}}])]]
          [tehtavien-syotto {:paivitys-fn paivitys-fn
                             :haetaan     haetaan}
           {:lomake        lomake
@@ -581,20 +589,21 @@
          [kulujen-syottolomake e! app]
          [:div
           #_[debug/debug taulukko]
-          [:div
+          [:div.flex-row
+           {:style {:margin-bottom "36px"}}
            [:h2 "Kulujen kohdistus"]
            #_[napit/yleinen-toissijainen
-            "Tallenna Excel"
-            #(loki/log "En tallenna vielä")
-            {:vayla-tyyli? true
-             :luokka       "suuri"
-             :disabled     true}]
+              "Tallenna Excel"
+              #(loki/log "En tallenna vielä")
+              {:vayla-tyyli? true
+               :luokka       "suuri"
+               :disabled     true}]
            #_[napit/yleinen-toissijainen
-            "Tallenna PDF"
-            #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
-            {:vayla-tyyli? true
-             :disabled     true
-             :luokka       "suuri"}]
+              "Tallenna PDF"
+              #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
+              {:vayla-tyyli? true
+               :disabled     true
+               :luokka       "suuri"}]
            ;^{:key "raporttipdf"}
            #_[:form {:target "_blank" :method "POST"
                      :action (k/pdf-url :kulut)}

@@ -22,6 +22,8 @@
 (defrecord PaivitaLomake [polut-ja-arvot optiot])
 (defrecord AvaaLasku [lasku])
 (defrecord NakymastaPoistuttiin [])
+(defrecord PoistaKulu [id])
+(defrecord PoistoOnnistui [tulos])
 
 (defrecord LuoDokumentti [optiot])
 (defrecord DokumenttiLuotu [dokumentti])
@@ -342,10 +344,10 @@
                       :pdf :luo-pdf-kuluista
                       :excel :luo-excel-kuluista)]
       (tuck-apurit/post! rajapinta
-                       {}
-                       {:onnistui            ->DokumenttiLuotu
-                        :epaonnistui         ->KutsuEpaonnistui
-                        :paasta-virhe-lapi?  true}))
+                         {}
+                         {:onnistui           ->DokumenttiLuotu
+                          :epaonnistui        ->KutsuEpaonnistui
+                          :paasta-virhe-lapi? true}))
     app)
   NakymastaPoistuttiin
   (process-event [_ app]
@@ -605,6 +607,33 @@
       (cond-> app
               true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
               (true? validi?) (update-in [:parametrit :haetaan] inc))))
+  PoistoOnnistui
+  (process-event
+    [{tulos :tulos} app]
+    (loki/log "Poistettu" tulos)
+    (as-> app a
+          (update a :kulut (fn [kulut]
+                             (as-> kulut ks
+                                   (filter
+                                     (fn [{:keys [id] :as _kulu}]
+                                       (not= id (:id tulos)))
+                                     ks))))
+          (assoc a
+            :taulukko (p/paivita-taulukko!
+                        (luo-kulutaulukko a)
+                        (formatoi-tulos (:kulut a)))
+            :syottomoodi false)
+          (update-in a [:parametrit :haetaan] inc)
+          (update a :lomake resetoi-kulut)))
+  PoistaKulu
+  (process-event
+    [{:keys [id]} app]
+    (tuck-apurit/post! :poista-lasku
+                       {:urakka-id (-> @tila/yleiset :urakka :id)
+                        :id        id}
+                       {:onnistui    ->PoistoOnnistui
+                        :epaonnistui ->KutsuEpaonnistui})
+    (update-in app [:parametrit :haetaan] inc))
 
   ;; FORMITOIMINNOT
 
