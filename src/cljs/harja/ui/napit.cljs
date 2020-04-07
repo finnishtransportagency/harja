@@ -197,41 +197,59 @@
 (defn uusi
   ([toiminto] (uusi "Uusi" toiminto {}))
   ([teksti toiminto] (uusi teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka disabled] :as optiot}]
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka   (str "nappi-ensisijainen" " " luokka)
+                            {:luokka   (str (cond
+                                              (and vayla-tyyli?
+                                                   teksti-nappi?) "button-primary-text"
+                                              vayla-tyyli? "button-primary-default"
+                                              :else "nappi-ensisijainen") " " luokka)
                              :ikoni    (ikonit/livicon-plus)
                              :disabled disabled})]))
 
 (defn hyvaksy
   ([toiminto] (hyvaksy "OK" toiminto {}))
   ([teksti toiminto] (hyvaksy teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-myonteinen" " " luokka)
+                            {:luokka (str (cond
+                                            (and vayla-tyyli?
+                                                 teksti-nappi?) "button-positive-text"
+                                            vayla-tyyli? "button-positive-default"
+                                            :else "nappi-myonteinen") " " luokka)
                              :ikoni  (ikonit/check)})]))
 
 (defn peruuta
   ([toiminto] (peruuta "Peruuta" toiminto {}))
   ([teksti toiminto] (peruuta teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str (if vayla-tyyli?
-                                            "button-negative-default"
-                                            "nappi-kielteinen") " " luokka)
+                            {:luokka (str (cond
+                                            (and vayla-tyyli?
+                                                 teksti-nappi?) "button-negative-text"
+                                            vayla-tyyli? "button-negative-default"
+                                            :else "nappi-kielteinen") " " luokka)
                              :ikoni  (ikonit/livicon-ban)})]))
 
 (defn yleinen
   ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))
-  ([teksti tyyppi toiminto {:keys [disabled luokka] :as optiot}]
+  ([teksti tyyppi toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka   (case tyyppi
-                                         :ensisijainen (str "nappi-ensisijainen" " " luokka)
-                                         :toissijainen (str "nappi-toissijainen" " " luokka))
+                                         :ensisijainen (str (cond
+                                                              (and vayla-tyyli?
+                                                                   teksti-nappi?) "button-primary-text"
+                                                              vayla-tyyli? "button-primary-default"
+                                                              :else "nappi-ensisijainen") " " luokka)
+                                         :toissijainen (str (cond
+                                                              (and vayla-tyyli?
+                                                                   teksti-nappi?) "button-secondary-text"
+                                                              vayla-tyyli? "button-secondary-default"
+                                                              :else "nappi-toissijainen") " " luokka))
                              :disabled disabled})]))
 
 (defn yleinen-ensisijainen
@@ -259,10 +277,14 @@
 
 (defn kielteinen
   ([teksti toiminto] (kielteinen teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka   (str "nappi-kielteinen" " " luokka)
+                            {:luokka   (str (cond
+                                              (and vayla-tyyli?
+                                                   teksti-nappi?) "button-negative-text"
+                                              vayla-tyyli? "button-negative-default"
+                                              :else "nappi-kielteinen") " " luokka)
                              :disabled disabled})]))
 
 (defn sulje
@@ -288,11 +310,15 @@
 
 (defn kumoa
   ([teksti toiminto] (kumoa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:ikoni  (ikonit/kumoa)
-                             :luokka (str "nappi-toissijainen" " " luokka)})]))
+                             :luokka (str (cond
+                                            (and vayla-tyyli?
+                                                 teksti-nappi?) "button-secondary-text"
+                                            vayla-tyyli? "button-secondary-default"
+                                            :else "nappi-toissijainen") " " luokka)})]))
 
 (defn sulje-ruksi
   [sulje!]
@@ -315,26 +341,36 @@
 
 (defn tarkasta
   ([teksti toiminto] (tarkasta teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str (if vayla-tyyli?
-                                            "button-secondary-default"
-                                            "nappi-toissijainen") " " luokka)
+                            {:luokka (str (cond
+                                            (and vayla-tyyli?
+                                                 teksti-nappi?) "button-secondary-text"
+                                            vayla-tyyli? "button-secondary-default"
+                                            :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/eye-open)})]))
 
 (defn muokkaa
   ([teksti toiminto] (muokkaa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)
+                            {:luokka (str (cond
+                                            (and vayla-tyyli?
+                                                 teksti-nappi?) "button-secondary-text"
+                                            vayla-tyyli? "button-secondary-default"
+                                            :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/livicon-pen)})]))
 
 (defn avaa
   ([teksti toiminto] (avaa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)
+                            {:luokka (str (cond
+                                            (and vayla-tyyli?
+                                                 teksti-nappi?) "button-secondary-text"
+                                            vayla-tyyli? "button-secondary-default"
+                                            :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/eye-open)})]))
