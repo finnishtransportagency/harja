@@ -8,4 +8,6 @@ INSERT INTO jarjestelman_tila (palvelin, tila, "osa-alue", paivitetty)
 -- name: hae-sonjan-tila
 SELECT palvelin, tila, paivitetty
 FROM jarjestelman_tila
-WHERE "osa-alue"='sonja';
+WHERE "osa-alue"='sonja' AND
+      (:kehitys? IS TRUE OR
+       palvelin ILIKE('%harja%'));

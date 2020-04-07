@@ -9,9 +9,11 @@
             [clj-time.coerce :as tc]
             [harja.pvm :as pvm]))
 
-(defn hae-sonjan-tila [db]
-  (let [sonjan-tila (q/hae-sonjan-tila db)]
-    (map #(update % :tila konv/jsonb->clojuremap) sonjan-tila)))
+(defn hae-sonjan-tila
+  ([db] (hae-sonjan-tila db false))
+  ([db kehitysmoodi?]
+   (let [sonjan-tila (q/sonjan-tila db kehitysmoodi?)]
+     (map #(update % :tila konv/jsonb->clojuremap) sonjan-tila))))
 
 (defn olion-tila-aktiivinen? [tila]
   (= tila "ACTIVE"))
@@ -42,10 +44,10 @@
 (defn kaikki-yhteydet-ok? [tilat]
   (and (not (empty? tilat))
        (every? (fn [{:keys [tila paivitetty]}]
-                 (yhteys-ok? tila paivitetty))
+                 (yhteys-ok? (:olioiden-tilat tila) paivitetty))
                tilat)))
 
-(defrecord JarjestelmanTila []
+(defrecord JarjestelmanTila [kehitysmoodi?]
   component/Lifecycle
   (start
     [{db :db
@@ -56,7 +58,7 @@
       :hae-sonjan-tila
       (fn [kayttaja]
         (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-sonjajonot kayttaja)
-        (hae-sonjan-tila db))
+        (hae-sonjan-tila db kehitysmoodi?))
       {:kysely-spec ::sd/hae-jonojen-tilat-kysely
        :vastaus-spec ::sd/hae-jonojen-tilat-vastaus})
     this))

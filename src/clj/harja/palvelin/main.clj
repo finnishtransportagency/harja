@@ -581,7 +581,7 @@
                       [:http-palvelin])
 
       :jarjestelman-tila (component/using
-                   (jarjestelman-tila/->JarjestelmanTila)
+                   (jarjestelman-tila/->JarjestelmanTila (:kehitysmoodi asetukset))
                    [:db :http-palvelin])
 
       ;; Harja API
@@ -668,7 +668,7 @@
         [:db :pois-kytketyt-ominaisuudet])
 
       :status (component/using
-                (status/luo-status)
+                (status/luo-status (:kehitysmoodi asetukset))
                 ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
                 ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
                 ;; ennen kuin sen statusta aletaan seuraamaan
