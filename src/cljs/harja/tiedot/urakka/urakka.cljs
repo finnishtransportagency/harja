@@ -7,19 +7,21 @@
             [harja.pvm :as pvm]
             [clojure.string :as str]))
 
-(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
-                                                                  :toimenpide     nil
-                                                                  :valitaso       nil
-                                                                  :noudetaan      0}}
-                                :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
-                                                                                         :maksetaan                      :molemmat
-                                                                                         :kopioidaan-tuleville-vuosille? true
-                                                                                         :laskutukseen-perustuen-valinta #{}}}
-                                                       :suodattimet          {:hankinnat                      {:toimenpide                     :talvihoito
-                                                                                                               :maksetaan                      :molemmat
-                                                                                                               :kopioidaan-tuleville-vuosille? true
-                                                                                                               :laskutukseen-perustuen-valinta #{}}
-                                                                              :kopioidaan-tuleville-vuosille? true}}})
+(defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
+                                                                         :maksetaan :molemmat
+                                                                         :kopioidaan-tuleville-vuosille? true
+                                                                         :laskutukseen-perustuen-valinta #{}}}
+                                       :suodattimet {:hankinnat {:toimenpide :talvihoito
+                                                                 :maksetaan :molemmat
+                                                                 :kopioidaan-tuleville-vuosille? true
+                                                                 :laskutukseen-perustuen-valinta #{}}
+                                                     :kopioidaan-tuleville-vuosille? true}})
+
+(def suunnittelu-default-arvot {:tehtavat {:valinnat {:samat-kaikille false
+                                                      :toimenpide nil
+                                                      :valitaso nil
+                                                      :noudetaan 0}}
+                                :kustannussuunnitelma kustannussuunnitelma-default})
 
 (defn hankinnat-testidata [maara]
   (into []
