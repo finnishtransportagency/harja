@@ -6,7 +6,7 @@
             [harja.kyselyt.status :as q]))
 
 (defn tietokannan-tila [db]
-  {:viimeisin-toteuman-luontiaika (q/hae-viimeisin-toteuman-luontiaika db)})
+  {:viimeisin-toteuman-luontiaika (q/tarkista-kantayhteys db)})
 
 (defn replikoinnin-tila [db-replica]
   {:replikoinnin-viive-sekunteina (q/hae-replikoinnin-viive db-replica)})
