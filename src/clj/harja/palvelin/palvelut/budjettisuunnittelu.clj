@@ -282,7 +282,7 @@
                                                                                    olemassa-olevat-kiinteahintaiset-tyot))
                                                                            ajat)]
                               (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (kiin-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+                              (kiin-q/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
                                   (update! db ::bs/kiinteahintainen-tyo
