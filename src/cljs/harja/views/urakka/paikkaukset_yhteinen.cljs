@@ -48,8 +48,7 @@
                          :voi-valita-kartalta? voi-valita-trn-kartalta?}
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
-       [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka aikavali-atom {:otsikko aikavali-otsikko
-                                                                                   :vaihda-filtteri-urakan-paattyessa? false}]
+       [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko}]
        [:span.label-ja-kentta
         [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
         [:div.kentta
