@@ -17,21 +17,24 @@
 (defn laskutus []
   (komp/luo
     (fn []
-      [:span.laskutus
-       [bs/tabs {:style :tabs :classes "tabs-taso2"
-                 :active (nav/valittu-valilehti-atom :laskutus)}
-        "Kulujen kohdistus"
-        :kohdistetut-kulut
-        ^{:keys "kohdistetut-kulut"}
-        [kohdistetut-kulut/kohdistetut-kulut]
+      (let [mhu-urakka? (= :teiden-hoito
+                           (:tyyppi @nav/valittu-urakka))]
+        [:span.laskutus
+         [bs/tabs {:style :tabs :classes "tabs-taso2"
+                   :active (nav/valittu-valilehti-atom :laskutus)}
+          "Kulujen kohdistus"
+          :kohdistetut-kulut
+          (when mhu-urakka?
+            ^{:keys "kohdistetut-kulut"}
+            [kohdistetut-kulut/kohdistetut-kulut])
 
-        "Laskutusyhteenveto"
-        :laskutusyhteenveto
-        ^{:key "laskutusyhteenveto"}
-        [laskutusyhteenveto/laskutusyhteenveto]
+          "Laskutusyhteenveto"
+          :laskutusyhteenveto
+          ^{:key "laskutusyhteenveto"}
+          [laskutusyhteenveto/laskutusyhteenveto]
 
-        "Maksuerät"
-        :maksuerat
-        ^{:key "maksuerat"}
-        (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
-          [maksuerat/maksuerat-listaus])]])))
+          "Maksuerät"
+          :maksuerat
+          ^{:key "maksuerat"}
+          (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
+            [maksuerat/maksuerat-listaus])]]))))
