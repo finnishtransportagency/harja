@@ -617,6 +617,9 @@
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
             {:vayla-tyyli? true
              :luokka       "suuri"}]]
+
+          ;; ks. VHAR-1761 milloin vihje voidaan poistaa
+          [yleiset/vihje "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. Näitä kuluja ei saa syöttää manuaalisesti muulloin kuin poikkeustilanteissa."]
           #_[kentat/vayla-lomakekentta
              "Kirjoita tähän halutessasi lisätietoa"
              :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
