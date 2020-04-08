@@ -19,7 +19,8 @@
             [harja.ui.kentat :as kentat]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.transit :as t])
+            [harja.transit :as t]
+            [harja.pvm :as pvm])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn- lomakkeen-osio [otsikko & osiot]
@@ -404,48 +405,48 @@
                                     "Lisää aliurakoitsija"])]
         (lomakkeen-osio
           "Lisätiedot"
-          [kentat/vayla-lomakekentta
-           "Aliurakoitsija"
-           :komponentti (fn []
-                          [yleiset/alasveto-toiminnolla
-                           (r/partial lisaa-aliurakoitsija (fn [aliurakoitsija]
-                                                             (e!
-                                                               (tiedot/->LuoUusiAliurakoitsija
-                                                                 aliurakoitsija
-                                                                 {:sivuvaikutus-tuloksella-fn #(reset! aliurakoitsija-atomi %)}))))
-                           {:disabled     (not= 0 haetaan)
-                            :valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
-                            :valinnat     aliurakoitsijat
-                            :valinta-fn   #(do
-                                             (swap! aliurakoitsija-atomi
-                                                    assoc
-                                                    :id (:id %)
-                                                    :nimi (:nimi %)
-                                                    :ytunnus (:ytunnus %))
-                                             (paivitys-fn
-                                               :suorittaja-nimi (:nimi %)
-                                               :aliurakoitsija (:id %)))
-                            :formaatti-fn #(get % :nimi)}])]
-          [kentat/vayla-lomakekentta
-           "Aliurakoitsijan y-tunnus"
-           :disabled (not= 0 haetaan)
-           :class #{(str "input" (if ytunnus-validi? "" "-error") "-default") "komponentin-input"}
-           :arvo (or
-                   ytunnus
-                   (some
-                     #(when (= aliurakoitsija (:id %)) (:ytunnus %))
-                     aliurakoitsijat))
-           :placeholder "Y-tunnus puuttuu. Muotoa 1234567-1"
-           :on-change #(do
-                         (paivitys-fn {:validoitava? true} :ytunnus (-> % .-target .-value))
-                         (swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value)))
-           :on-blur #(paivita-aliurakoitsija-jos-ytunnusta-muokattu
-                       @aliurakoitsija-atomi
-                       aliurakoitsijat
-                       (fn [aliurakoitsija]
-                         (when
-                           ytunnus-validi?
-                           (e! (tiedot/->PaivitaAliurakoitsija aliurakoitsija)))))]
+          #_[kentat/vayla-lomakekentta
+             "Aliurakoitsija"
+             :komponentti (fn []
+                            [yleiset/alasveto-toiminnolla
+                             (r/partial lisaa-aliurakoitsija (fn [aliurakoitsija]
+                                                               (e!
+                                                                 (tiedot/->LuoUusiAliurakoitsija
+                                                                   aliurakoitsija
+                                                                   {:sivuvaikutus-tuloksella-fn #(reset! aliurakoitsija-atomi %)}))))
+                             {:disabled     (not= 0 haetaan)
+                              :valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
+                              :valinnat     aliurakoitsijat
+                              :valinta-fn   #(do
+                                               (swap! aliurakoitsija-atomi
+                                                      assoc
+                                                      :id (:id %)
+                                                      :nimi (:nimi %)
+                                                      :ytunnus (:ytunnus %))
+                                               (paivitys-fn
+                                                 :suorittaja-nimi (:nimi %)
+                                                 :aliurakoitsija (:id %)))
+                              :formaatti-fn #(get % :nimi)}])]
+          #_[kentat/vayla-lomakekentta
+             "Aliurakoitsijan y-tunnus"
+             :disabled (not= 0 haetaan)
+             :class #{(str "input" (if ytunnus-validi? "" "-error") "-default") "komponentin-input"}
+             :arvo (or
+                     ytunnus
+                     (some
+                       #(when (= aliurakoitsija (:id %)) (:ytunnus %))
+                       aliurakoitsijat))
+             :placeholder "Y-tunnus puuttuu. Muotoa 1234567-1"
+             :on-change #(do
+                           (paivitys-fn {:validoitava? true} :ytunnus (-> % .-target .-value))
+                           (swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value)))
+             :on-blur #(paivita-aliurakoitsija-jos-ytunnusta-muokattu
+                         @aliurakoitsija-atomi
+                         aliurakoitsijat
+                         (fn [aliurakoitsija]
+                           (when
+                             ytunnus-validi?
+                             (e! (tiedot/->PaivitaAliurakoitsija aliurakoitsija)))))]
           [kentat/vayla-lomakekentta
            "Kirjoita tähän halutessasi lisätietoa"
            :disabled (not= 0 haetaan)
@@ -510,6 +511,44 @@
                       {:nayta-lisatyt-liitteet? false
                        :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])]])
 
+(defn- kulun-poistovarmistus-modaali
+  [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]
+  [:div#kulun-poisto-modaali
+   (for [k kohdistukset]
+     ^{:key (gensym "trpoisto")}
+     [:<>
+      [:div.flex-row
+       (str "Tehtäväryhmä: "
+                         (some #(when (= (:tehtavaryhma k) (:id %))
+                                  (:tehtavaryhma %))
+                               tehtavaryhmat))]
+      [:div.flex-row (str "Määrä: "
+                          (:summa k))]])
+   [:div.flex-row (str "Koontilaskun kuukausi: "
+                       (let [[kk hv] (str/split koontilaskun-kuukausi #"/")]
+                         (str (get kuukaudet-strs (keyword kk)) " - "
+                              (get hoitovuodet-strs (keyword hv)))))]
+   [:div.flex-row (str "Laskun päivämäärä: "
+                       laskun-pvm)]
+   [:div.flex-row (str "Kokonaissumma: "
+                       (reduce
+                         (fn [a s]
+                           (+ a (tiedot/parsi-summa (:summa s))))
+                         0
+                         kohdistukset))]
+   [:div
+    [napit/yleinen-toissijainen
+     "Peruuta"
+     (fn []
+       (modal/piilota!))
+     {:vayla-tyyli? true
+      :luokka "suuri"}]
+    [napit/poista
+     "Poista tiedot"
+     varmistus-fn
+     {:vayla-tyyli? true
+      :luokka "suuri"}]]])
+
 (defn- kulujen-syottolomake
   [e! _]
   (let [paivitys-fn (fn [& opts-polut-ja-arvot]
@@ -518,11 +557,16 @@
                                              opts-polut-ja-arvot)
                             opts (when (odd? (count opts-polut-ja-arvot)) (first opts-polut-ja-arvot))]
                         (e! (tiedot/->PaivitaLomake polut-ja-arvot opts))))]
-    (fn [e! {syottomoodi   :syottomoodi lomake :lomake aliurakoitsijat :aliurakoitsijat
-             tehtavaryhmat :tehtavaryhmat {haetaan :haetaan} :parametrit}]
+    (fn [e! {syottomoodi                   :syottomoodi
+             {:keys [tehtavaryhma
+                     kohdistukset
+                     koontilaskun-kuukausi
+                     erapaiva] :as lomake} :lomake
+             aliurakoitsijat               :aliurakoitsijat
+             tehtavaryhmat                 :tehtavaryhmat
+             {haetaan :haetaan}            :parametrit}]
       (let [{:keys [nayta]} lomake]
         [:div.ajax-peitto-kontti
-         #_[debug/debug lomake]
          [:div.palstat
           [:div.palsta
            [napit/takaisin
@@ -536,11 +580,19 @@
                        "Uusi kulu"))]]
           [:div.palsta.flex
            (when-not (nil? (:id lomake))
-             [napit/peruuta "Poista kulu"
-              #(e! (tiedot/->PoistaKulu (:id lomake)))
+             [napit/poista "Poista kulu"
+              #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?"}
+                             [kulun-poistovarmistus-modaali {:varmistus-fn          (fn []
+                                                                                      (modal/piilota!)
+                                                                                      (e! (tiedot/->PoistaKulu (:id lomake))))
+                                                             :kohdistukset          kohdistukset
+                                                             :koontilaskun-kuukausi koontilaskun-kuukausi
+                                                             :tehtavaryhma          tehtavaryhma
+                                                             :laskun-pvm            (pvm/pvm erapaiva)
+                                                             :tehtavaryhmat         tehtavaryhmat}])
               {:vayla-tyyli?  true
                :teksti-nappi? true
-               :style         {:font-size "14px"
+               :style         {:font-size   "14px"
                                :margin-left "auto"}}])]]
          [tehtavien-syotto {:paivitys-fn paivitys-fn
                             :haetaan     haetaan}

@@ -610,7 +610,6 @@
   PoistoOnnistui
   (process-event
     [{tulos :tulos} app]
-    (loki/log "Poistettu" tulos)
     (as-> app a
           (update a :kulut (fn [kulut]
                              (as-> kulut ks
