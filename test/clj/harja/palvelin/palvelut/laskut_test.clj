@@ -50,16 +50,16 @@
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Vesakon raivaus ja runkopuun poisto")
                       :tehtava             nil}]
-   :liitteet        [{:liite_id     nil
-                      :liite_tyyppi "image/png"
-                      :liite_nimi   "pensas-2021-01.jpg"
-                      :liite_koko   nil
-                      :liite_oid    nil}
-                     {:liite_id     nil
-                      :liite_tyyppi "image/png"
-                      :liite_nimi   "pensas-2021-02.jpg"
-                      :liite_koko   nil
-                      :liite_oid    nil}]})
+   :liitteet        [{:liite-id     1
+                      :liite-tyyppi "image/png"
+                      :liite-nimi   "pensas-2021-01.jpg"
+                      :liite-koko   nil
+                      :liite-oid    nil}
+                     {:liite-id     2
+                      :liite-tyyppi "image/png"
+                      :liite-nimi   "pensas-2021-02.jpg"
+                      :liite-koko   nil
+                      :liite-oid    nil}]})
 
 (def uusi-kohdistus
   {:rivi                3
@@ -194,6 +194,10 @@
         poistettu-lasku
         (kutsu-http-palvelua :poista-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :id tallennettu-id})
+        poistetun-laskun-haku
+        (kutsu-http-palvelua :lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id})]
 
     ;; Tallennus
@@ -212,8 +216,8 @@
 
     ;; Päivitys: kohdistuksen ja laskun poistaminen
     (is (= (count (:kohdistukset poistettu-kohdistus)) 2) "Kohdistuksen poistaminen vähensi kohdistusten määrää yhdellä (poistettu-kohdistus).")
-    (is (= (count (:kohdistukset poistettu-lasku)) 0) "Laskun poistaminen poistaa kohdistukset (poistettu-lasku).")
-    (is (= (count (:kohdistukset poistettu-lasku)) 0) "Poistettua laskua ei palaudu (poistettu-lasku).")))
+    (is (= (:id poistettu-lasku) tallennettu-id) "Laskun poistaminen palauttaa poistetun laskun (poistettu-lasku)")
+    (is (empty? poistetun-laskun-haku) "Poistettua laskua ei palaudu (poistetun-laskun-haku).")))
 
 
 (deftest paivita-maksuera-testi

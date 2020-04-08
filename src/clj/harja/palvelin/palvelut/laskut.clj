@@ -85,7 +85,9 @@
         laskun-kohdistukset (into []
                                   (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))
         liitteet (into [] (q/hae-liitteet db {:lasku-id id}))]
-    (assoc lasku :kohdistukset laskun-kohdistukset :liitteet liitteet)))
+    (if-not (empty? lasku)
+      (assoc lasku :kohdistukset laskun-kohdistukset :liitteet liitteet)
+      lasku)))
 
 (defn- laskuerittelyn-maksueratyyppi
   "Selvittää laskuerittelyn maksueratyypin, jotta laskun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
@@ -171,8 +173,8 @@
   (let [liitteet (into [] (q/hae-liitteet db {:lasku-id id}))
         poistettu-lasku (hae-laskuerittely db user {:id id})]
     (when (not (empty? liitteet))
-      (doseq [{liite :liite} liitteet]
-        (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite :kayttaja (:id user)})))
+      (doseq [{liite-id :liite-id} liitteet]
+        (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id id :liite-id liite-id :kayttaja (:id user)})))
     (q/poista-lasku! db {:urakka   urakka-id
                          :id       id
                          :kayttaja (:id user)})
