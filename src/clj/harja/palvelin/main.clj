@@ -585,7 +585,7 @@
                       [:http-palvelin])
 
       :jarjestelman-tila (component/using
-                   (jarjestelman-tila/->JarjestelmanTila)
+                   (jarjestelman-tila/->JarjestelmanTila (:kehitysmoodi asetukset))
                    [:db :http-palvelin])
 
       ;; Harja API
@@ -672,7 +672,10 @@
         [:db :pois-kytketyt-ominaisuudet])
 
       :status (component/using
-                (status/luo-status)
+                (status/luo-status (:kehitysmoodi asetukset))
+                ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
+                ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
+                ;; ennen kuin sen statusta aletaan seuraamaan
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
 
       :vaylien-geometriahaku
@@ -720,13 +723,6 @@
           (recur)
           vastaus)))))
 
-(defn kasittele-saikeen-kaatuminen
-  [saikeen-nimi]
-  (case saikeen-nimi
-    "jms-saije" (do (reset! sonja/jms-saije-sammutettu? true)
-                    (when-let [sonja-yhteys-ok (get-in harja-jarjestelma :sonja :yhteys-ok?)]
-                      (reset! sonja-yhteys-ok false)))))
-
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
@@ -735,15 +731,14 @@
       (reify Thread$UncaughtExceptionHandler
         (uncaughtException [_ thread e]
           (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-          (log/error "Virhe: " e)
-          (kasittele-saikeen-kaatuminen (.getName thread)))))
+          (log/error "Virhe: " e))))
     (alter-var-root #'harja-jarjestelma
                     (constantly
                       (-> (lue-asetukset asetusfile)
                           luo-jarjestelma
                           component/start)))
     (aloita-sonja harja-jarjestelma)
-    (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (status/aseta-status! :harja (:status harja-jarjestelma) 200 "Harja käynnistetty")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
