@@ -1942,9 +1942,13 @@
                                                            :ajettavat-jarejestykset #{:mapit}
                                                            :triggeroi-seuranta? true}
                                                           true)
-                                    (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
-                                                                                                        :tunniste-rajapinnan-dataan)
-                                                                                      (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset))))
+                                    (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
+                                          tallennettavien-arvojen-osat (if (= ::data (grid/hae-osa vanhempiosa :nimi))
+                                                                         (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
+                                                                         (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
+                                      (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                                          :tunniste-rajapinnan-dataan)
+                                                                                        tallennettavien-arvojen-osat))))
                                     (when paivita-kattohinta?
                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
                                 (fn [rivit-alla arvo]
