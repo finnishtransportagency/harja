@@ -505,6 +505,7 @@
                                                                           :leveys 1
                                                                           :luokat #{"table-default" "table-default-header" "harmaa-teksti" "lihavoitu"}}))
                                    :body [{:tyyppi :taulukko
+                                           :nimi ::data-rivi
                                            :osat [{:tyyppi :rivi
                                                    :nimi ::data-yhteenveto
                                                    :osat (cond-> [{:tyyppi :laajenna
@@ -1943,7 +1944,7 @@
                                                            :triggeroi-seuranta? true}
                                                           true)
                                     (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
-                                          tallennettavien-arvojen-osat (if (= ::data (grid/hae-osa vanhempiosa :nimi))
+                                          tallennettavien-arvojen-osat (if (= ::data-rivi (grid/hae-osa vanhempiosa :nimi))
                                                                          (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
                                                                          (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
                                       (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
