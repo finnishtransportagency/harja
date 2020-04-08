@@ -15,8 +15,7 @@ CREATE TABLE lasku (
                      poistettu boolean default false,
                      laskun_numero text,
                      lisatieto text,
-                     koontilaskun_kuukausi text,
-                     suorittaja integer references aliurakoitsija(id));
+                     koontilaskun_kuukausi text);
 
 COMMENT ON table lasku IS
   E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Laskun tiedot tallennetaan tähän tauluun. Laskuerittely ja kohdistus eri toimenpiteille, tehtäväryhmille ja tehtväille tallennetaan lasku_kohdistus-tauluun.

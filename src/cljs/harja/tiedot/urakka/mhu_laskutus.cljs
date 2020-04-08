@@ -576,10 +576,6 @@
                                             :erapaiva              erapaiva
                                             :id                    (when-not (nil? id) id)
                                             :urakka                urakka
-                                            :suorittaja-nimi       (some
-                                                                     #(when (= aliurakoitsija (:id %))
-                                                                        (:nimi %))
-                                                                     aliurakoitsijat)
                                             :kokonaissumma         kokonaissumma
                                             :laskun-numero         (let [laskun-numero (-> laskun-numero js/parseFloat)]
                                                                      (if (js/isNaN laskun-numero)

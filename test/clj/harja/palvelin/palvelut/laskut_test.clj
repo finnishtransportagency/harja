@@ -29,12 +29,9 @@
    :erapaiva        #inst "2021-12-15T21:00:00.000-00:00"
    :kokonaissumma   1332
    :tyyppi          "laskutettava"
-   :suorittaja-nimi "Kaarinan Kadunkiillotus Oy"
    :kohdistukset    [{:kohdistus-id        nil
                       :rivi                1
                       :summa               666
-                      :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
-                      :suorittaja-id       1
                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -43,8 +40,6 @@
                      {:kohdistus-id        nil
                       :rivi                2
                       :summa               666
-                      :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
-                      :suorittaja-id       1
                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -64,8 +59,6 @@
 (def uusi-kohdistus
   {:rivi                3
    :summa               987
-   :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
-   :suorittaja-id       1
    :suoritus-alku       #inst "2021-11-23T22:00:00.000000000-00:00"
    :suoritus-loppu      #inst "2021-11-24T22:00:00.000000000-00:00"
    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -80,12 +73,9 @@
    :erapaiva        #inst "2021-12-15T21:00:00.000-00:00"
    :kokonaissumma   5555.55
    :tyyppi          "laskutettava"
-   :suorittaja-nimi "Ali Urakoitsija Ky"
    :kohdistukset    [{:kohdistus-id        5
                       :rivi                2
                       :summa               3333.33
-                      :suorittaja-nimi     "Uusi Suorittaja"
-                      :suorittaja-id       2
                       :suoritus-alku       #inst "2021-03-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-03-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -99,12 +89,9 @@
    :erapaiva        #inst "2021-10-15T21:00:00.000-00:00"
    :kokonaissumma   666.66
    :tyyppi          "laskutettava"
-   :suorittaja-nimi "Äkkipika Oy"
    :kohdistukset    [{:kohdistus-id        nil
                       :rivi                1
                       :summa               666.66
-                      :suorittaja-nimi     "Äkkipika Oy"
-                      :suorittaja-id       3
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -119,12 +106,9 @@
    :erapaiva        #inst "2021-10-15T21:00:00.000-00:00"
    :kokonaissumma   666.66
    :tyyppi          "laskutettava"
-   :suorittaja-nimi "Kaarinan Kadunkiillotus Oy"
    :kohdistukset    [{:kohdistus-id        nil
                       :rivi                1
                       :summa               666.66
-                      :suorittaja-nimi     "Kaarinan Kadunkiillotus Oy"
-                      :suorittaja-id       1
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
@@ -157,7 +141,6 @@
     (is (count (distinct (map :id laskuerittely))) "Urakan laskujen haku palauttaa kolme laskua.")
     (is (apply = (map :id laskuerittely)) "Laskuerittelyssä on vain yhden laskun tietoja.")
     (is (count (map :kohdistus-id laskuerittely)) "Laskun erittely sisältää kolme kohdistusta.")
-    (is (= (:suorittaja laskuerittely) 1) "Aliurakoitsijan id palautuu.")
     (is (= (:kokonaissumma laskuerittely) 666.66M) "Kokonaissumma palautuu.")
     (is (= (:summa (first (filter #(= #inst "2019-11-21T22:00:00.000000000-00:00" (:suoritus-alku %)) (:kohdistukset laskuerittely)))) 222.22M) "Yksittäisen rivin summatieto palautuu.")))
 

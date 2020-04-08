@@ -39,12 +39,10 @@ SELECT l.id                   as "id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
-       l.suorittaja           as "suorittaja-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu"
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-       left JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
@@ -74,13 +72,10 @@ SELECT l.id                   as "id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
-       l.suorittaja           as "suorittaja-id",
-       a.nimi                 as "suorittaja-nimi",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu"
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-       JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND lk.suoritus_alku BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
@@ -93,11 +88,8 @@ SELECT l.id            as "id",
        l.laskun_numero as "laskun-numero",
        l.tyyppi        as "tyyppi",
        l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
-       l.suorittaja    as "suorittaja",
-       l.lisatieto     as "lisatieto",
-       a.nimi          as "suorittaja-nimi"
+       l.lisatieto     as "lisatieto"
 FROM lasku l
-  left join aliurakoitsija a on l.suorittaja = a.id
 where l.id = :id
   AND l.poistettu IS NOT TRUE;
 
@@ -111,11 +103,8 @@ SELECT lk.id                  as "kohdistus-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
        lk.luotu               as "luontiaika",
-       lk.muokattu            as "muokkausaika",
-       a.id                   as "suorittaja-id",
-       a.nimi                 as "suorittaja-nimi"
+       lk.muokattu            as "muokkausaika"
   FROM lasku_kohdistus lk
-  LEFT JOIN aliurakoitsija a ON (select suorittaja from lasku where id = :lasku) = a.id
  WHERE lk.lasku = :lasku
    AND lk.poistettu IS NOT TRUE
  ORDER by lk.id;
@@ -123,9 +112,9 @@ SELECT lk.id                  as "kohdistus-id",
 -- name: luo-lasku<!
 INSERT
   INTO lasku
-       (erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto,
+       (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, lisatieto,
         laskun_numero, koontilaskun_kuukausi)
-VALUES (:erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI,
+VALUES (:erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI,
         current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
 
 -- name: paivita-lasku<!
@@ -135,7 +124,6 @@ update
            lisatieto = :lisatieto,
            laskun_numero = :numero,
            kokonaissumma = :kokonaissumma,
-           suorittaja = :suorittaja,
            tyyppi = :tyyppi ::LASKUTYYPPI,
            muokattu = current_timestamp,
            muokkaaja = :kayttaja,

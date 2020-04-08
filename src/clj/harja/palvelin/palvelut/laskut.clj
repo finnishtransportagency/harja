@@ -47,7 +47,6 @@
                   :erapaiva              (:erapaiva lasku)
                   :laskun-numero         (:laskun-numero lasku)
                   :koontilaskun-kuukausi (:koontilaskun-kuukausi lasku)
-                  :suorittaja            (:suorittaja-id lasku)
                   :liitteet              liitteet
                   :kohdistukset          (mapv #(dissoc %
                                                         :tyyppi
@@ -128,13 +127,12 @@
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
   Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
-  [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi suorittaja-nimi laskun-numero
+  [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as _laskuerittely}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
                          :kokonaissumma         kokonaissumma
                          :urakka                urakka
-                         :suorittaja            (when suorittaja-nimi (kasittele-suorittaja db user suorittaja-nimi))
                          :tyyppi                tyyppi
                          :numero                laskun-numero
                          :lisatieto             lisatieto
