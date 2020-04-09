@@ -77,7 +77,7 @@ BEGIN
       AND loppupvm <= loppu;
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tg_poista_muistetut_laskutusyht_johtojahallinto
     AFTER INSERT OR UPDATE OR DELETE
@@ -123,7 +123,7 @@ BEGIN
       AND alkupvm >= alku
       AND loppupvm <= loppu;
     RETURN NULL;
-END
+END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tg_poista_muistetut_laskutusyht_kohdistetut
