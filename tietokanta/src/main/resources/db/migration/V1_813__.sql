@@ -663,38 +663,3 @@ BEGIN
     ON CONFLICT ON CONSTRAINT uniikki_urakka_aika DO UPDATE SET rivit = cache, tallennettu = NOW();
 END;
 $$ LANGUAGE plpgsql;
-
--- Kun hoidonjohdon työn suunnitelma muuttuu, poista muistetut
-CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_kht() RETURNS trigger AS $$
-DECLARE
-    maksupvm DATE;
-    ur INTEGER;
-    tpi_id INTEGER;
-BEGIN
-    IF TG_OP != 'DELETE' THEN
-        maksupvm := NEW.maksupvm;
-        tpi_id := NEW.toimenpideinstanssi;
-    ELSE
-        maksupvm := OLD.maksupvm;
-        tpi_id := OLD.toimenpideinstanssi;
-    END IF;
-
-    IF maksupvm IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    SELECT INTO ur urakka
-    FROM toimenpideinstanssi tpi
-    WHERE tpi.id = tpi_id;
-
-    PERFORM poista_hoitokauden_muistetut_laskutusyht(ur, maksupvm);
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER tg_poista_muistetut_laskutusyht_kht
-    AFTER INSERT OR UPDATE OR DELETE
-    ON kokonaishintainen_tyo
-    FOR EACH ROW
-EXECUTE PROCEDURE poista_muistetut_laskutusyht_kht();
