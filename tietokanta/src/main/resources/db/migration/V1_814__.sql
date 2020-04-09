@@ -1,6 +1,9 @@
 -- Kiinteähintainen suunniteltu työ ei päädykään suoraan maksueriin, eikä se niin ollen vaikuta laskutusyhteenvetoon.
-DROP TRIGGER tg_poista_muistetut_laskutusyht_kiinteat ON kiinteahintainen_tyo;
-DROP FUNCTION poista_muistetut_laskutusyht_kiinteat();
+DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_kiinteat ON kiinteahintainen_tyo;
+DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_kustannusarv ON kustannusarvioitu_tyo;
+DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_johtojahallinto ON johto_ja_hallintokorvaus;
+DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_kohdistetut ON lasku;
+DROP FUNCTION IF EXISTS  poista_muistetut_laskutusyht_kiinteat();
 
 -- Hoidon johdon kustannusarvioidut työt vaikuttavat suunniteltuinakin maksuerään ja laskutusyhteenvetoon
 CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_kustannusarv() RETURNS trigger AS
@@ -85,8 +88,8 @@ CREATE TRIGGER tg_poista_muistetut_laskutusyht_johtojahallinto
 EXECUTE PROCEDURE poista_muistetut_laskutusyht_johtojahallinto();
 
 -- Muutetaan triggerin ja proseduurin nimi
-DROP TRIGGER tg_poista_muistetut_laskutusyht_kiinteat ON lasku;
-DROP FUNCTION poista_muistetut_laskutusyht_kustannusarvioidut();
+DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_kiinteat ON lasku;
+DROP FUNCTION IF EXISTS poista_muistetut_laskutusyht_kustannusarvioidut();
 
 -- Kun kohdistetut kulut muuttuvat, poista muistetut laskutusyhteenvedolta
 CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_kohdistetut() RETURNS trigger AS
