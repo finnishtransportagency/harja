@@ -68,7 +68,7 @@
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
-                  :kulut/laskun-numero         [(ei-pakollinen ei-tyhja ei-nil)]
+                  :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil]
