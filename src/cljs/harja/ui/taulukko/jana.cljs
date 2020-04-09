@@ -1,11 +1,13 @@
 (ns harja.ui.taulukko.jana
   (:require [clojure.spec.alpha :as s]
-            [harja.ui.taulukko.protokollat :as p]))
+            [harja.ui.taulukko.protokollat :as p]
+            [harja.loki :as loki]))
 
 (defonce muuta-avain-rivi
          {:id [:janan-id]
           :lapset [:solut]
           :class [:luokat]
+          :on-click [:toiminnot :on-click]
           :piillotettu? [:piilotettu?]})
 (defonce muuta-avain-rivi-lapsilla
          {:id [:janan-id]
@@ -16,9 +18,9 @@
   (piirra-jana [this]
     (assert (vector? (:solut this)) (str "RIVIN: " janan-id " SOLUT EI OLE VEKTORI"))
     (when-not (:piilotettu? this)
-      [:div.jana.janan-rivi.row {:class (when luokat
+      [:div.jana.janan-rivi.row (into {:class (when luokat
                                         (apply str (interpose " " luokat)))
-                               :data-cy janan-id}
+                               :data-cy janan-id} (:toiminnot this))
      (for [solu (:solut this)
            :let [{:keys [osan-id]} solu]]
        (with-meta
