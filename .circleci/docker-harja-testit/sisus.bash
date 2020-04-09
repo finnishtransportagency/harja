@@ -57,7 +57,7 @@ rm -vf asetukset.edn
 git checkout -b "t_$BRANCH" "origin/$BRANCH"
 git checkout asetukset.edn
 
-sed -i -e 's/:jvm-opts \^:replace \["-Xms256m" "-Xmx2g"\]/:jvm-opts \^:replace \["-Xms256m" "-Xmx1g"\]/g' project.clj
+sed -i -e 's/:jvm-opts \^:replace \["-Xms256m" "-Xmx2g"\]/:jvm-opts \^:replace \["-Xms256m" "-Xmx900m"\]/g' project.clj
 
 mkdir -p ../.harja
 echo aaaa > ../.harja/anti-csrf-token
