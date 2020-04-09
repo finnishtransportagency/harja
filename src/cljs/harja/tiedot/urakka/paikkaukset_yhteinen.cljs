@@ -74,7 +74,8 @@
                               (map #(identity
                                       {:id (::paikkaus/id %)
                                        :nimi (::paikkaus/nimi %)
-                                       :valittu? true})
+                                       :valittu? true
+                                       :tierekisteriosoite (::paikkaus/tierekisteriosoite %)})
                                    (:paikkauskohteet tulos)))
           naytettavat-tulokset (itemit-avain tulos)]
       (palvelukutsu-onnistui-fn tulos)
