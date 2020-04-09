@@ -123,10 +123,7 @@
        :arvo laskun-numero
        :on-change #(paivitys-fn
                      {:validoitava? true}
-                     :laskun-numero (let [num (-> % .-target .-value js/parseInt)]
-                                      (if (js/isNaN num)
-                                        nil
-                                        num)))])))
+                     :laskun-numero (-> % .-target .-value))])))
 
 (defn kohdistuksen-poisto [indeksi kohdistukset]
   (apply conj
@@ -137,6 +134,16 @@
   [{:keys [paivitys-fn tehtavaryhma indeksi tehtavaryhma-meta tehtavaryhmat disabled]}]
   [yleiset/livi-pudotusvalikko {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? tehtavaryhma-meta))
                                 :disabled     disabled
+                                :nayta-ryhmat [:ei-hallinnollinen :hallinnollinen]
+                                :ryhmittely   #(cond
+                                                 (boolean (re-find #"oidonjohtopalkkio" (:tehtavaryhma %))) :hallinnollinen
+                                                 (boolean (re-find #"rillishankinnat" (:tehtavaryhma %))) :hallinnollinen
+                                                 (boolean (re-find #"ohto- ja hallintokorvaus" (:tehtavaryhma %))) :hallinnollinen
+                                                 :else :ei-hallinnollinen)
+                                :ryhman-otsikko (fn [ryhma]
+                                                  (case ryhma
+                                                    :hallinnollinen "Hallinnollisiin toimenpiteisiin liittyviä kuluja saa syöttää manuaalisesti vain poikkeustilanteessa:"
+                                                    :ei-hallinnollinen "Valitse:"))
                                 :vayla-tyyli? true
                                 :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
                                 :valitse-fn   #(do
@@ -468,7 +475,9 @@
       :arvo (or (when (> (count kohdistukset) 1)
                   (gstring/format "%.2f" (reduce
                                            (fn [a s]
-                                             (+ a (tiedot/parsi-summa (:summa s))))
+                                             (+ a (tiedot/parsi-summa (if (true? (:poistettu s))
+                                                                        0
+                                                                        (:summa s)))))
                                            0
                                            kohdistukset)))
                 (get-in lomake [:kohdistukset 0 :summa])

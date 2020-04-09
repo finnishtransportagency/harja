@@ -10,7 +10,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.ui.modal :as modal]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -302,6 +303,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
+          (loki/log ryhmissa? ryhmitellyt-itemit)
           [:div (merge
                   {:class (str (if vayla-tyyli?
                                  (str "select-" (if virhe? "error-" "") "default")

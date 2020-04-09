@@ -560,7 +560,11 @@
                 erapaiva id] :as lomake} :lomake
         maksuerat                        :maksuerat :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
-          kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
+          kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
+                                         0
+                                         (:summa %2)))
+                                0
+                                kohdistukset)
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
           {validi? :validi?} (meta validoitu-lomake)
@@ -577,10 +581,7 @@
                                             :id                    (when-not (nil? id) id)
                                             :urakka                urakka
                                             :kokonaissumma         kokonaissumma
-                                            :laskun-numero         (let [laskun-numero (-> laskun-numero js/parseFloat)]
-                                                                     (if (js/isNaN laskun-numero)
-                                                                       nil
-                                                                       laskun-numero))
+                                            :laskun-numero         laskun-numero
                                             :lisatieto             lisatieto
                                             :tyyppi                tyyppi
                                             :liitteet              liitteet
@@ -618,7 +619,7 @@
                         (luo-kulutaulukko a)
                         (formatoi-tulos (:kulut a)))
             :syottomoodi false)
-          (update-in a [:parametrit :haetaan] inc)
+          (update-in a [:parametrit :haetaan] dec)
           (update a :lomake resetoi-kulut)))
   PoistaKulu
   (process-event

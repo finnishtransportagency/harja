@@ -36,7 +36,6 @@
 
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
-    (loki/log "ei pakollinen " arvo)
     (if-not (str/blank? arvo)
       (v-fn arvo)
       true)))
@@ -56,7 +55,7 @@
 
 (defn numero [arvo]
   (when
-    (number? arvo)
+    (number? (-> arvo js/parseFloat))
     arvo))
 
 (defn paivamaara [arvo]
@@ -69,7 +68,7 @@
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
-                  :kulut/laskun-numero         [(ei-pakollinen numero)]
+                  :kulut/laskun-numero         [(ei-pakollinen ei-tyhja ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil]
@@ -138,8 +137,7 @@
 (def kulun-oletus-validoinnit
   [[:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
    [:erapaiva] (:kulut/erapaiva validoinnit)
-   [:laskun-numero] (:kulut/laskun-numero validoinnit)
-   [:ytunnus] (:kulut/y-tunnus validoinnit)])
+   [:laskun-numero] (:kulut/laskun-numero validoinnit)])
 
 (defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
   (apply luo-validius-meta
