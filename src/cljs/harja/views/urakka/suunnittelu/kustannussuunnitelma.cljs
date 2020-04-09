@@ -890,73 +890,70 @@
 
 (defn hankinnat-laskutukseen-perustuen-grid []
   (let [g (hankintojen-pohja "suunnittellut-hankinnat-laskutukseen-perustuen-taulukko"
-                                   (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :laskutukseen-perustuvat-hankinnat :grid] g)))
-                                   {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid]))
-                                    :paivita! (fn [f]
-                                                (swap! tila/suunnittelu-kustannussuunnitelma
-                                                       (fn [tila]
-                                                         (update-in tila [:gridit :laskutukseen-perustuvat-hankinnat :grid] f))))}
-                                   (fn [hoitokauden-numero rivit-alla arvo]
-                                     (when (and arvo (not (empty? rivit-alla)))
-                                       (doseq [rivi rivit-alla
-                                               :let [maara-solu (grid/get-in-grid rivi [1])
-                                                     piillotettu? (grid/piillotettu? rivi)]]
-                                         (when-not piillotettu?
-                                           (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
-                                                                  :arvo arvo
-                                                                  :solu maara-solu
-                                                                  :ajettavat-jarejestykset #{:mapit}
-                                                                  :triggeroi-seuranta? true}
-                                                                 true
-                                                                 hoitokauden-numero
-                                                                 :hankinnat)))
-                                       (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta
-                                                                         hoitokauden-numero
-                                                                         (vec (keep (fn [rivi]
-                                                                                      (let [maara-solu (grid/get-in-grid rivi [1])
-                                                                                            piillotettu? (grid/piillotettu? rivi)]
-                                                                                        (when-not piillotettu?
-                                                                                          (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                                    rivit-alla))))
-                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-                                   (fn [hoitokauden-numero arvo]
-                                     (when arvo
-                                       (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
-                                                              :arvo arvo
-                                                              :solu solu/*this*
-                                                              :ajettavat-jarejestykset #{:mapit}
-                                                              :triggeroi-seuranta? false}
-                                                             false
-                                                             hoitokauden-numero
-                                                             :hankinnat)))
-                                   (fn [hoitokauden-numero arvo]
-                                     #_(grid/paivita-osa! solu/*this*
-                                                        (fn [solu]
-                                                          (assoc solu :nappi-nakyvilla? false)))
-                                     (when arvo
-                                       (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
-                                                              :arvo arvo
-                                                              :solu solu/*this*
-                                                              :ajettavat-jarejestykset true
-                                                              :triggeroi-seuranta? true}
-                                                             true
-                                                             hoitokauden-numero
-                                                             :hankinnat)
-                                       (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))]
+                             (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :laskutukseen-perustuvat-hankinnat :grid] g)))
+                             {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid]))
+                              :paivita! (fn [f]
+                                          (swap! tila/suunnittelu-kustannussuunnitelma
+                                                 (fn [tila]
+                                                   (update-in tila [:gridit :laskutukseen-perustuvat-hankinnat :grid] f))))}
+                             (fn [hoitokauden-numero rivit-alla arvo]
+                               (when (and arvo (not (empty? rivit-alla)))
+                                 (doseq [rivi rivit-alla
+                                         :let [maara-solu (grid/get-in-grid rivi [1])
+                                               piillotettu? (grid/piillotettu? rivi)]]
+                                   (when-not piillotettu?
+                                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
+                                                            :arvo arvo
+                                                            :solu maara-solu
+                                                            :ajettavat-jarejestykset #{:mapit}
+                                                            :triggeroi-seuranta? true}
+                                                           true
+                                                           hoitokauden-numero
+                                                           :hankinnat)))
+                                 (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta
+                                                                   hoitokauden-numero
+                                                                   (vec (keep (fn [rivi]
+                                                                                (let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                      piillotettu? (grid/piillotettu? rivi)]
+                                                                                  (when-not piillotettu?
+                                                                                    (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                                              rivit-alla))))
+                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                             (fn [hoitokauden-numero arvo]
+                               (when arvo
+                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
+                                                        :arvo arvo
+                                                        :solu solu/*this*
+                                                        :ajettavat-jarejestykset #{:mapit}
+                                                        :triggeroi-seuranta? false}
+                                                       false
+                                                       hoitokauden-numero
+                                                       :hankinnat)))
+                             (fn [hoitokauden-numero arvo]
+                               (when arvo
+                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
+                                                        :arvo arvo
+                                                        :solu solu/*this*
+                                                        :ajettavat-jarejestykset true
+                                                        :triggeroi-seuranta? true}
+                                                       true
+                                                       hoitokauden-numero
+                                                       :hankinnat)
+                                 (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/laskutukseen-perustuvat-hankinnat-rajapinta
                                        (t/laskutukseen-perustuvat-hankinnat-dr)
                                        (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                                      :solun-polun-pituus 1
-                                                                     :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                     :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                      :datan-kasittely (fn [otsikot]
                                                                                         (mapv (fn [otsikko]
                                                                                                 otsikko)
                                                                                               (vals otsikot)))}
                                                [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
                                                                         :solun-polun-pituus 1
-                                                                        :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                        :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                         :datan-kasittely (fn [yhteensa]
                                                                                            (mapv (fn [[_ nimi]]
                                                                                                    nimi)
