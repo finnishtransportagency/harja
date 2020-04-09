@@ -48,10 +48,8 @@ CREATE TRIGGER tg_poista_muistetut_laskutusyht_kustannusarv
     FOR EACH ROW
 EXECUTE PROCEDURE poista_muistetut_laskutusyht_kustannusarv();
 
-
 -- Johto- ja hallintokorvaukset päivittyvät maksuerälle automaattisesti, täytyy putsata laskutusyhteenveto
-CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_johtojahallinto() RETURNS trigger AS
-$$
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_johtojahallinto() RETURNS trigger AS $$
 DECLARE
     alku  DATE;
     loppu DATE;
