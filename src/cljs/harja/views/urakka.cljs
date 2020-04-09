@@ -102,6 +102,8 @@
   (let [ur @nav/valittu-urakka
         _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
+        mhu-urakka? (= :teiden-hoito
+                       (:tyyppi ur))
         hae-urakan-tyot (fn [ur]
                           (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                             (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
@@ -129,6 +131,12 @@
        (when (valilehti-mahdollinen? :suunnittelu ur)
          ^{:key "suunnittelu"}
          [suunnittelu/suunnittelu ur])
+
+       (if mhu-urakka? "Kulut" "Laskutus")
+       :laskutus
+       (when (valilehti-mahdollinen? :laskutus ur)
+         ^{:key "laskutus"}
+         [laskutus/laskutus])
 
        "Toteumat"
        :toteumat
@@ -208,12 +216,6 @@
        (when (valilehti-mahdollinen? :paikkaukset ur)
          ^{:key "paikkaukset"}
          [paikkaukset/paikkaukset ur])
-
-       "Laskutus"
-       :laskutus
-       (when (valilehti-mahdollinen? :laskutus ur)
-         ^{:key "laskutus"}
-         [laskutus/laskutus])
 
        "Laskutus"
        :laskutus-vesivaylat
