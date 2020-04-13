@@ -712,6 +712,9 @@
 (defn hae-muhoksen-paallystysurakan-testikohteen-id []
   (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
 
+(defn hae-muhoksen-paallystysurakan-testipaikkauskohteen-id []
+  (ffirst (q (str "SELECT id FROM paikkauskohde WHERE nimi = 'Testikohde Muhoksen paallystysurakassa'"))))
+'
 (defn hae-utajarven-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka

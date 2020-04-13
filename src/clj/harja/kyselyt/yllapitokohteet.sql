@@ -856,6 +856,11 @@ SELECT urakka AS id
 FROM yllapitokohde
 WHERE id = :id;
 
+-- name: hae-paikkauskohteen-urakka-id
+SELECT "urakka-id" AS id
+  FROM paikkauskohde
+ WHERE id = :id;
+
 -- name: hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
 SELECT suorittava_tiemerkintaurakka AS id
 FROM yllapitokohde
