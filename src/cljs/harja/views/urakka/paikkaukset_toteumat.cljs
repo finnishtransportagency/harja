@@ -144,6 +144,9 @@
                                  [::paikkaus/paikkauskohde ::paikkaus/id])
         alkupvm (get paikkaus ::paikkaus/alkuaika)
         loppupvm (get paikkaus ::paikkaus/loppuaika)
+        ;; Asiakkaan kanssa sovittu, että yhtä paikkauskohdetta kohden on vain yksi työmenetelmä
+        ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
+        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
         pinta-ala-sum (pinta-alojen-summa paikkaukset)
         massamenekki-sum (massamenekin-summa paikkaukset)]
     [{:tyyli {}
@@ -176,14 +179,16 @@
            [:span.bold (pvm/pvm-aika-opt alkupvm)]]
           [:td {:colSpan 1}
            [:span.bold (pvm/pvm-aika-opt loppupvm)]]
-          [:td {:colSpan 3}]
+          [:td {:colSpan 1}
+           [:span.bold tyomenetelma]]
+          [:td {:colSpan 2}]
           [:td
            [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
           [:td
            [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
           [:td {:colSpan 2}
-           [:div {:style {:float "right"}}
-            [:a.livicon-arrow-right {:style {:float "right"}
+           [:div..gridin-fonttikoko {:style {:float "right"}}
+            [:a.livicon-arrow-right {:style {:margin "1rem"}
                                      :href "#"
                                      :on-click #(do
                                                   (.preventDefault %)
