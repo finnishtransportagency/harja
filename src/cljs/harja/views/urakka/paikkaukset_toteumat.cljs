@@ -131,6 +131,65 @@
       materiaalit-skeema
       materiaalit]]))
 
+
+(def otsikkokomp-ohje-teksti-tarkistus-ja-yha
+  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Jos tiedoissa on virheitä, valitse Ilmoita virhe.")
+
+(def otsikkokomp-vasen-margin "20px")
+
+(defn otsikkokomponentti
+  [e! paikkaukset]
+  (let [paikkaus (first paikkaukset)
+        paikkauskohde-id (get-in paikkaus
+                                 [::paikkaus/paikkauskohde ::paikkaus/id])
+        alkupvm (get paikkaus ::paikkaus/alkuaika)
+        loppupvm (get paikkaus ::paikkaus/loppuaika)
+        pinta-ala-sum (pinta-alojen-summa paikkaukset)
+        massamenekki-sum (massamenekin-summa paikkaukset)]
+    [{:tyyli {}
+      :sisalto
+      (fn [_]
+        [:<>
+         [:tr.grid-otsikkokomponentti {:style {:border "none"
+                                               :background-color "#C8C8C8"}}
+          [:td {:colSpan 11
+                :style {:border "none"}}
+           [:p {:style {:margin-left otsikkokomp-vasen-margin}}
+            [:span.bold "Ohje: "] otsikkokomp-ohje-teksti-tarkistus-ja-yha]]
+          [:td {:colSpan 2
+                :style {:border "none"}}
+           [napit/yleinen-toissijainen "Ilmoita virhe"
+            #(e! (tiedot/->AvaaVirheModal paikkaukset))
+            {:ikoni (ikonit/livicon-kommentti)}]]
+          [:td {:colSpan 3}
+           [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
+            #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+            {:ikoni (ikonit/livicon-check)
+             :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}]]]
+         [:tr.valiotsikko.grid-otsikkokomponentti {:style {:background-color "#C8C8C8"}}
+
+          [:td {:colSpan 3}
+           [:span.bold {:style {:margin-left otsikkokomp-vasen-margin}}
+            (str "Yhteensä: " (count paikkaukset))]]
+          [:td {:colSpan 4}]
+          [:td {:colSpan 1}
+           [:span.bold (pvm/pvm-aika-opt alkupvm)]]
+          [:td {:colSpan 1}
+           [:span.bold (pvm/pvm-aika-opt loppupvm)]]
+          [:td {:colSpan 3}]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
+          [:td {:colSpan 2}
+           [:div {:style {:float "right"}}
+            [:a.livicon-arrow-right {:style {:float "right"}
+                                     :href "#"
+                                     :on-click #(do
+                                                  (.preventDefault %)
+                                                  (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
+             "Kustannukset"]]]]])}]))
+
 (defn paikkaukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
@@ -183,6 +242,7 @@
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
          :salli-valiotsikoiden-piilotus? true
+         :valiotsikoiden-alkutila :kaikki-kiinni
          :tunniste ::paikkaus/id
          :sivuta 100
          :tyhja (if paikkauksien-haku-kaynnissa?
@@ -196,65 +256,16 @@
                         [paikkaukset-vetolaatikko e! rivi app])))
                paikkauket-vetolaatikko)}
         skeema
-        paikkaukset-grid]])))
 
-(def ohje-teksti-tarkistus-ja-yha
-  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Jos tiedoissa on virheitä, valitse Ilmoita virhe.")
+        (mapcat
+          ;; Lisätään tässä kohti väliotsikot, välttyy turhilta eventeiltä
+          (fn [[otsikko paikkaukset]]
+            (cons (grid/otsikko otsikko {:id (get-in (first paikkaukset) [::paikkaus/paikkauskohde ::paikkaus/id])
+                                         :otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
+                  (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
+                           paikkaukset)))
+                (group-by ::paikkaus/nimi paikkaukset-grid))]])))
 
-(def vasen-margin "20px")
-
-(defn otsikkokomponentti
-  [e! paikkaukset]
-  (let [paikkaus (first paikkaukset)
-        paikkauskohde-id (get-in paikkaus
-                                 [::paikkaus/paikkauskohde ::paikkaus/id])
-        alkupvm (get paikkaus ::paikkaus/alkuaika)
-        loppupvm (get paikkaus ::paikkaus/loppuaika)
-        pinta-ala-sum (pinta-alojen-summa paikkaukset)
-        massamenekki-sum (massamenekin-summa paikkaukset)]
-    [{:tyyli {}
-      :sisalto
-      (fn [_]
-        [:<>
-         [:tr.grid-otsikkokomponentti {:style {:border "none"
-                                               :background-color "#C8C8C8"}}
-          [:td {:colSpan 11
-                :style {:border "none"}}
-           [:p {:style {:margin-left vasen-margin}}
-            [:span.bold "Ohje: "] ohje-teksti-tarkistus-ja-yha]]
-          [:td {:colSpan 2
-                :style {:border "none"}}
-           [napit/yleinen-toissijainen "Ilmoita virhe"
-            #(e! (tiedot/->AvaaVirheModal paikkaukset))
-            {:ikoni (ikonit/livicon-kommentti)}]]
-          [:td {:colSpan 3}
-           [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
-            #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
-            {:ikoni (ikonit/livicon-check)
-             :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}]]]
-         [:tr.valiotsikko.grid-otsikkokomponentti {:style {:background-color "#C8C8C8"}}
-
-          [:td {:colSpan 3}
-           [:span.bold {:style {:margin-left vasen-margin}}
-            (str "Yhteensä: " (count paikkaukset))]]
-          [:td {:colSpan 4}]
-          [:td {:colSpan 1}
-           [:span.bold (pvm/pvm-aika-opt alkupvm)]]
-          [:td {:colSpan 1}
-           [:span.bold (pvm/pvm-aika-opt loppupvm)]]
-          [:td {:colSpan 3}]
-          [:td
-           [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
-          [:td
-           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
-          [:td {:colSpan 2}
-           [:div {:style {:float "right"}}
-            [:a.livicon-arrow-right {:style {:float "right"}
-                                     :href "#"
-                                     :on-click #(do
-                                                  (.preventDefault %)
-                                                  (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
-             "Kustannukset"]]]]])}]))
 
 (defn toteumat* [e! app]
   (komp/luo
@@ -262,16 +273,6 @@
                            (reset! tiedot/taso-nakyvissa? true))
                       #(do (e! (tiedot/->NakymastaPois))
                            (reset! tiedot/taso-nakyvissa? false)))
-    ;; Syy, että miksi tämmöinen erillinen otsikoiden lisäysfunktio on tässä sen sijaan, että
-    ;; tuo otsikko laitettaisiin samantein paikkallensa tiedot/kasittele-haettu-tulos funktiossa
-    ;; niinkuin se tehdään kustannusten puolella on se, että harja.ui.grid ns:n requiraaminen
-    ;; tiedot ns:ssa aiheuttaa circular dependencyn.
-    (komp/kun-muuttuu (fn [e! {haettu-uudet-paikkaukset? :haettu-uudet-paikkaukset?}]
-                        (when haettu-uudet-paikkaukset?
-                          (e! (tiedot/->LisaaOtsikotGridiin (fn [[otsikko paikkaukset]]
-                                                              (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
-                                                                    (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
-                                                                             paikkaukset))))))))
     (fn [e! app]
       [:span
        [kartta/kartan-paikka]

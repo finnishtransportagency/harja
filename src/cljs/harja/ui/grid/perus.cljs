@@ -882,8 +882,10 @@
                   (swap! historia pop)
                   (when muutos
                     (muutos ohjaus))))
-        maarita-valiotsikoiden-alkutila! (fn []
-                                           (when (and (not @valiotsikoiden-alkutila-maaritelty?)
+        maarita-valiotsikoiden-alkutila! (fn [tiedot]
+                                           ;; Merkataan tämä check tehdyksi vasta kun (not empty) data on saatu serveriltä
+                                           (when (and (not-empty tiedot)
+                                                      (not @valiotsikoiden-alkutila-maaritelty?)
                                                       salli-valiotsikoiden-piilotus?
                                                       (some? tiedot))
                                              (let [tila (if (= valiotsikoiden-alkutila :kaikki-kiinni)
@@ -971,7 +973,7 @@
 
     (komp/luo
       (komp/sisaan (fn []
-                     (maarita-valiotsikoiden-alkutila!)
+                     (maarita-valiotsikoiden-alkutila! tiedot)
                      (when infolaatikon-tila-muuttui
                        (infolaatikon-tila-muuttui false))))
       (komp/ulos #(when infolaatikon-tila-muuttui
@@ -985,7 +987,7 @@
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
          (tarkista-sivutus! tiedot)
-         (maarita-valiotsikoiden-alkutila!)
+         (maarita-valiotsikoiden-alkutila! tiedot)
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
          (reset! rivien-maara (count tiedot))
