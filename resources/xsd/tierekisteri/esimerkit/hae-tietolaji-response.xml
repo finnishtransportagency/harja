@@ -17,7 +17,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMNUMERO</kenttatunniste>
+                    <kenttatunniste>ASETUSNR</kenttatunniste>
                     <jarjestysnumero>2</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>true</pakollinen>

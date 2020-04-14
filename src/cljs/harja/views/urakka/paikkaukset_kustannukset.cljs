@@ -4,85 +4,95 @@
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.ui.debug :as debug]
+            [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
-            [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
-            [harja.ui.napit :as napit]
-            [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
-(defn yksikkohintaiset-kustannukset
-  [e! app]
-  (let [skeema [{:otsikko "Kirjaus\u00ADaika"
-                 :leveys 3
-                 :nimi :kirjattu
-                 :fmt yhteinen-view/aika-formatteri}
-                {:otsikko "Selite"
-                 :leveys 5
-                 :nimi :selite}
-                {:otsikko "Määrä"
-                 :leveys 2
-                 :nimi :maara}
-                {:otsikko "Yksikkö"
-                 :leveys 2
-                 :nimi :yksikko}
-                {:otsikko "Yksikkö\u00ADhinta"
-                 :leveys 2
-                 :nimi :yksikkohinta}]]
-    (fn [_ {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
-                   yksikkohintaiset-grid]}]
+
+(defn- nappaa-kohde [kohde-id]
+  (first (filter
+           #(= (:id %) kohde-id)
+           (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))))
+
+(defn- aseta-tr-kentat [rivi {:keys [tierekisteriosoite id]}]
+  (let [{:keys [tie aosa aet losa let]} tierekisteriosoite]
+    (assoc rivi :tie tie
+                :aosa aosa
+                :aet aet
+                :losa losa
+                :let let
+                :paikkauskohde id)))
+
+(defn paikkauksien-kokonaishinta-tyomenetelmittain [e! app]
+  (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkauksien-kokonaishinta-tyomenetelmittain-grid]}]
+    (let [urakka-id (get-in @yhteiset-tiedot/tila [:urakka :id])
+          skeema [{:otsikko "Kohde" :leveys 10 :valinta-nayta :nimi :valinta-arvo :id
+                   :tyyppi :valinta
+                   :valinnat (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet])
+                   :nimi :paikkauskohde :fmt :nimi
+                   :aseta (fn [rivi arvo]
+                            (aseta-tr-kentat rivi (nappaa-kohde arvo)))
+                   :validoi [[:ei-tyhja "Valitse kohde"]]
+                   :muokattava? #(if (pos-int? (:paikkaustoteuma-id %))
+                                   false
+                                   true)}
+                  {:nimi :tie :otsikko "Tie" :tyyppi :positiivinen-numero :leveys 2}
+                  {:nimi :aosa :otsikko "Aosa" :tyyppi :positiivinen-numero :leveys 2}
+                  {:nimi :aet :otsikko "Aet" :tyyppi :positiivinen-numero :leveys 2}
+                  {:nimi :losa :otsikko "Losa" :tyyppi :positiivinen-numero :leveys 2}
+                  {:nimi :let :otsikko "Let" :tyyppi :positiivinen-numero :leveys 2}
+                  {:otsikko "Työmenetelmä"
+                   :leveys 5 :tyyppi :valinta
+                   :validoi [[:ei-tyhja "Valitse työmenetelmä"]]
+                   :valinnat (:urakan-tyomenetelmat @yhteiset-tiedot/tila)
+                   :nimi :tyomenetelma}
+                  {:otsikko "Valmistumispvm" :leveys 5 :tyyppi :pvm :fmt pvm/pvm-opt :nimi :valmistumispvm
+                   :validoi [[:ei-tyhja "Syötä valmistumispvm"]]}
+                  {:otsikko "Kokonaishinta" :fmt fmt/euro-opt :leveys 5 :tyyppi :numero :nimi :hinta
+                   :validoi [[:ei-tyhja "Syötä hinta"]]}]
+          yhteissumma (->> paikkauksien-kokonaishinta-tyomenetelmittain-grid
+                           (map :hinta)
+                           (reduce +))]
       [:div
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
-                    "Paikkauksien yksikköhintaiset kustannukset")
+                    "Paikkauksien kokonaishintaiset kustannukset työmenetelmittäin")
          :tunniste :paikkaustoteuma-id
-         :salli-valiotsikoiden-piilotus? true
+         :tallenna (if (and
+                         (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-kustannukset urakka-id)
+                         (not (empty? (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))))
+                     #(tiedot/tallenna-kustannukset %)
+                     :ei-mahdollinen)
+         :tallennus-ei-mahdollinen-tooltip (if-not (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-kustannukset urakka-id)
+                                             "Ei kirjoitusoikeutta."
+                                             (when (empty? (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))
+                                               "Urakassa ei ole vielä paikkauskohteita, joille kustannuksia voisi kirjata."))
          :sivuta 50
-         :tyhja "Ei yksikköhintaisia kustannuksia"}
+         :tyhja "Ei kustannuksia"}
         skeema
-        yksikkohintaiset-grid]])))
-
-(defn kokonaishintaiset-kustannukset [e! app]
-  (let [skeema [{:otsikko "Kirjaus\u00ADaika"
-                 :leveys 5
-                 :nimi :kirjattu
-                 :fmt yhteinen-view/aika-formatteri}
-                {:otsikko "Selite"
-                 :leveys 5
-                 :nimi :selite}
-                {:otsikko "Hinta"
-                 :leveys 5
-                 :nimi :hinta}]]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? kokonaishintaiset-grid]}]
-      [:div
-       [grid/grid
-        {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
-                    [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
-                    "Paikkauksien kokonaishintaiset kustannukset")
-         :salli-valiotsikoiden-piilotus? true
-         :tunniste :paikkaustoteuma-id
-         :sivuta 50
-         :tyhja "Ei kokonaishintaisia kustannuksia"}
-        skeema
-        kokonaishintaiset-grid]])))
+        (reverse
+          (sort-by :valmistumispvm paikkauksien-kokonaishinta-tyomenetelmittain-grid))]
+       [yleiset/taulukkotietonakyma {:table-style {:float "right"}}
+        "Yhteensä:"
+        (fmt/euro-opt yhteissumma)]])))
 
 (defn kustannukset* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti
-                                                       "Siirry toimenpiteisiin"
-                                                       (fn [paikkauskohde-id]
-                                                         (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
-                      #(e! (tiedot/->NakymastaPois)))
+    (komp/ulos #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
       [:div
        [debug/debug app]
        [yhteinen-view/hakuehdot
         {:nakyma :kustannukset
          :palvelukutsu-onnistui-fn #(e! (tiedot/->KustannuksetHaettu %))}]
-       [kokonaishintaiset-kustannukset e! app]
-       [yksikkohintaiset-kustannukset e! app]])))
+       [paikkauksien-kokonaishinta-tyomenetelmittain e! app]])))
 
 (defn kustannukset [ur]
   (komp/luo

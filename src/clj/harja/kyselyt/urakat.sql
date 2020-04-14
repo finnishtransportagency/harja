@@ -103,6 +103,16 @@ WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
       AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
+-- name: hae-kaynnissa-olevat-hoitourakat
+SELECT
+    u.id,
+    u.nimi,
+    u.tyyppi
+  FROM urakka u
+ WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+   AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
+   AND u.tyyppi IN ('hoito', 'teiden-hoito');
+
 -- name: hae-kaynnissa-olevat-ja-tulevat-urakat
 SELECT
   u.id,
@@ -757,6 +767,11 @@ WHERE u.id IN (:idt);
 -- name: hae-urakan-sampo-id
 -- single?: true
 SELECT sampoid
+FROM urakka
+WHERE id = :urakka;
+
+-- name: hae-urakan-nimi
+SELECT id, nimi
 FROM urakka
 WHERE id = :urakka;
 

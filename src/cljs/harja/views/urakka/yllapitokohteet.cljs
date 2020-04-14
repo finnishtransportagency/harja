@@ -52,7 +52,9 @@
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 7)
 (def tr-leveys 8)
+(def tr-leveys-aikataulu 2)
 (def kohde-leveys (* tr-leveys 2))
+(def kohde-leveys-aikataulu (* tr-leveys-aikataulu 4))
 (def tarjoushinta-leveys 10)
 (def maaramuutokset-leveys 10)
 (def toteutunut-hinta-leveys 20)
@@ -318,11 +320,11 @@
                                              (fn tayta-toimenpide-toistuvasti-fn [toistettava-rivi tama-rivi]
                                                (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))]))
   ([{:keys [muokattava-tie? muokattava-ajorata-ja-kaista? validoi
-            vain-nama-validoinnit? hae-fn tr-sarake-fn valinta-arity-3? dissoc-cols]}
+            vain-nama-validoinnit? hae-fn tr-sarake-fn valinta-arity-3? dissoc-cols aikataulu?]}
     [tayta-alas?-fn tayta-paallyste-fn tayta-paallyste-toistuvasti-fn paallyste-valinta-nayta-fn tayta-raekoko-fn
      tayta-raekoko-toistuvasti-fn tayta-tyomenetelma-fn tayta-tyomenetelma-toistuvasti-fn tyomenetelma-valinta-nayta-fn
      tayta-massamaara-fn tayta-massamaara-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn]]
-   (let [tr-sarakkeet-asetukset [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
+   (let [tr-sarakkeet-asetukset [{:nimi :nimi :pituus-max 30  :leveys (if aikataulu? kohde-leveys-aikataulu kohde-leveys)}
                                  {:nimi :tr-numero :muokattava? muokattava-tie?
                                   :validoi (:tr-numero validoi)}
                                  {:nimi :tr-ajorata :muokattava? muokattava-ajorata-ja-kaista?
@@ -338,12 +340,12 @@
                   (concat
                     (if tr-sarake-fn
                       (tierekisteriosoite-sarakkeet
-                        tr-leveys
+                        (if aikataulu? tr-leveys-aikataulu tr-leveys)
                         tr-sarakkeet-asetukset
                         vain-nama-validoinnit?
                         tr-sarake-fn)
                       (tierekisteriosoite-sarakkeet
-                        tr-leveys
+                        (if aikataulu? tr-leveys-aikataulu tr-leveys)
                         tr-sarakkeet-asetukset
                         vain-nama-validoinnit?))
                     [(assoc paallystys-tiedot/paallyste-grid-skeema
@@ -629,7 +631,7 @@
          kohdeosat]))))
 
 (defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata?
-                                 virhe-viesti rivinumerot? dissoc-cols]}]
+                                 virhe-viesti rivinumerot? dissoc-cols aikataulu?]}]
   (let [g (grid/grid-ohjaus)
         rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
@@ -656,7 +658,8 @@
                                                  :muokattava-tie? muokattava-tie?
                                                  :vain-nama-validoinnit? true
                                                  :hae-fn hae-fn
-                                                 :dissoc-cols dissoc-cols})
+                                                 :dissoc-cols dissoc-cols
+                                                 :aikataulu? aikataulu?})
             muokkaa-kohdeosat! (fn [uudet-osat]
                                  (let [uudet-kohdeosat (if jarjesta-kun-kasketaan
                                                          (vary-meta uudet-osat assoc :jarjesta-gridissa true)
@@ -841,7 +844,7 @@
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi dissoc-cols
                                     kohteen-rivi-validointi kohteen-taulukko-validointi
                                     muut-kohteen-rivi-validointi muut-kohteen-taulukko-validointi
-                                    paallystyksen-tarkka-aikataulu piilota-kohdeosat?]}]
+                                    paallystyksen-tarkka-aikataulu piilota-kohdeosat? aikataulu?]}]
   (let [vuosi @u/valittu-urakan-vuosi
         tallenna-fn (fn [osatyyppi]
                       (fn [rivit]
@@ -914,7 +917,8 @@
               :voi-muokata? voi-muokata?
               :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")
               :kohdetyyppi kohdetyyppi
-              :dissoc-cols dissoc-cols}])
+              :dissoc-cols dissoc-cols
+              :aikataulu? aikataulu?}])
            (when-not piilota-kohdeosat?
              [yllapitokohdeosat
              {:otsikko "Muut tierekisteriosoitteet"
@@ -937,7 +941,8 @@
                             :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}
               :voi-muokata? voi-muokata?
               :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")
-              :dissoc-cols dissoc-cols}])
+              :dissoc-cols dissoc-cols
+              :aikataulu? aikataulu?}])
            (when paallystyksen-tarkka-aikataulu
              [(:fn paallystyksen-tarkka-aikataulu)
               urakka sopimus-id rivi vuosi
@@ -1008,7 +1013,7 @@
                                                     false)))
 
 (defn alikohteiden-vetolaatikot
-  [urakka sopimus-id kohteet-atom kohdetyyppi piilota-kohdeosat? dissoc-cols paallystyksen-tarkka-aikataulu]
+  [urakka sopimus-id kohteet-atom kohdetyyppi piilota-kohdeosat? dissoc-cols paallystyksen-tarkka-aikataulu aikataulu?]
   (into {}
         (map (juxt
                :id
@@ -1025,7 +1030,8 @@
                                         :muut-kohteen-taulukko-validointi [{:fn (r/partial muukohde-toisten-kanssa-paallekkain-validointi)
                                                                             :sarakkeet tr/alikohteen-tr-sarakkeet-map}]
                                         :dissoc-cols dissoc-cols
-                                        :paallystyksen-tarkka-aikataulu paallystyksen-tarkka-aikataulu}])))
+                                        :paallystyksen-tarkka-aikataulu paallystyksen-tarkka-aikataulu
+                                        :aikataulu? aikataulu?}])))
         @kohteet-atom))
 
 (defn yllapitokohteet
@@ -1116,7 +1122,8 @@
                                                       (:kohdetyyppi optiot)
                                                       false
                                                       #{}
-                                                      nil)
+                                                      nil
+                                                      false)
              :rivi-validointi (-> validointi :paakohde :tr-osoite)
              :taulukko-varoitus (-> varoitukset :paakohde :taulukko)
              :tallenna (when-not piilota-tallennus? @tallenna)

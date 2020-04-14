@@ -59,7 +59,9 @@
 (def paikkauskohteen-perustiedot
   #{::id
     ::ulkoinen-id
-    ::nimi})
+    ::nimi
+    ::tila
+    ::virhe})
 
 (def paikkauksen-perustiedot
   #{::id
@@ -104,9 +106,8 @@
     ::tyyppi
     ::selite
     ::hinta
-    ::yksikko
-    ::yksikkohinta
-    ::maara})
+    ::tyomenetelma
+    ::valmistumispvm})
 
 (s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
                               :date  #(instance? #?(:cljs js/Date

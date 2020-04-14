@@ -10,12 +10,15 @@
             [taoensso.timbre :as log]
             [harja.kyselyt
              [urakat :as urakat-q]
+             [sopimukset :as sopimukset-q]
              [organisaatiot :as organisaatiot-q]
+             [materiaalit :as materiaalit]
              [raportit :as raportit-q]]
             [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
             [harja.domain.roolit :as roolit]
+            [harja.pvm :as pvm]
             [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
             [harja.transit :as t]
@@ -121,9 +124,34 @@
             [:div "Raportoinnissa on nyt ruuhkaa. Yritetään kohta uudelleen. "
              "Sivu latautuu automaattisesti uudelleen hetken kuluttua."]]])})
 
+(defn- paivita-urakan-materiaalin-kayton-cachet-eiliselta [db urakka-id]
+  (let [urakan-sopimus-idt (map :id
+                                (sopimukset-q/hae-urakan-sopimus-idt db
+                                                                     {:urakka_id urakka-id}))]
+    (doseq [sopimus-id urakan-sopimus-idt]
+      ;; Päivitetään sopimuksen_kaytetty_materiaali (sisältää saman datan kuin myöhemmin luotu materialized view raportti_toteutuneet_materiaalit, jos aika sallii, voidaan refaktoroida ja hankkiutua toisesta eroon)
+      ;; (Ympäristöraporttia varten)
+      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                             :alkupvm (pvm/eilinen)}))
+    ;; Päivitetään taulu urakan_materiaalin_kaytto_hoitoluokittain (Ympäristöraporttia varten)
+    (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                       :alkupvm (pvm/eilinen)
+                                                                       :loppupvm (pvm/eilinen)})))
+
+(defn- paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta [db]
+  (let [urakka-idt (mapv :id
+                         (urakat-q/hae-kaynnissa-olevat-hoitourakat db))]
+    (jdbc/with-db-transaction [db db]
+                              (doseq [u urakka-idt]
+                                (paivita-urakan-materiaalin-kayton-cachet-eiliselta db u)))
+    :paivitetty))
+
+;; Asetetaan raportticachen päivitys klo 7:15, koska tietty urakoitsija lähettää usein jopa 7h pitkiä toteumia.
+;; Esim. t.alkanut klo 22, saapuu API:in klo 5. Näin saadaan ajettua nekin vielä tuoreeltaan raporteille
 (defn paivita-raportti-cache-oisin! [db]
-  (ajastettu-tehtava/ajasta-paivittain [0 1 0]
+  (ajastettu-tehtava/ajasta-paivittain [7 15 0]
                                        (fn [_]
+                                         (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
                                          (raportit-q/paivita_raportti_cachet db))))
 
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]

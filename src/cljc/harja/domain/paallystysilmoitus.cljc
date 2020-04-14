@@ -149,7 +149,8 @@
    {:nimi "26" :koodi 26}
    {:nimi "27" :koodi 27}
    {:nimi "28" :koodi 28}
-   {:nimi "29" :koodi 29}])
+   {:nimi "29" :koodi 29}
+   {:nimi "31" :koodi 31}])
 
 (def +sideainetyypit+
   "Sideainetyypit"

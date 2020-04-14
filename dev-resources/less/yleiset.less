@@ -157,10 +157,6 @@ button > .ajax-loader {
   max-width: 100%;
   width: @leveys;
 
-  .aikavali-valinnat {
-    text-align: center;
-  }
-
   .pvm-kentta {
     width: 46%;
   }
@@ -398,43 +394,29 @@ button > .ajax-loader {
   }
 }
 
-
-.lomake-sisempi-osio {
-  width:100%;
-  padding:16px;
-  background-color: @gray245;
-  margin: 4px 0px;
-  display:flex;
-  flex-direction: column;
-
-  > div {
-    margin:11px 0px;
-  }
-}
-
-.kulukentta {
-  .puolikas {
-    width:50%;
-  }
-  margin: 11px 0px;
-}
-
-.liiterivi {
-  height:40px;
+.flex-row {
   display:flex;
   flex-direction:row;
-  align-items: center;
-
-  .liitelista {
-    flex:3;
+  justify-content: space-between;
+  align-items:center;
+  width:100%;
+}
+.map-lista {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: 10px;
+  &:last-child {
+    padding-bottom: 10px;
   }
-
-  .liitepoisto {
-    flex:1;
-  }
-
-  .liitenappi {
-    flex:1;
+  > * {
+    &:nth-child(1) {
+      flex: 1;
+    }
+    &:nth-child(2) {
+      flex: 1;
+    }
   }
 }
-

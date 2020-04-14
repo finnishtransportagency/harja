@@ -167,27 +167,36 @@
                                     (valitse (pvm/nyt)))}
                    "Tänään"]]]]])))))
 
+(def ^:const
+pvm-popupin-sulkevat-nappaimet
+  "Näppäimet, joille pvm popup suljetaan, kun focus on input-kentässä. Tab, enter ja esc."
+  #{9 13 27})
+
 (defn pvm-valintakalenteri-inputilla
-  [optiot]
+  [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [pvm valitse luokat valittava?-fn]}]
+    (fn [{:keys [pvm valitse luokat valittava?-fn disabled]}]
       [:div.kalenteri-kontti
-       [:input {:type      :text
-                :class     (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                :value     (cond
-                             (not (empty? @suora-syotto-sisalto)) @suora-syotto-sisalto
-                             (not (nil? pvm)) (pvm/pvm pvm)
-                             :else "")
+       [:input {:disabled    disabled
+                :type        :text
+                :class       (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
+                :value       (cond
+                               (seq @suora-syotto-sisalto) @suora-syotto-sisalto
+                               (not (nil? pvm)) (pvm/pvm pvm)
+                               :else "")
 
-                :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                :on-focus  #(reset! auki? true)
-                :on-blur   (fn []
-                             (if-not (empty? @suora-syotto-sisalto)
-                               (do (valitse (pvm/->pvm @suora-syotto-sisalto))
-                                   (reset! suora-syotto-sisalto "")))
-                             (js/setTimeout #(reset! auki? false) 100))}]
-       (when @auki? [pvm-valintakalenteri {:vayla-tyyli?  true
-                                           :valitse       valitse
-                                           :valittava?-fn valittava?-fn
-                                           :pvm           pvm}])])))
+                :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
+                :on-focus    #(reset! auki? true)
+                :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
+                                (reset! auki? false))
+                :on-blur     (fn []
+                               (when (seq @suora-syotto-sisalto)
+                                 (valitse (pvm/->pvm @suora-syotto-sisalto))
+                                 (reset! suora-syotto-sisalto "")))}]
+       (when @auki?
+         [pvm-valintakalenteri {:vayla-tyyli?  true
+                                :valitse       #(do (reset! auki? false)
+                                                    (valitse %))
+                                :valittava?-fn valittava?-fn
+                                :pvm           pvm}])])))

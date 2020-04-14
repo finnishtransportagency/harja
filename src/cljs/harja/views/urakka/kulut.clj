@@ -5,6 +5,6 @@
   [otsikko & osiot]
   `(do
      [:div
-      {:class #{"col-xs-12" "col-sm-6"}}
+      {:class #{"palsta"}}
       [:h2 ~otsikko]
       ~@osiot]))

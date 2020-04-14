@@ -14,6 +14,7 @@
             <xs:enumeration value="tl513"/>
             <xs:enumeration value="tl196"/>
             <xs:enumeration value="tl519"/>
+            <xs:enumeration value="tl520"/>
             <xs:enumeration value="tl505"/>
             <xs:enumeration value="tl195"/>
             <xs:enumeration value="tl504"/>

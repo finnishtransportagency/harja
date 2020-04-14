@@ -44,6 +44,8 @@
      [:head
       [:title "HARJA"]
       [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+      ;; Edge yrittää muuttaa isot numerot puhelinnumerolinkeiksi. Ei haluta sitä käytöstä.
+      [:meta {:name "format-detection" :content "telephone=no"}]
       [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
       [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
       [:meta {:name "mobile-web-app-capable" :content "yes"}]
