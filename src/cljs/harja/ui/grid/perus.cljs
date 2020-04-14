@@ -466,7 +466,8 @@
                      :on-click #(toggle-valiotsikko valiotsikko-id
                                                     piilotetut-valiotsikot)
                      :style (merge {} (when (not (empty? otsikkokomponentit))
-                                        {:border-bottom "none"}))})
+                                        {:border-bottom "none"
+                                         :border-top "solid 0.1mm black"}))})
       [:td {:colSpan colspan}
        [:h5 teksti]
        (when salli-valiotsikoiden-piilotus?
