@@ -483,7 +483,7 @@
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
                                        esta-poistaminen? tallennus-kaynnissa?
-                                       salli-valiotsikoiden-piilotus? valiotsikon-komponentti-flowhun?
+                                       salli-valiotsikoiden-piilotus?
                                        piilotetut-valiotsikot tiedot gridin-tietoja
                                        esta-poistaminen-tooltip piilota-toiminnot?
                                        voi-muokata-rivia? skeema vetolaatikot-auki]}]
@@ -542,7 +542,7 @@
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
                                      rivin-infolaatikko infolaatikko-nakyvissa? infolaatikon-tila-muuttui
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
-                                     piilotetut-valiotsikot valiotsikon-komponentti-flowhun?
+                                     piilotetut-valiotsikot
                                      rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki salli-valiotsikoiden-piilotus?]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
@@ -717,7 +717,7 @@
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
            raporttivienti raporttiparametrit virhe-viesti aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
-           taulukko-validointi taulukko-varoitus taulukko-huomautus valiotsikon-komponentti-flowhun?] :as opts} skeema tiedot]
+           taulukko-validointi taulukko-varoitus taulukko-huomautus] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko

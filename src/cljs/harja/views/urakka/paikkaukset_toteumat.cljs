@@ -44,11 +44,6 @@
         rivien-lkm (count paikkaukset)
         pinta-ala (pinta-alojen-summa paikkaukset)
         massamenekki (massamenekin-summa paikkaukset)]
-    (log "modaalin paikkaus " (pr-str paikkaus))
-    (log "modaalin paikkaus, kohteen nimi " nimi)
-    (log "modaalin paikkaus, kohteen pinta-ala " pinta-ala)
-    (log "modaalin paikkaus, kohteen massamenekki " massamenekki)
-    (log "modaalin paikkaus, rivien lkm" rivien-lkm)
     [modal/modal
     {:otsikko (str "Lähetä sähköposti")
      :luokka "ilmoita-virheesta-modal"
@@ -76,7 +71,7 @@
                         "Kohde" nimi
                         "Rivejä" rivien-lkm
                         "Pinta-ala yht. " pinta-ala
-                             "Massamenekki" massamenekki)]]]))
+                        "Massamenekki" massamenekki)]]]))
 
 
 (defn paikkaukset-vetolaatikko
@@ -223,7 +218,7 @@
         [:<>
          [:tr.grid-otsikkokomponentti {:style {:border "none"
                                                :background-color "#C8C8C8"}}
-          [:td {:colSpan 12
+          [:td {:colSpan 11
                 :style {:border "none"}}
            [:p {:style {:margin-left vasen-margin}}
             [:span.bold "Ohje: "] ohje-teksti-tarkistus-ja-yha]]
@@ -232,7 +227,7 @@
            [napit/yleinen-toissijainen "Ilmoita virhe"
             #(e! (tiedot/->AvaaVirheModal paikkaukset))
             {:ikoni (ikonit/livicon-kommentti)}]]
-          [:td {:colSpan 2}
+          [:td {:colSpan 3}
            [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
             #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
             {:ikoni (ikonit/livicon-check)
