@@ -26,11 +26,12 @@ WHERE maksuera IN (SELECT m.numero
                           JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                    WHERE tpi.id = :toimenpideinstanssi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
 
--- name: merkitse-maksuerat-likaisiksi!
+-- name: merkitse-maksuerat-likaisiksi-hoidonjohdossa!
+-- Hoidon johdon suunitellut kustannukset liitetään automaattisesti maksuerään kuukauden viimeisenä päivänä
 UPDATE maksuera
 SET likainen = TRUE,
     muokattu = current_timestamp
 WHERE toimenpideinstanssi IN (SELECT id
                               FROM toimenpideinstanssi
-                              WHERE id = :toimenpideinstanssi
+                              WHERE id = :toimenpideinstanssi and toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- MHU ja HJU Hoidon johto
                                 AND loppupvm > current_timestamp - INTERVAL '3 months');

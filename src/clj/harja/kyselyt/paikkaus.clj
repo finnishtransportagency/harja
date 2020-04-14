@@ -289,17 +289,19 @@
   (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
                        ::muokkaustiedot/poistettu? false}))
 
-(defn hae-urakan-paikkaustoteumat [db urakka-id]
-  (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id
-                            ::muokkaustiedot/poistettu? false}))
-
 (defn hae-urakan-paikkauskohteet [db urakka-id]
   (let [paikkauskohteet (fetch db
                                ::paikkaus/paikkauskohde
                                (conj paikkaus/paikkauskohteen-perustiedot
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
-                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
-    (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
+                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})
+        paikkauskohteet (into []
+                              (comp
+                                (map #(assoc % ::paikkaus/tierekisteriosoite
+                                               (first (hae-paikkauskohteen-tierekisteriosoite db {:kohde (::paikkaus/id %)}))))
+                                (map #(dissoc % ::paikkaus/paikkaukset)))
+                              paikkauskohteet)]
+paikkauskohteet))
 
 (defn hae-urakan-tyomenetelmat [db urakka-id]
   (let [paikkauksien-tyomenetelmat (fetch db

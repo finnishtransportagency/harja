@@ -133,8 +133,8 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= (+ (* 2 (count kiinteahintaisten-toimenpideinstanssit)) ;; Jos kiinteähintainen kustannuserä on likainen, myös vastaava maksuerä on likainen.
-                  1 ;; mhu-johto toimenpideinstanssi
+        (is (= (+ (count kiinteahintaisten-toimenpideinstanssit) ;; vain kustannussuunnitelmat
+                  2 ;; mhu-johto toimenpideinstanssi (sekä kustannussuunnitelma että maksuerä)
                   )
                viestit-jonossa)
             "Sampoon ei siirry kaikki likaisiksi merkatut kiinteättyöt sekä johto- ja hallintokorvaustyöt")))

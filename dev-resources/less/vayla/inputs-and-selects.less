@@ -19,6 +19,8 @@
 .select-ul-yhteiset-arvot() {
   list-style: none;
   padding-left: 0px;
+  position: relative;
+  z-index:200;
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
@@ -123,6 +125,36 @@ label {
     }
     > ul {
       .select-ul-yhteiset-arvot();
+      > .harja-alasvetolista-ryhma {
+         .harja-alasvetolista-ryhman-otsikko {
+          color: @gray125;
+          padding: 10px;
+        }
+        > li {
+        .select-li-yhteiset-arvot();
+        display: flex;
+        > * {
+          align-self: center;
+          padding-left: 10px;
+          flex: 1;
+          line-height: 40px;
+        }
+        a {
+          color: inherit;
+          &:hover {
+            color:inherit;
+            text-decoration: none;
+          }
+        }
+        &:hover {
+          background-color: @gray245;
+        }
+
+        &:focus {
+          background-color: @gray235;
+        }
+      }
+      }
 
       > li {
         .select-li-yhteiset-arvot();
@@ -150,7 +182,7 @@ label {
       }
     }
     position: relative;
-    z-index: 100;
+
     outline-color: @gray200;
     outline-width: 1px;
     outline-offset: -1px;
