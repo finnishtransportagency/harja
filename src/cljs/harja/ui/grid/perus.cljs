@@ -456,7 +456,7 @@
 
 
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
-                            piilotetut-valiotsikot valiotsikon-komponentti-flowhun?]}]
+                            piilotetut-valiotsikot]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
         otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
     [:<>
@@ -472,14 +472,13 @@
        (when salli-valiotsikoiden-piilotus?
          (if (@piilotetut-valiotsikot valiotsikko-id)
            (ikonit/livicon-chevron-right)
-           (ikonit/livicon-chevron-down)))
-       ]]
+           (ikonit/livicon-chevron-down)))]]
      (when-not (empty? otsikkokomponentit)
-        (map-indexed
-          (fn [i {:keys [sisalto]}]
-            ^{:key i}
-            [sisalto {:id valiotsikko-id}])
-          otsikkokomponentit))]))
+       (map-indexed
+         (fn [i {:keys [sisalto]}]
+           ^{:key i}
+           [sisalto {:id valiotsikko-id}])
+         otsikkokomponentit))]))
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
@@ -507,8 +506,7 @@
                                [^{:key teksti}
                                [valiotsikko {:colspan colspan :teksti teksti :otsikko-record id
                                              :piilotetut-valiotsikot piilotetut-valiotsikot
-                                             :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                             :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?}]])
+                                             :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]])
                              (when-not (rivi-piilotetun-otsikon-alla? i (vec tiedot) @piilotetut-valiotsikot)
                                (let [rivi (get muokatut id)
                                      rivin-virheet (get kaikki-virheet id)
@@ -562,8 +560,7 @@
                         [valiotsikko {:colspan colspan :teksti (:teksti rivi)
                                       :otsikko-record rivi
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
-                                      :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                      :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?}]]
+                                      :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
                         (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit-jarjestetty) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)
@@ -680,7 +677,6 @@
                                         HUOM! Vaatii toimiakseen: mahdollista-rivin-valinta? true
   :mahdollista-rivin-valinta?           jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
   :salli-valiotsikoiden-piilotus?       Jos true, väliotsikoiden sisällön voi piilottaa klikkaamalla riviä
-  :valiotsikon-komponentti-flowhun?    Jos true, väliotsikon komponentille ei anneta absolute position tyyliä vaan kiinni flowhun
   :valiotsikoiden-alkutila              Jos väliotsikot on sallittu piilottaa, tämä määrittää, mitkä otsikot ovat
                                         oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
@@ -1085,7 +1081,6 @@
                                            :vetolaatikot vetolaatikot :muokkaa! muokkaa!
                                            :voi-poistaa? voi-poistaa?
                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                           :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?
                                            :esta-poistaminen? esta-poistaminen?
                                            :esta-poistaminen-tooltip esta-poistaminen-tooltip
                                            :piilota-toiminnot? piilota-toiminnot?
@@ -1098,7 +1093,6 @@
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
                                          :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                         :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?
                                          :vetolaatikot vetolaatikot :tallenna tallenna
                                          :rivi-klikattu rivi-klikattu
                                          :rivin-infolaatikko rivin-infolaatikko

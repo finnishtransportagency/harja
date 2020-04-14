@@ -188,7 +188,6 @@
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
          :salli-valiotsikoiden-piilotus? true
-         :valiotsikon-komponentti-flowhun? true
          :tunniste ::paikkaus/id
          :sivuta 100
          :tyhja (if paikkauksien-haku-kaynnissa?
