@@ -1775,7 +1775,6 @@
                                              (merge polut
                                                     {(keyword "piillota-itsetaytettyja-riveja-" nimi) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
                                                                                                        :toiminto! (fn [g _ maksukausi]
-                                                                                                                    (println "maksukausi - " nimi ": " maksukausi)
                                                                                                                     (let [naytettavat-kuukaudet (into #{} (t/maksukauden-kuukaudet maksukausi))]
                                                                                                                       (doseq [rivi (grid/hae-grid (grid/get-in-grid (grid/etsi-osa g nimi) [1]) :lapset)]
                                                                                                                         (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
@@ -2308,10 +2307,10 @@
                                                                                            {:toimenpide toimenpide})))))))]
     (fn [{:keys [toimenpide]} laskutukseen-perustuen? on-oikeus?]
       [:div#laskutukseen-perustuen-filter
-       [:input#lakutukseen-perustuen.vayla-checkbox
+       [:input#laskutukseen-perustuen.vayla-checkbox
         {:type "checkbox" :checked laskutukseen-perustuen?
          :on-change (partial vaihda-fn toimenpide) :disabled (not on-oikeus?)}]
-       [:label {:for "lakutukseen-perustuen"}
+       [:label {:for "laskutukseen-perustuen"}
         "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle: "
         [:b (t/toimenpide-formatointi toimenpide)]]])))
 
