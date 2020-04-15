@@ -130,100 +130,135 @@
          (subvec kohdistukset 0 indeksi)
          (subvec kohdistukset (inc indeksi))))
 
-(defn tehtavaryhma-dropdown
+(defn tehtavaryhma-tai-toimenpide-dropdown
   [{:keys [paivitys-fn tehtavaryhma indeksi tehtavaryhma-meta tehtavaryhmat disabled]}]
-  [yleiset/livi-pudotusvalikko {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? tehtavaryhma-meta))
-                                :disabled     disabled
-                                :nayta-ryhmat [:ei-hallinnollinen :hallinnollinen]
-                                :ryhmittely   #(cond
-                                                 (boolean (re-find #"oidonjohtopalkkio" (:tehtavaryhma %))) :hallinnollinen
-                                                 (boolean (re-find #"rillishankinnat" (:tehtavaryhma %))) :hallinnollinen
-                                                 (boolean (re-find #"ohto- ja hallintokorvaus" (:tehtavaryhma %))) :hallinnollinen
-                                                 :else :ei-hallinnollinen)
-                                :ryhman-otsikko (fn [ryhma]
-                                                  (case ryhma
-                                                    :hallinnollinen "Hallinnollisiin toimenpiteisiin liittyviä kuluja saa syöttää manuaalisesti vain poikkeustilanteessa:"
-                                                    :ei-hallinnollinen "Valitse:"))
-                                :vayla-tyyli? true
-                                :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
-                                :valitse-fn   #(do
-                                                 (paivitys-fn
-                                                   [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
-                                                 (paivitys-fn {:validoitava? true}
-                                                              [:kohdistukset indeksi :tehtavaryhma] (:id %)))
-                                :format-fn    #(get % :tehtavaryhma)}
-   tehtavaryhmat])
+  (let [valittu-tehtavaryhma (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
+        optiot {:virhe?         (not (validi-ei-tarkistettu-tai-ei-koskettu? tehtavaryhma-meta))
+                :disabled       disabled
+                :nayta-ryhmat   [:ei-hallinnollinen :hallinnollinen]
+                :ryhmittely     #(cond
+                                   (boolean (re-find #"oidonjohtopalkkio" (:tehtavaryhma %))) :hallinnollinen
+                                   (boolean (re-find #"rillishankinnat" (:tehtavaryhma %))) :hallinnollinen
+                                   (boolean (re-find #"ohto- ja hallintokorvaus" (:tehtavaryhma %))) :hallinnollinen
+                                   :else :ei-hallinnollinen)
+                :ryhman-otsikko (fn [ryhma]
+                                  (case ryhma
+                                    :hallinnollinen "Hallinnollisiin toimenpiteisiin liittyviä kuluja saa syöttää manuaalisesti vain poikkeustilanteessa:"
+                                    :ei-hallinnollinen "Valitse:"))
+                :vayla-tyyli?   true
+                :valinta        valittu-tehtavaryhma
+                :valitse-fn     #(do
+                                   (paivitys-fn
+                                     [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
+                                   (paivitys-fn {:validoitava? true}
+                                                [:kohdistukset indeksi :tehtavaryhma] (:id %)))
+                :format-fn      #(get % :tehtavaryhma)}]
+    [:<>
+     [yleiset/livi-pudotusvalikko optiot
+      tehtavaryhmat]
+     (when (or
+             (boolean (re-find #"oidonjohtopalkkio" (or (:tehtavaryhma valittu-tehtavaryhma)
+                                                        "")))
+             (boolean (re-find #"rillishankinnat" (or (:tehtavaryhma valittu-tehtavaryhma)
+                                                      "")))
+             (boolean (re-find #"ohto- ja hallintokorvaus" (or (:tehtavaryhma valittu-tehtavaryhma)
+                                                               ""))))
+       [yleiset/vihje "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. Näitä kuluja ei saa syöttää manuaalisesti muulloin kuin poikkeustilanteissa."])]))
 
 (defn yksittainen-kohdistus
-  [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi disabled]}]
+  [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi disabled
+           toimenpiteet]}]
   [:div.palstat
    [:div.palsta
     [kentat/vayla-lomakekentta
      "Tehtäväryhmä *"
      :tyylit {:kontti #{"kulukentta"}}
-     :komponentti tehtavaryhma-dropdown
+     :komponentti tehtavaryhma-tai-toimenpide-dropdown
      :komponentin-argumentit {:paivitys-fn       paivitys-fn
                               :tehtavaryhma      tehtavaryhma
                               :tehtavaryhmat     tehtavaryhmat
                               :tehtavaryhma-meta tehtavaryhma-meta
                               :indeksi           indeksi
+                              :toimenpiteet      toimenpiteet
                               :disabled          disabled}]]])
 
 (defn useampi-kohdistus
-  [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi summa-meta summa disabled poistettu muokataan?]}]
-  [:div.palstat
-   [:div.palsta
-    (apply conj [:h3]
-           (filter #(not (nil? %))
-                   [(when (and muokataan?
-                               poistettu)
-                      {:style {:color "#ff0000"}})
-                    (str (if (and muokataan?
-                                  poistettu) "Poistetaan kohdistus " "Kohdistus ")
-                         (inc indeksi))]))                  ; indeksi alkaa nollasta, mutta se ei ole paras tässä
-    [kentat/vayla-lomakekentta
-     "Tehtäväryhmä *"
-     :tyylit {:kontti #{"kulukentta"}}
-     :komponentti tehtavaryhma-dropdown
-     :komponentin-argumentit {:paivitys-fn       paivitys-fn
-                              :tehtavaryhma      tehtavaryhma
-                              :tehtavaryhmat     tehtavaryhmat
-                              :tehtavaryhma-meta tehtavaryhma-meta
-                              :indeksi           indeksi
-                              :disabled          (or poistettu
-                                                     disabled)}]
-    [kentat/vayla-lomakekentta
-     "Kustannus € *"
-     :arvo summa
-     :disabled (or poistettu
-                   disabled)
-     :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
-     :on-change #(paivitys-fn
+  [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta
+           indeksi summa-meta summa disabled poistettu muokataan?
+           toimenpiteet]}]
+  (let [lisatyo? true]
+    [:div.palstat
+     [:div.palsta
+      (apply conj [:h3.flex-row]
+             (filter #(not (nil? %))
+                     [(when (and muokataan?
+                                 poistettu)
+                        {:style {:color "#ff0000"}})
+                      (str (if (and muokataan?
+                                    poistettu) "Poistetaan kohdistus " "Kohdistus ")
+                           (inc indeksi))
+                      (when lisatyo?
+                        [:span
+                         [:input#kulu-lisat.vayla-checkbox
+                          {:type      :checkbox
+                           :disabled  disabled
+                           :on-change #()
+                           :on-click  #(paivitys-fn [:kohdistukset indeksi :lisatyo?] (-> % .-target .-checked))}]
+                         [:label {:for "kulu-lisat"} "Lisätyö"]])]))
+      [kentat/vayla-lomakekentta
+       "Tehtäväryhmä *"
+       :tyylit {:kontti #{"kulukentta"}}
+       :komponentti tehtavaryhma-tai-toimenpide-dropdown
+       :komponentin-argumentit {:paivitys-fn       paivitys-fn
+                                :tehtavaryhma      tehtavaryhma
+                                :tehtavaryhmat     tehtavaryhmat
+                                :tehtavaryhma-meta tehtavaryhma-meta
+                                :indeksi           indeksi
+                                :toimenpiteet      toimenpiteet
+                                :disabled          (or poistettu
+                                                       disabled)}]
+      [kentat/vayla-lomakekentta
+       "Kustannus € *"
+       :arvo summa
+       :disabled (or poistettu
+                     disabled)
+       :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
+       :on-change #(paivitys-fn
+                     [:kohdistukset indeksi :summa]
+                     (-> % .-target .-value))
+       :on-blur #(paivitys-fn
+                   {:validoitava? true}
                    [:kohdistukset indeksi :summa]
-                   (-> % .-target .-value))
-     :on-blur #(paivitys-fn
-                 {:validoitava? true}
-                 [:kohdistukset indeksi :summa]
-                 (-> % .-target .-value tiedot/parsi-summa))]]
-   [:div.palsta
-    [:h3.kohdistuksen-poisto
-     [napit/poista "" (cond
-                        (and muokataan? poistettu)
-                        #(paivitys-fn [:kohdistukset indeksi :poistettu] false)
-                        (and muokataan? (not poistettu))
-                        #(paivitys-fn [:kohdistukset indeksi :poistettu] true)
-                        :else #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
-                                                                     (vary-meta lomake update :validius (fn [validius]
-                                                                                                          (dissoc validius
-                                                                                                                  [:kohdistukset indeksi :summa]
-                                                                                                                  [:kohdistukset indeksi :tehtavaryhma]))))}
-                                            :kohdistukset (r/partial kohdistuksen-poisto indeksi)))
-      {:teksti-nappi? true
-       :vayla-tyyli?  true}]]]])
+                   (-> % .-target .-value tiedot/parsi-summa))]]
+     [:div.palsta
+      [:h3.kohdistuksen-poisto
+       [napit/poista "" (cond
+                          (and muokataan? poistettu)
+                          #(paivitys-fn [:kohdistukset indeksi :poistettu] false)
+                          (and muokataan? (not poistettu))
+                          #(paivitys-fn [:kohdistukset indeksi :poistettu] true)
+                          :else #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
+                                                                       (vary-meta lomake update :validius (fn [validius]
+                                                                                                            (dissoc validius
+                                                                                                                    [:kohdistukset indeksi :summa]
+                                                                                                                    [:kohdistukset indeksi :tehtavaryhma]))))}
+                                              :kohdistukset (r/partial kohdistuksen-poisto indeksi)))
+        {:teksti-nappi? true
+         :vayla-tyyli?  true}]]
+      (when lisatyo?
+        [kentat/vayla-lomakekentta
+         "Lisätieto *"
+         :arvo lisatyon-lisatieto
+         :disabled (or poistettu
+                       disabled)
+         :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta) "" "-error") "-default") "komponentin-input"}
+         :on-change #(paivitys-fn
+                       [:kohdistukset indeksi :lisatyon-lisatieto]
+                       (-> % .-target .-value))])]]))
 
 (defn tehtavaryhma-maara
   [{:keys [tehtavaryhmat kohdistukset-lkm paivitys-fn validius disabled muokataan?]} indeksi t]
-  (let [{:keys [tehtavaryhma summa poistettu]} t
+  (let [{:keys [tehtavaryhma summa poistettu lisatyo-lisatieto lisatyo?]} t
         useampia-kohdistuksia? (> kohdistukset-lkm 1)
         summa-meta (get validius [:kohdistukset indeksi :summa])
         tehtavaryhma-meta (get validius [:kohdistukset indeksi :tehtavaryhma])]
@@ -239,13 +274,17 @@
                            :summa-meta        summa-meta
                            :disabled          disabled
                            :poistettu         poistettu
-                           :muokataan?        muokataan?}]
+                           :muokataan?        muokataan?
+                           :lisatyo?          lisatyo?
+                           :lisatyo-lisatieto lisatyo-lisatieto}]
        [yksittainen-kohdistus {:paivitys-fn       paivitys-fn
                                :tehtavaryhma      tehtavaryhma
                                :tehtavaryhmat     tehtavaryhmat
                                :tehtavaryhma-meta tehtavaryhma-meta
                                :indeksi           indeksi
-                               :disabled          disabled}])]))
+                               :disabled          disabled
+                               :lisatyo?          lisatyo?
+                               :lisatyo-lisatieto lisatyo-lisatieto}])]))
 
 (defn lisaa-validointi [lomake-meta validoinnit]
   (reduce (fn [kaikki {:keys [polku validoinnit]}]
@@ -283,12 +322,14 @@
                                [(first kohdistukset)])]
     [:div.row {:style {:max-width "960px"}}
      [:div.palstat
-      [:h3 {:style {:width "100%"}}
-       [:span.flex-row "Mihin työhön kulu liittyy?"
-        [:input#kulut-kohdistuvat-useammalle.vayla-checkbox
-         {:type      :checkbox
+      [:div.palsta
+       [:h3 {:style {:width "100%"}}
+        "Mihin työhön kulu liittyy?"]
+       [:div.flex-row
+        [:input#kulu-normaali.vayla-radio
+         {:type      :radio
+          :name      "kulu-group"
           :disabled  (not= 0 haetaan)
-          :checked   (> kohdistukset-lkm 1)
           :on-change #()
           :on-click  #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        lisaa-kohdistus
@@ -308,7 +349,57 @@
                                                        paivita-validoinnit
                                                        lomake)))]
                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
-        [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]]]]
+        [:label {:for "kulu-normaali"} "Normaali suunniteltu tai määrämitattava hankintakulu"]]
+       [:div.flex-row
+        [:input#kulu-useampi.vayla-radio
+         {:type      :radio
+          :name      "kulu-group"
+          :disabled  (not= 0 haetaan)
+          :on-change #()
+          :on-click  #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
+                                                       lisaa-kohdistus
+                                                       resetoi-kohdistukset)
+                            jalkiprosessointi-fn (if (.. % -target -checked)
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       lisaa-validointi
+                                                       [{:polku       [:kohdistukset kohdistukset-lkm :summa]
+                                                         :validoinnit (:kulut/summa tila/validoinnit)}
+                                                        {:polku       [:kohdistukset kohdistukset-lkm :tehtavaryhma]
+                                                         :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       paivita-validoinnit
+                                                       lomake)))]
+                        (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
+        [:label {:for "kulu-useampi"} "Kulut kohdistuvat eri tehtäville ja/tai osa kuluista on lisätöitä"]]
+       [:div.flex-row
+        [:input#kulu-lisatyo.vayla-radio
+         {:type      :radio
+          :name      "kulu-group"
+          :disabled  (not= 0 haetaan)
+          :on-change #()
+          :on-click  #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
+                                                       lisaa-kohdistus
+                                                       resetoi-kohdistukset)
+                            jalkiprosessointi-fn (if (.. % -target -checked)
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       lisaa-validointi
+                                                       [{:polku       [:kohdistukset kohdistukset-lkm :summa]
+                                                         :validoinnit (:kulut/summa tila/validoinnit)}
+                                                        {:polku       [:kohdistukset kohdistukset-lkm :tehtavaryhma]
+                                                         :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
+                                                   (fn [lomake]
+                                                     (vary-meta
+                                                       lomake
+                                                       paivita-validoinnit
+                                                       lomake)))]
+                        (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
+        [:label {:for "kulu-lisatyo"} "Lisätyö"]]]]
      (into [:div.row] (map-indexed
                         (r/partial tehtavaryhma-maara
                                    {:tehtavaryhmat    tehtavaryhmat
@@ -334,131 +425,16 @@
           :luokka        "suuri"
           :teksti-nappi? true}]])]))
 
-(defn- aliurakoitsija-lisays-modaali
-  [_]
-  (let [aliurakoitsija-atomi (r/atom {:nimi "" :ytunnus "" :virhe? false :koskettu-nimi? false :koskettu-ytunnus? false})]
-    (fn [{:keys [tallennus-fn haetaan]}]
-      (let [y-tunnus-validi? (not (nil? (-> @aliurakoitsija-atomi :ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus)))
-            nimi-validi? (not (nil? (-> @aliurakoitsija-atomi :nimi tila/ei-tyhja tila/ei-nil)))
-            {:keys [koskettu-nimi? koskettu-ytunnus?]} @aliurakoitsija-atomi]
-        [:div
-         [kentat/vayla-lomakekentta
-          "Yrityksen nimi *"
-          :disabled (not= 0 haetaan)
-          :class #{(str "input" (if (or
-                                      (false? koskettu-nimi?)
-                                      (true? nimi-validi?)) "" "-error") "-default") "komponentin-input"}
-          :arvo (:nimi @aliurakoitsija-atomi)
-          :on-change (fn [event]
-                       (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value) :koskettu-nimi? true))]
-         [kentat/vayla-lomakekentta
-          "Y-tunnus *"
-          :placeholder "Muotoa 1234567-1"
-          :disabled (not= 0 haetaan)
-          :class #{(str "input" (if (or
-                                      (false? koskettu-ytunnus?)
-                                      (true? y-tunnus-validi?)) "" "-error") "-default") "komponentin-input"}
-          :arvo (:ytunnus @aliurakoitsija-atomi)
-          :on-change (fn [event] (swap! aliurakoitsija-atomi assoc :ytunnus (-> event .-target .-value) :koskettu-ytunnus? true))]
-         (when (true? (-> @aliurakoitsija-atomi :virhe?))
-           [:div "Tarkista annetut tiedot, tiedoissa virhe. Y-tunnus muotoa nnnnnnn-n"])
-         [:div.napit
-          [napit/tallenna
-           "Tallenna"
-           (fn []
-             (if (and (true? nimi-validi?)
-                      (true? y-tunnus-validi?))
-               (do
-                 (tallennus-fn (-> @aliurakoitsija-atomi (dissoc :virhe? :koskettu-nimi? :koskettu-ytunnus?)))
-                 (modal/piilota!))
-               (swap! aliurakoitsija-atomi assoc :virhe? true)))
-           {:ikoni        [ikonit/ok]
-            :vayla-tyyli? true}]
-          [napit/sulje
-           "Sulje"
-           (fn [] (modal/piilota!))
-           {:vayla-tyyli? true
-            :ikoni        [ikonit/remove]}]]]))))
-
-(defn- paivita-aliurakoitsija-jos-ytunnusta-muokattu
-  [aliurakoitsija aliurakoitsijat paivitys-fn]
-  (let [{:keys [id ytunnus]} aliurakoitsija
-        {tallennettu-ytunnus :ytunnus} (some #(when (= (:id %) id) %) aliurakoitsijat)]
-    (if-not (and (= tallennettu-ytunnus ytunnus))
-      (paivitys-fn aliurakoitsija))))
-
-(defn- lisatiedot [_ {{:keys [aliurakoitsija] :as _lomake} :lomake
-                      aliurakoitsijat                      :aliurakoitsijat}]
-  (let [aliurakoitsija-atomi (r/atom
-                               (if aliurakoitsija
-                                 (some #(when (= (:id %) aliurakoitsija) %) aliurakoitsijat)
-                                 {:id nil :nimi nil :ytunnus ""}))]
-    (fn [{:keys [paivitys-fn haetaan e!]}
-         {{:keys [aliurakoitsija lisatieto] :as _lomake} :lomake
-          aliurakoitsijat                                :aliurakoitsijat}]
-      (let [{:keys [ytunnus]} @aliurakoitsija-atomi
-            ytunnus-validi? (cond
-                              (str/blank? ytunnus) true
-                              (not (nil? (-> ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus))) true
-                              :else false)
-            lisaa-aliurakoitsija (fn [tallennus-fn {sulje :sulje}]
-                                   [:div
-                                    {:on-click #(do
-                                                  (sulje)
-                                                  (modal/nayta! {;:sulje   sulku-fn
-                                                                 :otsikko "Lisää aliurakoitsija"}
-                                                                [aliurakoitsija-lisays-modaali {:tallennus-fn tallennus-fn
-                                                                                                :haetaan      haetaan}]))}
-                                    "Lisää aliurakoitsija"])]
-        (lomakkeen-osio
-          "Lisätiedot"
-          #_[kentat/vayla-lomakekentta
-             "Aliurakoitsija"
-             :komponentti (fn []
-                            [yleiset/alasveto-toiminnolla
-                             (r/partial lisaa-aliurakoitsija (fn [aliurakoitsija]
-                                                               (e!
-                                                                 (tiedot/->LuoUusiAliurakoitsija
-                                                                   aliurakoitsija
-                                                                   {:sivuvaikutus-tuloksella-fn #(reset! aliurakoitsija-atomi %)}))))
-                             {:disabled     (not= 0 haetaan)
-                              :valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
-                              :valinnat     aliurakoitsijat
-                              :valinta-fn   #(do
-                                               (swap! aliurakoitsija-atomi
-                                                      assoc
-                                                      :id (:id %)
-                                                      :nimi (:nimi %)
-                                                      :ytunnus (:ytunnus %))
-                                               (paivitys-fn
-                                                 :suorittaja-nimi (:nimi %)
-                                                 :aliurakoitsija (:id %)))
-                              :formaatti-fn #(get % :nimi)}])]
-          #_[kentat/vayla-lomakekentta
-             "Aliurakoitsijan y-tunnus"
-             :disabled (not= 0 haetaan)
-             :class #{(str "input" (if ytunnus-validi? "" "-error") "-default") "komponentin-input"}
-             :arvo (or
-                     ytunnus
-                     (some
-                       #(when (= aliurakoitsija (:id %)) (:ytunnus %))
-                       aliurakoitsijat))
-             :placeholder "Y-tunnus puuttuu. Muotoa 1234567-1"
-             :on-change #(do
-                           (paivitys-fn {:validoitava? true} :ytunnus (-> % .-target .-value))
-                           (swap! aliurakoitsija-atomi assoc :ytunnus (-> % .-target .-value)))
-             :on-blur #(paivita-aliurakoitsija-jos-ytunnusta-muokattu
-                         @aliurakoitsija-atomi
-                         aliurakoitsijat
-                         (fn [aliurakoitsija]
-                           (when
-                             ytunnus-validi?
-                             (e! (tiedot/->PaivitaAliurakoitsija aliurakoitsija)))))]
-          [kentat/vayla-lomakekentta
-           "Kirjoita tähän halutessasi lisätietoa"
-           :disabled (not= 0 haetaan)
-           :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
-           :arvo lisatieto])))))
+(defn- lisatiedot
+  [{:keys [paivitys-fn haetaan]}
+   {{:keys [lisatieto] :as _lomake} :lomake}]
+  (lomakkeen-osio
+    "Lisätiedot"
+    [kentat/vayla-lomakekentta
+     "Kirjoita tähän halutessasi lisätietoa"
+     :disabled (not= 0 haetaan)
+     :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))
+     :arvo lisatieto]))
 
 (defn- maara-summa
   [{:keys [paivitys-fn haetaan]}
@@ -528,9 +504,9 @@
      [:<>
       [:div.flex-row
        (str "Tehtäväryhmä: "
-                         (some #(when (= (:tehtavaryhma k) (:id %))
-                                  (:tehtavaryhma %))
-                               tehtavaryhmat))]
+            (some #(when (= (:tehtavaryhma k) (:id %))
+                     (:tehtavaryhma %))
+                  tehtavaryhmat))]
       [:div.flex-row (str "Määrä: "
                           (:summa k))]])
    [:div.flex-row (str "Koontilaskun kuukausi: "
@@ -551,12 +527,12 @@
      (fn []
        (modal/piilota!))
      {:vayla-tyyli? true
-      :luokka "suuri"}]
+      :luokka       "suuri"}]
     [napit/poista
      "Poista tiedot"
      varmistus-fn
      {:vayla-tyyli? true
-      :luokka "suuri"}]]])
+      :luokka       "suuri"}]]])
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -571,11 +547,11 @@
                      kohdistukset
                      koontilaskun-kuukausi
                      erapaiva] :as lomake} :lomake
-             aliurakoitsijat               :aliurakoitsijat
              tehtavaryhmat                 :tehtavaryhmat
              {haetaan :haetaan}            :parametrit}]
       (let [{:keys [nayta]} lomake]
         [:div.ajax-peitto-kontti
+         [debug/debug lomake]
          [:div.palstat
           [:div.palsta
            [napit/takaisin
@@ -613,10 +589,10 @@
           [laskun-tiedot {:paivitys-fn paivitys-fn
                           :haetaan     haetaan}
            {:lomake lomake}]
-          [lisatiedot {:paivitys-fn paivitys-fn
-                       :haetaan     haetaan
-                       :e!          e!} {:lomake          lomake
-                                         :aliurakoitsijat aliurakoitsijat}]]
+          [lisatiedot
+           {:paivitys-fn paivitys-fn
+            :haetaan     haetaan}
+           {:lomake lomake}]]
          [:div.palstat
           {:style {:margin-top "56px"}}
           [maara-summa {:paivitys-fn paivitys-fn
@@ -680,7 +656,6 @@
              :luokka       "suuri"}]]
 
           ;; ks. VHAR-1761 milloin vihje voidaan poistaa
-          [yleiset/vihje "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. Näitä kuluja ei saa syöttää manuaalisesti muulloin kuin poikkeustilanteissa."]
           #_[kentat/vayla-lomakekentta
              "Kirjoita tähän halutessasi lisätietoa"
              :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
