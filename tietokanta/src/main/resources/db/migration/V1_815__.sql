@@ -100,9 +100,6 @@ BEGIN
         -- Jos ensimmäisestä tienosasta (alkuosasta) a-pistellä splitatun pätkän pituus on sama kuin alkuosan pituus, on mahdollista että a-piste on alkuosan alussa tai lopussa. St_Splitin feature.
         -- Tutkitaan yhdistetyn tienpätkän ja ajoradan perusteella kumpi on totta.
         IF (alkukohta.etaisyys = r.alkuosa_geom_pituus) THEN
-            RAISE NOTICE 'Tarkista onko alkupiste alkuosan alussa vai lopussa?';
-            RAISE NOTICE 'split 1 pituus, split a-pisteen perusteella: %', st_length(st_geometryn(osat_split_a, 1))::INTEGER;
-            RAISE NOTICE 'split 2 pituus, split a-pisteen perusteella: %', st_length(st_geometryn(osat_split_a, 2))::INTEGER;
             -- Jos kaikista osista yhdistetty reitti on yhtä pitkä kuin a-pisteellä splitattu viiva, a-piste on alkuosan alussa (St_Splitin feature).
             IF (st_length(osat_geom)::INTEGER = st_length(st_geometryn(osat_split_a, 1))::INTEGER) THEN
                 IF r.ajorata = 1 THEN
@@ -128,9 +125,6 @@ BEGIN
         -- Jos b-pistellä splitatun pätkän pituus on sama kuin loppuosan pituus, on mahdollista että b-piste on loppuosan alussa tai lopussa. St_Splitin feature.
         -- Loppuosa = tienosa jolla b-piste sijaitsee. Ajoradan (ajosuunnan) perusteella päätellään onko piste tienosan lopussa vai alussa.
         IF (loppukohta.etaisyys = r.loppuosa_geom_pituus) THEN
-            RAISE NOTICE 'Tarkista onko loppupiste loppuosan alussa vai lopussa?';
-            RAISE NOTICE 'split 1 pituus, split b-pisteen perusteella: %', st_length(st_geometryn(osat_split_b, 1))::INTEGER;
-            RAISE NOTICE 'split 2 pituus, split b-pisteen perusteella: %', st_length(st_geometryn(osat_split_b, 2))::INTEGER;
             -- Jos kaikista osista yhdistetty reitti on yhtä pitkä kuin b-pisteellä splitattu viiva, b-piste on loppuosan lopussa (St_Splitin feature).
             IF (st_length(osat_geom)::INTEGER = st_length(st_geometryn(osat_split_b, 1))::INTEGER) THEN
                 IF r.ajorata = 1 THEN
