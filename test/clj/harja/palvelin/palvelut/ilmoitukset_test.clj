@@ -266,7 +266,7 @@
     (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
 
 ;; TODO: VHAR-1754 Väliaikaisesti näin. Palauta tämä käyttöön, kun VHAR-1156 toteutetaan
-;(deftest tarkista-aikavalihaut
+;(defn tarkista-aikavalihaut
 ;  (let [alkuaika (clj-time.core/date-time 2005 10 10 2)
 ;        loppuaika (clj-time.core/date-time 2005 10 10 4)
 ;        parametrit {:hallintayksikko nil
