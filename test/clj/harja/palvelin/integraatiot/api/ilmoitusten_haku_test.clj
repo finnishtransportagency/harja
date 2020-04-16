@@ -143,6 +143,9 @@
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))
         ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
                                  (t/minus (t/now) (t/minutes 185)))
+        ;;TODO VHAR-1754 Väliaikasesti ilmoitusaika = lähetysaika
+        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                 (t/minus (t/now) (t/minutes 180)))
         lahetysaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
                                  (t/minus (t/now) (t/minutes 180)))
         aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
