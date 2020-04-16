@@ -54,3 +54,23 @@
                    :yksikkohintainen 0.0M}]]
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
+(deftest hae-urakan-maksueran-summat-mhu-urakalle
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ; Talvihoito	23100	45
+        ; Liikenneympäristön hoito	23110	46
+        ; Soratien hoito	23120	47
+        ; MHU ja HJU hoidon johto	23150	48
+        ; Päällyste	20100	49
+        ; MHU Ylläpito	20190	50
+        ; MHU Korvausinvestointi	14300	51ﬂ
+        odotettu [{:tpi_id 45, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 46, :urakka_id 36, :kokonaishintainen 2888.88M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 47, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 48, :urakka_id 36, :kokonaishintainen 666.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 49, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 50, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 51, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}]
+
+        vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
+    (is (= odotettu vastaus))))
