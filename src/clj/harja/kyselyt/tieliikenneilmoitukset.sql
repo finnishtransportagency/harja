@@ -6,7 +6,7 @@ SELECT
   ulompi_i.tunniste,
   u.nimi as urakkanimi,
   ulompi_i.ilmoitusid,
-  --ulompi_i.ilmoitettu, TODO: VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UI:lla.
+  --ulompi_i.ilmoitettu, TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   ulompi_i.valitetty as ilmoitettu,
   ulompi_i.valitetty,
   ulompi_i.yhteydenottopyynto,
@@ -41,7 +41,7 @@ WHERE ulompi_i.id IN
       (sisempi_i.urakka IS NULL OR sisempi_i.urakka IN (:urakat)) AND
 
       -- Tarkasta että ilmoituksen ilmoitusajankohta sopii hakuehtoihin
-      -- TODO: VHAR-1754 Väliaikaisesti. Ilmoitettu korvattu sarakkeella valitetty kolme kertaa
+      -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu korvattu sarakkeella valitetty kolme kertaa
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
        (:loppu_annettu IS FALSE AND sisempi_i.valitetty  >= :alku) OR
        (:alku_annettu IS FALSE AND sisempi_i.valitetty  <= :loppu) OR
@@ -81,7 +81,7 @@ WHERE ulompi_i.id IN
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
        sisempi_i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
-      -- TODO: VHAR-1754 Väliaikaisesti. Ilmoitettu korvattu sarakkeella valitetty kaksi kertaa.
+      -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu korvattu sarakkeella valitetty kaksi kertaa.
        ORDER BY sisempi_i.valitetty DESC
        LIMIT :max-maara::INTEGER)
 ORDER BY ulompi_i.valitetty DESC, it.kuitattu DESC;
@@ -90,7 +90,7 @@ ORDER BY ulompi_i.valitetty DESC, it.kuitattu DESC;
 SELECT
   i.urakka,
   -- i.ilmoitettu,
-  i.valitetty as ilmoitettu,        -- TODO: VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UI:lla.
+  i.valitetty as ilmoitettu,        -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   i.ilmoitustyyppi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
@@ -110,7 +110,7 @@ WHERE i.id IN
          (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-          -- TODO: VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kolme kertaa.
+          -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kolme kertaa.
           (:loppu_annettu IS FALSE AND x.valitetty >= :alku) OR
           (:alku_annettu IS FALSE AND x.valitetty <= :loppu) OR
           (x.valitetty BETWEEN :alku AND :loppu)))
@@ -120,7 +120,7 @@ ORDER by u.nimi;
 SELECT
   ilmoitusid,
   tunniste,
-  -- ilmoitettu, -- TODO: VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UI:lla.
+  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   valitetty as ilmoitettu,
   tila,
   yhteydenottopyynto,
@@ -155,7 +155,7 @@ SELECT
   hy.id                                    AS hallintayksikko_id,
   hy.nimi                                  AS hallintayksikko_nimi,
   i.ilmoitusid,
-  -- i.ilmoitettu, -- TODO: VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UI:lla.
+  -- i.ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   i.valitetty as ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
@@ -227,7 +227,7 @@ SELECT
   i.ilmoitustyyppi,
   i.urakka,
   i.urakkatyyppi,
-  -- i.ilmoitettu, -- TODO: VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UI:lla.
+  -- i.ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   i.valitetty as ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
@@ -282,7 +282,7 @@ WHERE i.id IN (:idt);
 SELECT
   ilmoitusid,
   tunniste,
-  -- ilmoitettu, -- TODO: VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UI:lla.
+  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   valitetty as ilmoitettu,
   yhteydenottopyynto,
   paikankuvaus,
@@ -529,7 +529,7 @@ FROM asiakaspalauteluokka apl
        (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
                                                                FROM urakka
                                                                WHERE hallintayksikko = :hallintayksikko_id)) AND
-        -- TODO: VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kaksi kertaa.
+        -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kaksi kertaa.
        (:alkupvm :: DATE IS NULL OR i.valitetty >= :alkupvm) AND
        (:loppupvm :: DATE IS NULL OR i.valitetty <= :loppupvm)
 GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
@@ -551,7 +551,7 @@ WHERE
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND
-  -- TODO: VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kaksi kertaa.
+  -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kaksi kertaa.
   (:alkupvm :: DATE IS NULL OR valitetty >= :alkupvm) AND
   (:loppupvm :: DATE IS NULL OR valitetty <= :loppupvm);
 
