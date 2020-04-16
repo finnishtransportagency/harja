@@ -265,25 +265,25 @@
                                                                      :kuittaustyyppi :aloitus}]}]
     (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
 
-
-(deftest tarkista-aikavalihaut
-  (let [alkuaika (clj-time.core/date-time 2005 10 10 2)
-        loppuaika (clj-time.core/date-time 2005 10 10 4)
-        parametrit {:hallintayksikko nil
-                    :urakka nil
-                    :hoitokausi nil
-                    :ilmoitettu-alkuaika(c/to-date alkuaika)
-                    :ilmoitettu-loppuaika (c/to-date loppuaika)
-                    :tyypit +ilmoitustyypit+
-                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
-                    :aloituskuittauksen-ajankohta :kaikki
-                    :hakuehto ""}
-        ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :hae-ilmoitukset +kayttaja-jvh+ parametrit)
-        ilmoitus (first ilmoitukset-palvelusta)]
-    (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
-    (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
-    (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
+;; TODO: VHAR-1754 Väliaikaisesti näin. Palauta tämä käyttöön, kun VHAR-1156 toteutetaan
+;(deftest tarkista-aikavalihaut
+;  (let [alkuaika (clj-time.core/date-time 2005 10 10 2)
+;        loppuaika (clj-time.core/date-time 2005 10 10 4)
+;        parametrit {:hallintayksikko nil
+;                    :urakka nil
+;                    :hoitokausi nil
+;                    :ilmoitettu-alkuaika(c/to-date alkuaika)
+;                    :ilmoitettu-loppuaika (c/to-date loppuaika)
+;                    :tyypit +ilmoitustyypit+
+;                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+;                    :aloituskuittauksen-ajankohta :kaikki
+;                    :hakuehto ""}
+;        ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+;                                               :hae-ilmoitukset +kayttaja-jvh+ parametrit)
+;        ilmoitus (first ilmoitukset-palvelusta)]
+;    (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
+;    (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
+;    (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
 
 
 (deftest hae-ilmoitus-oikeudet
