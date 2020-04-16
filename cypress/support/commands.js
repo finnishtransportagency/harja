@@ -47,7 +47,23 @@ Cypress.Commands.add("taulukonOsaPolussa", { prevSubject: 'element'}, ($taulukko
 Cypress.Commands.add("testaaOtsikot", { prevSubject: 'element'}, ($taulukko, otsikoidenArvot) => {
     cy.wrap($taulukko).find('[data-cy=otsikko-rivi]').then(($otsikkoRivi) => {
         for (let i = 0; i < otsikoidenArvot.length - 1; i++) {
-            cy.wrap($otsikkoRivi).rivinSarake(i).contains(otsikoidenArvot[i]).should('exist');
+            if (otsikoidenArvot[i] === '') {
+                cy.wrap($otsikkoRivi).rivinSarake(i).then(($solu) => {
+                    expect($solu
+                        .find(() => {
+                            return true;
+                        })
+                        .addBack()
+                        .contents()
+                        .filter(function (index, element) {
+                            return (element.nodeType === 3 && element.wholeText !== '');
+                        })
+                        .length)
+                        .to.equal(0);
+                });
+            } else {
+                cy.wrap($otsikkoRivi).rivinSarake(i).contains(otsikoidenArvot[i]).should('exist');
+            }
         }
     }).then(() => {
         return $taulukko;

@@ -792,7 +792,7 @@
                                                                                                                                                   (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
                                                                                                                                                                                                                                                      :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa hoitokauden-numero)})
                                                                                                                                                   ;; Päivitetään myös yhteenvedotkomponentti
-                                                                                                                                                  (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
+                                                                                                                                                  (assoc-in [:yhteenvedot :hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
                                       {}
                                       (range 1 6))))))
 
