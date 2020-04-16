@@ -23,17 +23,6 @@
                                                       :noudetaan 0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
 
-(defn hankinnat-testidata [maara]
-  (into []
-        (drop 9
-              (drop-last 3
-                         (mapcat (fn [vuosi]
-                                   (map #(identity
-                                           {:pvm   (harja.pvm/luo-pvm vuosi % 15)
-                                            :maara maara})
-                                        (range 0 12)))
-                                 (range (harja.pvm/vuosi (harja.pvm/nyt)) (+ (harja.pvm/vuosi (harja.pvm/nyt)) 6)))))))
-
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
     (if-not (str/blank? arvo)
