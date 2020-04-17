@@ -85,6 +85,7 @@
                 {:disabled (not valmis-tallennettavaksi?)
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
+                 :virheviesti "Lähetys epäonnistui. Yritä myöhemmin uudelleen."
                  :kun-onnistuu (fn [vastaus]
                                  (reset! tiedot/aikataulurivit vastaus)
                                  (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}

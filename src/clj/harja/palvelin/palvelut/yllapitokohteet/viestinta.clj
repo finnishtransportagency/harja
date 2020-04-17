@@ -352,34 +352,36 @@
 
 
 ;; Lähetä viesti paikkauksien tarkastuksessa havaitusta virheestä
-(defn- viesti-paikkaustoteumassa-virhe [{:keys [kohde-nimi rivien-lkm pinta-ala massamenekki
+(defn- viesti-paikkaustoteumassa-virhe [{:keys [kohde-nimi rivien-lukumaara pinta-ala-summa massamenekki-summa
                                                 saate ilmoittaja]}]
   (let [tiivistelma (format "Virhe kohteen '%s' paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." kohde-nimi)]
     (html
       [:div
        [:p (sanitoi tiivistelma)]
-       (when saate [:p (sanitoi saate)])
-       [:h5 "Kohteen tiedot"]
+       [:h3 "Kohteen tiedot"]
        (html-tyokalut/tietoja [["Kohde" kohde-nimi]
-                               ["Rivejä" rivien-lkm]
-                               ["Pinta-ala yht." pinta-ala]
-                               ["Massamenekki yht." massamenekki]
-                               ["Ilmoittaja" (formatoi-ilmoittaja ilmoittaja)]])])))
+                               ["Rivejä" rivien-lukumaara]
+                               ["Pinta-ala yht." (str pinta-ala-summa "m\u00B2")]
+                               ["Massamenekki yht." massamenekki-summa]
+                               ["Ilmoittaja" (formatoi-ilmoittaja ilmoittaja)]])
+       (when saate [:div
+                    [:h3 "Lisätietoa virheestä"]
+                    [:p (sanitoi saate)]
+                    ])])))
 
-(defn laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe
+(defn laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
   [{:keys [fim email kopio-itselle? muut-vastaanottajat ilmoittaja
-           saate rivien-lkm pinta-ala massamenekki urakka-sampo-id] :as tiedot}]
-  (log/debug "laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe " tiedot)
+           saate rivien-lukumaara pinta-ala-summa massamenekki-summa urakka-sampo-id] :as tiedot}]
   (let [viestin-otsikko (format "Virhe kohteen '%s' paikkaustoteumassa. Tarkista ja korjaa tiedot."
                                 (:harja.domain.paikkaus/nimi tiedot))
         viestin-params {:kohde-nimi (:harja.domain.paikkaus/nimi tiedot)
-                        :rivien-lkm rivien-lkm
-                        :pinta-ala 1000 ;; FIXME, hoida frontilta tänne
-                        :massamenekki 2000 ;; FIXME, hoida frontilta tänne
+                        :rivien-lukumaara rivien-lukumaara
+                        :pinta-ala-summa pinta-ala-summa
+                        :massamenekki-summa massamenekki-summa
                         :saate saate
                         :ilmoittaja ilmoittaja}
         viestin-vartalo (viesti-paikkaustoteumassa-virhe viestin-params)]
@@ -391,4 +393,6 @@
          :urakka-sampoid urakka-sampo-id
          :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
          :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo}))))
+         :viesti-body viestin-vartalo})))
+  {:onnistui! true :viesti "Sähköpostin lähetys onnistui"}
+  )

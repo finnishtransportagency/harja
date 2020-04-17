@@ -221,17 +221,24 @@
                             (hae-paikkausurakan-kustannukset db user hakuparametrit)))
 
 (defn ilmoita-virheesta-paikkaustiedoissa!
-  [db fim email user {::paikkaus/keys [id nimi urakka-id] :as tiedot}]
+  [db fim email user {::paikkaus/keys [id nimi urakka-id saate pinta-ala-summa massamenekki-summa rivien-lukumaara] :as tiedot}]
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
-  (log/debug "ilmoita-virheesta-paikkaustiedoissa!, paikkauskohteen id: " id ", kohteen nimi: " nimi "ja  urakka-id" urakka-id)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
-  (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)]
+  (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
+        response (try
 
-    (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe (merge tiedot
-                                                                            {:email email
-                                                                             :fim fim
-                                                                             :urakka-sampo-id urakka-sampo-id})))
-  ;; TODO 1: Logiikka joka lähettää sähköpostin, ks. harja.palvelin.palvelut.yllapitokohteet.viestinta/ laheta-sposti-urakoitsijalle-paikkauskohteeessa-virhe
+                   (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe (merge tiedot
+                                                                                          {:email              email
+                                                                                           :fim                fim
+                                                                                           :urakka-sampo-id    urakka-sampo-id
+                                                                                           :pinta-ala-summa    pinta-ala-summa
+                                                                                           :massamenekki-summa massamenekki-summa
+                                                                                           :rivien-lukumaara   rivien-lukumaara
+                                                                                           :saate              saate
+                                                                                           :ilmoittaja         user}))
+                   (catch Exception e
+                     {:virhe "Sähköpostia ei voi lähettää, yritä myöhemmin uudelleen."}))]
+    response)
   ;; TODO 2: Onnistuneen lähetyksen jälkeen merkitse tietokantaan että ilmoitus virheestä lähetetty (tila)
   )
 

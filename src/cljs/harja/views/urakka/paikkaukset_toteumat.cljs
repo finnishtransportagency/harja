@@ -39,16 +39,15 @@
 
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
-  [e! paikkaukset]
-  (let [{::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
+  [e! app]
+  (let [
+        paikkaukset (:modalin-paikkaus app)
+        saate (:saate app)
+        {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
-        pinta-ala (pinta-alojen-summa paikkaukset)
-        massamenekki (massamenekin-summa paikkaukset)]
-    (log "modaalin paikkaus " (pr-str paikkaus))
-    (log "modaalin paikkaus, kohteen nimi " nimi)
-    (log "modaalin paikkaus, kohteen pinta-ala " pinta-ala)
-    (log "modaalin paikkaus, kohteen massamenekki " massamenekki)
-    (log "modaalin paikkaus, rivien lkm" rivien-lkm)
+        pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
+        massamenekki (massamenekin-summa paikkaukset)
+        ]
     [modal/modal
     {:otsikko (str "Lähetä sähköposti")
      :luokka "ilmoita-virheesta-modal"
@@ -61,22 +60,39 @@
 
               [napit/palvelinkutsu-nappi
                "Ilmoita"
-               #(tiedot/ilmoita-virheesta-paikkaustiedoissa paikkaus)
+               #(tiedot/ilmoita-virheesta-paikkaustiedoissa (merge paikkaus
+                                                                   {::paikkaus/saate saate
+                                                                    ::paikkaus/pinta-ala-summa pinta-ala
+                                                                    ::paikkaus/massamenekki-summa massamenekki
+                                                                    ::paikkaus/rivien-lukumaara rivien-lkm}))
                {:disabled false
                 :luokka "nappi-myonteinen"
                 :ikoni (ikonit/check)
                 :kun-onnistuu (fn [vastaus]
-                                (log "Homma rokkasi, kerrotaan jotenkin käyttäjälle. " (pr-str vastaus))
-                                (e! (tiedot/->VirheIlmoitusOnnistui vastaus)))
-                :kun-virhe #(viesti/nayta! "Virheilmoitus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)}]]}
+                                (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
+                                (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
+                :kun-virhe #(viesti/nayta! (% :virhe) :error viesti/viestin-nayttoaika-keskipitka)
+                }]]}
 
      [:div
-      [:h5 (str "Tänne sisältöä, esim ")
-       (yleiset/tietoja {}
+      [:p
+       "Harja lähettää sähköpostin urakoitsijalle: "
+       [:span.bold (get-in @yhteiset-tiedot/tila [:urakka :urakoitsija :nimi])]]
+      [:h3 (str "Sähköpostiviestin sisältö")]
+      [:div {:style {:padding "10px" :border "1px solid #f0f0f0"}}
+      [:p "Virhe kohteen " [:b nimi ] " paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." ]
+       [:h4 "Kohteen tiedot"]
+       (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
                         "Kohde" nimi
                         "Rivejä" rivien-lkm
-                        "Pinta-ala yht. " pinta-ala
-                             "Massamenekki" massamenekki)]]]))
+                        "Pinta-ala yht. " (str pinta-ala "m\u00B2")
+                        "Massamenekki" massamenekki)
+        [:h5 "Lisätietoa virheestä"]
+        [kentat/tee-kentta {:tyyppi :text :otsikko "Foo" :koko [80 8]}
+         ; TODO tämä toimii mutta input tulee pienellä viiveellä :saate avaimeen?
+         (r/wrap (get-in app [:saate])
+                 #(e! (tiedot/->PaivitaSaate %)))
+         ]]]]))
 
 
 (defn paikkaukset-vetolaatikko
@@ -287,7 +303,7 @@
          {:nakyma :toteumat
           :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
         (when (:modalin-paikkaus app)
-          [ilmoita-virheesta-modal e! (:modalin-paikkaus app)])
+          [ilmoita-virheesta-modal e! app])
         [paikkaukset e! app]]])))
 
 (defn toteumat [ur]

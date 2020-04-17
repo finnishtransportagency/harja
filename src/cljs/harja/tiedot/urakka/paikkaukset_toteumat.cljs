@@ -105,6 +105,7 @@
 (defrecord SuljeVirheModal [])
 (defrecord VirheIlmoitusOnnistui [vastaus])
 (defrecord MerkitseTarkistetuksiOnnistui [vastaus])
+(defrecord PaivitaSaate [teksti])
 
 (extend-protocol tuck/Event
   Nakymaan
@@ -141,7 +142,6 @@
 
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
-    (log "jarno Avaa Virhe Modal, paikkaus: " (pr-str paikkaus))
     (assoc app :modalin-paikkaus paikkaus))
   SuljeVirheModal
   (process-event [_ app]
@@ -149,9 +149,14 @@
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "VirheIlmoitusOnnistui " (pr-str vastaus))
-    ;; TODO: päivitä tilaa (app) siten että virhe ilmoitus onnistui näkyy UI:lla tmv
-    (assoc app :modalin-paikkaus nil))
+    (assoc app :modalin-paikkaus nil :saate nil))
   MerkitseTarkistetuksiOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
-    (assoc app :modalin-paikkaus nil)))
+    (assoc app :modalin-paikkaus nil))
+  PaivitaSaate
+  (process-event [{teksti :teksti} app]
+    (assoc app :saate teksti))
+  )
+
+
