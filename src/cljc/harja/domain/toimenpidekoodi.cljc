@@ -37,6 +37,19 @@
     ;; kaikki muut sen jälkeen
     4))
 
+
+(defn tuotteen-jarjestys-mhu [t2-koodi]
+  (case t2-koodi
+    "23100" 1 ; Talvihoito ensimmäisenä
+    "23110" 2 ; Liikenneympäristön hoito toisena
+    "23120" 3 ; Soratien hoito kolmantena
+    "23150" 4 ; MHU ja HJU hoidon johto
+    "20100" 5 ; Päällyste
+    "20190" 6 ; MHU Ylläpito
+    "14300" 7 ; MHU Korvausinvestointi
+    ;; kaikki muut sen jälkeen
+    8))
+
 (defn toimenpidekoodi-tehtavalla [rivit tehtava]
   (first (filter #(= (:tehtava %) tehtava) rivit)))
 

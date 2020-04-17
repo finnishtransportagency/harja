@@ -134,6 +134,7 @@ SELECT paivita_pohjavesialueet();
 \i testidata/laskutusyhteenveto_kajaani.sql
 \i testidata/laskutusyhteenveto_vantaa.sql
 \i testidata/laskutusyhteenveto_espoo.sql
+\i testidata/laskutusyhteenveto_mhu.sql
 
 -- Testidata MHU laskutusta varten
 \i testidata/laskut.sql

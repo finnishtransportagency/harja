@@ -8,6 +8,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :refer :all :as raportointi]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
             [harja.palvelin.raportointi.testiapurit :as apurit]
             [harja.pvm :as pvm]
 
@@ -51,12 +52,12 @@
                                               :loppupvm (pvm/->pvm "31.8.2015")
                                               :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Kaikki yhteensä")
-        laskutusyhteenveto (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
-                                          (:db jarjestelma)
-                                          +kayttaja-jvh+
-                                          {:urakka-id @oulun-alueurakan-2014-2019-id
-                                           :alkupvm   (pvm/->pvm "1.8.2015")
-                                           :loppupvm (pvm/->pvm "31.8.2015")})
+        laskutusyhteenveto (laskutusyhteenveto-yhteiset/hae-laskutusyhteenvedon-tiedot
+                             (:db jarjestelma)
+                             +kayttaja-jvh+
+                             {:urakka-id @oulun-alueurakan-2014-2019-id
+                              :alkupvm   (pvm/->pvm "1.8.2015")
+                              :loppupvm (pvm/->pvm "31.8.2015")})
         laskutusyhteenveto-indeksien-nurkkasumma (reduce + (map :kaikki_laskutetaan_ind_korotus laskutusyhteenveto))]
 
     (is (vector? vastaus))
