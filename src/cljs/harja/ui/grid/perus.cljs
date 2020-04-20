@@ -456,7 +456,7 @@
 
 
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
-                            piilotetut-valiotsikot valiotsikon-komponentti-flowhun?]}]
+                            piilotetut-valiotsikot]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
         otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
     [:<>
@@ -466,7 +466,8 @@
                      :on-click #(toggle-valiotsikko valiotsikko-id
                                                     piilotetut-valiotsikot)
                      :style (merge {} (when (not (empty? otsikkokomponentit))
-                                        {:border-bottom "none"}))})
+                                        {:border-bottom "none"
+                                         :border-top "solid 0.1mm black"}))})
       [:td {:colSpan colspan}
        [:h5 teksti]
        (when salli-valiotsikoiden-piilotus?
@@ -484,7 +485,7 @@
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
                                        esta-poistaminen? tallennus-kaynnissa?
-                                       salli-valiotsikoiden-piilotus? valiotsikon-komponentti-flowhun?
+                                       salli-valiotsikoiden-piilotus?
                                        piilotetut-valiotsikot tiedot gridin-tietoja
                                        esta-poistaminen-tooltip piilota-toiminnot?
                                        voi-muokata-rivia? skeema vetolaatikot-auki]}]
@@ -507,8 +508,7 @@
                                [^{:key teksti}
                                [valiotsikko {:colspan colspan :teksti teksti :otsikko-record id
                                              :piilotetut-valiotsikot piilotetut-valiotsikot
-                                             :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                             :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?}]])
+                                             :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]])
                              (when-not (rivi-piilotetun-otsikon-alla? i (vec tiedot) @piilotetut-valiotsikot)
                                (let [rivi (get muokatut id)
                                      rivin-virheet (get kaikki-virheet id)
@@ -544,7 +544,7 @@
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
                                      rivin-infolaatikko infolaatikko-nakyvissa? infolaatikon-tila-muuttui
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
-                                     piilotetut-valiotsikot valiotsikon-komponentti-flowhun?
+                                     piilotetut-valiotsikot
                                      rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki salli-valiotsikoiden-piilotus?]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
@@ -562,8 +562,7 @@
                         [valiotsikko {:colspan colspan :teksti (:teksti rivi)
                                       :otsikko-record rivi
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
-                                      :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                      :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?}]]
+                                      :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
                         (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit-jarjestetty) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)
@@ -680,7 +679,6 @@
                                         HUOM! Vaatii toimiakseen: mahdollista-rivin-valinta? true
   :mahdollista-rivin-valinta?           jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
   :salli-valiotsikoiden-piilotus?       Jos true, väliotsikoiden sisällön voi piilottaa klikkaamalla riviä
-  :valiotsikon-komponentti-flowhun?    Jos true, väliotsikon komponentille ei anneta absolute position tyyliä vaan kiinni flowhun
   :valiotsikoiden-alkutila              Jos väliotsikot on sallittu piilottaa, tämä määrittää, mitkä otsikot ovat
                                         oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
@@ -721,7 +719,7 @@
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
            raporttivienti raporttiparametrit virhe-viesti aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
-           taulukko-validointi taulukko-varoitus taulukko-huomautus valiotsikon-komponentti-flowhun?] :as opts} skeema tiedot]
+           taulukko-validointi taulukko-varoitus taulukko-huomautus] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -886,8 +884,10 @@
                   (swap! historia pop)
                   (when muutos
                     (muutos ohjaus))))
-        maarita-valiotsikoiden-alkutila! (fn []
-                                           (when (and (not @valiotsikoiden-alkutila-maaritelty?)
+        maarita-valiotsikoiden-alkutila! (fn [tiedot]
+                                           ;; Merkataan tämä check tehdyksi vasta kun (not empty) data on saatu serveriltä
+                                           (when (and (not-empty tiedot)
+                                                      (not @valiotsikoiden-alkutila-maaritelty?)
                                                       salli-valiotsikoiden-piilotus?
                                                       (some? tiedot))
                                              (let [tila (if (= valiotsikoiden-alkutila :kaikki-kiinni)
@@ -975,7 +975,7 @@
 
     (komp/luo
       (komp/sisaan (fn []
-                     (maarita-valiotsikoiden-alkutila!)
+                     (maarita-valiotsikoiden-alkutila! tiedot)
                      (when infolaatikon-tila-muuttui
                        (infolaatikon-tila-muuttui false))))
       (komp/ulos #(when infolaatikon-tila-muuttui
@@ -989,7 +989,7 @@
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
          (tarkista-sivutus! tiedot)
-         (maarita-valiotsikoiden-alkutila!)
+         (maarita-valiotsikoiden-alkutila! tiedot)
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
          (reset! rivien-maara (count tiedot))
@@ -1085,7 +1085,6 @@
                                            :vetolaatikot vetolaatikot :muokkaa! muokkaa!
                                            :voi-poistaa? voi-poistaa?
                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                           :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?
                                            :esta-poistaminen? esta-poistaminen?
                                            :esta-poistaminen-tooltip esta-poistaminen-tooltip
                                            :piilota-toiminnot? piilota-toiminnot?
@@ -1098,7 +1097,6 @@
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
                                          :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                         :valiotsikon-komponentti-flowhun? valiotsikon-komponentti-flowhun?
                                          :vetolaatikot vetolaatikot :tallenna tallenna
                                          :rivi-klikattu rivi-klikattu
                                          :rivin-infolaatikko rivin-infolaatikko

@@ -9,9 +9,10 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]))
+            [taoensso.timbre :as log]))
 
 (defn- muodosta-tr-ehdot
   "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
@@ -210,6 +211,12 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (jdbc/with-db-transaction [db db]
                             (doseq [rivi rivit]
+                              (assert (:tyomenetelma rivi) "Työmenetelmä puuttuu.")
+                              (assert (:valmistumispvm rivi) "Valmistumispvm puuttuu.")
+                              (assert (:hinta rivi) "Hinta puuttuu.")
+                              (ypk-yleiset/vaadi-paikkauskohde-kuuluu-urakkaan db
+                                                                               (::paikkaus/urakka-id tiedot)
+                                                                               (:paikkauskohde rivi))
                               (if (pos-int? (:paikkaustoteuma-id rivi))
                                 (paivita-paikkaustoteuma! db user rivi)
                                 (luo-paikkaustoteuma! db

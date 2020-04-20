@@ -1,8 +1,3 @@
--- name: hae-viimeisin-toteuman-luontiaika
--- single?: true
--- Hakee viimeisimmän toteuman luontiajan
-SELECT luotu FROM toteuma ORDER BY id DESC LIMIT 1;
-
 -- name: hae-replikoinnin-viive
 -- single?: true
 -- Palauttaa replikoinnin viiveen sekunteina.

@@ -15,6 +15,20 @@
             [harja.fmt :as fmt]))
 
 
+(defn- nappaa-kohde [kohde-id]
+  (first (filter
+           #(= (:id %) kohde-id)
+           (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet]))))
+
+(defn- aseta-tr-kentat [rivi {:keys [tierekisteriosoite id]}]
+  (let [{:keys [tie aosa aet losa let]} tierekisteriosoite]
+    (assoc rivi :tie tie
+                :aosa aosa
+                :aet aet
+                :losa losa
+                :let let
+                :paikkauskohde id)))
+
 (defn paikkauksien-kokonaishinta-tyomenetelmittain [e! app]
   (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkauksien-kokonaishinta-tyomenetelmittain-grid]}]
     (let [urakka-id (get-in @yhteiset-tiedot/tila [:urakka :id])
@@ -22,6 +36,8 @@
                    :tyyppi :valinta
                    :valinnat (get-in @yhteiset-tiedot/tila [:valinnat :urakan-paikkauskohteet])
                    :nimi :paikkauskohde :fmt :nimi
+                   :aseta (fn [rivi arvo]
+                            (aseta-tr-kentat rivi (nappaa-kohde arvo)))
                    :validoi [[:ei-tyhja "Valitse kohde"]]
                    :muokattava? #(if (pos-int? (:paikkaustoteuma-id %))
                                    false

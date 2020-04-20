@@ -52,7 +52,6 @@
         paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
                                      tulos)]
     {:paikkaukset-grid kiinnostavat-tiedot
-     :haettu-uudet-paikkaukset? true
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
 
 (def toteumat-kartalla
@@ -95,7 +94,6 @@
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
 (defrecord SiirryKustannuksiin [paikkauskohde-id])
-(defrecord LisaaOtsikotGridiin [otsikon-lisays-fn])
 ;; Haut
 (defrecord PaikkauksetHaettu [tulos])
 
@@ -132,13 +130,6 @@
                                                                                               paikkauskohteet))))))
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
     (assoc app :nakymassa? false))
-  LisaaOtsikotGridiin
-  (process-event [{otsikon-lisays-fn :otsikon-lisays-fn} app]
-    (assoc app
-           :paikkaukset-grid (mapcat otsikon-lisays-fn
-                                     (group-by ::paikkaus/nimi (:paikkaukset-grid app)))
-           :haettu-uudet-paikkaukset? false))
-
   AvaaVirheModal
   (process-event [{paikkaus :paikkaus} app]
     (assoc app :modalin-paikkaus paikkaus))

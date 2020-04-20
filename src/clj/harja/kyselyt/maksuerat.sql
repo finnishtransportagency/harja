@@ -69,7 +69,7 @@ GROUP BY tpi_id;
 -- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain kolme.
 SELECT tpi_id,
        :urakka_id                       as urakka_id,
-       SUM(kokonaishintaisten_summa)    AS kokonaishintainen, -- Hankinnat
+       SUM(kokonaishintaisten_summa)    AS kokonaishintainen, -- Kuluina kirjatut hankinnat ja lisätyöt sekä suunnitelluista kustannuksista poimitut hoidon johdon kulut
        SUM(akilliset_hoitotyot_summa)   AS "akillinen-hoitotyo",
        SUM(vahinkojen_korjaukset_summa) AS "vahinkojen-korjaukset",
        SUM(muutostyot_summa) AS "lisatyot",
@@ -108,7 +108,7 @@ FROM (SELECT
                    hk.loppupvm,
                    laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
                                                    date_trunc('month', now()) :: DATE,
-                                                   (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id :: INTEGER)
+                                                   (date_trunc('month', now()) + INTERVAL '1 MONTH - 1 day') :: DATE, :urakka_id :: INTEGER)
                FROM (SELECT *
                      FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
                      WHERE alkupvm < now() AND loppupvm > now()) AS hk
