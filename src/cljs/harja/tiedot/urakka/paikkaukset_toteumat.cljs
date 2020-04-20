@@ -81,7 +81,6 @@
 
 
 (defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
-  (log "ilmoita-virheesta-paikkaustiedoissa, " (pr-str paikkaus))
   (k/post! :ilmoita-virheesta-paikkaustiedoissa
            (merge paikkaus
                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
@@ -148,7 +147,6 @@
     (assoc app :modalin-paikkaus nil))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
-    (log "VirheIlmoitusOnnistui " (pr-str vastaus))
     (assoc app :modalin-paikkaus nil :saate nil))
   MerkitseTarkistetuksiOnnistui
   (process-event [{vastaus :vastaus} app]
