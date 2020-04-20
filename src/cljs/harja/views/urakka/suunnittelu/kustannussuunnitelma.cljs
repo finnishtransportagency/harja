@@ -1775,7 +1775,6 @@
                                              (merge polut
                                                     {(keyword "piillota-itsetaytettyja-riveja-" nimi) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
                                                                                                        :toiminto! (fn [g _ maksukausi]
-                                                                                                                    (println "maksukausi - " nimi ": " maksukausi)
                                                                                                                     (let [naytettavat-kuukaudet (into #{} (t/maksukauden-kuukaudet maksukausi))]
                                                                                                                       (doseq [rivi (grid/hae-grid (grid/get-in-grid (grid/etsi-osa g nimi) [1]) :lapset)]
                                                                                                                         (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
@@ -1893,15 +1892,17 @@
          disablerivit-avain (keyword (str nimi "-disablerivit"))
          aseta-yhteenveto-avain (keyword (str "aseta-" nimi "-yhteenveto!"))
          aseta-avain (keyword (str "aseta-" nimi "!"))
-         jarjestysvektori (if indeksikorjaus?
-                            [:nimi :maara :yhteensa :indeksikorjattu]
-                            [:nimi :maara :yhteensa])
-         jarjestysvektori-body (if indeksikorjaus?
-                                 [:aika :maara :yhteensa :indeksikorjattu]
-                                 [:aika :maara :yhteensa])
+         jarjestysvektori (with-meta (if indeksikorjaus?
+                                       [:nimi :maara :yhteensa :indeksikorjattu]
+                                       [:nimi :maara :yhteensa])
+                                     {:nimi :mapit})
+         jarjestysvektori-body (with-meta (if indeksikorjaus?
+                                            [:aika :maara :yhteensa :indeksikorjattu]
+                                            [:aika :maara :yhteensa])
+                                          {:nimi :mapit})
          yhteenveto-grid-rajapinta-asetukset {:rajapinta :yhteenveto
                                               :solun-polun-pituus 1
-                                              :jarjestys [^{:nimi :mapit} jarjestysvektori]
+                                              :jarjestys [jarjestysvektori]
                                               :datan-kasittely (fn [yhteenveto]
                                                                  (mapv (fn [[_ v]]
                                                                          v)
@@ -1992,7 +1993,7 @@
                                         (t/maarataulukon-dr indeksikorjaus? rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain)
                                         {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                                :solun-polun-pituus 1
-                                                               :jarjestys [^{:nimi :mapit} jarjestysvektori]
+                                                               :jarjestys [jarjestysvektori]
                                                                :datan-kasittely (fn [otsikot]
                                                                                   (mapv (fn [otsikko]
                                                                                           otsikko)
@@ -2003,7 +2004,7 @@
                                                                              :jarjestys [{:keyfn :aika
                                                                                           :comp (fn [aika-1 aika-2]
                                                                                                   (pvm/ennen? aika-1 aika-2))}
-                                                                                         ^{:nimi :mapit} jarjestysvektori-body]
+                                                                                         jarjestysvektori-body]
                                                                              :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
                                                                                                 (mapv (fn [rivi]
                                                                                                         (mapv (fn [[_ v]]
@@ -2023,7 +2024,7 @@
                                                                                                                     (grid/hae-grid data-sisalto-grid :lapset))))}
                                          [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
                                                                   :solun-polun-pituus 1
-                                                                  :jarjestys [^{:nimi :mapit} jarjestysvektori]
+                                                                  :jarjestys [jarjestysvektori]
                                                                   :datan-kasittely (fn [yhteensa]
                                                                                      (mapv (fn [[_ nimi]]
                                                                                              nimi)
@@ -2308,10 +2309,10 @@
                                                                                            {:toimenpide toimenpide})))))))]
     (fn [{:keys [toimenpide]} laskutukseen-perustuen? on-oikeus?]
       [:div#laskutukseen-perustuen-filter
-       [:input#lakutukseen-perustuen.vayla-checkbox
+       [:input#laskutukseen-perustuen.vayla-checkbox
         {:type "checkbox" :checked laskutukseen-perustuen?
          :on-change (partial vaihda-fn toimenpide) :disabled (not on-oikeus?)}]
-       [:label {:for "lakutukseen-perustuen"}
+       [:label {:for "laskutukseen-perustuen"}
         "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle: "
         [:b (t/toimenpide-formatointi toimenpide)]]])))
 
@@ -2466,13 +2467,14 @@
    [yleis-suodatin suodattimet]
    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
-(defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+(defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and kantahaku-valmis? indeksit)
     (let [hinnat (mapv (fn [jh eh hjp]
-                        {:summa (+ jh eh hjp)})
-                      johto-ja-hallintokorvaukset-yhteensa
-                      erillishankinnat-yhteensa
-                      hoidonjohtopalkkio-yhteensa)]
+                         {:summa (+ jh eh hjp)})
+                       johto-ja-hallintokorvaukset-yhteensa
+                       toimistokulut-yhteensa
+                       erillishankinnat-yhteensa
+                       hoidonjohtopalkkio-yhteensa)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko "Yhteenveto"
                       :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
@@ -2496,7 +2498,7 @@
                                            kantahaku-valmis?]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
-   [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+   [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]])
