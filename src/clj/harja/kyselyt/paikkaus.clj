@@ -30,7 +30,9 @@
   (fetch db
          ::paikkaus/paikkaus
          (conj paikkaus/paikkauksen-perustiedot
-               [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+               [::paikkaus/paikkauskohde (conj paikkaus/paikkauskohteen-perustiedot
+                                               ::muokkaustiedot/luotu
+                                               ::muokkaustiedot/muokattu)])
          hakuehdot))
 
 (defn hae-paikkaukset-tienkohta [db hakuehdot]
@@ -49,7 +51,9 @@
 (defn hae-paikkauskohteet [db hakuehdot]
   (fetch db
          ::paikkaus/paikkauskohde
-         paikkaus/paikkauskohteen-perustiedot
+         (conj paikkaus/paikkauskohteen-perustiedot
+               ::muokkaustiedot/luotu
+               ::muokkaustiedot/muokattu)
          hakuehdot))
 
 (defn onko-paikkaus-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
@@ -293,6 +297,8 @@
   (let [paikkauskohteet (fetch db
                                ::paikkaus/paikkauskohde
                                (conj paikkaus/paikkauskohteen-perustiedot
+                                     ::muokkaustiedot/muokattu
+                                     ::muokkaustiedot/luotu
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
                                {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})
         paikkauskohteet (into []
