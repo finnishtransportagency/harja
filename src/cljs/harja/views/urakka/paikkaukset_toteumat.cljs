@@ -40,14 +40,12 @@
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
-  (let [
-        paikkaukset (:modalin-paikkaus app)
+  (let [paikkaukset (:modalin-paikkaus app)
         saate (:saate app)
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
-        massamenekki (massamenekin-summa paikkaukset)
-        ]
+        massamenekki (massamenekin-summa paikkaukset)]
     [modal/modal
     {:otsikko (str "Lähetä sähköposti")
      :luokka "ilmoita-virheesta-modal"
@@ -91,8 +89,7 @@
         [kentat/tee-kentta {:tyyppi :text :otsikko "Foo" :koko [80 8]}
          ; TODO tämä toimii mutta input tulee pienellä viiveellä :saate avaimeen?
          (r/wrap (get-in app [:saate])
-                 #(e! (tiedot/->PaivitaSaate %)))
-         ]]]]))
+                 #(e! (tiedot/->PaivitaSaate %)))]]]]))
 
 
 (defn paikkaukset-vetolaatikko

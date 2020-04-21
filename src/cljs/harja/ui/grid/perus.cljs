@@ -473,9 +473,8 @@
        (when salli-valiotsikoiden-piilotus?
          (if (@piilotetut-valiotsikot valiotsikko-id)
            (ikonit/livicon-chevron-right)
-           (ikonit/livicon-chevron-down)))
-       ]]
-     (when (and (not(empty? otsikkokomponentit)) (not(contains? @piilotetut-valiotsikot valiotsikko-id)) )
+           (ikonit/livicon-chevron-down)))]]
+     (when-not (empty? otsikkokomponentit)
         (map-indexed
           (fn [i {:keys [sisalto]}]
             ^{:key i}
