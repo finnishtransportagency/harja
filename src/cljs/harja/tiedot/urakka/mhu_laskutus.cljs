@@ -438,11 +438,21 @@
                           tulos)))
           {:keys [tehtavaryhmat toimenpiteet]} (reduce
                                                  (fn [k asia]
-                                                   (update k
-                                                           (if (nil? (:tehtavaryhma asia))
+                                                   (let [toimenpide-rivi? (nil? (:tehtavaryhma asia))
+                                                         toimenpide-rivi-olemassa? (when toimenpide-rivi?
+                                                                                     (some #(and (= (:toimenpideinstanssi %)
+                                                                                                    (:toimenpideinstanssi asia))
+                                                                                                 (= (:toimenpide-id %)
+                                                                                                    (:toimenpide-id asia)))
+                                                                                           (:toimenpiteet k)))]
+                                                     (apply update k
+                                                           (if toimenpide-rivi?
                                                              :toimenpiteet
                                                              :tehtavaryhmat)
-                                                           conj asia))
+                                                            (if (and toimenpide-rivi-olemassa?
+                                                                     toimenpide-rivi?)
+                                                              [identity]
+                                                              [conj asia]))))
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
