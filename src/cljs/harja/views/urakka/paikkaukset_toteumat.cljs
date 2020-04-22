@@ -168,11 +168,59 @@
    "odottaa_vastausta" "Odottaa vastausta"
    nil "Ei lähetetty YHA:an"})
 
+(defn- komponentti-otsikon-sisaan
+  [e! paikkaukset]
+  (let [paikkaus (first paikkaukset)
+        paikkauskohde (::paikkaus/paikkauskohde paikkaus)
+        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        lahetyksen-tila   (::paikkaus/tila paikkauskohde)
+        ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
+        tarkistettu (::paikkaus/tarkistettu paikkauskohde)
+        urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+        solujen-tyyli {:margin ".5rem"}]
+    (fn [_]
+     [:<>
+      (if-not urakoitsija-kayttajana?
+        [:span {:style solujen-tyyli}
+         [napit/palvelinkutsu-nappi (if tarkistettu
+                                      (str "Tarkistettu " (pvm/pvm-opt tarkistettu))
+                                      "Merkitse tarkistetuksi")
+          #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+          {:ikoni (ikonit/livicon-check)
+           :disabled (boolean tarkistettu)
+           :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}]
+
+         [:span {:style solujen-tyyli}
+          (if-not tarkistettu
+            (if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
+              "Lähetys YHA:an"
+              "Ei lähetetä YHA:an")
+            (get lahetyksen-tilan-teksti lahetyksen-tila))]])
+      (if (and (not urakoitsija-kayttajana?)
+               (not (= "lahetetty" lahetyksen-tila)))
+        [:span {:style solujen-tyyli}
+         [:span {:style {:color "#0066cc"}}
+          (ikonit/envelope)]
+         [yleiset/linkki "Ilmoita virhe"
+          #(e! (tiedot/->AvaaVirheModal paikkaukset))]]
+
+        (when ilmoitettu-virhe
+          [:span.virheviesti-sailio
+           [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
+           [:span ilmoitettu-virhe]]))
+      [:span.gridin-fonttikoko {:style {:style solujen-tyyli}}
+       [:a.livicon-arrow-right {:style {:margin "1rem"}
+                                :href "#"
+                                :on-click #(do
+                                             (.preventDefault %)
+                                             (e! (tiedot/->SiirryKustannuksiin
+                                                   (::paikkaus/id paikkauskohde))))}
+        "Kustannukset"]]])))
+
 (defn otsikkokomponentti
   [e! paikkaukset]
   (let [paikkaus (first paikkaukset)
         paikkauskohde (::paikkaus/paikkauskohde paikkaus)
-        paikkauskohde-id (::paikkaus/id paikkauskohde)
         alkupvm (get paikkaus ::paikkaus/alkuaika)
         loppupvm (get paikkaus ::paikkaus/loppuaika)
         ;; Asiakkaan kanssa sovittu, että yhtä paikkauskohdetta kohden on vain yksi työmenetelmä
@@ -180,58 +228,21 @@
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
         pinta-ala-sum (pinta-alojen-summa paikkaukset)
         massamenekki-sum (massamenekin-summa paikkaukset)
-        lahetyksen-tila   (::paikkaus/tila paikkauskohde)
-        ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
-        tarkistettu (::paikkaus/tarkistettu paikkauskohde)
+
         aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
                     (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
-                    (str "Luotu: " (pvm/pvm-aika-opt (::muokkaustiedot/luotu paikkauskohde))))
-        urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
+                    (str "Luotu: " (pvm/pvm-aika-opt (::muokkaustiedot/luotu paikkauskohde))))]
     [{:tyyli {}
       :sisalto
       (fn [_]
         [:<>
-         [:tr.grid-otsikkokomponentti {:style {:border "none"
-                                               :background-color "#C8C8C8"}}
-          [:td {:colSpan 12
-                :style {:border "none"}}
-           [:p {:style {:margin-left otsikkokomp-vasen-margin}}]]
-          [:td {:colSpan 2
-                :style {:border "none"}}
-           (if-not urakoitsija-kayttajana?
-             [napit/yleinen-toissijainen "Ilmoita virhe"
-              #(e! (tiedot/->AvaaVirheModal paikkaukset))
-              {:ikoni (ikonit/livicon-kommentti)}]
-
-             (when ilmoitettu-virhe
-               [:div.virheviesti-sailio
-                [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
-                [:span ilmoitettu-virhe]]))]
-          [:td {:colSpan 2}
-           (if-not urakoitsija-kayttajana?
-             [:span
-              [napit/palvelinkutsu-nappi (if tarkistettu
-                                           (str "Tarkistettu " (pvm/pvm-opt tarkistettu))
-                                           "Merkitse tarkistetuksi")
-               #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
-               {:ikoni (ikonit/livicon-check)
-                :disabled (boolean tarkistettu)
-                :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}]
-
-              [:div
-               (if-not tarkistettu
-                 (if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
-                   "Lähetys YHA:an"
-                   "Ei lähetetä YHA:an")
-                 (get lahetyksen-tilan-teksti lahetyksen-tila))]])]]
-         [:tr.valiotsikko.grid-otsikkokomponentti {:style {:background-color "#C8C8C8"}}
-
-          [:td {:colSpan 2}
+         [:tr.valiotsikko.grid-otsikkokomponentti
+          [:td {:colSpan 3}
            [:span.bold {:style {:margin-left otsikkokomp-vasen-margin}}
             (str "Yhteensä: " (count paikkaukset))]]
-          [:td {:colSpan 2}
+          [:td {:colSpan 3}
            [:span (str aikaleima)]]
-          [:td {:colSpan 3}]
+          [:td {:colSpan 1}]
           [:td {:colSpan 1}
            [:span.bold (pvm/pvm-aika-opt alkupvm)]]
           [:td {:colSpan 1}
@@ -243,14 +254,7 @@
            [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
           [:td
            [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
-          [:td {:colSpan 2}
-           [:div..gridin-fonttikoko {:style {:float "right"}}
-            [:a.livicon-arrow-right {:style {:margin "1rem"}
-                                     :href "#"
-                                     :on-click #(do
-                                                  (.preventDefault %)
-                                                  (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
-             "Kustannukset"]]]]])}]))
+          [:td {:colSpan 2}]]])}]))
 
 (defn paikkaukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
@@ -326,6 +330,10 @@
           ;; Lisätään tässä kohti väliotsikot, välttyy turhilta eventeiltä
           (fn [[otsikko paikkaukset]]
             (cons (grid/otsikko otsikko {:id (get-in (first paikkaukset) [::paikkaus/paikkauskohde ::paikkaus/id])
+                                         :komponentti-otsikon-sisaan {:col-span 6
+                                                                      :sisalto (komponentti-otsikon-sisaan e! paikkaukset)
+                                                                      :otsikon-tyyli {:background-color "#dcdcdc"}}
+
                                          :otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
                   (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
                            paikkaukset)))

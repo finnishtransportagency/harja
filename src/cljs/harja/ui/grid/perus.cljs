@@ -458,6 +458,8 @@
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
+        ;; mahdollistetaan komponentin rendaus myös otsikkorivin sisään
+        komponentti-otsikon-sisaan (get-in otsikko-record [:optiot :komponentti-otsikon-sisaan])
         otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
     [:<>
      [:tr.otsikko (when salli-valiotsikoiden-piilotus?
@@ -465,15 +467,24 @@
                                  (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
                      :on-click #(toggle-valiotsikko valiotsikko-id
                                                     piilotetut-valiotsikot)
-                     :style (merge {} (when (not (empty? otsikkokomponentit))
-                                        {:border-bottom "none"
-                                         :border-top "solid 0.1mm black"}))})
-      [:td {:colSpan colspan}
-       [:h5 teksti]
+                     :style (merge {}
+                                   (when (not (empty? otsikkokomponentit))
+                                     {:border-bottom "none"
+                                      :border-top "solid 0.1mm black"})
+                                   (when (:otsikon-tyyli komponentti-otsikon-sisaan)
+                                     (:otsikon-tyyli komponentti-otsikon-sisaan)))})
+      [:td {:colSpan (if (empty? komponentti-otsikon-sisaan)
+                       colspan
+                       (- colspan (:col-span komponentti-otsikon-sisaan)))}
        (when salli-valiotsikoiden-piilotus?
          (if (@piilotetut-valiotsikot valiotsikko-id)
            (ikonit/livicon-chevron-right)
-           (ikonit/livicon-chevron-down)))]]
+           (ikonit/livicon-chevron-down)))
+       [:h5 teksti]]
+      (when (and (:sisalto komponentti-otsikon-sisaan)
+                 (:col-span komponentti-otsikon-sisaan))
+        [:td {:colSpan (:col-span komponentti-otsikon-sisaan)}
+         [(:sisalto komponentti-otsikon-sisaan)]])]
      (when-not (empty? otsikkokomponentit)
         (map-indexed
           (fn [i {:keys [sisalto]}]
