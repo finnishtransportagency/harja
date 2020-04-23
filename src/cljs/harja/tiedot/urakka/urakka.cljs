@@ -145,8 +145,14 @@
   (apply luo-validius-meta
          (concat kulun-oletus-validoinnit
                  (mapcat (fn [i]
-                           [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                            [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)])
+                           (if (= "lisatyo"
+                                  (:maksueratyyppi
+                                    (get kohdistukset i)))
+                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
+                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
+                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
                          (range (count kohdistukset))))))
 
 (def kulut-kohdistus-default {:tehtavaryhma        nil

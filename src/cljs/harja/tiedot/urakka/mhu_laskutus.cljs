@@ -102,11 +102,18 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
+(defn kulu->lomake [lasku]
   (let [{suorittaja :suorittaja} lasku]
     (-> lasku
         (dissoc :suorittaja)
         (assoc :aliurakoitsija suorittaja)
+        (update :kohdistukset (fn [kohdistukset]
+                                (mapv #(assoc %
+                                         :lisatyo?
+                                         (if (= "lisatyo" (:maksueratyyppi %))
+                                           true
+                                           false))
+                                      kohdistukset)))
         (with-meta (tila/kulun-validointi-meta lasku)))))
 
 (defn- luo-paivitys-fn
