@@ -52,12 +52,14 @@
 
 (defn parsi-summa [summa]
   (cond
+    (not (string? summa)) summa
     (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
         (string/replace "," ".")
         js/parseFloat)
-    (not (nil? summa)) summa
+    (not (or (str/blank? summa)
+             (nil? summa))) summa
     :else 0))
 
 (defn- osien-paivitys-fn
@@ -579,7 +581,7 @@
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
-                                         (:summa %2)))
+                                         (parsi-summa (:summa %2))))
                                 0
                                 kohdistukset)
           {validoi-fn :validoi} (meta lomake)

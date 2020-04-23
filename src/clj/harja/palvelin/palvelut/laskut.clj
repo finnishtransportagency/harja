@@ -198,7 +198,6 @@
   "Funktio tallentaa laskun ja laskuerittelyn (laskun kohdistuksen). Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id laskuerittely]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-
   (luo-tai-paivita-laskuerittely db user urakka-id laskuerittely))
 
 (defn- poista-laskun-liite
