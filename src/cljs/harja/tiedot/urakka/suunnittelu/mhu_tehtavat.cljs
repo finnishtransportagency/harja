@@ -10,7 +10,6 @@
             [harja.pvm :as pvm]))
 
 (defrecord PaivitaMaara [solu arvo tyylit])
-(defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
 (defrecord ValitseTaso [arvo taso])
 (defrecord HaeTehtavatJaMaarat [parametrit])
 (defrecord TehtavaHakuOnnistui [tehtavat parametrit])
@@ -108,10 +107,13 @@
           samat-kaikille? (:samat-kaikille valinnat)]
       (if samat-kaikille?
         (doseq [vuosi (keys (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat]))]
-          (let [maara (-> tehtavat-ja-toimenpiteet
-                          (get-in [(-> tehtava-id str keyword) :maarat vuosi])
+          (let [maara (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat vuosi])
+                maara (if (string? maara)
+                        (-> maara
                           (clj-str/replace #"," ".")
-                          js/parseFloat)]
+                          js/parseFloat)
+                        maara)
+                maara (if (js/isNaN maara) 0 maara)]
             (tuck-apurit/post! :tallenna-tehtavamaarat
                                {:urakka-id             urakka-id
                                 :hoitokauden-alkuvuosi (-> vuosi
@@ -255,33 +257,4 @@
 
   SamatKaikilleMoodi
   (process-event [{:keys [samat?]} app]
-    (assoc-in app [:valinnat :samat-kaikille] samat?))
-  LaajennaSoluaKlikattu
-  (process-event [{:keys [laajenna-osa auki?]} app]
-    (update app :tehtavat-taulukko
-            (fn [taulukon-rivit]
-              (let [klikatun-rivin-id (first (keep (fn [rivi]
-                                                     (when (p/osan-polku rivi laajenna-osa)
-                                                       (p/janan-id rivi)))
-                                                   taulukon-rivit))]
-                (map (fn [{:keys [janan-id] :as rivi}]
-                       (let [{:keys [vanhempi]} (meta rivi)
-                             klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
-                             klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
-                         ;; Jos joku rivi on kiinnitetty, halutaan sulkea myös kaikki lapset ja lasten lapset.
-                         ;; Kumminkin lapsirivien Laajenna osan sisäinen tila jää väärään tilaan, ellei sitä säädä ulko käsin.
-                         ;; Tässä otetaan ja muutetaan se oikeaksi.
-                         (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
-                           (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
-                                                                  %)
-                                                               (:solut rivi))]
-                             (reset! (p/osan-tila rivin-laajenna-osa) false)))
-                         (cond
-                           ;; Jos riviä klikataan, piilotetaan lapset
-                           (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
-                                                                        assoc :piillotettu? false)
-                           ;; Jos rivillä on lapsen lapsia, piillotetaan myös ne
-                           (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
-                                                                                    assoc :piillotettu? true)
-                           :else rivi)))
-                     taulukon-rivit))))))
+    (assoc-in app [:valinnat :samat-kaikille] samat?)))
