@@ -148,7 +148,7 @@
                     :arvo "Määrä"
                     :class #{"col-xs-1"})})
 
-(defn- hae-avaimella-fn [verrattava haettava palautettava]
+(defn- hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
   (fn [kohde]
     (let [palautuksen-avain (or palautettava
                                 haettava)]
@@ -180,7 +180,7 @@
                    taulukko)]
     (loop [taulukko taulukko
            parillinen? true
-           [{:keys [erapaiva toimenpideinstanssi tehtavaryhma summa] :as rivi} & rivit] rivit]
+           [{:keys [erapaiva toimenpideinstanssi tehtavaryhma summa maksueratyyppi] :as rivi} & rivit] rivit]
       (if-not rivi
         taulukko
         (recur (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
@@ -199,15 +199,26 @@
                                {:class #{"col-xs-1"}}]
                               [osa/->Teksti
                                (keyword (gensym "maksuera-"))
-                               (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
+                               (str "HA" (some (hae-avaimella-fn {:verrattava   toimenpideinstanssi
+                                                                  :haettava     [:toimenpideinstanssi :id]
+                                                                  :palautettava :numero})
+                                               maksuerat))
                                {:class #{"col-xs-2"}}]
                               [osa/->Teksti
                                (keyword (gensym "toimenpideinstanssi-"))
-                               (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
+                               (str (some (hae-avaimella-fn {:verrattava   toimenpideinstanssi
+                                                             :haettava     :toimenpideinstanssi
+                                                             :palautettava :toimenpide})
+                                          toimenpiteet))
                                {:class #{"col-xs-4"}}]
                               [osa/->Teksti
                                (keyword (gensym "tehtavaryhma-"))
-                               (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
+                               (str (if (= maksueratyyppi "lisatyo")
+                                      "Lisätyö"
+                                      (some (hae-avaimella-fn {:verrattava   tehtavaryhma
+                                                               :haettava     :id
+                                                               :palautettava :tehtavaryhma})
+                                            tehtavaryhmat)))
                                {:class #{"col-xs-4"}}]
                               [osa/->Teksti
                                (keyword (gensym "summa-"))
@@ -455,9 +466,9 @@
                                                                                                     (:toimenpide-id asia)))
                                                                                            (:toimenpiteet k)))]
                                                      (apply update k
-                                                           (if toimenpide-rivi?
-                                                             :toimenpiteet
-                                                             :tehtavaryhmat)
+                                                            (if toimenpide-rivi?
+                                                              :toimenpiteet
+                                                              :tehtavaryhmat)
                                                             (if (and toimenpide-rivi-olemassa?
                                                                      toimenpide-rivi?)
                                                               [identity]
