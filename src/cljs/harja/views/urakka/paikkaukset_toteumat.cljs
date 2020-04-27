@@ -177,45 +177,51 @@
         ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
-        solujen-tyyli {:margin ".5rem"}]
+        solujen-tyyli {:margin-right ".5rem"
+                       :margin-left ".5rem"}]
     (fn [_]
-     [:<>
-      (if-not urakoitsija-kayttajana?
+     [:div {:style {:display "flex"
+                   :justify-content "space-evenly"}}
+      (when-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
-         [napit/palvelinkutsu-nappi (if tarkistettu
-                                      (str "Tarkistettu " (pvm/pvm-opt tarkistettu))
-                                      "Merkitse tarkistetuksi")
-          #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
-          {:ikoni (ikonit/livicon-check)
-           :disabled (boolean tarkistettu)
-           :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}]
+         (if tarkistettu
+           [:span
+            [:span {:style {:color "green"}} (ikonit/livicon-check)]
+            (str " Tarkistettu " (pvm/pvm-opt tarkistettu))]
+           [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
+           #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+           {:ikoni (ikonit/livicon-check)
+            :luokka "nappi-ensisijainen btn-xs"
+            :disabled (boolean tarkistettu)
+            :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}])])
 
+      (when-not urakoitsija-kayttajana?
+        [:span {:style solujen-tyyli}
+         (if-not tarkistettu
+           (if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
+             "Lähetys YHA:an"
+             "Ei lähetetä YHA:an")
+           (get lahetyksen-tilan-teksti lahetyksen-tila))])
+
+      [:span
+       (if (and (not urakoitsija-kayttajana?)
+                (not (= "lahetetty" lahetyksen-tila)))
          [:span {:style solujen-tyyli}
-          (if-not tarkistettu
-            (if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
-              "Lähetys YHA:an"
-              "Ei lähetetä YHA:an")
-            (get lahetyksen-tilan-teksti lahetyksen-tila))]])
-      (if (and (not urakoitsija-kayttajana?)
-               (not (= "lahetetty" lahetyksen-tila)))
-        [:span {:style solujen-tyyli}
-         [:span {:style {:color "#0066cc"}}
-          (ikonit/envelope)]
-         [yleiset/linkki "Ilmoita virhe"
-          #(e! (tiedot/->AvaaVirheModal paikkaukset))]]
+          [yleiset/linkki "Ilmoita virhe"
+           #(e! (tiedot/->AvaaVirheModal paikkaukset))
+           {:style {}
+            :ikoni (ikonit/envelope)}]]
 
-        (when ilmoitettu-virhe
-          [:span.virheviesti-sailio
-           [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
-           [:span ilmoitettu-virhe]]))
-      [:span.gridin-fonttikoko {:style {:style solujen-tyyli}}
-       [:a.livicon-arrow-right {:style {:margin "1rem"}
-                                :href "#"
-                                :on-click #(do
-                                             (.preventDefault %)
-                                             (e! (tiedot/->SiirryKustannuksiin
-                                                   (::paikkaus/id paikkauskohde))))}
-        "Kustannukset"]]])))
+         (when ilmoitettu-virhe
+           [:span.virheviesti-sailio
+            [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
+            [:span ilmoitettu-virhe]]))]
+      [yleiset/linkki "Kustannukset"
+       #(do
+          (.preventDefault %)
+          (e! (tiedot/->SiirryKustannuksiin
+                (::paikkaus/id paikkauskohde))))
+       {:ikoni (ikonit/euro)}]])))
 
 (defn otsikkokomponentti
   [e! paikkaukset]

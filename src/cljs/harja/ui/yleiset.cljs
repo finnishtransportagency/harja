@@ -110,8 +110,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    [:span (str " " v)]]))]]))
 
 
-(defn linkki [otsikko toiminto]
-  [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
+(defn linkki
+  ([otsikko toiminto]
+    (linkki otsikko toiminto {}))
+  ([otsikko toiminto {:keys [style ikoni]}]
+   [:a {:style style
+        :href "#"
+        :on-click #(do (.preventDefault %) (toiminto))}
+    [:span
+     (when ikoni ikoni)
+     (if ikoni
+       (str " " otsikko)
+       otsikko)]]))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
   [:a {:href linkki :target "_blank"} otsikko])
