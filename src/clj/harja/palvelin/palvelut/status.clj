@@ -32,16 +32,18 @@
     :post [(boolean? %)]}
    (let [timeout-ms (or timeout-ms 20000)
          timeout-s (ms->s timeout-ms)]
-     (with-open [c (.getConnection (:datasource db))
-                 stmt (jdbc/prepare-statement c
-                                              "SELECT 1;"
-                                              {:timeout timeout-s
-                                               :result-type :forward-only
-                                               :concurrency :read-only})
-                 rs (.executeQuery stmt)]
-       (if (.next rs)
-         (= 1 (.getObject rs 1))
-         false)))))
+     (try (with-open [c (.getConnection (:datasource db))
+                      stmt (jdbc/prepare-statement c
+                                                   "SELECT 1;"
+                                                   {:timeout timeout-s
+                                                    :result-type :forward-only
+                                                    :concurrency :read-only})
+                      rs (.executeQuery stmt)]
+            (if (.next rs)
+              (= 1 (.getObject rs 1))
+              false))
+          (catch Throwable _
+            false)))))
 
 (defn replikoinnin-tila-ok?
   ([db-replica] (replikoinnin-tila-ok? db-replica nil))
@@ -51,8 +53,11 @@
     :post [(boolean? %)]}
    (let [timeout-ms (or timeout-ms 100000)
          timeout-s (ms->s timeout-ms)
-         replikoinnin-viive (q/hae-replikoinnin-viive db-replica)]
-     (not (and replikoinnin-viive (> replikoinnin-viive timeout-s))))))
+         replikoinnin-viive (try (q/hae-replikoinnin-viive db-replica)
+                                 (catch Throwable _
+                                   nil))]
+     (and replikoinnin-viive
+          (< replikoinnin-viive timeout-s)))))
 
 (defn sonja-yhteyden-tila-ok?
   ([db kehitysmoodi?] (sonja-yhteyden-tila-ok? db kehitysmoodi? nil))
