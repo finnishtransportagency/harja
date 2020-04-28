@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.tarkastukset-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
+            [clojure.core.async :refer [<!!]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as t]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -199,3 +200,38 @@
                                  +kayttaja-tero+
                                  {:urakka-id urakka-id
                                   :tarkastus-id (:id tarkastus)})))))
+
+(deftest hae-tarkastusreitit-kartalle
+  (let [extent [237856 7077888 500000 7340032]
+        params {:havaintoja-sisaltavat? false, :urakka-id 4, :loppupvm #inst "2016-12-31T21:59:59.000-00:00", :vain-laadunalitukset? false, :tekija nil, :alkupvm #inst "2016-11-30T22:00:00.000-00:00", :valittu {:id nil}, :tyyppi nil, :tienumero nil}]
+    (let [vastaus (<!! (t/hae-tarkastusreitit-kartalle (:db jarjestelma)
+                                                       +kayttaja-jvh+
+                                                       {:extent extent
+                                                        :parametrit params}))
+          sijainti (:sijainti vastaus)
+          reitti (:reitti vastaus)
+          sijainnin-eka-viiva (first (:lines sijainti))
+          reitin-eka-viiva (first (:lines reitti))]
+      (is (true? (:ok? vastaus)))
+      (is (= :tarkastus (:tyyppi-kartalla vastaus)))
+      (is (nil? (:talvihoitomittaus vastaus)))
+      (is (= :laatu (:tyyppi vastaus)))
+      (is (= false (:laadunalitus vastaus)))
+      (is (= :tilaaja (:tekija vastaus)))
+      (is (= #{"Lumista"} (:vakiohavainnot vastaus)))
+
+      (is (map? sijainti))
+      (is (= :multiline (:type sijainti)))
+      (is (= 13 (count (:lines sijainti))))
+      (is (= {:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}
+             sijainnin-eka-viiva))
+      (is (= :line (:type sijainnin-eka-viiva)))
+      (is (= 2 (count (:points sijainnin-eka-viiva))))
+
+
+      (is (map? reitti))
+      (is (= :multiline (:type reitti)))
+      (is (= 13 (count (:lines reitti))))
+      (is (= {:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]} reitin-eka-viiva))
+      (is (contains? (:selite vastaus) :teksti))
+      (is (contains? (:selite vastaus) :vari)))))
