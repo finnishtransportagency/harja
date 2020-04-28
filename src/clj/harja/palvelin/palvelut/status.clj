@@ -55,9 +55,11 @@
          timeout-s (ms->s timeout-ms)
          replikoinnin-viive (try (q/hae-replikoinnin-viive db-replica)
                                  (catch Throwable _
-                                   nil))]
-     (and replikoinnin-viive
-          (< replikoinnin-viive timeout-s)))))
+                                   :virhe))]
+     ;Vähän outo käsittely replikan ok-tilalle. Tämä sen takia, että kun ei jossain ympäristössä ole oikeasti replikaa (paikallinen, Circle), niin tuo kantaquery palauttaa nil.
+     (boolean (and (not= :virhe replikoinnin-viive)
+                   (not (and replikoinnin-viive
+                             (> replikoinnin-viive timeout-s))))))))
 
 (defn sonja-yhteyden-tila-ok?
   ([db kehitysmoodi?] (sonja-yhteyden-tila-ok? db kehitysmoodi? nil))
