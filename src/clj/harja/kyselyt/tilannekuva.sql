@@ -293,7 +293,7 @@ SELECT ypk.id,
   FROM yllapitokohde ypk
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
        JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE)
- WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+ WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ST_CollectionHomogenize(ypko.sijainti))
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
