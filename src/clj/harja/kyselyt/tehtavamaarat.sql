@@ -5,8 +5,6 @@ SELECT ut.urakka                  as "urakka",
        ut.tehtava                 as "tehtava-id",
        ut.maara                   as "maara"
 FROM urakka_tehtavamaara ut
-         JOIN urakka u on ut.urakka = u.id
-         JOIN toimenpidekoodi tpk on ut.tehtava = tpk.id
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokausi
   AND ut.poistettu IS NOT TRUE;
