@@ -211,6 +211,7 @@
                               :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                               :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
                               :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
+                              :arvonvahennyssanktio "Arvonvähennys"
                               :yllapidon_muistutus "Muistutus"
                               :yllapidon_sakko "Sakko"
                               :yllapidon_bonus "Bonus"

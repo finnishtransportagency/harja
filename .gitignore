@@ -10,6 +10,7 @@ dev-resources/js/harja.js
 dev-resources/js/out/
 logs/
 doc/
+dev/
 harja-stg-dump.sql
 harja-stg-dump
 harja-test-dump.sql
