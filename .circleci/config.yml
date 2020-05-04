@@ -79,7 +79,7 @@ jobs:
             psql -h localhost -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"
             cd ..
             cp /tmp/harja/asetukset.edn .
-            sed -i -e 's/:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
+            sed -i -e 's/;:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
             sed -i -e 's/:kehitysmoodi true/:kehitysmoodi false/g' asetukset.edn
             mkdir -p ../.harja
             echo aaaa > ../.harja/anti-csrf-token
