@@ -14,8 +14,8 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
-            [harja.palvelin.raportointi.testiapurit :as apurit]))
+            [harja.palvelin.raportointi.testiapurit :as apurit]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -63,7 +63,8 @@
     (is (= (list ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M 0]
                  (list "Yhteensä" 2000M 200M 1800M 2000M 0))
            rivit))
-    (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön." " " yleinen/materiaalitoteumien-paivitysinfo) ] formiaatti-vinkki))
+    (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. "
+                         yleinen/materiaalitoteumien-paivitysinfo)] formiaatti-vinkki))
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Materiaaliraportti")
 
@@ -97,7 +98,8 @@
                  ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M]
                  (list "Yhteensä" 4000M 200M 3800M 2000M))
            rivit))
-    (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön." " " yleinen/materiaalitoteumien-paivitysinfo) ] formiaatti-vinkki))
+    (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. "
+                         yleinen/materiaalitoteumien-paivitysinfo)] formiaatti-vinkki))
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Materiaaliraportti")
     (apurit/tarkista-taulukko-kaikki-rivit-ja-yhteenveto
@@ -126,7 +128,8 @@
              ["Pohjois-Pohjanmaa" 4000M 200M 3800M 2000M]
              (list "Yhteensä" 8000M 200M 7800M 2000M))
            rivit))
-    (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön." " " yleinen/materiaalitoteumien-paivitysinfo) ] formiaatti-vinkki))
+    (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. "
+                         yleinen/materiaalitoteumien-paivitysinfo)] formiaatti-vinkki))
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Materiaaliraportti")
     (apurit/tarkista-taulukko-kaikki-rivit-ja-yhteenveto
