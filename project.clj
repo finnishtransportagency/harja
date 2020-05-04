@@ -147,11 +147,7 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["osgeo" "https://download.osgeo.org/webdav/geotools/"]
-                 ;; Tämä on kaiketi org.geotools/* dependencyjä varten. Nykyinen  versio
-                 ;; on kyllä mavenissakin, mutta jos tarvii joskus SNPASHOTIN, niin tuolta
-                 ;; löytyy
-                 ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
+  :repositories [["osgeo" "https://repo.osgeo.org/repository/release/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]
                  ;; Tämä on tässä [org.clojure/data.zip "0.1.4-SNAPSHOT"] dependencyn takia
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
