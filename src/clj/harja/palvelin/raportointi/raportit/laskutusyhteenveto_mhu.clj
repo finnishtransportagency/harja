@@ -3,6 +3,7 @@
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.kyselyt.maksuerat :as maksuerat-q]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
 
@@ -18,8 +19,6 @@
             [clojure.string :as str]
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
-
-
 ;; kannassa testailua varten:
 ;; select * from laskutusyhteenveto_teiden_hoito('2020-10-01', '2021-09-30', '2020-03-01', '2020-03-31',36);
 (defn hae-laskutusyhteenvedon-tiedot
@@ -30,18 +29,15 @@
                                    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
                                    (pvm/paivamaaran-hoitokausi alkupvm)
                                    [alkupvm loppupvm])]
-    (log/debug "hae-mhu-urakan-laskutusyhteenvedon-tiedot" tiedot)
-
     (let [tulos (vec
                   (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
                            (into []
                                  (laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito db
-                                                                            (konv/sql-date hk-alkupvm)
-                                                                            (konv/sql-date hk-loppupvm)
-                                                                            (konv/sql-date alkupvm)
-                                                                            (konv/sql-date loppupvm)
-                                                                            urakka-id))))]
-      (log/debug (pr-str tulos))
+                                                                                         (konv/sql-date hk-alkupvm)
+                                                                                         (konv/sql-date hk-loppupvm)
+                                                                                         (konv/sql-date alkupvm)
+                                                                                         (konv/sql-date loppupvm)
+                                                                                         urakka-id))))]
       tulos)))
 
 (defn laske-asiakastyytyvaisyysbonus
@@ -58,160 +54,196 @@
 (defn- kuukausi [date]
   (.format (java.text.SimpleDateFormat. "MMMM") date))
 
-
-(defn- korotettuna-jos-indeksi-saatavilla
-  [rivi avain]
-  (let [avain-ind-korotus (keyword (str avain "_ind_korotus"))
-        ind-korotus (avain-ind-korotus rivi)
-        ilman-korotusta  ((keyword avain) rivi)]
-    (if-not ind-korotus  ;indeksipuutteen aiheuttama nil
-      {:tulos            ilman-korotusta
-       :indeksi-puuttui? true}
-      {:tulos (+ ilman-korotusta ind-korotus)
-       :indeksi-puuttui? false})))
-
-
-(defn taulukko-elementti
-  [otsikko taulukon-tiedot kyseessa-kk-vali?
-   laskutettu-teksti laskutetaan-teksti
-   yhteenveto yhteenveto-teksti summa-fmt
-   tyypin-maksuerat]
-  [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
-              :viimeinen-rivi-yhteenveto? true}
-   (rivi
-     {:otsikko otsikko :leveys 36}
-     (when kyseessa-kk-vali?
-       {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
-     (when kyseessa-kk-vali?
-       {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
-     {:otsikko yhteenveto-teksti :leveys 29 :tyyppi :varillinen-teksti})])
-
-
 (defn- laskettavat-kentat [rivi konteksti]
   (let [kustannusten-kentat (into []
-                                  (apply concat [(lyv-yhteiset/kustannuslajin-kaikki-kentat "kit")
-                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "kat")
-                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "kht")
-                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "mt")
-                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "aht")
+                                  (apply concat [(lyv-yhteiset/kustannuslajin-kaikki-kentat "lisatyot")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "kokonaishintainen")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "sakot")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hoidonjohto")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_erillishankinnat")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "bonukset")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_palkkio")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "kaikki")
                                                  (when (= :urakka konteksti) [:tpi])]))]
     (if (and (some? (:suolasakot_laskutettu rivi))
-             (some?(:suolasakot_laskutetaan rivi)))
+             (some? (:suolasakot_laskutetaan rivi)))
       (into []
             (concat kustannusten-kentat
                     (lyv-yhteiset/kustannuslajin-kaikki-kentat "suolasakot")))
       kustannusten-kentat)))
 
-
-(defn- taulukko
-  [otsikko otsikko-jos-tyhja
-   laskutettu-teksti laskutettu-kentta
-   laskutetaan-teksti laskutetaan-kentta
-   yhteenveto-teksti kyseessa-kk-vali?
-   tiedot summa-fmt kentat-joiden-laskennan-indeksipuute-sotki
-   tyypin-maksuerat]
-  [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
-              :viimeinen-rivi-yhteenveto? true}
-   (rivi
-     {:otsikko otsikko :leveys 36}
-     (when kyseessa-kk-vali?
-       {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
-     (when kyseessa-kk-vali?
-       {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti}))])
-
 (def summa-fmt fmt/euro-opt)
 
+(defn- koosta-yhteenveto [tiedot]
+  (let [kaikki-yhteensa-laskutettu (apply + (map #(:kaikki_laskutettu %) tiedot))
+        kaikki-yhteensa-laskutetaan (apply + (map #(:kaikki_laskutetaan %) tiedot))]
+    (conj tiedot
+          {:kaikki-yhteensa-laskutettu kaikki-yhteensa-laskutettu
+           :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
+           :nimi "Kaikki toteutuneet kustannukset"})))
 
-;; TODO: laskentalogiikat täysin tekemättä
+(defn- koosta-tavoite [tiedot urakka-tavoite]
+  (let [kaikki-yhteensa (apply + (map #(if (not (nil? (:kaikki_laskutettu %)))
+                                         (:kaikki_laskutettu %)
+                                         0) tiedot))]
+    (conj tiedot
+          {:tavoite-hinta (:tavoitehinta urakka-tavoite)
+           :jaljella (- (:tavoitehinta urakka-tavoite) kaikki-yhteensa)
+           :nimi "Tavoite"})))
+
 (defn- hankinnat
   [tp-rivi kyseessa-kk-vali?]
   (rivi
-    "Hankinnat"
-    [:varillinen-teksti {:arvo (or 100 (summa-fmt nil))
-                         :fmt (when 100 :raha)}]
+    (str "Hankinnat")
+    [:varillinen-teksti {:arvo (:kokonaishintainen_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:kokonaishintainen_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or 100 (summa-fmt nil))
+      [:varillinen-teksti {:arvo (or (:kokonaishintainen_laskutetaan tp-rivi) (summa-fmt nil))
 
-                           :fmt (when 100 :raha)}])))
+                           :fmt (when (:kokonaishintainen_laskutetaan tp-rivi) :raha)}])))
 
-;; TODO: laskentalogiikat täysin tekemättä
 (defn- lisatyot
   [tp-rivi kyseessa-kk-vali?]
   (rivi
-    "Lisätyöt"
-    [:varillinen-teksti {:arvo (or 200 (summa-fmt nil))
-                         :fmt (when 200 :raha)}]
+    (str "Lisätyöt")
+    [:varillinen-teksti {:arvo (or (:lisatyot_laskutettu tp-rivi) (summa-fmt nil))
+                         :fmt (when (:lisatyot_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or 200 (summa-fmt nil))
-                           :fmt (when 200 :raha)}])))
+      [:varillinen-teksti {:arvo (or (:lisatyot_laskutetaan tp-rivi) (summa-fmt nil))
+                           :fmt (when (:lisatyot_laskutetaan tp-rivi) :raha)}])))
 
-;; TODO: laskentalogiikat täysin tekemättä
 (defn- sanktiot
   [tp-rivi kyseessa-kk-vali?]
   (rivi
-    "Sanktiot"
-    [:varillinen-teksti {:arvo (or 300 (summa-fmt nil))
-                         :fmt (when 300 :raha)}]
+    (str "Sanktiot")
+    [:varillinen-teksti {:arvo (or (:sakot_laskutettu tp-rivi) (summa-fmt nil))
+                         :fmt (when (:sakot_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or 300 (summa-fmt nil))
-                           :fmt (when 300 :raha)}])))
+      [:varillinen-teksti {:arvo (or (:sakot_laskutetaan tp-rivi) (summa-fmt nil))
+                           :fmt (when (:sakot_laskutetaan tp-rivi) :raha)}])))
 ;; TODO: laskentalogiikat täysin tekemättä
 (defn- suolasanktiot
   [tp-rivi kyseessa-kk-vali?]
   (rivi
-    "Suolasanktiot"
-    [:varillinen-teksti {:arvo (or 400 (summa-fmt nil))
-                         :fmt (when 400 :raha)}]
+    (str "Suolasanktiot")
+    [:varillinen-teksti {:arvo (or (:suolasakot_laskutettu tp-rivi) (summa-fmt nil))
+                         :fmt (when (:suolasakot_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or 400 (summa-fmt nil))
-                           :fmt (when 400 :raha)}])))
+      [:varillinen-teksti {:arvo (or (:suolasakot_laskutetaan tp-rivi) (summa-fmt nil))
+                           :fmt (when (:suolasakot_laskutetaan tp-rivi) :raha)}])))
 
-;; TODO: laskentalogiikat täysin tekemättä
+(defn- johto-hallintakorvaukset
+  [tp-rivi kyseessa-kk-vali?]
+  (rivi
+    (str "Johto- ja hallintakorvaukset")
+    [:varillinen-teksti {:arvo (:hoidonjohto_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:hoidonjohto_laskutettu tp-rivi) :raha)}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (:hoidonjohto_laskutetaan tp-rivi) (summa-fmt nil))
+
+                           :fmt (when (:hoidonjohto_laskutetaan tp-rivi) :raha)}])))
+
+(defn- erillishankinnat
+  [tp-rivi kyseessa-kk-vali?]
+  (rivi
+    (str "Erillishankinnat")
+    [:varillinen-teksti {:arvo (:hj_erillishankinnat_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:hj_erillishankinnat_laskutettu tp-rivi) :raha)}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (summa-fmt (:hj_erillishankinnat_laskutetaan tp-rivi)) (summa-fmt nil))
+
+                           :fmt (when (summa-fmt (:hj_erillishankinnat_laskutetaan tp-rivi)) :raha)}])))
+
+(defn- hj-palkkio
+  [tp-rivi kyseessa-kk-vali?]
+  (rivi
+    (str "HJ-palkkio")
+    [:varillinen-teksti {:arvo (:hj_palkkio_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:hj_palkkio_laskutettu tp-rivi) :raha)}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (summa-fmt (:hj_palkkio_laskutetaan tp-rivi)) (summa-fmt nil))
+
+                           :fmt (when (summa-fmt (:hj_palkkio_laskutetaan tp-rivi)) :raha)}])))
+
+(defn- bonukset
+  [tp-rivi kyseessa-kk-vali?]
+  (rivi
+    (str "Bonukset")
+    [:varillinen-teksti {:arvo (:bonukset_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:bonukset_laskutettu tp-rivi) :raha)}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (:bonukset_laskutetaan tp-rivi) (summa-fmt nil))
+
+                           :fmt (when (:bonukset_laskutetaan tp-rivi) :raha)}])))
+
 (defn- yhteensa
   [tp-rivi kyseessa-kk-vali?]
   (rivi
-    "Yhteensä"
-    [:varillinen-teksti {:arvo (or 1000 (summa-fmt nil))
-                         :fmt (when 1000 :raha)}]
+    (str "Yhteensä")
+    [:varillinen-teksti {:arvo (or (:kaikki_laskutettu tp-rivi) (summa-fmt nil))
+                         :fmt (when (:kaikki_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or 1000 (summa-fmt nil))
-                           :fmt (when 1000 :raha)}])))
+      [:varillinen-teksti {:arvo (or (:kaikki_laskutetaan tp-rivi) (summa-fmt nil))
+                           :fmt (when (:kaikki_laskutetaan tp-rivi) :raha)}])))
 
+(defn- kaikki-yhteensa [tp-rivi kyseessa-kk-vali?]
+  (rivi
+    (str "Toteutuneet kustannukset yhteensä")
+    [:varillinen-teksti {:arvo (or (:kaikki-yhteensa-laskutettu tp-rivi) (summa-fmt nil))
+                         :fmt (when (:kaikki-yhteensa-laskutettu tp-rivi) :raha)}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (:kaikki-yhteensa-laskutetaan tp-rivi) (summa-fmt nil))
+                           :fmt (when (:kaikki-yhteensa-laskutetaan tp-rivi) :raha)}])))
+(defn- tavoitehinta [tp-rivi kyseessa-kk-vali?]
+  (rivi
+    (str "Tavoite / Jäljellä")
+    [:varillinen-teksti {:arvo (or (:tavoite-hinta tp-rivi) (summa-fmt nil))
+                         :fmt (when (:tavoite-hinta tp-rivi) :raha)}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (:jaljella tp-rivi) (summa-fmt nil))
+                           :fmt (when (:jaljella tp-rivi) :raha)}])))
 
 (defn- taulukko [{:keys [tp-rivi laskutettu-teksti laskutetaan-teksti
                          kyseessa-kk-vali?]}]
-  (log/debug "jarno tprivi" tp-rivi)
   (let [rivit (into []
                     (remove nil?
-                          [(hankinnat tp-rivi kyseessa-kk-vali?)
-                           (lisatyot tp-rivi kyseessa-kk-vali?)
-                           (sanktiot tp-rivi kyseessa-kk-vali?)
-                           (when (= "Talvihoito" (:nimi tp-rivi))
-                             (suolasanktiot tp-rivi kyseessa-kk-vali?))
-                           (yhteensa tp-rivi kyseessa-kk-vali?)]))]
-    (log/debug "jarno rivit " rivit)
-    [:taulukko {:oikealle-tasattavat-kentat #{1 2}
-               :viimeinen-rivi-yhteenveto? true}
-    ;; otsikot
-    (rivi
-      {:otsikko (:nimi tp-rivi) :leveys 36}
-      {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
-      (when kyseessa-kk-vali?
-        {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
+                            (cond
+                              (= "MHU ja HJU hoidon johto" (:nimi tp-rivi))
+                              [(johto-hallintakorvaukset tp-rivi kyseessa-kk-vali?)
+                               (erillishankinnat tp-rivi kyseessa-kk-vali?)
+                               (hj-palkkio tp-rivi kyseessa-kk-vali?)
+                               (bonukset tp-rivi kyseessa-kk-vali?)
+                               (sanktiot tp-rivi kyseessa-kk-vali?)
+                               (yhteensa tp-rivi kyseessa-kk-vali?)]
+                              (= "Kaikki toteutuneet kustannukset" (:nimi tp-rivi))
+                              [(kaikki-yhteensa tp-rivi kyseessa-kk-vali?)]
+                              (= "Tavoite" (:nimi tp-rivi))
+                              [(tavoitehinta tp-rivi kyseessa-kk-vali?)]
+                              :default
+                              [(hankinnat tp-rivi kyseessa-kk-vali?)
+                               (lisatyot tp-rivi kyseessa-kk-vali?)
+                               (sanktiot tp-rivi kyseessa-kk-vali?)
+                               (when (= "Talvihoito" (:nimi tp-rivi))
+                                 (suolasanktiot tp-rivi kyseessa-kk-vali?))
+                               (yhteensa tp-rivi kyseessa-kk-vali?)])))]
 
-    ;; arvot
-    rivit]))
+    [:taulukko {:oikealle-tasattavat-kentat #{1 2}
+                :viimeinen-rivi-yhteenveto? true}
+     ;; otsikot
+     (rivi
+       {:otsikko (:nimi tp-rivi) :leveys 36}
+       {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
+       (when kyseessa-kk-vali?
+         {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
+
+     ;; arvot
+     rivit]))
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [;; Aikavälit ja otsikkotekstit
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-        kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-        kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
-        laskutettu-teksti (str "Hoito\u00ADkauden alusta")
+        laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
 
         ;; Konteksti ja urakkatiedot
@@ -225,6 +257,7 @@
                  db {:alkupvm alkupvm :loppupvm loppupvm
                      :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
                      :urakkatyyppi (name (:urakkatyyppi parametrit))})
+        urakka-tavoite (first (budjetti-q/hae-budjettitavoite db {:urakka urakka-id}))
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                                       :urakka-nimi (:nimi %)
                                                       :indeksi (:indeksi %)
@@ -240,11 +273,8 @@
 
         urakoiden-lahtotiedot (lyv-yhteiset/urakoiden-lahtotiedot laskutusyhteenvedot)
 
-        ;; Indeksitiedot
-        ainakin-yhdessa-urakassa-indeksit-kaytossa? (some #(:indeksi (val %)) urakoiden-lahtotiedot)
+        ;; Indeksitiedot - joita ei tarvita kuten laskutusyhteenvetoraportissa - mhu raporteissa vain sanktiot ja bonukset perustuvat indeksiin
         perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
-        kkn-indeksiarvo (when kyseessa-kk-vali?
-                          (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
 
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
@@ -258,25 +288,27 @@
                                                             %))
                                                kaikki-tuotteittain))
         tiedot (into []
-                     (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))]
+                     (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
+        tiedot (-> tiedot
+                   (koosta-yhteenveto)
+                   (koosta-tavoite urakka-tavoite))
+        _ (log/debug "tiedot :: " (pr-str tiedot))]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
      [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
      (when perusluku
        (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
-     (when (and ainakin-yhdessa-urakassa-indeksit-kaytossa? urakka-id)
-       (yleinen/kkn-indeksiarvo {:kyseessa-kk-vali? kyseessa-kk-vali?
-                                 :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo}))
-
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat
-         (for [tp-rivi tiedot]
-          (do
-            (taulukko {:tp-rivi tp-rivi
-                       :laskutettu-teksti laskutettu-teksti
-                       :laskutetaan-teksti laskutetaan-teksti
-                       :kyseessa-kk-vali? kyseessa-kk-vali?})))))
+         (for [tp-rivi tiedot
+               :let [yhteensa-otsikko (if (not (= (:nimi tp-rivi) "Tavoite")) laskutettu-teksti "Tavoitehinta")
+                     kuukausi-otsikko (if (not (= (:nimi tp-rivi) "Tavoite")) laskutetaan-teksti "Jäljellä")]]
+           (do
+             (taulukko {:tp-rivi tp-rivi
+                        :laskutettu-teksti yhteensa-otsikko
+                        :laskutetaan-teksti kuukausi-otsikko
+                        :kyseessa-kk-vali? kyseessa-kk-vali?})))))
 
 
      (when (and hallintayksikko-id (= 0 (count urakat)))
