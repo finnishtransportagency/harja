@@ -155,5 +155,4 @@
                                           (konv/sql-date alkupvm)
                                           (konv/sql-date loppupvm)
                                           urakka-id))))]
-    ;(log/debug (pr-str tulos))
     tulos))
