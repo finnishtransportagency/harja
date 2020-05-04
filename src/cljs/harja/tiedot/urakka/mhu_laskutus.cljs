@@ -52,12 +52,14 @@
 
 (defn parsi-summa [summa]
   (cond
+    (not (string? summa)) summa
     (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
         (string/replace "," ".")
         js/parseFloat)
-    (not (nil? summa)) summa
+    (not (or (str/blank? summa)
+             (nil? summa))) summa
     :else 0))
 
 (defn- osien-paivitys-fn
@@ -102,11 +104,18 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
+(defn kulu->lomake [lasku]
   (let [{suorittaja :suorittaja} lasku]
     (-> lasku
         (dissoc :suorittaja)
         (assoc :aliurakoitsija suorittaja)
+        (update :kohdistukset (fn [kohdistukset]
+                                (mapv #(assoc %
+                                         :lisatyo?
+                                         (if (= "lisatyo" (:maksueratyyppi %))
+                                           true
+                                           false))
+                                      kohdistukset)))
         (with-meta (tila/kulun-validointi-meta lasku)))))
 
 (defn- luo-paivitys-fn
@@ -139,7 +148,7 @@
                     :arvo "Määrä"
                     :class #{"col-xs-1"})})
 
-(defn- hae-avaimella-fn [verrattava haettava palautettava]
+(defn- hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
   (fn [kohde]
     (let [palautuksen-avain (or palautettava
                                 haettava)]
@@ -171,7 +180,7 @@
                    taulukko)]
     (loop [taulukko taulukko
            parillinen? true
-           [{:keys [erapaiva toimenpideinstanssi tehtavaryhma summa] :as rivi} & rivit] rivit]
+           [{:keys [erapaiva toimenpideinstanssi tehtavaryhma summa maksueratyyppi] :as rivi} & rivit] rivit]
       (if-not rivi
         taulukko
         (recur (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
@@ -190,15 +199,26 @@
                                {:class #{"col-xs-1"}}]
                               [osa/->Teksti
                                (keyword (gensym "maksuera-"))
-                               (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
+                               (str "HA" (some (hae-avaimella-fn {:verrattava   toimenpideinstanssi
+                                                                  :haettava     [:toimenpideinstanssi :id]
+                                                                  :palautettava :numero})
+                                               maksuerat))
                                {:class #{"col-xs-2"}}]
                               [osa/->Teksti
                                (keyword (gensym "toimenpideinstanssi-"))
-                               (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
+                               (str (some (hae-avaimella-fn {:verrattava   toimenpideinstanssi
+                                                             :haettava     :toimenpideinstanssi
+                                                             :palautettava :toimenpide})
+                                          toimenpiteet))
                                {:class #{"col-xs-4"}}]
                               [osa/->Teksti
                                (keyword (gensym "tehtavaryhma-"))
-                               (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
+                               (str (if (= maksueratyyppi "lisatyo")
+                                      "Lisätyö"
+                                      (some (hae-avaimella-fn {:verrattava   tehtavaryhma
+                                                               :haettava     :id
+                                                               :palautettava :tehtavaryhma})
+                                            tehtavaryhmat)))
                                {:class #{"col-xs-4"}}]
                               [osa/->Teksti
                                (keyword (gensym "summa-"))
@@ -438,11 +458,21 @@
                           tulos)))
           {:keys [tehtavaryhmat toimenpiteet]} (reduce
                                                  (fn [k asia]
-                                                   (update k
-                                                           (if (nil? (:tehtavaryhma asia))
-                                                             :toimenpiteet
-                                                             :tehtavaryhmat)
-                                                           conj asia))
+                                                   (let [toimenpide-rivi? (nil? (:tehtavaryhma asia))
+                                                         toimenpide-rivi-olemassa? (when toimenpide-rivi?
+                                                                                     (some #(and (= (:toimenpideinstanssi %)
+                                                                                                    (:toimenpideinstanssi asia))
+                                                                                                 (= (:toimenpide-id %)
+                                                                                                    (:toimenpide-id asia)))
+                                                                                           (:toimenpiteet k)))]
+                                                     (apply update k
+                                                            (if toimenpide-rivi?
+                                                              :toimenpiteet
+                                                              :tehtavaryhmat)
+                                                            (if (and toimenpide-rivi-olemassa?
+                                                                     toimenpide-rivi?)
+                                                              [identity]
+                                                              [conj asia]))))
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
@@ -562,7 +592,7 @@
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
-                                         (:summa %2)))
+                                         (parsi-summa (:summa %2))))
                                 0
                                 kohdistukset)
           {validoi-fn :validoi} (meta lomake)

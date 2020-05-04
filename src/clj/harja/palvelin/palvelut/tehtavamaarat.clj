@@ -61,7 +61,6 @@
                                              polut-arvot)))
             valitaso-id (luo-id-fn otsikko)
             paivitetty-idt (paivita-tarvittaessa idt otsikko valitaso-id)]
-        #_(println paivitetty-idt)
         (recur
           paivitetty-idt
           (-> tulos
