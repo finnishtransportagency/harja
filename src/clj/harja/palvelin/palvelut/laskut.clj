@@ -92,16 +92,18 @@
   "Selvittää laskuerittelyn maksueratyypin, jotta laskun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
   Yleensä tyyppi on kokonaishintainen. Jos tehtävä on Äkillinen hoitotyö, maksuerätyyppi on akillinen-hoitotyö.
   Jos tehtävä on "
-  [db tehtavaryhma-id tehtava-id]
+  [db tehtavaryhma-id tehtava-id lisatyo?]
   ;;TODO: tarkista ehdot, korjaa
-  (cond (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "Äkilliset hoitotytöt")
-            (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "ÄKILLISET HOITOTYÖT"))
-        "akilliset-hoitotyot"
-        (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "vahinkojen korja")
-            (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "VAHINKOJEN KORJAAMINEN"))
-        "muu"                                               ;; vahinkojen korjaukset
-        :default
-        "kokonaishintainen"))
+  (cond
+    (or lisatyo?) "lisatyo"
+    (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "Äkilliset hoitotytöt")
+        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "ÄKILLISET HOITOTYÖT"))
+    "akilliset-hoitotyot"
+    (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "vahinkojen korja")
+        (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "VAHINKOJEN KORJAAMINEN"))
+    "muu"                                                   ;; vahinkojen korjaukset
+    :default
+    "kokonaishintainen"))
 
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
@@ -111,10 +113,11 @@
                   :summa               (:summa laskurivi)
                   :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
                   :tehtavaryhma        (:tehtavaryhma laskurivi)
-                  :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
+                  :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi) (:lisatyo? laskurivi))
                   :alkupvm             (:suoritus-alku laskurivi)
                   :loppupvm            (:suoritus-loppu laskurivi)
-                  :kayttaja            (:id user)}]
+                  :kayttaja            (:id user)
+                  :lisatyon-lisatieto  (:lisatyon-lisatieto laskurivi)}]
     (if (nil? (:kohdistus-id laskurivi))
       (q/luo-laskun-kohdistus<! db (assoc yhteiset :lasku lasku-id
                                                    :rivi (:rivi laskurivi)))

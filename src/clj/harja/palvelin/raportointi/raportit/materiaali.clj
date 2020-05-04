@@ -1,16 +1,13 @@
 (ns harja.palvelin.raportointi.raportit.materiaali
   "Materiaaliraportti"
   (:require [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.tyokalut.merkkijono :as merkkijono]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
@@ -150,6 +147,7 @@
                                (for [m materiaaliotsikot]
                                 (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m)))))))]))))]
      (when-not (empty? toteumat)
-       [:teksti "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön."])]))
+       [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. "
+                     yleinen/materiaalitoteumien-paivitysinfo)])]))
 
     
