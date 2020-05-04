@@ -28,3 +28,6 @@ CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
   FROM pohjavesialue_alue pa
     CROSS JOIN urakat_alueet ua
   WHERE ST_CONTAINS(ua.alue, pa.alue);
+
+GRANT ALL PRIVILEGES ON pohjavesialueet_urakoittain TO harja;
+GRANT ALL PRIVILEGES ON pohjavesialueet_urakoittain TO flyway;
