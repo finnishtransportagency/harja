@@ -62,6 +62,8 @@ RUN pg_ctl start; \
     pg_ctl stop;
 
 USER root
+# Siivotaan
+RUN rm -rf /tmp
 
 ## Käynnistyskomento
 CMD sudo -iu postgres /usr/pgsql-9.5/bin/pg_ctl start -D "/var/lib/pgsql/data/9.5"; \
