@@ -147,7 +147,7 @@ DECLARE
     hj_palkkio_laskutetaan      NUMERIC;
     hj_palkkio_laskutettu_rivi  RECORD;
     hj_palkkio_laskutetaan_rivi RECORD;
-    tehtavaryhma_id          INTEGER;
+    tehtavaryhma_id             INTEGER;
 
 BEGIN
     -- Haetaan hoidon johdon yhteenvetoja
@@ -279,9 +279,6 @@ BEGIN
     -- Haetaan hoidon johdon yhteenvetoja
 
     RAISE NOTICE 'hoidon_johto_yhteenveto: toimenpidekoodi %' , toimenpide_koodi;
-    -- Haetaan urakan indeksiin liittyvät tiedot
-    perusluku := indeksilaskennan_perusluku(ur);
-
     hoidonjohto_laskutettu := 0.0;
     hoidonjohto_laskutetaan := 0.0;
 
@@ -516,6 +513,11 @@ BEGIN
     aikavali_vuosi := (SELECT EXTRACT(YEAR FROM aikavali_alkupvm) :: INTEGER);
     hk_alkuvuosi := (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER);
     hk_alkukuukausi := (SELECT EXTRACT(MONTH FROM hk_alkupvm) :: INTEGER);
+    indeksi_vuosi :=
+                (SELECT EXTRACT(YEAR FROM hk_alkupvm - INTERVAL '1 YEAR') :: INTEGER); -- Hoitourakkaa edeltävä vuosi. Esim. hoitourakka alkaa 2019 -> 2018
+    indeksi_kuukausi := 9;
+    -- Aina syyskuu
+
 
     -- Loopataan urakan toimenpideinstanssien läpi
     FOR t IN SELECT tpk2.nimi  AS nimi,
@@ -618,8 +620,7 @@ BEGIN
                                       indeksi,
                                       perintapvm,
                                       (SELECT korotettuna
-                                       FROM laske_kuukauden_indeksikorotus(hk_alkuvuosi::INTEGER,
-                                                                           hk_alkukuukausi::INTEGER, indeksinimi,
+                                       FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, indeksinimi,
                                                                            -maara, perusluku)) AS indeksikorotettuna
                                FROM sanktio s
                                WHERE s.toimenpideinstanssi = t.tpi
@@ -665,8 +666,8 @@ BEGIN
                         -- Lasketaan suolasakolle indeksikorotus
                         hoitokauden_laskettu_suolasakon_maara := (SELECT korotettuna
                                                                   FROM laske_kuukauden_indeksikorotus(
-                                                                          hk_alkuvuosi::INTEGER,
-                                                                          hk_alkukuukausi::INTEGER, indeksinimi,
+                                                                          indeksi_vuosi,
+                                                                          indeksi_kuukausi, indeksinimi,
                                                                           hoitokauden_laskettu_suolasakon_maara,
                                                                           perusluku));
                         RAISE NOTICE 'hoitokauden_laskettu_suolasakon_maara indeksikorotettuna: %', hoitokauden_laskettu_suolasakon_maara;
@@ -737,9 +738,8 @@ BEGIN
                     ELSEIF eki.tyyppi = 'lupausbonus' THEN
                         -- Bonus :: lupausbonus
                         SELECT *
-                        FROM laske_kuukauden_indeksikorotus(hk_alkuvuosi::INTEGER,
-                                                            hk_alkukuukausi::INTEGER,
-                                                            eki.indeksin_nimi, eki.rahasumma, perusluku)
+                        FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, eki.indeksin_nimi,
+                                                            eki.rahasumma, perusluku)
                         INTO lupaus_bon_rivi;
 
                         IF eki.pvm <= aikavali_loppupvm THEN
@@ -757,9 +757,8 @@ BEGIN
                     ELSEIF eki.tyyppi = 'tktt-bonus' THEN
                         -- Bonus :: tktt-bonus
                         SELECT *
-                        FROM laske_kuukauden_indeksikorotus(hk_alkuvuosi::INTEGER,
-                                                            hk_alkukuukausi::INTEGER,
-                                                            eki.indeksin_nimi, eki.rahasumma, perusluku)
+                        FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, eki.indeksin_nimi,
+                                                            eki.rahasumma, perusluku)
                         INTO tktt_bon_rivi;
 
                         IF eki.pvm <= aikavali_loppupvm THEN
@@ -809,8 +808,8 @@ BEGIN
                     ELSIF eki.tyyppi = 'muu' THEN
                         -- Bonus :: muu
                         SELECT *
-                        FROM laske_kuukauden_indeksikorotus(hk_alkuvuosi::INTEGER, hk_alkukuukausi::INTEGER,
-                                                            eki.indeksin_nimi, eki.rahasumma, perusluku)
+                        FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi, eki.indeksin_nimi,
+                                                            eki.rahasumma, perusluku)
                         INTO erilliskustannukset_rivi;
 
                         IF eki.pvm <= aikavali_loppupvm THEN
@@ -847,10 +846,9 @@ BEGIN
             -- muutkin hankinnat (ks. kohdistetut_laskutetaan alla).
             hoidonjohto_laskutettu := 0.0;
             hoidonjohto_laskutetaan := 0.0;
-            h_rivi := (select hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm,
-                                                      t.tuotekoodi,
-                                                      t.tpi, ur, perusluku, indeksinimi, hk_alkuvuosi::INTEGER,
-                                                      hk_alkukuukausi::INTEGER));
+            h_rivi := (select hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi,
+                                                      t.tpi, ur, perusluku, indeksinimi, indeksi_vuosi,
+                                                      indeksi_kuukausi));
 
             hoidonjohto_laskutettu := h_rivi.hoidonjohto_laskutettu;
             hoidonjohto_laskutetaan := h_rivi.hoidonjohto_laskutetaan;
@@ -910,17 +908,25 @@ BEGIN
             kaikki_laskutetaan := 0.0;
             kaikki_laskutettu := sakot_laskutettu +
                                  COALESCE(suolasakot_laskutettu, 0.0) +
-                                 bonukset_laskutettu + kokonaishintainen_laskutettu + lisatyot_laskutettu +
+                                 bonukset_laskutettu + hankinnat_laskutettu + lisatyot_laskutettu +
                                  hoidonjohto_laskutettu +
                                  erilliskustannukset_laskutettu + hj_palkkio_laskutettu +
                                  hj_erillishankinnat_laskutettu;
 
             kaikki_laskutetaan := sakot_laskutetaan +
                                   COALESCE(suolasakot_laskutetaan, 0.0) +
-                                  bonukset_laskutetaan + kokonaishintainen_laskutetaan + lisatyot_laskutetaan +
+                                  bonukset_laskutetaan + hankinnat_laskutetaan + lisatyot_laskutetaan +
                                   hoidonjohto_laskutetaan +
                                   erilliskustannukset_laskutetaan + hj_palkkio_laskutetaan +
                                   hj_erillishankinnat_laskutetaan;
+
+            -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio.
+            -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset
+            tavoitehintaiset_laskutettu := hankinnat_laskutettu + hoidonjohto_laskutettu + hj_erillishankinnat_laskutettu +
+                                           hj_palkkio_laskutettu;
+
+            tavoitehintaiset_laskutetaan := hankinnat_laskutetaan + hoidonjohto_laskutetaan +  hj_erillishankinnat_laskutetaan +
+                                            hj_palkkio_laskutetaan;
 
 
             RAISE NOTICE '
@@ -952,6 +958,9 @@ BEGIN
 
             RAISE NOTICE 'Kaikki laskutettu: %', kaikki_laskutettu;
             RAISE NOTICE 'Kaikki laskutetaan: %', kaikki_laskutetaan;
+
+            RAISE NOTICE 'Tavoitehintaiset laskutettu: %', tavoitehintaiset_laskutettu;
+            RAISE NOTICE 'Tavoitehintaiset laskutetaan: %', tavoitehintaiset_laskutetaan;
 
             RAISE NOTICE 'Suolasakko käytössä: %', suolasakko_kaytossa;
             RAISE NOTICE 'Läpmötila puuttuu: %', lampotila_puuttuu;

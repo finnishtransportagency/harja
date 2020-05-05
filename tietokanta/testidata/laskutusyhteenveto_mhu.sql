@@ -5,19 +5,25 @@
 DO
 $$
     DECLARE
-        kayttaja_id                       INTEGER;
-        sanktio_tyyppi_id                 INTEGER;
-        toimenpideinstanssi_talvihoito_id INTEGER;
-        urakka_id                         INTEGER;
-        sopimus_id                        INTEGER;
+        kayttaja_id                        INTEGER;
+        saktio_talvihoito                  INTEGER;
+        saktio_liikymp                     INTEGER;
+        toimenpideinstanssi_talvihoito_id  INTEGER;
+        toimenpideinstanssi_liikenneymp_id INTEGER;
+        urakka_id                          INTEGER;
+        sopimus_id                         INTEGER;
     BEGIN
         kayttaja_id := (select id from kayttaja where kayttajanimi = 'Integraatio');
-        sanktio_tyyppi_id :=
+        saktio_talvihoito :=
                 (SELECT id FROM sanktiotyyppi WHERE nimi = 'Talvihoito, päätiet (talvihoitoluokat Is ja I)');
+        saktio_liikymp := (SELECT id FROM sanktiotyyppi WHERE nimi = 'Liikenneympäristön hoito');
         toimenpideinstanssi_talvihoito_id := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP');
+        toimenpideinstanssi_liikenneymp_id :=
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP');
         urakka_id := (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024');
+        -- MHU Oulu sopimus
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS null);
-        --MHU Oulu sopimus
+
 
 
         -- Sanktiot -- Oulun MHU 2019-2024 - Talvihoito 10/2019
@@ -33,7 +39,7 @@ $$
         (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
         VALUES ('A'::sanktiolaji, 1000.77, '2019-10-12 06:06.37', 'MAKU 2015',
                 (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU T1'),
-                toimenpideinstanssi_talvihoito_id, sanktio_tyyppi_id, false, kayttaja_id);
+                toimenpideinstanssi_talvihoito_id, saktio_talvihoito, false, kayttaja_id);
 
 
         -- Sanktiot -- Oulun MHU 2019-2024 - Talvihoito 03/2020
@@ -50,7 +56,22 @@ $$
                              suorasanktio, luoja)
         VALUES ('A'::sanktiolaji, 100.20, '2020-03-17 06:06.37', 'MAKU 2015',
                 (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU T2'),
-                toimenpideinstanssi_talvihoito_id, sanktio_tyyppi_id, false, kayttaja_id);
+                toimenpideinstanssi_talvihoito_id, saktio_talvihoito, false, kayttaja_id);
+
+        -- Sanktiot -- Oulun MHU 2019-2024 - Liikenneympäristön hoito 10/2019
+        INSERT INTO laatupoikkeama
+        (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, tarkastuspiste, luoja, luotu, aika,
+         kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa,
+         tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
+        VALUES ('harja-ui'::lahde, 'Testikohde', 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+                'sanktio'::laatupoikkeaman_paatostyyppi, 'Ei toimi', 123,
+                kayttaja_id, NOW(), '2019-10-11 06:06.37', '2019-10-11 06:06.37', false, false, urakka_id,
+                'Sanktion sisältävä laatupoikkeama - MHU L1', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
+        INSERT INTO sanktio
+        (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
+        VALUES ('A'::sanktiolaji, 1000.77, '2019-10-12 06:06.37', 'MAKU 2015',
+                (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU L1'),
+                toimenpideinstanssi_liikenneymp_id, saktio_talvihoito, false, kayttaja_id);
 
         -- SUOLASAKOT
         -- Suolasakot :: Vaatii suolasakon, toteutuma_materiaalin, toteutuman sekä lämpötilat, toimiakseen.
@@ -98,7 +119,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- MHU hoidon johto
--- Johto - ja hallintokorvaukset
+-- Johto- ja hallintokorvaukset, HJ-palkkio
 DO
 $$
     DECLARE
@@ -108,6 +129,7 @@ $$
         kayttaja_id                   INTEGER;
         toimenpidekoodi_tyonjohto     INTEGER;
         tehtavaryhma_erillishankinnat INTEGER;
+        tehtavaryhma_hjpalkkiot       INTEGER;
         vuosi                         INTEGER;
         ennen_urakkaa                 BOOLEAN;
     BEGIN
@@ -117,6 +139,7 @@ $$
         kayttaja_id := (select id from kayttaja where kayttajanimi = 'Integraatio');
         toimenpidekoodi_tyonjohto := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
+        tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
         vuosi := (SELECT extract(year from NOW()));
         ennen_urakkaa := FALSE;
 
@@ -191,6 +214,17 @@ $$
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
                                            sopimus, luoja)
         VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi, sopimus_id,
+                kayttaja_id);
+
+        -- HJ-palkkio - 10/2019
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                                           sopimus, luoja)
+        VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_hjpalkkiot, tpi, sopimus_id,
+                kayttaja_id);
+        -- Erillishankinnat - 03/2020
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                                           sopimus, luoja)
+        VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_hjpalkkiot, tpi, sopimus_id,
                 kayttaja_id);
 
     END

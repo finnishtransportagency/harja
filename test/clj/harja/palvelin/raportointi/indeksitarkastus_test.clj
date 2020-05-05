@@ -52,7 +52,7 @@
                                               :loppupvm (pvm/->pvm "31.8.2015")
                                               :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Kaikki yhteensä")
-        laskutusyhteenveto (laskutusyhteenveto-yhteiset/hae-laskutusyhteenvedon-tiedot
+        laskutusyhteenveto (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                              (:db jarjestelma)
                              +kayttaja-jvh+
                              {:urakka-id @oulun-alueurakan-2014-2019-id

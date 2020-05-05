@@ -43,10 +43,10 @@
     "23100" 1 ; Talvihoito ensimmäisenä
     "23110" 2 ; Liikenneympäristön hoito toisena
     "23120" 3 ; Soratien hoito kolmantena
-    "23150" 4 ; MHU ja HJU hoidon johto
-    "20100" 5 ; Päällyste
-    "20190" 6 ; MHU Ylläpito
-    "14300" 7 ; MHU Korvausinvestointi
+    "20100" 4 ; Päällyste
+    "20190" 5 ; MHU Ylläpito
+    "14300" 6 ; MHU Korvausinvestointi
+    "23150" 7 ; MHU ja HJU hoidon johto
     ;; kaikki muut sen jälkeen
     8))
 
