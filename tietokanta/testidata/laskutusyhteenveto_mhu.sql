@@ -75,40 +75,26 @@ $$
 
         -- SUOLASAKOT
         -- Suolasakot :: Vaatii suolasakon, toteutuma_materiaalin, toteutuman sekä lämpötilat, toimiakseen.
-        -- Lisätään hatusta vedetyt lämpötilat 10/2019 ja 03/2020 kuukausille
+        -- Lisätään hatusta vedetyt lämpötilat 10/2019 ja 09/2020 kuukausille
         INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila,
                                 pitka_keskilampotila_vanha)
         VALUES (urakka_id,
                 '2019-10-01', '2020-09-30', -3.5, -5.6, -5.6);
 
-
-        -- Suolasakko -- Oulun MHU 2019-2024 - Talvihoito 10/2019
+        -- Suolasakko tarkistetaan aina talvihoitokauden jälkeen. Joten lisää sakko kesäkuulle
+        -- Suolasakko -- Oulun MHU 2019-2024 - Talvihoidon jälkeen
         INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, talvisuolaraja, luoja,
                                 luotu)
-        VALUES (3.0, 2019, 10, 'MAKU 2015', urakka_id, 800, kayttaja_id, NOW());
+        VALUES (3.0, 2019, 6, 'MAKU 2015', urakka_id, 800, kayttaja_id, NOW());
         -- Suolauksen toteuma (materiaalitoteuma)
         INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi,
                              suorittajan_ytunnus, lisatieto)
-        VALUES ('harja-ui'::lahde, urakka_id, sopimus_id, NOW(), '2019-10-01 13:00:00+02', '2019-10-31 13:00:00+02',
-                'kokonaishintainen'::toteumatyyppi, 'Sami Suolaaja', '4153724-6', 'Sami-Suolaaja-2019');
+        VALUES ('harja-ui'::lahde, urakka_id, sopimus_id, NOW(), '2019-10-01 13:00:00+02', '2020-04-30 13:00:00+02',
+                'kokonaishintainen'::toteumatyyppi, 'Sami Suolaaja', '4153724-6', 'Sami-Suolaaja-2020');
 
         INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
-        VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2019'), NOW(),
+        VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(),
                 (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300);
-
-
-        -- Ilmeisesit suolasakkoja voi olla vain yksi per talvi, joten tämä nyt kommenteissa
-        -- Suolasakko -- Oulun MHU 2019-2024 - Talvihoito 03/2020
-        --INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, talvisuolaraja, luoja, luotu)
-        --VALUES (7.0, 2019, 3, 'MAKU 2015', urakka_id, 800, kayttaja_id, NOW());
-        -- Suolauksen toteuma (materiaalitoteuma)
-        --INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
-        --VALUES ('harja-ui'::lahde, urakka_id, sopimus_id, NOW(), '2020-03-01 13:00:00+02', '2020-03-31 13:00:00+02',
-        --       'kokonaishintainen'::toteumatyyppi, 'Sami Suolaaja', '4153724-6', 'Sami-Suolaaja-2020');
-
-        --INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
-        --VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(),
-        --        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1500);
 
 
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)

@@ -642,6 +642,39 @@ BEGIN
 
                 END LOOP;
 
+            -- Onko suolasakko käytössä urakassa
+            IF (SELECT count(*)
+                FROM suolasakko
+                WHERE urakka = ur
+                  AND kaytossa
+                  AND hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER)) > 0
+            THEN
+                suolasakko_kaytossa = TRUE;
+            ELSE
+                suolasakko_kaytossa = FALSE;
+            END IF;
+
+            -- Ovatko suolasakon tarvitsemat lämpötilat kannassa
+            SELECT l.*
+            FROM "lampotilat" l
+            WHERE l.urakka = ur
+              AND l.alkupvm = hk_alkupvm
+              AND l.loppupvm = hk_loppupvm
+            INTO lampotilat_rivi;
+
+            RAISE NOTICE 'Urakalle % Lämpötilat: % ',ur, lampotilat_rivi;
+
+            IF (lampotilat_rivi IS NULL OR lampotilat_rivi.keskilampotila IS NULL OR
+                lampotilat_rivi.pitka_keskilampotila IS NULL)
+            THEN
+                RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', ur, hk_alkupvm, hk_loppupvm;
+                RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat_rivi.keskilampotila, lampotilat_rivi.pitka_keskilampotila;
+                lampotila_puuttuu = TRUE;
+            ELSE
+                lampotila_puuttuu = FALSE;
+            END IF;
+
+
             suolasakot_laskutettu := 0.0;
             suolasakot_laskutetaan := 0.0;
 
@@ -669,19 +702,17 @@ BEGIN
                         RAISE NOTICE 'hoitokauden_laskettu_suolasakon_maara indeksikorotettuna: %', hoitokauden_laskettu_suolasakon_maara;
 
                         -- Jos suolasakko ei ole käytössä, ei edetä
-                        IF (hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi IS NULL AND
-                            hoitokauden_suolasakko_rivi.maksukuukausi IS NULL) THEN
+                        IF (suolasakko_kaytossa = FALSE) THEN
                             RAISE NOTICE 'Suolasakko ei käytössä annetulla aikavälillä urakassa %, aikavali_alkupvm: %, hoitokauden_suolasakko_rivi: %', ur, aikavali_alkupvm, hoitokauden_suolasakko_rivi;
                             -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
                         ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi < aikavali_kuukausi AND aikavali_kuukausi < 10)
-                            OR (hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi) THEN
-                            RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
+                            OR (hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi AND hoitokauden_suolasakko_rivi.maksukuukausi < aikavali_kuukausi) THEN
+                            RAISE NOTICE 'Suolasakko (summa: % ) on laskutettu aiemmin hoitokaudella kuukausi: %', hoitokauden_laskettu_suolasakon_maara, hoitokauden_suolasakko_rivi.maksukuukausi;
                             suolasakot_laskutettu := hoitokauden_laskettu_suolasakon_maara;
                             -- Jos valittu yksittäinen kuukausi on maksukuukausi TAI jos kyseessä koko hoitokauden raportti (poikkeustapaus)
                         ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi = aikavali_kuukausi AND
-                               hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi = aikavali_vuosi)
-                            OR (aikavali_alkupvm = hk_alkupvm AND aikavali_loppupvm = hk_loppupvm) THEN
-                            RAISE NOTICE 'Suolasakko laskutetaan tässä kuussa % tai kyseessä koko hoitokauden LYV-raportti.', hoitokauden_suolasakko_rivi.maksukuukausi;
+                               hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi < aikavali_vuosi) THEN
+                            RAISE NOTICE 'Suolasakko (summa: %) laskutetaan tässä kuussa: % ',hoitokauden_laskettu_suolasakon_maara, hoitokauden_suolasakko_rivi.maksukuukausi;
                             suolasakot_laskutetaan := hoitokauden_laskettu_suolasakon_maara;
                         ELSE
                             RAISE NOTICE 'Suolasakkoa ei vielä laskutettu, maksukuukauden arvo: %', hoitokauden_suolasakko_rivi.maksukuukausi;
@@ -860,37 +891,6 @@ BEGIN
             hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
             hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 
-            -- Onko suolasakko käytössä urakassa
-            IF (SELECT count(*)
-                FROM suolasakko
-                WHERE urakka = ur
-                  AND kaytossa
-                  AND hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER)) > 0
-            THEN
-                suolasakko_kaytossa = TRUE;
-            ELSE
-                suolasakko_kaytossa = FALSE;
-            END IF;
-
-            -- Ovatko suolasakon tarvitsemat lämpötilat kannassa
-            SELECT l.*
-            FROM "lampotilat" l
-            WHERE l.urakka = ur
-              AND l.alkupvm = hk_alkupvm
-              AND l.loppupvm = hk_loppupvm
-            INTO lampotilat_rivi;
-
-            RAISE NOTICE 'Urakalle % Lämpötilat: % ',ur, lampotilat_rivi;
-
-            IF (lampotilat_rivi IS NULL OR lampotilat_rivi.keskilampotila IS NULL OR
-                lampotilat_rivi.pitka_keskilampotila IS NULL)
-            THEN
-                RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', ur, hk_alkupvm, hk_loppupvm;
-                RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat_rivi.keskilampotila, lampotilat_rivi.pitka_keskilampotila;
-                lampotila_puuttuu = TRUE;
-            ELSE
-                lampotila_puuttuu = FALSE;
-            END IF;
 
             -- Kustannusten kokonaissummat
             kaikki_laskutettu := 0.0;
