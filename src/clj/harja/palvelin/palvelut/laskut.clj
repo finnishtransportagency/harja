@@ -10,7 +10,11 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tyokalut.big :as big]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
-            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.pvm :as pvm]
+            [harja.kyselyt.konversio :as konversio]))
 
 
 (defn kasittele-suorittaja
@@ -205,9 +209,96 @@
   (hae-laskuerittely db user {:id lasku-id}))
 
 (defn- kulu-pdf
-  [db user params]
-  (println "Kulud")
-  (kpdf/kulu-pdf))
+  [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (println "Kulud" urakka-id)
+  (let [kulut (sort-by :erapaiva
+                       (q/hae-laskuerittelyt-tietoineen-vientiin db {:urakka   urakka-id
+                                                                     :alkupvm  (or alkupvm
+                                                                                   (konversio/sql-timestamp (pvm/->pvm "01.01.1990")))
+                                                                     :loppupvm (or
+                                                                                 loppupvm
+                                                                                 (konversio/sql-timestamp (pvm/nyt)))}))]
+    (println kulut)
+    (kpdf/kulu-pdf kulut)))
+
+(defn- kulu-excel
+  [db workbook user {:keys [urakka-id alkupvm loppupvm]}]
+  (println "EXCEL" workbook)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (println "Kuludexcel" urakka-id)
+  (let [kulut (sort-by :erapaiva
+                       (q/hae-laskuerittelyt-tietoineen-vientiin db {:urakka   urakka-id
+                                                                     :alkupvm  (or alkupvm
+                                                                                   (konversio/sql-timestamp (pvm/->pvm "01.01.1990")))
+                                                                     :loppupvm (or
+                                                                                 loppupvm
+                                                                                 (konversio/sql-timestamp (pvm/nyt)))}))
+        luo-sarakkeet (fn [& otsikot]
+                        (mapv #(hash-map :otsikko %) otsikot))
+        luo-data (fn [rivi]
+                   [(-> rivi
+                        :erapaiva
+                        pvm/pvm
+                        str)
+                    (:toimenpide rivi)
+                    (or (:tehtavaryhma rivi)
+                        "Lisätyö")
+                    [:arvo-ja-yksikko {:arvo (:summa rivi) :yksikko "€" :fmt? false}]])
+        optiot {:sheet-nimi "Kulu Excel"
+                :otsikko    "Hurlumhei"}
+        sarakkeet (luo-sarakkeet "Eräpäivä" "Toimenpide" "Tehtäväryhmä" "Summa")
+        taulukko [:taulukko optiot sarakkeet (mapv luo-data kulut)]]
+    (excel/muodosta-excel [:raportti {:nimi "Blah" :orientaatio :landscape} taulukko] workbook)))
+
+;[:raportti
+; {:nimi Sanktioiden yhteenveto, :orientaatio :landscape}
+; [:taulukko
+;  {:otsikko Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.10.2019 - 30.09.2020,
+;   :oikealle-tasattavat-kentat #{1 3 2},
+;   :sheet-nimi Sanktioiden yhteenveto}
+;  [{:otsikko , :leveys 12}
+;   {:otsikko Aktiivinen Kajaani Testi, :leveys 15, :fmt :raha}
+;   {:otsikko Aktiivinen Oulu Testi, :leveys 15, :fmt :raha}
+;   {:otsikko Yh­teen­sä, :leveys 15, :fmt :raha}]
+;  [{:otsikko Talvihoito}
+;   [Muistutukset
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]]
+;   [Sakko A 0 0 0]
+;   [- Päätiet 0 0 0]
+;   [- Muut tiet 0 0 0]
+;   [Sakko B 0 0 0]
+;   [- Päätiet 0 0 0]
+;   [- Muut tiet 0 0 0]
+;   [Talvihoito, sakot yht. 0 0 0]
+;   [Talvihoito, indeksit yht. 0 0 0]
+;   {:otsikko Muut tuotteet}
+;   [Muistutukset
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]]
+;   [Sakko A 0 0 0]
+;   [- Liikenneymp. hoito 0 0 0]
+;   [- Sorateiden hoito 0 0 0]
+;   [Sakko B 0 0 0]
+;   [- Liikenneymp. hoito 0 0 0]
+;   [- Sorateiden hoito 0 0 0]
+;   [Muut tuotteet, sakot yht. 0 0 0]
+;   [Muut tuotteet, indeksit yht. 0 0 0]
+;   {:otsikko Ryhmä C}
+;   [Ryhmä C, sakot yht. 0 0 0]
+;   [Ryhmä C, indeksit yht. 0 0 0]
+;   {:otsikko Yhteensä}
+;   [Muistutukset yht.
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
+;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]]
+;   [Indeksit yht. 0 0 0]
+;   [Kaikki sakot yht. 0 0 0]
+;   [Kaikki yht. 0 0 0]]
+;  ]]
 
 (defn- luo-pdf
   [pdf user hakuehdot]
@@ -220,7 +311,8 @@
   (start [this]
     (let [db (:db this)
           http (:http-palvelin this)
-          pdf (:pdf-vienti this)]
+          pdf (:pdf-vienti this)
+          excel (:excel-vienti this)]
       (julkaise-palvelu http :laskut
                         (fn [user hakuehdot]
                           (hae-urakan-laskut db user hakuehdot)))
@@ -250,6 +342,8 @@
                           (luo-pdf pdf user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
+      (when excel
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :kulut (partial #'kulu-excel db)))
       this))
 
   (stop [this]
@@ -264,4 +358,6 @@
                      :luo-pdf-kuluista)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
+    (when (:excel-vienti this)
+      (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :kulut))
     this))

@@ -25,9 +25,6 @@
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
 
-(defrecord LuoDokumentti [optiot])
-(defrecord DokumenttiLuotu [dokumentti])
-
 (defrecord LiiteLisatty [liite])
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
 
@@ -336,21 +333,6 @@
     nro-mukaan))
 
 (extend-protocol tuck/Event
-  DokumenttiLuotu
-  (process-event [{:keys [dokumentti]} app]
-
-    app)
-  LuoDokumentti
-  (process-event [{{:keys [tyyppi]} :optiot} app]
-    (let [rajapinta (case tyyppi
-                      :pdf :luo-pdf-kuluista
-                      :excel :luo-excel-kuluista)]
-      (tuck-apurit/post! rajapinta
-                         {}
-                         {:onnistui           ->DokumenttiLuotu
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :paasta-virhe-lapi? true}))
-    app)
   NakymastaPoistuttiin
   (process-event [_ app]
     (resetoi-kulunakyma))

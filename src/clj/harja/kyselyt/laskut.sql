@@ -24,6 +24,23 @@ select liite.id               AS "liite-id",
        join liite liite on ll.liite = liite.id
        where l.id = :lasku-id;
 
+-- name: hae-laskuerittelyt-tietoineen-vientiin
+-- Hakee PDF/Excel -generointiin tarvittavien tietojen kanssa urakan kulut
+select
+       tpi.nimi as "toimenpide",
+       tr.nimi as "tehtavaryhma",
+       lk.summa,
+       me.numero as "maksuera",
+       l.erapaiva
+from lasku l
+       join lasku_kohdistus lk on l.id = lk.lasku
+       join toimenpideinstanssi tpi on lk.toimenpideinstanssi = tpi.id
+       join maksuera me on lk.toimenpideinstanssi = me.toimenpideinstanssi
+       left join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+where l.urakka = 36
+    and l.erapaiva between :alkupvm ::date and :loppupvm ::date
+    and l.poistettu is not true;
+
 -- name: hae-kaikki-urakan-laskuerittelyt
 -- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
 SELECT l.id                   as "id",

@@ -132,26 +132,26 @@
 
 (defn tehtavaryhma-dropdown
   [{:keys [paivitys-fn tehtavaryhma indeksi tehtavaryhma-meta tehtavaryhmat disabled]}]
-  [yleiset/livi-pudotusvalikko {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? tehtavaryhma-meta))
-                                :disabled     disabled
-                                :nayta-ryhmat [:ei-hallinnollinen :hallinnollinen]
-                                :ryhmittely   #(cond
-                                                 (boolean (re-find #"oidonjohtopalkkio" (:tehtavaryhma %))) :hallinnollinen
-                                                 (boolean (re-find #"rillishankinnat" (:tehtavaryhma %))) :hallinnollinen
-                                                 (boolean (re-find #"ohto- ja hallintokorvaus" (:tehtavaryhma %))) :hallinnollinen
-                                                 :else :ei-hallinnollinen)
+  [yleiset/livi-pudotusvalikko {:virhe?         (not (validi-ei-tarkistettu-tai-ei-koskettu? tehtavaryhma-meta))
+                                :disabled       disabled
+                                :nayta-ryhmat   [:ei-hallinnollinen :hallinnollinen]
+                                :ryhmittely     #(cond
+                                                   (boolean (re-find #"oidonjohtopalkkio" (:tehtavaryhma %))) :hallinnollinen
+                                                   (boolean (re-find #"rillishankinnat" (:tehtavaryhma %))) :hallinnollinen
+                                                   (boolean (re-find #"ohto- ja hallintokorvaus" (:tehtavaryhma %))) :hallinnollinen
+                                                   :else :ei-hallinnollinen)
                                 :ryhman-otsikko (fn [ryhma]
                                                   (case ryhma
                                                     :hallinnollinen "Hallinnollisiin toimenpiteisiin liittyviä kuluja saa syöttää manuaalisesti vain poikkeustilanteessa:"
                                                     :ei-hallinnollinen "Valitse:"))
-                                :vayla-tyyli? true
-                                :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
-                                :valitse-fn   #(do
-                                                 (paivitys-fn
-                                                   [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
-                                                 (paivitys-fn {:validoitava? true}
-                                                              [:kohdistukset indeksi :tehtavaryhma] (:id %)))
-                                :format-fn    #(get % :tehtavaryhma)}
+                                :vayla-tyyli?   true
+                                :valinta        (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
+                                :valitse-fn     #(do
+                                                   (paivitys-fn
+                                                     [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
+                                                   (paivitys-fn {:validoitava? true}
+                                                                [:kohdistukset indeksi :tehtavaryhma] (:id %)))
+                                :format-fn      #(get % :tehtavaryhma)}
    tehtavaryhmat])
 
 (defn yksittainen-kohdistus
@@ -528,9 +528,9 @@
      [:<>
       [:div.flex-row
        (str "Tehtäväryhmä: "
-                         (some #(when (= (:tehtavaryhma k) (:id %))
-                                  (:tehtavaryhma %))
-                               tehtavaryhmat))]
+            (some #(when (= (:tehtavaryhma k) (:id %))
+                     (:tehtavaryhma %))
+                  tehtavaryhmat))]
       [:div.flex-row (str "Määrä: "
                           (:summa k))]])
    [:div.flex-row (str "Koontilaskun kuukausi: "
@@ -551,12 +551,12 @@
      (fn []
        (modal/piilota!))
      {:vayla-tyyli? true
-      :luokka "suuri"}]
+      :luokka       "suuri"}]
     [napit/poista
      "Poista tiedot"
      varmistus-fn
      {:vayla-tyyli? true
-      :luokka "suuri"}]]])
+      :luokka       "suuri"}]]])
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -665,14 +665,24 @@
               {:vayla-tyyli? true
                :disabled     true
                :luokka       "suuri"}]
-           ;^{:key "raporttipdf"}
-           #_[:form {:target "_blank" :method "POST"
-                     :action (k/pdf-url :kulut)}
-              [:input {:type  "hidden" :name "parametrit"
-                       :value (t/clj->transit {})}]
-              [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
-               {:type         "submit"
-                :vayla-tyyli? true}]]
+           ^{:key "raporttixls"}
+           [:form {:target "_blank" :method "POST"
+                   :action (k/excel-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)})}]
+            [napit/yleinen-toissijainen "Tallenna Excel" #(loki/log "Plop")
+             {:type         "submit"
+              :luokka       "suuri"
+              :vayla-tyyli? true}]]
+           ^{:key "raporttipdf"}
+           [:form {:target "_blank" :method "POST"
+                   :action (k/pdf-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)})}]
+            [napit/yleinen-toissijainen "Tallenna PDF" #(loki/log "Plop")
+             {:type         "submit"
+              :luokka       "suuri"
+              :vayla-tyyli? true}]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))

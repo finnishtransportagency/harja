@@ -12,7 +12,8 @@
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
@@ -165,6 +166,11 @@
              :on-click  #(do
                            (.preventDefault %)
                            (.stopPropagation %)
+                           (when (= "submit" type)
+                             (-> %
+                                 .-target
+                                 .-parentNode
+                                 .requestSubmit))
                            (apply toiminto toiminto-args))}
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))
