@@ -239,12 +239,12 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn "Todennusheader oam_remote_user puuttui kokonaan")
+          (log/error "Todennusheader oam_remote_user puuttui kokonaan. " headerit)
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
-            (log/warn "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
+            (log/error "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
             (throw+ todennusvirhe)))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
