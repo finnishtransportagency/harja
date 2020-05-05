@@ -28,9 +28,7 @@
   (ilmoitukset/paivita-lahettaja-ilmoitukselle!
     db (:etunimi lahettaja)
     (:sukunimi lahettaja)
-    (if (:tyopuhelin lahettaja)
-      (:tyopuhelin lahettaja)
-      (:matkapuhelin lahettaja))
+    (:puhelinnumero lahettaja)
     (:sahkoposti lahettaja)
     id))
 
