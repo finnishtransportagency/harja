@@ -57,7 +57,7 @@
 (defn- laskettavat-kentat [rivi konteksti]
   (let [kustannusten-kentat (into []
                                   (apply concat [(lyv-yhteiset/kustannuslajin-kaikki-kentat "lisatyot")
-                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "kokonaishintainen")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hankinnat")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "sakot")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hoidonjohto")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_erillishankinnat")
@@ -95,12 +95,12 @@
   [tp-rivi kyseessa-kk-vali?]
   (rivi
     (str "Hankinnat")
-    [:varillinen-teksti {:arvo (:kokonaishintainen_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
-                         :fmt (when (:kokonaishintainen_laskutettu tp-rivi) :raha)}]
+    [:varillinen-teksti {:arvo (:hankinnat_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:hankinnat_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (:kokonaishintainen_laskutetaan tp-rivi) (summa-fmt nil))
+      [:varillinen-teksti {:arvo (or (:hankinnat_laskutetaan tp-rivi) (summa-fmt nil))
 
-                           :fmt (when (:kokonaishintainen_laskutetaan tp-rivi) :raha)}])))
+                           :fmt (when (:hankinnat_laskutetaan tp-rivi) :raha)}])))
 
 (defn- lisatyot
   [tp-rivi kyseessa-kk-vali?]

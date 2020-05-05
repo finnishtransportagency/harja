@@ -398,10 +398,12 @@ AS
     perusluku                       NUMERIC,
     kaikki_laskutettu               NUMERIC,
     kaikki_laskutetaan              NUMERIC,
-    lisatyot_laskutettu              NUMERIC,
-    lisatyot_laskutetaan             NUMERIC,
-    kokonaishintainen_laskutettu    NUMERIC,
-    kokonaishintainen_laskutetaan   NUMERIC,
+    tavoitehintaiset_laskutettu     NUMERIC,
+    tavoitehintaiset_laskutetaan    NUMERIC,
+    lisatyot_laskutettu             NUMERIC,
+    lisatyot_laskutetaan            NUMERIC,
+    hankinnat_laskutettu            NUMERIC,
+    hankinnat_laskutetaan           NUMERIC,
     sakot_laskutettu                NUMERIC,
     sakot_laskutetaan               NUMERIC,
     suolasakot_laskutettu           NUMERIC,
@@ -430,74 +432,77 @@ CREATE OR REPLACE FUNCTION laskutusyhteenveto_teiden_hoito(hk_alkupvm date, hk_l
 as
 $$
 DECLARE
-    t                                               RECORD;
-    kaikki_laskutettu                               NUMERIC;
-    kaikki_laskutetaan                              NUMERIC;
-    lisatyot_laskutettu                             NUMERIC;
-    lisatyot_laskutetaan                            NUMERIC;
-    lisatyot_rivi                                   RECORD;
-    lisatyo                                         RECORD;
-    kokonaishintainen_laskutettu                    NUMERIC;
-    kokonaishintainen_laskutetaan                   NUMERIC;
-    kokonaishintainen_i                             RECORD;
-    kokonaishintainen_rivi                          RECORD;
+    t                                     RECORD;
+    kaikki_laskutettu                     NUMERIC;
+    kaikki_laskutetaan                    NUMERIC;
+    tavoitehintaiset_laskutettu           NUMERIC;
+    tavoitehintaiset_laskutetaan          NUMERIC;
+    lisatyot_laskutettu                   NUMERIC;
+    lisatyot_laskutetaan                  NUMERIC;
+    lisatyot_rivi                         RECORD;
+    lisatyo                               RECORD;
+    hankinnat_laskutettu                  NUMERIC;
+    hankinnat_laskutetaan                 NUMERIC;
+    hankinnat_i                           RECORD;
+    hankinnat_rivi                        RECORD;
 
     -- Sakot
-    sakot_laskutettu                                NUMERIC;
-    sakot_rivi                                      RECORD;
-    sakot_laskutetaan                               NUMERIC;
-    sanktiorivi                                     RECORD;
-    suolasakot_laskutettu                           NUMERIC;
-    suolasakot_laskutetaan                          NUMERIC;
-    hoitokauden_suolasakko_rivi                     RECORD;
-    hoitokauden_laskettu_suolasakon_maara           NUMERIC;
+    sakot_laskutettu                      NUMERIC;
+    sakot_laskutetaan                     NUMERIC;
+    sanktiorivi                           RECORD;
+    suolasakot_laskutettu                 NUMERIC;
+    suolasakot_laskutetaan                NUMERIC;
+    hoitokauden_suolasakko_rivi           RECORD;
+    hoitokauden_laskettu_suolasakon_maara NUMERIC;
 
     -- Hoidon johto
-    h_rivi                                          RECORD;
-    hj_palkkio_rivi                                 RECORD;
+    h_rivi                                RECORD;
+    hj_palkkio_rivi                       RECORD;
     -- Hoidon johto :: Bonukset
-    alihank_bon_laskutettu                          NUMERIC;
-    alihank_bon_laskutetaan                         NUMERIC;
-    lupaus_bon_laskutettu                           NUMERIC;
-    lupaus_bon_laskutetaan                          NUMERIC;
-    lupaus_bon_rivi                                 RECORD;
-    tavoitepalkk_bon_laskutettu                     NUMERIC;
-    tavoitepalkk_bon_laskutetaan                    NUMERIC;
-    tktt_bon_laskutettu                             NUMERIC;
-    tktt_bon_laskutetaan                            NUMERIC;
-    tktt_bon_rivi                                   RECORD;
-    asiakas_tyyt_bon_laskutettu                     NUMERIC;
-    asiakas_tyyt_bon_laskutetaan                    NUMERIC;
-    asiakas_tyyt_bon_rivi                           RECORD;
-    bonukset_laskutettu                             NUMERIC;
-    bonukset_laskutetaan                            NUMERIC;
+    alihank_bon_laskutettu                NUMERIC;
+    alihank_bon_laskutetaan               NUMERIC;
+    lupaus_bon_laskutettu                 NUMERIC;
+    lupaus_bon_laskutetaan                NUMERIC;
+    lupaus_bon_rivi                       RECORD;
+    tavoitepalkk_bon_laskutettu           NUMERIC;
+    tavoitepalkk_bon_laskutetaan          NUMERIC;
+    tktt_bon_laskutettu                   NUMERIC;
+    tktt_bon_laskutetaan                  NUMERIC;
+    tktt_bon_rivi                         RECORD;
+    asiakas_tyyt_bon_laskutettu           NUMERIC;
+    asiakas_tyyt_bon_laskutetaan          NUMERIC;
+    asiakas_tyyt_bon_rivi                 RECORD;
+    bonukset_laskutettu                   NUMERIC;
+    bonukset_laskutetaan                  NUMERIC;
 
     -- Hoidon johto :: Erilliskustannukset
-    erilliskustannukset_laskutettu                  NUMERIC;
-    erilliskustannukset_laskutetaan                 NUMERIC;
-    erilliskustannukset_rivi                        RECORD;
-    eki                                             RECORD;
-    hoidonjohto_laskutettu                          NUMERIC;
-    hoidonjohto_laskutetaan                         NUMERIC;
+    erilliskustannukset_laskutettu        NUMERIC;
+    erilliskustannukset_laskutetaan       NUMERIC;
+    erilliskustannukset_rivi              RECORD;
+    eki                                   RECORD;
+    hoidonjohto_laskutettu                NUMERIC;
+    hoidonjohto_laskutetaan               NUMERIC;
     -- Hoidonjohto - HJ-palkkio
-    hj_palkkio_laskutettu                           NUMERIC;
-    hj_palkkio_laskutetaan                          NUMERIC;
+    hj_palkkio_laskutettu                 NUMERIC;
+    hj_palkkio_laskutetaan                NUMERIC;
     -- Hoidonjohto - Erillihankinnat
-    hj_erillishankinnat_laskutettu                  NUMERIC;
-    hj_erillishankinnat_laskutetaan                 NUMERIC;
-    hj_erillishankinnat_rivi                        RECORD;
+    hj_erillishankinnat_laskutettu        NUMERIC;
+    hj_erillishankinnat_laskutetaan       NUMERIC;
+    hj_erillishankinnat_rivi              RECORD;
 
     -- Asetuksia
-    suolasakko_kaytossa                             BOOLEAN;
-    lampotilat_rivi                                 RECORD;
-    lampotila_puuttuu                               BOOLEAN;
-    rivi                                            laskutusyhteenveto_raportti_mhu_rivi;
-    aikavali_kuukausi                               NUMERIC;
-    aikavali_vuosi                                  NUMERIC;
-    hk_alkuvuosi                                    NUMERIC;
-    hk_alkukuukausi                                 NUMERIC;
-    perusluku                                       NUMERIC; -- urakan indeksilaskennan perusluku (urakkasopimusta edeltävän vuoden joulukuusta 3kk ka)
-    indeksinimi                                     VARCHAR;
+    suolasakko_kaytossa                   BOOLEAN;
+    lampotilat_rivi                       RECORD;
+    lampotila_puuttuu                     BOOLEAN;
+    rivi                                  laskutusyhteenveto_raportti_mhu_rivi;
+    aikavali_kuukausi                     NUMERIC;
+    aikavali_vuosi                        NUMERIC;
+    hk_alkuvuosi                          NUMERIC;
+    hk_alkukuukausi                       NUMERIC;
+    indeksi_vuosi                         INTEGER;
+    indeksi_kuukausi                      INTEGER;
+    perusluku                             NUMERIC; -- urakan indeksilaskennan perusluku (urakkasopimusta edeltävän vuoden syys-,loka, marraskuun keskiarvo)
+    indeksinimi                           VARCHAR; -- MAKU2015
 
 BEGIN
 
@@ -523,7 +528,7 @@ BEGIN
              WHERE tpi.urakka = ur
         LOOP
             RAISE NOTICE '*************************************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % ***************************************************************', t.nimi, t.tpi;
-            kokonaishintainen_laskutettu := 0.0;
+            hankinnat_laskutettu := 0.0;
 
 
             -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut lisätyöt
@@ -531,73 +536,75 @@ BEGIN
             lisatyot_laskutetaan := 0.0;
 
             FOR lisatyot_rivi IN
-                SELECT summa            as kit_summa,
-                       lk.suoritus_alku AS tot_alkanut
-                FROM lasku_kohdistus lk
+                SELECT summa            as lisatyot_summa,
+                       l.erapaiva AS erapaiva
+                FROM lasku l
+                    JOIN lasku_kohdistus lk ON lk.lasku = l.id
                          JOIN toimenpideinstanssi tpi on lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
                 WHERE lk.maksueratyyppi = 'lisatyo' -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
                   AND lk.poistettu IS NOT TRUE
-                  AND lk.suoritus_alku BETWEEN hk_alkupvm AND aikavali_loppupvm
+                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
                 LOOP
 
-                    SELECT lisatyot_rivi.kit_summa AS summa,
-                           lisatyot_rivi.kit_summa AS korotettuna,
+                    SELECT lisatyot_rivi.lisatyot_summa AS summa,
                            0::NUMERIC              as korotus
                     INTO lisatyo;
 
-                    RAISE NOTICE 'kit_rivi: %', lisatyo;
-                    IF lisatyot_rivi.tot_alkanut <= aikavali_loppupvm THEN
+                    RAISE NOTICE 'lisatyot_rivi: %', lisatyo;
+                    IF lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
                         -- Hoitokauden alusta
                         lisatyot_laskutettu := lisatyot_laskutettu + COALESCE(lisatyo.summa, 0.0);
 
-                        IF lisatyot_rivi.tot_alkanut >= aikavali_alkupvm AND
-                           lisatyot_rivi.tot_alkanut <= aikavali_loppupvm THEN
+                        IF lisatyot_rivi.erapaiva >= aikavali_alkupvm AND
+                           lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
                             -- Laskutetaan nyt
                             lisatyot_laskutetaan := lisatyot_laskutetaan + COALESCE(lisatyo.summa, 0.0);
                         END IF;
                     END IF;
+                    RAISE NOTICE 'lisatyo: %', lisatyo;
                 END LOOP;
-            RAISE NOTICE 'lisatyo: %', lisatyo;
 
-            -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut kokonaishintaiset työt
-            kokonaishintainen_laskutettu := 0.0;
-            kokonaishintainen_laskutetaan := 0.0;
 
-            FOR kokonaishintainen_i IN
+            -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut hankinnat työt
+            hankinnat_laskutettu := 0.0;
+            hankinnat_laskutetaan := 0.0;
+
+            FOR hankinnat_i IN
                 SELECT summa            as kht_summa,
-                       lk.suoritus_alku AS tot_alkanut
-                FROM lasku_kohdistus lk
+                       l.erapaiva AS erapaiva
+                FROM lasku l
+                         JOIN lasku_kohdistus lk ON lk.lasku = l.id
                          JOIN toimenpideinstanssi tpi on lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
                 WHERE lk.maksueratyyppi = 'kokonaishintainen' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
                   AND lk.poistettu IS NOT TRUE
-                  AND lk.suoritus_alku BETWEEN hk_alkupvm AND aikavali_loppupvm
+                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
                 LOOP
 
-                    SELECT kokonaishintainen_i.kht_summa AS summa,
-                           kokonaishintainen_i.kht_summa AS korotettuna,
-                           0::NUMERIC                    as korotus
-                    INTO kokonaishintainen_rivi;
+                    SELECT hankinnat_i.kht_summa AS summa,
+                           hankinnat_i.kht_summa AS korotettuna,
+                           0::NUMERIC            as korotus
+                    INTO hankinnat_rivi;
 
-                    RAISE NOTICE 'kokonaishintainen_rivi: % TPI %', kokonaishintainen_rivi, t.tpi;
-                    RAISE NOTICE 'kokonaishintainen_rivi.summa: % TPI %', kokonaishintainen_rivi.summa, t.tpi;
+                    RAISE NOTICE 'hankinnat_rivi: % TPI %', hankinnat_rivi, t.tpi;
+                    RAISE NOTICE 'hankinnat_rivi.summa: % TPI %', hankinnat_rivi.summa, t.tpi;
 
-                    IF kokonaishintainen_i.tot_alkanut <= aikavali_loppupvm THEN
+                    IF hankinnat_i.erapaiva <= aikavali_loppupvm THEN
                         -- Hoitokauden alusta
-                        kokonaishintainen_laskutettu :=
-                                    kokonaishintainen_laskutettu + COALESCE(kokonaishintainen_rivi.summa, 0.0);
+                        hankinnat_laskutettu :=
+                                hankinnat_laskutettu + COALESCE(hankinnat_rivi.summa, 0.0);
 
-                        IF kokonaishintainen_i.tot_alkanut >= aikavali_alkupvm AND
-                           kokonaishintainen_i.tot_alkanut <= aikavali_loppupvm THEN
+                        IF hankinnat_i.erapaiva >= aikavali_alkupvm AND
+                           hankinnat_i.erapaiva <= aikavali_loppupvm THEN
                             -- Laskutetaan nyt
-                            kokonaishintainen_laskutetaan :=
-                                        kokonaishintainen_laskutetaan + COALESCE(kokonaishintainen_rivi.summa, 0.0);
+                            hankinnat_laskutetaan :=
+                                    hankinnat_laskutetaan + COALESCE(hankinnat_rivi.summa, 0.0);
                         END IF;
                     END IF;
 
-                    RAISE NOTICE 'kokonaishintainen_laskutettu: %', kokonaishintainen_laskutettu;
-                    RAISE NOTICE 'kokonaishintainen_laskutetaan: %', kokonaishintainen_laskutetaan;
+                    RAISE NOTICE 'hankinnat_laskutettu: %', hankinnat_laskutettu;
+                    RAISE NOTICE 'hankinnat_laskutetaan: %', hankinnat_laskutetaan;
                 END LOOP;
 
             -- SANKTIOT
@@ -920,7 +927,7 @@ BEGIN
     Yhteenveto:';
             RAISE NOTICE 'LASKUTETTU ENNEN AIKAVÄLIÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE 'Lisatyot laskutettu: %', lisatyot_laskutettu;
-            RAISE NOTICE 'Kokonaishintainen laskutettu: %', kokonaishintainen_laskutettu;
+            RAISE NOTICE 'Hankinnat laskutettu: %', hankinnat_laskutettu;
             RAISE NOTICE 'Sakot laskutettu: %', sakot_laskutettu;
             RAISE NOTICE 'Suolasakot laskutettu: %', suolasakot_laskutettu;
             RAISE NOTICE 'Hoidonjohto laskutettu: %', hoidonjohto_laskutettu;
@@ -932,7 +939,7 @@ BEGIN
             RAISE NOTICE '
     LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE 'Lisatyot laskutetaan: %', lisatyot_laskutetaan;
-            RAISE NOTICE 'Kokonaishintainen laskutetaan: %', kokonaishintainen_laskutetaan;
+            RAISE NOTICE 'Hankinnat laskutetaan: %', hankinnat_laskutetaan;
             RAISE NOTICE 'Sakot laskutetaan: %', sakot_laskutetaan;
             RAISE NOTICE 'Suolasakot laskutetaan: %', suolasakot_laskutetaan;
 
@@ -955,8 +962,9 @@ BEGIN
 
             rivi := (t.nimi, t.tuotekoodi, t.tpi, perusluku,
                      kaikki_laskutettu, kaikki_laskutetaan,
+                     tavoitehintaiset_laskutettu, tavoitehintaiset_laskutetaan,
                      lisatyot_laskutettu, lisatyot_laskutetaan,
-                     kokonaishintainen_laskutettu, kokonaishintainen_laskutetaan,
+                     hankinnat_laskutettu, hankinnat_laskutetaan,
                      sakot_laskutettu, sakot_laskutetaan,
                      suolasakot_laskutettu, suolasakot_laskutetaan,
                      hoidonjohto_laskutettu, hoidonjohto_laskutetaan,
