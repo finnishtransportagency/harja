@@ -285,10 +285,18 @@ BEGIN
                                "luoja-id", tyyppi, selite, hinta, tyomenetelma, valmistumispvm,
                                tierekisteriosoite)
   VALUES -- Kokonaishintaiset
-    (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt', 3500, 'massapintaus', NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
-    (6662, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt 2', 400, 'massapintaus', NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
-    (133, oulun_alueurakan_id, hoito_paikkauskohde_3_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
+         (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 3500, 'massapintaus', NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
+         (6662, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt 2', 400, 'massapintaus', NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
+         (133, oulun_alueurakan_id, hoito_paikkauskohde_3_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+         (2355, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 1700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+         (2359, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 1300, 'massapintaus', NOW()::DATE, ROW (22, 1, 151, 1, 250, NULL)),
+         (2356, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 1800, 'remix-pintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+  (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+      'Liikennejärjestelyt', 1900, 'kuumennuspintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;

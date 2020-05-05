@@ -178,7 +178,7 @@ UPDATE paikkaustoteuma
        muokattu = NOW(),
        tierekisteriosoite = ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite,
        valmistumispvm = :valmistumispvm
- WHERE id = :paikkaustoteuma-id
+ WHERE id = :paikkaustoteuma-id;
 
 --name: luo-paikkaustoteuma!
 INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu,
@@ -186,4 +186,24 @@ INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu,
                             tyomenetelma, valmistumispvm, tierekisteriosoite)
  VALUES(:urakka, :paikkauskohde, :luoja, NOW(),
         :tyyppi::paikkaustoteumatyyppi, :hinta, NOW(),
-        :tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite)
+        :tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite);
+
+--name: hae-paikkauskohteen-tierekisteriosoite
+  WITH tr_alku AS (
+      SELECT id, tierekisteriosoite as tr1
+        FROM paikkaus p1
+       WHERE "paikkauskohde-id" = :kohde
+       ORDER BY (p1.tierekisteriosoite).aosa,
+                (p1.tierekisteriosoite).aet limit 1),
+   tr_loppu AS (
+      SELECT id, tierekisteriosoite as tr2
+        FROM paikkaus p2
+       WHERE "paikkauskohde-id" = :kohde
+       ORDER BY (p2.tierekisteriosoite).losa DESC,
+                (p2.tierekisteriosoite).let DESC limit 1)
+SELECT (tr1).tie as tie,
+       (tr1).aosa,
+       (tr1).aet,
+       (tr2).losa,
+       (tr2).let from tr_alku, tr_loppu
+WHERE (tr1).tie = (tr2).tie;

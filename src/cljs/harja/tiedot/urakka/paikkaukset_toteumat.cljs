@@ -7,7 +7,8 @@
             [harja.tyokalut.tuck :as tt]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            harja.ui.grid.protokollat)
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def app (atom nil))

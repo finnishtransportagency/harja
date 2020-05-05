@@ -6,7 +6,7 @@ set -u
 cd /tmp/cypress-run
 cp /jar/asetukset.edn .
 tar xf /jar/cypress.tar
-sed -i -e 's/:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
+sed -i -e 's/;:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
 sed -i -e 's/:kehitysmoodi true/:kehitysmoodi false/g' asetukset.edn
 sed -i -e "s/:palvelin \"localhost\"/:palvelin \"postgres\"/g" asetukset.edn
 mkdir -p ../.harja

@@ -39,39 +39,70 @@ Harja repon hakemistorakenne:
 
 ## Kehitysympäristön pystyttäminen
 
-### Kehitystyökalut
 
-Asenna Leiningen:
-http://leiningen.org/
-
-Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8.
-Vaihtoehtoisesti voit käyttää dockeria.
-
-### Tunnukset ulkoisiin järjestelmiin
-
-Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
-
-### Kääntäminen
-
-Siirry projektin juureen. Käännä backend & käynnistä REPL:<br/>
+1. Asenna Leiningen: http://leiningen.org/ tai brew install leiningen
+2. Asenna Docker: www.docker.com/
+3. Laita docker käyntiin sanomalla /harja/tietokanta kansiossa
+<code>
+sh devdb_up.sh
+</code>
+4. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+5. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:<br/>
 <code>
 lein do clean, compile, repl
 </code>
 
-Käännä frontend ja käynnistä Figwheel:<br/>
+6. Käännä frontend ja käynnistä Figwheel:<br/>
 <code>
 sh kaynnista_harja_front_dev.sh
 </code>
 
 Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:3000
+Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit
 
-### Kehitystyötä helpottavat työkalut
+## Kirjautuminen ja ModHeader
 
-- **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
+Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
+Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä, pyydä apua tiimiläiseltä pikaviestimen kautta miten homma tehdään.
 
-### Docker paikallinen kehitysympäristö
+Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
+Harjan harja.domain.oikeudet.makrot luo Excelin pohjalta roolit käytettäväksi koodista.
+Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä frontissa että backissä. Frontissa yleensä
+piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
+luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
-Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää myös dockerilla.
+Seuraavat headerit tuettuna:
+
+* OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
+* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
+    * Järjestelmävastaava: Jarjestelmavastaava
+    * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
+    * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
+    * Urakan vastuuhenkilö: <urakan-sampoid>_vastuuhenkilo
+* OAM_ORGANIZATION: Organisaation nimi, esim. "Väylä" tai "YIT Rakennus Oy"
+* OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
+* OAM_USER_FIRST_NAME: Etunimi
+* OAM_USER_LAST_NAME: Sukunimi
+* OAM_USER_MAIL: Sähköpostiosoite
+* OAM_USER_MOBILE: Puhelinnumero
+
+Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
+jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
+
+### Docker - paikallinen kehitysympäristö
+
+Kannan restart 
+<code>
+sh devdb_restart.sh
+</code>
+
+Kanta alas 
+<code>
+sh devdb_down.sh
+</code>
+
+
+Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
 Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita, mutta sovellus
 logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 
@@ -80,7 +111,7 @@ logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
-Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up.
+Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up. (käytä mieluummin ym. sh devdb_* skriptejä.)
 
 ## Dokumentaatio
 
@@ -111,7 +142,7 @@ Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 ## Testaus
 
 Harjassa on kolme eritasoista test-suitea: fronttitestit (phantom), palvelutestit (backend) ja
-e2e testit (erillisessä projektissa).
+e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä tehtyjä e2e-testejä, joita on hyvä suosia. Uusia Selenium-testejä ei kannata enää kirjoitella.
 
 ### Fronttitestit
 
@@ -129,7 +160,7 @@ Täysiä työnkulkuja, joissa on useita komponentteja, ei tarvitse tässä test 
 
 Testaa UI tilassa reaktioiden oikea toiminta ja tuck event käsittely.
 
-### Backend testit
+### Backend-testit
 
 Backend testit testaavat harjan palvelinta ja käytössä on oikea tietokanta.
 Kaikille palveluille on syytä tehdä testi, joka testaa vähintään onnistuvan
@@ -155,7 +186,6 @@ sivun rakenteesta.
 
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
 
-Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
 
 ## Staging tietokannan sisällön muokkaus
 
@@ -176,80 +206,10 @@ ssh -L7777:localhost:5432 harja-db1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
 
-## Autogeneroi nuolikuvat SVG:nä
-Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
-Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
-puhtaat -namespacessa määriteltyihin.
-
-(def varit {"punainen" "rgb(255,0,0)"
-            "oranssi" "rgb(255,128,0)"
-            "keltainen" "rgb(255,255,0)"
-            "lime" "rgb(128,255,0)"
-	    "vihrea" "rgb(0,255,0)"
- 	    "turkoosi" "rgb(0,255,128)"
- 	    "syaani" "rgb(0,255,255)"
- 	    "sininen" "rgb(0,128,255)"
- 	    "tummansininen" "rgb(0,0,255)"
- 	    "violetti" "rgb(128,0,255)"
- 	    "magenta" "rgb(255,0,255)"
- 	    "pinkki" "rgb(255,0,128)"})
-
-(for [[vari rgb] varit]
-  (spit (str "resources/public/images/nuoli-" vari ".svg")
-  	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
-   <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
-</svg>")))
-
-## Konvertoi SVG kuvia PNG:ksi
-
-Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
-> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png /Users/minä/kuva/jossain/image.svg
-
-Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
-
-kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
-
-> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
-
-## Aja cloveragelle testikattavuusraportti
-Hae työkalu: https://github.com/jarnovayrynen/cloverage
-Työkalun cloverage/cloverage kansiossa aja "lein install"
-Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
 ## Tieverkon tuonti kantaan
 
 Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
-
-
-## Kirjautuminen
-
-Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
-Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä.
-
-Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
-Harjan harja.domain.oikeudet.makrot luo Excelin pohjalta roolit käytettäväksi koodista.
-Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä frontissa että backissä. Frontissa yleensä
-piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
-luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
-
-Seuraavat headerit tuettuna:
-
-* OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
-* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
-    * Järjestelmävastaava: Jarjestelmavastaava
-    * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
-    * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
-    * Urakan vastuuhenkilö: <urakan-sampoid>_vastuuhenkilo
-* OAM_ORGANIZATION: Organisaation nimi, esim. "Väylä" tai "YIT Rakennus Oy"
-* OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
-* OAM_USER_FIRST_NAME: Etunimi
-* OAM_USER_LAST_NAME: Sukunimi
-* OAM_USER_MAIL: Sähköpostiosoite
-* OAM_USER_MOBILE: Puhelinnumero
-
-Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
-jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
 
 ## Labyrintin SMS-gateway
 
@@ -335,3 +295,43 @@ docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq
 
 URL konsoliin:
 localhost:8162/admin/queues.jsp (admin/admin)
+
+
+
+# Harvoin tarvittavaa (jos koskaan)
+
+## Autogeneroi nuolikuvat SVG:nä
+Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
+Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
+puhtaat -namespacessa määriteltyihin.
+
+(def varit {"punainen" "rgb(255,0,0)"
+            "oranssi" "rgb(255,128,0)"
+            "keltainen" "rgb(255,255,0)"
+            "lime" "rgb(128,255,0)"
+	    "vihrea" "rgb(0,255,0)"
+ 	    "turkoosi" "rgb(0,255,128)"
+ 	    "syaani" "rgb(0,255,255)"
+ 	    "sininen" "rgb(0,128,255)"
+ 	    "tummansininen" "rgb(0,0,255)"
+ 	    "violetti" "rgb(128,0,255)"
+ 	    "magenta" "rgb(255,0,255)"
+ 	    "pinkki" "rgb(255,0,128)"})
+
+(for [[vari rgb] varit]
+  (spit (str "resources/public/images/nuoli-" vari ".svg")
+  	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
+   <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
+</svg>")))
+
+## Konvertoi SVG kuvia PNG:ksi
+
+Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
+> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png /Users/minä/kuva/jossain/image.svg
+
+Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
+
+kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
+
+> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end

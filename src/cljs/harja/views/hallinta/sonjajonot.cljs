@@ -55,22 +55,13 @@
            {:key (first (keys %))})
         jonot)])
 
-(defn tila [e! {palvelin :palvelin {:keys [olioiden-tilat saikeiden-tilat]} :tila paivitetty :paivitetty}]
+(defn tila [e! {palvelin :palvelin {:keys [olioiden-tilat]} :tila paivitetty :paivitetty}]
   (let [{:keys [istunnot yhteyden-tila]} olioiden-tilat]
     [:div.tilat
      [:div.thumbnail
       [:h2 {:class (if (pvm/ennen? (tc/to-local-date-time (pvm/sekunttia-sitten 20)) (tc/to-local-date-time paivitetty))
                      "bg-success" "bg-danger")}
        (str palvelin " (Päivitetty: " paivitetty ")")]
-      [:hr]
-      [:h3 "Säikeet"]
-      (map (fn [{:keys [nimi status]}]
-             (with-meta
-               [:div.saije
-                [:span "Nimi: " nimi]
-                [:span "Status: " status]]
-               {:key nimi}))
-           (reverse (sort-by :nimi saikeiden-tilat)))
       [:hr]
       [:h3 "JMS"]
       [:span {:class (if (= yhteyden-tila "ACTIVE")
