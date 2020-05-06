@@ -394,6 +394,17 @@
          :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo}))
+    (doseq [muu-vastaanottaja muut-vastaanottajat]
+      (try
+        (sahkoposti/laheta-viesti!
+          email
+          (sahkoposti/vastausosoite email)
+          muu-vastaanottaja
+          (str "Harja: " viestin-otsikko)
+          viestin-vartalo)
+        (catch Exception e
+          (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                             muu-vastaanottaja (pr-str e))))))
     (when (and kopio-itselle? (:sahkoposti ilmoittaja))
       (viestinta/laheta-sahkoposti-itselle
         {:email email

@@ -13,7 +13,11 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def app (atom {:kopio-itselle? true}))
+(def tyhja-lomake {:kopio-itselle? true
+                   :saate nil
+                   :muut-vastaanottajat {}})
+
+(def app (atom {:lomakedata tyhja-lomake}))
 
 (def taso-nakyvissa? (atom false))
 
@@ -79,17 +83,22 @@
                                          :teksti "Paikkaukset"}]})))))
 
 
-(defn ilmoita-virheesta-paikkaustiedoissa [paikkaus kopio-itselle?]
+(defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
   (k/post! :ilmoita-virheesta-paikkaustiedoissa
            (merge paikkaus
-                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)
-                   :kopio-itselle? kopio-itselle?})))
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
 
 (defn merkitse-paikkaus-tarkistetuksi [paikkaus]
   (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
   (k/post! :merkitse-paikkauskohde-tarkistetuksi
            (merge paikkaus
                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
+
+(defn sahkopostiosoitteet-settiin [muut]
+  (->> (vals muut)
+       (filter (comp not :poistettu))
+       (map :sahkoposti)
+       (into #{})))
 
 ;; Muokkaukset
 (defrecord Nakymaan [])
@@ -103,8 +112,8 @@
 (defrecord SuljeVirheModal [])
 (defrecord VirheIlmoitusOnnistui [vastaus])
 (defrecord MerkitseTarkistetuksiOnnistui [vastaus])
-(defrecord PaivitaSaate [teksti])
-(defrecord PaivitaKopioItselle [kopio?])
+(defrecord PaivitaLomakedata [lomakedata])
+(defrecord PaivitaMuutVastaanottajat [muut])
 
 (extend-protocol tuck/Event
   Nakymaan
@@ -140,17 +149,17 @@
     (assoc app :modalin-paikkaus nil))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :modalin-paikkaus nil :saate nil :kopio-itselle? true))
+    (assoc app :modalin-paikkaus nil
+               :lomakedata tyhja-lomake))
   MerkitseTarkistetuksiOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
     (assoc app :modalin-paikkaus nil))
-  PaivitaSaate
-  (process-event [{teksti :teksti} app]
-    (assoc app :saate teksti))
-  PaivitaKopioItselle
-  (process-event [{kopio? :kopio?} app]
-    (assoc app :kopio-itselle? kopio?))
-  )
+  PaivitaLomakedata
+  (process-event [{lomakedata :lomakedata} app]
+    (assoc app :lomakedata lomakedata))
+  PaivitaMuutVastaanottajat
+  (process-event [{muut :muut} app]
+    (assoc-in app [:lomakedata :muut-vastaanottajat] muut)))
 
 
