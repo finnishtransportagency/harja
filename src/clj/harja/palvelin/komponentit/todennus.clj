@@ -142,7 +142,7 @@ on nil."
            first))
 
 (defn- hae-kayttajalle-organisaatio
-  [db ely y-tunnus organisaatio roolit]f
+  [db ely y-tunnus organisaatio roolit]
   (or
    ;; Jos ELY-numero haetaan se
    (hae-organisaatio-elynumerolla db ely)
