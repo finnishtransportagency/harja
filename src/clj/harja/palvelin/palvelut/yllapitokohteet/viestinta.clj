@@ -393,6 +393,12 @@
          :urakka-sampoid urakka-sampo-id
          :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
          :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo}))
+    (when (and kopio-itselle? (:sahkoposti ilmoittaja))
+      (viestinta/laheta-sahkoposti-itselle
+        {:email email
+         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakoitsijan vastuuhenkilölle."
+         :sahkoposti (:sahkoposti ilmoittaja)
+         :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})))
-  {:onnistui! true :viesti "Sähköpostin lähetys onnistui"}
-  )
+  {:onnistui! true :viesti "Sähköpostin lähetys onnistui"})

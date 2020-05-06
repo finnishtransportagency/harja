@@ -67,15 +67,15 @@
                                                                    {::paikkaus/saate saate
                                                                     ::paikkaus/pinta-ala-summa pinta-ala
                                                                     ::paikkaus/massamenekki-summa massamenekki
-                                                                    ::paikkaus/rivien-lukumaara rivien-lkm}))
+                                                                    ::paikkaus/rivien-lukumaara rivien-lkm})
+                                                            (:kopio-itselle? app))
                {:disabled false
                 :luokka "nappi-myonteinen"
                 :ikoni (ikonit/check)
                 :kun-onnistuu (fn [vastaus]
                                 (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
                                 (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
-                :kun-virhe #(viesti/nayta! (% :virhe) :warning viesti/viestin-nayttoaika-keskipitka)
-                }]]}
+                :kun-virhe #(viesti/nayta! (% :virhe) :warning viesti/viestin-nayttoaika-keskipitka)}]]}
 
      [:div
       [:p
@@ -91,10 +91,16 @@
                         "Pinta-ala yht. " (str pinta-ala "m\u00B2")
                         "Massamenekki" massamenekki)
         [:h5 "Lisätietoa virheestä"]
-        [kentat/tee-kentta {:tyyppi :text :otsikko "Foo" :koko [80 8]}
-         ; TODO tämä toimii mutta input tulee pienellä viiveellä :saate avaimeen?
-         (r/wrap (get-in app [:saate])
-                 #(e! (tiedot/->PaivitaSaate %)))]]]]))
+       [kentat/tee-kentta {:tyyppi :text :otsikko "Foo" :koko [80 8]}
+        ; TODO tämä toimii mutta input tulee pienellä viiveellä :saate avaimeen?
+        (r/wrap (get-in app [:saate])
+                #(e! (tiedot/->PaivitaSaate %)))]
+       [kentat/tee-kentta {:tyyppi :checkbox
+                           :teksti "Lähetä sähköpostiini kopio viestistä"
+                           :nayta-rivina? true :palstoja 3
+                           :nimi :kopio-itselle?}
+        (r/wrap (get-in app [:kopio-itselle?])
+                #(e! (tiedot/->PaivitaKopioItselle %)))]]]]))
 
 
 (defn paikkaukset-vetolaatikko

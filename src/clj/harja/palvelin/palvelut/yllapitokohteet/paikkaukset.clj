@@ -233,16 +233,16 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
         response (try
-
                    (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe (merge tiedot
-                                                                                          {:email              email
-                                                                                           :fim                fim
-                                                                                           :urakka-sampo-id    urakka-sampo-id
-                                                                                           :pinta-ala-summa    pinta-ala-summa
+                                                                                          {:email email
+                                                                                           :fim fim
+                                                                                           :kopio-itselle? (:kopio-itselle? tiedot)
+                                                                                           :urakka-sampo-id urakka-sampo-id
+                                                                                           :pinta-ala-summa pinta-ala-summa
                                                                                            :massamenekki-summa massamenekki-summa
-                                                                                           :rivien-lukumaara   rivien-lukumaara
-                                                                                           :saate              saate
-                                                                                           :ilmoittaja         user}))
+                                                                                           :rivien-lukumaara rivien-lukumaara
+                                                                                           :saate saate
+                                                                                           :ilmoittaja user}))
                    (catch Exception e
                      {:virhe "Sähköpostia ei voi lähettää, yritä myöhemmin uudelleen."}))]
     response)

@@ -13,7 +13,7 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def app (atom nil))
+(def app (atom {:kopio-itselle? true}))
 
 (def taso-nakyvissa? (atom false))
 
@@ -79,10 +79,11 @@
                                          :teksti "Paikkaukset"}]})))))
 
 
-(defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
+(defn ilmoita-virheesta-paikkaustiedoissa [paikkaus kopio-itselle?]
   (k/post! :ilmoita-virheesta-paikkaustiedoissa
            (merge paikkaus
-                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)
+                   :kopio-itselle? kopio-itselle?})))
 
 (defn merkitse-paikkaus-tarkistetuksi [paikkaus]
   (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
@@ -103,6 +104,7 @@
 (defrecord VirheIlmoitusOnnistui [vastaus])
 (defrecord MerkitseTarkistetuksiOnnistui [vastaus])
 (defrecord PaivitaSaate [teksti])
+(defrecord PaivitaKopioItselle [kopio?])
 
 (extend-protocol tuck/Event
   Nakymaan
@@ -138,7 +140,7 @@
     (assoc app :modalin-paikkaus nil))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :modalin-paikkaus nil :saate nil))
+    (assoc app :modalin-paikkaus nil :saate nil :kopio-itselle? true))
   MerkitseTarkistetuksiOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
@@ -146,6 +148,9 @@
   PaivitaSaate
   (process-event [{teksti :teksti} app]
     (assoc app :saate teksti))
+  PaivitaKopioItselle
+  (process-event [{kopio? :kopio?} app]
+    (assoc app :kopio-itselle? kopio?))
   )
 
 
