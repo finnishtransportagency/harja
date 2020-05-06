@@ -31,13 +31,15 @@ select
        tr.nimi as "tehtavaryhma",
        lk.summa,
        me.numero as "maksuera",
-       l.erapaiva
+       l.erapaiva,
+       u.nimi as "urakka"
 from lasku l
+       join urakka u on l.urakka = u.id
        join lasku_kohdistus lk on l.id = lk.lasku
        join toimenpideinstanssi tpi on lk.toimenpideinstanssi = tpi.id
        join maksuera me on lk.toimenpideinstanssi = me.toimenpideinstanssi
        left join tehtavaryhma tr on lk.tehtavaryhma = tr.id
-where l.urakka = 36
+where l.urakka = :urakka
     and l.erapaiva between :alkupvm ::date and :loppupvm ::date
     and l.poistettu is not true;
 
