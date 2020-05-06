@@ -146,7 +146,8 @@
     (assoc app :modalin-paikkaus paikkaus))
   SuljeVirheModal
   (process-event [_ app]
-    (assoc app :modalin-paikkaus nil))
+    (assoc app :modalin-paikkaus nil
+               :lomakedata tyhja-lomake))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :modalin-paikkaus nil
