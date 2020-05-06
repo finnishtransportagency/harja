@@ -942,20 +942,20 @@ UPDATE tehtavaryhma SET yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64
 -- TODO Tarkista tämä
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' WHERE nimi = 'Johto- ja hallintokorvaus (J)';
 
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = '49b7388b-419c-47fa-9b1b-3797f1fab21d' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)' AND
-        tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0623ae3c-b8b0-4791-96ea-4808029d43de');
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (liik.ymp.hoito)' AND
-        tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '1b374802-dbe7-430b-bfc5-4635383d18e3');
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'b3a7a210-4ba6-4555-905c-fef7308dc5ec' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)' AND
-        tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'df612065-20d5-47b9-8cca-51ffd250e1f8');
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1f12fe16-375e-49bf-9a95-4560326ce6cf' WHERE nimi = 'Äkillinen hoitotyö (talvihoito)' AND
-        tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '24103c8d-3a8a-4b6f-9315-570834d4479d');
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974' WHERE nimi = 'Äkillinen hoitotyö (l.ymp.hoito)' AND
-        tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658');
-UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'd373c08b-32eb-4ac2-b817-04106b862fb1' WHERE nimi = 'Äkillinen hoitotyö (soratiet)' AND
-        tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '5a6760e8-6494-4db2-80bc-c06df391a5b6');
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = '49b7388b-419c-47fa-9b1b-3797f1fab21d' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)' AND
+--         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0623ae3c-b8b0-4791-96ea-4808029d43de');
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)' AND
+--         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '1b374802-dbe7-430b-bfc5-4635383d18e3');
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'b3a7a210-4ba6-4555-905c-fef7308dc5ec' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)' AND
+--         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'df612065-20d5-47b9-8cca-51ffd250e1f8');
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1f12fe16-375e-49bf-9a95-4560326ce6cf' WHERE nimi = 'Äkillinen hoitotyö (talvihoito)' AND
+--         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '24103c8d-3a8a-4b6f-9315-570834d4479d');
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974' WHERE nimi = 'Äkillinen hoitotyö (l.ymp.hoito)' AND
+--         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658');
+-- UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'd373c08b-32eb-4ac2-b817-04106b862fb1' WHERE nimi = 'Äkillinen hoitotyö (soratiet)' AND
+--         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '5a6760e8-6494-4db2-80bc-c06df391a5b6');
 
 -- Päivitetään api-tunnus tehtävähierarkian tehtäville, joilla sitä ei entuudestaan ole. Sama tunnus kaikkiin ympäristöihin (prod, stg, test, local). Huom. osa tehtävistä puuttuu kehitysympäristöstä.
 -- Api-tunnuksen olemassa olo ei tarkoita sitä, että tehtävälle kirjataan apin kautta toteumia. Api-käyttöä määrittää seurataan-apin-kautta-sarake.
