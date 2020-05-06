@@ -35,7 +35,7 @@
 
 (defn laheta-sposti-fim-kayttajarooleille
   "Yrittää lähettää sähköpostin annetun urakan FIM-käyttäjille, jotka ovat
-   annetussa roolissa. Jos viestin lähetys epäonnistuu, logittaa virheen ja heittää Exceptionin.
+   annetussa roolissa. Jos viestin lähetys epäonnistuu, logittaa virheen.
 
    Parametrit:
    fim                    FIM-komponentti
@@ -58,11 +58,12 @@
             (:sahkoposti henkilo)
             (str "Harja: " viesti-otsikko)
             viesti-body)
-          )))
+          ))
+      {:onnistui? true :viesti "Sähköpostin lähetys onnistui" :virhe nil})
     (catch Exception e
       (log/error (format "Sähköpostia ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
                          urakka-sampoid fim-kayttajaroolit (pr-str e)))
-      (throw e)
+      {:onnistui? false :viesti "Sähköpostia ei voitu lähettää" :virhe e}
       )))
 
 (defn laheta-tekstiviesti-fim-kayttajarooleille
