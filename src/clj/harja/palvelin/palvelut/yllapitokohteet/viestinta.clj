@@ -385,30 +385,31 @@
                         :saate saate
                         :ilmoittaja ilmoittaja}
         viestin-vartalo (viesti-paikkaustoteumassa-virhe viestin-params)]
-    ;; laheta-sposti-fim-kayttajarooleille palauttaa hashmapin jossa mahollinen errori. ajetaan tämä try-catch -blokissa, ja napataan mahdolliset virheet.
-    (try
-      (when urakka-sampo-id
-        (log/debug (format "Lähetetään sähköposti: paikkaustoteumassa %s virhe." (:harja.domain.paikkaus/nimi tiedot)))
-        (let [response (viestinta/laheta-sposti-fim-kayttajarooleille
-                         {:fim                fim
-                          :email              email
-                          :urakka-sampoid     urakka-sampo-id
-                          :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
-                          :viesti-otsikko     viestin-otsikko
-                          :viesti-body        viestin-vartalo})]
-          (if (false? (:onnistui? response))
-            (throw (:virhe response))
-            )
-          ))
-      (when (and kopio-itselle? (:sahkoposti ilmoittaja))
-        (let [response (viestinta/laheta-sahkoposti-itselle
-                         {:email          email
-                          :kopio-viesti   "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakoitsijan vastuuhenkilölle."
-                          :sahkoposti     (:sahkoposti ilmoittaja)
-                          :viesti-otsikko viestin-otsikko
-                          :viesti-body    viestin-vartalo})]
-          (if (false? (:onnistui? response))
-            (throw (:virhe response)))))
-      (catch Exception e
-        {:onnistui? false :viesti "Sähköpostin lähetys epäonnistui"})))
-  {:onnistui? true :viesti "Sähköpostin lähetys onnistui"})
+    (when urakka-sampo-id
+      (log/debug (format "Lähetetään sähköposti: paikkaustoteumassa %s virhe." (:harja.domain.paikkaus/nimi tiedot)))
+      (viestinta/laheta-sposti-fim-kayttajarooleille
+        {:fim fim
+         :email email
+         :urakka-sampoid urakka-sampo-id
+         :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo}))
+    (doseq [muu-vastaanottaja muut-vastaanottajat]
+      (try
+        (sahkoposti/laheta-viesti!
+          email
+          (sahkoposti/vastausosoite email)
+          muu-vastaanottaja
+          (str "Harja: " viestin-otsikko)
+          viestin-vartalo)
+        (catch Exception e
+          (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                             muu-vastaanottaja (pr-str e))))))
+    (when (and kopio-itselle? (:sahkoposti ilmoittaja))
+      (viestinta/laheta-sahkoposti-itselle
+        {:email email
+         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakoitsijan vastuuhenkilölle."
+         :sahkoposti (:sahkoposti ilmoittaja)
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo})))
+  {:onnistui! true :viesti "Sähköpostin lähetys onnistui"})

@@ -28,7 +28,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :as modal]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -50,57 +52,59 @@
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
-        massamenekki (massamenekin-summa paikkaukset)]
+        massamenekki (massamenekin-summa paikkaukset)
+        lomakedata (:lomakedata app)]
     [modal/modal
-    {:otsikko (str "Lähetä sähköposti")
-     :luokka "ilmoita-virheesta-modal"
-     :nakyvissa? true
-     :sulje-fn #(e! (tiedot/->SuljeVirheModal))
-     :footer [:div
-              [napit/peruuta
-               "Peruuta"
-               #(e! (tiedot/->SuljeVirheModal))]
+     {:otsikko (str "Lähetä sähköposti")
+      :luokka "ilmoita-virheesta-modal"
+      :nakyvissa? true
+      :sulje-fn #(e! (tiedot/->SuljeVirheModal))
+      :footer [:div
+               [napit/peruuta
+                "Peruuta"
+                #(e! (tiedot/->SuljeVirheModal))]
 
-              [napit/palvelinkutsu-nappi
-               "Ilmoita"
-               #(tiedot/ilmoita-virheesta-paikkaustiedoissa (merge paikkaus
-                                                                   {::paikkaus/saate saate
-                                                                    ::paikkaus/pinta-ala-summa pinta-ala
-                                                                    ::paikkaus/massamenekki-summa massamenekki
-                                                                    ::paikkaus/rivien-lukumaara rivien-lkm})
-                                                            (:kopio-itselle? app))
-               {:disabled false
-                :luokka "nappi-myonteinen"
-                :ikoni (ikonit/check)
-                :kun-onnistuu (fn [vastaus]
-                                (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
-                                (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
-                :kun-virhe #(viesti/nayta! (% :virhe) :warning viesti/viestin-nayttoaika-keskipitka)}]]}
+               [napit/palvelinkutsu-nappi
+                "Ilmoita"
+                #(tiedot/ilmoita-virheesta-paikkaustiedoissa (merge paikkaus
+                                                                    {::paikkaus/saate (:saate lomakedata)
+                                                                     ::paikkaus/pinta-ala-summa pinta-ala
+                                                                     ::paikkaus/massamenekki-summa massamenekki
+                                                                     ::paikkaus/rivien-lukumaara rivien-lkm
+                                                                     ::paikkaus/kopio-itselle? (:kopio-itselle? lomakedata)
+                                                                     ::paikkaus/muut-vastaanottajat (tiedot/sahkopostiosoitteet-settiin
+                                                                                                      (:muut-vastaanottajat lomakedata))}))
+                {:disabled false
+                 :luokka "nappi-myonteinen"
+                 :ikoni (ikonit/check)
+                 :kun-onnistuu (fn [vastaus]
+                                 (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
+                                 (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
+                 :kun-virhe #(viesti/nayta! (% :virhe) :warning viesti/viestin-nayttoaika-keskipitka)}]]}
 
      [:div
       [:p
        "Harja lähettää sähköpostin urakoitsijalle: "
        [:span.bold (get-in @yhteiset-tiedot/tila [:urakka :urakoitsija :nimi])]]
-      [:h3 (str "Sähköpostiviestin sisältö")]
-      [:div {:style {:padding "10px" :border "1px solid #f0f0f0"}}
-      [:p "Virhe kohteen " [:b nimi ] " paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." ]
-       [:h4 "Kohteen tiedot"]
-       (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
-                        "Kohde" nimi
-                        "Rivejä" rivien-lkm
-                        "Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                        "Massamenekki" massamenekki)
-        [:h5 "Lisätietoa virheestä"]
-       [kentat/tee-kentta {:tyyppi :text :otsikko "Foo" :koko [80 8]}
-        ; TODO tämä toimii mutta input tulee pienellä viiveellä :saate avaimeen?
-        (r/wrap (get-in app [:saate])
-                #(e! (tiedot/->PaivitaSaate %)))]
-       [kentat/tee-kentta {:tyyppi :checkbox
-                           :teksti "Lähetä sähköpostiini kopio viestistä"
-                           :nayta-rivina? true :palstoja 3
-                           :nimi :kopio-itselle?}
-        (r/wrap (get-in app [:kopio-itselle?])
-                #(e! (tiedot/->PaivitaKopioItselle %)))]]]]))
+       [lomake/lomake {:otsikko "Sähköpostiviestin sisältö"
+                       :muokkaa! #(e! (tiedot/->PaivitaLomakedata %))}
+        [{:nimi :tiedot :muokattava? (constantly false)
+          :tyyppi :komponentti :palstoja 3
+          :komponentti (fn []
+                         [:div {:style {:padding "10px" :border "1px solid #f0f0f0"}}
+                          [:p "Virhe kohteen " [:b nimi ] " paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." ]
+                          [:h4 "Kohteen tiedot"]
+                         (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
+                                         "Kohde" nimi
+                                         "Rivejä" rivien-lkm
+                                         "Pinta-ala yht. " (str pinta-ala "m\u00B2")
+                                         "Massamenekki" massamenekki)])}
+         (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
+                                                         #(e! (tiedot/->PaivitaMuutVastaanottajat
+                                                                (grid/hae-muokkaustila %))))
+         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"})
+         varmista-kayttajalta/modal-sahkopostikopio]
+        lomakedata]]]))
 
 
 (defn paikkaukset-vetolaatikko
