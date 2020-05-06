@@ -59,7 +59,9 @@ SELECT l.id                   as "id",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
        lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu"
+       lk.suoritus_loppu      as "suoritus-loppu",
+       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
+       lk.maksueratyyppi      as "maksueratyyppi"
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
 WHERE l.urakka = :urakka
@@ -92,7 +94,9 @@ SELECT l.id                   as "id",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
        lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu"
+       lk.suoritus_loppu      as "suoritus-loppu",
+       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
+       lk.maksueratyyppi      as "maksueratyyppi"
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
 WHERE l.urakka = :urakka
@@ -122,7 +126,9 @@ SELECT lk.id                  as "kohdistus-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
        lk.luotu               as "luontiaika",
-       lk.muokattu            as "muokkausaika"
+       lk.muokattu            as "muokkausaika",
+       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
+       lk.maksueratyyppi      as "maksueratyyppi"
   FROM lasku_kohdistus lk
  WHERE lk.lasku = :lasku
    AND lk.poistettu IS NOT TRUE
@@ -152,9 +158,9 @@ update
 -- name: luo-laskun-kohdistus<!
 INSERT
 INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
-                      suoritus_loppu, luotu, luoja)
+                      suoritus_loppu, luotu, luoja, lisatyon_lisatieto)
 VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
-        current_timestamp, :kayttaja);
+        current_timestamp, :kayttaja, :lisatyon-lisatieto);
 
 -- name: paivita-laskun-kohdistus<!
 update lasku_kohdistus
@@ -165,7 +171,8 @@ set summa = :summa,
     suoritus_alku = :alkupvm,
     suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
-    muokkaaja = :kayttaja
+    muokkaaja = :kayttaja,
+    lisatyon_lisatieto = :lisatyon-lisatieto
 where id = :id;
 
 -- name: poista-lasku!

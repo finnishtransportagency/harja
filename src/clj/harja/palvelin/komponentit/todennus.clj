@@ -218,7 +218,7 @@ headerit palautetaan normaalisti."
                     oam-tiedot))
            oam-tiedot)
       (catch Throwable t
-        (log/warn t "Käyttäjätietojen varmistuksessa virhe!")))))
+        (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
@@ -239,18 +239,18 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn "Todennusheader oam_remote_user puuttui kokonaan")
+          (log/error "Todennusheader oam_remote_user puuttui kokonaan")
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
-            (log/warn "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
+            (log/error "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
             (throw+ todennusvirhe)))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
   component/Lifecycle
   (start [this]
-    (log/warn "Käytetään FEIKKI käyttäjätodennusta, käyttäjä = " (pr-str kayttaja))
+    (log/error "Käytetään FEIKKI käyttäjätodennusta, käyttäjä = " (pr-str kayttaja))
     this)
   (stop [this]
     this)

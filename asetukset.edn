@@ -6,7 +6,8 @@
 
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
-                 :salli-oletuskayttaja? false}
+                 ;:salli-oletuskayttaja? false
+                 }
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
  :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"
@@ -72,7 +73,7 @@
         :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
         :kayttajatunnus "Harja"
         :salasana #=(slurp "../.harja/turi-salasana")
-        :paivittainen-lahetysaika [0 0 0 ]}
+        :paivittainen-lahetysaika [0 0 0]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true
@@ -120,10 +121,10 @@
                         :siltojen-osoite "https://ava.vayla.fi/harja/PTV.tl261_H.shz"
                         :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
 
-                       ; Inspire-asetukset
-                       ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
-                       ; :siltojen-osoite "https://julkinen.vayla.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
-                       ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
+                        ; Inspire-asetukset
+                        ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
+                        ; :siltojen-osoite "https://julkinen.vayla.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
+                        ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
                         :urakoiden-osoite "https://ava.vayla.fi/harja/[AINEISTO].shz"
@@ -195,9 +196,9 @@
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
- :reimari {;:url "https://www.example.com/HarjaWebService"
-           ;:kayttajatunnus "reimaritunnus"
-           ;:salasana "reimarisalasana"
+ :reimari {:url "https://www.example.com/HarjaWebService"
+           :kayttajatunnus "reimaritunnus"
+           :salasana "reimarisalasana"
            ;; :toimenpidehakuvali 60
            ;; :komponenttityyppihakuvali 60
            ;; :turvalaitekomponenttihakuvali 60

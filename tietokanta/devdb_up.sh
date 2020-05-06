@@ -4,7 +4,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-IMAGE=${1:-solita/harjadb}
+IMAGE=${1:-solita/harjadb:centos-9.5}
 
 if ! docker images | grep $IMAGE >> /dev/null; then
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
@@ -20,11 +20,12 @@ docker run -p 127.0.0.1:5432:5432 --name harjadb -dit $IMAGE 1> /dev/null
 echo "Käynnistetään Docker-image" $IMAGE
 echo ""
 docker images | head -n1
-docker images | grep $IMAGE
+docker images | grep $(echo $IMAGE | sed "s/:.*//") | grep $(echo $IMAGE | sed "s/.*://")
 
 echo ""
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa 5432"
 while ! nc -z localhost 5432; do
+    echo "nukutaan..."
     sleep 0.5;
 done;
 
