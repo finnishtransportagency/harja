@@ -100,7 +100,8 @@
                                          "Massamenekki" massamenekki)])}
          varmista-kayttajalta/modal-muut-vastaanottajat
          (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
-                                                        :pakollinen? true})
+                                                        :pakollinen? true
+                                                        :validoi [[:ei-tyhja "Anna tarkempi kuvaus virheistä."]]})
          varmista-kayttajalta/modal-sahkopostikopio]
         lomakedata]]]))
 
