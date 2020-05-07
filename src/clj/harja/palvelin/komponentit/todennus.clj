@@ -237,14 +237,16 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
   (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
+      (log/debug "HES")
       (if (nil? kayttaja-id)
         (do
-          (log/error "Todennusheader oam_remote_user puuttui kokonaan")
+          (log/error (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/error "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
+            (log/error "Onko headereissa virhe? " headerit)
             (throw+ todennusvirhe)))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
