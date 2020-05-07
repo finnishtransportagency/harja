@@ -48,7 +48,6 @@
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
   (let [paikkaukset (:modalin-paikkaus app)
-        saate (:saate app)
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
@@ -72,9 +71,9 @@
                                                                      ::paikkaus/massamenekki-summa massamenekki
                                                                      ::paikkaus/rivien-lukumaara rivien-lkm
                                                                      ::paikkaus/kopio-itselle? (:kopio-itselle? lomakedata)
-                                                                     ::paikkaus/muut-vastaanottajat (tiedot/sahkopostiosoitteet-settiin
+                                                                     ::paikkaus/muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
                                                                                                       (:muut-vastaanottajat lomakedata))}))
-                {:disabled false
+                {:disabled (not (lomake/voi-tallentaa? lomakedata))
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
                  :kun-onnistuu (fn [vastaus]
@@ -99,10 +98,9 @@
                                          "Rivejä" rivien-lkm
                                          "Pinta-ala yht. " (str pinta-ala "m\u00B2")
                                          "Massamenekki" massamenekki)])}
-         (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
-                                                         #(e! (tiedot/->PaivitaMuutVastaanottajat
-                                                                (grid/hae-muokkaustila %))))
-         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"})
+         varmista-kayttajalta/modal-muut-vastaanottajat
+         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
+                                                        :pakollinen? true})
          varmista-kayttajalta/modal-sahkopostikopio]
         lomakedata]]]))
 

@@ -223,7 +223,6 @@
 (defrecord AvaaSahkopostinLahetysModal [ilmoitus avaa-pdf?])
 (defrecord SuljeSahkopostinLahetysModal [])
 (defrecord SahkopostiModalinLomakettaMuokattu [lomakedata])
-(defrecord SahkopostinMuitaVastaanottajiaMuokattu [muut-vastaanottajat])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
@@ -454,12 +453,6 @@
     (log "SahkopostiModalinLomakettaMuokattu, lomakedata: " (pr-str lomakedata))
     (assoc-in app
               [:sahkopostilahetyksen-modal-data :lomakedata] lomakedata))
-
-  SahkopostinMuitaVastaanottajiaMuokattu
-  (process-event [{muut-vastaanottajat :muut-vastaanottajat} app]
-    (log "SahkopostinMuitaVastaanottajiaMuokattu, muut-vastaanottajat: " (pr-str muut-vastaanottajat))
-    (assoc-in app
-              [:sahkopostilahetyksen-modal-data :lomakedata :muut-vastaanottajat] muut-vastaanottajat))
 
   AloitaUusiTietyoilmoitus
   (process-event [{urakka-id :urakka-id} app]
