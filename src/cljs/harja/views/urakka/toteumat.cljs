@@ -20,7 +20,8 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.roolit :as roolit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -30,50 +31,51 @@
   "Toteumien pääkomponentti"
   [ur]
   (komp/luo
-   (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :S))
-                     #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-   (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))]
-     (fn [{:keys [id] :as ur}]
-       [bs/tabs {:style :tabs :classes "tabs-taso2"
-                 :active (nav/valittu-valilehti-atom :toteumat)}
+    (komp/sisaan-ulos #(do
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :S))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+    (fn [{:keys [id] :as ur}]
+      (let [mhu-urakan-urakoitsija? (and (= :teiden-hoito (:tyyppi ur))
+                                         (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija))]
+        [bs/tabs {:style :tabs :classes "tabs-taso2"
+                  :active (nav/valittu-valilehti-atom :toteumat)}
 
-        "Kokonaishintaiset työt" :kokonaishintaiset-tyot
-        (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
-                   (not mhu-urakka?))
-          [kokonaishintaiset-tyot/kokonaishintaiset-toteumat])
+         "Kokonaishintaiset työt" :kokonaishintaiset-tyot
+         (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
+                    (not mhu-urakan-urakoitsija?))
+           [kokonaishintaiset-tyot/kokonaishintaiset-toteumat])
 
-        "Yksikköhintaiset työt" :yksikkohintaiset-tyot
-        (when (and (oikeudet/urakat-toteumat-yksikkohintaisettyot id)
-                   (not mhu-urakka?))
-          [yks-hint-tyot/yksikkohintaisten-toteumat])
+         "Yksikköhintaiset työt" :yksikkohintaiset-tyot
+         (when (and (oikeudet/urakat-toteumat-yksikkohintaisettyot id)
+                    (not mhu-urakan-urakoitsija?))
+           [yks-hint-tyot/yksikkohintaisten-toteumat])
 
-        "Muutos- ja lisätyöt" :muut-tyot
-        (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
-                   (not mhu-urakka?))
-          [muut-tyot/muut-tyot-toteumat ur])
+         "Muutos- ja lisätyöt" :muut-tyot
+         (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
+                    (not mhu-urakan-urakoitsija?))
+           [muut-tyot/muut-tyot-toteumat ur])
 
-        "Suola" :suola
-        (when (and (oikeudet/urakat-toteumat-suola id)
-                   (#{:hoito :teiden-hoito} (:tyyppi ur)))
-          [suolatoteumat])
+         "Suola" :suola
+         (when (and (oikeudet/urakat-toteumat-suola id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [suolatoteumat])
 
-        "Pohjavesialueet" :pohjavesialueet
-        (when (and (oikeudet/urakat-toteumat-suola id)
-                   (#{:hoito :teiden-hoito} (:tyyppi ur)))
-          [pohjavesialueen-suola])
+         "Pohjavesialueet" :pohjavesialueet
+         (when (and (oikeudet/urakat-toteumat-suola id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [pohjavesialueen-suola])
 
-        "Materiaalit" :materiaalit
-        (when (oikeudet/urakat-toteumat-materiaalit id)
-          [materiaalit-nakyma ur])
+         "Materiaalit" :materiaalit
+         (when (oikeudet/urakat-toteumat-materiaalit id)
+           [materiaalit-nakyma ur])
 
-        "Erilliskustannukset" :erilliskustannukset
-        (when (oikeudet/urakat-toteumat-erilliskustannukset id)
-          [erilliskustannukset/erilliskustannusten-toteumat ur])
+         "Erilliskustannukset" :erilliskustannukset
+         (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+           [erilliskustannukset/erilliskustannusten-toteumat ur])
 
-        "Varusteet" :varusteet
-        (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
-                   (oikeudet/urakat-toteumat-varusteet id)
-                   (#{:hoito :teiden-hoito} (:tyyppi ur)))
-          [varusteet/varusteet])]))))
+         "Varusteet" :varusteet
+         (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+                    (oikeudet/urakat-toteumat-varusteet id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [varusteet/varusteet])]))))
