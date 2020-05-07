@@ -30,14 +30,14 @@
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  (komp/luo
-    (komp/sisaan-ulos #(do
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :S))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (fn [{:keys [id] :as ur}]
-      (let [mhu-urakan-urakoitsija? (and (= :teiden-hoito (:tyyppi ur))
-                                         (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija))]
+  (let [mhu-urakan-urakoitsija? (and (= :teiden-hoito (:tyyppi ur))
+                                     (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija))]
+    (komp/luo
+      (komp/sisaan-ulos #(do
+                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                           (nav/vaihda-kartan-koko! :S))
+                        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+      (fn [{:keys [id] :as ur}]
         [bs/tabs {:style :tabs :classes "tabs-taso2"
                   :active (nav/valittu-valilehti-atom :toteumat)}
 
