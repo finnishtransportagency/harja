@@ -87,7 +87,6 @@
   (let [indeksit (into []
                        (map #(konv/string->keyword % :urakkatyyppi))
                        (q/hae-urakkatyypin-indeksit db))]
-    (log/debug "hae urakkatyypin indeksit: " indeksit)
     indeksit))
 
 
@@ -100,7 +99,6 @@
                        (comp (map konv/alaviiva->rakenne)
                              (map #(konv/string->keyword % [:indeksi :urakkatyyppi])))
                        (q/hae-paallystysurakan-indeksitiedot db {:urakka urakka-id}))]
-    (log/debug "hae-paallystysurakan-indeksit: " indeksit)
     indeksit))
 
 (defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
@@ -115,7 +113,6 @@
   "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
   Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
   [db user indeksitiedot]
-  (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
   (doseq [urakka-id (distinct (map :urakka indeksitiedot))]
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id))
   (let [urakka-id (some :urakka indeksitiedot)]

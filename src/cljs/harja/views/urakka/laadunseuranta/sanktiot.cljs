@@ -246,7 +246,7 @@
          (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
-            :valinnat ["MAKU 2005" "MAKU 2010"]
+            :valinnat ["MAKU 2015" "MAKU 2010" "MAKU 2005"]
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1})
 
