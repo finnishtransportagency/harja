@@ -158,135 +158,268 @@
       (is (= (:bonukset_laskutettu hoidonjohto)
              (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio))))))
 
-(deftest laskutusyhteenvedon-tietojen-haku-2
-  (testing "laskutusyhteenvedon-tietojen-haku"
-    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
-                               (:db jarjestelma)
-                               +kayttaja-jvh+
-                               {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                                :urakkatyyppi "teiden-hoito"
-                                :alkupvm (pvm/->pvm "1.3.2020") ;; (pvm/->pvm "1.3.2020") (pvm/hoitokauden-alkupvm (pvm/vuosi (pvm/nyt)))
-                                :loppupvm (pvm/->pvm "31.3.2020")}) ;; (pvm/->pvm "31.3.2020") (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))
+(deftest mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot
+  (testing "mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot"
+    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
+              (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
+          hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
+
+          lupaussanktio (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
+          sakkoryhma = 'lupaussanktio'
+          AND toimenpideinstanssi = 48
+          AND poistettu IS NOT TRUE
+          AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
+
+          vaihtosanktio (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
+          sakkoryhma = 'vaihtosanktio'
+          AND toimenpideinstanssi = 48
+          AND poistettu IS NOT TRUE
+          AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
+
+          arvonvahennys (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
+          sakkoryhma = 'arvonvahennyssanktio'
+          AND toimenpideinstanssi = 48
+          AND poistettu IS NOT TRUE
+          AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
+
+          lupaus-ja-vaihtosanktiot-indeksikorotuksella (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
+                                                                  (:db jarjestelma)
+                                                                  {:hoitokauden-alkuvuosi 2019
+                                                                   :indeksinimi "MAKU 2015"
+                                                                   :summa (+  lupaussanktio vaihtosanktio)
+                                                                   :perusluku (:perusluku hoidonjohto)}))]
+
+      (is (= (:sakot_laskutettu hoidonjohto)
+             (* -1 (+ (:korotettuna lupaus-ja-vaihtosanktiot-indeksikorotuksella) arvonvahennys)))))))
+
+
+(deftest laskutusyhteenvedon-sememointi
+  (testing "laskutusyhteenvedon-sementoiti"
+    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
+              (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
 
           poista-tpi (fn [tiedot]
                        (map #(dissoc %
                                      :tpi) tiedot))
-          haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
-          ;haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
-
-          haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))
-          haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
-          haetut-tiedot-oulu-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot-oulu))
-          haetut-tiedot-oulu-mhu-ja-hoidon-johto (first (filter #(= (:tuotekoodi %) "23150") haetut-tiedot-oulu))
-          haetut-tiedot-oulu-paallyste (first (filter #(= (:tuotekoodi %) "20100") haetut-tiedot-oulu))
-          haetut-tiedot-oulu-mhu-yllapito (first (filter #(= (:tuotekoodi %) "20190") haetut-tiedot-oulu))
-          haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") haetut-tiedot-oulu))
-          ;; TODO: assertit testidataan pohjautuen eri toimenpideinstansseille. Luodaan lisää dataa jos sitä on liian vähän
-          _ (log/debug "haetut-tiedot-oulu-talvihoito")
-          _ (clojure.pprint/pprint haetut-tiedot-oulu-talvihoito)
+          haetut-tiedot-oulu-ilman-tpita (poista-tpi @oulun-mhu-urakka-2020-03)
+          haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu-ilman-tpita))
+          haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu-ilman-tpita))
+          haetut-tiedot-oulu-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot-oulu-ilman-tpita))
+          haetut-tiedot-oulu-paallyste (first (filter #(= (:tuotekoodi %) "20100") haetut-tiedot-oulu-ilman-tpita))
+          haetut-tiedot-oulu-mhu-yllapito (first (filter #(= (:tuotekoodi %) "20190") haetut-tiedot-oulu-ilman-tpita))
+          haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") haetut-tiedot-oulu-ilman-tpita))
+          haetut-tiedot-oulu-mhu-ja-hoidon-johto (first (filter #(= (:tuotekoodi %) "23150") haetut-tiedot-oulu-ilman-tpita))
+          ;; Kommentoin nämä pois, koska oletettavasti jotain vielä muuttuu, niin ei hajoa testit ihan heti.
+          ;_ (log/debug "haetut-tiedot-oulu-talvihoito")
+          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-talvihoito)
           ;_ (log/debug "haetut-tiedot-oulu-liikenneymparisto" )
           ;_ (clojure.pprint/pprint haetut-tiedot-oulu-liikenneymparisto)
           ;_ (log/debug "haetut-tiedot-oulu-soratiet" )
           ;_ (clojure.pprint/pprint haetut-tiedot-oulu-soratiet)
           ;_ (log/debug "haetut-tiedot-oulu-mhu-korvausinvestointi" )
           ;_ (clojure.pprint/pprint haetut-tiedot-oulu-mhu-korvausinvestointi)
+          ;_ (log/debug "haetut-tiedot-oulu-paallyste" )
+          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-paallyste)
+          ;_ (log/debug "haetut-tiedot-oulu-mhu-yllapito" )
+          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-mhu-yllapito)
+          ;_ (log/debug "haetut-tiedot-oulu-mhu-ja-hoidon-johto" )
+          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-mhu-ja-hoidon-johto)
           #_odotetut-talvihoito #_{:bonukset_laskutetaan 0.0M,
                                    :suolasakot_laskutetaan 0.0M,
-                                   :kaikki_laskutetaan 3192.5139143730886850152180M,
-                                   :kaikki_laskutettu 4201.9914143730886850136773000M,
+                                   :kaikki_laskutetaan 3193.3438073394495412843240M,
+                                   :kaikki_laskutettu 5425.6360435779816513752714M,
                                    :hj_palkkio_laskutettu 0.0M,
                                    :lisatyot_laskutettu 600.97M,
                                    :hoidonjohto_laskutettu 0.0M,
                                    :bonukset_laskutettu 0.0M,
-                                   :sakot_laskutetaan -107.8860856269113149847820M,
+                                   :sakot_laskutetaan -107.0561926605504587156760M,
                                    :hj_erillishankinnat_laskutetaan 0.0M,
                                    :erilliskustannukset_laskutetaan 0.0M,
+                                   :hankinnat_laskutettu 6000.97M,
                                    :nimi "Talvihoito",
                                    :lisatyot_laskutetaan 300.20M,
                                    :lampotila_puuttuu false,
                                    :perusluku 130.8M,
-                                   :suolasakot_laskutettu -1214.5259938837920489304800000M,
-                                   :kokonaishintainen_laskutettu 6000.97M,
+                                   :suolasakot_laskutettu 0.0M,
+                                   :hankinnat_laskutetaan 3000.20M,
+                                   :indeksi_puuttuu false,
+                                   :tavoitehintaiset_laskutettu 6000.97M,
                                    :hj_erillishankinnat_laskutettu 0.0M,
-                                   :kokonaishintainen_laskutetaan 3000.20M,
                                    :tuotekoodi "23100",
                                    :hoidonjohto_laskutetaan 0.0M,
                                    :hj_palkkio_laskutetaan 0.0M,
-                                   :sakot_laskutettu -1185.4225917431192660558427M,
+                                   :sakot_laskutettu -1176.3039564220183486247286M,
                                    :erilliskustannukset_laskutettu 0.0M,
-                                   :suolasakko_kaytossa true}
+                                   :suolasakko_kaytossa true,
+                                   :tavoitehintaiset_laskutetaan 3000.20M}
           #_odotetut-liikenneymparistot #_{:bonukset_laskutetaan 0.0M,
                                            :suolasakot_laskutetaan 0.0M,
-                                           :kht_laskutettu 666.66M,
                                            :kaikki_laskutetaan 0.0M,
-                                           :kaikki_laskutettu 5111.10M,
-                                           :kht_laskutetaan 0.0M,
-                                           :mt_laskutettu 0.0M,
+                                           :kaikki_laskutettu 1819.6322362385321100909474M,
+                                           :hj_palkkio_laskutettu 0.0M,
+                                           :lisatyot_laskutettu 0.0M,
+                                           :hoidonjohto_laskutettu 0.0M,
                                            :bonukset_laskutettu 0.0M,
                                            :sakot_laskutetaan 0.0M,
-                                           :kit_laskutetaan 0.0M,
+                                           :hj_erillishankinnat_laskutetaan 0.0M,
+                                           :erilliskustannukset_laskutetaan 0.0M,
+                                           :hankinnat_laskutettu 2888.88M,
                                            :nimi "Liikenneympäristön hoito",
-                                           :mt_laskutetaan 0.0M,
-                                           :kit_laskutettu 0.0M,
-                                           :lampotila_puuttuu true,
-                                           :aht_laskutetaan 0.0M,
-                                           :perusluku nil,
-                                           :kat_laskutettu 0.0M,
+                                           :lisatyot_laskutetaan 0.0M,
+                                           :lampotila_puuttuu false,
+                                           :perusluku 130.8M,
                                            :suolasakot_laskutettu 0.0M,
-                                           :aht_laskutettu 4444.44M,
-                                           :kat_laskutetaan 0.0M,
+                                           :hankinnat_laskutetaan 0.0M,
+                                           :indeksi_puuttuu false,
+                                           :tavoitehintaiset_laskutettu 2888.88M,
+                                           :hj_erillishankinnat_laskutettu 0.0M,
                                            :tuotekoodi "23110",
-                                           :sakot_laskutettu 0.0M,
-                                           :suolasakko_kaytossa false,
-                                           :tpi 46}
+                                           :hoidonjohto_laskutetaan 0.0M,
+                                           :hj_palkkio_laskutetaan 0.0M,
+                                           :sakot_laskutettu -1069.2477637614678899090526M,
+                                           :erilliskustannukset_laskutettu 0.0M,
+                                           :suolasakko_kaytossa true,
+                                           :tavoitehintaiset_laskutetaan 0.0M}
           #_odotetut-soratiet #_{:bonukset_laskutetaan 0.0M,
                                  :suolasakot_laskutetaan 0.0M,
-                                 :kht_laskutettu 4000.77M,
-                                 :kaikki_laskutetaan 0.0M,
-                                 :kaikki_laskutettu 4000.77M,
-                                 :kht_laskutetaan 0.0M,
-                                 :mt_laskutettu 0.0M,
+                                 :kaikki_laskutetaan 4400.40M,
+                                 :kaikki_laskutettu 8801.94M,
+                                 :hj_palkkio_laskutettu 0.0M,
+                                 :lisatyot_laskutettu 800.97M,
+                                 :hoidonjohto_laskutettu 0.0M,
                                  :bonukset_laskutettu 0.0M,
                                  :sakot_laskutetaan 0.0M,
-                                 :kit_laskutetaan 0.0M,
+                                 :hj_erillishankinnat_laskutetaan 0.0M,
+                                 :erilliskustannukset_laskutetaan 0.0M,
+                                 :hankinnat_laskutettu 8000.97M,
                                  :nimi "Soratien hoito",
-                                 :mt_laskutetaan 0.0M,
-                                 :kit_laskutettu 400.77M,
-                                 :lampotila_puuttuu true,
-                                 :aht_laskutetaan 0.0M,
-                                 :perusluku nil,
-                                 :kat_laskutettu 400.77M,
+                                 :lisatyot_laskutetaan 400.20M,
+                                 :lampotila_puuttuu false,
+                                 :perusluku 130.8M,
                                  :suolasakot_laskutettu 0.0M,
-                                 :aht_laskutettu 0.0M,
-                                 :kat_laskutetaan 0.0M,
+                                 :hankinnat_laskutetaan 4000.20M,
+                                 :indeksi_puuttuu false,
+                                 :tavoitehintaiset_laskutettu 8000.97M,
+                                 :hj_erillishankinnat_laskutettu 0.0M,
                                  :tuotekoodi "23120",
+                                 :hoidonjohto_laskutetaan 0.0M,
+                                 :hj_palkkio_laskutetaan 0.0M,
                                  :sakot_laskutettu 0.0M,
-                                 :suolasakko_kaytossa false,
-                                 :tpi 47}
+                                 :erilliskustannukset_laskutettu 0.0M,
+                                 :suolasakko_kaytossa true,
+                                 :tavoitehintaiset_laskutetaan 4000.20M}
           #_odotetut-korvausinvestoinnit #_{:bonukset_laskutetaan 0.0M,
                                             :suolasakot_laskutetaan 0.0M,
-                                            :kht_laskutettu 6000.77M,
-                                            :kaikki_laskutetaan 6000.20M,
-                                            :kaikki_laskutettu 6000.77M,
-                                            :kht_laskutetaan 6000.20M,
-                                            :mt_laskutettu 0.0M,
+                                            :kaikki_laskutetaan 6600.40M,
+                                            :kaikki_laskutettu 13201.94M,
+                                            :hj_palkkio_laskutettu 0.0M,
+                                            :lisatyot_laskutettu 1200.97M,
+                                            :hoidonjohto_laskutettu 0.0M,
                                             :bonukset_laskutettu 0.0M,
                                             :sakot_laskutetaan 0.0M,
-                                            :kit_laskutetaan 600.20M,
+                                            :hj_erillishankinnat_laskutetaan 0.0M,
+                                            :erilliskustannukset_laskutetaan 0.0M,
+                                            :hankinnat_laskutettu 12000.97M,
                                             :nimi "MHU Korvausinvestointi",
-                                            :mt_laskutetaan 0.0M,
-                                            :kit_laskutettu 600.77M,
-                                            :lampotila_puuttuu true,
-                                            :aht_laskutetaan 0.0M,
-                                            :perusluku nil,
-                                            :kat_laskutettu 600.77M,
+                                            :lisatyot_laskutetaan 600.20M,
+                                            :lampotila_puuttuu false,
+                                            :perusluku 130.8M,
                                             :suolasakot_laskutettu 0.0M,
-                                            :aht_laskutettu 0.0M,
-                                            :kat_laskutetaan 600.20M,
+                                            :hankinnat_laskutetaan 6000.20M,
+                                            :indeksi_puuttuu false,
+                                            :tavoitehintaiset_laskutettu 12000.97M,
+                                            :hj_erillishankinnat_laskutettu 0.0M,
                                             :tuotekoodi "14300",
+                                            :hoidonjohto_laskutetaan 0.0M,
+                                            :hj_palkkio_laskutetaan 0.0M,
                                             :sakot_laskutettu 0.0M,
-                                            :suolasakko_kaytossa false,
-                                            :tpi 51}
+                                            :erilliskustannukset_laskutettu 0.0M,
+                                            :suolasakko_kaytossa true,
+                                            :tavoitehintaiset_laskutetaan 6000.20M}
+          #_ odotetut-paallyste #_ {:bonukset_laskutetaan 0.0M,
+                                    :suolasakot_laskutetaan 0.0M,
+                                    :kaikki_laskutetaan 5500.40M,
+                                    :kaikki_laskutettu 11001.94M,
+                                    :hj_palkkio_laskutettu 0.0M,
+                                    :lisatyot_laskutettu 1000.97M,
+                                    :hoidonjohto_laskutettu 0.0M,
+                                    :bonukset_laskutettu 0.0M,
+                                    :sakot_laskutetaan 0.0M,
+                                    :hj_erillishankinnat_laskutetaan 0.0M,
+                                    :erilliskustannukset_laskutetaan 0.0M,
+                                    :hankinnat_laskutettu 10000.97M,
+                                    :nimi "Päällyste",
+                                    :lisatyot_laskutetaan 500.20M,
+                                    :lampotila_puuttuu false,
+                                    :perusluku 130.8M,
+                                    :suolasakot_laskutettu 0.0M,
+                                    :hankinnat_laskutetaan 5000.20M,
+                                    :indeksi_puuttuu false,
+                                    :tavoitehintaiset_laskutettu 10000.97M,
+                                    :hj_erillishankinnat_laskutettu 0.0M,
+                                    :tuotekoodi "20100",
+                                    :hoidonjohto_laskutetaan 0.0M,
+                                    :hj_palkkio_laskutetaan 0.0M,
+                                    :sakot_laskutettu 0.0M,
+                                    :erilliskustannukset_laskutettu 0.0M,
+                                    :suolasakko_kaytossa true,
+                                    :tavoitehintaiset_laskutetaan 5000.20M}
+          #_ odotetut-yllapito #_ {:bonukset_laskutetaan 0.0M,
+                                   :suolasakot_laskutetaan 0.0M,
+                                   :kaikki_laskutetaan 7700.40M,
+                                   :kaikki_laskutettu 15401.94M,
+                                   :hj_palkkio_laskutettu 0.0M,
+                                   :lisatyot_laskutettu 1400.97M,
+                                   :hoidonjohto_laskutettu 0.0M,
+                                   :bonukset_laskutettu 0.0M,
+                                   :sakot_laskutetaan 0.0M,
+                                   :hj_erillishankinnat_laskutetaan 0.0M,
+                                   :erilliskustannukset_laskutetaan 0.0M,
+                                   :hankinnat_laskutettu 14000.97M,
+                                   :nimi "MHU Ylläpito",
+                                   :lisatyot_laskutetaan 700.20M,
+                                   :lampotila_puuttuu false,
+                                   :perusluku 130.8M,
+                                   :suolasakot_laskutettu 0.0M,
+                                   :hankinnat_laskutetaan 7000.20M,
+                                   :indeksi_puuttuu false,
+                                   :tavoitehintaiset_laskutettu 14000.97M,
+                                   :hj_erillishankinnat_laskutettu 0.0M,
+                                   :tuotekoodi "20190",
+                                   :hoidonjohto_laskutetaan 0.0M,
+                                   :hj_palkkio_laskutetaan 0.0M,
+                                   :sakot_laskutettu 0.0M,
+                                   :erilliskustannukset_laskutettu 0.0M,
+                                   :suolasakko_kaytossa true,
+                                   :tavoitehintaiset_laskutetaan 7000.20M}
+          #_ odotetut-mhu-ja-hoidon-johto #_ {:bonukset_laskutetaan 2068.42507645259938838000M,
+                                              :suolasakot_laskutetaan 0.0M,
+                                              :kaikki_laskutetaan 2382.11009174311926605600M,
+                                              :kaikki_laskutettu 3482.11009174311926605600M,
+                                              :hj_palkkio_laskutettu 100.0M,
+                                              :lisatyot_laskutettu 0.0M,
+                                              :hoidonjohto_laskutettu 213.68501529051987767600M,
+                                              :bonukset_laskutettu 6205.27522935779816514000M,
+                                              :sakot_laskutetaan 0.0M,
+                                              :hj_erillishankinnat_laskutetaan 50.0M,
+                                              :erilliskustannukset_laskutetaan 0.0M,
+                                              :hankinnat_laskutettu 0.0M,
+                                              :nimi "MHU ja HJU hoidon johto",
+                                              :lisatyot_laskutetaan 0.0M,
+                                              :lampotila_puuttuu false,
+                                              :perusluku 130.8M,
+                                              :suolasakot_laskutettu 0.0M,
+                                              :hankinnat_laskutetaan 0.0M,
+                                              :indeksi_puuttuu false,
+                                              :tavoitehintaiset_laskutettu 413.68501529051987767600M,
+                                              :hj_erillishankinnat_laskutettu 100.0M,
+                                              :tuotekoodi "23150",
+                                              :hoidonjohto_laskutetaan 213.68501529051987767600M,
+                                              :hj_palkkio_laskutetaan 50.0M,
+                                              :sakot_laskutettu -3136.85015290519877676000M,
+                                              :erilliskustannukset_laskutettu 0.0M,
+                                              :suolasakko_kaytossa true,
+                                              :tavoitehintaiset_laskutetaan 313.68501529051987767600M}
           ]
 
       ;; Talvihoito - Hankinnat - laskutetaan

@@ -10,6 +10,7 @@ $$
         saktio_liikymp                     INTEGER;
         toimenpideinstanssi_talvihoito_id  INTEGER;
         toimenpideinstanssi_liikenneymp_id INTEGER;
+        toimenpideinstanssi_hoidonjohto_id INTEGER;
         urakka_id                          INTEGER;
         sopimus_id                         INTEGER;
     BEGIN
@@ -20,6 +21,8 @@ $$
         toimenpideinstanssi_talvihoito_id := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP');
         toimenpideinstanssi_liikenneymp_id :=
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP');
+        toimenpideinstanssi_hoidonjohto_id :=
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         urakka_id := (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024');
         -- MHU Oulu sopimus
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL);
@@ -100,6 +103,54 @@ $$
 
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
             VALUES (urakka_id, 1, 250000, NULL, 1.1 * 250000, NOW(), kayttaja_id);
+
+        -- MHU Hoidonjohto - SANKTIOT: lupaussanktio (tämän lopullinen summa indeksilaskennan kautta)
+        INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                                    tarkastuspiste, luoja, luotu, aika,
+                                    kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero,
+                                    tr_alkuosa, tr_loppuosa,
+                                    tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
+            VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '',
+                    'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123, kayttaja_id, NOW(), '2020-03-16 06:06.37',
+                    '2020-03-16 06:06.37', FALSE, FALSE, urakka_id,'Sanktion sisältävä laatupoikkeama - MHU HJ1', 1, 2,
+                    3, 4, point(418237, 7207744)::GEOMETRY, 5);
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+                             suorasanktio, luoja)
+            VALUES ('lupaussanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+                    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ1'),
+                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei sanktiotyyppiä'), FALSE, kayttaja_id);
+
+        -- MHU Hoidonjohto - SANKTIOT: vastuuhenkilön vaihtosanktio (tämän lopullinen summa indeksilaskennan kautta), arvonvähennykset
+        INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                                    tarkastuspiste, luoja, luotu, aika,
+                                    kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero,
+                                    tr_alkuosa, tr_loppuosa,
+                                    tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
+            VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '',
+                    'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123, kayttaja_id, NOW(), '2020-03-16 06:06.37',
+                    '2020-03-16 06:06.37', FALSE, FALSE, urakka_id,'Sanktion sisältävä laatupoikkeama - MHU HJ2', 1, 2,
+                    3, 4, point(418237, 7207744)::GEOMETRY, 5);
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+                             suorasanktio, luoja)
+            VALUES ('vaihtosanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+                    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ2'),
+                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei sanktiotyyppiä'), FALSE, kayttaja_id);
+
+        -- MHU Hoidonjohto - SANKTIOT: arvonvähennykset
+        INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                                    tarkastuspiste, luoja, luotu, aika,
+                                    kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero,
+                                    tr_alkuosa, tr_loppuosa,
+                                    tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
+            VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '',
+                    'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123, kayttaja_id, NOW(), '2020-03-16 06:06.37',
+                    '2020-03-16 06:06.37', FALSE, FALSE, urakka_id,'Sanktion sisältävä laatupoikkeama - MHU HJ3', 1, 2,
+                    3, 4, point(418237, 7207744)::GEOMETRY, 5);
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+                             suorasanktio, luoja)
+            VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+                    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ3'),
+                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei sanktiotyyppiä'), FALSE, kayttaja_id);
 
     END
 $$ LANGUAGE plpgsql;
