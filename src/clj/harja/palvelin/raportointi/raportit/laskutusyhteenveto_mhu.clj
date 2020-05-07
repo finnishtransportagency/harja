@@ -73,22 +73,19 @@
         kaikki-tavoitehintaiset-laskutetaan (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutetaan %)))
                                                              (:tavoitehintaiset_laskutetaan %)
                                                              0) tiedot))]
-    (conj tiedot
-          {:kaikki-tavoitehintaiset-laskutettu kaikki-tavoitehintaiset-laskutettu
-           :kaikki-tavoitehintaiset-laskutetaan kaikki-tavoitehintaiset-laskutetaan
-           :kaikki-yhteensa-laskutettu kaikki-yhteensa-laskutettu
-           :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
-           :nimi "Kaikki toteutuneet kustannukset"})))
+    {:kaikki-tavoitehintaiset-laskutettu kaikki-tavoitehintaiset-laskutettu
+     :kaikki-tavoitehintaiset-laskutetaan kaikki-tavoitehintaiset-laskutetaan
+     :kaikki-yhteensa-laskutettu kaikki-yhteensa-laskutettu
+     :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
+     :nimi "Kaikki toteutuneet kustannukset"}))
 
 (defn- koosta-tavoite [tiedot urakka-tavoite]
   (let [kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
                                                             0) tiedot))]
-    (conj tiedot
-          {
-           :tavoite-hinta (:tavoitehinta urakka-tavoite)
-           :jaljella (- (:tavoitehinta urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
-           :nimi "Tavoite"})))
+    {:tavoite-hinta (:tavoitehinta urakka-tavoite)
+     :jaljella (- (:tavoitehinta urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
+     :nimi "Tavoite"}))
 
 (defn- hankinnat
   [tp-rivi kyseessa-kk-vali?]
@@ -304,20 +301,30 @@
                                                kaikki-tuotteittain))
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
-        tiedot (-> tiedot
-                   (koosta-yhteenveto)
-                   (koosta-tavoite urakka-tavoite))
-        _ (log/debug "tiedot :: " (pr-str tiedot))]
+        yhteenveto (koosta-yhteenveto tiedot)
+        tavoite (koosta-tavoite tiedot urakka-tavoite)
+        kootesttu-yhteenveto (conj [] yhteenveto tavoite)]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
      [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
      (when perusluku
        (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
-     [:teksti (str "Käytetään edellisen vuoden syyskuun indeksiarvoa: " (fmt/desimaaliluku (:arvo raportin-indeksiarvo) 1))]
+     [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku (:arvo raportin-indeksiarvo) 1))]
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat
          (for [tp-rivi tiedot
+               :let [yhteensa-otsikko (if (not (= (:nimi tp-rivi) "Tavoite")) laskutettu-teksti "Tavoitehinta")
+                     kuukausi-otsikko (if (not (= (:nimi tp-rivi) "Tavoite")) laskutetaan-teksti "Jäljellä")]]
+           (do
+             (taulukko {:tp-rivi tp-rivi
+                        :laskutettu-teksti yhteensa-otsikko
+                        :laskutetaan-teksti kuukausi-otsikko
+                        :kyseessa-kk-vali? kyseessa-kk-vali?})))))
+     [:teksti ""]
+     (lyv-yhteiset/aseta-sheet-nimi
+       (concat
+         (for [tp-rivi kootesttu-yhteenveto
                :let [yhteensa-otsikko (if (not (= (:nimi tp-rivi) "Tavoite")) laskutettu-teksti "Tavoitehinta")
                      kuukausi-otsikko (if (not (= (:nimi tp-rivi) "Tavoite")) laskutetaan-teksti "Jäljellä")]]
            (do
