@@ -20,8 +20,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.roolit :as roolit])
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
