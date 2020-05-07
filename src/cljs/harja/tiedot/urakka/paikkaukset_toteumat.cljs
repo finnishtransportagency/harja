@@ -9,13 +9,14 @@
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def tyhja-lomake {:kopio-itselle? true
                    :saate nil
-                   :muut-vastaanottajat {}})
+                   :muut-vastaanottajat nil})
 
 (def app (atom {:lomakedata tyhja-lomake}))
 
@@ -94,11 +95,7 @@
            (merge paikkaus
                   {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
 
-(defn sahkopostiosoitteet-settiin [muut]
-  (->> (vals muut)
-       (filter (comp not :poistettu))
-       (map :sahkoposti)
-       (into #{})))
+
 
 ;; Muokkaukset
 (defrecord Nakymaan [])
@@ -146,7 +143,8 @@
     (assoc app :modalin-paikkaus paikkaus))
   SuljeVirheModal
   (process-event [_ app]
-    (assoc app :modalin-paikkaus nil))
+    (assoc app :modalin-paikkaus nil
+               :lomakedata tyhja-lomake))
   VirheIlmoitusOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :modalin-paikkaus nil

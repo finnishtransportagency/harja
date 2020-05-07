@@ -732,3 +732,9 @@ jatkon."
 +raportin-vientimuodot+
   [(tallenna-excel-nappi (k/excel-url :raportointi))
    (tallenna-pdf-nappi (k/pdf-url :raportointi))])
+
+(defn sahkopostiosoitteet-str->set [osoitteet]
+  (into #{}
+        (map
+          #(str/trim %)
+          (str/split osoitteet #","))))
