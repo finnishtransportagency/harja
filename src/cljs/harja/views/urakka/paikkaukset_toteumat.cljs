@@ -79,7 +79,7 @@
                  :kun-onnistuu (fn [vastaus]
                                  (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
                                  (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
-                 :kun-virhe #(viesti/nayta! (% :virhe) :warning viesti/viestin-nayttoaika-keskipitka)}]]}
+                 :kun-virhe #(viesti/nayta! "Sähköpostiviestin lähetys epäonnistui. Kokeile hetken päästä uudelleen." :warning viesti/viestin-nayttoaika-keskipitka)}]]}
 
      [:div
       [:p

@@ -233,8 +233,8 @@
   (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
-        response (try
-                   (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe (merge tiedot
+        paikkauskohde-id (get-in tiedot [::paikkaus/paikkauskohde ::paikkaus/id])
+        response (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe (merge tiedot
                                                                                           {:email email
                                                                                            :fim fim
                                                                                            :kopio-itselle? kopio-itselle?
@@ -244,12 +244,11 @@
                                                                                            :massamenekki-summa massamenekki-summa
                                                                                            :rivien-lukumaara rivien-lukumaara
                                                                                            :saate saate
-                                                                                           :ilmoittaja user}))
-                   (catch Exception e
-                     {:virhe "Sähköpostia ei voi lähettää, yritä myöhemmin uudelleen."}))]
-    response)
-  ;; TODO 2: Onnistuneen lähetyksen jälkeen merkitse tietokantaan että ilmoitus virheestä lähetetty (tila)
-  )
+                                                                                           :ilmoittaja user}))]
+    (if (not (contains? response :virhe))
+      (q/paivita-paikkauskohteen-ilmoitettu-virhe! db {:id paikkauskohde-id :ilmoitettu-virhe saate}))
+    response
+  ))
 
 (defn merkitse-paikkauskohde-tarkistetuksi!
   [db user {::paikkaus/keys [id nimi urakka-id] :as tiedot}]

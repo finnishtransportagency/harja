@@ -48,6 +48,13 @@ FROM paikkausilmoitus
 WHERE paikkauskohde = :paikkauskohde
       AND paikkausilmoitus.poistettu IS NOT TRUE;
 
+-- name: paivita-paikkauskohteen-ilmoitettu-virhe!
+-- Päivittää paikkauskohteen ilmoitetun virheen
+UPDATE paikkauskohde
+    SET
+    "ilmoitettu-virhe"              = :ilmoitettu-virhe
+WHERE id = :id;
+
 -- name: paivita-paikkausilmoitus!
 -- Päivittää paikkausilmoituksen
 UPDATE paikkausilmoitus

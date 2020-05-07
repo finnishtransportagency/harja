@@ -369,6 +369,9 @@
                     [:p (sanitoi saate)]
                     ])])))
 
+(def viestit-yhteensa (atom 0))
+(def epaonnistuneet-viestit-yhteensa (atom 0))
+
 (defn laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
@@ -386,30 +389,51 @@
                         :ilmoittaja ilmoittaja}
         viestin-vartalo (viesti-paikkaustoteumassa-virhe viestin-params)]
     (when urakka-sampo-id
+      (swap! viestit-yhteensa inc)
       (log/debug (format "Lähetetään sähköposti: paikkaustoteumassa %s virhe." (:harja.domain.paikkaus/nimi tiedot)))
-      (viestinta/laheta-sposti-fim-kayttajarooleille
+      (let [vastaus (viestinta/laheta-sposti-fim-kayttajarooleille
         {:fim fim
          :email email
          :urakka-sampoid urakka-sampo-id
          :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
          :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo}))
+         :viesti-body        viestin-vartalo})]
+        (if (false? (:onnistui? vastaus))
+          (do
+            (log/error "FIM käyttäjälle säpön lähetys epäonnistui")
+            (swap! epaonnistuneet-viestit-yhteensa inc))
+          )))
     (doseq [muu-vastaanottaja muut-vastaanottajat]
-      (try
-        (sahkoposti/laheta-viesti!
-          email
-          (sahkoposti/vastausosoite email)
-          muu-vastaanottaja
-          (str "Harja: " viestin-otsikko)
-          viestin-vartalo)
-        (catch Exception e
-          (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
-                             muu-vastaanottaja (pr-str e))))))
+      (log/debug "Muu vastaanottaja menossa, osoite: " (pr-str muu-vastaanottaja))
+      (if (not-empty muu-vastaanottaja) ; Tarkistus että säpo-kentässä on jotain sisältöä.
+        (do
+          (swap! viestit-yhteensa inc)
+          (try
+            (sahkoposti/laheta-viesti!
+              email
+              (sahkoposti/vastausosoite email)
+              muu-vastaanottaja
+              (str "Harja: " viestin-otsikko)
+              viestin-vartalo)
+            (catch Exception e
+              (swap! epaonnistuneet-viestit-yhteensa inc)
+              (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                                 muu-vastaanottaja (pr-str e))))))))
     (when (and kopio-itselle? (:sahkoposti ilmoittaja))
+      ;(swap! viestit-yhteensa inc) ; TODO: kopiolähetyksen seuraaminen on hyödytäntä koska laheta-sahkoposti-itselle ei palauta true/false flagia onnistumisesta.
+      (log/debug (format "Lähetetään kopio paikkaus-virheilmoituksesta sähköpostiin: %s" (:sahkoposti ilmoittaja)))
       (viestinta/laheta-sahkoposti-itselle
         {:email email
          :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakoitsijan vastuuhenkilölle."
          :sahkoposti (:sahkoposti ilmoittaja)
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})))
-  {:onnistui! true :viesti "Sähköpostin lähetys onnistui"})
+
+  ; TODO: kun-virhe ei saa täältä :virhe true - datan viestiä käyttöön, vaan näyttäisi että on nil?
+  (if (> @epaonnistuneet-viestit-yhteensa 0)
+    (if (= @epaonnistuneet-viestit-yhteensa @viestit-yhteensa)
+      {:virhe true :viesti "Sähköpostien lähetys epäonnistui. Yritä myöhemmin uudelleen."}
+      {:virhe true :viesti "Sähköpostien lähetys epäonnistui osittain. Yritä myöhemmin uudelleen."}
+      )
+    {:viesti "Sähköpostin lähetys onnistui"}
+  ))
