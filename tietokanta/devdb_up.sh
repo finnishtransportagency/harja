@@ -4,7 +4,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-IMAGE=${1:-solita/harjadb:centos-9.5}
+IMAGE=${1:-solita/harjadb:centos-12}
 
 if ! docker images | grep $IMAGE >> /dev/null; then
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
