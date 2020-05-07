@@ -132,6 +132,32 @@
 
       (is (= (:suolasakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
 
+(deftest mhu-laskutusyhteenvedon-hoidonjohdon-bonukset
+  (testing "mhu-laskutusyhteenvedon-hoidonjohdon-bonukset"
+    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
+              (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
+          hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
+          _ (println "hoidonjohto" (pr-str hoidonjohto))
+          lupaus-ja-asiakastyytyvaisyys-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
+          (tyyppi = 'lupausbonus' OR tyyppi = 'tktt-bonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
+          AND toimenpideinstanssi = 48
+          AND poistettu IS NOT TRUE
+          AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
+          alihankinta-ja-tavoitepalkkio (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
+          ( tyyppi = 'alihankintabonus' OR tyyppi = 'tavoitepalkkio' )
+          AND toimenpideinstanssi = 48
+          AND poistettu IS NOT TRUE
+          AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
+          lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
+                                                   (:db jarjestelma)
+                                                   {:hoitokauden-alkuvuosi 2019
+                                                    :indeksinimi "MAKU 2015"
+                                                    :summa lupaus-ja-asiakastyytyvaisyys-bonus
+                                                    :perusluku (:perusluku hoidonjohto)}))]
+
+      (is (= (:bonukset_laskutettu hoidonjohto)
+             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio))))))
+
 (deftest laskutusyhteenvedon-tietojen-haku-2
   (testing "laskutusyhteenvedon-tietojen-haku"
     (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -291,21 +317,3 @@
       #_(testing "MHU Korvausinvestointi"
           (testi/tarkista-map-arvot odotetut-korvausinvestoinnit haetut-tiedot-oulu-mhu-korvausinvestointi))
       )))
-
-
-(deftest tiedot-haetaan-oikein-maksuera-laskentaa-varten
-  (testing "tiedot-haetaan-oikein-maksuera-laskentaa-varten"
-    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
-                               (:db jarjestelma)
-                               +kayttaja-jvh+
-                               {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                                :alkupvm (pvm/hoitokauden-alkupvm (pvm/vuosi (pvm/nyt)))
-                                :loppupvm (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))})
-
-          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))]
-      (println " haetut tiedot liikenne" (select-keys haetut-tiedot-oulu-liikenneympariston-hoito
-                                                      [:yht_laskutetaan :yht_laskutetaan_ind_korotus :yht_laskutetaan_ind_korotettuna]))
-
-      (is (= (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito) 7882.5M) ":yht_laskutetaan laskutusyhteenvedossa")
-      (is (= (:yht_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito) 2310.387931034483003250M) ":yht_laskutetaan laskutusyhteenvedossa")
-      (is (= (:yht_laskutetaan_ind_korotettuna haetut-tiedot-oulu-liikenneympariston-hoito) 10192.887931034483003250M) ":yht_laskutetaan laskutusyhteenvedossa"))))
