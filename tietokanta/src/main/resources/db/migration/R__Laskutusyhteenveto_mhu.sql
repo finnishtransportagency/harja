@@ -510,7 +510,7 @@ BEGIN
     aikavali_vuosi := (SELECT EXTRACT(YEAR FROM aikavali_alkupvm) :: INTEGER);
     hk_alkuvuosi := (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER);
     hk_alkukuukausi := (SELECT EXTRACT(MONTH FROM hk_alkupvm) :: INTEGER);
-    indeksi_vuosi := hk_alkuvuosi; -- Hoitokautta edeltävä syyskuu. Eli hoitokausi alkaa aina lokakuussa, niin se on se sama alku vuosi. Esim. hoitourakka alkaa 2019 -> indeksi vuosi on 2019
+    indeksi_vuosi := hk_alkuvuosi; -- Hoitokautta edeltävä syyskuu. Eli hoitokausi alkaa aina lokakuussa, niin se on se sama alkuvuosi. Esim. hoitourakka alkaa 2019 -> indeksi_vuosi on 2019
     indeksi_kuukausi := 9;
     -- Aina syyskuu MHU urakoissa. Indeksi otetaan siis aina edellisen vuoden syyskuusta.
 
@@ -679,8 +679,6 @@ BEGIN
             suolasakot_laskutetaan := 0.0;
 
             -- Suolasakko lasketaan vain Talvihoito-toimenpiteelle (tuotekoodi '23100')
-            -- TODO: Joku joka tietää, tarkista. En osaa sanoa, miten suolasakot kohdistuu, vai kohdistuuko oikein "Hoitokauden alusta" kohtaan ja pelkästään kuukauden "laskutetaan" kohtaan.
-
             IF t.tuotekoodi = '23100' THEN
                 -- TODO: Tein tästä loopin, koska ajattelin, että suolasakkoja voidaan antaa yhdelle talvelle monta, mutta ilmeisesti ei pysty?
                 FOR hoitokauden_suolasakko_rivi IN

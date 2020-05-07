@@ -9,6 +9,8 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-kyselyt]
             [harja.pvm :as pvm]
             [harja.testi :as testi]))
 

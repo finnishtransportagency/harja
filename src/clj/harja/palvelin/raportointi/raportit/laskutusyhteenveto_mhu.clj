@@ -40,17 +40,6 @@
                                                                                          urakka-id))))]
       tulos)))
 
-(defn laske-asiakastyytyvaisyysbonus
-  [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
-  (assert (and maksupvm summa) "Annettava maksupvm ja summa jotta voidaan laskea asiakastyytyväisyysbonuksen arvo.")
-  (first
-    (into []
-          (laskutus-q/laske-asiakastyytyvaisyysbonus db
-                                                     urakka-id
-                                                     (konv/sql-date maksupvm)
-                                                     indeksinimi
-                                                     summa))))
-
 (defn- kuukausi [date]
   (.format (java.text.SimpleDateFormat. "MMMM") date))
 
