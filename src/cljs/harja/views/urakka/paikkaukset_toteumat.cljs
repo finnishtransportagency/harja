@@ -213,19 +213,17 @@
              "Ei lähetetä YHA:an")
            (get lahetyksen-tilan-teksti lahetyksen-tila))])
 
-      [:span
-       (if (and (not urakoitsija-kayttajana?)
-                (not (= "lahetetty" lahetyksen-tila)))
+      (when-not urakoitsija-kayttajana?
+        [:span
          [:span {:style solujen-tyyli}
           [yleiset/linkki "Ilmoita virhe"
            #(e! (tiedot/->AvaaVirheModal paikkaukset))
            {:style {}
             :ikoni (ikonit/envelope)}]]
-
-         (when ilmoitettu-virhe
+         (if ilmoitettu-virhe
            [:span.virheviesti-sailio
             [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
-            [:span ilmoitettu-virhe]]))]
+            [:span (str (subs ilmoitettu-virhe 0 14) "...")]])])
       [yleiset/linkki "Kustannukset"
        #(do
           (.preventDefault %)

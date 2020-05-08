@@ -57,14 +57,12 @@
             (sahkoposti/vastausosoite email)
             (:sahkoposti henkilo)
             (str "Harja: " viesti-otsikko)
-            viesti-body)
-          ))
+            viesti-body)))
       {:onnistui? true :viesti "Sähköpostin lähetys onnistui" :virhe nil})
     (catch Exception e
       (log/error (format "Sähköpostia ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
                          urakka-sampoid fim-kayttajaroolit (pr-str e)))
-      {:onnistui? false :viesti "Sähköpostia ei voitu lähettää" :virhe e}
-      )))
+      {:onnistui? false :viesti "Sähköpostia ei voitu lähettää" :virhe e})))
 
 (defn laheta-tekstiviesti-fim-kayttajarooleille
   "Yrittää lähettää tekstiviestin annetun urakan FIM-käyttäjille, jotka ovat
