@@ -12,6 +12,7 @@
  :asset-path "js/out"
  :libs ["src/js/kuvataso.js"]
  :closure-output-charset "US-ASCII"
- ;Ota tämä kommentista pois, jos eta halua nähdä taulukon debuggia
- ;:closure-defines {harja.ui.taulukko-debug/TAULUKKO_DEBUG false}
+ :closure-defines {harja.ui.taulukko-debug/TAULUKKO_DEBUG false
+                   harja.ui.grid-debug/GRID_DEBUG true}
+ :npm-deps false ;; if you run Cypress locally, you might need this
  }

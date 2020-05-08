@@ -3,11 +3,18 @@
   (:require [cljs.test :as t :refer-macros [is]]
             [tuck.core :as tuck]
             [harja.loki :refer [log]]
-            [cljs.core.async :as async :refer [<! >! chan timeout]]
+            [cljs.core.async :as async :refer [<! >! chan timeout unsub pub put! close!]]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def palveukutsu-viive (atom {})) ;; Palvelukontekstin tunniste -> palvelukutsu-eventin id
+
+;; Kutsujärjestys on bindingina palvelukutsu*:n parametrin sijasta, koska se koskee useita kutsuja eikä vain yhtä
+(def ^:dynamic *kutsujarjestys* nil)
+
+(defonce jarjestys-kanava (chan))
+
+(defonce jarjestys-pub (pub jarjestys-kanava :kutsu-kasittely))
 
 (defn- palvelukutsu*
   "Optiot:
@@ -21,7 +28,8 @@
                       sillä samaa palvelua saatetaan kutsua eri kontekstissa."
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
                                   epaonnistui epaonnistui-parametrit lahetetty
-                                  paasta-virhe-lapi?]}]
+                                  paasta-virhe-lapi? palauta-kanava?]
+                           jarjestys-sub ::jarjestys-sub}]
   (assert (or (nil? viive)
               (and viive tunniste))
           "Viive vaatii tunnisteen!")
@@ -30,38 +38,58 @@
         onnistui! (when onnistui (apply tuck/send-async! onnistui
                                         onnistui-parametrit))
         epaonnistui! (when epaonnistui (apply tuck/send-async! epaonnistui
-                                              epaonnistui-parametrit))]
-    (try
-      (go
-        (let [event-tunniste (when tunniste (gensym tunniste))]
-          (when (and tunniste viive)
-            (swap! palveukutsu-viive assoc tunniste event-tunniste)
-            (<! (timeout viive)))
+                                              epaonnistui-parametrit))
+        kutsujarjestys *kutsujarjestys*
+        suorituskanava (try
+                          (go
+                            (let [event-tunniste (when tunniste (gensym tunniste))]
+                              (when (and tunniste viive)
+                                (swap! palveukutsu-viive assoc tunniste event-tunniste)
+                                (<! (timeout viive)))
 
-          ;; Jos viive käytössä:
-          ;; Mikäli viiveen jälkeen palvelukutsu-viive atomissa on palvelukutsun
-          ;; tunnisteena edelleen sama, tämän eventin generoima merkkijono,
-          ;; niin silloin palvelukutsua ei ole yritetty tehdä uudestaan
-          ;; timeoutin aikana ja tämä kutsu saa lähteä.
-          ;; Muussa tapauksessa on uusi timeouttaava palvelukutsu jonossa,
-          ;; joten tämä kutsu hylätään.
+                              ;; Jos viive käytössä:
+                              ;; Mikäli viiveen jälkeen palvelukutsu-viive atomissa on palvelukutsun
+                              ;; tunnisteena edelleen sama, tämän eventin generoima merkkijono,
+                              ;; niin silloin palvelukutsua ei ole yritetty tehdä uudestaan
+                              ;; timeoutin aikana ja tämä kutsu saa lähteä.
+                              ;; Muussa tapauksessa on uusi timeouttaava palvelukutsu jonossa,
+                              ;; joten tämä kutsu hylätään.
 
-          (if (or
-                (not viive)
-                (and viive tunniste (= (tunniste @palveukutsu-viive) event-tunniste)))
-            (do
-              (when lahetetty! (lahetetty!))
-              (let [vastaus (if argumentit
-                              (<! (k/post! palvelu argumentit nil (boolean paasta-virhe-lapi?)))
-                              (<! (k/get! palvelu nil (boolean paasta-virhe-lapi?))))]
-                (if (k/virhe? vastaus)
-                  (when epaonnistui! (epaonnistui! vastaus))
-                  (when onnistui! (onnistui! vastaus)))))
-            (log "Hylätään palvelukutsu, viiveen aikana on uusi jonossa."))))
-      (catch :default e
-        (when epaonnistui! (epaonnistui! nil))
-        (throw e)))
-    app))
+                              (if (or
+                                    (not viive)
+                                    (and viive tunniste (= (tunniste @palveukutsu-viive) event-tunniste)))
+                                (do
+                                  (when lahetetty! (lahetetty!))
+                                  (let [vastaus (if argumentit
+                                                  (<! (k/post! palvelu argumentit nil (boolean paasta-virhe-lapi?)))
+                                                  (<! (k/get! palvelu nil (boolean paasta-virhe-lapi?))))
+                                        vastauksen-kasittely (fn [vastaus]
+                                                               (if (k/virhe? vastaus)
+                                                                 (when epaonnistui! (epaonnistui! vastaus))
+                                                                 (when onnistui! (onnistui! vastaus))))
+                                        kasittele-vastaus-jarjestyksessa (fn [vastaus]
+                                                                           (vastauksen-kasittely vastaus)
+                                                                           (unsub jarjestys-pub :kutsu-kasitelty? jarjestys-sub)
+                                                                           (close! jarjestys-sub)
+                                                                           (swap! kutsujarjestys rest)
+                                                                           (put! jarjestys-kanava {:kutsu-kasittely :kutsu-kasitelty?
+                                                                                                   :arvo true}))]
+                                    (cond
+                                      (nil? kutsujarjestys) (vastauksen-kasittely vastaus)
+                                      (= (first @kutsujarjestys) palvelu) (kasittele-vastaus-jarjestyksessa vastaus)
+                                      :else (<! (go-loop [aikaisempi-kutsu-kasitelty (<! jarjestys-sub)]
+                                                  (if (= (first @kutsujarjestys) palvelu)
+                                                    (kasittele-vastaus-jarjestyksessa vastaus)
+                                                    (recur (<! jarjestys-sub))))))
+                                    :kutsu-kasitelty))
+                                (do (log "Hylätään palvelukutsu, viiveen aikana on uusi jonossa.")
+                                    :kutsu-hylatty))))
+                          (catch :default e
+                            (when epaonnistui! (epaonnistui! nil))
+                            (throw e)))]
+    (if palauta-kanava?
+      suorituskanava
+      app)))
 
 (defn get!
   ([palvelu optiot]

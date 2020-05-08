@@ -16,4 +16,39 @@ SELECT *
 from urakka_tavoite
 WHERE urakka = :urakka;
 
+-- name:hae-johto-ja-hallintokorvaukset
+SELECT jh.tunnit,
+       jh.tuntipalkka,
+       jh.vuosi,
+       jh.kuukausi,
+       jh."ennen-urakkaa",
+       jh."osa-kuukaudesta",
+       jht.toimenkuva
+FROM johto_ja_hallintokorvaus jh
+  JOIN johto_ja_hallintokorvaus_toimenkuva jht ON jh."toimenkuva-id" = jht.id
+WHERE jh."urakka-id" = :urakka-id AND
+      jht."urakka-id" IS NULL;
 
+-- name:hae-omat-johto-ja-hallintokorvaukset
+SELECT jh.tunnit,
+       jh.tuntipalkka,
+       jh.vuosi,
+       jh.kuukausi,
+       jh."ennen-urakkaa",
+       jh."osa-kuukaudesta",
+       jht.toimenkuva,
+       jht.id AS "toimenkuva-id"
+FROM johto_ja_hallintokorvaus jh
+  JOIN johto_ja_hallintokorvaus_toimenkuva jht ON jh."toimenkuva-id" = jht.id AND jht."urakka-id" = jh."urakka-id"
+WHERE jh."urakka-id" = :urakka-id;
+
+-- name:hae-urakan-omat-jh-korvaukset
+SELECT id AS "toimenkuva-id",
+       toimenkuva
+FROM johto_ja_hallintokorvaus_toimenkuva
+WHERE "urakka-id" = :urakka-id
+
+-- name:lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<!
+INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id")
+VALUES (:toimenkuva, :urakka-id)
+RETURNING id

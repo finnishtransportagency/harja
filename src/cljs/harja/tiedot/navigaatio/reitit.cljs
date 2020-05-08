@@ -13,7 +13,7 @@
          :toteumat :kokonaishintaiset-tyot
          :toimenpiteet :kokonaishintaiset-toimenpiteet
          :toteutus :kokonaishintaiset-tyot
-         :laskutus :laskutusyhteenveto
+         :laskutus :kohdistetut-kulut
          :hallinta :indeksit
          :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset

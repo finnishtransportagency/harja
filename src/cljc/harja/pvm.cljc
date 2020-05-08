@@ -151,6 +151,12 @@
      :clj  (Date.)))
 
 #?(:clj
+   (defn eilinen
+     "Palauttaa eilisen Datena"
+     []
+     (dateksi (t/minus (t/now) (t/days 1)))))
+
+#?(:clj
    (defn nyt-suomessa []
      (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
 
@@ -856,9 +862,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn tuntia-sitten [tuntia]
      (-> tuntia t/hours t/ago)))
 
-#?(:cljs
-   (defn sekunttia-sitten [sekunttia]
-     (t/minus (nyt) (t/seconds sekunttia))))
+(defn sekunttia-sitten [sekunttia]
+  #?(:cljs
+     (t/minus (nyt) (t/seconds sekunttia))
+     :clj
+     (t/minus (joda-timeksi (nyt)) (t/seconds sekunttia))))
 
 (def kayttoonottto (t/local-date 2016 10 1))
 

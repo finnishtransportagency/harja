@@ -34,7 +34,8 @@
 (def +polku+ (let [host (.-host js/location)]
                (if (or (gstr/startsWith host "10.")
                        (#{"localhost" "localhost:3000" "localhost:8000"
-                          "harja-test.solitaservices.fi"} host))
+                          "harja-test.solitaservices.fi"} host)
+                       (gstr/contains host "googleusercontent"))
                  "/"
                  "/harja/")))
 (defn polku []
@@ -347,5 +348,5 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (or (gstr/startsWith host "10.10.")
         (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
            "harja-test.solitaservices.fi"
-           "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
-           "testiextranet.vayla.fi"} host))))
+           "testiextranet.vayla.fi"} host)
+        (gstr/contains host "googleusercontent"))))

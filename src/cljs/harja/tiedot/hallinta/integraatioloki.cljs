@@ -55,6 +55,7 @@
 
 
 (def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
+(def hae-automaattisesti? (atom true))
 
 (defn hae-tapahtumat! []
   (let  [valittu-jarjestelma @valittu-jarjestelma

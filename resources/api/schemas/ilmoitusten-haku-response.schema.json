@@ -81,7 +81,7 @@
               },
               "sijainti": {
                 "id": "urn:harja/ilmoitukset/0/sijainti",
-                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+                "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json",
                 "required": true
               },
               "tienumero": {

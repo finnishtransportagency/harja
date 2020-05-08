@@ -57,7 +57,9 @@
                                        (s/optional-key :palvelin) s/Str
                                        :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
                                                (s/optional-key :sahkoposti-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
+                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
+                                               (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
+                                               (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
@@ -87,6 +89,7 @@
                                            (s/optional-key :tieosoiteverkon-shapefile) s/Str
                                            (s/optional-key :tieosoiteverkon-osoite) s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde) s/Str
+                                           (s/optional-key :laajennetun-tieosoiteverkon-tiedot) s/Str
                                            (s/optional-key :pohjavesialueen-shapefile) s/Str
                                            (s/optional-key :pohjavesialueen-osoite) s/Str
                                            (s/optional-key :pohjavesialueen-tuontikohde) s/Str

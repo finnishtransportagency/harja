@@ -42,7 +42,7 @@
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (str tulos " \u20AC")))
+            (if nayta-euromerkki (str tulos " \u20AC") tulos)))
 
         :clj
         (s/replace (.format (doto
@@ -117,6 +117,20 @@
            ;; voi ottaa loppuvälilyönnin pois. Eli esim "harja-sampo " -> "harja-sampo"
            ;(re-find #"^\s*" nimi)
            ;(s/replace nimi #"^\s*" "")
+
+           (re-find #"maanteiden hoitourakka" nimi)
+           (s/replace nimi #"maanteiden hoitourakka" "MHU")
+
+           (re-find #"Maanteiden hoitourakka" nimi)
+           (s/replace nimi #"Maanteiden hoitourakka" "MHU")
+
+           ;; Tähän yksittäisiä pitkiä urakoita. Ei ehkä kovin tehokasta tai järkevää.
+           (re-find #"^[0-9]\w+,? Päällystettyjen teiden ylläpito, " nimi)
+           (s/replace nimi #"^[0-9]\w+,? Päällystettyjen teiden ylläpito," "Pääll.yp.")
+
+           ;; numerot (Sampo ID) alusta pois
+           (re-find #"^[0-9]\w+,?" nimi)
+           (s/replace nimi #"^[0-9]\w+,?" "")
 
            ;; Ylimääräiset välilyönnit pois
            (re-find #"\s\s+" nimi)
@@ -258,6 +272,15 @@
            (re-find #"TIENPÄÄLLYSTYS" nimi)
            (s/replace nimi #"TIENPÄÄLLYSTYS" "pääl.")
 
+           (re-find #"Päällystettyjen teiden ylläpito" nimi)
+           (s/replace nimi #"Päällystettyjen" "Pääll.yp.")
+
+           (re-find #"päällystettyjen" nimi)
+           (s/replace nimi #"päällystettyjen" "pääll.")
+
+           (re-find #"Päällystettyjen" nimi)
+           (s/replace nimi #"Päällystettyjen" "Pääll.")
+
            (re-find #"päällystys" nimi)
            (s/replace nimi #"päällystys" "pääl.")
 
@@ -305,23 +328,29 @@
            (s/replace nimi #"PAIKKAUKSEN" "paik.")
 
            ;; Valaistus
+           (re-find #"tievalaistuksen" nimi)
+           (s/replace nimi #"tievalaistuksen" "tieval.")
+
+           (re-find #"Tievalaistuksen" nimi)
+           (s/replace nimi #"Tievalaistuksen" "Tieval.")
+
            (re-find #"valaistuksen" nimi)
-           (s/replace nimi #"valaistuksen" "v.")
+           (s/replace nimi #"valaistuksen" "val.")
 
            (re-find #"Valaistuksen" nimi)
-           (s/replace nimi #"Valaistuksen" "v.")
+           (s/replace nimi #"Valaistuksen" "Val.")
 
            (re-find #"VALAISTUKSEN" nimi)
-           (s/replace nimi #"VALAISTUKSEN" "v.")
+           (s/replace nimi #"VALAISTUKSEN" "val.")
 
            (re-find #"valaistus" nimi)
-           (s/replace nimi #"valaistus" "v.")
+           (s/replace nimi #"valaistus" "val.")
 
            (re-find #"Valaistus" nimi)
-           (s/replace nimi #"Valaistus" "v.")
+           (s/replace nimi #"Valaistus" "val.")
 
            (re-find #"VALAISTUS" nimi)
-           (s/replace nimi #"VALAISTUS" "v.")
+           (s/replace nimi #"VALAISTUS" "val.")
 
            ;; Tiemerkintä
            (re-find #"merkinnän" nimi)
@@ -354,26 +383,6 @@
            ;; ", " -> " "
            (re-find #"\s*,\s*" nimi)
            (s/replace nimi #"\s*,\s*" " ")
-
-           ;; Lyhennetään tie. Ilman tätä esim "tievalaistus" on "tiev"., joka on ihan ok,
-           ;; mutta jos on pakko niin on pakko
-           (re-find #"tien" nimi)
-           (s/replace nimi #"tien" "")
-
-           (re-find #"Tien" nimi)
-           (s/replace nimi #"Tien" "")
-
-           (re-find #"TIEN" nimi)
-           (s/replace nimi #"TIEN" "")
-
-           (re-find #"tie" nimi)
-           (s/replace nimi #"tie" "")
-
-           (re-find #"Tie" nimi)
-           (s/replace nimi #"Tie" "")
-
-           (re-find #"TIE" nimi)
-           (s/replace nimi #"TIE" "")
 
            :else (lyhenna-keskelta pituus nimi)))))))
 

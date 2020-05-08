@@ -188,16 +188,30 @@
             :palstoja 1 :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                     (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)
+                           sanktiotyypit (sanktiot/lajin-sanktiotyypit arvo)
+                           paivitetty (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count sanktiotyypit)) (first sanktiotyypit))]
+                                          (assoc paivitetty
+                                            :tyyppi tyyppi
+                                            :toimenpideinstanssi
+                                            (when tpk
+                                              (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                        paivitetty)]
+
                        (if-not (sanktio-domain/sakko? paivitetty)
                          (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                          paivitetty)))
-            :valinnat mahdolliset-sanktiolajit
+            :valinnat (sort mahdolliset-sanktiolajit)
             :valinta-nayta #(case %
                               :A "Ryhmä A"
                               :B "Ryhmä B"
                               :C "Ryhmä C"
                               :muistutus "Muistutus"
+                              :lupaussanktio "Lupaussanktio"
+                              :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
+                              :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
+                              :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
+                              :arvonvahennyssanktio "Arvonvähennys"
                               :yllapidon_muistutus "Muistutus"
                               :yllapidon_sakko "Sakko"
                               :yllapidon_bonus "Bonus"
@@ -218,7 +232,7 @@
                        :toimenpideinstanssi
                        (when tpk
                          (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-            ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
+            ;; Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata.
             :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
             :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
             :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
@@ -232,7 +246,7 @@
          (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
-            :valinnat ["MAKU 2005" "MAKU 2010"]
+            :valinnat ["MAKU 2015" "MAKU 2010" "MAKU 2005"]
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1})
 
@@ -338,10 +352,10 @@
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
        {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
        {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
-        :hae #(or (when (:summa %)
-                    (if yllapito?
-                      (- (:summa %)) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
-                      (:summa %)))
+        :hae #(or (let [summa (:summa %)]
+                    (fmt/euro-opt false
+                                  (when summa
+                                    (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
                   "Muistutus")}]
       sanktiot]
      (when yllapito?

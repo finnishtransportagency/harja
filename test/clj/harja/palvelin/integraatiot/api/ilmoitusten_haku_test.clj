@@ -37,7 +37,7 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn odotettu-ilmoitus [ilmoitettu]
+(defn odotettu-ilmoitus [ilmoitettu lahetetty]
   {"ilmoitettu" ilmoitettu
    "ilmoittaja" {"email" "matti.meikalainen@palvelu.fi"
                  "etunimi" "Matti"
@@ -141,18 +141,23 @@
 
 (deftest kuuntele-urakan-ilmoituksia
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))
-        lahetys-aika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/hours 3)))
+        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                 (t/minus (t/now) (t/minutes 185)))
+        ;;TODO VHAR-1754 Väliaikasesti ilmoitusaika = lähetysaika
+        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                 (t/minus (t/now) (t/minutes 180)))
+        lahetysaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                 (t/minus (t/now) (t/minutes 180)))
         aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
                             (t/now))
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
         tloik-kuittaukset (atom [])]
     (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
     ;; Ennen lähetystä, odotetaan, että api-kutsu on kerennyt jäädä kuuntelemaan
-    (<!! (timeout 300))
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma lahetys-aika))
+    (<!! (timeout 2000))
+    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma ilmoitusaika lahetysaika))
 
-    (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 20000)
+    (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 30000)
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
@@ -160,7 +165,8 @@
       (when (not= 1 (count (get vastausdata "ilmoitukset")))
         (println @vastaus))
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
-      (is (= (odotettu-ilmoitus (str lahetys-aika "Z")) ilmoitus)))
+      (is (= (odotettu-ilmoitus (str ilmoitusaika "Z") (str lahetysaika "Z")) ilmoitus)))
+
 
     (odota-ehdon-tayttymista #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 20000)
 

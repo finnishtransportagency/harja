@@ -7,7 +7,7 @@
              [konversio :as konv]
              [urakat :as urakat-q]]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen
-             :refer [raportin-otsikko]]
+             :refer [raportin-otsikko] :as yleinen]
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.fmt :as fmt]
@@ -316,5 +316,6 @@
 
        materiaalit)]
      (when-not (empty? materiaalit)
-       [:teksti "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta."])]))
+       [:teksti (str "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta. "
+                     yleinen/materiaalitoteumien-paivitysinfo)])]))
 

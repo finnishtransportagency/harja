@@ -74,17 +74,15 @@
                     :tiemerkintapvm (:valmis-tiemerkintaan lomakedata)
                     :kopio-itselle? (:kopio-itselle? lomakedata)
                     :saate (:saate lomakedata)
-                    :muut-vastaanottajat (->> (vals (get-in
-                                                      data
-                                                      [:lomakedata :muut-vastaanottajat]))
-                                              (filter (comp not :poistettu))
-                                              (map :sahkoposti))
+                    :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                           (:muut-vastaanottajat lomakedata))
                     :urakka-id urakka-id
                     :sopimus-id (first @u/valittu-sopimusnumero)
                     :vuosi vuosi})
                 {:disabled (not valmis-tallennettavaksi?)
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
+                 :virheviesti "Lähetys epäonnistui. Yritä myöhemmin uudelleen."
                  :kun-onnistuu (fn [vastaus]
                                  (reset! tiedot/aikataulurivit vastaus)
                                  (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
@@ -98,9 +96,7 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
-                                                        #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                                                (grid/hae-muokkaustila %)))
+        varmista-kayttajalta/modal-muut-vastaanottajat
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
@@ -155,9 +151,7 @@
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
-       [(varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
-                                                        #(swap! tiedot/tiemerkinta-valmis-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                                                (grid/hae-muokkaustila %)))
+       [varmista-kayttajalta/modal-muut-vastaanottajat
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
@@ -327,7 +321,8 @@
                                    ;; Lisätään modalissa kirjoitetut mailitiedot kaikille muokatuille kohteille
                                    (doseq [kohde-id (map #(first (::aikajana/drag %)) tiemerkinnan-valmistumiset)]
                                      (swap! tiedot/kohteiden-sahkopostitiedot assoc kohde-id
-                                            {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                                            {:muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                                                    (:muut-vastaanottajat lomakedata))
                                              :saate (:saate lomakedata)
                                              :kopio-itselle? (:kopio-itselle? lomakedata)}))
                                    (valmis!))
@@ -372,6 +367,17 @@
                                              :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})
            aikataulurivit)]]))
 
+(defn- paallystysurakan-tarkka-aikataulu
+  [urakka-id sopimus-id rivi vuosi nakyma voi-muokata-paallystys? voi-muokata-tiemerkinta?]
+  [tarkka-aikataulu/tarkka-aikataulu
+   {:rivi rivi
+    :vuosi vuosi
+    :nakyma nakyma
+    :voi-muokata-paallystys? (voi-muokata-paallystys?)
+    :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
+    :urakka-id urakka-id
+    :sopimus-id sopimus-id}])
+
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -404,18 +410,19 @@
                                                 (reset! tiedot/aikataulurivit vastaus)
                                                 (reset! tiedot/kohteiden-sahkopostitiedot nil)))
                   :ei-mahdollinen)
-      :vetolaatikot (into {}
-                          (map (juxt :id
-                                     (fn [rivi]
-                                       [tarkka-aikataulu/tarkka-aikataulu
-                                        {:rivi rivi
-                                         :vuosi vuosi
-                                         :nakyma (:nakyma optiot)
-                                         :voi-muokata-paallystys? (voi-muokata-paallystys?)
-                                         :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
-                                         :urakka-id urakka-id
-                                         :sopimus-id sopimus-id}]))
-                               aikataulurivit))}
+      :vetolaatikot (yllapitokohteet-view/alikohteiden-vetolaatikot urakka-id
+                                                                    (first @u/valittu-sopimusnumero)
+                                                                    (atom aikataulurivit)
+                                                                    (:kohdetyyppi optiot)
+                                                                    (if (= :tiemerkinta (:nakyma optiot))
+                                                                           false
+                                                                           true)
+                                                                    #{:raekoko :massamaara :toimenpide :tr-muokkaus}
+                                                                    {:fn paallystysurakan-tarkka-aikataulu
+                                                                     :nakyma (:nakyma optiot)
+                                                                     :voi-muokata-paallystys? voi-muokata-paallystys?
+                                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
+                                                                    true)}
      [{:tyyppi :vetolaatikon-tila :leveys 2}
       {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
        :pituus-max 128 :muokattava? voi-muokata-paallystys?}
@@ -424,19 +431,6 @@
       {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
        :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
        :muokattava? (constantly false)}
-      {:otsikko "Ajo\u00ADrata"
-       :nimi :tr-ajorata
-       :muokattava? (constantly false)
-       :tyyppi :string :tasaa :oikea
-       :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
-       :leveys 3}
-      {:otsikko "Kais\u00ADta"
-       :muokattava? (constantly false)
-       :nimi :tr-kaista
-       :tyyppi :string
-       :tasaa :oikea
-       :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
-       :leveys 3}
       {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
        :tyyppi :positiivinen-numero
        :tasaa :oikea

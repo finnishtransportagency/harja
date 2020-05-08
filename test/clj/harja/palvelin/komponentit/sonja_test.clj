@@ -372,19 +372,13 @@
     (doseq [istunto (-> status-ennen :olioiden-tilat :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
-    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*"]]
-      (is (some #(= (:nimi %) saije)
-                (:saikeiden-tilat status-ennen))))
     ;; STATUS LOPETUKSEN JÄLKEEN TESTIT
     (is (= (-> status-lopetuksen-jalkeen :olioiden-tilat :yhteyden-tila) "RECONNECTING"))
     ;; STATUS RECONNECTIN JÄLKEEN
     (is (= (-> status-aloituksen-jalkeen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
     (doseq [istunto (-> status-aloituksen-jalkeen :olioiden-tilat :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
-      (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
-    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*"]]
-      (is (some #(= (:nimi %) saije)
-                (:saikeiden-tilat status-aloituksen-jalkeen))))))
+      (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))))
 
 (deftest liikaa-kaskyja
   (alts!! [*sonja-yhteys* (timeout 10000)])

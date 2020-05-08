@@ -32,7 +32,7 @@
     ::toimenkuva (specql.rel/has-one ::toimenkuva-id
                                      ::johto-ja-hallintokorvaus-toimenkuva
                                      ::id)}
-   #?(:clj {::kk-v (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
-            ::tunnit (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
-            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
+   #?(:clj {::tunnit (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::osa-kuukaudesta (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
 
