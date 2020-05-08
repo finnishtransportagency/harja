@@ -735,6 +735,7 @@ jatkon."
 
 (defn sahkopostiosoitteet-str->set [osoitteet]
   (into #{}
-        (map
-          #(str/trim %)
-          (str/split osoitteet #","))))
+        (keep not-empty
+              (map
+                #(str/trim %)
+                (str/split osoitteet #",")))))
