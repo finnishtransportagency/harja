@@ -191,7 +191,8 @@
     (fn [_]
      [:div {:style {:display "flex"
                    :justify-content "space-evenly"}}
-      (when-not urakoitsija-kayttajana?
+      ;; piilotetaan kunnes backend toteutettu, ettei mene raakileena tuotantoon
+      #_(when-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
          (if tarkistettu
            [:span
