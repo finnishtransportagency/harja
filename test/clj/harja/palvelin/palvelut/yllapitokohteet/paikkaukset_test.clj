@@ -5,6 +5,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]))
@@ -291,7 +292,13 @@
                                      +kayttaja-jvh+
                                      {::paikkaus/urakka-id urakka-id
                                       :ensimmainen-haku? true})
-        paikkauskohteet (:paikkauskohteet kustannukset)]
+        paikkauskohteet (for [x (:paikkauskohteet kustannukset)] (dissoc x
+                                                                         ::paikkaus/tarkistaja-id
+                                                                         ::paikkaus/tarkistettu
+                                                                         ::paikkaus/tila
+                                                                         ::paikkaus/ilmoitettu-virhe
+                                                                         ::muokkaustiedot/luotu
+                                                                         ::muokkaustiedot/muokattu))]
     (is (= paikkauskohteet [#:harja.domain.paikkaus{:id 1, :nimi "Testikohde", :ulkoinen-id 666, :tierekisteriosoite {:tie 20, :aosa 1, :aet 1, :losa 3, :let 250}}
 
                             #:harja.domain.paikkaus{:id 3, :nimi "Testikohde 2", :ulkoinen-id 1337, :tierekisteriosoite {:tie 20, :aosa 3, :aet 200, :losa 3, :let 300}}

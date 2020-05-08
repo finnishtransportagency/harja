@@ -349,3 +349,91 @@
      :saate saate
      :muut-vastaanottajat muut-vastaanottajat
      :ilmoittaja kayttaja}))
+
+
+;; Lähetä viesti paikkauksien tarkastuksessa havaitusta virheestä
+(defn- viesti-paikkaustoteumassa-virhe [{:keys [kohde-nimi rivien-lukumaara pinta-ala-summa massamenekki-summa
+                                                saate ilmoittaja]}]
+  (let [tiivistelma (format "Virhe kohteen '%s' paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." kohde-nimi)]
+    (html
+      [:div
+       [:p (sanitoi tiivistelma)]
+       [:h3 "Kohteen tiedot"]
+       (html-tyokalut/tietoja [["Kohde" kohde-nimi]
+                               ["Rivejä" rivien-lukumaara]
+                               ["Pinta-ala yht." (str pinta-ala-summa "m\u00B2")]
+                               ["Massamenekki yht." massamenekki-summa]
+                               ["Ilmoittaja" (formatoi-ilmoittaja ilmoittaja)]])
+       (when saate [:div
+                    [:h3 "Lisätietoa virheestä"]
+                    [:p (sanitoi saate)]
+                    ])])))
+
+(def viestit-yhteensa (atom 0))
+(def epaonnistuneet-viestit-yhteensa (atom 0))
+
+(defn laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe
+  "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
+   ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
+
+   Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
+  [{:keys [fim email kopio-itselle? muut-vastaanottajat ilmoittaja
+           saate rivien-lukumaara pinta-ala-summa massamenekki-summa urakka-sampo-id] :as tiedot}]
+  (let [viestin-otsikko (format "Virhe kohteen '%s' paikkaustoteumassa. Tarkista ja korjaa tiedot."
+                                (:harja.domain.paikkaus/nimi tiedot))
+        viestin-params {:kohde-nimi (:harja.domain.paikkaus/nimi tiedot)
+                        :rivien-lukumaara rivien-lukumaara
+                        :pinta-ala-summa pinta-ala-summa
+                        :massamenekki-summa massamenekki-summa
+                        :saate saate
+                        :ilmoittaja ilmoittaja}
+        viestin-vartalo (viesti-paikkaustoteumassa-virhe viestin-params)]
+    (when urakka-sampo-id
+      (swap! viestit-yhteensa inc)
+      (log/debug (format "Lähetetään sähköposti: paikkaustoteumassa %s virhe." (:harja.domain.paikkaus/nimi tiedot)))
+      (let [vastaus (viestinta/laheta-sposti-fim-kayttajarooleille
+        {:fim fim
+         :email email
+         :urakka-sampoid urakka-sampo-id
+         :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
+         :viesti-otsikko viestin-otsikko
+         :viesti-body        viestin-vartalo})]
+        (if (false? (:onnistui? vastaus))
+          (do
+            (log/error "FIM käyttäjälle säpön lähetys epäonnistui")
+            (swap! epaonnistuneet-viestit-yhteensa inc))
+          )))
+    (doseq [muu-vastaanottaja muut-vastaanottajat]
+      (log/debug "Muu vastaanottaja menossa, osoite: " (pr-str muu-vastaanottaja))
+      (if (not-empty muu-vastaanottaja) ; Tarkistus että säpo-kentässä on jotain sisältöä.
+        (do
+          (swap! viestit-yhteensa inc)
+          (try
+            (sahkoposti/laheta-viesti!
+              email
+              (sahkoposti/vastausosoite email)
+              muu-vastaanottaja
+              (str "Harja: " viestin-otsikko)
+              viestin-vartalo)
+            (catch Exception e
+              (swap! epaonnistuneet-viestit-yhteensa inc)
+              (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                                 muu-vastaanottaja (pr-str e))))))))
+    (when (and kopio-itselle? (:sahkoposti ilmoittaja))
+      ;(swap! viestit-yhteensa inc) ; TODO: kopiolähetyksen seuraaminen on hyödytäntä koska laheta-sahkoposti-itselle ei palauta true/false flagia onnistumisesta.
+      (log/debug (format "Lähetetään kopio paikkaus-virheilmoituksesta sähköpostiin: %s" (:sahkoposti ilmoittaja)))
+      (viestinta/laheta-sahkoposti-itselle
+        {:email email
+         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakoitsijan vastuuhenkilölle."
+         :sahkoposti (:sahkoposti ilmoittaja)
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo})))
+
+  ; TODO: kun-virhe ei saa täältä :virhe true - datan viestiä käyttöön, vaan näyttäisi että on nil?
+  (if (> @epaonnistuneet-viestit-yhteensa 0)
+    (if (= @epaonnistuneet-viestit-yhteensa @viestit-yhteensa)
+      {:virhe true :viesti "Sähköpostien lähetys epäonnistui. Yritä myöhemmin uudelleen."}
+      {:virhe true :viesti "Sähköpostien lähetys epäonnistui osittain. Yritä myöhemmin uudelleen."}
+      )
+    {:viesti "Sähköpostin lähetys onnistui"}
+  ))
