@@ -5,6 +5,7 @@ psql -h localhost -U harjatest template1 -c "DROP DATABASE IF EXISTS harjatest_t
 psql -h localhost -U harjatest template1 -c "CREATE DATABASE harjatest_template OWNER harjatest;"
 
 psql -h localhost -U harjatest harjatest_template -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+psql -h localhost -U harjatest harjatest_template -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
 psql -h localhost -U harjatest harjatest_template -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
 cd tietokanta
