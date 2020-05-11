@@ -20,8 +20,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.roolit :as roolit])
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -30,30 +29,29 @@
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  (komp/luo
-    (komp/sisaan-ulos #(do
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :S))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (fn [{:keys [id] :as ur}]
-      (let [mhu-urakan-urakoitsija? (and (= :teiden-hoito (:tyyppi ur))
-                                         (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija))]
+  (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))]
+    (komp/luo
+      (komp/sisaan-ulos #(do
+                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                           (nav/vaihda-kartan-koko! :S))
+                        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+      (fn [{:keys [id] :as ur}]
         [bs/tabs {:style :tabs :classes "tabs-taso2"
                   :active (nav/valittu-valilehti-atom :toteumat)}
 
          "Kokonaishintaiset työt" :kokonaishintaiset-tyot
          (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
-                    (not mhu-urakan-urakoitsija?))
+                    (not mhu-urakka?))
            [kokonaishintaiset-tyot/kokonaishintaiset-toteumat])
 
          "Yksikköhintaiset työt" :yksikkohintaiset-tyot
          (when (and (oikeudet/urakat-toteumat-yksikkohintaisettyot id)
-                    (not mhu-urakan-urakoitsija?))
+                    (not mhu-urakka?))
            [yks-hint-tyot/yksikkohintaisten-toteumat])
 
          "Muutos- ja lisätyöt" :muut-tyot
          (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
-                    (not mhu-urakan-urakoitsija?))
+                    (not mhu-urakka?))
            [muut-tyot/muut-tyot-toteumat ur])
 
          "Suola" :suola
