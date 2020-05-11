@@ -24,6 +24,7 @@
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
+(defrecord AsetaHakuparametri [polku arvo])
 
 (defrecord LiiteLisatty [liite])
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
@@ -497,9 +498,13 @@
                        :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
   HaeUrakanLaskut
-  (process-event [{:keys [hakuparametrit]} app]
-    (tuck-apurit/post! :kaikki-laskuerittelyt
-                       {:urakka-id (:id hakuparametrit)}
+  (process-event [{{:keys [id alkupvm loppupvm]} :hakuparametrit} app]
+    (tuck-apurit/post! (if (and alkupvm loppupvm)
+                         :laskuerittelyt
+                         :kaikki-laskuerittelyt)
+                       (cond-> {:urakka-id id}
+                               (and alkupvm loppupvm) (assoc :alkupvm alkupvm
+                                                             :loppupvm loppupvm))
                        {:onnistui           ->LaskuhakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
                         :paasta-virhe-lapi? true})
@@ -642,6 +647,12 @@
                        {:onnistui    ->PoistoOnnistui
                         :epaonnistui ->KutsuEpaonnistui})
     (update-in app [:parametrit :haetaan] inc))
+  AsetaHakuparametri
+  (process-event
+    [{:keys [polku arvo]} app]
+    (assoc-in app [:parametrit (case polku
+                                 :alkupvm :haun-alkupvm
+                                 :loppupvm :haun-loppupvm)] arvo))
 
   ;; FORMITOIMINNOT
 
