@@ -177,6 +177,8 @@
    "odottaa_vastausta" "Odottaa vastausta"
    nil "Ei lähetetty YHA:an"})
 
+(def ilmoitettu-virhe-max-merkkimaara 100)
+
 (defn- komponentti-otsikon-sisaan
   [e! paikkaukset]
   (let [paikkaus (first paikkaukset)
@@ -187,7 +189,8 @@
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
         solujen-tyyli {:margin-right ".5rem"
-                       :margin-left ".5rem"}]
+                       :margin-left ".5rem"
+                       :flex 1}]
     (fn [_]
      [:div {:style {:display "flex"
                    :justify-content "space-evenly"}}
@@ -214,22 +217,25 @@
            (get lahetyksen-tilan-teksti lahetyksen-tila))])
 
       (when-not urakoitsija-kayttajana?
-        [:span
-         [:span {:style solujen-tyyli}
+        [:span {:style solujen-tyyli}
           [yleiset/linkki "Ilmoita virhe"
            #(e! (tiedot/->AvaaVirheModal paikkaukset))
            {:style {}
             :ikoni (ikonit/envelope)}]]
-         (if ilmoitettu-virhe
-           [:span.virheviesti-sailio
-            [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
-            [:span (str (subs ilmoitettu-virhe 0 14) "...")]])])
+        )
+
+      (if (and ilmoitettu-virhe (not urakoitsija-kayttajana?))
+        [:span.virheviesti-sailio {:style {:flex "2 1 0%"}}
+         [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
+         [:span {:style {:word-break "break-word"}} (str (subs ilmoitettu-virhe 0 ilmoitettu-virhe-max-merkkimaara)
+                                                         (if (> (count ilmoitettu-virhe) ilmoitettu-virhe-max-merkkimaara) "..."))]])
+
       [yleiset/linkki "Kustannukset"
        #(do
           (.preventDefault %)
           (e! (tiedot/->SiirryKustannuksiin
                 (::paikkaus/id paikkauskohde))))
-       {:ikoni (ikonit/euro)}]])))
+       {:ikoni (ikonit/euro) :style {:flex 1}}]])))
 
 (defn otsikkokomponentti
   [e! paikkaukset]
