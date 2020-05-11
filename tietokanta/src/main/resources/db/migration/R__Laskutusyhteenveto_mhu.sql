@@ -7,8 +7,8 @@ CREATE TYPE HJERILLISHANKINNAT_RIVI AS
     hj_erillishankinnat_laskutetaan NUMERIC
 );
 CREATE OR REPLACE FUNCTION hj_erillishankinnat(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-                                               toimenpide_koodi TEXT, t_instanssi INTEGER,
-                                               ur INTEGER) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
+                                               toimenpide_koodi TEXT,
+                                               t_instanssi INTEGER) RETURNS SETOF HJERILLISHANKINNAT_RIVI AS
 $$
 DECLARE
 
@@ -22,9 +22,9 @@ DECLARE
 BEGIN
     -- Haetaan hoidon johdon erillishankinnat
 
-    RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi %' , toimenpide_koodi;
+    RAISE NOTICE 'hj_erillishankinnat: toimenpidekoodi % -- tehtavaryhma_i: % ' , toimenpide_koodi, tehtavaryhma_id;
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
-    RAISE NOTICE 'hj_erillishankinnat :: tehtavaryhma_i: %', tehtavaryhma_id;
+
 
     hj_erillishankinnat_laskutettu := 0.0;
     hj_erillishankinnat_laskutetaan := 0.0;
@@ -66,8 +66,7 @@ BEGIN
         -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
         -- Kuluvan kuukauden laskutettava summa nousee maksuerään vasta kuukauden viimeisenä päivänä.
 
-
-        -- erillishankinnat - laskutetaan
+        -- Erillishankinnat - laskutetaan
         FOR hj_erillishankinnat_laskutetaan_rivi IN SELECT id,
                                                            coalesce(summa, 0)                          AS erillishankinta_summa,
                                                            (SELECT (date_trunc('MONTH', format('%s-%s-%s', vuosi, kuukausi, 1)::DATE) +
@@ -95,6 +94,7 @@ BEGIN
             LOOP
                 -- Kuukauden laskutettava määrä päivittyy laskutettavaan summaan ja lähetettävään maksuerään vasta kuukauden viimeisenä päivänä.
                 IF (hj_erillishankinnat_laskutetaan_rivi.tot_alkanut::DATE <= current_date) THEN
+                    RAISE NOTICE 'Erillishankinnat laskutetaan :: summa: %', hj_erillishankinnat_laskutetaan_rivi.erillishankinta_summa;
                     hj_erillishankinnat_laskutetaan := hj_erillishankinnat_laskutetaan + COALESCE(
                             hj_erillishankinnat_laskutetaan_rivi.erillishankinta_summa, 0.0);
                 END IF;
@@ -106,7 +106,6 @@ BEGIN
     RETURN NEXT rivi;
 END;
 $$ LANGUAGE plpgsql;
-
 
 -- MHU hoidonjohdon palkkio pilkotaan tähän
 CREATE TYPE HJPALKKIO_RIVI AS
@@ -131,7 +130,7 @@ DECLARE
 BEGIN
     -- Haetaan hoidon johdon yhteenvetoja
 
-    RAISE NOTICE 'hj_palkkio: toimenpidekoodi %' , toimenpide_koodi;
+    RAISE NOTICE 'HJ-Palkkio: toimenpidekoodi %' , toimenpide_koodi;
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
 
     hj_palkkio_laskutettu := 0.0;
@@ -139,12 +138,12 @@ BEGIN
 
     IF (toimenpide_koodi = '23150') THEN
 
-        RAISE NOTICE 'hj_palkkio lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
+        RAISE NOTICE 'HJ-Palkkio lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
 
         -- Ennen tarkasteltavaa aikaväliä laskutetut hoidonjohdon palkkiot - (päätellään tpi:stä ja toimenpidekoodista )
         -- Käydään läpi tiedot taulusta: kustannusarvioitu_tyo
 
-        -- hj_palkkio - laskutettu
+        -- HJ-Palkkio - laskutettu
         FOR hj_palkkio_laskutettu_rivi IN SELECT id,
                                                  coalesce(summa, 0)                          AS hjpalkkio_summa,
                                                  (SELECT (date_trunc('MONTH', format('%s-%s-%s', vuosi, kuukausi, 1)::DATE) +
@@ -203,6 +202,7 @@ BEGIN
             LOOP
                 -- Kuukauden laskutettava määrä päivittyy laskutettavaan summaan ja lähetettävään maksuerään vasta kuukauden viimeisenä päivänä.
                 IF (hj_palkkio_laskutetaan_rivi.tot_alkanut::DATE <= current_date) THEN
+                    RAISE NOTICE 'HJ-palkkio laskutetaan :: summa: %', hj_palkkio_laskutetaan_rivi.hjpalkkio_summa;
                     hj_palkkio_laskutetaan :=
                                 hj_palkkio_laskutetaan + COALESCE(hj_palkkio_laskutetaan_rivi.hjpalkkio_summa, 0.0);
                 END IF;
@@ -214,7 +214,6 @@ BEGIN
     RETURN NEXT rivi;
 END;
 $$ LANGUAGE plpgsql;
-
 
 -- MHU hoidon johto on niin iso ja monimutkainen laskenta, että se on eriytetty tähän
 CREATE TYPE HOIDONJOHTO_RIVI AS
@@ -326,9 +325,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-
-DROP FUNCTION IF EXISTS laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
+DROP FUNCTION IF EXISTS mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
     aikavali_loppupvm DATE, ur INTEGER);
 
 DROP TYPE IF EXISTS LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI;
@@ -367,9 +364,8 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     indeksi_puuttuu                 BOOLEAN
 );
 
--- Palauttaa maksuerien kokonaissummat
--- Tallentaa laskutusyhteenvetoon päivittyneen tilanteen
-CREATE OR REPLACE FUNCTION laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE,
+-- Palauttaa MHU laskutusyhteenvedossa tarvittavat summat
+CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE,
                                                            aikavali_alkupvm DATE, aikavali_loppupvm DATE,
                                                            ur INTEGER) RETURNS SETOF LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI
     LANGUAGE plpgsql AS
@@ -475,9 +471,8 @@ BEGIN
                           JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
                  WHERE tpi.urakka = ur
         LOOP
-            RAISE NOTICE '*************************************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % ***************************************************************', t.nimi, t.tpi;
+            RAISE NOTICE '****************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % ************************************************', t.nimi, t.tpi;
             hankinnat_laskutettu := 0.0;
-
 
             -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut lisätyöt
             lisatyot_laskutettu := 0.0;
@@ -834,8 +829,7 @@ BEGIN
             hj_erillishankinnat_laskutettu := 0.0;
             hj_erillishankinnat_laskutetaan := 0.0;
             hj_erillishankinnat_rivi :=
-                    (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi,
-                                                ur));
+                    (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi));
             hj_erillishankinnat_laskutettu := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
             hj_erillishankinnat_laskutetaan := hj_erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 
@@ -919,9 +913,7 @@ BEGIN
                      suolasakko_kaytossa, lampotila_puuttuu, indeksi_puuttuu
                 );
 
-
             RETURN NEXT rivi;
         END LOOP;
 END;
 $$;
-

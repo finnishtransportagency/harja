@@ -73,8 +73,8 @@ SELECT tpi_id,
        SUM(sanktiot_summa) AS "sanktiot",
        SUM(bonukset_summa) AS "bonukset"
 FROM (SELECT
-          SUM((laskutusyhteenveto_teiden_hoito).hankinnat_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).hankinnat_laskutetaan)                 AS kokonaishintaisten_summa, -- Hankinnat
+          SUM((laskutusyhteenveto_teiden_hoito).kht_laskutettu +
+              (laskutusyhteenveto_teiden_hoito).kht_laskutetaan)                 AS kokonaishintaisten_summa, -- Hankinnat
           SUM((laskutusyhteenveto_teiden_hoito).sakot_laskutettu +
               (laskutusyhteenveto_teiden_hoito).sakot_laskutetaan) AS "sanktiot_summa",
           SUM((laskutusyhteenveto_teiden_hoito).bonukset_laskutettu +

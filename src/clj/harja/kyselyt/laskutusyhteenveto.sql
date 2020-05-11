@@ -7,7 +7,7 @@ SELECT * FROM laskutusyhteenveto(
 
 -- name: hae-laskutusyhteenvedon-tiedot-teiden-hoito
 -- Hakee laskutusyhteenvetoon tarvittavat tiedot teiden hoidon urakassa (MHU)
-SELECT * FROM laskutusyhteenveto_teiden_hoito(
+SELECT * FROM mhu_laskutusyhteenveto_teiden_hoito(
                   :hk_alkupvm::DATE, :hk_loppupvm::DATE,
                   :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
                   :urakka::INTEGER);
