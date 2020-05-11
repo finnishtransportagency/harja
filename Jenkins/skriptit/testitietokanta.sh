@@ -16,3 +16,4 @@ PGOPTIONS='--client-min-messages=warning' psql -h localhost -U harjatest harjate
 
 psql -h localhost -U harjatest template1 -c "DROP DATABASE IF EXISTS harjatest;"
 psql -h localhost -U harjatest template1 -c "CREATE DATABASE harjatest OWNER harjatest TEMPLATE harjatest_template;"
+psql -h localhost -U harjatest template1 -c "CREATE DATABASE temp OWNER harjatest TEMPLATE harjatest_template;"
