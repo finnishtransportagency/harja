@@ -166,8 +166,6 @@
              :on-click  #(do
                            (.preventDefault %)
                            (.stopPropagation %)
-                           #_(when (= "submit" type)
-                             (. (.. % -target -parentNode) requestSubmit))
                            (apply toiminto toiminto-args))}
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))

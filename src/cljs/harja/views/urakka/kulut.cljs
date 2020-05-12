@@ -742,11 +742,7 @@
                                              :alkupvm   haun-alkupvm
                                              :loppupvm  haun-loppupvm})}]
             [:button {:type  "submit"
-                      :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]
-            #_[napit/yleinen-toissijainen "Tallenna Excel" #(loki/log "Muodostetaan Excel")
-               {:type         "submit"
-                :luokka       "suuri"
-                :vayla-tyyli? true}]]
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
            ^{:key "raporttipdf"}
            [:form {:style  {:margin-left  "16px"
                             :margin-right "64px"}
@@ -757,11 +753,7 @@
                                              :alkupvm   haun-alkupvm
                                              :loppupvm  haun-loppupvm})}]
             [:button {:type  "submit"
-                      :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]
-            #_[napit/yleinen-toissijainen "Tallenna PDF" #(loki/log "Muodostetaan PDF")
-               {:type         "submit"
-                :luokka       "suuri"
-                :vayla-tyyli? true}]]
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
