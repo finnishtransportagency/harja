@@ -237,7 +237,6 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
   (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
-      (log/debug "HES")
       (if (nil? kayttaja-id)
         (do
           (log/error (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
