@@ -166,11 +166,8 @@
              :on-click  #(do
                            (.preventDefault %)
                            (.stopPropagation %)
-                           (when (= "submit" type)
-                             (let [vanhempi (. (.. % -target -parentNode) -requestSubmit)
-                                   pyyda-submit (. vanhempi -requestSubmit)]
-                               (loki/log "vanhempi" vanhempi "pyyda " pyyda-submit)
-                               (. (.. % -target -parentNode) requestSubmit)))
+                           #_(when (= "submit" type)
+                             (. (.. % -target -parentNode) requestSubmit))
                            (apply toiminto toiminto-args))}
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))

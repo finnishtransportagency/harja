@@ -741,10 +741,12 @@
                      :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
                                              :alkupvm   haun-alkupvm
                                              :loppupvm  haun-loppupvm})}]
-            [napit/yleinen-toissijainen "Tallenna Excel" #(loki/log "Muodostetaan Excel")
-             {:type         "submit"
-              :luokka       "suuri"
-              :vayla-tyyli? true}]]
+            [:button {:type  "submit"
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]
+            #_[napit/yleinen-toissijainen "Tallenna Excel" #(loki/log "Muodostetaan Excel")
+               {:type         "submit"
+                :luokka       "suuri"
+                :vayla-tyyli? true}]]
            ^{:key "raporttipdf"}
            [:form {:style  {:margin-left  "16px"
                             :margin-right "64px"}
@@ -754,10 +756,12 @@
                      :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
                                              :alkupvm   haun-alkupvm
                                              :loppupvm  haun-loppupvm})}]
-            [napit/yleinen-toissijainen "Tallenna PDF" #(loki/log "Muodostetaan PDF")
-             {:type         "submit"
-              :luokka       "suuri"
-              :vayla-tyyli? true}]]
+            [:button {:type  "submit"
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]
+            #_[napit/yleinen-toissijainen "Tallenna PDF" #(loki/log "Muodostetaan PDF")
+               {:type         "submit"
+                :luokka       "suuri"
+                :vayla-tyyli? true}]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
@@ -770,14 +774,14 @@
               :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
               :arvo hakuteksti]
            [kentat/aikavali {:pvm-alku                 haun-alkupvm
-                                  :pvm-min                  (-> @tila/yleiset :urakka :alkupvm)
-                                  :pvm-max                  (-> @tila/yleiset :urakka :loppupvm)
-                                  :pvm-loppu                haun-loppupvm
-                                  :ikoni                    ikonit/calendar
-                                  :valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
-                                  :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
-                                                                                            :alkupvm  %1
-                                                                                            :loppupvm %2}))}]]
+                             :pvm-min                  (-> @tila/yleiset :urakka :alkupvm)
+                             :pvm-max                  (-> @tila/yleiset :urakka :loppupvm)
+                             :pvm-loppu                haun-loppupvm
+                             :ikoni                    ikonit/calendar
+                             :valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
+                             :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
+                                                                                       :alkupvm  %1
+                                                                                       :loppupvm %2}))}]]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 
