@@ -6198,6 +6198,7 @@ WHERE taso = 4
 
 
 -- Äkillisten hoitotöiden ja vahinkojen korjaamisen nimeäminen selkeämmin
+-- Päivitetään myös liik.ymp.hoito => l.ymp.hoito
 UPDATE toimenpidekoodi
 SET nimi               = 'Äkillinen hoitotyö (talvihoito)',
     suunnitteluyksikko = 'euroa'
