@@ -76,7 +76,6 @@
     :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
     :alihankintabonus "Alihankintabonus"
     :lupausbonus "Lupausbonus"
-    :tktt-bonus "TKTT-bonus"
     :tavoitepalkkio "Tavoitepalkkio"
     :muu "Muu"
     +valitse-tyyppi+))
@@ -88,7 +87,7 @@
              true)
           (case urakkatyyppi
             :hoito [:asiakastyytyvaisyysbonus :muu]
-            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :lupausbonus :tktt-bonus :tavoitepalkkio :muu]
+            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :lupausbonus :tavoitepalkkio :muu]
             [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
