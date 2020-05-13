@@ -44,7 +44,7 @@
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.2.5"]
-                 [net.postgis/postgis-jdbc "2.3.0"]
+                 [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.16.1"]
                  [com.mchange/c3p0 "0.9.5.4"]
                  [webjure/jeesql "0.4.7"]
@@ -147,11 +147,7 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["osgeo" "https://download.osgeo.org/webdav/geotools/"]
-                 ;; Tämä on kaiketi org.geotools/* dependencyjä varten. Nykyinen  versio
-                 ;; on kyllä mavenissakin, mutta jos tarvii joskus SNPASHOTIN, niin tuolta
-                 ;; löytyy
-                 ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
+  :repositories [["osgeo" "https://repo.osgeo.org/repository/release/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]
                  ;; Tämä on tässä [org.clojure/data.zip "0.1.4-SNAPSHOT"] dependencyn takia
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
