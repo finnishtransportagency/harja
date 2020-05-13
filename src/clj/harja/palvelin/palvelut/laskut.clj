@@ -211,11 +211,8 @@
   (q/poista-laskun-ja-liitteen-linkitys! db {:lasku-id lasku-id :liite-id liite-id :kayttaja (:id user)})
   (hae-laskuerittely db user {:id lasku-id}))
 
-(defn- hae-ja-jarjesta-kulut-kuukausien-mukaan
-  [])
-
 (defn- kulu-pdf
-  [db user {:keys [urakka-id alkupvm loppupvm]}]
+  [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [alkupvm (or alkupvm
                     (pvm/->pvm "01.01.1990"))
@@ -226,15 +223,14 @@
                                                             :loppupvm (konversio/sql-timestamp loppupvm)})
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
-                                                   kulut))
-        otsikko (-> kulut first :urakka)]
-    (kpdf/kulu-pdf otsikko
+                                                   kulut))]
+    (kpdf/kulu-pdf urakka-nimi
                    (pvm/pvm alkupvm)
                    (pvm/pvm loppupvm)
                    kulut-kuukausien-mukaan)))
 
 (defn- kulu-excel
-  [db workbook user {:keys [urakka-id alkupvm loppupvm]}]
+  [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (let [alkupvm (or alkupvm
                     (pvm/->pvm "01.01.1990"))
@@ -247,10 +243,10 @@
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
                                                    kulut))
-        otsikko (-> kulut first :urakka)
         luo-sarakkeet (fn [& otsikot]
                         (mapv #(hash-map :otsikko %) otsikot))
-        optiot {:nimi    otsikko}
+        optiot {:nimi  urakka-nimi
+                :tyhja (if (empty? kulut) "Ei kuluja valitulla aikavälillä.")}
         sarakkeet (luo-sarakkeet "Eräpäivä" "Toimenpide" "Tehtäväryhmä" "Maksuerä" "Summa")
         luo-rivi (fn [rivi] [(-> rivi
                                  :erapaiva
@@ -266,65 +262,18 @@
                          [:teksti (str vuosi-kuukausi)]
                          [:otsikko (str vuosi-kuukausi)]
                          [:taulukko optiot sarakkeet (mapv luo-rivi rivit)]))
+        taulukot (reduce luo-data [] kulut-kuukausien-mukaan)
         taulukko (concat
-                   [:raportti {:nimi        (str otsikko "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
-                             :orientaatio :landscape}]
-                   (reduce luo-data [] kulut-kuukausien-mukaan))]
+                   [:raportti {:nimi        (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+                               :orientaatio :landscape}]
+                   (if (empty? taulukot)
+                       [[:taulukko optiot (luo-sarakkeet (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))) [["Ei kuluja valitulla aikavälillä"]]]]
+                       taulukot))]
     (excel/muodosta-excel (vec taulukko)
                           workbook)))
 
-;[:raportti
-; {:nimi Sanktioiden yhteenveto, :orientaatio :landscape}
-; [:taulukko
-;  {:otsikko Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.10.2019 - 30.09.2020,
-;   :oikealle-tasattavat-kentat #{1 3 2},
-;   :sheet-nimi Sanktioiden yhteenveto}
-;  [{:otsikko , :leveys 12}
-;   {:otsikko Aktiivinen Kajaani Testi, :leveys 15, :fmt :raha}
-;   {:otsikko Aktiivinen Oulu Testi, :leveys 15, :fmt :raha}
-;   {:otsikko Yh­teen­sä, :leveys 15, :fmt :raha}]
-;  [{:otsikko Talvihoito}
-;   [Muistutukset
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]]
-;   [Sakko A 0 0 0]
-;   [- Päätiet 0 0 0]
-;   [- Muut tiet 0 0 0]
-;   [Sakko B 0 0 0]
-;   [- Päätiet 0 0 0]
-;   [- Muut tiet 0 0 0]
-;   [Talvihoito, sakot yht. 0 0 0]
-;   [Talvihoito, indeksit yht. 0 0 0]
-;   {:otsikko Muut tuotteet}
-;   [Muistutukset
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]]
-;   [Sakko A 0 0 0]
-;   [- Liikenneymp. hoito 0 0 0]
-;   [- Sorateiden hoito 0 0 0]
-;   [Sakko B 0 0 0]
-;   [- Liikenneymp. hoito 0 0 0]
-;   [- Sorateiden hoito 0 0 0]
-;   [Muut tuotteet, sakot yht. 0 0 0]
-;   [Muut tuotteet, indeksit yht. 0 0 0]
-;   {:otsikko Ryhmä C}
-;   [Ryhmä C, sakot yht. 0 0 0]
-;   [Ryhmä C, indeksit yht. 0 0 0]
-;   {:otsikko Yhteensä}
-;   [Muistutukset yht.
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]
-;    [:arvo-ja-yksikko {:arvo 0, :yksikko  kpl, :fmt? false}]]
-;   [Indeksit yht. 0 0 0]
-;   [Kaikki sakot yht. 0 0 0]
-;   [Kaikki yht. 0 0 0]]
-;  ]]
-
 (defn- luo-pdf
   [pdf user hakuehdot]
-  (println "Luod")
   (let [{:keys [tiedosto-bytet tiedostonimi]} (pdf-vienti/luo-pdf pdf :kulut user hakuehdot)]
     tiedosto-bytet))
 
@@ -359,9 +308,6 @@
       (julkaise-palvelu http :poista-laskun-liite
                         (fn [user hakuehdot]
                           (poista-laskun-liite db user hakuehdot)))
-      (julkaise-palvelu http :luo-pdf-kuluista
-                        (fn [user hakuehdot]
-                          (luo-pdf pdf user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel
@@ -376,8 +322,7 @@
                      :tallenna-lasku
                      :poista-lasku
                      :poista-laskurivi
-                     :poista-laskun-liite
-                     :luo-pdf-kuluista)
+                     :poista-laskun-liite)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)

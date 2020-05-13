@@ -739,6 +739,7 @@
                    :action (k/excel-url :kulut)}
             [:input {:type  "hidden" :name "parametrit"
                      :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
                                              :alkupvm   haun-alkupvm
                                              :loppupvm  haun-loppupvm})}]
             [:button {:type  "submit"
@@ -750,6 +751,7 @@
                    :action (k/pdf-url :kulut)}
             [:input {:type  "hidden" :name "parametrit"
                      :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
                                              :alkupvm   haun-alkupvm
                                              :loppupvm  haun-loppupvm})}]
             [:button {:type  "submit"

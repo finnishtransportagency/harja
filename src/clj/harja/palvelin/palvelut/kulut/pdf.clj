@@ -9,10 +9,10 @@
                         :border-right  border})
 
 (defn- valiotsikko-rivi [otsikko]
-  [:fo:block {:margin-top "4mm"
+  [:fo:block {:margin-top    "4mm"
               :margin-bottom "2mm"}
    [:fo:block {:font-weight "bold"
-               :font-size 12}
+               :font-size   12}
     (str otsikko)]])
 
 (defn- rivi [otsikko & sisaltosolut]
@@ -43,15 +43,17 @@
       {:margin {:left "5mm" :right "5mm" :top "5mm" :bottom "5mm"
                 :body "0mm"}}
       [:fo:wrapper {:font-size 8}
-       [:fo:block {:text-align "center"
+       [:fo:block {:text-align    "center"
                    :margin-bottom "5mm"}
         [:fo:block {:font-weight "bold"}
          [:fo:block
           {:font-weight "bold"
-           :font-size 12}
+           :font-size   12}
           (str "Kooste " otsikko " " alkupvm " - " loppupvm)]]]
-       (for [[kk rivit] kulut]
-         [:fo:block
-          (valiotsikko-rivi kk)
-          (taulukko rivit)])])
+       (if-not (empty? kulut)
+         (for [[kk rivit] kulut]
+           [:fo:block
+            (valiotsikko-rivi kk)
+            (taulukko rivit)])
+         (valiotsikko-rivi "Ei kuluja valitulla aikavälillä"))])
     {:tiedostonimi (str otsikko "_" alkupvm "-" loppupvm ".pdf")}))
