@@ -169,36 +169,40 @@
     (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintään päivämäärällä " tiemerkintapvm)
     (log/debug "Perutaan urakan " urakka-id " kohteen " kohde-id " valmius tiemerkintään, tiemerkintapvm:n oltava nil: " tiemerkintapvm))
 
-  (jdbc/with-db-transaction [db db]
-    (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
-                                 (first (q/hae-yllapitokohteen-aikataulu
-                                          db {:id kohde-id})))]
-      (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
-        db
-        {:valmis_tiemerkintaan tiemerkintapvm
-         :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
-                                             (c/from-date)
-                                             tm-domain/tiemerkinta-oltava-valmis
-                                             (c/to-date))
-         :id kohde-id
-         :urakka urakka-id})
+  (try
+    (jdbc/with-db-transaction [db db]
+                             (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
+                                                          (first (q/hae-yllapitokohteen-aikataulu
+                                                                   db {:id kohde-id})))]
+                               (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
+                                 db
+                                 {:valmis_tiemerkintaan           tiemerkintapvm
+                                  :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
+                                                                      (c/from-date)
+                                                                      tm-domain/tiemerkinta-oltava-valmis
+                                                                      (c/to-date))
+                                  :id                             kohde-id
+                                  :urakka                         urakka-id})
 
-      (when (or (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
-                (viestinta/valita-tieto-peru-valmius-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm))
-        (let [kohteen-tiedot (first (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                      db [kohde-id]))
-              kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
-          (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
-            {:fim fim :email email :kohteen-tiedot kohteen-tiedot
-             :tiemerkintapvm tiemerkintapvm
-             :kopio-itselle? kopio-itselle?
-             :saate saate
-             :sahkopostitiedot muut-vastaanottajat
-             :kayttaja user})))
+                               (when (or (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
+                                         (viestinta/valita-tieto-peru-valmius-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm))
+                                 (let [kohteen-tiedot (first (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                               db [kohde-id]))
+                                       kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
+                                   (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+                                     {:fim              fim :email email :kohteen-tiedot kohteen-tiedot
+                                      :tiemerkintapvm   tiemerkintapvm
+                                      :kopio-itselle?   kopio-itselle?
+                                      :saate            saate
+                                      :sahkopostitiedot muut-vastaanottajat
+                                      :kayttaja         user})))
 
-      (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                     :sopimus-id sopimus-id
-                                     :vuosi vuosi}))))
+                               (hae-urakan-aikataulu db user {:urakka-id  urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :vuosi      vuosi})))
+    (catch Exception e
+      ;Sähköpostilähetys voi epäonnistua, virheilmoitus aiheuttaa 500-errorin consoleen selaimessa. Syödään se tässä pois ja näytetään oletusvirheviesti.
+       {:virhe true})))
 
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]

@@ -21,6 +21,9 @@
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
     "muokattu" ::muokkaustiedot/muokattu
     "poistettu" ::muokkaustiedot/poistettu?
+    "tarkistettu" ::tarkistettu
+    "tarkistaja-id" ::tarkistaja-id
+    "ilmoitettu-virhe" ::ilmoitettu-virhe
     ::paikkaukset (specql.rel/has-many ::id
                                        ::paikkaus
                                        ::paikkauskohde-id)
@@ -61,7 +64,10 @@
     ::ulkoinen-id
     ::nimi
     ::tila
-    ::virhe})
+    ::virhe
+    ::tarkistettu
+    ::tarkistaja-id
+    ::ilmoitettu-virhe})
 
 (def paikkauksen-perustiedot
   #{::id
@@ -132,3 +138,10 @@
 
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
                                                      :opt-un [::paikkauskohteet ::tyomenetelmat]))
+
+;; FIXME: keksitty lista. Hommaa YHA-jengiltä oikea lista
+(def tyomenetelmat-jotka-lahetetaan-yhaan
+  #{"massapintaus" "remix-pintaus"})
+
+(defn pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelma]
+  (boolean (tyomenetelmat-jotka-lahetetaan-yhaan tyomenetelma)))

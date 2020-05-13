@@ -7,20 +7,20 @@
             [harja.pvm :as pvm]
             [clojure.string :as str]))
 
-(defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
-                                                                         :maksetaan :molemmat
+(defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
+                                                                         :maksetaan                      :molemmat
                                                                          :kopioidaan-tuleville-vuosille? true
                                                                          :laskutukseen-perustuen-valinta #{}}}
-                                       :suodattimet {:hankinnat {:toimenpide :talvihoito
-                                                                 :maksetaan :molemmat
-                                                                 :kopioidaan-tuleville-vuosille? true
-                                                                 :laskutukseen-perustuen-valinta #{}}
-                                                     :kopioidaan-tuleville-vuosille? true}})
+                                       :suodattimet          {:hankinnat                      {:toimenpide                     :talvihoito
+                                                                                               :maksetaan                      :molemmat
+                                                                                               :kopioidaan-tuleville-vuosille? true
+                                                                                               :laskutukseen-perustuen-valinta #{}}
+                                                              :kopioidaan-tuleville-vuosille? true}})
 
-(def suunnittelu-default-arvot {:tehtavat {:valinnat {:samat-kaikille false
-                                                      :toimenpide nil
-                                                      :valitaso nil
-                                                      :noudetaan 0}}
+(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
+                                                                  :toimenpide     nil
+                                                                  :valitaso       nil
+                                                                  :noudetaan      0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
 
 (defn ei-pakollinen [v-fn]
@@ -61,7 +61,9 @@
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil]
-                  :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]})
+                  :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
+                  :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
+                  :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]})
 
 (defn validoi-fn
   "Kutsuu vain lomakkeen kaikki validointifunktiot ja päivittää koko lomakkeen validiuden"
@@ -132,15 +134,24 @@
   (apply luo-validius-meta
          (concat kulun-oletus-validoinnit
                  (mapcat (fn [i]
-                           [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                            [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)])
+                           (if (= "lisatyo"
+                                  (:maksueratyyppi
+                                    (get kohdistukset i)))
+                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
+                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
+                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
                          (range (count kohdistukset))))))
 
-(def kulut-lomake-default (with-meta {:kohdistukset          [{:tehtavaryhma        nil
-                                                               :toimenpideinstanssi nil
-                                                               :summa               0
-                                                               :poistettu           false
-                                                               :rivi                0}]
+(def kulut-kohdistus-default {:tehtavaryhma        nil
+                              :toimenpideinstanssi nil
+                              :summa               0
+                              :poistettu           false
+                              :lisatyo?            false
+                              :rivi                0})
+
+(def kulut-lomake-default (with-meta {:kohdistukset          [kulut-kohdistus-default]
                                       :aliurakoitsija        nil
                                       :koontilaskun-kuukausi nil
                                       :laskun-numero         nil

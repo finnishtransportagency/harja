@@ -33,23 +33,10 @@
                                   {:key (str "varmistus-nappi-" tyyppi)})))]}
                   sisalto)))
 
-(defn modal-muut-vastaanottajat [muut-vastaanottajat muutos-fn]
-  {:otsikko "Muut vastaanottajat"
-   :nimi :muut-vastaanottajat
-   :uusi-rivi? true
-   :palstoja 2
-   :tyyppi :komponentti
-   :komponentti (fn [_]
-                  [grid/muokkaus-grid
-                   {:tyhja "Ei vastaanottajia."
-                    :voi-muokata? true
-                    :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                    :muutos muutos-fn}
-                   [{:otsikko "Sähköpostiosoite"
-                     :nimi :sahkoposti
-                     :tyyppi :email
-                     :leveys 1}]
-                   (atom muut-vastaanottajat)])})
+(def modal-muut-vastaanottajat
+  {:otsikko "Muut sähköpostiosoitteet pilkulla eroteltuna"
+   :nimi :muut-vastaanottajat :tyyppi :email :palstoja 3
+   :validoi [[:email]]})
 
 (def modal-saateviesti {:otsikko "Vapaaehtoinen saateviesti, joka liitetään sähköpostiin"
                         :koko [90 8]
