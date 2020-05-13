@@ -1,5 +1,10 @@
 [
-  {
+   {
+    "date": "2020-5-13",
+    "title": "Paikkausten rajapinta ja käyttöliittymä toiminnassa",
+    "body": 
+    "<p>Paikkausurakoihin liittyen voi nyt tuoda tietoa Harjaan rajapintamäärityksen mukaisesti. Käyttöliittymässä paikkauksille on olemassa oma välilehti, mistä löytyy sekä tekniset toteumatiedot että mahdollisuus kirjata kustannukset. <br>Toteumatietojen puolella uutena ominaisuutena tilaajalla on mahdollisuus raportoida urakoitsijalle päin mahdollisista virheistä, jolloin Harja lähettää asiasta sähköpostin urakoitsijan vastuuhenkilölle, samalla voi halutessan ottaa itselleen kopion viestistä. Hieman myöhemmin on ttilaajalle tulossa vielä mahdollisuus lähettää valmistuneet paikkaustiedot tarkistuksen jälkeen YHA:an. Kustannukset voidaan kirjata joko käsin Harjaan tai rajapinnan kautta. Relevantit rajapinnat ovat: <ul><li>https://extranet.vayla.fi/harja/apidoc/<li>api.html#urakat__id__paikkaus_kustannus_post</ul></p>"
+  },{
     "date": "2020-3-3",
     "title": "MHU-urakoiden sanktiolajit lisätty",
     "body": 
