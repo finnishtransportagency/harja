@@ -139,7 +139,7 @@
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
           _ (println "hoidonjohto" (pr-str hoidonjohto))
           lupaus-ja-asiakastyytyvaisyys-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
-          (tyyppi = 'lupausbonus' OR tyyppi = 'tktt-bonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
+          (tyyppi = 'lupausbonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
           AND toimenpideinstanssi = 48
           AND poistettu IS NOT TRUE
           AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))

@@ -188,7 +188,7 @@ $$
 
 
         -- Bonukset - 10/2019
-        -- Erilliskustannukset - Alihankintabonus - lupausbonus - tktt-bonus - tavoitepalkkio
+        -- Erilliskustannukset - Alihankintabonus - lupausbonus - tavoitepalkkio
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
             VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
@@ -198,11 +198,6 @@ $$
                                       lisatieto, luotu, luoja)
             VALUES ('lupausbonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
                     'Hyvin luvattu!', '2019-10-13', kayttaja_id);
-
-        INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
-                                      lisatieto, luotu, luoja)
-            VALUES ('tktt-bonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
-                    'Hoiditpa tktt jutut hyvin!', '2019-10-13', kayttaja_id);
 
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
@@ -220,11 +215,6 @@ $$
                                       lisatieto, luotu, luoja)
             VALUES ('lupausbonus', sopimus_id, urakka_id, tpi, '2020-03-15', 500, 'MAKU 2015',
                     'Hyvin luvattu!', '2020-03-13', kayttaja_id);
-
-        INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
-                                      lisatieto, luotu, luoja)
-            VALUES ('tktt-bonus', sopimus_id, urakka_id, tpi, '2020-03-15', 500, 'MAKU 2015',
-                    'Hoiditpa tktt jutut hyvin!', '2020-03-13', kayttaja_id);
 
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)

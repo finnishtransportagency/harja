@@ -731,9 +731,7 @@ BEGIN
                             END IF;
                         END IF;
                         -- Asiakastyytyväisyysbonus
-                    ELSEIF erilliskustannus_rivi.tyyppi = 'tktt-bonus' OR
-                           erilliskustannus_rivi.tyyppi = 'asiakastyytyvaisyysbonus' THEN
-                        -- Bonus :: tktt-bonus = tienkäytöntutkimus = asiakastyytyväisyysbonus - nämä on sama asia, mutta erheellisesti laitettu kahtena bonuksena
+                    ELSEIF erilliskustannus_rivi.tyyppi = 'asiakastyytyvaisyysbonus' THEN
                         SELECT *
                             FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
                                                                 erilliskustannus_rivi.indeksin_nimi,
@@ -768,7 +766,7 @@ BEGIN
                             END IF;
                         END IF;
 
-                        -- TODO: Kuuluuko muu - näihin erilliskustannuksiin? Se ei ole siis joukossa: Alihankintabonus, lupausbonus, tktt-bonus/asiakastyytyväisyys tai tavoitepalkkio.
+                        -- TODO: Kuuluuko muu - näihin erilliskustannuksiin? Se ei ole siis joukossa: Alihankintabonus, lupausbonus, asiakastyytyväisyys tai tavoitepalkkio.
                     ELSIF erilliskustannus_rivi.tyyppi = 'muu' THEN
                         -- Bonus :: muu
                         SELECT *
