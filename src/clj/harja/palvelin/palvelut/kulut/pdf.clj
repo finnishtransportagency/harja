@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.kulut.pdf
-  (:require [harja.tyokalut.xsl-fo :as xsl-fo]))
+  (:require [harja.tyokalut.xsl-fo :as xsl-fo]
+            [harja.pvm :as pvm]))
 
 (def ^:private border "solid 0.1mm black")
 
@@ -33,8 +34,8 @@
    [:fo:table-column {:column-width "10%"}]
    [:fo:table-body
     (for [{:keys [summa tehtavaryhma toimenpide maksuera erapaiva]} rivit]
-      (rivi erapaiva toimenpide (or tehtavaryhma
-                                    "Lisätyö") (str "HA" maksuera) summa))]])
+      (rivi (pvm/pvm erapaiva) toimenpide (or tehtavaryhma
+                                              "Lisätyö") (str "HA" maksuera) summa))]])
 
 (defn kulu-pdf
   [otsikko alkupvm loppupvm kulut]

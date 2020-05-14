@@ -650,9 +650,12 @@
   AsetaHakuparametri
   (process-event
     [{:keys [polku arvo]} app]
-    (assoc-in app [:parametrit (case polku
+    (let [arvo (if (nil? arvo)
+                 (-> @tila/yleiset :urakka polku)
+                 arvo)]
+      (assoc-in app [:parametrit (case polku
                                  :alkupvm :haun-alkupvm
-                                 :loppupvm :haun-loppupvm)] arvo))
+                                 :loppupvm :haun-loppupvm)] arvo)))
 
   ;; FORMITOIMINNOT
 

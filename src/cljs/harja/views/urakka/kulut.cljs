@@ -738,10 +738,10 @@
                    :target "_blank" :method "POST"
                    :action (k/excel-url :kulut)}
             [:input {:type  "hidden" :name "parametrit"
-                     :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
                                              :urakka-nimi (-> @tila/yleiset :urakka :nimi)
-                                             :alkupvm   haun-alkupvm
-                                             :loppupvm  haun-loppupvm})}]
+                                             :alkupvm     haun-alkupvm
+                                             :loppupvm    haun-loppupvm})}]
             [:button {:type  "submit"
                       :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
            ^{:key "raporttipdf"}
@@ -750,10 +750,10 @@
                    :target "_blank" :method "POST"
                    :action (k/pdf-url :kulut)}
             [:input {:type  "hidden" :name "parametrit"
-                     :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
                                              :urakka-nimi (-> @tila/yleiset :urakka :nimi)
-                                             :alkupvm   haun-alkupvm
-                                             :loppupvm  haun-loppupvm})}]
+                                             :alkupvm     haun-alkupvm
+                                             :loppupvm    haun-loppupvm})}]
             [:button {:type  "submit"
                       :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
            [napit/yleinen-ensisijainen
@@ -767,15 +767,18 @@
               "Kirjoita tähän halutessasi lisätietoa"
               :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
               :arvo hakuteksti]
-           [kentat/aikavali {:pvm-alku                 haun-alkupvm
-                             :pvm-min                  (-> @tila/yleiset :urakka :alkupvm)
-                             :pvm-max                  (-> @tila/yleiset :urakka :loppupvm)
-                             :pvm-loppu                haun-loppupvm
-                             :ikoni                    ikonit/calendar
-                             :valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
-                             :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
-                                                                                       :alkupvm  %1
-                                                                                       :loppupvm %2}))}]]
+           [kentat/aikavali
+            {:valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
+             :pvm-alku                 (or haun-alkupvm
+                                           (-> @tila/yleiset :urakka :alkupvm))
+             :rajauksen-alkupvm           (-> @tila/yleiset :urakka :alkupvm)
+             :rajauksen-loppupvm          (-> @tila/yleiset :urakka :loppupvm)
+             :pvm-loppu                (or haun-loppupvm
+                                           (-> @tila/yleiset :urakka :loppupvm))
+             :ikoni                    ikonit/calendar
+             :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
+                                                                       :alkupvm  %1
+                                                                       :loppupvm %2}))}]]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 
