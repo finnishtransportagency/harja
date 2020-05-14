@@ -126,7 +126,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
 WHERE u.hallintayksikko = :hallintayksikko AND
-      (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
+      u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
       rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
@@ -144,7 +144,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
   JOIN organisaatio o ON u.hallintayksikko = o.id
-WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
+WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
       rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", o.nimi, o.elynumero, mk.yksikko, mk.materiaalityyppi;
 
