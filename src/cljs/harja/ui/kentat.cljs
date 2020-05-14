@@ -700,9 +700,14 @@
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
-        teksti (atom (if p
-                       (pvm/pvm p)
-                       ""))
+        date->teksti #(if % (pvm/pvm %) "")
+        teksti (atom (date->teksti p))
+        ;; pidetään edellinen data arvo tallessa, jotta voidaan muuttaa teksti oikeaksi
+        ;; jos annetun data-atomin arvo muuttuu muualla kuin tässä komponentissa
+        vanha-data (atom p)
+        muuta-data! (fn [arvo]
+                      (reset! data arvo)
+                      (reset! vanha-data arvo))
         validoi-fn (fn [validoi? validointi uusi-paiva]
                      (if validoi?
                        (cond
@@ -720,13 +725,13 @@
                                   (when (validoi-fn d)
                                     (reset! teksti t)
                                     (when eri-pvm?
-                                      (reset! data d)))))
+                                      (muuta-data! d)))))
         muuta! (fn [data t]
                  (when (or (re-matches +pvm-regex+ t)
                            (str/blank? t))
                    (reset! teksti t))
                  (if (str/blank? t)
-                   (reset! data nil)))]
+                   (muuta-data! nil)))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
@@ -739,6 +744,8 @@
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi]} data]
          (let [nykyinen-pvm @data
+               _ (when-not (= nykyinen-pvm @vanha-data)
+                   (reset! teksti (date->teksti nykyinen-pvm)))
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
                validoi? (some? validointi)
@@ -747,34 +754,35 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))]
+           (reset! vanha-data nykyinen-pvm)
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil)
-             :style    {:display "inline-block"}}
-            [:input.pvm {:class       (when lomake? "form-control")
+             :style {:display "inline-block"}}
+            [:input.pvm {:class (when lomake? "form-control")
                          :placeholder (or placeholder "pp.kk.vvvv")
-                         :value       nykyinen-teksti
-                         :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
-                         :on-change   #(muuta! data (-> % .-target .-value))
+                         :value nykyinen-teksti
+                         :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
+                         :on-change #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= key-code-tab (-> % .-keyCode)) (= key-code-tab (-> % .-which))
                                                  (= key-code-enter (-> % .-keyCode)) (= key-code-enter (-> % .-which)))
                                          (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                          (reset! auki false)
                                          true)
-                         :on-blur     #(let [t (-> % .-target .-value)
-                                             pvm (pvm/->pvm t)]
-                                         (when on-blur
-                                           (on-blur %))
-                                         (if (and pvm (not (validoi pvm)))
-                                           (do (reset! data nil)
-                                               (reset! teksti ""))
-                                           (teksti-paivamaaraksi! validoi data (-> % .-target .-value))))}]
+                         :on-blur #(let [t (-> % .-target .-value)
+                                         pvm (pvm/->pvm t)]
+                                     (when on-blur
+                                       (on-blur %))
+                                     (if (and pvm (not (validoi pvm)))
+                                       (do (muuta-data! nil)
+                                           (reset! teksti ""))
+                                       (teksti-paivamaaraksi! validoi data (-> % .-target .-value))))}]
             (when @auki
-              [pvm-valinta/pvm-valintakalenteri {:valitse       #(when (validoi %)
-                                                                   (reset! auki false)
-                                                                   (reset! data %)
-                                                                   (reset! teksti (pvm/pvm %)))
-                                                 :pvm           naytettava-pvm
+              [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
+                                                             (reset! auki false)
+                                                             (muuta-data! %)
+                                                             (reset! teksti (pvm/pvm %)))
+                                                 :pvm naytettava-pvm
                                                  :pakota-suunta pakota-suunta
                                                  :valittava?-fn (when validoi?
                                                                   validoi)}])]))})))
