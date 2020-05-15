@@ -51,7 +51,7 @@
 (defn parsi-summa [summa]
   (cond
     (not (string? summa)) summa
-    (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
+    (re-matches #"-?\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
         (string/replace "," ".")
@@ -569,13 +569,8 @@
     (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                  :aliurakoitsijat
-        {:keys [kohdistukset
-                koontilaskun-kuukausi
-                aliurakoitsija liitteet
-                laskun-numero lisatieto
-                erapaiva id] :as lomake} :lomake
-        maksuerat                        :maksuerat :as app}]
+    [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
+                laskun-numero lisatieto erapaiva id] :as lomake} :lomake :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
