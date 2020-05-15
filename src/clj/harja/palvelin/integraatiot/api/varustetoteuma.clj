@@ -346,7 +346,7 @@
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
     (julkaise-reitti
       http :lisaa-varustetoteuma
-      (POST "/api/urakat/:id/toteumat/varuste" request
+      (POST "/api/urakat/:id/toteumat/varuste/" request
         (kasittele-kutsu-async
           db
           integraatioloki
