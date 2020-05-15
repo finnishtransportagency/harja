@@ -1143,6 +1143,12 @@
 
 (declare ->Grid)
 
+(defn grid-olemassa? [grid]
+  (not (nil?
+         (try (root grid)
+              (catch :default _
+                nil)))))
+
 (defrecord Grid [id alueet koko osat parametrit]
   p/IGrid
   (-osat [this]
@@ -1239,7 +1245,8 @@
                                                                     (add-watch data-atom
                                                                                tapahtuman-nimi
                                                                                (fn [_ _ vanha uusi]
-                                                                                 (when-not dk/*seuranta-muutos?*
+                                                                                 (when (and (not dk/*seuranta-muutos?*)
+                                                                                            (grid-olemassa? this))
                                                                                    (let [vanha-data (map #(get-in vanha %) polut)
                                                                                          uusi-data (map #(get-in uusi %) polut)
                                                                                          seurattava-data-muuttunut? (not= vanha-data uusi-data)
