@@ -49,7 +49,9 @@
     :ei-hallinnollinen "Valitse:"))
 
 (defonce hallinnollinen-vihje-viesti
-         "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. Näitä kuluja ei saa syöttää manuaalisesti muulloin kuin poikkeustilanteissa.")
+         [:span "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. "
+          [:b "Näitä kuluja ei saa syöttää"]
+          "manuaalisesti muulloin kuin poikkeustilanteissa."])
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
@@ -191,16 +193,17 @@
         valitse-toimenpide-fn #(paivitys-fn
                                  [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
         optiot (merge ryhmat
-                      {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
-                       :disabled     disabled
-                       :vayla-tyyli? true
-                       :valinta      valittu-asia
-                       :valitse-fn   (if lisatyo?
-                                       valitse-toimenpide-fn
-                                       valitse-tehtavaryhma-fn)
-                       :format-fn    (if lisatyo?
-                                       #(get % :toimenpide)
-                                       #(get % :tehtavaryhma))})]
+                      {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
+                       :disabled      disabled
+                       :vayla-tyyli?  true
+                       :valinta       valittu-asia
+                       :skrollattava? true
+                       :valitse-fn    (if lisatyo?
+                                        valitse-toimenpide-fn
+                                        valitse-tehtavaryhma-fn)
+                       :format-fn     (if lisatyo?
+                                        #(get % :toimenpide)
+                                        #(get % :tehtavaryhma))})]
     [:<>
      [yleiset/livi-pudotusvalikko optiot
       valinnat]
@@ -771,8 +774,8 @@
             {:valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
              :pvm-alku                 (or haun-alkupvm
                                            (-> @tila/yleiset :urakka :alkupvm))
-             :rajauksen-alkupvm           (-> @tila/yleiset :urakka :alkupvm)
-             :rajauksen-loppupvm          (-> @tila/yleiset :urakka :loppupvm)
+             :rajauksen-alkupvm        (-> @tila/yleiset :urakka :alkupvm)
+             :rajauksen-loppupvm       (-> @tila/yleiset :urakka :loppupvm)
              :pvm-loppu                (or haun-loppupvm
                                            (-> @tila/yleiset :urakka :loppupvm))
              :ikoni                    ikonit/calendar
