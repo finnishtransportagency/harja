@@ -38,7 +38,7 @@
         payload (-> "test/resurssit/api/varustetoteuma.json"
                     slurp
                     (.replace "__ID__" (str ulkoinen-id)))
-        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste/"]]
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
        (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
@@ -121,7 +121,7 @@
         payload (-> "test/resurssit/api/varustetoteuma.json"
                     slurp
                     (.replace "__ID__" (str ulkoinen-id)))
-        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste/"]]
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
        (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
@@ -150,7 +150,7 @@
         payload (-> "test/resurssit/api/varustetoteuma_virheelliset_arvot.json"
                     slurp
                     (.replace "__ID__" (str ulkoinen-id)))
-        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste/"]]
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
        (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
@@ -179,7 +179,7 @@
         payload (-> "test/resurssit/api/varustetoteuma.json"
                     slurp
                     (.replace "__ID__" (str ulkoinen-id)))
-        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste/"]]
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml-virhe
        #"http?://localhost" :allow]
@@ -206,7 +206,7 @@
         payload (-> "test/resurssit/api/varustetoteuma.json"
                     slurp
                     (.replace "__ID__" (str ulkoinen-id)))
-        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste/"]]
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
        (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml

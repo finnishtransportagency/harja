@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
@@ -346,8 +346,8 @@
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
     (julkaise-reitti
       http :lisaa-varustetoteuma
-      (POST "/api/urakat/:id/toteumat/varuste/" request
-        (kasittele-kutsu-async
+      (POST "/api/urakat/:id/toteumat/varuste" request
+        (kasittele-kutsu
           db
           integraatioloki
           :lisaa-varustetoteuma
