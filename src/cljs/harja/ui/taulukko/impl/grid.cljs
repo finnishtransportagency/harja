@@ -603,7 +603,7 @@
       (when (nil? (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta))
         (warn (str "Rajapinalle " rajapinta " ei ole määritetty kuuntelijaa datan käsittlijään!\n"
                    "Annettu rajapinta: " rajapinta ". Olemassa olevat:\n"
-                   (with-out-str (cljs.pprint/pprint (keys (:kuuntelijat datan-kasittelija))))))))
+                   (pr-str (keys (:kuuntelijat datan-kasittelija)))))))
     (let [rajapintakasittelija (seuranta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
                                                                                                          @kuuntelija)
                                                          rajapinnan-dataf (if (and *jarjesta-data* jarjestys)
@@ -1143,6 +1143,12 @@
 
 (declare ->Grid)
 
+(defn grid-olemassa? [grid]
+  (not (nil?
+         (try (root grid)
+              (catch :default _
+                nil)))))
+
 (defrecord Grid [id alueet koko osat parametrit]
   p/IGrid
   (-osat [this]
@@ -1239,7 +1245,8 @@
                                                                     (add-watch data-atom
                                                                                tapahtuman-nimi
                                                                                (fn [_ _ vanha uusi]
-                                                                                 (when-not dk/*seuranta-muutos?*
+                                                                                 (when (and (not dk/*seuranta-muutos?*)
+                                                                                            (grid-olemassa? this))
                                                                                    (let [vanha-data (map #(get-in vanha %) polut)
                                                                                          uusi-data (map #(get-in uusi %) polut)
                                                                                          seurattava-data-muuttunut? (not= vanha-data uusi-data)
@@ -1393,10 +1400,9 @@
                                                   (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
                                                                    (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
                                                     (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
-                                                         "\n" (with-out-str (cljs.pprint/pprint
-                                                                              {:data-rajapinnasta (first data)
-                                                                               :grid-data (second data)
-                                                                               :osan-derefable (get data 2)}))))))))))
+                                                         "\n" (pr-str {:data-rajapinnasta (first data)
+                                                                       :grid-data (second data)
+                                                                       :osan-derefable (get data 2)})))))))))
      :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
      :render (fn [this]
                (if-let [error (.. this -state -error)]
