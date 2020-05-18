@@ -120,7 +120,6 @@
   ([valittu-aikavali-atom asetukset]
    (let [aikavalin-alku (atom (first @valittu-aikavali-atom))
          aikavalin-loppu (atom (second @valittu-aikavali-atom))
-
          asetukset-atom (atom asetukset)]
      (komp/luo
        (komp/sisaan-ulos #(do
@@ -131,10 +130,10 @@
                                            (if-not aikavalin-rajoitus
                                              (swap! valittu-aikavali-atom
                                                     (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [uusi-arvo (second vanha-aikavali)] :alku)))
+                                                      (pvm/varmista-aikavali-opt [uusi-arvo @aikavalin-loppu] :alku)))
                                              (swap! valittu-aikavali-atom
                                                     (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [uusi-arvo (second vanha-aikavali)] aikavalin-rajoitus :alku)))))
+                                                      (pvm/varmista-aikavali-opt [uusi-arvo @aikavalin-loppu] aikavalin-rajoitus :alku)))))
                                          (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))
                             (add-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu
                                        (fn [_ _ _ uusi-arvo]
@@ -143,10 +142,10 @@
                                            (if-not aikavalin-rajoitus
                                              (swap! valittu-aikavali-atom
                                                     (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [(first vanha-aikavali) uusi-arvo] :loppu)))
+                                                      (pvm/varmista-aikavali-opt [@aikavalin-alku uusi-arvo] :loppu)))
                                              (swap! valittu-aikavali-atom
                                                     (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [(first vanha-aikavali) uusi-arvo] aikavalin-rajoitus :loppu)))))
+                                                      (pvm/varmista-aikavali-opt [@aikavalin-alku uusi-arvo] aikavalin-rajoitus :loppu)))))
                                          (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom)))))
                          #(do
                             (remove-watch aikavalin-alku :ui-valinnat-aikavalin-alku)

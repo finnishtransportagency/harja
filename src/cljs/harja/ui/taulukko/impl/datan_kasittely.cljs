@@ -114,9 +114,9 @@
                                    (when-not dynaaminen?
                                      (when (nil? (get rajapinta kuuntelun-nimi))
                                        (warn "Rajapinnan kuuntelijalle " (str kuuntelun-nimi) " ei ole määritetty rajapinnan skeemaa!\n"
-                                             "Rajapinta:\n" (with-out-str (pp/pprint rajapinta))))
+                                             "Rajapinta:\n" (pr-str rajapinta)))
                                      (when-not (s/valid? (get rajapinta kuuntelun-nimi) rajapinnan-data)
-                                       (warn "Rajapinnan " (str kuuntelun-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta kuuntelun-nimi))
+                                       (warn "Rajapinnan " (str kuuntelun-nimi) " data:\n" (pr-str rajapinnan-data) " ei vastaa spekkiin. " (str (get rajapinta kuuntelun-nimi))
                                              (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data)))))
                                    (if (satisfies? IWithMeta rajapinnan-data)
                                      {:data rajapinnan-data
@@ -249,7 +249,7 @@
                                       (try (apply f tila args)
                                            (catch :default e
                                              (error (str "RAJAPINNAN ASTTAJA " rajapinnan-nimi " KAATUI VIRHEESEEN " (.-name e) "\n"
-                                                         "ANNETUT ARGUMENTIT:\n" (with-out-str (pp/pprint args))))
+                                                         "ANNETUT ARGUMENTIT:\n" (pr-str args)))
                                              (error e)
                                              tila))))))))
 
