@@ -10,6 +10,10 @@
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]))
 
+(def merkitse-paikkauskohde-tarkistetuksi!
+  "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
+)
+
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
 
