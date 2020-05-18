@@ -6198,6 +6198,7 @@ WHERE taso = 4
 
 
 -- Äkillisten hoitotöiden ja vahinkojen korjaamisen nimeäminen selkeämmin
+-- Päivitetään myös liik.ymp.hoito => l.ymp.hoito
 UPDATE toimenpidekoodi
 SET nimi               = 'Äkillinen hoitotyö (talvihoito)',
     suunnitteluyksikko = 'euroa'
@@ -6207,13 +6208,13 @@ WHERE nimi = 'Äkillinen hoitotyö'
 UPDATE toimenpidekoodi
 SET nimi               = 'Äkillinen hoitotyö (l.ymp.hoito)',
     suunnitteluyksikko = 'euroa'
-WHERE nimi = 'Äkillinen hoitotyö'
+WHERE nimi IN ('Äkillinen hoitotyö', 'Äkillinen hoitotyö (liik.ymp.hoito)')
   AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23116');
 
 UPDATE toimenpidekoodi
 SET nimi               = 'Äkillinen hoitotyö (soratiet)',
     suunnitteluyksikko = 'euroa'
-WHERE nimi = 'Äkillinen hoitotyö'
+WHERE nimi IN ('Äkillinen hoitotyö')
   AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23124');
 
 UPDATE toimenpidekoodi
@@ -6225,7 +6226,8 @@ WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen'
 UPDATE toimenpidekoodi
 SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
     suunnitteluyksikko = 'euroa'
-WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen'
+WHERE nimi IN ('Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen',
+               'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (liik.ymp.hoito)')
   AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23116');
 
 UPDATE toimenpidekoodi
