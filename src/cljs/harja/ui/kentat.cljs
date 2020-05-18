@@ -1563,7 +1563,8 @@
           :value (or (when (and pvm-alku pvm-loppu)
                        (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
                      "")
-          :on-click #(swap! auki? not)]
+          :on-click #(swap! auki? not)
+          :read-only true]
          (when @auki?
            [:div.aikavali-dropdown
             [pvm-valintakentta {:valinta-fn               valinta-fn

@@ -56,11 +56,6 @@
                            :4-hoitovuosi "4. hoitovuosi"
                            :5-hoitovuosi "5. hoitovuosi"})
 
-(def hoitovuosi->vuosiluku (into {} (map-indexed (fn [indeksi vuosi]
-                                                   [(keyword (str (inc indeksi) "-hoitovuosi")) vuosi])
-                                                 (range (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
-                                                        (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)))))
-
 (defn- hallinnollisen-otsikointi [ryhma]
   (case ryhma
     :hallinnollinen "Hallinnollisiin toimenpiteisiin liittyviä kuluja saa syöttää manuaalisesti vain poikkeustilanteessa:"
@@ -165,8 +160,11 @@
 
 (defn paivamaaran-valinta
   [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi]}]
-  (loki/log "KK" koontilaskun-kuukausi)
-  (let [kk (when-not (nil? koontilaskun-kuukausi)
+  (let [hoitovuosi->vuosiluku (into {} (map-indexed (fn [indeksi vuosi]
+                                                      [(keyword (str (inc indeksi) "-hoitovuosi")) vuosi])
+                                                    (range (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                                                           (-> @tila/yleiset :urakka :loppupvm pvm/vuosi))))
+        kk (when-not (nil? koontilaskun-kuukausi)
              (-> koontilaskun-kuukausi (string/split #"/") first keyword kuukaudet-keyword->number))
         vuosi (when-not (nil? koontilaskun-kuukausi)
                 (-> koontilaskun-kuukausi
@@ -178,13 +176,14 @@
                 (if (< kk 10)
                   (inc vuosi)
                   vuosi))]
-    (loki/log "kk vv hv" kk vuosi hoitovuosi->vuosiluku)
     [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
                                                  :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
                                                  :pvm           erapaiva
                                                  :pakota-suunta false
                                                  :disabled      disabled
-                                                 :valittava?-fn #(when-not (nil? koontilaskun-kuukausi) (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi))))}])) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+                                                 :valittava?-fn #(if-not (nil? koontilaskun-kuukausi)
+                                                                   (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi)))
+                                                                   false)}])) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
 
 (defn koontilaskun-kk-droppari
