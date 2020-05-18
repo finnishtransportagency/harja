@@ -209,10 +209,12 @@
 
       (when-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
-         (if-not tarkistettu
-           (if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
-             "Lähetys YHA:an"
-             "Ei lähetetä YHA:an")
+         (if tarkistettu
+           ; TODO Tarkista halutut työmenetelmät YHAlta ja filtteröi lähetysnappi näkyviin/pois näkyvistä
+           ; TODO: Lisää myös sama tarkistuslogiikka backendin puolelle, ettei voi vahingossa livahtaa YHAn suuntaan tarpeettomia paikkauksia.
+           ;(if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
+           ;  "Lähetys YHA:an"
+           ;  "Ei lähetetä YHA:an")
            (get lahetyksen-tilan-teksti lahetyksen-tila))])
 
       (when-not urakoitsija-kayttajana?
