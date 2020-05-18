@@ -55,6 +55,15 @@ UPDATE paikkauskohde
     "ilmoitettu-virhe"              = :ilmoitettu-virhe
 WHERE id = :id;
 
+
+-- name: merkitse-paikkauskohde-tarkistetuksi!
+-- Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman
+UPDATE paikkauskohde
+    SET
+    tarkistettu                 = NOW(),
+    "tarkistaja-id"             = :tarkistaja-id
+WHERE id = :id;
+
 -- name: paivita-paikkausilmoitus!
 -- Päivittää paikkausilmoituksen
 UPDATE paikkausilmoitus
