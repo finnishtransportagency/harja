@@ -93,7 +93,8 @@
   (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
   (k/post! :merkitse-paikkauskohde-tarkistetuksi
            (merge paikkaus
-                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)
+                   ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila)) })))
 
 
 
