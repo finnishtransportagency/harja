@@ -80,14 +80,21 @@
     :lupausbonus "Lupausbonus"
     +valitse-tyyppi+))
 
-(defn luo-kustannustyypit [urakkatyyppi kayttaja]
+(defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
   ;; Ei sallita urakoitsijan antaa itselleen asiakastyytyväisyysbonuksia
+  ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
+  ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
              (not= :asiakastyytyvaisyysbonus %)
              true)
-          (case urakkatyyppi
-            :hoito [:asiakastyytyvaisyysbonus :muu]
-            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio :lupausbonus]
+          (cond
+            (= :hoito urakkatyyppi)
+            [:asiakastyytyvaisyysbonus :muu]
+            (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
+            [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio :lupausbonus]
+            (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
+            [:muu]
+            :default
             [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
@@ -229,12 +236,23 @@
             :valinta-nayta #(:tpi_nimi %)
             :valinnat @u/urakan-toimenpideinstanssit
             :fmt #(:tpi_nimi %)
-            :palstoja 1}
+            :palstoja 1
+            :aseta (fn
+                     ;; MHU (:teiden-hoito) tyyppisillä urakoilla on rajoituksia erilliskustatannustyypeissä.
+                     ;; Jos urakan-tyyppi :teiden-hoito ja toimenpideinstanssi "hoidonjohto" 23150, niin annetaan mahdollisuus bonusten lisäykselle.
+                     ;; Muuten :teiden-hoito tyyppisillä urakoilla on mahdollisuu lisätä vain "muu" tyyppinen erilliskustannus
+                     ;; Jottenka tässä vain nollataan tyypin valinta, jos tähän toimenpideinstanssiin kosketaan
+                     [rivi arvo]
+                     (assoc
+                       (if (= :teiden-hoito urakan-tyyppi)
+                         (assoc rivi :tyyppi nil)
+                         rivi)
+                       :toimenpideinstanssi arvo))}
            {:otsikko "Tyyppi" :nimi :tyyppi
             :pakollinen? true
             :tyyppi :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
-            :valinnat (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja)
+            :valinnat (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))
             :fmt #(erilliskustannustyypin-teksti %)
             :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
