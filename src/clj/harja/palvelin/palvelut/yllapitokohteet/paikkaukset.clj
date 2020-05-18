@@ -259,25 +259,23 @@
   (let [lahetys (try+ (yha-paikkauskomponentti/laheta-paikkauskohde yhap urakka-id kohde-id)
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
-        lahetys-onnistui? (not (contains? lahetys :virhe))
-
-        ]
+        lahetys-onnistui? (not (contains? lahetys :virhe))]
     (merge
       {:paikkauskohde nil}
       (when-not lahetys-onnistui?
-        lahetys)))
+        lahetys))))
 
-  (defn merkitse-paikkauskohde-tarkistetuksi!
-    [db yhap user {::paikkaus/keys [id nimi urakka-id paikkauskohde hakuparametrit] :as tiedot}]
-    (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-    (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
-    (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
-          user-id (:id user)]
-      (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
-      (assert (some? user-id) "Käyttäjän tunniste puuttuu")
-      (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})
-      (hae-urakan-paikkauskohteet db user hakuparametrit))))
+(defn merkitse-paikkauskohde-tarkistetuksi!
+  [db yhap user {::paikkaus/keys [id nimi urakka-id paikkauskohde hakuparametrit] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
+  (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
+        user-id (:id user)]
+    (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
+    (assert (some? user-id) "Käyttäjän tunniste puuttuu")
+    (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})
+    (hae-urakan-paikkauskohteet db user hakuparametrit)))
 
 (defrecord Paikkaukset []
   component/Lifecycle
