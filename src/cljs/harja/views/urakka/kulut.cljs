@@ -37,11 +37,29 @@
                          :marraskuu "Marraskuu"
                          :joulukuu  "Joulukuu"})
 
+(defonce kuukaudet-keyword->number {:tammikuu  1
+                                    :helmikuu  2
+                                    :maaliskuu 3
+                                    :huhtikuu  4
+                                    :toukokuu  5
+                                    :kesakuu   6
+                                    :heinakuu  7
+                                    :elokuu    8
+                                    :syyskuu   9
+                                    :lokakuu   10
+                                    :marraskuu 11
+                                    :joulukuu  12})
+
 (defonce hoitovuodet-strs {:1-hoitovuosi "1. hoitovuosi"
                            :2-hoitovuosi "2. hoitovuosi"
                            :3-hoitovuosi "3. hoitovuosi"
                            :4-hoitovuosi "4. hoitovuosi"
                            :5-hoitovuosi "5. hoitovuosi"})
+
+(def hoitovuosi->vuosiluku (into {} (map-indexed (fn [indeksi vuosi]
+                                                   [(keyword (str (inc indeksi) "-hoitovuosi")) vuosi])
+                                                 (range (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                                                        (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)))))
 
 (defn- hallinnollisen-otsikointi [ryhma]
   (case ryhma
@@ -146,13 +164,27 @@
          (subvec kohdistukset (inc indeksi))))
 
 (defn paivamaaran-valinta
-  [{:keys [paivitys-fn erapaiva erapaiva-meta disabled]}]
-  [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
-                                               :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
-                                               :pvm           erapaiva
-                                               :pakota-suunta false
-                                               :disabled      disabled
-                                               :valittava?-fn #(true? true)}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+  [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi]}]
+  (loki/log "KK" koontilaskun-kuukausi)
+  (let [kk (when-not (nil? koontilaskun-kuukausi)
+             (-> koontilaskun-kuukausi (string/split #"/") first keyword kuukaudet-keyword->number))
+        vuosi (when-not (nil? koontilaskun-kuukausi)
+                (-> koontilaskun-kuukausi
+                    (string/split #"/")
+                    second
+                    keyword
+                    hoitovuosi->vuosiluku))
+        vuosi (when-not (nil? vuosi)
+                (if (< kk 10)
+                  (inc vuosi)
+                  vuosi))]
+    (loki/log "kk vv hv" kk vuosi hoitovuosi->vuosiluku)
+    [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
+                                                 :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
+                                                 :pvm           erapaiva
+                                                 :pakota-suunta false
+                                                 :disabled      disabled
+                                                 :valittava?-fn #(when-not (nil? koontilaskun-kuukausi) (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi))))}])) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
 
 (defn koontilaskun-kk-droppari
@@ -627,10 +659,11 @@
       [kentat/vayla-lomakekentta
        "Laskun pvm *"
        :komponentti paivamaaran-valinta
-       :komponentin-argumentit {:disabled      (not= 0 haetaan)
-                                :erapaiva      erapaiva
-                                :paivitys-fn   paivitys-fn
-                                :erapaiva-meta erapaiva-meta}]
+       :komponentin-argumentit {:disabled              (not= 0 haetaan)
+                                :erapaiva              erapaiva
+                                :paivitys-fn           paivitys-fn
+                                :erapaiva-meta         erapaiva-meta
+                                :koontilaskun-kuukausi koontilaskun-kuukausi}]
       [kentat/vayla-lomakekentta
        "Koontilaskun numero"
        :disabled (not= 0 haetaan)
