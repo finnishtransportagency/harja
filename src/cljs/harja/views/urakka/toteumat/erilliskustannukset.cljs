@@ -75,6 +75,9 @@
   (case avainsana
     :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
     :muu "Muu"
+    :alihankintabonus "Alihankintabonus"
+    :tavoitepalkkio "Tavoitepalkkio"
+    :lupausbonus "Lupausbonus"
     +valitse-tyyppi+))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja]
@@ -84,6 +87,7 @@
              true)
           (case urakkatyyppi
             :hoito [:asiakastyytyvaisyysbonus :muu]
+            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio :lupausbonus]
             [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
@@ -121,11 +125,19 @@
       +rivin-luokka+
       "")))
 
+(defn- mhu-bonuksen-indeksi [bonus-tyyppi urakan-indeksi]
+  (if (or
+        (= :asiakastyytyvaisyysbonus bonus-tyyppi)
+        (= :lupausbonus bonus-tyyppi))
+    urakan-indeksi
+    yleiset/+ei-sidota-indeksiin+))
+
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
   []
   (let [ur @nav/valittu-urakka
-        urakan-indeksi @u/urakassa-kaytetty-indeksi
+        urakan-indeksi (:indeksi ur)
+        urakan-tyyppi (:tyyppi ur)
         muokattu (atom (if (:id @valittu-kustannus)
                          (assoc @valittu-kustannus
                            :sopimus @u/valittu-sopimusnumero
@@ -227,12 +239,26 @@
             :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
             :aseta (fn [rivi arvo]
-                     (assoc (if (and
-                                  urakan-indeksi
-                                  (= :asiakastyytyvaisyysbonus arvo))
+                     (assoc (cond
+                              (and
+                                (not= :teiden-hoito urakan-tyyppi)
+                                urakan-indeksi
+                                (= :asiakastyytyvaisyysbonus arvo))
                               (assoc rivi :indeksin_nimi urakan-indeksi
                                           :maksaja :tilaaja)
-                              rivi)
+                              (and
+                                (= :teiden-hoito urakan-tyyppi)
+                                (or (= :lupausbonus arvo)
+                                    (= :asiakastyytyvaisyysbonus arvo)))
+                              (assoc rivi :indeksin_nimi urakan-indeksi
+                                          :maksaja :tilaaja)
+                              (and
+                                (= :teiden-hoito urakan-tyyppi)
+                                (or (not= :lupausbonus arvo)
+                                    (not= :asiakastyytyvaisyysbonus arvo)))
+                              (assoc rivi :indeksin_nimi "Ei sidota indeksiin"
+                                          :maksaja :tilaaja)
+                              :default rivi)
                        :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen? true
@@ -249,14 +275,23 @@
            (when (urakka/indeksi-kaytossa?)
              {:otsikko "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
               :pakollinen? true
-              ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
-              :muokattava? #(not (and
-                                   (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                   (= :hoito (:tyyppi ur))))
-              :valinnat (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+)
-              :fmt #(if (nil? %)
+              ;; Hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan - indeksi pakotetaan
+              ;; Maanteiden hoitourakoissa (MHU) as.tyyt.bonuksen laskennan indeksi ja lupausbonus menee urakan alkamisvuoden mukaan - indeksi pakotetaan
+              ;; Sen sijaan maanteiden hoitourakoissa (MHU) alihankintabonukselle ja tavoitepalkkiolle ei saa valita indeksiä.
+              :muokattava? #(not (or
+                                   (and
+                                     (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                     (= :hoito (:tyyppi ur)))
+                                   (= :teiden-hoito (:tyyppi ur))))
+              :valinnat (if (= :teiden-hoito (:tyyppi ur))
+                          (mhu-bonuksen-indeksi (:tyyppi @muokattu) urakan-indeksi)
+                          (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+))
+              :fmt #(cond
+                      (and (= :hoito (:tyyppi ur)) (nil? %))
                       yleiset/+valitse-indeksi+
-                      (str %))
+                      (and (= :teiden-hoito (:tyyppi ur)) (nil? %))
+                      (mhu-bonuksen-indeksi (:tyyppi @muokattu) urakan-indeksi)
+                      :default (str %))
               :palstoja 1
               :vihje (when (and
                              (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
