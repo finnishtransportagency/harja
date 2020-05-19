@@ -25,7 +25,7 @@
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
-(defn- lisaa-kirjausikoni [teksti]
+(defn lisaa-kirjausikoni [teksti]
   (swap! s/kirjauspisteet
          conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
                 :label teksti)))

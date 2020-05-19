@@ -603,7 +603,7 @@
       (when (nil? (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta))
         (warn (str "Rajapinalle " rajapinta " ei ole määritetty kuuntelijaa datan käsittlijään!\n"
                    "Annettu rajapinta: " rajapinta ". Olemassa olevat:\n"
-                   (with-out-str (cljs.pprint/pprint (keys (:kuuntelijat datan-kasittelija))))))))
+                   (pr-str (keys (:kuuntelijat datan-kasittelija)))))))
     (let [rajapintakasittelija (seuranta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
                                                                                                          @kuuntelija)
                                                          rajapinnan-dataf (if (and *jarjesta-data* jarjestys)
@@ -1400,10 +1400,9 @@
                                                   (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
                                                                    (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
                                                     (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
-                                                         "\n" (with-out-str (cljs.pprint/pprint
-                                                                              {:data-rajapinnasta (first data)
-                                                                               :grid-data (second data)
-                                                                               :osan-derefable (get data 2)}))))))))))
+                                                         "\n" (pr-str {:data-rajapinnasta (first data)
+                                                                       :grid-data (second data)
+                                                                       :osan-derefable (get data 2)})))))))))
      :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
      :render (fn [this]
                (if-let [error (.. this -state -error)]

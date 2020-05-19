@@ -8,14 +8,13 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log warn]]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.domain.oikeudet :as oikeudet]
             [cljs.spec.alpha :as s]
-            [harja.loki :refer [warn]]
             [harja.tyokalut.regex :as re]
             [goog.dom :as dom]
             [harja.ui.modal :as modal]
@@ -610,9 +609,9 @@
                                                                                                                                 (when-not (= (count arvot) (count johdetut-arvot))
                                                                                                                                   (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                                                                                                                         "-> ARVOT\n"
-                                                                                                                                        (with-out-str (cljs.pprint/pprint arvot))
+                                                                                                                                        (pr-str arvot)
                                                                                                                                         "-> JOHDETUT ARVOT\n"
-                                                                                                                                        (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                                                                                                        (pr-str johdetut-arvot))
                                                                                                                                   arvot)
                                                                                                                                 (vec
                                                                                                                                   (map merge
@@ -724,9 +723,9 @@
                                                                                                                                           (when-not (= (count arvot) (count johdetut-arvot))
                                                                                                                                             (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                                                                                                                                   "-> ARVOT\n"
-                                                                                                                                                  (with-out-str (cljs.pprint/pprint arvot))
+                                                                                                                                                  (pr-str arvot)
                                                                                                                                                   "-> JOHDETUT ARVOT\n"
-                                                                                                                                                  (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                                                                                                                  (pr-str johdetut-arvot))
                                                                                                                                             arvot)
                                                                                                                                           (vec
                                                                                                                                             (map merge
@@ -1032,9 +1031,9 @@
                                                     (when-not (= (count arvot) (count johdetut-arvot))
                                                       (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                                             "-> ARVOT\n"
-                                                            (with-out-str (cljs.pprint/pprint arvot))
+                                                            (pr-str arvot)
                                                             "-> JOHDETUT ARVOT\n"
-                                                            (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                            (pr-str johdetut-arvot))
                                                       arvot)
                                                     (vec
                                                       (map merge
@@ -1227,9 +1226,9 @@
                                                                                                                        (when-not (= (count arvot) (count johdetut-arvot))
                                                                                                                          (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                                                                                                                "-> ARVOT\n"
-                                                                                                                               (with-out-str (cljs.pprint/pprint arvot))
+                                                                                                                               (pr-str arvot)
                                                                                                                                "-> JOHDETUT ARVOT\n"
-                                                                                                                               (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                                                                                               (pr-str johdetut-arvot))
                                                                                                                          arvot)
                                                                                                                        (vec
                                                                                                                          (map merge
@@ -1271,9 +1270,9 @@
                                                                                                                                 (when-not (= (count arvot) (count johdetut-arvot))
                                                                                                                                   (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
                                                                                                                                         "-> ARVOT\n"
-                                                                                                                                        (with-out-str (cljs.pprint/pprint arvot))
+                                                                                                                                        (pr-str arvot)
                                                                                                                                         "-> JOHDETUT ARVOT\n"
-                                                                                                                                        (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                                                                                                        (pr-str johdetut-arvot))
                                                                                                                                   arvot)
                                                                                                                                 (vec
                                                                                                                                   (map merge
