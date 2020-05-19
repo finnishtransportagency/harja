@@ -184,12 +184,16 @@
         (recur (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
                                         :pelkka-palautus? true
                                         :rivin-parametrit {:on-click #(e! (->AvaaLasku rivi))
-                                                           :class    #{"table-default"
+                                                           :class    (cond->
+                                                                       #{"table-default"
                                                                        "table-default-selectable"
                                                                        (str "table-default-"
                                                                             (if (true? parillinen?)
                                                                               "even"
-                                                                              "odd"))}}}
+                                                                              "odd"))}
+                                                                       (and (= 0 (count rivit))
+                                                                            (not (nil? rivi)))
+                                                                       (conj "bottom-margin-16px"))}}
                               [osa/->Teksti
                                (keyword (gensym "erapv-"))
                                (str
