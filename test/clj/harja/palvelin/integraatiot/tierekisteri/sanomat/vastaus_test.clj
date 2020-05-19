@@ -24,7 +24,7 @@
     (is (= "tl506" (:tunniste tietolaji)))
     (is (= 15 (count (:ominaisuudet (:tietolaji vastaus)))))
 
-    (is (= "ASETUSNR" (:kenttatunniste ominaisuus)))
+    (is (= "asetusnr" (:kenttatunniste ominaisuus)))
     (is (= 2 (:jarjestysnumero ominaisuus)))
     (is (= 12 (:pituus ominaisuus)))
     (is (:pakollinen ominaisuus))
