@@ -269,7 +269,7 @@
     },
     "paikkaukset": {
       "type": "array",
-      "maxItems": 200,
+      "maxItems": 300,
       "items": {
         "type": "object",
         "additionalProperties": false,
