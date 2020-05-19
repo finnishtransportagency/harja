@@ -184,7 +184,7 @@
   (let [paikkaus (first paikkaukset)
         paikkauskohde (::paikkaus/paikkauskohde paikkaus)
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
-        lahetyksen-tila   (::paikkaus/tila paikkauskohde)
+        lahetyksen-tila (::paikkaus/tila paikkauskohde)
         ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
@@ -194,8 +194,7 @@
     (fn [_]
      [:div {:style {:display "flex"
                    :justify-content "space-evenly"}}
-      ;; piilotetaan kunnes backend toteutettu, ettei mene raakileena tuotantoon
-      #_(when-not urakoitsija-kayttajana?
+      (when-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
          (if tarkistettu
            [:span
@@ -206,14 +205,16 @@
            {:ikoni (ikonit/livicon-check)
             :luokka "nappi-ensisijainen btn-xs"
             :disabled (boolean tarkistettu)
-            :kun-onnistuu #(e! (tiedot/->MerkitseTarkistetuksiOnnistui %))}])])
+            :kun-onnistuu #(e! (tiedot/->PaikkauksetHaettu %))}])])
 
       (when-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
-         (if-not tarkistettu
-           (if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
-             "Lähetys YHA:an"
-             "Ei lähetetä YHA:an")
+         (if tarkistettu
+           ; TODO Tarkista halutut työmenetelmät YHAlta ja filtteröi lähetysnappi näkyviin/pois näkyvistä
+           ; TODO: Lisää myös sama tarkistuslogiikka backendin puolelle, ettei voi vahingossa livahtaa YHAn suuntaan tarpeettomia paikkauksia.
+           ;(if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
+           ;  "Lähetys YHA:an"
+           ;  "Ei lähetetä YHA:an")
            (get lahetyksen-tilan-teksti lahetyksen-tila))])
 
       (when-not urakoitsija-kayttajana?
