@@ -17,7 +17,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>ASETUSNR</kenttatunniste>
+                    <kenttatunniste>asetusnr</kenttatunniste>
                     <jarjestysnumero>2</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>true</pakollinen>
@@ -28,7 +28,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>SIVUTIE</kenttatunniste>
+                    <kenttatunniste>sivutie</kenttatunniste>
                     <jarjestysnumero>3</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>false</pakollinen>
@@ -64,7 +64,7 @@
                     </koodisto>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMALA</kenttatunniste>
+                    <kenttatunniste>lmala</kenttatunniste>
                     <jarjestysnumero>4</jarjestysnumero>
                     <pituus>10</pituus>
                     <pakollinen>false</pakollinen>
@@ -77,7 +77,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMVANHA</kenttatunniste>
+                    <kenttatunniste>lmvanha</kenttatunniste>
                     <jarjestysnumero>5</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
@@ -88,7 +88,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMTYYPPI</kenttatunniste>
+                    <kenttatunniste>lmtyyppi</kenttatunniste>
                     <jarjestysnumero>6</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
@@ -129,7 +129,7 @@
                     </koodisto>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMKAUSI</kenttatunniste>
+                    <kenttatunniste>lmkausi</kenttatunniste>
                     <jarjestysnumero>7</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>false</pakollinen>
@@ -140,7 +140,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMKIINNIT</kenttatunniste>
+                    <kenttatunniste>lmkiinnit</kenttatunniste>
                     <jarjestysnumero>8</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
@@ -181,7 +181,7 @@
                     </koodisto>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMMATER</kenttatunniste>
+                    <kenttatunniste>lmmater</kenttatunniste>
                     <jarjestysnumero>9</jarjestysnumero>
                     <pituus>4</pituus>
                     <pakollinen>false</pakollinen>
@@ -215,7 +215,7 @@
                     </koodisto>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMTEKSTI</kenttatunniste>
+                    <kenttatunniste>lmteksti</kenttatunniste>
                     <jarjestysnumero>10</jarjestysnumero>
                     <pituus>50</pituus>
                     <pakollinen>false</pakollinen>
@@ -228,7 +228,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>LMOMIST</kenttatunniste>
+                    <kenttatunniste>lmomist</kenttatunniste>
                     <jarjestysnumero>11</jarjestysnumero>
                     <pituus>50</pituus>
                     <pakollinen>false</pakollinen>
@@ -239,7 +239,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>OPASTETUNN</kenttatunniste>
+                    <kenttatunniste>opastetunn</kenttatunniste>
                     <jarjestysnumero>12</jarjestysnumero>
                     <pituus>20</pituus>
                     <pakollinen>false</pakollinen>
@@ -250,7 +250,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>KUNTOLUOKK</kenttatunniste>
+                    <kenttatunniste>kuntoluokitus</kenttatunniste>
                     <jarjestysnumero>13</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
@@ -300,7 +300,7 @@
                     </koodisto>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>OPASTETUNN</kenttatunniste>
+                    <kenttatunniste>opastetunn</kenttatunniste>
                     <jarjestysnumero>14</jarjestysnumero>
                     <pituus>10</pituus>
                     <pakollinen>false</pakollinen>
@@ -311,7 +311,7 @@
                     </voimassaolo>
                 </ominaisuus>
                 <ominaisuus>
-                    <kenttatunniste>URAKKA</kenttatunniste>
+                    <kenttatunniste>urakka</kenttatunniste>
                     <jarjestysnumero>15</jarjestysnumero>
                     <pituus>6</pituus>
                     <pakollinen>false</pakollinen>
