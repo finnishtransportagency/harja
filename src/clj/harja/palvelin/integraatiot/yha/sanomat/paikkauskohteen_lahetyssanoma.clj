@@ -44,6 +44,11 @@
         kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
                                                          :harja.domain.paikkaus/urakka-id        urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
+        kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
+                      :harja.domain.muokkaustiedot/muokattu
+                      :harja.domain.paikkaus/tarkistettu
+                      :harja.domain.paikkaus/tarkistaja-id
+                      :harja.domain.paikkaus/ilmoitettu-virhe)
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
                                                                 :harja.domain.paikkaus/urakka-id        urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})

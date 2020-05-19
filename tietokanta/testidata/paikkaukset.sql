@@ -1,62 +1,117 @@
 INSERT INTO paikkauskohde ("luoja-id",
+                           luotu,
                            "ulkoinen-id",
                            nimi,
-                           "urakka-id"
+                           "urakka-id",
+                           tila,
+                           "ilmoitettu-virhe",
+                           muokattu,
+                           "muokkaaja-id",
+                           tarkistettu,
+                           "tarkistaja-id"
 )
 VALUES ((SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'destia'
          LIMIT 1),
+        current_timestamp,
         666,
         'Testikohde',
         (SELECT id
          FROM urakka
-         WHERE sampoid = '1242141-OULU2')),
+         WHERE sampoid = '1242141-OULU2'),
+        'lahetetty'::lahetyksen_tila,
+        NULL,
+        NOW() + INTERVAL '2 day',
+        (SELECT id
+           FROM kayttaja
+          WHERE kayttajanimi = 'jvh'
+          LIMIT 1),
+       NOW(),
+(SELECT id
+   FROM kayttaja
+  WHERE kayttajanimi = 'jvh'
+  LIMIT 1)),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+   current_timestamp,
   666,
   'Testikohde toisessa urakassa sama urakoitsija ja ulkoinen id',
   (SELECT id
     FROM urakka
-    WHERE sampoid = '1245142-KAJ2')),
+    WHERE sampoid = '1245142-KAJ2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+   current_timestamp,
    1337,
    'Testikohde 2',
    (SELECT id
     FROM urakka
-    WHERE sampoid = '1242141-OULU2')),
+    WHERE sampoid = '1242141-OULU2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL),
    ((SELECT id
        FROM kayttaja
       WHERE kayttajanimi = 'destia'
       LIMIT 1),
+    current_timestamp,
     1338,
     'Testikohde 3',
     (SELECT id
        FROM urakka
-      WHERE sampoid = '1242141-OULU2')),
+      WHERE sampoid = '1242141-OULU2'),
+    NULL,
+    'Testikohteen numero XYZ tiedot eivät pitäneet paikkaansa. Tsekkaisitko ja lähetä korjaukset. T. Pete',
+    NULL,
+    NULL,
+    NULL,
+    NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+   current_timestamp,
    221337,
    '22 testikohteet',
    (SELECT id
     FROM urakka
-    WHERE sampoid = '1242141-OULU2')),
+    WHERE sampoid = '1242141-OULU2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'skanska'
     LIMIT 1),
+   current_timestamp,
    7331,
    'Testikohde Muhoksen paallystysurakassa',
    (SELECT id
     FROM urakka
-    WHERE sampoid = '4242523-TES2'));
+    WHERE sampoid = '4242523-TES2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL);
 
 
 DO $$ DECLARE

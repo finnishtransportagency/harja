@@ -25,6 +25,8 @@
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+    [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
+
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
@@ -279,6 +281,10 @@
                          (yha-integraatio/->Yha (:yha asetukset))
                          [:db :integraatioloki])
 
+      :yha-paikkauskomponentti (component/using
+                         (yha-paikkauskomponentti/->YhaPaikkaukset (:yha asetukset))
+                         [:db :integraatioloki])
+
       :velho-integraatio (component/using
                            (velho-integraatio/->Velho (:velho asetukset))
                            [:db :integraatioloki])
@@ -399,7 +405,7 @@
                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
-                     [:http-palvelin :db])
+                     [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))

@@ -73,7 +73,8 @@
     :tiedostopesula
     :tieluvat
     :paikkaukset
-    :jarjestelman-tila})
+    :jarjestelman-tila
+    :yha-paikkauskomponentti})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

@@ -74,17 +74,15 @@
                     :tiemerkintapvm (:valmis-tiemerkintaan lomakedata)
                     :kopio-itselle? (:kopio-itselle? lomakedata)
                     :saate (:saate lomakedata)
-                    :muut-vastaanottajat (->> (vals (get-in
-                                                      data
-                                                      [:lomakedata :muut-vastaanottajat]))
-                                              (filter (comp not :poistettu))
-                                              (map :sahkoposti))
+                    :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                           (:muut-vastaanottajat lomakedata))
                     :urakka-id urakka-id
                     :sopimus-id (first @u/valittu-sopimusnumero)
                     :vuosi vuosi})
                 {:disabled (not valmis-tallennettavaksi?)
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
+                 :virheviesti "Lähetys epäonnistui. Yritä myöhemmin uudelleen."
                  :kun-onnistuu (fn [vastaus]
                                  (reset! tiedot/aikataulurivit vastaus)
                                  (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
@@ -98,9 +96,7 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
-                                                        #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                                                (grid/hae-muokkaustila %)))
+        varmista-kayttajalta/modal-muut-vastaanottajat
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
@@ -155,9 +151,7 @@
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
-       [(varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
-                                                        #(swap! tiedot/tiemerkinta-valmis-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                                                (grid/hae-muokkaustila %)))
+       [varmista-kayttajalta/modal-muut-vastaanottajat
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
@@ -327,7 +321,8 @@
                                    ;; Lisätään modalissa kirjoitetut mailitiedot kaikille muokatuille kohteille
                                    (doseq [kohde-id (map #(first (::aikajana/drag %)) tiemerkinnan-valmistumiset)]
                                      (swap! tiedot/kohteiden-sahkopostitiedot assoc kohde-id
-                                            {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                                            {:muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                                                    (:muut-vastaanottajat lomakedata))
                                              :saate (:saate lomakedata)
                                              :kopio-itselle? (:kopio-itselle? lomakedata)}))
                                    (valmis!))

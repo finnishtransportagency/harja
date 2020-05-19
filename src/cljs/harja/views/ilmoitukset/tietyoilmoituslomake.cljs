@@ -305,7 +305,7 @@
                    (tiedot/->TallennaIlmoitus
                      (lomake/ilman-lomaketietoja ilmoitus) true avaa-pdf?
                      {:vastaanottaja (:vastaanottaja lomakedata)
-                      :muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                      :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set (:muut-vastaanottajat lomakedata))
                       :kopio-itselle? (:kopio-itselle? lomakedata)
                       :saate (:saate lomakedata)}))
 
@@ -330,10 +330,7 @@
          :hae #(if (:vastaanottaja lomakedata)
                  (:vastaanottaja lomakedata))
          :muokattava? (constantly false)}
-        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
-                                                        #(do
-                                                           (e! (tiedot/->SahkopostinMuitaVastaanottajiaMuokattu
-                                                                 (grid/hae-muokkaustila %)))))
+        varmista-kayttajalta/modal-muut-vastaanottajat
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))

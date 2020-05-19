@@ -218,7 +218,7 @@ headerit palautetaan normaalisti."
                     oam-tiedot))
            oam-tiedot)
       (catch Throwable t
-        (log/warn t "Käyttäjätietojen varmistuksessa virhe!")))))
+        (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
@@ -239,7 +239,7 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn "Todennusheader oam_remote_user puuttui kokonaan")
+          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)

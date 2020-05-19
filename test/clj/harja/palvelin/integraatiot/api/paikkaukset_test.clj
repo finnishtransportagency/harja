@@ -83,10 +83,10 @@
                                                                   [(dissoc (first tienkohta) ::paikkaus/tienkohta-id)])))))
     (is (= odotettu-paikkauskohde (-> (select-keys paikkauskohde [::paikkaus/paikkauskohde])
                                       (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
-                                                                         (dissoc paikkauskohde ::paikkaus/id))))))
+                                                                         (dissoc paikkauskohde ::paikkaus/id ::muokkaustiedot/luotu))))))
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
-                            ::paikkaus/id)))))
+                            ::paikkaus/id ::muokkaustiedot/luotu)))))
 
 (deftest kirjaa-paikkaustietoja
   (let [db (luo-testitietokanta)
@@ -121,7 +121,9 @@
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id
-                            ::paikkaus/kirjattu)))
+                            ::paikkaus/kirjattu
+                            ::muokkaustiedot/luotu
+                            ::muokkaustiedot/muokattu)))
 
     (is (= 200 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
 

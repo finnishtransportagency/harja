@@ -103,7 +103,8 @@
         "aosa",
         "aet",
         "losa",
-        "let"
+        "let",
+        "ajorata"
       ],
       "$comment": "Urakoitsija voi lähettää useamman ajoradan paikkaukselle, mutta tämän ei tulisi käytännössä tapahtua",
       "properties": {
@@ -268,7 +269,7 @@
     },
     "paikkaukset": {
       "type": "array",
-      "maxItems": 200,
+      "maxItems": 300,
       "items": {
         "type": "object",
         "additionalProperties": false,

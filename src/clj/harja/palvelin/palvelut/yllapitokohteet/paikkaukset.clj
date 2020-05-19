@@ -5,12 +5,17 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]))
+            [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
+            [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [try+]]
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]))
 
 (defn- muodosta-tr-ehdot
   "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
@@ -225,11 +230,61 @@
                             ;; Palautetaan symmetrisesti käyttäjän hakuehtojen mukaisesti urakan kustannukset
                             (hae-paikkausurakan-kustannukset db user hakuparametrit)))
 
+(defn ilmoita-virheesta-paikkaustiedoissa!
+  [db fim email user {::paikkaus/keys [id nimi urakka-id  pinta-ala-summa massamenekki-summa rivien-lukumaara
+                                       saate muut-vastaanottajat kopio-itselle?] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
+  (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
+        paikkauskohde-id (get-in tiedot [::paikkaus/paikkauskohde ::paikkaus/id])
+        response (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe (merge tiedot
+                                                                                          {:email email
+                                                                                           :fim fim
+                                                                                           :kopio-itselle? kopio-itselle?
+                                                                                           :muut-vastaanottajat muut-vastaanottajat
+                                                                                           :urakka-sampo-id urakka-sampo-id
+                                                                                           :pinta-ala-summa pinta-ala-summa
+                                                                                           :massamenekki-summa massamenekki-summa
+                                                                                           :rivien-lukumaara rivien-lukumaara
+                                                                                           :saate saate
+                                                                                           :ilmoittaja user}))]
+    (if (not (contains? response :virhe))
+      (q/paivita-paikkauskohteen-ilmoitettu-virhe! db {:id paikkauskohde-id :ilmoitettu-virhe saate}))
+    response
+  ))
+
+(defn- laheta-paikkauskohde-yhaan
+  "Lähettää annetut kohteet teknisine tietoineen YHAan."
+  [db yhap {:keys [urakka-id kohde-id]}]
+  (let [lahetys (try+ (yha-paikkauskomponentti/laheta-paikkauskohde yhap urakka-id kohde-id)
+                      (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                        virheet))
+        lahetys-onnistui? (not (contains? lahetys :virhe))]
+    (merge
+      {:paikkauskohde nil}
+      (when-not lahetys-onnistui?
+        lahetys))))
+
+(defn merkitse-paikkauskohde-tarkistetuksi!
+  [db yhap user {::paikkaus/keys [id nimi urakka-id paikkauskohde hakuparametrit] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)})
+  (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
+        user-id (:id user)]
+    (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
+    (assert (some? user-id) "Käyttäjän tunniste puuttuu")
+    (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})
+    (hae-urakan-paikkauskohteet db user hakuparametrit)))
+
 (defrecord Paikkaukset []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
+          email (:sonja-sahkoposti this)
+          fim (:fim this)
+          db (:db this)
+          yha-paikkaus (:yha-paikkauskomponentti this)]
       (julkaise-palvelu http :hae-urakan-paikkauskohteet
                         (fn [user tiedot]
                           (hae-urakan-paikkauskohteet db user tiedot))
@@ -243,6 +298,12 @@
       (julkaise-palvelu http :tallenna-paikkauskustannukset
                         (fn [user tiedot]
                           (tallenna-paikkauskustannukset! db user tiedot)))
+      (julkaise-palvelu http :ilmoita-virheesta-paikkaustiedoissa
+                        (fn [user tiedot]
+                          (ilmoita-virheesta-paikkaustiedoissa! db fim email user tiedot)))
+      (julkaise-palvelu http :merkitse-paikkauskohde-tarkistetuksi
+                        (fn [user tiedot]
+                            (merkitse-paikkauskohde-tarkistetuksi! db yha-paikkaus user tiedot)))
       this))
 
   (stop [this]
@@ -250,5 +311,7 @@
       (:http-palvelin this)
       :hae-urakan-paikkauskohteet
       :hae-paikkausurakan-kustannukset
-      :tallenna-paikkauskustannukset)
+      :tallenna-paikkauskustannukset
+      :ilmoita-virheesta-paikkaustiedoissa
+      :merkitse-paikkauskohde-tarkistetuksi)
     this))

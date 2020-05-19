@@ -223,6 +223,15 @@
                      (nil? loppuosa))
        (or viesti "Y-tunnuksen pitää olla 7 numeroa, väliviiva, ja tarkastusnumero.")))))
 
+(defmethod validoi-saanto :email [_ _ data _ _ & [viesti]]
+  (let [osat (str-clj/split data #",")]
+    (when-not
+      (or (empty? data)
+          (every?
+            #(re-matches #"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$" (str-clj/trim %))
+            osat))
+      (or viesti "Kirjoita sähköpostitiedot pilkulla eroteltuna loppuun asti."))))
+
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]
