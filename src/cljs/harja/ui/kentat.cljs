@@ -704,10 +704,11 @@
         teksti (atom (date->teksti p))
         ;; pidetään edellinen data arvo tallessa, jotta voidaan muuttaa teksti oikeaksi
         ;; jos annetun data-atomin arvo muuttuu muualla kuin tässä komponentissa
-        vanha-data (atom p)
+        vanha-data (cljs.core/atom {:data p
+                                    :muokattu-tassa? true})
         muuta-data! (fn [arvo]
-                      (reset! data arvo)
-                      (reset! vanha-data arvo))
+                      (swap! vanha-data assoc :data arvo :muokattu-tassa? true)
+                      (reset! data arvo))
         validoi-fn (fn [validoi? validointi uusi-paiva]
                      (if validoi?
                        (cond
@@ -730,7 +731,7 @@
                  (when (or (re-matches +pvm-regex+ t)
                            (str/blank? t))
                    (reset! teksti t))
-                 (if (str/blank? t)
+                 (when (str/blank? t)
                    (muuta-data! nil)))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
@@ -740,11 +741,12 @@
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
-
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi]} data]
          (let [nykyinen-pvm @data
-               _ (when-not (= nykyinen-pvm @vanha-data)
+               {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
+               _ (when (and (not= nykyinen-pvm vanha-data-arvo)
+                            (not muokattu-tassa?))
                    (reset! teksti (date->teksti nykyinen-pvm)))
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
@@ -754,7 +756,7 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))]
-           (reset! vanha-data nykyinen-pvm)
+           (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil)
              :style {:display "inline-block"}}
@@ -769,14 +771,14 @@
                                          (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                          (reset! auki false)
                                          true)
-                         :on-blur #(let [t (-> % .-target .-value)
-                                         pvm (pvm/->pvm t)]
+                         :on-blur #(let [arvo (.. % -target -value)
+                                         pvm (pvm/->pvm arvo)]
                                      (when on-blur
                                        (on-blur %))
                                      (if (and pvm (not (validoi pvm)))
                                        (do (muuta-data! nil)
                                            (reset! teksti ""))
-                                       (teksti-paivamaaraksi! validoi data (-> % .-target .-value))))}]
+                                       (teksti-paivamaaraksi! validoi data arvo)))}]
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
                                                              (reset! auki false)
