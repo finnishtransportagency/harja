@@ -185,16 +185,12 @@
         (recur (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
                                         :pelkka-palautus? true
                                         :rivin-parametrit {:on-click #(e! (->AvaaLasku rivi))
-                                                           :class    (cond->
-                                                                       #{"table-default"
-                                                                         "table-default-selectable"
-                                                                         (str "table-default-"
-                                                                              (if (true? parillinen?)
-                                                                                "even"
-                                                                                "odd"))}
-                                                                       (and (= 0 (count rivit))
-                                                                            (not (nil? rivi)))
-                                                                       (conj "bottom-margin-16px"))}}
+                                                           :class    #{"table-default"
+                                                                       "table-default-selectable"
+                                                                       (str "table-default-"
+                                                                            (if (true? parillinen?)
+                                                                              "even"
+                                                                              "odd"))}}}
                               [osa/->Teksti
                                (keyword (gensym "erapv-"))
                                (str
@@ -261,9 +257,18 @@
                                                 solut)))
         flattaus-fn (fn [kaikki nykyinen]
                       ;; Yhdistä perustiedot ja kohdistukset
-                      (apply conj kaikki (map #(merge nykyinen (select-keys nykyinen [:kohdistukset]) %) (:kohdistukset nykyinen))))
+                      (apply conj
+                             kaikki
+                             (map
+                               #(merge nykyinen
+                                       (select-keys nykyinen
+                                                    [:kohdistukset])
+                                       %)
+                               (:kohdistukset nykyinen))))
         flattaa (fn [flatattavat]
-                  (let [flatatut (reduce flattaus-fn [] flatattavat)]
+                  (let [flatatut (reduce flattaus-fn
+                                         []
+                                         flatattavat)]
                     (sort-by :toimenpideinstanssi flatatut)))
         even? (r/atom true)
         luo-laskun-nro-otsikot (fn [rs [laskun-nro {summa :summa rivit :rivit}]]
@@ -274,30 +279,51 @@
                                      (if (= 0 laskun-nro)
                                        rs
                                        (valiotsikko-rivi
-                                         (r/partial p/lisaa-rivi! rs {:rivi             jana/->Rivi
-                                                                      :pelkka-palautus? true
-                                                                      :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin"}}})
-                                         {:otsikko "Koontilasku nro " :arvo laskun-nro :luokka #{"col-xs-4"}}
-                                         {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-offset-7" "col-xs-1"}}))
+                                         (r/partial p/lisaa-rivi!
+                                                    rs
+                                                    {:rivi             jana/->Rivi
+                                                     :pelkka-palautus? true
+                                                     :rivin-parametrit {:class #{"table-default"
+                                                                                 "table-default-header"
+                                                                                 "table-default-thin"}}})
+                                         {:otsikko "Koontilasku nro "
+                                          :arvo    laskun-nro
+                                          :luokka  #{"col-xs-4"}}
+                                         {:otsikko ""
+                                          :arvo    (fmt/euro summa)
+                                          :luokka  #{"col-xs-offset-7" "col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
+                                 (loki/log "koko" koko (count (:rivit koko)))
                                  ;; pvm tulee muodossa vvvv/kk
-                                 (let [[vvvv kk] (map #(js/parseInt %) (str/split pvm #"/"))]
+                                 (let [[vvvv kk] (map #(js/parseInt %)
+                                                      (str/split pvm #"/"))]
                                    (reduce luo-laskun-nro-otsikot
                                            (valiotsikko-rivi
-                                             (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
-                                                                            :pelkka-palautus? true
-                                                                            :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin-strong"}}})
+                                             (r/partial p/lisaa-rivi!
+                                                        koko
+                                                        {:rivi             jana/->Rivi
+                                                         :pelkka-palautus? true
+                                                         :rivin-parametrit {:class (cond-> #{"table-default"
+                                                                                             "table-default-header"
+                                                                                             "table-default-thin-strong"}
+                                                                                           (not= (count (:rivit koko))
+                                                                                              1)
+                                                                                           (conj "top-margin-16px"))}})
                                              {:otsikko ""
-                                              :arvo (str (pvm/kk-fmt kk) "kuu " vvvv
-                                                         " yhteensä") :luokka #{"col-xs-4"}}
+                                              :arvo    (str (pvm/kk-fmt kk)
+                                                            "kuu "
+                                                            vvvv
+                                                            " yhteensä")
+                                              :luokka  #{"col-xs-4"}}
                                              {:otsikko ""
                                               :arvo    (fmt/euro summa)
                                               :luokka  #{"col-xs-offset-7" "col-xs-1"}})
                                            rivit)))
         jaottele-riveiksi-taulukkoon (fn [taulukko rivit]
                                        (let [taulukko-rivit (reduce luo-paivamaara-otsikot
-                                                                    taulukko rivit)]
+                                                                    taulukko
+                                                                    rivit)]
                                          (p/paivita-taulukko! taulukko-rivit)))]
     (muodosta-taulukko :kohdistetut-kulut-taulukko
                        {:otsikot     {:janan-tyyppi jana/Rivi
