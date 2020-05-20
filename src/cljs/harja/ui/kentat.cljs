@@ -1452,8 +1452,9 @@
          komponentin-argumentit :komponentin-argumentit
          tyylit                 :tyylit
          otsikko-tag            :otsikko-tag
-         ikoni                  :ikoni} propit
-        propit (apply dissoc propit #{:komponentti :tyylit :komponentin-argumentit :otsikko-tag :ikoni})]
+         ikoni                  :ikoni
+         virhe-viesti           :virhe} propit
+        propit (apply dissoc propit #{:komponentti :tyylit :komponentin-argumentit :otsikko-tag :ikoni :virhe})]
     [:div {:class (or (:kontti tyylit)
                       #{"kulukentta"})}
      [(if-not (nil? otsikko-tag)
@@ -1463,9 +1464,12 @@
                             #{})} otsikko]
      (if komponentti
        [komponentti (or komponentin-argumentit {})]
-       [:div.ikoni-sisaan
-        (when-not (nil? ikoni) [ikoni])
-        [:input.input-default.komponentin-input propit]])]))
+       [:<>
+        [:div.ikoni-sisaan
+         (when-not (nil? ikoni) [ikoni])
+         [:input.input-default.komponentin-input propit]]
+        (when virhe-viesti
+          [:span.virhe virhe-viesti])])]))
 
 (defn aikavali
   "Aikavälin valinta -komponentti

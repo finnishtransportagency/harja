@@ -34,11 +34,12 @@
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
-(defrecord HaeAliurakoitsijat [])
 (defrecord HaeUrakanLaskutJaTiedot [hakuparametrit])
+(defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
 
-(defrecord KutsuEpaonnistui [tulos])
+(defrecord KutsuEpaonnistui [tulos parametrit])
 
+(defrecord TarkistusOnnistui [tulos parametrit])
 (defrecord MaksueraHakuOnnistui [tulos])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
@@ -186,11 +187,11 @@
                                         :rivin-parametrit {:on-click #(e! (->AvaaLasku rivi))
                                                            :class    (cond->
                                                                        #{"table-default"
-                                                                       "table-default-selectable"
-                                                                       (str "table-default-"
-                                                                            (if (true? parillinen?)
-                                                                              "even"
-                                                                              "odd"))}
+                                                                         "table-default-selectable"
+                                                                         (str "table-default-"
+                                                                              (if (true? parillinen?)
+                                                                                "even"
+                                                                                "odd"))}
                                                                        (and (= 0 (count rivit))
                                                                             (not (nil? rivi)))
                                                                        (conj "bottom-margin-16px"))}}
@@ -401,6 +402,12 @@
 
   ;; SUCCESS
 
+  TarkistusOnnistui
+  (process-event [{tulos :tulos {:keys [ei-async-laskuria]} :parametrit} app]
+    (->
+      app
+      (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))
+      (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)))
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
     (->
@@ -475,8 +482,8 @@
   ;; FAIL
 
   KutsuEpaonnistui
-  (process-event [{:keys [tulos]} app]
-    (update-in app [:parametrit :haetaan] dec))
+  (process-event [{{:keys [ei-async-laskuria]} :parametrit} app]
+    (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
 
   ;; HAUT
 
@@ -494,13 +501,6 @@
                           :epaonnistui        ->KutsuEpaonnistui
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 2))
-  HaeAliurakoitsijat
-  (process-event [_ app]
-    (tuck-apurit/get! :aliurakoitsijat
-                      {:onnistui           ->AliurakoitsijahakuOnnistui
-                       :epaonnistui        ->KutsuEpaonnistui
-                       :paasta-virhe-lapi? true})
-    (update-in app [:parametrit :haetaan] inc))
   HaeUrakanLaskut
   (process-event [{{:keys [id alkupvm loppupvm]} :hakuparametrit} app]
     (tuck-apurit/post! (if (and alkupvm loppupvm)
@@ -529,6 +529,17 @@
 
   ;; VIENNIT
 
+  OnkoLaskunNumeroKaytossa
+  (process-event [{laskun-numero :laskun-numero} app]
+    (tuck-apurit/post! :tarkista-laskun-numeron-paivamaara
+                       {:laskun-numero laskun-numero
+                        :urakka        (-> @tila/yleiset :urakka :id)}
+                       {:onnistui               ->TarkistusOnnistui
+                        :onnistui-parametrit    [{:ei-async-laskuria true}]
+                        :epaonnistui            ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:ei-async-laskuria true}]
+                        :paasta-virhe-lapi?     true})
+    app)
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
     (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot))
@@ -653,8 +664,8 @@
                  (-> @tila/yleiset :urakka polku)
                  arvo)]
       (assoc-in app [:parametrit (case polku
-                                 :alkupvm :haun-alkupvm
-                                 :loppupvm :haun-loppupvm)] arvo)))
+                                   :alkupvm :haun-alkupvm
+                                   :loppupvm :haun-loppupvm)] arvo)))
 
   ;; FORMITOIMINNOT
 

@@ -641,13 +641,13 @@
           :teksti-nappi? true}]])]))
 
 (defn laskun-tiedot
-  [{:keys [paivitys-fn haetaan]}
-   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva] :as lomake} :lomake}]
+  [{:keys [paivitys-fn e! haetaan]}
+   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva tarkistukset] :as lomake} :lomake}]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])]
     (lomakkeen-osio
-      "Laskun tiedot"
+      (str "Laskun tiedot")
       [kentat/vayla-lomakekentta
        "Koontilaskun kuukausi *"
        :komponentti koontilaskun-kk-droppari
@@ -669,7 +669,15 @@
        :arvo laskun-numero
        :on-change #(paivitys-fn
                      {:validoitava? true}
-                     :laskun-numero (-> % .-target .-value))])))
+                     :laskun-numero (-> % .-target .-value))
+       :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
+       :virhe (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
+                         (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
+                (str "Annetulla numerolla on jo olemassa kirjaus, jonka päivämäärä on " (-> tarkistukset
+                                                                                            :numerolla-tarkistettu-pvm
+                                                                                            :erapaiva
+                                                                                            pvm/pvm)
+                     ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))])))
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -728,7 +736,8 @@
           {:style {:margin-top    "56px"
                    :margin-bottom "56px"}}
           [laskun-tiedot {:paivitys-fn paivitys-fn
-                          :haetaan     haetaan}
+                          :haetaan     haetaan
+                          :e!          e!}
            {:lomake lomake}]
           [lisatiedot
            {:paivitys-fn paivitys-fn
@@ -758,7 +767,6 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-alkupvm haun-loppupvm]} :parametrit :as app}]
