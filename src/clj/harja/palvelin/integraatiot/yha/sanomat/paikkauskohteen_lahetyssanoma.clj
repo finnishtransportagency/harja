@@ -47,7 +47,8 @@
         kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
                       :harja.domain.muokkaustiedot/muokattu
                       :harja.domain.paikkaus/tarkistettu
-                      :harja.domain.paikkaus/tarkistaja-id)
+                      :harja.domain.paikkaus/tarkistaja-id
+                      :harja.domain.paikkaus/ilmoitettu-virhe)
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
                                                                 :harja.domain.paikkaus/urakka-id        urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})

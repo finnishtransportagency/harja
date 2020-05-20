@@ -70,7 +70,7 @@
   (when paivamaara
     (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))
 
-(defn gridien-siivous []
+(defn gridien-siivous! []
   (doseq [grid-polku [[:gridit :suunnitelmien-tila :grid]
                       [:gridit :suunnittellut-hankinnat :grid]
                       [:gridit :laskutukseen-perustuvat-hankinnat :grid]
@@ -98,7 +98,6 @@
 (defn fmt-euro [summa]
   (try (fmt/euro summa)
        (catch :default e
-         (error (str "EURO FORMATOINTI EPÄONNISTUI SUMMALLE " summa "\n") e)
          summa)))
 
 (defn poista-tyhjat [arvo]
@@ -2521,113 +2520,129 @@
 
 (defn kustannussuunnitelma*
   [_ app]
-  (let [lahdetty-nakymasta? (cljs.core/atom false)]
+  (let [nakyman-setup (cljs.core/atom {:lahdetty-nakymasta? false})]
     (komp/luo
       (komp/piirretty (fn [_]
-                        (e! (t/->Hoitokausi))
-                        (e! (t/->TaulukoidenVakioarvot))
-                        (e! (t/->FiltereidenAloitusarvot))
-                        (e! (t/->YleisSuodatinArvot))
-                        (e! (t/->Oikeudet))
-                        (e! (tuck-apurit/->MuutaTila [:taulukkojen-init-thread]
-                                                     (go-loop [[tf & tfs] [[suunnitelmien-tila-grid true nil]
-                                                                           [suunnittellut-hankinnat-grid true nil]
-                                                                           [hankinnat-laskutukseen-perustuen-grid true nil]
-                                                                           [rahavarausten-grid false nil]
-                                                                           [(partial maarataulukko "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :erillishankinnat-disablerivit]
-                                                                           [johto-ja-hallintokorvaus-laskulla-grid true nil]
-                                                                           [johto-ja-hallintokorvaus-laskulla-yhteenveto-grid true nil]
-                                                                           [(partial maarataulukko "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :toimistokulut-disablerivit]
-                                                                           [(partial maarataulukko "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :hoidonjohtopalkkio-disablerivit]
-                                                                           [(partial maarataulukko "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false) true :tilaajan-varaukset-disablerivit]]
-                                                               init-lopetetaan? @lopeta-taulukkojen-luonti?
-                                                               lopetetaan? init-lopetetaan?]
-                                                       (cond
-                                                         ;; Jos on lähdetty näkymästä, niin ei luoda enää taulukoita
-                                                         @lahdetty-nakymasta? nil
-                                                         ;; Jos näkymään tultaessa vielä ollaan siivoamassa edellisiä taulukoita
-                                                         ;; niin odotellaan sen prosessin loppumista. Näin käy, jos tabeja
-                                                         ;; vaihtelee nopeasti
-                                                         init-lopetetaan? (do (<! (async/timeout 500))
-                                                                              (let [init-lopetetaan? @lopeta-taulukkojen-luonti?]
-                                                                                (recur tfs
-                                                                                       init-lopetetaan?
-                                                                                       init-lopetetaan?)))
-                                                         ;; Muussa tapauksessa luodaan taulukko
-                                                         :else (when-not (or lopetetaan? (nil? tf))
-                                                                 (let [[taulukko-f paivita-raidat? tapahtuma-tunniste] tf
-                                                                       taulukko (taulukko-f)]
-                                                                   (when paivita-raidat?
-                                                                     (t/paivita-raidat! (grid/osa-polusta taulukko [::g-pohjat/data])))
-                                                                   (when tapahtuma-tunniste
-                                                                     (grid/triggeroi-tapahtuma! taulukko tapahtuma-tunniste))
-                                                                   (recur tfs
-                                                                          init-lopetetaan?
-                                                                          @lopeta-taulukkojen-luonti?)))))))
-                        (e! (t/->HaeKustannussuunnitelma))
-                        (tila/lisaa-urakan-vaihto-trigger! gridien-siivous)))
-      (komp/ulos #(do (reset! lahdetty-nakymasta? true)
-                      (go (reset! lopeta-taulukkojen-luonti? true)
-                          (<! (:taulukkojen-init-thread @tila/suunnittelu-kustannussuunnitelma))
-                          (gridien-siivous)
-                          (swap! tila/suunnittelu-kustannussuunnitelma (fn [_] tila/kustannussuunnitelma-default))
-                          (reset! lopeta-taulukkojen-luonti? false))))
-      (fn [e*! {:keys [suodattimet] :as app}]
+                        (swap! nakyman-setup
+                               (fn [{:keys [lahdetty-nakymasta?] :as setup}]
+                                 (assoc setup
+                                        :tilan-alustus
+                                        (go-loop [siivotaan-edellista-taulukkoryhmaa? @lopeta-taulukkojen-luonti?]
+                                          (cond
+                                            lahdetty-nakymasta? nil
+                                            siivotaan-edellista-taulukkoryhmaa? (do (<! (async/timeout 500))
+                                                                                    (recur @lopeta-taulukkojen-luonti?))
+                                            :else (do
+                                                    (log "[kustannussuunnitelma] TILAN ALUSTUS")
+                                                    (swap! tila/suunnittelu-kustannussuunnitelma (fn [_] tila/kustannussuunnitelma-default))
+                                                    (loop [[event & events] [(t/->Hoitokausi)
+                                                                             (t/->TaulukoidenVakioarvot)
+                                                                             (t/->FiltereidenAloitusarvot)
+                                                                             (t/->YleisSuodatinArvot)
+                                                                             (t/->Oikeudet)
+                                                                             (t/->HaeKustannussuunnitelma)]]
+                                                      (when (and (not (:lahdetty-nakymasta? @nakyman-setup))
+                                                                 (not (nil? event)))
+                                                        (e! event)
+                                                        (recur events)))
+                                                    (loop [[tf & tfs] [[suunnitelmien-tila-grid true nil]
+                                                                       [suunnittellut-hankinnat-grid true nil]
+                                                                       [hankinnat-laskutukseen-perustuen-grid true nil]
+                                                                       [rahavarausten-grid false nil]
+                                                                       [(partial maarataulukko "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :erillishankinnat-disablerivit]
+                                                                       [johto-ja-hallintokorvaus-laskulla-grid true nil]
+                                                                       [johto-ja-hallintokorvaus-laskulla-yhteenveto-grid true nil]
+                                                                       [(partial maarataulukko "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :toimistokulut-disablerivit]
+                                                                       [(partial maarataulukko "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :hoidonjohtopalkkio-disablerivit]
+                                                                       [(partial maarataulukko "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false) true :tilaajan-varaukset-disablerivit]]
+                                                           lahdetty-nakymasta? (:lahdetty-nakymasta? @nakyman-setup)]
+                                                      (when (and (not lahdetty-nakymasta?)
+                                                                 (not (nil? tf)))
+                                                        (let [[taulukko-f paivita-raidat? tapahtuma-tunniste] tf
+                                                              taulukko (taulukko-f)]
+                                                          (when paivita-raidat?
+                                                            (t/paivita-raidat! (grid/osa-polusta taulukko [::g-pohjat/data])))
+                                                          (when tapahtuma-tunniste
+                                                            (grid/triggeroi-tapahtuma! taulukko tapahtuma-tunniste))
+                                                          (recur tfs
+                                                                 (:lahdetty-nakymasta? @nakyman-setup)))))))))))))
+      (komp/ulos (fn []
+                   (swap! nakyman-setup assoc :lahdetty-nakymasta? true)
+                   (swap! tila/suunnittelu-kustannussuunnitelma assoc :gridit-vanhentuneet? true)
+                   (when-not (some true? (for [grid-polku [[:gridit :suunnitelmien-tila :grid]
+                                                           [:gridit :suunnittellut-hankinnat :grid]
+                                                           [:gridit :laskutukseen-perustuvat-hankinnat :grid]
+                                                           [:gridit :rahavaraukset :grid]
+                                                           [:gridit :erillishankinnat :grid]
+                                                           [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid]
+                                                           [:gridit :johto-ja-hallintokorvaukset :grid]
+                                                           [:gridit :toimistokulut :grid]
+                                                           [:gridit :hoidonjohtopalkkio :grid]
+                                                           [:gridit :tilaajan-varaukset :grid]]]
+                                           (nil? (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku))))
+                     (reset! lopeta-taulukkojen-luonti? true)
+                     (go (<! (:tilan-alustus @nakyman-setup))
+                         (gridien-siivous!)
+                         (log "[kustannussuunnitelma] SIIVOTTU")
+                         (reset! lopeta-taulukkojen-luonti? false)))))
+      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
         (set! e! e*!)
-        [:div#kustannussuunnitelma
-         [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
-         [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
-         [haitari-laatikko
-          "Tavoite- ja kattohinta lasketaan automaattisesti"
-          {:alussa-auki? true
-           :id "tavoite-ja-kattohinta"}
-          [tavoite-ja-kattohinta-sisalto
-           (get app :yhteenvedot)
-           (get-in app [:domain :kuluva-hoitokausi])
-           (get-in app [:domain :indeksit])]
-          [:span#tavoite-ja-kattohinta-huomio
-           "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
-         [:span.viiva-alas]
-         [haitari-laatikko
-          "Suunnitelmien tila"
-          {:alussa-auki? true
-           :otsikko-elementti :h2}
-          [suunnitelmien-tila
-           (get-in app [:gridit :suunnitelmien-tila :grid])
-           (:kantahaku-valmis? app)]
-          [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
-          [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma  Sampoa varten. Ks. Laskutus > Maksuerät."]]
-         [:span.viiva-alas]
-         [hankintakustannukset-taulukot
-          (get-in app [:domain :kirjoitusoikeus?])
-          (get-in app [:domain :indeksit])
-          (get-in app [:domain :kuluva-hoitokausi])
-          (get-in app [:gridit :suunnittellut-hankinnat :grid])
-          (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
-          (get-in app [:gridit :rahavaraukset :grid])
-          (get-in app [:yhteenvedot :hankintakustannukset])
-          (:kantahaku-valmis? app)
-          suodattimet]
-         [:span.viiva-alas]
-         [hallinnolliset-toimenpiteet-sisalto
-          (get-in app [:domain :indeksit])
-          (get-in app [:domain :kuluva-hoitokausi])
-          (dissoc suodattimet :hankinnat)
-          (get-in app [:gridit :erillishankinnat :grid])
-          (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
-          (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-          (get-in app [:gridit :toimistokulut :grid])
-          (get-in app [:gridit :hoidonjohtopalkkio :grid])
-          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
-          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
-          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
-          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
-          (:kantahaku-valmis? app)]
-         [:span.viiva-alas.sininen]
-         [tilaajan-varaukset
-          (get-in app [:gridit :tilaajan-varaukset :grid])
-          (dissoc suodattimet :hankinnat)
-          (:kantahaku-valmis? app)]]))))
+        (if gridit-vanhentuneet?
+          [yleiset/ajax-loader]
+          [:div#kustannussuunnitelma
+           [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+           [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
+           [haitari-laatikko
+            "Tavoite- ja kattohinta lasketaan automaattisesti"
+            {:alussa-auki? true
+             :id "tavoite-ja-kattohinta"}
+            [tavoite-ja-kattohinta-sisalto
+             (get app :yhteenvedot)
+             (get-in app [:domain :kuluva-hoitokausi])
+             (get-in app [:domain :indeksit])]
+            [:span#tavoite-ja-kattohinta-huomio
+             "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
+           [:span.viiva-alas]
+           [haitari-laatikko
+            "Suunnitelmien tila"
+            {:alussa-auki? true
+             :otsikko-elementti :h2}
+            [suunnitelmien-tila
+             (get-in app [:gridit :suunnitelmien-tila :grid])
+             (:kantahaku-valmis? app)]
+            [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
+            [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma  Sampoa varten. Ks. Laskutus > Maksuerät."]]
+           [:span.viiva-alas]
+           [hankintakustannukset-taulukot
+            (get-in app [:domain :kirjoitusoikeus?])
+            (get-in app [:domain :indeksit])
+            (get-in app [:domain :kuluva-hoitokausi])
+            (get-in app [:gridit :suunnittellut-hankinnat :grid])
+            (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
+            (get-in app [:gridit :rahavaraukset :grid])
+            (get-in app [:yhteenvedot :hankintakustannukset])
+            (:kantahaku-valmis? app)
+            suodattimet]
+           [:span.viiva-alas]
+           [hallinnolliset-toimenpiteet-sisalto
+            (get-in app [:domain :indeksit])
+            (get-in app [:domain :kuluva-hoitokausi])
+            (dissoc suodattimet :hankinnat)
+            (get-in app [:gridit :erillishankinnat :grid])
+            (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
+            (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+            (get-in app [:gridit :toimistokulut :grid])
+            (get-in app [:gridit :hoidonjohtopalkkio :grid])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+            (:kantahaku-valmis? app)]
+           [:span.viiva-alas.sininen]
+           [tilaajan-varaukset
+            (get-in app [:gridit :tilaajan-varaukset :grid])
+            (dissoc suodattimet :hankinnat)
+            (:kantahaku-valmis? app)]])))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
