@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "ilmoitustoimenpide": {
+      "id": "urn:harja/ilmoitustoimenpide",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aika": {
+          "id": "urn:harja/ilmoitustoimenpide/aika",
+          "type": "string",
+          "format": "date-time",
+          "required": true
+        },
+        "tyyppi": {
+          "id": "urn:harja/ilmoitustoimenpide/tyyppi",
+          "required": true,
+          "enum": [
+            "vastaanotto",
+            "aloitus",
+            "muutos",
+            "lopetus",
+            "vastaus"
+          ]
+        },
+        "aiheutti-toimenpiteita": {
+          "id": "urn:harja/ilmoitustoimenpide/aiheutti-toimenpiteita",
+          "type": "boolean"
+        },
+        "ilmoittaja": {
+          "id": "urn:harja/ilmoitustoimenpide/ilmoittaja",
+          "type": "object",
+          "required": true,
+          "additionalProperties": false,
+          "properties": {
+            "henkilo": {
+              "id": "urn:harja/ilmoitustoimenpide/ilmoittaja/henkilo",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+              "required": true
+            },
+            "organisaatio": {
+              "id": "urn:harja/ilmoitustoimenpide/ilmoittaja/organisaatio",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+              "required": true
+            }
+          }
+        },
+        "kasittelija": {
+          "id": "urn:harja/ilmoitustoimenpide/kasittelija",
+          "type": "object",
+          "required": true,
+          "additionalProperties": false,
+          "properties": {
+            "henkilo": {
+              "id": "urn:harja/ilmoitustoimenpide/kasittelija/henkilo",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+              "required": true
+            },
+            "organisaatio": {
+              "id": "urn:harja/ilmoitustoimenpide/kasittelija/organisaatio",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+              "required": true
+            }
+          }
+        },
+        "vapaateksti": {
+          "id": "urn:harja/ilmoitustoimenpide/vapaateksti",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+
+

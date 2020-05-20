@@ -27,8 +27,23 @@
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/tunniste",
                 "type": "string"
               },
+              "tila": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/tila",
+                "required": true,
+                "enum": [
+                  "kuittaamaton",
+                  "vastaanotettu",
+                  "aloitettu",
+                  "lopetettu"
+                ]
+              },
               "ilmoitettu": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitettu",
+                "type": "string",
+                "required": true
+              },
+              "vastaanotettu": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/valitetty-harjaan",
                 "type": "string",
                 "required": true
               },
@@ -100,6 +115,11 @@
               "lisatieto": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/lisatieto",
                 "type": "string"
+              },
+              "toimenpiteet": {
+                "id": "urn:harja/ilmoitukset/0/toimenpiteet",
+                "$ref": "file:resources/api/schemas/entities/ilmoitustoimenpide.schema.json",
+                "required": false
               }
             }
           }
