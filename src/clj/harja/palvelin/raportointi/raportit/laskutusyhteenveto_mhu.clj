@@ -48,7 +48,7 @@
                                   (apply concat [(lyv-yhteiset/kustannuslajin-kaikki-kentat "lisatyot")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hankinnat")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "sakot")
-                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hoidonjohto")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "johto_ja_hallinto")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_erillishankinnat")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "bonukset")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_palkkio")
@@ -132,12 +132,12 @@
   [tp-rivi kyseessa-kk-vali?]
   (rivi
     (str "Johto- ja hallintakorvaukset")
-    [:varillinen-teksti {:arvo (:hoidonjohto_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
-                         :fmt (when (:hoidonjohto_laskutettu tp-rivi) :raha)}]
+    [:varillinen-teksti {:arvo (:johto_ja_hallinto_laskutettu tp-rivi) #_(or 100 (summa-fmt nil))
+                         :fmt (when (:johto_ja_hallinto_laskutettu tp-rivi) :raha)}]
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (:hoidonjohto_laskutetaan tp-rivi) (summa-fmt nil))
+      [:varillinen-teksti {:arvo (or (:johto_ja_hallinto_laskutetaan tp-rivi) (summa-fmt nil))
 
-                           :fmt (when (:hoidonjohto_laskutetaan tp-rivi) :raha)}])))
+                           :fmt (when (:johto_ja_hallinto_laskutetaan tp-rivi) :raha)}])))
 
 (defn- erillishankinnat
   [tp-rivi kyseessa-kk-vali?]

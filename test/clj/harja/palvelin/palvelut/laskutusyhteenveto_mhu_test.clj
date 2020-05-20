@@ -32,8 +32,8 @@
                       (compose-fixtures jarjestelma-fixture urakkatieto-fixture)))
 
 ;; Tallenna monissa testeissa käytetty raportti atomiin, jotta tietokantahakuihin ei tarvitse tuhlata aikaa
-(def oulun-mhu-urakka-sopimus (atom nil))
 (def oulun-mhu-urakka-2020-03 (atom []))
+(def oulun-mhu-urakka-2020-04 (atom []))
 (def oulun-mhu-urakka-2020-06 (atom []))
 
 (defn hae-2020-03-tiedot []
@@ -44,6 +44,15 @@
      :urakkatyyppi "teiden-hoito"
      :alkupvm (pvm/->pvm "1.3.2020")
      :loppupvm (pvm/->pvm "31.3.2020")}))
+
+(defn hae-2020-04-tiedot []
+  (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+    (:db jarjestelma)
+    +kayttaja-jvh+
+    {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+     :urakkatyyppi "teiden-hoito"
+     :alkupvm (pvm/->pvm "1.4.2020")
+     :loppupvm (pvm/->pvm "30.4.2020")}))
 
 (defn hae-2020-06-tiedot []
   (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -65,7 +74,6 @@
           haetut-tiedot-oulu-mhu-yllapito (first (filter #(= (:tuotekoodi %) "20190") @oulun-mhu-urakka-2020-03))
           haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") @oulun-mhu-urakka-2020-03))
           haetut-tiedot-oulu-mhu-ja-hoidon-johto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))]
-
 
       (is (= 7 (count @oulun-mhu-urakka-2020-03)))
       (is (not (empty? haetut-tiedot-oulu-talvihoito)))
@@ -191,6 +199,39 @@
 
       (is (= (:sakot_laskutettu hoidonjohto)
              (* -1 (+ (:korotettuna lupaus-ja-vaihtosanktiot-indeksikorotuksella) arvonvahennys)))))))
+
+(deftest mhu-laskutusyhteenvedon-hoidonjohdon-poikkeuslaskutukset
+  (testing "mhu-laskutusyhteenvedon-hoidonjohdon-poikkeuslaskutukset"
+    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-04))
+              (reset! oulun-mhu-urakka-2020-04 (hae-2020-04-tiedot)))
+          hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-04))
+
+          poikkeukset (ffirst (q (str "SELECT SUM(lk.summa)
+          FROM lasku_kohdistus lk
+          WHERE lk.lasku IN (select id from lasku where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
+          AND lk.toimenpideinstanssi = 48")))
+
+          db_hallinto (ffirst (q (str "SELECT SUM(lk.summa)
+          FROM lasku l, lasku_kohdistus lk
+          WHERE lk.lasku = (select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
+          AND lk.toimenpideinstanssi = 48
+          AND lk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
+          AND l.erapaiva = '2020-04-21'::DATE")))
+
+          db_erillis (ffirst (q (str "SELECT SUM(lk.summa)
+          FROM lasku l, lasku_kohdistus lk
+          WHERE lk.lasku = (select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
+          AND lk.toimenpideinstanssi = 48
+          AND lk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
+          AND l.erapaiva = '2020-04-22'::DATE")))]
+
+      (is (= (+ (:hj_palkkio_laskutetaan hoidonjohto) (:johto_ja_hallinto_laskutetaan hoidonjohto) (:hj_erillishankinnat_laskutetaan hoidonjohto))
+             poikkeukset))
+      (is (= (:johto_ja_hallinto_laskutetaan hoidonjohto)
+             db_hallinto))
+      (is (= (:hj_erillishankinnat_laskutetaan hoidonjohto)
+             db_erillis)))))
+
 
 
 (deftest laskutusyhteenvedon-sememointi
@@ -450,3 +491,20 @@
       #_(testing "MHU Korvausinvestointi"
           (testi/tarkista-map-arvot odotetut-korvausinvestoinnit haetut-tiedot-oulu-mhu-korvausinvestointi))
       )))
+
+#_ (deftest tiedot-haetaan-oikein-maksuera-laskentaa-varten
+  (testing "tiedot-haetaan-oikein-maksuera-laskentaa-varten"
+    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma)
+                               +kayttaja-jvh+
+                               {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                :alkupvm (pvm/hoitokauden-alkupvm (pvm/vuosi (pvm/nyt)))
+                                :loppupvm (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))})
+
+          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))]
+      (println " haetut tiedot liikenne" (select-keys haetut-tiedot-oulu-liikenneympariston-hoito
+                                                      [:yht_laskutetaan :yht_laskutetaan_ind_korotus :yht_laskutetaan_ind_korotettuna]))
+
+      (is (= (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito) 7882.5M) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= (:yht_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito) 2310.387931034483003250M) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= (:yht_laskutetaan_ind_korotettuna haetut-tiedot-oulu-liikenneympariston-hoito) 10192.887931034483003250M) ":yht_laskutetaan laskutusyhteenvedossa"))))

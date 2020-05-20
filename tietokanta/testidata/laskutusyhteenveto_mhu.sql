@@ -157,19 +157,20 @@ $$ LANGUAGE plpgsql;
 
 
 -- MHU hoidon johto
--- Johto- ja hallintokorvaukset, HJ-palkkio
+-- Johto- ja hallintokorvaukset, HJ-palkkio, bonukset
 DO
 $$
     DECLARE
-        urakka_id                     INTEGER;
-        sopimus_id                    INTEGER;
-        tpi                           INTEGER;
-        kayttaja_id                   INTEGER;
-        toimenpidekoodi_tyonjohto     INTEGER;
-        tehtavaryhma_erillishankinnat INTEGER;
-        tehtavaryhma_hjpalkkiot       INTEGER;
-        vuosi                         INTEGER;
-        ennen_urakkaa                 BOOLEAN;
+        urakka_id                          INTEGER;
+        sopimus_id                         INTEGER;
+        tpi                                INTEGER;
+        kayttaja_id                        INTEGER;
+        toimenpidekoodi_tyonjohto          INTEGER;
+        tehtavaryhma_erillishankinnat      INTEGER;
+        tehtavaryhma_hjpalkkiot            INTEGER;
+        tehtavaryhma_johto_hallintokorvaus INTEGER;
+        vuosi                              INTEGER;
+        ennen_urakkaa                      BOOLEAN;
     BEGIN
         urakka_id := (SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024');
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL); --MHU Oulu sopimus
@@ -178,6 +179,7 @@ $$
         toimenpidekoodi_tyonjohto := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
         tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
+        tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
         vuosi := (SELECT extract(YEAR FROM NOW()));
         ennen_urakkaa := FALSE;
 
@@ -185,7 +187,6 @@ $$
                                               "toimenkuva-id")
             VALUES (urakka_id, 5, 40, vuosi, 3, ennen_urakkaa, NOW(),
                     (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
-
 
         -- Bonukset - 10/2019
         -- Erilliskustannukset - Alihankintabonus - lupausbonus - tavoitepalkkio
@@ -204,7 +205,6 @@ $$
             VALUES ('tavoitepalkkio', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
                     'Pääsit tavoitteisiin!', '2019-10-13', kayttaja_id);
 
-
         -- Bonukset - 03/2020
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
@@ -221,7 +221,6 @@ $$
             VALUES ('tavoitepalkkio', sopimus_id, urakka_id, tpi, '2020-03-15', 500, 'MAKU 2015',
                     'Pääsit tavoitteisiin!', '2020-03-13', kayttaja_id);
 
-
         -- Hoidonjohdon palkkiot - 10/2019
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
                                            sopimus, luoja)
@@ -237,14 +236,12 @@ $$
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
                                            sopimus, luoja)
             VALUES (2019, 10, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
-                    sopimus_id,
-                    kayttaja_id);
+                    sopimus_id, kayttaja_id);
         -- Erillishankinnat - 03/2020
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
                                            sopimus, luoja)
             VALUES (2020, 03, 50, 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
-                    sopimus_id,
-                    kayttaja_id);
+                    sopimus_id, kayttaja_id);
 
         -- HJ-palkkio - 10/2019
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
