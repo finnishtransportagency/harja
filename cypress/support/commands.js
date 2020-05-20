@@ -133,8 +133,8 @@ Cypress.Commands.add("valinnatValitse", { prevSubject: 'element'}, ($valinnat, p
 });
 
 Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) => {
-    cy.wrap($pvm).clear();
     cy.wrap($pvm).focus();
+    cy.wrap($pvm).clear();
     cy.wrap($pvm.parent()).find('table').should('exist');
     cy.wrap($pvm).type(parametrit.pvm).then(($pvmUudestaan) => {
         // Joskus Cypress ei vain kirjoita koko tekstiä kenttään
@@ -142,7 +142,7 @@ Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) 
             cy.wrap($pvmUudestaan).clear().type(parametrit.pvm)
         }
     });
-    cy.wrap(Cypress.$('#app')).click('topRight', {force: true});
+    cy.wrap($pvm).type('{enter}')
     cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
         return $pvm
     })
