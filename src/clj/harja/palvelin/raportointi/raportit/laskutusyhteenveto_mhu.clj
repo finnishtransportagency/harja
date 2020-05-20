@@ -83,9 +83,13 @@
   (let [kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
                                                             0) tiedot))]
-    {:tavoite-hinta (:tavoitehinta urakka-tavoite)
-     :jaljella (- (:tavoitehinta urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
-     :nimi "Tavoite"}))
+    (if urakka-tavoite
+      {:tavoite-hinta (:tavoitehinta urakka-tavoite)
+       :jaljella (- (:tavoitehinta urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
+       :nimi "Tavoite"}
+      {:tavoite-hinta 0
+       :jaljella 0
+       :nimi "Tavoite"})))
 
 (defn- hankinnat
   [tp-rivi kyseessa-kk-vali?]
