@@ -42,7 +42,7 @@
                 "type": "string",
                 "required": true
               },
-              "vastaanotettu": {
+              "valitetty-harjaan": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/valitetty-harjaan",
                 "type": "string",
                 "required": true
