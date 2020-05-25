@@ -216,7 +216,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Ilmoitusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.ilmoitus/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito :paallystys :tiemerkinta :kaikki}}
+    :urakkatyyppi #{:hoito :teiden-hoito :paallystys :tiemerkinta :valaistus :kaikki}}
 
    {:nimi :siltatarkastus
     :parametrit [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}
