@@ -40,12 +40,20 @@
               "ilmoitettu": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitettu",
                 "type": "string",
+                "format": "date-time",
                 "required": true
               },
               "valitetty-harjaan": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/valitetty-harjaan",
                 "type": "string",
+                "format": "date-time",
                 "required": true
+              },
+              "paivitetty-harjaan": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/paivitetty-harjaan",
+                "type": "string",
+                "format": "date-time",
+                "required": false
               },
               "ilmoitustyyppi": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitustyyppi",
@@ -116,10 +124,9 @@
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/lisatieto",
                 "type": "string"
               },
-              "toimenpiteet": {
-                "id": "urn:harja/ilmoitukset/0/toimenpiteet",
-                "$ref": "file:resources/api/schemas/entities/ilmoitustoimenpide.schema.json",
-                "required": false
+              "aiheutti-toimenpiteita": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/aiheutti-toimenpiteita",
+                "type": "boolean"
               }
             }
           }
