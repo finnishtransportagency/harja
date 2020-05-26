@@ -319,6 +319,9 @@
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
 
+(def yha-aikaleimalla
+  (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
+
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
@@ -392,6 +395,10 @@
 (defn aika-iso8601
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
+
+(defn aika-yha-format
+  [pvm]
+  (formatoi yha-aikaleimalla pvm))
 
 (defn kuukausi-ja-vuosi-valilyonnilla
   "Formatoi pvm:n muotoon: MM / yy"

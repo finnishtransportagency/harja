@@ -28,8 +28,8 @@
         kasittele-paikkaus (fn [p] {:paikkaus (-> p
                                                   (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id)
                                                   (rename-keys {:tierekisteriosoite :sijainti})
-                                                  (assoc :alkuaika (pvm/aika-iso8601 (:alkuaika p)))
-                                                  (assoc :loppuaika (pvm/aika-iso8601 (:loppuaika p)))
+                                                  (assoc :alkuaika (pvm/aika-yha-format (:alkuaika p)))
+                                                  (assoc :loppuaika (pvm/aika-yha-format (:loppuaika p)))
                                                   (conj {:kivi-ja-sideaineet (mapv kasittele-materiaali (:materiaalit p))})
                                                   (dissoc :materiaalit))})
         kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
