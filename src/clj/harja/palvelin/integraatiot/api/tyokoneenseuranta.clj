@@ -23,19 +23,19 @@
   (validointi/tarkista-koordinaattien-jarjestys (get-in havainto [:havainto :sijainti :koordinaatit]))
   (tks/tallenna-tyokonehavainto<!
     db
-    {:jarjestelma (get-in data [:otsikko :lahettaja :jarjestelma])
+    {:jarjestelma      (get-in data [:otsikko :lahettaja :jarjestelma])
      :organisaationimi (get-in data [:otsikko :lahettaja :organisaatio :nimi])
-     :ytunnus (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
-     :viestitunniste (get-in data [:otsikko :viestintunniste :id])
-     :lahetysaika (get-in data [:otsikko :lahetysaika])
-     :tyokoneid (get-in havainto [:havainto :tyokone :id])
-     :tyokonetunnus (get-in havainto [:havainto :tyokone :tunnus])
-     :tyokonetyyppi (get-in havainto [:havainto :tyokone :tyokonetyyppi])
-     :xkoordinaatti (get-in havainto [:havainto :sijainti :koordinaatit :x])
-     :ykoordinaatti (get-in havainto [:havainto :sijainti :koordinaatit :y])
-     :suunta (get-in havainto [:havainto :suunta])
-     :urakkaid urakka-id
-     :tehtavat (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))}))
+     :ytunnus          (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
+     :viestitunniste   (get-in data [:otsikko :viestintunniste :id])
+     :lahetysaika      (get-in data [:otsikko :lahetysaika])
+     :tyokoneid        (get-in havainto [:havainto :tyokone :id])
+     :tyokonetunnus    (get-in havainto [:havainto :tyokone :tunnus])
+     :tyokonetyyppi    (get-in havainto [:havainto :tyokone :tyokonetyyppi])
+     :xkoordinaatti    (get-in havainto [:havainto :sijainti :koordinaatit :x])
+     :ykoordinaatti    (get-in havainto [:havainto :sijainti :koordinaatit :y])
+     :suunta           (get-in havainto [:havainto :suunta])
+     :urakkaid         urakka-id
+     :tehtavat         (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))}))
 
 (defn- tallenna-tyokoneen-reitti
   "Tallentaa työkoneen sijainnin viivageometriana."
@@ -45,44 +45,38 @@
     (validointi/tarkista-koordinaattien-jarjestys koordinaatit))
   (tks/tallenna-tyokonehavainto-viivageometrialla<!
     db
-    {:jarjestelma (get-in data [:otsikko :lahettaja :jarjestelma])
+    {:jarjestelma      (get-in data [:otsikko :lahettaja :jarjestelma])
      :organisaationimi (get-in data [:otsikko :lahettaja :organisaatio :nimi])
-     :ytunnus (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
-     :viestitunniste (get-in data [:otsikko :viestintunniste :id])
-     :lahetysaika (get-in data [:otsikko :lahetysaika])
-     :tyokoneid (get-in havainto [:havainto :tyokone :id])
-     :tyokonetunnus (get-in havainto [:havainto :tyokone :tunnus])
-     :tyokonetyyppi (get-in havainto [:havainto :tyokone :tyokonetyyppi])
-     :viivageometria (json/write-str (get-in havainto [:havainto :sijainti :viivageometria]))
-     :suunta (get-in havainto [:havainto :suunta])
-     :urakkaid urakka-id
-     :tehtavat (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))}))
+     :ytunnus          (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
+     :viestitunniste   (get-in data [:otsikko :viestintunniste :id])
+     :lahetysaika      (get-in data [:otsikko :lahetysaika])
+     :tyokoneid        (get-in havainto [:havainto :tyokone :id])
+     :tyokonetunnus    (get-in havainto [:havainto :tyokone :tunnus])
+     :tyokonetyyppi    (get-in havainto [:havainto :tyokone :tyokonetyyppi])
+     :viivageometria   (json/write-str (get-in havainto [:havainto :sijainti :viivageometria]))
+     :suunta           (get-in havainto [:havainto :suunta])
+     :urakkaid         urakka-id
+     :tehtavat         (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))}))
 
 (defn- tallenna-seurantakirjaus-viivageometriana [_ data kayttaja db]
-  (validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
-                                                               (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
-                                                               kayttaja)
   (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])]
-      (when urakka-id (validointi/tarkista-urakka db urakka-id))
+      (when urakka-id (validointi/tarkista-jarjestelma-urakka-ja-kayttaja db urakka-id kayttaja))
       (tallenna-tyokoneen-reitti db data havainto urakka-id)))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defn- tallenna-seurantakirjaus [_ data kayttaja db]
-  (validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
-                                                               (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
-                                                               kayttaja)
   (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])]
       ;; Validointi nakkaa poikkeuksen, jos urakka-id ei ole validi
-      (when urakka-id (validointi/tarkista-urakka db urakka-id))
+      (when urakka-id (validointi/tarkista-jarjestelma-urakka-ja-kayttaja db urakka-id kayttaja))
       (tallenna-tyokoneen-koordinaatti db data havainto urakka-id)))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defrecord Tyokoneenseuranta []
   component/Lifecycle
   (start [{http :http-palvelin
-           db :db :as this}]
+           db   :db :as this}]
     (julkaise-reitti http :tallenna-tyokoneenseurantakirjaus
                      (POST +tyokone-seurantakirjaus-url+ request
                        (kasittele-kutsu db nil
@@ -98,5 +92,5 @@
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :tallenna-tyokoneenseurantakirjaus
-                          :tallenna-tyokoneen-reitti)
+                     :tallenna-tyokoneen-reitti)
     this))

@@ -73,7 +73,7 @@
     (if osan-derefable
       osan-derefable
       (do
-        (warn (str "Solulle ") (with-out-str (pr (type this))) (str " (" (:id this) ") ei ole annettu osan-derefablea!"))
+        (warn (str "Solulle ") (pr-str (type this)) (str " (" (:id this) ") ei ole annettu osan-derefablea!"))
         (r/atom nil)))))
 
 (defrecord Teksti [id parametrit]
