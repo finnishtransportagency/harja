@@ -85,7 +85,7 @@
   ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
   ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
-             (not= :asiakastyytyvaisyysbonus %)
+             (= :muu %)
              true)
           (cond
             (= :hoito urakkatyyppi)
