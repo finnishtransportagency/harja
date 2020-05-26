@@ -81,7 +81,7 @@
     +valitse-tyyppi+))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
-  ;; Ei sallita urakoitsijan antaa itselleen asiakastyytyväisyysbonuksia
+  ;; Ei sallita urakoitsijan antaa itselleen bonuksia
   ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
   ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
