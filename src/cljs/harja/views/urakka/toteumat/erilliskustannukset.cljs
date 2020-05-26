@@ -86,7 +86,7 @@
              true)
           (case urakkatyyppi
             :hoito [:asiakastyytyvaisyysbonus :muu]
-            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio :muu]
+            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio]
             [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
