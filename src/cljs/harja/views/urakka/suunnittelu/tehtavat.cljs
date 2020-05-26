@@ -225,7 +225,7 @@
         [:div
          ;[debug/debug app]
          [:h1 "Tehtävät ja määrät" [:span.pull-right nimi]]
-         [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
+         [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat
            [p/piirra-taulukko taulukon-tehtavat]
