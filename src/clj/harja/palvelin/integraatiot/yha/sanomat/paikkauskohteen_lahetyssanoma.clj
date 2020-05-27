@@ -61,7 +61,8 @@
                       paikkaukset)
         json (muodosta-sanoma-json urakka kohde paikkaukset)]
 
-    (if-let [virheet (json/validoi +paikkauksen-vienti+ json)]
+    ;; Huom! draft 4 json validointi poikkeuksellisesti
+    (if-let [virheet (json/validoi +paikkauksen-vienti+ json false)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. JSON ei ole validi. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
         (throw+ {:type  :invalidi-yha-paikkaus-json
