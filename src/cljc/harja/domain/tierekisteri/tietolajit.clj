@@ -141,7 +141,7 @@
     (validoi-arvo arvo kentan-kuvaus tietolaji)
     {kenttatunniste arvo}))
 
-(defn testaa-arvojen-versio!
+(defn testaa-arvojen-versio
   "Tierekisteri voi muuttaa kenttien kuvauksia, joka heijastuu merkkijonon pituudessa.
    Harjassa ei osata käsitellä version muutosta, joten nakataan poikkeus."
   [arvot-merkkijono kenttien-kuvaukset tietolaji]
@@ -160,7 +160,7 @@
   [arvot-merkkijono tietolajin-kuvaus]
   (let [tietolaji (:tunniste tietolajin-kuvaus)
         kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)
-        _ (testaa-arvojen-versio! arvot-merkkijono kenttien-kuvaukset tietolaji)
+        _ (testaa-arvojen-versio arvot-merkkijono kenttien-kuvaukset tietolaji)
         map-osat (mapv
                    (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
                    kenttien-kuvaukset)]
