@@ -131,7 +131,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                   :B "Ryhmä B"
                                   :C "Ryhmä C"
                                   :muistutus "Muistutus"
-                                  :lupaussanktio "Lupaussanktio"
                                   :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                                   :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
                                   :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"

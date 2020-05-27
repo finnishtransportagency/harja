@@ -17,6 +17,9 @@
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
 
+(def ^{:doc "Hae paikkauksen ajorata, parametreina [db, paikkauksen id], muodossa {:id 1}"}
+  hae-paikkauksen-ajorata)
+
 (defn hae-paikkaukset [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus

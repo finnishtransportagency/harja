@@ -74,16 +74,19 @@
   "Erilliskustannustyypin teksti avainsanaa vastaan"
   (case avainsana
     :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
+    :alihankintabonus "Alihankintabonus"
+    :tavoitepalkkio "Tavoitepalkkio"
     :muu "Muu"
     +valitse-tyyppi+))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja]
-  ;; Ei sallita urakoitsijan antaa itselleen asiakastyytyväisyysbonuksia
+  ;; Ei sallita urakoitsijan antaa itselleen bonuksia
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
-             (not= :asiakastyytyvaisyysbonus %)
+             (= :muu %)
              true)
           (case urakkatyyppi
             :hoito [:asiakastyytyvaisyysbonus :muu]
+            :teiden-hoito [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio]
             [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
@@ -260,7 +263,7 @@
               :palstoja 1
               :vihje (when (and
                              (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                             (= :hoito (:tyyppi ur)))
+                             (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur))))
                        (str "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan"
                             " automaattisesti laskutusyhteenvedossa. Käytettävä indeksi"
                             " määräytyy urakan kilpailuttamisajankohdan perusteella."))})
