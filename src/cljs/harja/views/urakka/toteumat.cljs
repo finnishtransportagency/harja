@@ -50,8 +50,7 @@
            [yks-hint-tyot/yksikkohintaisten-toteumat])
 
          "Muutos- ja lisätyöt" :muut-tyot
-         (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
-                    (not mhu-urakka?))
+         (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
            [muut-tyot/muut-tyot-toteumat ur])
 
          "Suola" :suola
