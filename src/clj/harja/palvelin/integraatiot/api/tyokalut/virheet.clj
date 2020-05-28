@@ -45,6 +45,7 @@
 (def +paallystysilmoitus-lukittu+ "paallystysilmoitus-lukittu")
 (def +ominaisuus-ei-kaytossa+ "ominaisuus-ei-kaytossa")
 (def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
+(def +virhe-tietolajin-arvojen-versiossa+ "virhe-tietolajin-arvojen-versiossa")
 (def +puutteellinen-paikkatietoaineisto+ "puutteellinen-paikkatietoaineisto")
 
 (defn heita-poikkeus
