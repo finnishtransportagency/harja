@@ -227,7 +227,9 @@
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
   [db urakka-id kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
-        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
+        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
+        ;; nollataan mahdollinen ilmoitettu virhe
+        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
