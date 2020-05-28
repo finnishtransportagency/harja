@@ -141,12 +141,26 @@
     (validoi-arvo arvo kentan-kuvaus tietolaji)
     {kenttatunniste arvo}))
 
+(defn testaa-arvojen-versio
+  "Tierekisteri voi muuttaa kenttien kuvauksia, joka heijastuu merkkijonon pituudessa.
+   Harjassa ei osata käsitellä version muutosta, joten nakataan poikkeus."
+  [arvot-merkkijono kenttien-kuvaukset tietolaji]
+  (let [nykyisen-version-pituus (transduce (map :pituus)
+                                           +
+                                           0
+                                           kenttien-kuvaukset)
+        testattavan-arvojen-pituus (count arvot-merkkijono)]
+    (when-not (= nykyisen-version-pituus testattavan-arvojen-pituus)
+      (throw+ {:type virheet/+virhe-tietolajin-arvojen-versiossa+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (str "Virhe tietolajin " tietolaji " versiossa")}]}))))
+
 (defn tietolajin-arvot-merkkijono->map
   "Ottaa arvot-stringin ja purkaa sen mapiksi käyttäen apuna annettua tietolajin kuvausta.
   Tietolajin kuvaus on Tierekisterin palauttama kuvaus tietolajista, muunnettuna Clojure-mapiksi."
   [arvot-merkkijono tietolajin-kuvaus]
   (let [tietolaji (:tunniste tietolajin-kuvaus)
         kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)
+        _ (testaa-arvojen-versio arvot-merkkijono kenttien-kuvaukset tietolaji)
         map-osat (mapv
                    (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
                    kenttien-kuvaukset)]
