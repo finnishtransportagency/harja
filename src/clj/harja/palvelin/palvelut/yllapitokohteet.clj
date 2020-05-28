@@ -166,10 +166,10 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
   (if tiemerkintapvm
-    (log/error "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintään päivämäärällä " tiemerkintapvm)
-    (log/error "Perutaan urakan " urakka-id " kohteen " kohde-id " valmius tiemerkintään, tiemerkintapvm:n oltava nil: " tiemerkintapvm))
+    (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintään päivämäärällä " tiemerkintapvm)
+    (log/debug "Perutaan urakan " urakka-id " kohteen " kohde-id " valmius tiemerkintään, tiemerkintapvm:n oltava nil: " tiemerkintapvm))
 
-  (try
+  ;;(try
     (jdbc/with-db-transaction [db db]
                              (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
                                                           (first (q/hae-yllapitokohteen-aikataulu
@@ -200,9 +200,12 @@
                                (hae-urakan-aikataulu db user {:urakka-id  urakka-id
                                                               :sopimus-id sopimus-id
                                                               :vuosi      vuosi})))
-    (catch Exception e
+   ;; Maarit testaa: s-postilähetyksen virheestä ei jää jälkeä
+    ;;(catch Exception e
       ;Sähköpostilähetys voi epäonnistua, virheilmoitus aiheuttaa 500-errorin consoleen selaimessa. Syödään se tässä pois ja näytetään oletusvirheviesti.
-       {:virhe true})))
+    ;;   {:virhe true}))
+
+  )
 
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]

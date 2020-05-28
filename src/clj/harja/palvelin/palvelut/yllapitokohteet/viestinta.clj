@@ -342,7 +342,7 @@
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
   [{:keys [fim email kohteen-tiedot tiemerkintapvm
            kopio-itselle? saate kayttaja muut-vastaanottajat]}]
-  (log/error "valita-tieto-kohteen-valmiudesta-tiemerkintaan; fim: " fim " ;email: " email " ;muut-vastaanottajat: " muut-vastaanottajat)
+  (log/error "valita-tieto-kohteen-valmiudesta-tiemerkintaan; kayttaja: " kayttaja " ;email: " email " ;muut-vastaanottajat: " muut-vastaanottajat)
   (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
     {:fim fim :email email :kohteen-tiedot kohteen-tiedot
      :tiemerkintapvm tiemerkintapvm
