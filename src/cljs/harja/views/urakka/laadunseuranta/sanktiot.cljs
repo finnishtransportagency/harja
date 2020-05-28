@@ -36,12 +36,11 @@
 
 (defn sanktion-tiedot
   [optiot]
-  (let [muokattu @tiedot/valittu-sanktio
+  (let [muokattu (atom @tiedot/valittu-sanktio)
         ; Jos urakkana on teiden-hoito (MHU) käyttäjä ei saa vapaasti valita indeksiä sanktiolle.
         ; Sanktioon kuuluva indeksi on pakollinen ja se on jo määritelty urakalle, joten se pakotetaan käyttöön.
-        muokattu (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                   (assoc muokattu :indeksi (:indeksi @nav/valittu-urakka))
-                   muokattu)
+        _ (when (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                   (swap! muokattu assoc :indeksi (:indeksi @nav/valittu-urakka)))
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                                (:id @nav/valittu-urakka))
         tallennus-kaynnissa (atom false)
@@ -58,8 +57,8 @@
               (or (not yllapitokohdeurakka?)
                   (and yllapitokohdeurakka? yllapitokohteet)))
        [lomake/lomake
-        {:otsikko (if (:id muokattu)
-                    (if (:suorasanktio muokattu)
+        {:otsikko (if (:id @muokattu)
+                    (if (:suorasanktio @muokattu)
                       "Muokkaa suoraa sanktiota"
                       "Muokkaa laatupoikkeaman kautta tehtyä sanktiota")
                     "Luo uusi suora sanktio")
@@ -70,13 +69,13 @@
                       [:span.nappiwrappi
                        [napit/palvelinkutsu-nappi
                         "Tallenna sanktio"
-                        #(tiedot/tallenna-sanktio muokattu urakka-id)
+                        #(tiedot/tallenna-sanktio @muokattu urakka-id)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
                          :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
                          :disabled (or (not voi-muokata?)
                                        (not (lomake/voi-tallentaa? tarkastus)))}]
-                       (when (and voi-muokata? (:id muokattu))
+                       (when (and voi-muokata? (:id @muokattu))
                          [:button.nappi-kielteinen
                           {:class (when @tallennus-kaynnissa "disabled")
                            :on-click
@@ -85,13 +84,13 @@
                              (varmista-kayttajalta/varmista-kayttajalta
                                {:otsikko "Sanktion poistaminen"
                                 :sisalto (str "Haluatko varmasti poistaa sanktion "
-                                              (or (str (:summa muokattu) "€") "")
+                                              (or (str (:summa @muokattu) "€") "")
                                               " päivämäärällä "
-                                              (pvm/pvm (:perintapvm muokattu)) "?")
+                                              (pvm/pvm (:perintapvm @muokattu)) "?")
                                 :hyvaksy "Poista"
                                 :toiminto-fn #(do
                                                 (let [res (tiedot/tallenna-sanktio
-                                                            (assoc muokattu
+                                                            (assoc @muokattu
                                                               :poistettu true)
                                                             urakka-id)]
                                                   (do (viesti/nayta! "Sanktio poistettu")
@@ -181,7 +180,7 @@
           :palstoja 2 :tyyppi :text :koko [80 :auto]
           :validoi [[:ei-tyhja "Anna perustelu"]]}
 
-         (when (= :muu (get-in muokattu [:laatupoikkeama :paatos :kasittelytapa]))
+         (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
             :hae (comp :muukasittelytapa :paatos :laatupoikkeama)
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :muukasittelytapa] arvo))
@@ -193,19 +192,21 @@
             :palstoja 1 :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)
-                           sanktiotyypit (sanktiot/lajin-sanktiotyypit arvo)
-                           paivitetty (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count sanktiotyypit)) (first sanktiotyypit))]
-                                          (assoc paivitetty
-                                            :tyyppi tyyppi
-                                            :toimenpideinstanssi
-                                            (when tpk
-                                              (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                        paivitetty)]
-
-                       (if-not (sanktio-domain/sakko? paivitetty)
-                         (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                         paivitetty)))
+                     (let [rivi (-> rivi
+                                    (assoc :laji arvo)
+                                    (dissoc :tyyppi)
+                                    (assoc :tyyppi nil))
+                           s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
+                           rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count s-tyypit)) (first s-tyypit))]
+                                  (assoc rivi
+                                    :tyyppi (dissoc tyyppi :laji)
+                                    :toimenpideinstanssi
+                                    (when tpk
+                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                  rivi)]
+                       (if-not (sanktio-domain/sakko? rivi)
+                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                         rivi)))
             :valinnat (sort mahdolliset-sanktiolajit)
             :valinta-nayta #(case %
                               :A "Ryhmä A"
@@ -236,18 +237,21 @@
                        :toimenpideinstanssi
                        (when tpk
                          (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-            ;; Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata.
-            :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji muokattu))))
-            :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
+            :valinta-arvo identity
+            :aseta-vaikka-sama? true
+            :valinnat-fn (fn [_]
+                           (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
+            :valinta-nayta (fn [arvo]
+                             (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
             :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
-         (when (sanktio-domain/sakko? muokattu)
+         (when (sanktio-domain/sakko? @muokattu)
            {:otsikko "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
             :hae #(when (:summa %) (Math/abs (:summa %)))
             :pakollinen? true :uusi-rivi? true :yksikko "€"
             :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
-         (when (and (sanktio-domain/sakko? muokattu) (urakka/indeksi-kaytossa?))
+         (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
             :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
@@ -255,7 +259,7 @@
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1})
 
-         (when (and (sanktio-domain/sakko? muokattu))
+         (when (and (sanktio-domain/sakko? @muokattu))
            {:otsikko "Toimenpide"
             :pakollinen? true
             :nimi :toimenpideinstanssi
@@ -266,19 +270,19 @@
             :palstoja 1
             :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
-         (when (:suorasanktio muokattu)
+         (when (:suorasanktio @muokattu)
            {:otsikko "Liitteet" :nimi :liitteet
             :palstoja 2
             :tyyppi :komponentti
             :komponentti (fn [_]
-                           [liitteet/liitteet-ja-lisays urakka-id (get-in muokattu [:laatupoikkeama :liitteet])
+                           [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
                             {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
                                                       #(swap! tiedot/valittu-sanktio
-                                                              (fn [] (assoc-in muokattu [:laatupoikkeama :uusi-liite] %))))
+                                                              (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
                              :uusi-liite-teksti "Lisää liite sanktioon"
                              :salli-poistaa-lisatty-liite? true
                              :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
-                                                              (fn [] (assoc-in muokattu [:laatupoikkeama :uusi-liite] nil)))
+                                                              (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))
                              :salli-poistaa-tallennettu-liite? true
                              :poista-tallennettu-liite-fn
                              (fn [liite-id]
@@ -288,12 +292,12 @@
                                   :domain-id (get-in @tiedot/valittu-sanktio [:laatupoikkeama :id])
                                   :liite-id liite-id
                                   :poistettu-fn (fn []
-                                                  (let [liitteet (get-in muokattu [:laatupoikkeama :liitteet])]
+                                                  (let [liitteet (get-in @muokattu [:laatupoikkeama :liitteet])]
                                                     (swap! tiedot/valittu-sanktio assoc-in [:laatupoikkeama :liitteet]
                                                            (filter (fn [liite]
                                                                      (not= (:id liite) liite-id))
                                                                    liitteet))))}))}])})]
-        muokattu]
+        @muokattu]
        [ajax-loader "Ladataan..."])]))
 
 (defn- suodattimet-ja-toiminnot [valittu-urakka]

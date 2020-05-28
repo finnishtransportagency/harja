@@ -170,7 +170,8 @@
                                                (:pvm m)
                                                (:rahasumma m))))
         tallennus-kaynnissa (atom false)
-        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))
+        kustannustyypit (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))]
     (komp/luo
       (fn []
         [:div.erilliskustannuksen-tiedot
@@ -179,7 +180,6 @@
                              "Muokkaa kustannusta"
                              "Luo uusi kustannus")
                   :muokkaa! (fn [uusi]
-                              (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
                   :voi-muokata? (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
                                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:id @nav/valittu-urakka))
@@ -251,8 +251,12 @@
            {:otsikko "Tyyppi" :nimi :tyyppi
             :pakollinen? true
             :tyyppi :valinta
-            :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
-            :valinnat (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))
+            :valitse-ainoa? false
+            :aseta-vaikka-sama? true
+            :valinta-arvo identity
+            :valinta-nayta (fn [arvo]
+                             (if arvo (erilliskustannustyypin-teksti arvo) +valitse-tyyppi+))
+            :valinnat kustannustyypit
             :fmt #(erilliskustannustyypin-teksti %)
             :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
