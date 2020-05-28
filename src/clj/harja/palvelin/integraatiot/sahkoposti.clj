@@ -33,7 +33,6 @@
   (rekisteroi-kuuntelija! [_ _]
     (log/info "Vain lähetys sähköposti ei tue kuuntelijan rekisteröintiä!"))
   (laheta-viesti! [_ lahettaja vastaanottaja otsikko sisalto]
-    (log/error "Lähetetään viesti!!" vastaanottaja)
     (postal/send-message {:host palvelin}
                          {:from lahettaja
                           :to vastaanottaja

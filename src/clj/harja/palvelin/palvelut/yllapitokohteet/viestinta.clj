@@ -264,8 +264,6 @@
                         :ilmoittaja ilmoittaja
                         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi}
         viestin-vartalo (viesti-kohde-valmis-merkintaan-tai-valmius-peruttu viestin-params)]
-    (log/error "MUUT VASTAANOTTAJAT " muut-vastaanottajat)
-    (log/error "ILMOITTAJA " (:sahkoposti ilmoittaja))
     (when tiemerkintaurakka-sampo-id ;; Kohteella ei välttämättä ole tiemerkintäurakkaa
       (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
       (viestinta/laheta-sposti-fim-kayttajarooleille
