@@ -106,7 +106,6 @@
                                                                      (remove (fn [{:keys [vuosi]}]
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
-                                                                            ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
                                                                             {:vuosi vuosi
                                                                              :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
