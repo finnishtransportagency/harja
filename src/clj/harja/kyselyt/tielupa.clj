@@ -146,14 +146,16 @@
 
 (defn tarkasta-oikeus-katselmukseen [tieluvat user]
   (doall (map (fn [{::tielupa/keys [urakat] :as tielupa}]
-                (if-not (every? (fn [urakka-id]
-                                  (oikeudet/on-muu-oikeus? "katselmus-url"
-                                                           oikeudet/hallinta-tienpidonluvat
-                                                           urakka-id
-                                                           user))
-                                urakat)
-                  (assoc tielupa ::tielupa/katselmus-url nil)
-                  tielupa))
+                (let [kayttajalla-oikeus-urakan-katselmus-urliin? (and (every? (fn [urakka-id]
+                                                                                 (oikeudet/on-muu-oikeus? "katselmus-url"
+                                                                                                          oikeudet/hallinta-tienpidonluvat
+                                                                                                          urakka-id
+                                                                                                          user))
+                                                                               urakat)
+                                                                       (not (nil? urakat)))]
+                  (if kayttajalla-oikeus-urakan-katselmus-urliin?
+                    tielupa
+                    (assoc tielupa ::tielupa/katselmus-url nil))))
               tieluvat)))
 
 (defn hae-tieluvat-hakunakymaan [db user hakuehdot]
