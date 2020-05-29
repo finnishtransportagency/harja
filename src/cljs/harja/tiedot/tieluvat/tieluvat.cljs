@@ -41,8 +41,8 @@
         aet (get-in valinnat [:tr :alkuetaisyys])
         losa (get-in valinnat [:tr :loppuosa])
         let (get-in valinnat [:tr :loppuetaisyys])]
-    (spec-apurit/poista-nil-avaimet
-      (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
+    (or (spec-apurit/poista-nil-avaimet
+          (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
              ::tielupa/tyyppi (:lupatyyppi valinnat)
              ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
              ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
@@ -57,7 +57,8 @@
               ::tielupa/losa (when (and losa let) losa)
               ::tielupa/let (when (and losa let) let)
 
-              #_#_::tielupa/geometria (:sijainti valinnat)}))))
+              #_#_::tielupa/geometria (:sijainti valinnat)}))
+        {})))
 
 (def hakijahaku
   (reify protokollat/Haku
