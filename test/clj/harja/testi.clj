@@ -585,6 +585,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
+(defn hae-oulun-aktiivinen-testi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Aktiivinen Oulu Testi';"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -929,6 +934,21 @@
      :organisaatio {:id 11
                     :nimi "YIT Rakennus Oy"
                     :tyyppi "urakoitsija"}
+     :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
+
+(def +kayttaja-oulu-aktiivinen-urakka-vastuuhenkilo+
+  (let [urakka-id (hae-oulun-aktiivinen-testi-id)
+        organisaatio (q-map (str "SELECT o.id, o.nimi, o.tyyppi FROM organisaatio o JOIN urakka u ON u.urakoitsija = o.id WHERE u.id=" urakka-id))]
+    {:organisaation-urakat #{urakka-id}
+     :sahkoposti nil
+     :kayttajanimi "foo"
+     :puhelin nil
+     :sukunimi "Vastuuhenkilö"
+     :roolit #{}
+     :organisaatioroolit {}
+     :id 7
+     :etunimi "foon"
+     :organisaatio organisaatio
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
 
 (defn tietokanta-fixture [testit]

@@ -217,8 +217,10 @@
 
 (defn- hae-tieluvat [db user {:keys [tieluvat alku loppu]}]
   (when (tk/valittu? tieluvat tk/tieluvat)
-    (tielupa-q/hae-tieluvat-hakunakymaan db {::tielupa/voimassaolon-alkupvm alku
-                                             ::tielupa/voimassaolon-loppupvm loppu})))
+    (tielupa-q/hae-tieluvat-hakunakymaan db
+                                         user
+                                         {::tielupa/voimassaolon-alkupvm alku
+                                          ::tielupa/voimassaolon-loppupvm loppu})))
 
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]

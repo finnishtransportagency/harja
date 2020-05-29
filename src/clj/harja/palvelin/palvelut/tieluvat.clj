@@ -8,7 +8,7 @@
 
 (defn hae-tieluvat [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
-  (q/hae-tieluvat-hakunakymaan db tiedot))
+  (q/hae-tieluvat-hakunakymaan db user tiedot))
 
 (defn hae-tielupien-hakijat [db user hakuteksti]
   (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)

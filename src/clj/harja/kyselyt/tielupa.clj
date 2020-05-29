@@ -5,10 +5,13 @@
     [specql.op :as op]
     [jeesql.core :refer [defqueries]]
     [clojure.set :as set]
+    [slingshot.slingshot :refer [try+]]
     [harja.id :refer [id-olemassa?]]
-    [harja.domain.tielupa :as tielupa]
+    [harja.domain
+     [tielupa :as tielupa]
+     [muokkaustiedot :as muokkaustiedot]
+     [oikeudet :as oikeudet]]
     [harja.pvm :as pvm]
-    [harja.domain.muokkaustiedot :as muokkaustiedot]
     [taoensso.timbre :as log]))
 
 (defqueries "harja/kyselyt/tielupa.sql"
@@ -141,36 +144,49 @@
           [(assoc (first lupa) ::tielupa/liitteet liitteet)])
         (group-by :tielupa liitteet) (group-by ::tielupa/id tieluvat)))))
 
-(defn hae-tieluvat-hakunakymaan [db hakuehdot]
+(defn tarkasta-oikeus-katselmukseen [tieluvat user]
+  (doall (map (fn [{::tielupa/keys [urakat] :as tielupa}]
+                (if-not (every? (fn [urakka-id]
+                                  (oikeudet/on-muu-oikeus? "katselmus-url"
+                                                           oikeudet/hallinta-tienpidonluvat
+                                                           urakka-id
+                                                           user))
+                                urakat)
+                  (assoc tielupa ::tielupa/katselmus-url nil)
+                  tielupa))
+              tieluvat)))
+
+(defn hae-tieluvat-hakunakymaan [db user hakuehdot]
   (->
     (fetch db
-          ::tielupa/tielupa
-          tielupa/kaikki-kentat
-          (op/and
-            (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
-              {::tielupa/hakija-nimi nimi})
-            (when-let [tyyppi (::tielupa/tyyppi hakuehdot)]
-              {::tielupa/tyyppi tyyppi})
-            (when-let [tunniste (::tielupa/paatoksen-diaarinumero hakuehdot)]
-              {::tielupa/paatoksen-diaarinumero (op/ilike (str "%" tunniste "%"))})
-            (let [alku (::tielupa/voimassaolon-alkupvm hakuehdot)
-                  loppu (::tielupa/voimassaolon-loppupvm hakuehdot)]
-              (cond
-                (and alku loppu)
-                (overlaps? ::tielupa/voimassaolon-alkupvm
-                           ::tielupa/voimassaolon-loppupvm
-                           alku
-                           loppu)
+           ::tielupa/tielupa
+           tielupa/kaikki-kentat
+           (op/and
+             (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
+               {::tielupa/hakija-nimi nimi})
+             (when-let [tyyppi (::tielupa/tyyppi hakuehdot)]
+               {::tielupa/tyyppi tyyppi})
+             (when-let [tunniste (::tielupa/paatoksen-diaarinumero hakuehdot)]
+               {::tielupa/paatoksen-diaarinumero (op/ilike (str "%" tunniste "%"))})
+             (let [alku (::tielupa/voimassaolon-alkupvm hakuehdot)
+                   loppu (::tielupa/voimassaolon-loppupvm hakuehdot)]
+               (cond
+                 (and alku loppu)
+                 (overlaps? ::tielupa/voimassaolon-alkupvm
+                            ::tielupa/voimassaolon-loppupvm
+                            alku
+                            loppu)
 
-                :else nil))
-            (let [[alku loppu] (:myonnetty hakuehdot)]
-              (cond
-                (and alku loppu)
-                {::tielupa/myontamispvm (op/between alku loppu)}
+                 :else nil))
+             (let [[alku loppu] (:myonnetty hakuehdot)]
+               (cond
+                 (and alku loppu)
+                 {::tielupa/myontamispvm (op/between alku loppu)}
 
-                :else nil))))
+                 :else nil))))
     (suodata-tieosoitteella (::tielupa/haettava-tr-osoite hakuehdot))
     (suodata-urakalla (:urakka-id hakuehdot))
+    (tarkasta-oikeus-katselmukseen user)
     ((partial tielupien-liitteet db))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]

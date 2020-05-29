@@ -280,12 +280,24 @@
   )
 
 (deftest filteroi-tieluvat-urakan-perusteella
-  (let [urakka-id (ffirst (q (str "SELECT id
-                                   FROM   urakka
-                                   WHERE  nimi = 'Aktiivinen Oulu Testi';")))
-        kaikki-tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {})
-        tieluvat-filteroityna-urakalla (tielupa-q/hae-tieluvat-hakunakymaan ds {:urakka-id urakka-id})]
-    (is (every? #(= urakka-id %)
-                (mapcat ::tielupa/urakat tieluvat-filteroityna-urakalla))
+  (let [urakka-id (hae-oulun-aktiivinen-testi-id)
+        kaikki-tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds +kayttaja-jvh+ {})
+        tieluvat-filteroityna-urakalla (tielupa-q/hae-tieluvat-hakunakymaan ds +kayttaja-jvh+ {:urakka-id urakka-id})
+        urakat (mapcat ::tielupa/urakat tieluvat-filteroityna-urakalla)]
+    (is (and (every? #(= urakka-id %)
+                     urakat)
+             (not (empty? urakat)))
         "Tielupien filtteröinti urakalla ei toimi")
     (is (> (count kaikki-tieluvat) (count tieluvat-filteroityna-urakalla)))))
+
+(deftest toimiiko-katselmus-url-filtterointi
+  (let [oulun-aktiivinen-testi-urakka-id (hae-oulun-aktiivinen-testi-id)
+        tieluvat-jvhna (tielupa-q/hae-tieluvat-hakunakymaan ds +kayttaja-jvh+ {})
+        tieluvat-aktiivinen-oulu-testi-urakka-kayttajana (tielupa-q/hae-tieluvat-hakunakymaan ds +kayttaja-oulu-aktiivinen-urakka-vastuuhenkilo+ {})]
+    (is (every? #(not (nil? (::tielupa/katselmus-url %)))
+                tieluvat-jvhna))
+    (is (every? #(or (and (not (nil? (::tielupa/katselmus-url %)))
+                          (= oulun-aktiivinen-testi-urakka-id (first (::tielupa/urakat %))))
+                     (and (nil? (::tielupa/katselmus-url %))
+                          (not= oulun-aktiivinen-testi-urakka-id (first (::tielupa/urakat %)))))
+                tieluvat-aktiivinen-oulu-testi-urakka-kayttajana))))
