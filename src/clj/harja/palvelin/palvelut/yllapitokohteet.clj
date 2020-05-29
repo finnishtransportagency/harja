@@ -168,7 +168,6 @@
   (if tiemerkintapvm
     (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintään päivämäärällä " tiemerkintapvm)
     (log/debug "Perutaan urakan " urakka-id " kohteen " kohde-id " valmius tiemerkintään, tiemerkintapvm:n oltava nil: " tiemerkintapvm))
-
   (try
     (jdbc/with-db-transaction [db db]
                              (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
@@ -194,7 +193,7 @@
                                       :tiemerkintapvm   tiemerkintapvm
                                       :kopio-itselle?   kopio-itselle?
                                       :saate            saate
-                                      :sahkopostitiedot muut-vastaanottajat
+                                      :muut-vastaanottajat muut-vastaanottajat
                                       :kayttaja         user})))
 
                                (hae-urakan-aikataulu db user {:urakka-id  urakka-id
