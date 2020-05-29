@@ -165,7 +165,6 @@
     (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
     (is (not (contains? vastaus :tarkastus)))
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
-    (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))
     (is (>= (count (:tietyomaat vastaus)) 1))
@@ -327,20 +326,9 @@
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
                                                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
                                                        (:ilmoitukset vastaus))))
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
-            :paikkaus
-            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyoilmoitus (:tietyoilmoitukset vastaus)))))
-
-  (testing "Päällystys / paikkaus haku nykytilanteeseen"
-    ;; Käyttää eri SQL-kyselyä historian ja nykytilanteen hakuun, joten hyvä testata erikseen vielä nykytilanne
-    (let [vastaus (hae-tk parametrit-laaja-nykytilanne)]
-
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
-            :paikkaus
-            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))))
 
   (testing "Infopaneeli saadaan luotua myös palvelimella piirretyille asioille."
     (let [toteuma (kutsu-karttakuvapalvelua

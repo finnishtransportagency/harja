@@ -5,7 +5,6 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystyksen-maksuerat :as tiedot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
@@ -85,7 +84,5 @@
 
 (defn maksuerat []
   (komp/luo
-    (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
-
     (fn []
       [tuck tiedot/tila maksuerat*])))

@@ -4,7 +4,6 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.domain.urakka :as urakka]
-            [harja.domain.organisaatio :as organisaatio]
             [harja.domain.vesivaylat.alus :as alus]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
