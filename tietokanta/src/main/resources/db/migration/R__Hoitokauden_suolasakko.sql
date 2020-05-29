@@ -74,12 +74,12 @@ BEGIN
   RAISE NOTICE 'sallittu suolankäyttö: %', sallittu_suolankaytto;
 
   -- Haetaan suolankäytön toteuma
-  SELECT SUM(maara) INTO suolankaytto
-    FROM sopimuksen_kaytetty_materiaali skm
-         JOIN materiaalikoodi mk ON skm.materiaalikoodi=mk.id
+  SELECT SUM(kokonaismaara) INTO suolankaytto
+    FROM raportti_toteutuneet_materiaalit rtm
+             JOIN materiaalikoodi mk ON rtm."materiaali-id"=mk.id
    WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi AND
-         skm.sopimus IN (SELECT id FROM sopimus WHERE urakka = urakka_id) AND
-	 skm.alkupvm BETWEEN hk_alkupvm AND hk_loppupvm;
+           rtm."urakka-id" = urakka_id AND
+       rtm.paiva BETWEEN hk_alkupvm AND hk_loppupvm;
 
   RAISE NOTICE 'Suolaa käytetty: %', suolankaytto;
 

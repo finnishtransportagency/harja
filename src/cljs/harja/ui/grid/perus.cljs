@@ -458,25 +458,39 @@
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
+        ;; mahdollistetaan komponentin rendaus myös otsikkorivin sisään
+        komponentti-otsikon-sisaan (get-in otsikko-record [:optiot :komponentti-otsikon-sisaan])
         otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
-    [:tr.otsikko (when salli-valiotsikoiden-piilotus?
-                   {:class "gridin-collapsoitava-valiotsikko klikattava"
-                    :on-click #(toggle-valiotsikko valiotsikko-id
-                                                   piilotetut-valiotsikot)})
-     [:td {:colSpan colspan}
-      (when salli-valiotsikoiden-piilotus?
-        (if (@piilotetut-valiotsikot valiotsikko-id)
-          (ikonit/livicon-chevron-right)
-          (ikonit/livicon-chevron-down)))
-
-      (map-indexed
-        (fn [i {:keys [sijainti sisalto tyyli]}]
-          ^{:key i}
-          [:div.grid-valiotsikko-custom-komponentti {:style (or tyyli {:top -2 :left sijainti})}
-           [sisalto {:id valiotsikko-id}]])
-        otsikkokomponentit)
-
-      [:h5 teksti]]]))
+    [:<>
+     [:tr.otsikko (when salli-valiotsikoiden-piilotus?
+                    {:class (str "gridin-collapsoitava-valiotsikko klikattava"
+                                 (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
+                     :on-click #(toggle-valiotsikko valiotsikko-id
+                                                    piilotetut-valiotsikot)
+                     :style (merge {}
+                                   (when (not (empty? otsikkokomponentit))
+                                     {:border-bottom "none"
+                                      :border-top "solid 0.1mm black"})
+                                   (when (:otsikon-tyyli komponentti-otsikon-sisaan)
+                                     (:otsikon-tyyli komponentti-otsikon-sisaan)))})
+      [:td {:colSpan (if (empty? komponentti-otsikon-sisaan)
+                       colspan
+                       (- colspan (:col-span komponentti-otsikon-sisaan)))}
+       (when salli-valiotsikoiden-piilotus?
+         (if (@piilotetut-valiotsikot valiotsikko-id)
+           (ikonit/livicon-chevron-right)
+           (ikonit/livicon-chevron-down)))
+       [:h5 teksti]]
+      (when (and (:sisalto komponentti-otsikon-sisaan)
+                 (:col-span komponentti-otsikon-sisaan))
+        [:td {:colSpan (:col-span komponentti-otsikon-sisaan)}
+         [(:sisalto komponentti-otsikon-sisaan)]])]
+     (when-not (empty? otsikkokomponentit)
+        (map-indexed
+          (fn [i {:keys [sisalto]}]
+            ^{:key i}
+            [sisalto {:id valiotsikko-id}])
+          otsikkokomponentit))]))
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
@@ -880,8 +894,10 @@
                   (swap! historia pop)
                   (when muutos
                     (muutos ohjaus))))
-        maarita-valiotsikoiden-alkutila! (fn []
-                                           (when (and (not @valiotsikoiden-alkutila-maaritelty?)
+        maarita-valiotsikoiden-alkutila! (fn [tiedot]
+                                           ;; Merkataan tämä check tehdyksi vasta kun (not empty) data on saatu serveriltä
+                                           (when (and (not-empty tiedot)
+                                                      (not @valiotsikoiden-alkutila-maaritelty?)
                                                       salli-valiotsikoiden-piilotus?
                                                       (some? tiedot))
                                              (let [tila (if (= valiotsikoiden-alkutila :kaikki-kiinni)
@@ -969,7 +985,7 @@
 
     (komp/luo
       (komp/sisaan (fn []
-                     (maarita-valiotsikoiden-alkutila!)
+                     (maarita-valiotsikoiden-alkutila! tiedot)
                      (when infolaatikon-tila-muuttui
                        (infolaatikon-tila-muuttui false))))
       (komp/ulos #(when infolaatikon-tila-muuttui
@@ -983,7 +999,7 @@
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
          (tarkista-sivutus! tiedot)
-         (maarita-valiotsikoiden-alkutila!)
+         (maarita-valiotsikoiden-alkutila! tiedot)
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
          (reset! rivien-maara (count tiedot))

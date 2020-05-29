@@ -177,20 +177,23 @@
                                (com.mchange.v2.c3p0.DataSources/destroy temppidb)
                                (:datasource (luo-temppitietokanta)))))
 
+(defn yrita-querya [f n]
+  (dotimes [n n]
+    (try
+      (f)
+      (catch PSQLException e
+        (Thread/sleep 500)
+        (log/warn e "- yritetään uudelleen, yritys" n)))))
+
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
   (with-open [c (.getConnection temppidb)
               ps (.createStatement c)]
 
-    (tapa-backend-kannasta ps "harjatest_template")
-    (tapa-backend-kannasta ps "harjatest")
-    (dotimes [n 5]
-      (try
-        (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
-        (catch PSQLException e
-          (Thread/sleep 500)
-          (log/warn e "- yritetään uudelleen, yritys" n))))
+    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
+    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+    (yrita-querya (fn [] (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")) 5)
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
 
@@ -712,6 +715,9 @@
 (defn hae-muhoksen-paallystysurakan-testikohteen-id []
   (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
 
+(defn hae-muhoksen-paallystysurakan-testipaikkauskohteen-id []
+  (ffirst (q (str "SELECT id FROM paikkauskohde WHERE nimi = 'Testikohde Muhoksen paallystysurakassa'"))))
+
 (defn hae-utajarven-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -720,7 +726,7 @@
 (defn hae-oulun-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'"))))
 
 (defn hae-lapin-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
@@ -730,7 +736,7 @@
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022'"))))
 
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id

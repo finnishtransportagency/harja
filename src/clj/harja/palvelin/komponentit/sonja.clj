@@ -131,8 +131,6 @@
 
 (defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava lopeta-tarkkailu-kanava tyyppi db]
   (thread
-    (doto (Thread/currentThread)
-      (.setName "jms-yhteyden-tarkkailu-saije"))
     (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
                                          :default false)]
       (when-not lopetetaan?
@@ -190,7 +188,12 @@
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
-    (.setFaultTolerant true)
+    ;; Fault tolerant –asetuksen pois kytkeminen puolestaan johtuu siitä, että jos se on käytössä, client vastaanottaa JMS-”palvelimelta” tiedon siitä,
+    ;; mitä osoitteita ja portteja on käytössä samassa klusterissa – ja ainakin aiemmin Sonja oli konfiguroitu siten, että se antoi täsmälleen yhden osoitteen,
+    ;; johon yhteyden katketessa pantiin sitten hanskat tiskiin.
+    (.setFaultTolerant false)
+    ;; Pingillä pyritään pitämään hengissä olemassa olevaa yhteyttä, vaikka siellä ei varsinaisesti liikettä olisikaan.
+    (.setPingInterval (int 30))
     ;; Yrittää reconnectata loputtomiin. Pitää wrapata intiin, jotta tyypiksi tulee Integer, eikä Float
     (.setFaultTolerantReconnectTimeout (int 0))
     ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
@@ -451,16 +454,8 @@
                                                                                                  {:vastaanottajan-tila vastaanottajan-tila
                                                                                                   :virheet virheet})}}))
                                                                jonot)}))
-                                             istunnot)}
-             saikeiden-tilat (sequence (comp
-                                         (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija|reconnecting-saije)" (.getName %))
-                                                    %))
-                                         (map #(identity
-                                                 {:nimi (.getName %)
-                                                  :status (.. % getState toString)})))
-                                       (.keySet (Thread/getAllStackTraces)))]
-         {:olioiden-tilat olioiden-tilat
-          :saikeiden-tilat saikeiden-tilat})
+                                             istunnot)}]
+         {:olioiden-tilat olioiden-tilat})
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
@@ -505,8 +500,6 @@
   [{:keys [yhteys-future tila kaskytyskanava] :as sonja} sammutus-kanava]
   (thread
     (reset! jms-saije-sammutettu? false)
-    (doto (Thread/currentThread)
-      (.setName "jms-saije"))
     ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
     ;; joku arvo pihalle.
     (let [yhteys-oliot (yhteys-oliot! yhteys-future sonja)]
@@ -543,8 +536,6 @@
    epäonnisuiko käsittely timeoutin vai täyden bufferin takia taikka sammutetun jms-saikeen takia."
   [kaskytyskanava kasky]
   (thread
-    (doto (Thread/currentThread)
-      (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*")))
     (let [kaskyn-kasittely-jms-saikeelle (chan)
           kaskyn-kasittely-kaskytys-saikeelle (chan)
           ;; offer! ei blokkaa. Tässä tulee käyttää offer!:ia put!:in sijasta, sillä put! lähettää viestin kanavaan sitten, kun
@@ -581,6 +572,7 @@
   (start [{db :db
            :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
+          ;; yhteys-ok? ei kaiketi käytetä missään?
           yhteys-ok? (atom false)
           ;; HUOM! käskytyskanavaan ei tulisi laittaa viestejä muuten kuin laheta-viesti-kaskytyskanavaan!
           ;; funktion kautta.

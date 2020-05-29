@@ -25,6 +25,8 @@
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+    [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
+
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
@@ -48,6 +50,7 @@
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
     [harja.palvelin.palvelut.laskut :as laskut]
+    [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
@@ -278,6 +281,10 @@
                          (yha-integraatio/->Yha (:yha asetukset))
                          [:db :integraatioloki])
 
+      :yha-paikkauskomponentti (component/using
+                         (yha-paikkauskomponentti/->YhaPaikkaukset (:yha asetukset))
+                         [:db :integraatioloki])
+
       :velho-integraatio (component/using
                            (velho-integraatio/->Velho (:velho asetukset))
                            [:db :integraatioloki])
@@ -344,6 +351,9 @@
                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :laskut (component/using
                 (laskut/->Laskut)
+                [:http-palvelin :db :pdf-vienti :excel-vienti :pois-kytketyt-ominaisuudet])
+      :aliurakoitsijat (component/using
+                (aliurakoitsijat/->Aliurakoitsijat)
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :toteumat (component/using
                   (toteumat/->Toteumat)
@@ -395,7 +405,7 @@
                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
-                     [:http-palvelin :db])
+                     [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
@@ -581,7 +591,7 @@
                       [:http-palvelin])
 
       :jarjestelman-tila (component/using
-                   (jarjestelman-tila/->JarjestelmanTila)
+                   (jarjestelman-tila/->JarjestelmanTila (:kehitysmoodi asetukset))
                    [:db :http-palvelin])
 
       ;; Harja API
@@ -668,7 +678,10 @@
         [:db :pois-kytketyt-ominaisuudet])
 
       :status (component/using
-                (status/luo-status)
+                (status/luo-status (:kehitysmoodi asetukset))
+                ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
+                ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
+                ;; ennen kuin sen statusta aletaan seuraamaan
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
 
       :vaylien-geometriahaku
@@ -716,13 +729,6 @@
           (recur)
           vastaus)))))
 
-(defn kasittele-saikeen-kaatuminen
-  [saikeen-nimi]
-  (case saikeen-nimi
-    "jms-saije" (do (reset! sonja/jms-saije-sammutettu? true)
-                    (when-let [sonja-yhteys-ok (get-in harja-jarjestelma :sonja :yhteys-ok?)]
-                      (reset! sonja-yhteys-ok false)))))
-
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
@@ -731,15 +737,14 @@
       (reify Thread$UncaughtExceptionHandler
         (uncaughtException [_ thread e]
           (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-          (log/error "Virhe: " e)
-          (kasittele-saikeen-kaatuminen (.getName thread)))))
+          (log/error "Virhe: " e))))
     (alter-var-root #'harja-jarjestelma
                     (constantly
                       (-> (lue-asetukset asetusfile)
                           luo-jarjestelma
                           component/start)))
     (aloita-sonja harja-jarjestelma)
-    (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (status/aseta-status! :harja (:status harja-jarjestelma) 200 "Harja käynnistetty")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?

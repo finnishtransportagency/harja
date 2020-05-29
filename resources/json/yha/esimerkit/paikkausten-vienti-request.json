@@ -1,0 +1,49 @@
+{
+  "urakka": {
+    "harja-id": 7,
+    "nimi": "Utajärven päällystysurakka"
+  },
+  "paikkauskohteet": [
+    {
+      "paikkauskohde": {
+        "harja-id": 988,
+        "nimi": "Uta-keskusta-01",
+        "paikkaukset": [
+          {
+            "paikkaus": {
+              "id": 1111,
+              "alkuaika": "2018-01-30T12:00:00.999Z",
+              "loppuaika": "2018-01-30T18:00:00.999Z",
+              "sijainti": {
+                "tie": 20,
+                "aosa": 1,
+                "aet": 1,
+                "losa": 5,
+                "let": 16,
+                "ajorata" : 1
+              },
+              "tyomenetelma": "massapintaus",
+              "massatyyppi": "asfalttibetoni",
+              "leveys": 10,
+              "massamenekki": 12,
+              "raekoko": 1,
+              "kuulamylly": "AN5",
+              "kivi-ja-sideaineet": [
+                {
+                  "kivi-ja-sideaine": {
+                    "esiintyma": "testi",
+                    "km-arvo": "testi",
+                    "muotoarvo": "testi",
+                    "sideainetyyppi": "20/30",
+                    "pitoisuus": 1.2,
+                    "lisa-aineet": "lisäaineet"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

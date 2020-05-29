@@ -28,7 +28,9 @@
   (ilmoitukset/paivita-lahettaja-ilmoitukselle!
     db (:etunimi lahettaja)
     (:sukunimi lahettaja)
-    (:puhelinnumero lahettaja)
+    (if (:tyopuhelin lahettaja)
+      (:tyopuhelin lahettaja)
+      (:matkapuhelin lahettaja))
     (:sahkoposti lahettaja)
     id))
 
@@ -77,7 +79,7 @@
                    :tunniste tunniste
                    :viestiid viesti-id
                    :vastaanotettu vastaanotettu
-                   :ilmoitettu-alunperin ilmoitettu}))]
+                   :vastaanotettu-alunperin valitetty}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)

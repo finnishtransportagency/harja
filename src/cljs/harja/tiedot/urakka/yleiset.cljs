@@ -28,7 +28,8 @@
   (swap! aikajana-vain-urakoitsijat? not))
 
 (def yhteyshenkilotyypit-kaikille-urakoille
-  (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus" "Viranomais- ja vahingonkorvausasiat"])))
+  (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus"
+                  "Viranomais- ja vahingonkorvausasiat" "Työmaavalvoja" "Työmaavalvojan sijainen"])))
 
 (def yhteyshenkilotyypit-vesivaylat
   (into [] (sort ["Sopimusvastaava"])))

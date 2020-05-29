@@ -10,7 +10,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.ui.modal :as modal]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -109,8 +110,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    [:span (str " " v)]]))]]))
 
 
-(defn linkki [otsikko toiminto]
-  [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
+(defn linkki
+  ([otsikko toiminto]
+    (linkki otsikko toiminto {}))
+  ([otsikko toiminto {:keys [style ikoni]}]
+   [:a {:style style
+        :href "#"
+        :on-click #(do (.preventDefault %) (toiminto))}
+    [:span
+     (when ikoni ikoni)
+     (if ikoni
+       (str " " otsikko)
+       otsikko)]]))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
   [:a {:href linkki :target "_blank"} otsikko])
@@ -189,7 +200,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
+[{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn!]} _]
   (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
@@ -210,7 +221,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
-                        (swap! auki? not)
+                        (if (swap! auki? not)
+                          (when auki-fn! (auki-fn!))
+                          (when kiinni-fn! (kiinni-fn!)))
                         nil))
         on-key-down-fn (fn [{:keys [vaihtoehdot valinta valitse-fn format-fn]} event]
                          (let [kc (.-keyCode event)
@@ -277,12 +290,15 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                                 (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                                   ^{:key (hash vaihtoehto)}
-                                  [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
+                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
                              (for [vaihtoehto vaihtoehdot]
                                ^{:key (hash vaihtoehto)}
-                               [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
+                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
+      (komp/klikattu-ulkopuolelle #(when @auki?
+                                     (reset! auki? false)
+                                     (when kiinni-fn! (kiinni-fn!)))
+                                  klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
                            EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
@@ -291,15 +307,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli?] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
+          (loki/log ryhmissa? ryhmitellyt-itemit)
           [:div (merge
                   {:class (str (if vayla-tyyli?
-                                 "select-default"
+                                 (str "select-" (if virhe? "error-" "") "default")
                                  "dropdown livi-alasveto")
                                (when class (str " " class))
                                (when @auki? " open"))}
@@ -310,13 +327,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :type "button"
              :disabled (if disabled "disabled" "")
              :title title
-             :on-click (r/partial on-click-fn vaihtoehdot)
+             :on-click (partial on-click-fn vaihtoehdot)
              :on-focus on-focus
-             :on-key-down (r/partial {:on-key-down-fn on-key-down-fn
-                                      :vaihtoehdot vaihtoehdot
-                                      :valinta valinta
-                                      :valitse-fn valitse-fn
-                                      :format-fn format-fn})}
+             :on-key-down (partial on-key-down-fn
+                            {:vaihtoehdot vaihtoehdot
+                             :valinta valinta
+                             :valitse-fn valitse-fn
+                             :format-fn format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if (and @auki? vayla-tyyli?)
               ^{:key :auki}
@@ -333,6 +350,31 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko otsikko]
    [livi-pudotusvalikko optiot valinnat]])
+
+(defn alasveto-toiminnolla
+  [_ _]
+  (let [auki? (r/atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn virhe? disabled]}]
+        [:div {:class #{(str "select-" (if virhe?
+                                         "error-"
+                                         "") "default") (when @auki? "open")}}
+         [:button.nappi-alasveto {:on-click #(swap! auki? not) :disabled disabled}
+          [:div.valittu
+           (or (formaatti-fn valittu) "Ei valittu")]
+          [:div.livicon-chevron-down]]
+         [:ul {:style {:display (if @auki?
+                                  "block"
+                                  "none")}}
+          (for [v valinnat]
+            ^{:key (gensym "alasveto-item-")}
+            [:li.harja-alasvetolistaitemi
+             {:on-click #(do
+                           (swap! auki? not)
+                           (valinta-fn v))}
+             [:span (formaatti-fn v)]])
+          [:li.harja-alasvetolistaitemi [toiminto {:sulje #(swap! auki? not)}]]]]))))
 
 
 (defn kaksi-palstaa-otsikkoja-ja-arvoja
@@ -391,10 +433,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
-  "Tekee geneerisen taulukko-tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
-  [optiot & otsikot-ja-arvot]
-  [:div.taulukko-tietonakyma
-   [:table
+  "Tekee geneerisen taulukko-tietonäkymän. Optioihin style tai table-style."
+  [{:keys [style table-style]} & otsikot-ja-arvot]
+  [:div.taulukko-tietonakyma {:style style}
+   [:table {:style table-style}
     [:tbody
      (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
            :when arvo]
@@ -690,3 +732,10 @@ jatkon."
 +raportin-vientimuodot+
   [(tallenna-excel-nappi (k/excel-url :raportointi))
    (tallenna-pdf-nappi (k/pdf-url :raportointi))])
+
+(defn sahkopostiosoitteet-str->set [osoitteet]
+  (into #{}
+        (keep not-empty
+              (map
+                #(str/trim %)
+                (str/split osoitteet #",")))))

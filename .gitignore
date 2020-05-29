@@ -10,6 +10,7 @@ dev-resources/js/harja.js
 dev-resources/js/out/
 logs/
 doc/
+dev/
 harja-stg-dump.sql
 harja-stg-dump
 harja-test-dump.sql
@@ -63,3 +64,4 @@ package.json
 src/cljs-dev/harja/repl.cljs
 .rebel_readline_history
 *.log
+/.clj-kondo/.cache/

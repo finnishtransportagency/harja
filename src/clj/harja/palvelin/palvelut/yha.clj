@@ -183,19 +183,22 @@
 
 (defn- tarkista-lahetettavat-kohteet
   "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
-   Jos ei ole, heittää poikkeuksen."
+   Jos ei ole, heittää poikkeuksen. Vuotta 2020 edeltäviä kohteita ei alkuvuoden kaistauudistuksen jälkeen
+   voi enää lähettää."
   [db kohde-idt]
   (doseq [kohde-id kohde-idt]
     (let [paallystysilmoitus (first (into []
                                           (comp (map konv/alaviiva->rakenne)
-                                                (map #(konv/string-poluista->keyword
-                                                        %
-                                                        [[:tekninen-osa :paatos]
-                                                         [:tila]])))
+                                                (map #(konv/pgarray->vector (:vuodet %)))
+                                                (map #(konv/string-poluista->keyword %
+                                                                                     [[:tekninen-osa :paatos]
+                                                                                      [:tila]])))
                                           (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                             db
                                             {:paallystyskohde kohde-id})))]
-      (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
+      (when-not (and (not (empty? (:vuodet paallystysilmoitus)))
+                     (every? #(> % 2019) (:vuodet paallystysilmoitus))
+                     (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
                      (or (= :valmis (:tila paallystysilmoitus))
                          (= :lukittu (:tila paallystysilmoitus))))
         (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))

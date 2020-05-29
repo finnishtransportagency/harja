@@ -12,23 +12,6 @@
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defn aika-formatteri [aika]
-  (when-not (nil? aika)
-    [:div
-     [:span {:style {:width "100%"
-                     :display "inline-block"}}
-      (pvm/pvm aika)]
-     [:span (str "klo. " (pvm/aika aika))]]))
-
-(defn otsikkokomponentti
-  [napin-teksti siirry-toimenpiteisiin-fn id]
-  [{:tyyli {:float "right"
-            :position "relative"}
-    :sisalto
-    (fn [_]
-      [napit/yleinen-ensisijainen
-       napin-teksti
-       #(siirry-toimenpiteisiin-fn id)])}])
 
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as yhteinen-tila}]
   (let [tr-atom (atom (:tr valinnat))
@@ -58,8 +41,7 @@
                          :voi-valita-kartalta? voi-valita-trn-kartalta?}
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
-       [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka aikavali-atom {:otsikko aikavali-otsikko
-                                                                                   :vaihda-filtteri-urakan-paattyessa? false}]
+       [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko}]
        [:span.label-ja-kentta
         [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
         [:div.kentta
@@ -67,15 +49,26 @@
           (:urakan-paikkauskohteet valinnat)
           (fn [paikkauskohde valittu?]
             (e! (yhteiset-tiedot/->PaikkausValittu paikkauskohde valittu?)))
-          [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Työmenetelmät"
-         :tyylit {:width "fit-content"}
-         :kentta-params {:tyyppi :checkbox-group
-                         :vaihtoehdot urakan-tyomenetelmat
-                         :nayta-rivina? true}
-         :arvo-atom tyomenetelmat-atom}]])))
-
+          [" paikkauskohde valittu" " paikkauskohdetta valittu"]
+          {:kaikki-valinta-fn (fn []
+                                (let [osa-valittu (some true? (map :valittu? (:urakan-paikkauskohteet valinnat)))]
+                                  (e! (yhteiset-tiedot/->PaivitaValinnat {:urakan-paikkauskohteet
+                                                                          (map #(assoc % :valittu? (not osa-valittu)) (:urakan-paikkauskohteet valinnat))
+                                                                          }))))}]]]
+       [:span.label-ja-kentta
+        [:span.kentan-otsikko "Työmenetelmät"]
+        [:div.kentta
+         [valinnat/checkbox-pudotusvalikko
+          (vec (map-indexed (fn [i tyomenetelma]
+                              {:id i :nimi tyomenetelma :valittu? (contains? (:tyomenetelmat valinnat) tyomenetelma)})
+                            (sort urakan-tyomenetelmat)))
+          (fn [tyomenetelma valittu?]
+            (e! (yhteiset-tiedot/->TyomenetelmaValittu tyomenetelma valittu?)))
+          [" työmenetelmä valittu" " työmenetelmää valittu"]
+          {:kaikki-valinta-fn (fn []
+                                (e! (yhteiset-tiedot/->PaivitaValinnat {:tyomenetelmat (if (empty? (:tyomenetelmat valinnat))
+                                                                                           urakan-tyomenetelmat
+                                                                                           (set nil))})))}]]]])))
 (defn hakuehdot-pohja [e! app]
   (komp/luo
     (komp/sisaan #(e! (yhteiset-tiedot/->Nakymaan)))

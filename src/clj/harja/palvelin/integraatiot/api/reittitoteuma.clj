@@ -167,6 +167,10 @@ maksimi-linnuntien-etaisyys 200)
                                (pr-str (:paattynyt toteuma)))))
           (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
 
+(defn- materiaalicachen-paivitys-ajettava?
+  "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
+  [toteuma-alkanut]
+  (not (pvm/tanaan? toteuma-alkanut)))
 
 (defn- paivita-materiaalicachet!
   "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain"
@@ -194,15 +198,19 @@ maksimi-linnuntien-etaisyys 200)
             ensimmainen-toteuman-alkanut-pvm (pvm-string->joda-date ensimmainen-toteuma-alkanut-str)
             viimeinen-toteuman-paattynyt-pvm (pvm-string->joda-date (get-in viimeinen-toteuma [:reittitoteuma :toteuma :paattynyt]))
             toteumien-eri-pvmt (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)]
-        (doseq [sopimus-id urakan-sopimus-idt]
-          (doseq [pvm toteumien-eri-pvmt]
-            (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                   :alkupvm (pvm/dateksi pvm)})))
 
-        (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                           :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
-                                                                           :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)})))))
 
+        ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
+        ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
+
+        (when (materiaalicachen-paivitys-ajettava? (aika-string->java-util-date ensimmainen-toteuma-alkanut-str))
+          (doseq [sopimus-id urakan-sopimus-idt]
+            (doseq [pvm toteumien-eri-pvmt]
+              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                     :alkupvm (pvm/dateksi pvm)})))
+          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                             :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
+                                                                             :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
@@ -212,7 +220,6 @@ maksimi-linnuntien-etaisyys 200)
   (doseq [toteuma (:reittitoteumat data)]
     (tallenna-yksittainen-reittitoteuma db db-replica
                                         urakka-id kirjaaja (:reittitoteuma toteuma)))
-
   (paivita-materiaalicachet! db urakka-id data))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]

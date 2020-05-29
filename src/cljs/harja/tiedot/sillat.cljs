@@ -11,7 +11,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def karttataso-sillat (atom false))
-
+(def jarjestys (atom :nimi))
 (def listaus (atom :kaikki))
 
 (defn- on-tarkastettu-hoitokautena?
@@ -19,12 +19,21 @@
   (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))]
     (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
 
+(defn on-poistettu?
+  [silta]
+  (or (some? (:loppupvm silta))
+      (some? (:lakkautuspvm silta))))
+
 (defn- varita-silta [silta]
   ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
 
   (-> silta
       (assoc-in [:alue :fill] true)
-      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta) "green" "red"))))
+      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta)
+                                 "palegreen"
+                                 (if (on-poistettu? silta)
+                                   "gainsboro"
+                                   "crimson")))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat

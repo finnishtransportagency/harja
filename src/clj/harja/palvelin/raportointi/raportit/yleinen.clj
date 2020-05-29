@@ -13,6 +13,9 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
+(def materiaalitoteumien-paivitysinfo
+  "Ympäristö- ja materiaaliraporttien laskelmat päivitetään kerran vuorokaudessa raporttien nopeuttamiseksi.")
+
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
   (let [kk-vali? (and (and alkupvm loppupvm)

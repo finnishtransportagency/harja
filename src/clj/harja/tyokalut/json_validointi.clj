@@ -46,22 +46,26 @@
 (defn validoi
   "Validoi annetun JSON sisällön vasten annettua JSON-skeemaa. JSON-skeeman tulee olla tiedosto annettussa
   skeema-polussa. JSON on String, joka on sisältö. Jos annettu JSON ei ole validia, heitetään JSONException."
-  [skeemaresurssin-polku json]
-  (log/debug "Tarkistetaan, että JSON on syntaksiltaan validi")
-  (try+
-    (cheshire/decode json true)
-    (catch Exception e
-      (kasittele-validointivirheet skeemaresurssin-polku (.getMessage e))))
-  (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku)
-  (let [virheet (validate
-                 (lue-skeemaresurssi skeemaresurssin-polku)
-                 (cheshire/parse-string json)
-                 {:draft3-required true
-                  :ref-resolver #(lue-skeemaresurssi
-                                  (.substring % (count "file:resources/")))})]
-    (if-not virheet
-      (log/debug "JSON data on validia")
-      (kasittele-validointivirheet skeemaresurssin-polku virheet))))
+  ([skeemaresurssin-polku json]
+   (validoi skeemaresurssin-polku json true))
+  ([skeemaresurssin-polku json vaadi-draft3?]
+   (log/debug "Tarkistetaan, että JSON on syntaksiltaan validi")
+   (try+
+     (cheshire/decode json true)
+     (catch Exception e
+       (kasittele-validointivirheet skeemaresurssin-polku (.getMessage e))))
+
+   (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku)
+   (let [virheet (validate
+                   (lue-skeemaresurssi skeemaresurssin-polku)
+                   (cheshire/parse-string json)
+                   {:draft3-required vaadi-draft3? ;; jos false, draft 4 käyttöön
+                    :lax-date-time-format? true
+                    :ref-resolver #(lue-skeemaresurssi
+                                     (.substring % (count "file:resources/")))})]
+     (if-not virheet
+       (log/debug "JSON data on validia")
+       (kasittele-validointivirheet skeemaresurssin-polku virheet)))))
 
 (defn lue-skeematiedosto [polku]
   (cheshire/parse-string (slurp polku)))

@@ -10,8 +10,15 @@
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]))
 
+(def merkitse-paikkauskohde-tarkistetuksi!
+  "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
+)
+
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
+
+(def ^{:doc "Hae paikkauksen ajorata, parametreina [db, paikkauksen id], muodossa {:id 1}"}
+  hae-paikkauksen-ajorata)
 
 (defn hae-paikkaukset [db hakuehdot]
   (fetch db
@@ -26,11 +33,13 @@
                [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
          hakuehdot))
 
-(defn hae-paikkaukset-paikkauskohe [db hakuehdot]
+(defn hae-paikkaukset-paikkauskohde [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus
          (conj paikkaus/paikkauksen-perustiedot
-               [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+               [::paikkaus/paikkauskohde (conj paikkaus/paikkauskohteen-perustiedot
+                                               ::muokkaustiedot/luotu
+                                               ::muokkaustiedot/muokattu)])
          hakuehdot))
 
 (defn hae-paikkaukset-tienkohta [db hakuehdot]
@@ -49,7 +58,9 @@
 (defn hae-paikkauskohteet [db hakuehdot]
   (fetch db
          ::paikkaus/paikkauskohde
-         paikkaus/paikkauskohteen-perustiedot
+         (conj paikkaus/paikkauskohteen-perustiedot
+               ::muokkaustiedot/luotu
+               ::muokkaustiedot/muokattu)
          hakuehdot))
 
 (defn onko-paikkaus-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
@@ -138,6 +149,15 @@
             ::paikkaus/urakka-id urakka-id
             ::paikkaus/ulkoinen-id (op/in (into #{} paikkauskohde-idt))}))
 
+(defn paivita-paikkauskohteen-tila
+  "Päivittää paikkauskohteen tilan harjan sisäisen id:n perusteella (lähetetty, virhe)."
+    [db paikkauskohde]
+    (let [id (::paikkaus/id paikkauskohde)
+          ehdot (if (id-olemassa? id)
+                  {::paikkaus/id id})]
+      (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
+      (first (hae-paikkaukset db ehdot))))
+
 (defn- paivita-paikkaus
   "Päivittää paikkauksen tiedot, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
   [db urakka-id paikkaus]
@@ -207,7 +227,9 @@
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
   [db urakka-id kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
-        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
+        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
+        ;; nollataan mahdollinen ilmoitettu virhe
+        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
@@ -280,18 +302,21 @@
   (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
                        ::muokkaustiedot/poistettu? false}))
 
-(defn hae-urakan-paikkaustoteumat [db urakka-id]
-  (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id
-                            ::muokkaustiedot/poistettu? false}))
-
-
 (defn hae-urakan-paikkauskohteet [db urakka-id]
   (let [paikkauskohteet (fetch db
                                ::paikkaus/paikkauskohde
                                (conj paikkaus/paikkauskohteen-perustiedot
+                                     ::muokkaustiedot/muokattu
+                                     ::muokkaustiedot/luotu
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
-                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
-    (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
+                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})
+        paikkauskohteet (into []
+                              (comp
+                                (map #(assoc % ::paikkaus/tierekisteriosoite
+                                               (first (hae-paikkauskohteen-tierekisteriosoite db {:kohde (::paikkaus/id %)}))))
+                                (map #(dissoc % ::paikkaus/paikkaukset)))
+                              paikkauskohteet)]
+paikkauskohteet))
 
 (defn hae-urakan-tyomenetelmat [db urakka-id]
   (let [paikkauksien-tyomenetelmat (fetch db

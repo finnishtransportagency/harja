@@ -438,7 +438,6 @@
 
     <xs:simpleType name="kaista">
         <xs:restriction base="xs:int">
-            <xs:enumeration value="1"/>
             <xs:enumeration value="11"/>
             <xs:enumeration value="12"/>
             <xs:enumeration value="13"/>
@@ -457,6 +456,7 @@
             <xs:enumeration value="27"/>
             <xs:enumeration value="28"/>
             <xs:enumeration value="29"/>
+            <xs:enumeration value="31"/>
         </xs:restriction>
     </xs:simpleType>
 

@@ -28,7 +28,8 @@ WHERE k.likainen = TRUE;
 UPDATE kustannussuunnitelma
 SET likainen = TRUE,
 muokattu = current_timestamp
-WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi);
+WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi AND
+  toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months'));
 
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
@@ -105,7 +106,8 @@ FROM maksuera m
                                    AND
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
-GROUP BY Extract(YEAR FROM yht.alkupvm);
+GROUP BY Extract(YEAR FROM yht.alkupvm)
+ORDER BY vuosi DESC;
 
 -- name: hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT

@@ -579,6 +579,8 @@
                                  (:arvot %)
                                  (:tietolaji %)))
                (catch [:type virheet/+virhe-tietolajin-arvojen-kasittelyssa+] {:keys [virheet]}
+                 (assoc % :arvot {:virhe virheet}))
+               (catch [:type virheet/+virhe-tietolajin-arvojen-versiossa+] {:keys [virheet]}
                  (assoc % :arvot {:virhe virheet})))))
      (map konv/alaviiva->rakenne))))
 

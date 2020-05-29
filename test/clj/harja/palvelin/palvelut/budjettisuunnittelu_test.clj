@@ -31,6 +31,24 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+(defn maksukausi-jhlle-kannasta [{:keys [toimenkuva ennen-urakkaa kuukausi]}]
+  (if ennen-urakkaa
+    nil
+    (cond
+      (= toimenkuva "sopimusvastaava") :molemmat
+      (= toimenkuva "vastuunalainen työnjohtaja") :molemmat
+      (and (= toimenkuva "päätoiminen apulainen")
+           (or (<= 1 kuukausi 4)
+               (<= 10 kuukausi 12))) :talvi
+      (= toimenkuva "päätoiminen apulainen") :kesa
+      (and (= toimenkuva "apulainen/työnjohtaja")
+           (or (<= 1 kuukausi 4)
+               (<= 10 kuukausi 12))) :talvi
+      (= toimenkuva "apulainen/työnjohtaja") :kesa
+      (= toimenkuva "viherhoidosta vastaava henkilö") :molemmat
+      (= toimenkuva "hankintavastaava") :molemmat
+      (= toimenkuva "harjoittelija") :molemmat)))
+
 (s/def ::aika-kuukaudella-ivalon-urakalle
   (s/with-gen ::bs-p/aika
               (fn []
@@ -153,13 +171,22 @@
                          (doseq [[_ tehtavat] ryhmiteltyna]
                            (testaa-ajat tehtavat toimenpide-avain)))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
-      (let [johto-ja-hallintokorvaukset (group-by :toimenkuva (:johto-ja-hallintokorvaukset budjetoidut-tyot))]
-        (doseq [[toimenkuva tiedot] johto-ja-hallintokorvaukset]
+      (let [jh-korvaukset (:johto-ja-hallintokorvaukset budjetoidut-tyot)
+            vakio-johto-ja-hallintokorvaukset (group-by :toimenkuva (:vakiot jh-korvaukset))
+            omat-johto-ja-hallintokorvaukset (:omat jh-korvaukset)
+            omat-toimenkuvat (:omat-toimenkuvat jh-korvaukset)]
+        (is (empty? omat-johto-ja-hallintokorvaukset) "Omat johto ja hallintokorvaukset ei ole tyhjä Pellon urakassa!")
+        (is (= 2 (count omat-toimenkuvat)) "Luotuja toimenkuvia ei ole tasan kaksi sellaiselle urakalle, jolle niitä ei aikasemmin ole määritetty!")
+        (is (every? #(and (contains? % :toimenkuva) (nil? (:toimenkuva %))) omat-toimenkuvat))
+        (is (every? #(and (contains? % :toimenkuva-id) (integer? (:toimenkuva-id %))) omat-toimenkuvat))
+        (doseq [[toimenkuva tiedot] vakio-johto-ja-hallintokorvaukset]
           (case toimenkuva
             "hankintavastaava" (is (= (into #{}
-                                            (mapcat (fn [hoitokausi]
-                                                      [[hoitokausi :molemmat]])
-                                                    (range 0 6)))
+                                            (map (fn [hoitokausi]
+                                                   (if (= 0 hoitokausi)
+                                                     [hoitokausi nil]
+                                                     [hoitokausi :molemmat]))
+                                                 (range 0 6)))
                                       (into #{} (keys (group-by (juxt :hoitokausi :maksukausi) tiedot)))))
             "sopimusvastaava" (is (= (into #{}
                                            (mapcat (fn [hoitokausi]
@@ -304,29 +331,38 @@
                           (into []
                                 (concat ensimmaisen-vuoden-ajat
                                         toisen-vuoden-ajat))))
-        tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma]}]
+        tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma tk_yt tr_yt]}]
                                   (case tallennettava-asia
                                     :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
-                                                             (= tehtava "Hoitourakan työnjohto")
+                                                             (= tk_yt "c9712637-fbec-4fbd-ac13-620b5619c744")
                                                              (nil? tehtavaryhma))
                                     :toimistokulut (and (= tyyppi "laskutettava-tyo")
-                                                        (= tehtava "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.")
+                                                        (= tk_yt "8376d9c4-3daf-4815-973d-cd95ca3bb388")
                                                         (nil? tehtavaryhma))
                                     :erillishankinnat (and (= tyyppi "laskutettava-tyo")
-                                                           (nil? tehtava)
-                                                           (= tehtavaryhma "ERILLISHANKINNAT (W)"))
+                                                           (= tr_yt "37d3752c-9951-47ad-a463-c1704cf22f4c")
+                                                           (nil? tehtava))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
-                                                                  (nil? tehtava)
-                                                                  (= tehtavaryhma "TILAAJAN RAHAVARAUS (T3)"))
+                                                                  (= tr_yt "0e78b556-74ee-437f-ac67-7a03381c64f6")
+                                                                  (nil? tehtava))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
-                                                                                     (= tehtava "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen")
+                                                                                     (contains? #{"49b7388b-419c-47fa-9b1b-3797f1fab21d"
+                                                                                                 "63a2585b-5597-43ea-945c-1b25b16a06e2"
+                                                                                                 "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+                                                                                                tk_yt)
                                                                                      (nil? tehtavaryhma))
                                     :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
-                                                              (= tehtava "Äkillinen hoitotyö")
+                                                              (contains? #{"1f12fe16-375e-49bf-9a95-4560326ce6cf"
+                                                                           "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
+                                                                           "d373c08b-32eb-4ac2-b817-04106b862fb1"}
+                                                                         tk_yt)
                                                               (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
                                                                             (nil? tehtava)
-                                                                            (nil? tehtavaryhma))))
+                                                                            (nil? tehtavaryhma))
+                                    :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
+                                                             (= tr_yt "a6614475-1950-4a61-82c6-fda0fd19bb54")
+                                                             (nil? tehtava))))
         tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
         paivitettava-data (mapv (fn [data]
                                   (-> data
@@ -350,11 +386,16 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
+              data-kannassa (map (fn [data]
+                                   (-> data
+                                       (update :tk_yt str)
+                                       (update :tr_yt str)))
+                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                                tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
                                            LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
-                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";"))
+                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)]
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
@@ -382,11 +423,16 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
-                                         FROM kustannusarvioitu_tyo kt
-                                           LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
-                                           LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
-                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (map (fn [data]
+                                   (-> data
+                                       (update :tk_yt str)
+                                       (update :tr_yt str)))
+                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                                     tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
+                                              FROM kustannusarvioitu_tyo kt
+                                                LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                                LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
+                                              WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)
 
 
@@ -431,176 +477,131 @@
 (deftest tallenna-johto-ja-hallintokorvaukset
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
         urakan-aloitus-vuosi (pvm/vuosi (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id))))
-        paivitysvuosi 3
-        tallennettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id)
-        paivitettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id {:hoitokaudet (into #{} (range paivitysvuosi 6))})]
+        paivitys-hoitokaudennumero 3
+        tallennettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi)
+        paivitettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi {:hoitokaudet (into #{} (range paivitys-hoitokaudennumero 6))
+                                                                                                           :ennen-urakkaa-mukaan? false})]
     (testing "Tallennus onnistuu"
       (doseq [{:keys [toimenkuva maksukausi] :as parametrit} tallennettava-data]
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Data kannassa on oikein"
-      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, eu.\"kk-v\", j_h.kuukausi, j_h.vuosi,
-                                                 tk.toimenkuva, j_h.luotu, j_h.\"ennen-urakkaa-id\"
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.kuukausi, j_h.vuosi,
+                                                 tk.toimenkuva, j_h.luotu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
-                                            LEFT JOIN johto_ja_hallintokorvaus_ennen_urakkaa eu ON eu.id = j_h.\"ennen-urakkaa-id\"
-                                          WHERE \"urakka-id\"=" urakka-id))
+                                          WHERE j_h.\"urakka-id\"=" urakka-id " AND tk.\"urakka-id\" IS NULL"))
             tallennettu-data (map (fn [data]
                                     (-> data
                                         (update :tunnit float)
                                         (update :tuntipalkka float)
-                                        (update :kk-v #(when % (float %)))
-                                        (update :kuukausi float)
-                                        (update :vuosi float)))
+                                        (update :kuukausi int)
+                                        (update :vuosi int)
+                                        (update :osa-kuukaudesta int)))
                                   tallennettu-data)
-            tallennettu-data-ilman-ennen-urakkaa (remove :ennen-urakkaa-id tallennettu-data)
-            tallennettu-data-kentalle-ennen-urakkaa (filter :ennen-urakkaa-id tallennettu-data)
-            ryhmitelty-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (pvm/luo-pvm (:vuosi %)
-                                                                                           (dec (:kuukausi %))
-                                                                                           15))
-                                                 tallennettu-data-ilman-ennen-urakkaa)
-            td-ryhmitelty (reduce-kv (fn [m [hoitokauden-aloitus-pvm _] hoitokauden-data]
+            tallennettu-data-ilman-ennen-urakkaa (remove :ennen-urakkaa tallennettu-data)
+            tallennettu-data-kentalle-ennen-urakkaa (filter :ennen-urakkaa tallennettu-data)
+
+            td-ryhmitelty (group-by :toimenkuva tallennettu-data-ilman-ennen-urakkaa)
+            td-ryhmitelty (reduce-kv (fn [m toimenkuva data-toimenkuvalle]
                                        (assoc m
-                                              (inc (- (pvm/vuosi hoitokauden-aloitus-pvm)
-                                                      urakan-aloitus-vuosi))
-                                              (group-by :toimenkuva hoitokauden-data)))
-                                     {}
-                                     ryhmitelty-hoitokausittain)
-            td-ryhmitelty (reduce-kv (fn [m hoitokauden-numero data-toimenkuvittain]
-                                       (assoc m
-                                              hoitokauden-numero
-                                              (reduce-kv (fn [ms toimenkuva data]
-                                                           (assoc ms
-                                                                  toimenkuva
-                                                                  (if (#{"päätoiminen apulainen"
-                                                                         "apulainen/työnjohtaja"}
-                                                                       toimenkuva)
-                                                                    {:kesa (filter #(<= 5 (:kuukausi %) 9)
-                                                                                   data)
-                                                                     :talvi (remove #(<= 5 (:kuukausi %) 9)
-                                                                                    data)}
-                                                                    {:molemmat data})))
-                                                         {}
-                                                         data-toimenkuvittain)))
+                                              toimenkuva
+                                              (if (#{"päätoiminen apulainen"
+                                                     "apulainen/työnjohtaja"}
+                                                   toimenkuva)
+                                                {:kesa (filter #(<= 5 (:kuukausi %) 9)
+                                                               data-toimenkuvalle)
+                                                 :talvi (remove #(<= 5 (:kuukausi %) 9)
+                                                                data-toimenkuvalle)}
+                                                {:molemmat data-toimenkuvalle})))
                                      {}
                                      td-ryhmitelty)]
         (is (every? :luotu tallennettu-data))
-        (doseq [{:keys [toimenkuva maksukausi jhkt]} tallennettava-data]
-          (doseq [{:keys [kk-v tunnit tuntipalkka hoitokausi] :as jhk} (remove #(= 0 (:hoitokausi %)) jhkt)
-                  :let [tallennettu-data-hoitokaudelle (get-in td-ryhmitelty [hoitokausi toimenkuva maksukausi])]]
+        (doseq [{:keys [toimenkuva maksukausi ennen-urakkaa? jhk-tiedot]} tallennettava-data
+                :let [tallennettu-data-maksukaudelle (get-in td-ryhmitelty [toimenkuva maksukausi])]
+                :when (not ennen-urakkaa?)]
+          (doseq [{:keys [kuukausi vuosi] :as jhk} jhk-tiedot
+                  :let [tallennettu-data-kuukaudelle (some #(when (and (= (:kuukausi %) kuukausi)
+                                                                       (= (:vuosi %) vuosi))
+                                                              %)
+                                                           tallennettu-data-maksukaudelle)]]
             (is (= (-> jhk
                        (update :tunnit float)
                        (update :tuntipalkka float))
-                   {:kk-v (if (= kk-v 4.5)
-                            4.5
-                            (count tallennettu-data-hoitokaudelle))
-                    :tunnit (-> tallennettu-data-hoitokaudelle first :tunnit)
-                    :tuntipalkka (-> tallennettu-data-hoitokaudelle first :tuntipalkka)
-                    :hoitokausi hoitokausi}))))
-        (= 1 (count tallennettu-data-kentalle-ennen-urakkaa))
-        (= (count tallennettu-data)
-           (reduce (fn [summa {kk-v :kk-v}]
-                     (if (= 4.5 kk-v)
-                       (inc summa)
-                       (+ summa kk-v)))
-                   0
-                   (mapcat :jhkt tallennettava-data)))))
+                   (select-keys tallennettu-data-kuukaudelle #{:tunnit :tuntipalkka :vuosi :kuukausi :osa-kuukaudesta})))))
+        (is (= 5 (count tallennettu-data-kentalle-ennen-urakkaa)))
+        (is (every? #(= 10 (:kuukausi %)) tallennettu-data-kentalle-ennen-urakkaa))))
     (testing "Päivitys onnistuu"
       (doseq [{:keys [toimenkuva maksukausi] :as parametrit} paivitettava-data]
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Päivittäminen ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Päivitetty data kannassa on oikein"
-      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, eu.\"kk-v\", j_h.kuukausi, j_h.vuosi,
-                                                 tk.toimenkuva, j_h.muokattu, j_h.\"ennen-urakkaa-id\"
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.kuukausi, j_h.vuosi,
+                                                 tk.toimenkuva, j_h.muokattu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
-                                            LEFT JOIN johto_ja_hallintokorvaus_ennen_urakkaa eu ON eu.id = j_h.\"ennen-urakkaa-id\"
-                                          WHERE \"urakka-id\"=" urakka-id))
+                                          WHERE j_h.\"urakka-id\"=" urakka-id " AND tk.\"urakka-id\" IS NULL"))
             tallennettu-data (map (fn [data]
                                     (-> data
                                         (update :tunnit float)
                                         (update :tuntipalkka float)
-                                        (update :kk-v #(when % (float %)))
-                                        (update :kuukausi float)
-                                        (update :vuosi float)))
+                                        (update :kuukausi int)
+                                        (update :vuosi int)
+                                        (update :osa-kuukaudesta int)))
                                   tallennettu-data)
-            tallennettu-data-ilman-ennen-urakkaa (remove :ennen-urakkaa-id tallennettu-data)
-            tallennettu-data-kentalle-ennen-urakkaa (filter :ennen-urakkaa-id tallennettu-data)
-            ryhmitelty-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (pvm/luo-pvm (:vuosi %)
-                                                                                           (dec (:kuukausi %))
-                                                                                           15))
-                                                 tallennettu-data-ilman-ennen-urakkaa)
-            td-ryhmitelty (reduce-kv (fn [m [hoitokauden-aloitus-pvm _] hoitokauden-data]
-                                       (assoc m
-                                              (inc (- (pvm/vuosi hoitokauden-aloitus-pvm)
-                                                      urakan-aloitus-vuosi))
-                                              (group-by :toimenkuva hoitokauden-data)))
-                                     {}
-                                     ryhmitelty-hoitokausittain)
-            td-ryhmitelty (reduce-kv (fn [m hoitokauden-numero data-toimenkuvittain]
-                                       (assoc m
-                                              hoitokauden-numero
-                                              (reduce-kv (fn [ms toimenkuva data]
-                                                           (assoc ms
-                                                                  toimenkuva
-                                                                  (if (#{"päätoiminen apulainen"
-                                                                         "apulainen/työnjohtaja"}
-                                                                       toimenkuva)
-                                                                    {:kesa (filter #(<= 5 (:kuukausi %) 9)
-                                                                                   data)
-                                                                     :talvi (remove #(<= 5 (:kuukausi %) 9)
-                                                                                    data)}
-                                                                    {:molemmat data})))
-                                                         {}
-                                                         data-toimenkuvittain)))
-                                     {}
-                                     td-ryhmitelty)]
-        (doseq [{:keys [toimenkuva maksukausi jhkt]} paivitettava-data]
-          (let [vanhat-tallennettava-jhkt (keep (fn [data]
-                                                  (when (< (:hoitokausi data) paivitysvuosi)
+            tallennettu-data-ilman-ennen-urakkaa (remove :ennen-urakkaa tallennettu-data)
+            tallennettu-data-kentalle-ennen-urakkaa (filter :ennen-urakkaa tallennettu-data)
+            tallennettu-data-hoitokaudella (mapv (fn [{:keys [vuosi kuukausi] :as data}]
+                                                   (assoc data :hoitokausi (inc (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/luo-pvm vuosi (dec kuukausi) 15))))
+                                                                                   (pvm/vuosi (pvm/hoitokauden-alkupvm urakan-aloitus-vuosi))))))
+                                                 tallennettu-data-ilman-ennen-urakkaa)]
+        (doseq [{:keys [toimenkuva maksukausi jhk-tiedot]} paivitettava-data]
+          (let [vanhat-tallennettava-jhkt (keep (fn [{:keys [vuosi kuukausi] :as data}]
+                                                  (when (< (inc (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/luo-pvm vuosi (dec kuukausi) 15))))
+                                                                   (pvm/vuosi (pvm/hoitokauden-alkupvm urakan-aloitus-vuosi))))
+                                                           paivitys-hoitokaudennumero)
                                                     (-> data
                                                         (update :tunnit float)
-                                                        (update :tuntipalkka float)
-                                                        (update :kk-v float))))
+                                                        (update :tuntipalkka float))))
                                                 (some (fn [{vanha-toimenkuva :toimenkuva
+                                                            vanha-jhkt :jhk-tiedot
                                                             vanha-maksukausi :maksukausi
-                                                            vanha-jhkt :jhkt}]
+                                                            ennen-urakkaa? :ennen-urakkaa?}]
                                                         (when (and (= vanha-toimenkuva toimenkuva)
-                                                                   (= vanha-maksukausi maksukausi))
+                                                                   (= vanha-maksukausi maksukausi)
+                                                                   (not ennen-urakkaa?))
                                                           vanha-jhkt))
                                                       tallennettava-data))
                 paivitetyt-tallennettava-jhkt (keep (fn [data]
                                                       (-> data
                                                           (update :tunnit float)
-                                                          (update :tuntipalkka float)
-                                                          (update :kk-v float)))
-                                                    jhkt)
-                vanhat-kannassa-jhkt (keep (fn [[hoitokausi data]]
-                                             (when (< hoitokausi paivitysvuosi)
-                                               (let [jh-korvaukset (get-in data [toimenkuva maksukausi])
-                                                     {:keys [tunnit tuntipalkka]} (first jh-korvaukset)]
-                                                 {:hoitokausi hoitokausi
-                                                  :tunnit (float tunnit)
-                                                  :tuntipalkka (float tuntipalkka)
-                                                  :kk-v (float (count jh-korvaukset))})))
-                                                td-ryhmitelty)
-                paivitetyt-kannassa-jhkt (keep (fn [[hoitokausi data]]
-                                                 (when (>= hoitokausi paivitysvuosi)
-                                                   (let [jh-korvaukset (get-in data [toimenkuva maksukausi])
-                                                         {:keys [tunnit tuntipalkka muokattu]} (first jh-korvaukset)]
-                                                     {:hoitokausi hoitokausi
-                                                      :tunnit (float tunnit)
-                                                      :tuntipalkka (float tuntipalkka)
-                                                      :kk-v (float (count jh-korvaukset))
-                                                      :muokattu muokattu})))
-                                               td-ryhmitelty)]
+                                                          (update :tuntipalkka float)))
+                                                    jhk-tiedot)
+                vanhat-kannassa-jhkt (keep (fn [{:keys [hoitokausi] :as data}]
+                                             (when (and (< hoitokausi
+                                                           paivitys-hoitokaudennumero)
+                                                        (= toimenkuva (:toimenkuva data))
+                                                        (= maksukausi (maksukausi-jhlle-kannasta data)))
+                                               data))
+                                           tallennettu-data-hoitokaudella)
+
+                paivitetyt-kannassa-jhkt (keep (fn [{:keys [hoitokausi] :as data}]
+                                                 (when (and (>= hoitokausi
+                                                                paivitys-hoitokaudennumero)
+                                                            (= toimenkuva (:toimenkuva data))
+                                                            (= maksukausi (maksukausi-jhlle-kannasta data)))
+                                                   data))
+                                               tallennettu-data-hoitokaudella)
+                sorttaus-fn (juxt :vuosi :kuukausi)]
+
             (is (every? :muokattu paivitetyt-kannassa-jhkt))
-            (is (= 1 (count tallennettu-data-kentalle-ennen-urakkaa)))
-            (is (= (sort-by :hoitokausi (remove #(= 0 (:hoitokausi %)) vanhat-tallennettava-jhkt))
-                   (sort-by :hoitokausi vanhat-kannassa-jhkt))
+            (is (= 5 (count tallennettu-data-kentalle-ennen-urakkaa)))
+            (is (every? #(= 10 (:kuukausi %)) tallennettu-data-kentalle-ennen-urakkaa))
+            (is (= (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) vanhat-tallennettava-jhkt))
+                   (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) vanhat-kannassa-jhkt)))
                 (str "Vanha data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))
-            (is (= (sort-by :hoitokausi paivitetyt-tallennettava-jhkt)
-                   (sort-by :hoitokausi (map #(dissoc % :muokattu) paivitetyt-kannassa-jhkt)))
+            (is (= (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-tallennettava-jhkt))
+                   (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-kannassa-jhkt)))
                 (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
 
 (deftest budjettitavoite-haku

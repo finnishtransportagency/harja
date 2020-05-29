@@ -12,21 +12,17 @@
             <xs:enumeration value="tl506"/>
             <xs:enumeration value="tl522"/>
             <xs:enumeration value="tl513"/>
-            <xs:enumeration value="tl196"/>
             <xs:enumeration value="tl519"/>
+            <xs:enumeration value="tl520"/>
             <xs:enumeration value="tl505"/>
-            <xs:enumeration value="tl195"/>
             <xs:enumeration value="tl504"/>
-            <xs:enumeration value="tl198"/>
             <xs:enumeration value="tl518"/>
             <xs:enumeration value="tl514"/>
             <xs:enumeration value="tl509"/>
             <xs:enumeration value="tl515"/>
             <xs:enumeration value="tl503"/> 
             <xs:enumeration value="tl512"/>
-            <xs:enumeration value="tl165"/>
             <xs:enumeration value="tl516"/>
-            <xs:enumeration value="tl323"/>
             <xs:enumeration value="tl524"/>
         </xs:restriction>
     </xs:simpleType>

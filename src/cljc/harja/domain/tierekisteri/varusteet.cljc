@@ -23,7 +23,8 @@
    "tl506" "Liikennemerkki"
    "tl522" "Reunakivet"
    "tl513" "Reunapaalut"
-   "tl519" "Puomit ja kulkuaukot"
+   "tl519" "Huoltoaukot"
+   "tl520" "Puomit"
    "tl505" "Jätehuolto"
    "tl504" "WC"
    "tl518" "Kivetyt alueet"
@@ -44,7 +45,8 @@
    "Liikennemerkki" "tl506"
    "Reunakivet" "tl522"
    "Reunapaalut" "tl513"
-   "Puomit ja kulkuaukot" "tl519"
+   "Huoltoaukot" "tl519"
+   "Puomit" "tl520"
    "Jätehuolto" "tl505"
    "WC" "tl504"
    "Kivetyt alueet" "tl518"
@@ -57,29 +59,39 @@
    "Viherkuviot" "tl524"
    "Tekninen piste" "tl523"})
 
+(def puolet
+  {0 "Määrittämätön"
+   1 "Oikea"
+   2 "Vasen"
+   3 "Ajoratojen välissä (ajosuuntia erottavalla keskialueella)"
+   7 "Tien päässä"
+   8 "Keskellä (ajoradalla tai sen yläpuolella)"
+   9 "Tien päällä"})
+
+(defn puoli->selitys
+  [puoli]
+  (get puolet puoli))
+
 (defn tien-puolet [tietolaji]
   (case tietolaji
     "tl523" [1 2 3]
     "tl501" [1 2 3 8]
     "tl517" [1 2]
-    "tl506" [1 2 3]
+    "tl506" [1 2 3 8]
     "tl507" [1 2 7]
     "tl508" [1 2 7]
     "tl509" [1 2 9]
     "tl522" [1 2 3 8]
     "tl513" [1 2 3]
-    "tl196" [1 2 7]
     "tl519" [1 2 3]
+    "tl520" [1 2 3 9]
     "tl505" [1 2 7 9]
-    "tl195" [1 2 7 9]
     "tl504" [1 2 7 9]
-    "tl198" [1 2 3 7]
     "tl518" [1 2 3 8]
     "tl514" [1 2 3]
     "tl515" [1 2 3]
     "tl503" [1 2 7 9]
     "tl512" [1 2 3 7 8 9]
-    "tl165" [1 2]
     "tl516" [1 2 3 8]
     "tl524" [1 2 3 4 7 8 9]
     []))
@@ -88,10 +100,7 @@
   (contains? #{"tl113",
                "tl191",
                "tl192",
-               "tl195",
-               "tl196",
                "tl197",
-               "tl198",
                "tl202",
                "tl211",
                "tl230",
@@ -115,6 +124,7 @@
                "tl516",
                "tl517",
                "tl519",
+               "tl520",
                "tl523",
                "tl524",
                "tl703"} tietolaji))
@@ -149,7 +159,6 @@
                "tl161",
                "tl162",
                "tl164",
-               "tl165",
                "tl166",
                "tl167",
                "tl168",
@@ -174,7 +183,6 @@
                "tl314",
                "tl317",
                "tl322",
-               "tl323",
                "tl326",
                "tl327",
                "tl328",
@@ -221,6 +229,19 @@
     (and (not (#{"x" "y" "z" "urakka"} tunniste))
          (not (re-matches #".*tunn" tunniste)))))
 
+(defn varusteen-liikennemerkki-skeema
+  [tietolaji]
+  (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
+        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
+        asetusnr->teksti (fn [numero]
+                           (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
+    {:otsikko "Liikennemerkki"
+     :tyyppi :string
+     :hae (fn [rivi]
+            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "asetusnr"])]
+              (str numero " - " (asetusnr->teksti numero))))
+     :leveys 2}))
+
 (def varusteen-perustiedot-skeema
   [{:otsikko "Tietolaji"
     :tyyppi :tunniste
@@ -235,7 +256,12 @@
     :tyyppi :tierekisteriosoite
     :hae (comp :tie :sijainti :tietue :varuste)
     :fmt tr/tierekisteriosoite-tekstina
-    :leveys 2}])
+    :leveys 1}
+   {:otsikko "Puoli"
+    :tyyppi :string
+    :hae #(let [puoli (get-in % [:varuste :tietue :sijainti :tie :puoli])]
+            (str puoli " - " (puoli->selitys puoli)))
+    :leveys 1}])
 
 (defn parsi-luku [s]
   #?(:cljs (js/parseInt s)

@@ -6,6 +6,7 @@
             [specql.data-types]
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.tierekisteri :as tr]
             [clojure.spec.alpha :as s]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
               ]))
@@ -148,7 +149,8 @@
    {:nimi "26" :koodi 26}
    {:nimi "27" :koodi 27}
    {:nimi "28" :koodi 28}
-   {:nimi "29" :koodi 29}])
+   {:nimi "29" :koodi 29}
+   {:nimi "31" :koodi 31}])
 
 (def +sideainetyypit+
   "Sideainetyypit"
@@ -240,7 +242,7 @@
     ; Osoitteelle tehdyt toimenpiteet
     (schema/optional-key :paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi-tai-nil+
     (schema/optional-key :raekoko) (schema/maybe schema/Int)
-    (schema/optional-key :massamenekki) (schema/maybe schema/Int) ;; kg/m2
+    (schema/optional-key :massamenekki) (schema/maybe schema/Num) ;; kg/m2
     (schema/optional-key :rc%) (schema/maybe schema/Int)
     (schema/optional-key :tyomenetelma) +tyomenetelma-tai-nil+
     (schema/optional-key :leveys) (schema/maybe schema/Num) ;; metriä
@@ -339,7 +341,7 @@
 (s/def ::urakka-id integer?)
 ;; Tässä on paljon muutakin, mutta tuo päällystyskohteen id pitää olla ainakin
 (s/def ::paallystysilmoitus #(and (integer? (:paallystyskohde-id %))
-                                  (every? integer? (vals (select-keys (:perustiedot %) #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})))))
+                                  (every? integer? (vals (select-keys (:perustiedot %) tr/paaluvali-avaimet)))))
 
 (s/def ::tallenna-paallystysilmoitus-kysely
   (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))

@@ -66,7 +66,7 @@
         paikkaus (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
         materiaali (first (paikkaus-q/hae-paikkaukset-materiaalit db {::paikkaus/ulkoinen-id paikkaustunniste}))
         tienkohta (first (paikkaus-q/hae-paikkaukset-tienkohta db {::paikkaus/ulkoinen-id paikkaustunniste}))
-        paikkauskohde (first (paikkaus-q/hae-paikkaukset-paikkauskohe db {::paikkaus/ulkoinen-id paikkaustunniste}))]
+        paikkauskohde (first (paikkaus-q/hae-paikkaukset-paikkauskohde db {::paikkaus/ulkoinen-id paikkaustunniste}))]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
     (is (= odotettu-paikkaus (dissoc paikkaus
@@ -83,10 +83,10 @@
                                                                   [(dissoc (first tienkohta) ::paikkaus/tienkohta-id)])))))
     (is (= odotettu-paikkauskohde (-> (select-keys paikkauskohde [::paikkaus/paikkauskohde])
                                       (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
-                                                                         (dissoc paikkauskohde ::paikkaus/id))))))
+                                                                         (dissoc paikkauskohde ::paikkaus/id ::muokkaustiedot/luotu))))))
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
-                            ::paikkaus/id)))))
+                            ::paikkaus/id ::muokkaustiedot/luotu)))))
 
 (deftest kirjaa-paikkaustietoja
   (let [db (luo-testitietokanta)
@@ -100,21 +100,7 @@
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
         poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
         poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
-        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/yksikkohinta 200M,
-                                    :harja.domain.paikkaus/maara 12.5M,
-                                    :harja.domain.paikkaus/selite "asfaltti",
-                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen",
-                                    :harja.domain.paikkaus/ulkoinen-id 234531,
-                                    :harja.domain.paikkaus/urakka-id 4,
-                                    :harja.domain.paikkaus/yksikko "t"}
-                                   {:harja.domain.paikkaus/yksikkohinta 20.4M,
-                                    :harja.domain.paikkaus/maara 14.5M,
-                                    :harja.domain.paikkaus/selite "bitumi",
-                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen",
-                                    :harja.domain.paikkaus/ulkoinen-id 234531,
-                                    :harja.domain.paikkaus/urakka-id 4,
-                                    :harja.domain.paikkaus/yksikko "kg"}
-                                   {:harja.domain.paikkaus/selite "Lähtömaksu",
+        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/selite "Lähtömaksu",
                                     :harja.domain.paikkaus/urakka-id 4,
                                     :harja.domain.paikkaus/hinta 450.3M,
                                     :harja.domain.paikkaus/ulkoinen-id 234531,
@@ -135,7 +121,9 @@
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id
-                            ::paikkaus/kirjattu)))
+                            ::paikkaus/kirjattu
+                            ::muokkaustiedot/luotu
+                            ::muokkaustiedot/muokattu)))
 
     (is (= 200 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
 

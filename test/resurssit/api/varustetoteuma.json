@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-01T00:00:00Z"
+    "lahetysaika": "2020-01-01T00:00:00Z"
   },
   "varustetoteumat": [
     {
@@ -19,8 +19,8 @@
           "tunniste": {
             "id": __ID__
           },
-          "alkanut": "2016-01-01T00:00:00Z",
-          "paattynyt": "2016-01-01T00:00:00Z",
+          "alkanut": "2020-01-01T00:00:00Z",
+          "paattynyt": "2020-01-01T00:00:00Z",
           "toteumatyyppi": "kokonaishintainen",
           "sopimusId": 1,
           "suorittaja": {
@@ -46,36 +46,36 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "lisatty": "2016-01-01T00:00:00Z",
+              "lisatty": "2020-01-01T00:00:00Z",
               "varuste": {
-                "tilannepvm": "2016-01-01T00:00:00Z",
+                "tilannepvm": "2020-01-01T00:00:00Z",
                 "tietue": {
-                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "alkupvm": "2020-01-01T00:00:00Z",
                   "sijainti": {
                     "tie": {
                       "numero": 20,
                       "aet": 12,
                       "aosa": 1,
-                      "ajr": 0,
+                      "ajr": 1,
                       "puoli": 1
                     }
                   },
                   "tietolaji": {
                     "tunniste": "tl506",
                     "arvot": {
-                      "LMNUMERO": "9987",
-                      "SIVUTIE": "2",
-                      "LMALA": "2",
-                      "LMVANHA": "0",
-                      "LMTYYPPI": "1",
-                      "LMKAUSI": "0",
-                      "LMKIINNIT": "1",
-                      "LMMATER": "1",
-                      "LMTEKSTI": "Testi liikennemerkki",
-                      "LMOMIST": "Omistaja",
-                      "OPASTETUNN": "",
-                      "KUNTOLUOKK": "4",
-                      "URAKKA": "400"
+                      "asetusnr": "312",
+                      "sivutie": "2",
+                      "lmala": "2",
+                      "lmvanha": "0",
+                      "lmtyyppi": "1",
+                      "lmkausi": "0",
+                      "lmkiinnit": "1",
+                      "lmmater": "1",
+                      "lmteksti": "Testi liikennemerkki",
+                      "lmomist": "Omistaja",
+                      "opastetunn": "",
+                      "kuntoluokitus": "4",
+                      "urakka": "400"
                     }
                   }
                 }
@@ -92,7 +92,7 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "poistettu": "2016-01-01T00:00:00Z",
+              "poistettu": "2020-01-01T00:00:00Z",
               "tunniste": "HARJ951547",
               "tietolajitunniste": "tl505"
             }
@@ -107,37 +107,37 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "paivitetty": "2016-01-01T00:00:00Z",
+              "paivitetty": "2020-01-01T00:00:00Z",
               "varuste": {
                 "tunniste": "HARJ951547",
-                "tilannepvm": "2016-01-01T00:00:00Z",
+                "tilannepvm": "2020-01-01T00:00:00Z",
                 "tietue": {
-                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "alkupvm": "2020-01-01T00:00:00Z",
                   "sijainti": {
                     "tie": {
                       "numero": 20,
                       "aet": 12,
                       "aosa": 1,
-                      "ajr": 0,
+                      "ajr": 1,
                       "puoli": 1
                     }
                   },
                   "tietolaji": {
                     "tunniste": "tl506",
                     "arvot": {
-                      "LMNUMERO": "9987",
-                      "SIVUTIE": "2",
-                      "LMALA": "2",
-                      "LMVANHA": "0",
-                      "LMTYYPPI": "1",
-                      "LMKAUSI": "0",
-                      "LMKIINNIT": "1",
-                      "LMMATER": "1",
-                      "LMTEKSTI": "Testi liikennemerkki",
-                      "LMOMIST": "Omistaja",
-                      "OPASTETUNN": "",
-                      "KUNTOLUOKK": "4",
-                      "URAKKA": "400"
+                      "asetusnr": "313",
+                      "sivutie": "2",
+                      "lmala": "2",
+                      "lmvanha": "0",
+                      "lmtyyppi": "1",
+                      "lmkausi": "0",
+                      "lmkiinnit": "1",
+                      "lmmater": "1",
+                      "lmteksti": "Testi liikennemerkki",
+                      "lmomist": "Omistaja",
+                      "opastetunn": "",
+                      "kuntoluokitus": "4",
+                      "urakka": "400"
                     }
                   }
                 }
@@ -154,36 +154,36 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "tarkastettu": "2016-01-01T00:00:00Z",
+              "tarkastettu": "2020-01-01T00:00:00Z",
               "varuste": {
                 "tunniste": "HARJ951547",
                 "tietue": {
-                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "alkupvm": "2020-01-01T00:00:00Z",
                   "sijainti": {
                     "tie": {
                       "numero": 20,
                       "aet": 12,
                       "aosa": 1,
-                      "ajr": 0,
+                      "ajr": 1,
                       "puoli": 1
                     }
                   },
                   "tietolaji": {
                     "tunniste": "tl506",
                     "arvot": {
-                      "LMNUMERO": "9987",
-                      "SIVUTIE": "2",
-                      "LMALA": "2",
-                      "LMVANHA": "0",
-                      "LMTYYPPI": "1",
-                      "LMKAUSI": "0",
-                      "LMKIINNIT": "1",
-                      "LMMATER": "1",
-                      "LMTEKSTI": "Testi liikennemerkki",
-                      "LMOMIST": "Omistaja",
-                      "OPASTETUNN": "",
-                      "KUNTOLUOKK": "4",
-                      "URAKKA": "400"
+                      "asetusnr": "311",
+                      "sivutie": "2",
+                      "lmala": "2",
+                      "lmvanha": "0",
+                      "lmtyyppi": "1",
+                      "lmkausi": "0",
+                      "lmkiinnit": "1",
+                      "lmmater": "1",
+                      "lmteksti": "Testi liikennemerkki",
+                      "lmomist": "Omistaja",
+                      "opastetunn": "",
+                      "kuntoluokitus": "4",
+                      "urakka": "400"
                     }
                   }
                 }

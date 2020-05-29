@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "nimi": {
+      "id": "urn:harja/nimi",
+      "type": "string"
+    },
+    "numero": {
+      "id": "urn:harja/sijainti/tie/numero",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "aet": {
+      "id": "urn:harja/sijainti/tie/aet",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "aosa": {
+      "id": "urn:harja/sijainti/tie/aosa",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "let": {
+      "id": "urn:harja/sijainti/tie/let",
+      "type": "integer",
+      "minimum": 0
+    },
+    "losa": {
+      "id": "urn:harja/sijainti/tie/losa",
+      "type": "integer",
+      "minimum": 0
+    },
+    "ajr": {
+      "id": "urn:harja/sijainti/tie/ajr",
+      "type": "integer",
+      "minimum": 0
+    },
+    "kaista": {
+      "id": "urn:harja/sijainti/tie/kaista",
+      "enum": [
+        1,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        31
+      ]
+    },
+    "puoli": {
+      "id": "urn:harja/sijainti/tie/puoli",
+      "type": "integer",
+      "minimum": 0
+    },
+    "alkupvm": {
+      "id": "urn:harja/sijainti/tie/alkupvm",
+      "type": "string",
+      "format": "date-time"
+    },
+    "loppupvm": {
+      "id": "urn:harja/sijainti/tie/loppupvm",
+      "type": "string",
+      "format": "date-time"
+    },
+    "karttapvm": {
+      "id": "urn:harja/sijainti/tie/karttapvm",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -126,7 +126,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
 WHERE u.hallintayksikko = :hallintayksikko AND
-      (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
+      u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
       rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
@@ -144,7 +144,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
   JOIN organisaatio o ON u.hallintayksikko = o.id
-WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
+WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
       rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", o.nimi, o.elynumero, mk.yksikko, mk.materiaalityyppi;
 
@@ -341,12 +341,7 @@ FROM tr_valin_suolatoteumat(:urakka::integer, :tie::integer, :alkuosa::integer, 
 		    :alkupvm, :loppupvm);
 
 -- name: hae-pohjavesialueen-suolatoteuma
-SELECT sum(rp.maara) AS maara_t_per_km,
-       sum(rp.maara)*sum(st_length(pv.alue))/1000 AS yhteensa,
-       ts.talvisuolaraja AS kayttoraja
+SELECT sum(rp.maara) AS maara_yhteensa
 FROM suolatoteuma_reittipiste rp
-  INNER JOIN pohjavesialue pv ON pv.tunnus = rp.pohjavesialue
-  LEFT JOIN pohjavesialue_talvisuola ts on ts.pohjavesialue = rp.pohjavesialue
-WHERE rp.pohjavesialue=:pohjavesialue
+WHERE rp.pohjavesialue = :pohjavesialue
   AND rp.aika BETWEEN :alkupvm AND :loppupvm
-GROUP BY pv.tunnus, ts.talvisuolaraja;
