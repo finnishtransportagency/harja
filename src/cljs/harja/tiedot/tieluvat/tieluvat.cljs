@@ -14,10 +14,11 @@
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tila (atom {:valinnat {:myonnetty nil}
+(def tila (atom {:valinnat nil
                  :valittu-tielupa nil
                  :tielupien-haku-kaynnissa? false
-                 :nakymassa? false}))
+                 :nakymassa? false
+                 :kayttajan-urakat [nil]}))
 
 (def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :voimassaolo :sijainti
                          :myonnetty])
@@ -30,6 +31,9 @@
 (defrecord TieluvatEiHaettu [virhe aikaleima])
 (defrecord ValitseTielupa [tielupa])
 (defrecord AvaaTielupaPaneelista [id])
+(defrecord KayttajanUrakat [])
+(defrecord KayttajanUrakatHakuOnnistui [vastaus])
+(defrecord KayttajanUrakatHakuEpaonnistui [vastaus])
 
 (defn hakuparametrit [valinnat]
   (or
@@ -177,4 +181,20 @@
 
   AvaaTielupaPaneelista
   (process-event [{id :id} app]
-    (assoc app :valittu-tielupa (first (filter #(= id (::tielupa/id %)) (:haetut-tieluvat app))))))
+    (assoc app :valittu-tielupa (first (filter #(= id (::tielupa/id %)) (:haetut-tieluvat app)))))
+  KayttajanUrakat
+  (process-event [_ app]
+    (-> app
+        (tt/post! :kayttajan-urakat
+                  []
+                  {:onnistui ->KayttajanUrakatHakuOnnistui
+                   :epaonnistui ->KayttajanUrakatHakuEpaonnistui})
+        (assoc :kayttajan-urakoiden-haku-kaynnissa? true)))
+  KayttajanUrakatHakuOnnistui
+  (process-event [{kayttajan-urakat :vastaus} app]
+    (assoc app :kayttajan-urakoiden-haku-kaynnissa? false
+           :kayttajan-urakat (into [nil] (mapcat :urakat kayttajan-urakat))))
+  KayttajanUrakatHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Urakoiden haku epäonnistui!" :danger)
+    (assoc app :kayttajan-urakoiden-haku-kaynnissa? false)))
