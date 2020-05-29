@@ -36,29 +36,28 @@
 (defrecord KayttajanUrakatHakuEpaonnistui [vastaus])
 
 (defn hakuparametrit [valinnat]
-  (or
+  (let [tie (get-in valinnat [:tr :numero])
+        aosa (get-in valinnat [:tr :alkuosa])
+        aet (get-in valinnat [:tr :alkuetaisyys])
+        losa (get-in valinnat [:tr :loppuosa])
+        let (get-in valinnat [:tr :loppuetaisyys])]
     (spec-apurit/poista-nil-avaimet
       (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
-                ::tielupa/tyyppi (:lupatyyppi valinnat)
-                ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
-                ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
-                ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
-                :myonnetty (:myonnetty valinnat)
+             ::tielupa/tyyppi (:lupatyyppi valinnat)
+             ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
+             ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
+             ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
+             :myonnetty (:myonnetty valinnat)
+             :urakka-id (get-in valinnat [:urakka :id])
 
-                ::tielupa/haettava-tr-osoite
-                (let [tie (get-in valinnat [:tr :numero])
-                      aosa (get-in valinnat [:tr :alkuosa])
-                      aet (get-in valinnat [:tr :alkuetaisyys])
-                      losa (get-in valinnat [:tr :loppuosa])
-                      let (get-in valinnat [:tr :loppuetaisyys])]
-                  {::tielupa/tie tie
-                   ::tielupa/aosa aosa
-                   ::tielupa/aet aet
-                   ::tielupa/losa (when (and losa let) losa)
-                   ::tielupa/let (when (and losa let) let)
+             ::tielupa/haettava-tr-osoite
+             {::tielupa/tie tie
+              ::tielupa/aosa aosa
+              ::tielupa/aet aet
+              ::tielupa/losa (when (and losa let) losa)
+              ::tielupa/let (when (and losa let) let)
 
-                   #_#_::tielupa/geometria (:sijainti valinnat)})))
-    {}))
+              #_#_::tielupa/geometria (:sijainti valinnat)}))))
 
 (def hakijahaku
   (reify protokollat/Haku
@@ -150,11 +149,6 @@
                      :epaonnistui ->TieluvatEiHaettu
                      :epaonnistui-parametrit [aikaleima]})
           (assoc :tielupien-haku-kaynnissa? true
-                 ;; Aikakenttäkomponentti päivittää tilaansa bugisesti kahdesti, kun sinne syöttää arvon
-                 ;; Kun antaa aikavälin alun, päivittyy tilaan aluksi [nil nil], joka laukaisee haun.
-                 ;; Täten kun käyttäjä antaa aikavälin toisen osan, on haku jo käynnissä. Tämän takia uuden
-                 ;; haun tekemistä, kun vanha on käynnissä, ei voi estää. Sen sijaan otetaan taulukkoon
-                 ;; aina vain uusimman haun tulos.
                  :nykyinen-haku aikaleima))))
 
   TieluvatHaettu
