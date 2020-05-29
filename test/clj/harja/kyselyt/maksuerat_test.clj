@@ -64,13 +64,13 @@
         ; Päällyste	20100	49
         ; MHU Ylläpito	20190	50
         ; MHU Korvausinvestointi	14300	51ﬂ
-        odotettu [{:tpi_id 45, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 46, :urakka_id 36, :kokonaishintainen 2888.88M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 47, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 48, :urakka_id 36, :kokonaishintainen 666.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 49, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 50, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 51, :urakka_id 36, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}]
+        odotettu [{:tpi_id 45, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 46, :urakka_id urakka-id, :kokonaishintainen 2888.88M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 47, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 48, :urakka_id urakka-id, :kokonaishintainen 666.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 49, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 50, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 51, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}]
 
         vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
     (is (= odotettu vastaus))))
