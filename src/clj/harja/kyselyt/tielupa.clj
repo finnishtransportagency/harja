@@ -152,7 +152,7 @@
                                                                                                           urakka-id
                                                                                                           user))
                                                                                urakat)
-                                                                       (not (nil? urakat)))]
+                                                                       (not (empty? urakat)))]
                   (if kayttajalla-oikeus-urakan-katselmus-urliin?
                     tielupa
                     (assoc tielupa ::tielupa/katselmus-url nil))))
