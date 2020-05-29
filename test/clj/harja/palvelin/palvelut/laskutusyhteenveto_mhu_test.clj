@@ -100,7 +100,7 @@
           ;; Lasketaan talvihoidon (jos laskee yhdelle, niin se toimii kaikille) tavoitehinta
           talvihoidon-tavoitehinta (+
                                      (:hankinnat_laskutettu talvihoito)
-                                     (:hoidonjohto_laskutettu talvihoito)
+                                     (:johto_ja_hallinto_laskutettu talvihoito)
                                      (:hj_erillishankinnat_laskutetaan talvihoito)
                                      (:hj_palkkio_laskutettu talvihoito))]
 

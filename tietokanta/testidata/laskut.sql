@@ -21,20 +21,20 @@ INSERT INTO lasku_liite (lasku, liite, luotu, luoja) VALUES ((select id from las
 DO
 $$
     DECLARE
-        kayttaja_id            INTEGER;
-        urakka_id              INTEGER;
-        tinst_talvihoito       INTEGER;
-        tinst_mhu_hoidon_johto INTEGER;
-        tinst_soratie          INTEGER;
-        tinst_paallystys       INTEGER;
-        tinst_korvaus          INTEGER;
-        tinst_yllapito     INTEGER;
-        tehtava_talvihoito INTEGER;
-        tehtava_soratie    INTEGER;
-        tehtava_paikkaus   INTEGER;
-        tehtava_yllapito   INTEGER;
-    tehtava_palkkio INTEGER;
-        tehtava_korvaus INTEGER;
+        kayttaja_id              INTEGER;
+        urakka_id                INTEGER;
+        tinst_talvihoito         INTEGER;
+        tinst_mhu_hoidon_johto   INTEGER;
+        tinst_soratie            INTEGER;
+        tinst_paallystys         INTEGER;
+        tinst_korvaus            INTEGER;
+        tinst_yllapito           INTEGER;
+        tehtava_talvihoito       INTEGER;
+        tehtava_soratie          INTEGER;
+        tehtava_paikkaus         INTEGER;
+        tehtava_yllapito         INTEGER;
+        tehtava_palkkio          INTEGER;
+        tehtava_korvaus          INTEGER;
         tehtava_erillishankinnat INTEGER;
 
     BEGIN
