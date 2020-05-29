@@ -399,9 +399,6 @@
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :paikkaus (component/using
-                  (paikkaus/->Paikkaus)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
