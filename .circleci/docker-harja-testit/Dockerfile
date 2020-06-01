@@ -17,11 +17,11 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 USER circleci
 
 RUN mkdir ~/opt
-RUN wget -O ~/apache-maven-3.6.2-bin.tar.gz http://mirror.netinch.com/pub/apache/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.tar.gz
-RUN if [ "$(sha512sum ~/apache-maven-3.6.2-bin.tar.gz )" != "d941423d115cd021514bfd06c453658b1b3e39e6240969caf4315ab7119a77299713f14b620fb2571a264f8dff2473d8af3cb47b05acf0036fc2553199a5c1ee  /home/circleci/apache-maven-3.6.2-bin.tar.gz" ]; then exit 1; fi;
-RUN tar -C ~/opt/ -zxf ~/apache-maven-3.6.2-bin.tar.gz
-ENV PATH="/home/circleci/opt/apache-maven-3.6.2/bin:${PATH}"
-RUN rm ~/apache-maven-3.6.2-bin.tar.gz
+RUN wget -O ~/apache-maven-3.6.3-bin.tar.gz https://www.nic.funet.fi/pub/mirrors/apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+RUN if [ "$(sha512sum ~/apache-maven-3.6.3-bin.tar.gz )" != "c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0  /home/circleci/apache-maven-3.6.3-bin.tar.gz" ]; then exit 1; fi;
+RUN tar -C ~/opt/ -zxf ~/apache-maven-3.6.3-bin.tar.gz
+ENV PATH="/home/circleci/opt/apache-maven-3.6.3/bin:${PATH}"
+RUN rm ~/apache-maven-3.6.3-bin.tar.gz
 RUN wget -O ~/phantomjs-2.1.1-linux-x86_64.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2
 RUN if [ "$(sha512sum ~/phantomjs-2.1.1-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /home/circleci/phantomjs-2.1.1-linux-x86_64.tar.bz2" ]; then exit 1; fi;
 RUN tar -C ~/opt/ -jxf ~/phantomjs-2.1.1-linux-x86_64.tar.bz2
