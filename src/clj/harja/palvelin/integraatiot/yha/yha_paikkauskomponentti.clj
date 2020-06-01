@@ -45,8 +45,6 @@
          (throw+ {:type    +virhe-paikkauskohteen-lahetyksessa+
                   :virheet {:virhe virheet}}))))))
 
-;; TODO: rajaa lähetettävät paikkauskohteet toimenpiteen perusteella. Rajaus pitää olla käyttöliittymässäkin, mutta varmista, että ei lähetetä ylimääräistä.
-;; TODO: Toimenpiteen rajaus enumeraatiossa?
 (defn laheta-paikkauskohde-yhaan [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
   "Lähettää YHA:aan paikkauskohteen kaikki paikkaukset. Sanomaa käytetää uuden paikkauskohteen tietojen lähettämiseen sekä
   olemassa olevan paikauskohteen tietojen päivittämiseen. Päivittäminen poistaa ne paikkaukset, jotka eivät siirry sanomassa.
@@ -60,7 +58,7 @@
       (fn [konteksti]
         (paivita-lahetyksen-tila db kohde-id :odottaa_vastausta)
         (let [http-asetukset {:metodi         :POST
-                              :url            url
+                              :url            (str url "paikkaus/")
                               :kayttajatunnus kayttajatunnus
                               :salasana       salasana
                               :otsikot {"Content-Type" "application/json"}}
