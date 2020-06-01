@@ -17,8 +17,6 @@
                                    (= (:urakkatyyppi %) "teiden-hoito")) @urakoitsijat))))
 (def urakoitsijat-paallystys
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "paallystys") @urakoitsijat))))
-(def urakoitsijat-paikkaus
-  (reaction (into #{} (filter #(= (:urakkatyyppi %) "paikkaus") @urakoitsijat))))
 (def urakoitsijat-tiemerkinta
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "tiemerkinta") @urakoitsijat))))
 (def urakoitsijat-valaistus

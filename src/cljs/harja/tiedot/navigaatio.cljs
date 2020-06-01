@@ -90,7 +90,6 @@
     [{:nimi "Hoito" :arvo :hoito}
      {:nimi "Tiemerkintä" :arvo :tiemerkinta}
      {:nimi "Päällystys" :arvo :paallystys}
-     {:nimi "Paikkaus" :arvo :paikkaus}
      {:nimi "Valaistus" :arvo :valaistus}
      {:nimi "Siltakorjaus" :arvo :siltakorjaus}
      {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
@@ -218,7 +217,6 @@
                     :hoito @urk/urakoitsijat-hoito
                     :teiden-hoito @urk/urakoitsijat-hoito
                     :paallystys @urk/urakoitsijat-paallystys
-                    :paikkaus @urk/urakoitsijat-paikkaus
                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
                     :valaistus @urk/urakoitsijat-valaistus
                     :siltakorjaus @urk/urakoitsijat-siltakorjaus
@@ -503,5 +501,4 @@
 (defn yllapitourakka-valittu? []
   (let [urakkatyyppi (:arvo @urakkatyyppi)]
     (or (= urakkatyyppi :paallystys)
-        (= urakkatyyppi :paikkaus)
         (= urakkatyyppi :tiemerkinta))))

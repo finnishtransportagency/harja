@@ -125,10 +125,12 @@
       :default
       tieluvat)))
 
-(defn suodata-urakalla [urakkaid]
-
-;; Hae alueurakka [harja.kyselyt.urakat :as u]
-  )
+(defn suodata-urakalla [tieluvat urakka-id]
+  (if urakka-id
+    (filter (fn [{::tielupa/keys [urakat]}]
+              (some #(= % urakka-id) urakat))
+            tieluvat)
+    tieluvat))
 
 (defn tielupien-liitteet [db tieluvat]
   (let [liitteet (hae-tielupien-liitteet db (map ::tielupa/id tieluvat))]
@@ -168,6 +170,7 @@
 
                 :else nil))))
     (suodata-tieosoitteella (::tielupa/haettava-tr-osoite hakuehdot))
+    (suodata-urakalla (:urakka-id hakuehdot))
     ((partial tielupien-liitteet db))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
