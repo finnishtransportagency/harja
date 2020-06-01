@@ -177,20 +177,23 @@
                                (com.mchange.v2.c3p0.DataSources/destroy temppidb)
                                (:datasource (luo-temppitietokanta)))))
 
+(defn yrita-querya [f n]
+  (dotimes [n n]
+    (try
+      (f)
+      (catch PSQLException e
+        (Thread/sleep 500)
+        (log/warn e "- yritetään uudelleen, yritys" n)))))
+
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
   (with-open [c (.getConnection temppidb)
               ps (.createStatement c)]
 
-    (tapa-backend-kannasta ps "harjatest_template")
-    (tapa-backend-kannasta ps "harjatest")
-    (dotimes [n 5]
-      (try
-        (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
-        (catch PSQLException e
-          (Thread/sleep 500)
-          (log/warn e "- yritetään uudelleen, yritys" n))))
+    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
+    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+    (yrita-querya (fn [] (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")) 5)
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
 

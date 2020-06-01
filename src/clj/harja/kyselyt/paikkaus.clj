@@ -10,8 +10,15 @@
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]))
 
+(def merkitse-paikkauskohde-tarkistetuksi!
+  "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
+)
+
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
+
+(def ^{:doc "Hae paikkauksen ajorata, parametreina [db, paikkauksen id], muodossa {:id 1}"}
+  hae-paikkauksen-ajorata)
 
 (defn hae-paikkaukset [db hakuehdot]
   (fetch db
@@ -220,7 +227,9 @@
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
   [db urakka-id kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
-        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
+        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
+        ;; nollataan mahdollinen ilmoitettu virhe
+        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)

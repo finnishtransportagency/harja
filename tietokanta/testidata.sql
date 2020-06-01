@@ -86,9 +86,6 @@ SELECT paivita_pohjavesialueet();
 -- Päällystyskohteet & -ilmoitukset
 \i testidata/yllapito/paallystys.sql
 
--- Paikkauskohteet & -ilmoitukset
-\i testidata/yllapito/paikkaus.sql
-
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
 

@@ -32,7 +32,16 @@ function cmd_back
 
 function cmd_uberjar
 {
-    lein tuotanto-notest
+    lein do clean, compile
+    echo "--> aot compile done"
+    lein less once
+    echo "--> less compile done"
+    lein with-profile +prod compile-prod
+    echo "--> cljs main compile done"
+    lein with-profile +laadunseuranta-prod compile-laadunseuranta-prod
+    echo "--> cljs laadunseuranta compile done"
+    lein uberjar
+    echo "--> uberjar done"
 }
 
 function cmd_help {

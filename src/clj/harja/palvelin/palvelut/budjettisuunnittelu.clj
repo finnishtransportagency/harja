@@ -102,12 +102,11 @@
                                   indeksiluvut-urakan-aikana (sequence
                                                                (comp (filter (fn [{:keys [kuukausi vuosi]}]
                                                                                (and (= 9 kuukausi)
-                                                                                    (>= vuosi (dec urakan-alkuvuosi)))))
+                                                                                    (>= vuosi urakan-alkuvuosi))))
                                                                      (remove (fn [{:keys [vuosi]}]
-                                                                               (>= vuosi (dec urakan-loppuvuosi))))
+                                                                               (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
-                                                                            ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
-                                                                            {:vuosi          (inc vuosi)
+                                                                            {:vuosi vuosi
                                                                              :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
