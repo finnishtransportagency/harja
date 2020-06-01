@@ -118,7 +118,7 @@ $$
                              suorasanktio, luoja)
             VALUES ('lupaussanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
                     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ1'),
-                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei sanktiotyyppiä'), FALSE, kayttaja_id);
+                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Sanktiotyyppiä ei tarvita'), FALSE, kayttaja_id);
 
         -- MHU Hoidonjohto - SANKTIOT: vastuuhenkilön vaihtosanktio (tämän lopullinen summa indeksilaskennan kautta), arvonvähennykset
         INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
@@ -134,7 +134,7 @@ $$
                              suorasanktio, luoja)
             VALUES ('vaihtosanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
                     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ2'),
-                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei sanktiotyyppiä'), FALSE, kayttaja_id);
+                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Sanktiotyyppiä ei tarvita'), FALSE, kayttaja_id);
 
         -- MHU Hoidonjohto - SANKTIOT: arvonvähennykset
         INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
@@ -150,7 +150,7 @@ $$
                              suorasanktio, luoja)
             VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
                     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ3'),
-                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei sanktiotyyppiä'), FALSE, kayttaja_id);
+                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Sanktiotyyppiä ei tarvita'), FALSE, kayttaja_id);
 
     END
 $$ LANGUAGE plpgsql;
