@@ -192,6 +192,7 @@
    {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta))
     :disabled     disabled
     :vayla-tyyli? true
+    :skrollattava? true
     :valinta      koontilaskun-kuukausi
     :valitse-fn   #(paivitys-fn {:validoitava? true}
                                 :koontilaskun-kuukausi %)
