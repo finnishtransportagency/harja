@@ -170,8 +170,7 @@
                                                (:pvm m)
                                                (:rahasumma m))))
         tallennus-kaynnissa (atom false)
-        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))
-        kustannustyypit (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))]
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
     (komp/luo
       (fn []
         [:div.erilliskustannuksen-tiedot
@@ -256,7 +255,7 @@
             :valinta-arvo identity
             :valinta-nayta (fn [arvo]
                              (if arvo (erilliskustannustyypin-teksti arvo) +valitse-tyyppi+))
-            :valinnat kustannustyypit
+            :valinnat (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))
             :fmt #(erilliskustannustyypin-teksti %)
             :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
