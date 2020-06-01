@@ -121,12 +121,16 @@ DECLARE
     laskutettu_rivi             RECORD;
     hj_palkkio_laskutetaan_rivi RECORD;
     tehtavaryhma_id             INTEGER;
+    toimenpidekoodi_id          INTEGER;
 
 BEGIN
-    -- Haetaan hoidon johdon yhteenvetoja
+    -- Haetaan hoidon johdon palkkiot
 
     RAISE NOTICE 'HJ-Palkkio: toimenpidekoodi %' , toimenpide_koodi;
+    -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
+    -- sekä toimenpidekoodista 'Hoitourakan työnjohto'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
+    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
 
     hj_palkkio_laskutettu := 0.0;
     hj_palkkio_laskutetaan := 0.0;
@@ -144,7 +148,7 @@ BEGIN
                                                                                perusluku)) AS summa
                                    FROM kustannusarvioitu_tyo kat
                                    WHERE kat.toimenpideinstanssi = t_instanssi
-                                     AND kat.tehtavaryhma = tehtavaryhma_id
+                                     AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava = toimenpidekoodi_id)
                                      AND kat.sopimus = sopimus_id
                                      AND (SELECT (date_trunc('MONTH',
                                                              format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
@@ -174,7 +178,7 @@ BEGIN
                                                                                            perusluku)) AS summa
                                                FROM kustannusarvioitu_tyo kat
                                                WHERE kat.toimenpideinstanssi = t_instanssi
-                                                 AND kat.tehtavaryhma = tehtavaryhma_id
+                                                 AND (kat.tehtavaryhma = tehtavaryhma_id OR kat.tehtava = toimenpidekoodi_id)
                                                  AND kat.sopimus = sopimus_id
                                                  AND (SELECT (date_trunc('MONTH',
                                                                          format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN aikavali_alkupvm AND aikavali_loppupvm
@@ -436,7 +440,7 @@ DECLARE
 
 BEGIN
 
-    -- Hoitokauden alkukuukauteen perustuvaa indeksi käytetään kuluissa, joita urakoitsija ei itse ole syöttänyt, kuten bonuksissa ja sanktioissa.
+    -- Hoitokauden alkukuukauteen perustuvaa indeksi käytetään kuluissa, joita urakoitsija ei itse ole syöttänyt, kuten bonuksissa, sanktioissa ja kustannusarvioiduissa_töissä.
     -- Muuten indeksiä ei käytetä
     perusluku := indeksilaskennan_perusluku(ur);
     RAISE NOTICE 'PERUSLUKU: %',perusluku;

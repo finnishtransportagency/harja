@@ -232,7 +232,25 @@
       (is (= (:hj_erillishankinnat_laskutetaan hoidonjohto)
              db_erillis)))))
 
+(deftest mhu-laskutusyhteenvedon-hoidonjohdon-palkkiot
+  (testing "mhu-laskutusyhteenvedon-hoidonjohdon-palkkiot"
+    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
+              (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
+          hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
+          perusluku (ffirst (q (str "SELECT indeksilaskennan_perusluku(" @oulun-maanteiden-hoitourakan-2019-2024-id ")")))
+          poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(lk.summa),0)
+                                                 FROM lasku_kohdistus lk
+                                                WHERE lk.lasku IN (select id from lasku where tyyppi = 'laskutettava' AND erapaiva >= '2020-3-01' AND erapaiva <= '2020-03-31')
+                                                  AND lk.toimenpideinstanssi = 48")))
+          kustannusarvioidut-tyot (ffirst (q (str "SELECT SUM(coalesce((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(2019,9,'MAKU 2015', coalesce(kat.summa, 0), " perusluku ")),0)) AS summa
+                                                     FROM kustannusarvioitu_tyo kat
+                                                    WHERE kat.toimenpideinstanssi = 48
+                                                      AND (kat.tehtavaryhma = 69 OR kat.tehtava = 3054)
+                                                      AND kat.sopimus = 39
+                                                      AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE)))
+                                                  BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE")))]
 
+      (is (= (:hj_palkkio_laskutetaan hoidonjohto) (+ poikkeuslaskutukset kustannusarvioidut-tyot))))))
 
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
