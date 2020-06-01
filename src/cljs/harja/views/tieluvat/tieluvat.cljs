@@ -694,9 +694,9 @@
      :nimi ::tielupa/liite-url}
     {:otsikko ""
      :tyyppi :linkki}
-    ;{:otsikko "Katselmus (linkki Tielupa-järjestelmään)"
-    ; :tyyppi :linkki
-    ; :nimi ::tielupa/katselmus-url}
+    {:otsikko "Katselmus (linkki Tielupa-järjestelmään)"
+     :tyyppi :linkki
+     :nimi ::tielupa/katselmus-url}
     {:otsikko "Urakka"
      :tyyppi :string
      :nimi ::tielupa/urakan-nimi}
