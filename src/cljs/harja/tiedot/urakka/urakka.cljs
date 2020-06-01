@@ -53,7 +53,6 @@
     arvo))
 
 (defn y-tunnus [arvo]
-  (loki/log "ytunnus arvo" arvo)
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
