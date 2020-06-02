@@ -30,7 +30,7 @@
      ^{:key "indeksit"}
      [i/indeksit-elementti])
 
-   "Tehtävät ja määrät"
+   "Tehtävät"
    :tehtavat
    (when (oikeudet/hallinta-tehtavat)
      ^{:key "tehtävät"}

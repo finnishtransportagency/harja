@@ -220,11 +220,10 @@
                             {:hoitokausi         (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
-      (let [{taulukon-tehtavat :tehtavat-taulukko} app
-            {:keys [nimi]} (-> @tila/tila :yleiset :urakka)]
+      (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div
          ;[debug/debug app]
-         [:h1 "Tehtävät ja määrät" [:span.pull-right nimi]]
+         [:h1 "Tehtävät ja määrät"]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat
