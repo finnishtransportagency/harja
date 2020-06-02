@@ -58,7 +58,7 @@
       (fn [konteksti]
         (paivita-lahetyksen-tila db kohde-id :odottaa_vastausta)
         (let [http-asetukset {:metodi         :POST
-                              :url            (str url "paikkaus/")
+                              :url            (str url "paikkaus/paivitys/")
                               :kayttajatunnus kayttajatunnus
                               :salasana       salasana
                               :otsikot {"Content-Type" "application/json"}}
