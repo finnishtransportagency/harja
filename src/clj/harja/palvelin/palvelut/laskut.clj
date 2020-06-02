@@ -10,7 +10,11 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tyokalut.big :as big]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
-            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.pvm :as pvm]
+            [harja.kyselyt.konversio :as konversio]))
 
 
 (defn kasittele-suorittaja
@@ -208,13 +212,68 @@
   (hae-laskuerittely db user {:id lasku-id}))
 
 (defn- kulu-pdf
-  [db user params]
-  (println "Kulud")
-  (kpdf/kulu-pdf))
+  [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (let [alkupvm (or alkupvm
+                    (pvm/->pvm "01.01.1990"))
+        loppupvm (or loppupvm
+                     (pvm/nyt))
+        kulut (q/hae-laskuerittelyt-tietoineen-vientiin db {:urakka   urakka-id
+                                                            :alkupvm  (konversio/sql-timestamp alkupvm)
+                                                            :loppupvm (konversio/sql-timestamp loppupvm)})
+        kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
+                                          (sort-by :erapaiva
+                                                   kulut))]
+    (kpdf/kulu-pdf urakka-nimi
+                   (pvm/pvm alkupvm)
+                   (pvm/pvm loppupvm)
+                   kulut-kuukausien-mukaan)))
+
+(defn- kulu-excel
+  [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (let [alkupvm (or alkupvm
+                    (pvm/->pvm "01.01.1990"))
+        loppupvm (or loppupvm
+                     (pvm/nyt))
+        kulut (sort-by :erapaiva
+                       (q/hae-laskuerittelyt-tietoineen-vientiin db {:urakka   urakka-id
+                                                                     :alkupvm  (konversio/sql-timestamp alkupvm)
+                                                                     :loppupvm (konversio/sql-timestamp loppupvm)}))
+        kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
+                                          (sort-by :erapaiva
+                                                   kulut))
+        luo-sarakkeet (fn [& otsikot]
+                        (mapv #(hash-map :otsikko %) otsikot))
+        optiot {:nimi  urakka-nimi
+                :tyhja (if (empty? kulut) "Ei kuluja valitulla aikavälillä.")}
+        sarakkeet (luo-sarakkeet "Eräpäivä" "Toimenpide" "Tehtäväryhmä" "Maksuerä" "Summa")
+        luo-rivi (fn [rivi] [(-> rivi
+                                 :erapaiva
+                                 pvm/pvm
+                                 str)
+                             (:toimenpide rivi)
+                             (or (:tehtavaryhma rivi)
+                                 "Lisätyö")
+                             (str "HA" (:maksuera rivi))
+                             [:arvo-ja-yksikko {:arvo (:summa rivi) :yksikko "€" :fmt? false}]])
+        luo-data (fn [kaikki [vuosi-kuukausi rivit]]
+                   (conj kaikki
+                         [:teksti (str vuosi-kuukausi)]
+                         [:otsikko (str vuosi-kuukausi)]
+                         [:taulukko optiot sarakkeet (mapv luo-rivi rivit)]))
+        taulukot (reduce luo-data [] kulut-kuukausien-mukaan)
+        taulukko (concat
+                   [:raportti {:nimi        (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+                               :orientaatio :landscape}]
+                   (if (empty? taulukot)
+                       [[:taulukko optiot (luo-sarakkeet (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))) [["Ei kuluja valitulla aikavälillä"]]]]
+                       taulukot))]
+    (excel/muodosta-excel (vec taulukko)
+                          workbook)))
 
 (defn- luo-pdf
   [pdf user hakuehdot]
-  (println "Luod")
   (let [{:keys [tiedosto-bytet tiedostonimi]} (pdf-vienti/luo-pdf pdf :kulut user hakuehdot)]
     tiedosto-bytet))
 
@@ -223,7 +282,8 @@
   (start [this]
     (let [db (:db this)
           http (:http-palvelin this)
-          pdf (:pdf-vienti this)]
+          pdf (:pdf-vienti this)
+          excel (:excel-vienti this)]
       (julkaise-palvelu http :laskut
                         (fn [user hakuehdot]
                           (hae-urakan-laskut db user hakuehdot)))
@@ -248,11 +308,10 @@
       (julkaise-palvelu http :poista-laskun-liite
                         (fn [user hakuehdot]
                           (poista-laskun-liite db user hakuehdot)))
-      (julkaise-palvelu http :luo-pdf-kuluista
-                        (fn [user hakuehdot]
-                          (luo-pdf pdf user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
+      (when excel
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :kulut (partial #'kulu-excel db)))
       this))
 
   (stop [this]
@@ -263,8 +322,31 @@
                      :tallenna-lasku
                      :poista-lasku
                      :poista-laskurivi
-                     :poista-laskun-liite
-                     :luo-pdf-kuluista)
+                     :poista-laskun-liite)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
+    (when (:excel-vienti this)
+      (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :kulut))
     this))
+
+;[:raportti
+; {:nimi Oulun MHU 2019-2024_Mon Jan 01 00:00:00 EET 1990-Wed May 06 09:51:32 EEST 2020, :orientaatio :landscape}
+; [[:taulukko
+;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
+;   [{:otsikko Eräpäivä}
+;    {:otsikko Toimenpide}
+;    {:otsikko Tehtäväryhmä}
+;    {:otsikko Maksuerä}
+;    {:otsikko Summa}]
+;   ([2019/09 blaa blaa blaa blaa]
+;     [15.09.2019 Oulu MHU Talvihoito TP Talvihoito (A) HA69 [:arvo-ja-yksikko {:arvo 3666.66M, :yksikko €, :fmt? false}]])]
+;  [:taulukko
+;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
+;   [{:otsikko Eräpäivä} {:otsikko Toimenpide} {:otsikko Tehtäväryhmä} {:otsikko Maksuerä} {:otsikko Summa}]
+;   ([2019/10 blaa blaa blaa blaa] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Äkilliset hoitotyöt, Liikenneympäristön hoito (T1) HA70 [:arvo-ja-yksikko {:arvo 4444.44M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Rummut, päällystetiet (R) HA70 [:arvo-ja-yksikko {:arvo 2222.22M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Puhtaanapito (P) HA70 [:arvo-ja-yksikko {:arvo 111.11M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Nurmetukset ja muut vihertyöt (N) HA70 [:arvo-ja-yksikko {:arvo 222.22M, :yksikko €, :fmt? false}]] [15.10.2019 Oulu MHU Liikenneympäristön hoito TP Vesakonraivaukset ja puun poisto (V) HA70 [:arvo-ja-yksikko {:arvo 333.33M, :yksikko €, :fmt? false}]])]
+;  [:taulukko
+;   {:sheet-nimi Oulun MHU 2019-2024, :otsikko Oulun MHU 2019-2024}
+;   [{:otsikko Eräpäivä} {:otsikko Toimenpide} {:otsikko Tehtäväryhmä} {:otsikko Maksuerä} {:otsikko Summa}]
+;   ([2020/04 blaa blaa blaa blaa]
+;     [08.04.2020 Oulu MHU Talvihoito TP KFo, NaFo (B2) HA69 [:arvo-ja-yksikko {:arvo 22222M, :yksikko €, :fmt? false}]]
+;     [23.04.2020 Oulu MHU MHU Ylläpito TP Lisätyö HA74 [:arvo-ja-yksikko {:arvo 12M, :yksikko €, :fmt? false}]])]]]
