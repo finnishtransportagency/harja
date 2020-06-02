@@ -100,7 +100,7 @@
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "poista-paikkauskohde" nil
     (fn [konteksti]
-      (let [url (str url "paikkauskohde/" kohde-id) ;; TODO: Selvitä oikea URL YHA:sta
+      (let [url (str url "paikkaus/poisto/")
             http-asetukset {:metodi         :DELETE
                             :url            url
                             :kayttajatunnus kayttajatunnus
