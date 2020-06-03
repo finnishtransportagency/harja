@@ -63,14 +63,25 @@
         ; MHU ja HJU hoidon johto	23150	48
         ; Päällyste	20100	49
         ; MHU Ylläpito	20190	50
-        ; MHU Korvausinvestointi	14300	51ﬂ
-        odotettu [{:tpi_id 45, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 46, :urakka_id urakka-id, :kokonaishintainen 2888.88M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 47, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 48, :urakka_id urakka-id, :kokonaishintainen 666.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 49, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 50, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
-                  {:tpi_id 51, :urakka_id urakka-id, :kokonaishintainen 0.0M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}]
+        ; MHU Korvausinvestointi	14300	51
+      #_  odotettu #_[{:tpi_id 45, :urakka_id 36, :kokonaishintainen 6601.94M, :sanktiot -1100.97M, :bonukset 0.0M}
+                  {:tpi_id 46, :urakka_id 36, :kokonaishintainen 2888.88M, :sanktiot -1000.77M, :bonukset 0.0M}
+                  {:tpi_id 48, :urakka_id 36, :kokonaishintainen 1166.0M, :sanktiot -3000.0M, :bonukset 0.0M}
+                  {:tpi_id 49, :urakka_id 36, :kokonaishintainen 11001.94M, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 50, :urakka_id 36, :kokonaishintainen 15401.94M, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 51, :urakka_id 36, :kokonaishintainen 13201.94M, :sanktiot 0.0M, :bonukset 0.0M}]
+
+        ;; Niin kauan kuin maksuerät käyttää eri sproccia täytyy tämä testi olla vanhojen urakoiden tyyppinen
+        ;; Kunhan maksuerät saadaan integroittua käyttämään uudempaa sproccia (mhu urakoille tehty), niin ylempänä kommenteissa oleva odotettu
+        ;; vectori voidaan ottaa käyttöön.
+        odotettu [{:tpi_id 45, :urakka_id urakka-id, :kokonaishintainen 6601.94M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot -1100.97M, :bonukset 0.0M}
+                  {:tpi_id 46, :urakka_id urakka-id, :kokonaishintainen 2888.88M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot -1000.77M, :bonukset 0.0M}
+                  {:tpi_id 47, :urakka_id urakka-id, :kokonaishintainen 8801.94M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 48, :urakka_id urakka-id, :kokonaishintainen 1196.60M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot -3000.0M, :bonukset 0.0M}
+                  {:tpi_id 49, :urakka_id urakka-id, :kokonaishintainen 11001.94M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 50, :urakka_id urakka-id, :kokonaishintainen 15401.94M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}
+                  {:tpi_id 51, :urakka_id urakka-id, :kokonaishintainen 13201.94M, :akillinen-hoitotyo nil, :vahinkojen-korjaukset nil, :lisatyot nil, :sanktiot 0.0M, :bonukset 0.0M}]
+
 
         vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
     (is (= odotettu vastaus))))

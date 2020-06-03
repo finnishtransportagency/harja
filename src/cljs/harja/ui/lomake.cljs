@@ -200,8 +200,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [s
-   data muokattava? muokkaa muokkaa-kenttaa-fn]
+  [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?]
   (let [{:keys [nimi hae aseta]} s
         hae (or hae #(get % nimi))
         init-arvo (hae data)
@@ -213,12 +212,18 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                (gensym "input")
                (fn [_ _ vanha-arvo uusi-arvo]
                  ;; Resetoi data, jos uusi data annettu
-                 (when (not= uusi-arvo vanha-arvo)
+                 (if (not= uusi-arvo vanha-arvo)
                    (let [{:keys [s data vaihda!]} @seurannan-muuttujat
                          {:keys [aseta nimi]} s]
                      (if aseta
                        (vaihda! (aseta data uusi-arvo))
-                       (vaihda! (assoc data nimi uusi-arvo)))))))
+                       (vaihda! (assoc data nimi uusi-arvo))))
+                   (when (and (= uusi-arvo vanha-arvo) aseta-vaikka-sama?)
+                     (let [{:keys [s data vaihda!]} @seurannan-muuttujat
+                           {:keys [aseta nimi]} s]
+                       (if aseta
+                         (vaihda! (aseta data uusi-arvo))
+                         (vaihda! (assoc data nimi uusi-arvo))))))))
     (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
          data muokattava? muokkaa muokkaa-kenttaa-fn]
       (reset! seurannan-muuttujat
@@ -261,7 +266,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label?] :as s}
+           piilota-label? aseta-vaikka-sama?] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   [:div.form-group {:class (str (or
@@ -288,7 +293,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
        [:span
         [:span.kentan-label otsikko]
         (when yksikko [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?]
 
     (when (and muokattu?
                (not (empty? virheet)))

@@ -32,11 +32,14 @@
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
                   nakymassa? @laskutusyhteenveto-nakyvissa?
-                  urakkatyyppi (:tyyppi ur)]
+                  urakkatyyppi (:tyyppi ur)
+                  raportin-nimi (if (= :teiden-hoito urakkatyyppi)
+                                  :laskutusyhteenveto-mhu
+                                  :laskutusyhteenveto)]
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
                  (:id ur)
-                 :laskutusyhteenveto
+                 raportin-nimi
                  {:alkupvm alkupvm
                   :loppupvm loppupvm
                   :urakkatyyppi urakkatyyppi})))))
@@ -56,7 +59,10 @@
     (fn []
       (let [ur @nav/valittu-urakka
             tiedot @laskutusyhteenvedon-tiedot
-            valittu-aikavali @u/valittu-hoitokauden-kuukausi]
+            valittu-aikavali @u/valittu-hoitokauden-kuukausi
+            raportin-nimi (if (= :teiden-hoito (:urakkatyyppi ur))
+                            :laskutusyhteenveto-mhu
+                            :laskutusyhteenveto)]
         [:span.laskutusyhteenveto
          [valinnat/urakan-hoitokausi ur]
          [valinnat/hoitokauden-kuukausi]
@@ -65,5 +71,5 @@
            [upotettu-raportti/raportin-vientimuodot p])
          
          (if-let [tiedot @laskutusyhteenvedon-tiedot]
-           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)]
+           [muodosta-html (assoc-in tiedot [1 :tunniste] raportin-nimi)]
            [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))
