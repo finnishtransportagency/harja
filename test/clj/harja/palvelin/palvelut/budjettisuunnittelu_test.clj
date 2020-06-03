@@ -678,9 +678,7 @@
                                        data-kannassa)
             uusidata-kannassa (filter (fn [tavoite]
                                         (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
-                                      data-kannassa)
-            _ (log/debug "uusidata-kannassa" (pr-str uusidata-kannassa))
-            _ (log/debug "(pyorista (* kerroin paivitetty-tavoitehinta))" (pr-str (pyorista (* kerroin paivitetty-tavoitehinta))) (pr-str (pyorista (:kattohinta (first uusidata-kannassa)))))]
+                                      data-kannassa)]
         (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
         (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta)) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
         (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
