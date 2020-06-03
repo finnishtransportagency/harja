@@ -2,6 +2,8 @@
 <b>Julkaistu: 12.2.2019</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.47 Julkaistu 1.4.2020
+    - Yhteystietorajapinnan roolienumeraatioon kolme uutta roolia: Viranomais- ja vahingonkorvausasiat, Työmaavalvoja ja Työmaavalvojan sijainen.
 - Versionumero 1.0.46 Julkaistu 22.11.2019
     - Työkoneseurantarajapintaan alfanumeerinen tieto: tunnus. Tunnus yksilöi käytetyn työkoneen.
 - Versionumero 1.0.45 Julkaistu 4.6.2019

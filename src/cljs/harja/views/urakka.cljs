@@ -10,7 +10,6 @@
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
-            [harja.views.urakka.yllapitokohteet.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
@@ -62,15 +61,12 @@
                         (u-domain/vesivaylaurakkatyyppi? tyyppi)
                         (istunto/ominaisuus-kaytossa? :vesivayla))
     :paikkaukset (and (oikeudet/urakat-paikkaukset id)
-                      (#{:hoito :paikkaus :paallystys} tyyppi))
+                      (#{:hoito :paallystys} tyyppi))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
                                        (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset id))
                                    (= tyyppi :paallystys))
-    :kohdeluettelo-paikkaus (and (or (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
-                                     (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
-                                 (= tyyppi :paikkaus))
     :laadunseuranta (or
                       (and (oikeudet/urakat-laadunseuranta id)
                            (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
@@ -186,12 +182,6 @@
        (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
          ^{:key "kohdeluettelo"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
-
-       "Kohdeluettelo"
-       :kohdeluettelo-paikkaus
-       (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
-         ^{:key "kohdeluettelo"}
-         [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
        "Laadunseuranta"
        :laadunseuranta
