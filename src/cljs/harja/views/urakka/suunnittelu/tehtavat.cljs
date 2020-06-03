@@ -188,7 +188,9 @@
             disabloitu-alasveto? (fn [koll]
                                    (= 0 (count koll)))]
 
-        [:div
+        [:div.flex-row
+         {:style {:justify-content "flex-start"
+                  :align-items "flex-end"}}
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Toimenpide"]
           [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
@@ -205,12 +207,15 @@
                                         :format-fn  #(str "1.10." % "-30.9." (inc %))
                                         :disabled   (disabloitu-alasveto? hoitokaudet)}
            hoitokaudet]]
-         [:label.kopioi-tuleville-vuosille
-          [:input {:type      "checkbox"
-                   :checked   (:samat-kaikille valinnat)
-                   :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
-                   :disabled  (:noudetaan valinnat)}]
-          "Samat suunnitellut määrät kaikille hoitokausille"]]))))
+         [:div
+          [:input#kopioi-tuleville-vuosille.vayla-checkbox
+           {:type      "checkbox"
+            :checked   (:samat-kaikille valinnat)
+            :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
+            :disabled  (:noudetaan valinnat)}]
+          [:label
+           {:for "kopioi-tuleville-vuosille"}
+           "Samat suunnitellut määrät kaikille hoitokausille"]]]))))
 
 (defn tehtavat*
   [e! app]
@@ -221,9 +226,8 @@
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
-        [:div
+        [:div#vayla
          ;[debug/debug app]
-         [:h1 "Tehtävät ja määrät"]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat
