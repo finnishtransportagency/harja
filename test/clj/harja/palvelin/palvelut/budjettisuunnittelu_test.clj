@@ -9,7 +9,8 @@
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
-            [slingshot.slingshot :refer [try+]]))
+            [slingshot.slingshot :refer [try+]]
+            [taoensso.timbre :as log]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -677,12 +678,14 @@
                                        data-kannassa)
             uusidata-kannassa (filter (fn [tavoite]
                                         (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
-                                      data-kannassa)]
+                                      data-kannassa)
+            _ (log/debug "uusidata-kannassa" (pr-str uusidata-kannassa))
+            _ (log/debug "(pyorista (* kerroin paivitetty-tavoitehinta))" (pr-str (pyorista (* kerroin paivitetty-tavoitehinta))) (pr-str (pyorista (:kattohinta (first uusidata-kannassa)))))]
         (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
         (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta)) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
         (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
         (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista paivitetty-tavoitehinta)) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: " (pyorista (:kattohinta %)) " == " (pyorista (* kerroin paivitetty-tavoitehinta)) ))))))
+        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: " (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta)) ))))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
