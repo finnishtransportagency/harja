@@ -19,8 +19,6 @@
             [clojure.string :as str]
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
-;; kannassa testailua varten:
-;; select * from laskutusyhteenveto_teiden_hoito('2020-10-01', '2021-09-30', '2020-03-01', '2020-03-31',36);
 (defn hae-laskutusyhteenvedon-tiedot
   [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
