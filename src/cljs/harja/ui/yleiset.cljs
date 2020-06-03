@@ -315,7 +315,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
-          (loki/log ryhmissa? ryhmitellyt-itemit)
           [:div (merge
                   {:class (str (if vayla-tyyli?
                                  (str "select-" (if virhe? "error-" "") "default")

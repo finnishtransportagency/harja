@@ -1,21 +1,22 @@
 
 .lomake-sisempi-osio {
-  width:100%;
-  padding:16px;
+  width: 100%;
+  padding: 16px;
   background-color: @gray245;
   margin: 4px 14px;
-  display:flex;
+  display: flex;
   flex-direction: column;
 
   > div {
-    margin:11px 0px;
+    margin: 11px 0px;
   }
 }
 
 .kulukentta {
   .puolikas {
-    width:50%;
+    width: 50%;
   }
+
   margin: 19px 0px;
 }
 
@@ -24,79 +25,84 @@
 }
 
 .liitelaatikko {
-  display:flex;
-  flex-direction:row;
+  display: flex;
+  flex-direction: row;
   align-items: center;
 
   .liiterivit {
-    display:flex;
-    flex-direction:column;
-    flex:3;
+    display: flex;
+    flex-direction: column;
+    flex: 3;
   }
 
   .liitenappi {
-    flex:1;
+    flex: 1;
     align-self: start;
   }
 }
 
 
 .liiterivi {
-  height:40px;
-  display:flex;
-  flex-direction:row;
+  height: 40px;
+  display: flex;
+  flex-direction: row;
   align-items: center;
 
   .liitelista {
-    flex:3;
+    flex: 3;
   }
 
   .liitepoisto {
-    flex:1;
+    flex: 1;
   }
 }
 
 .kulu-napit {
-  margin-left:28px;
+  margin-left: 28px;
   width: 100%;
-  margin-top:120px;
-  display:flex;
-  flex-direction:row;
+  margin-top: 120px;
+  display: flex;
+  flex-direction: row;
   align-items: flex-start;
+
   & > button {
-   &:first-child {
-     margin-right:39px;
-   }
+    &:first-child {
+      margin-right: 39px;
+    }
   }
 }
 
 .palstat {
-  margin-right:28px;
-  margin-left:28px;
-  display:flex;
-  flex-direction:row;
+  margin-right: 28px;
+  margin-left: 28px;
+  display: flex;
+  flex-direction: row;
   align-items: flex-start;
   max-width: 960px;
 }
 
 .palsta {
-  padding-left:55px;
-  padding-right:55px;
+  padding-left: 55px;
+  padding-right: 55px;
   flex-grow: 1;
-  flex-basis:50%;
-  max-width:50%;
+  flex-basis: 50%;
+  max-width: 50%;
+
   &:first-child {
-    padding-left:0px;
+    padding-left: 0px;
   }
+
   &:last-child {
-    padding-right:0px;
+    padding-right: 0px;
   }
+
   &:only-child {
-    padding-right:55px;
+    padding-right: 55px;
 
   }
+
   &.flex {
-    display:flex;
+    display: flex;
   }
 }
 
@@ -117,14 +123,16 @@
 }
 
 .kohdistuksen-poisto {
-  display:flex;
+  display: flex;
+
   > button {
-    margin-left:auto;
+    margin-left: auto;
   }
 }
 
 #kulun-poisto-modaali {
-  padding:15px;
+  padding: 15px;
+
   div {
     font-style: normal;
     font-weight: normal;
@@ -132,8 +140,9 @@
     line-height: 29px;
     display: flex;
     align-items: center;
+
     &:last-of-type {
-      margin-top:68px;
+      margin-top: 68px;
       margin-bottom: 53px;
     }
   }
@@ -144,8 +153,37 @@
     }
 
     &:last-of-type {
-      margin-left:15px;
+      margin-left: 15px;
     }
   }
 
+}
+
+.aikavali {
+  width:250px;
+
+  &-dropdown {
+    padding: 16px;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    border: 3px solid #0065AF;
+    background-color: white;
+    z-index: 1000;
+  }
+}
+
+.ikoni-sisaan {
+  position: relative;
+}
+
+.ikoni-sisaan input {
+  padding-right: 30px;
+}
+
+.ikoni-sisaan .glyphicon {
+  position: absolute;
+  right: 0px;
+  padding: 10px 12px;
+  pointer-events: none;
 }

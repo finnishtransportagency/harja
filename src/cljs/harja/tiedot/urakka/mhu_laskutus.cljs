@@ -24,9 +24,7 @@
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
-
-(defrecord LuoDokumentti [optiot])
-(defrecord DokumenttiLuotu [dokumentti])
+(defrecord AsetaHakuparametri [polku arvo])
 
 (defrecord LiiteLisatty [liite])
 (defrecord LiitteenPoistoOnnistui [tulos parametrit])
@@ -354,21 +352,6 @@
     nro-mukaan))
 
 (extend-protocol tuck/Event
-  DokumenttiLuotu
-  (process-event [{:keys [dokumentti]} app]
-
-    app)
-  LuoDokumentti
-  (process-event [{{:keys [tyyppi]} :optiot} app]
-    (let [rajapinta (case tyyppi
-                      :pdf :luo-pdf-kuluista
-                      :excel :luo-excel-kuluista)]
-      (tuck-apurit/post! rajapinta
-                         {}
-                         {:onnistui           ->DokumenttiLuotu
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :paasta-virhe-lapi? true}))
-    app)
   NakymastaPoistuttiin
   (process-event [_ app]
     (resetoi-kulunakyma))
@@ -515,9 +498,13 @@
                        :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
   HaeUrakanLaskut
-  (process-event [{:keys [hakuparametrit]} app]
-    (tuck-apurit/post! :kaikki-laskuerittelyt
-                       {:urakka-id (:id hakuparametrit)}
+  (process-event [{{:keys [id alkupvm loppupvm]} :hakuparametrit} app]
+    (tuck-apurit/post! (if (and alkupvm loppupvm)
+                         :laskuerittelyt
+                         :kaikki-laskuerittelyt)
+                       (cond-> {:urakka-id id}
+                               (and alkupvm loppupvm) (assoc :alkupvm alkupvm
+                                                             :loppupvm loppupvm))
                        {:onnistui           ->LaskuhakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
                         :paasta-virhe-lapi? true})
@@ -660,6 +647,15 @@
                        {:onnistui    ->PoistoOnnistui
                         :epaonnistui ->KutsuEpaonnistui})
     (update-in app [:parametrit :haetaan] inc))
+  AsetaHakuparametri
+  (process-event
+    [{:keys [polku arvo]} app]
+    (let [arvo (if (nil? arvo)
+                 (-> @tila/yleiset :urakka polku)
+                 arvo)]
+      (assoc-in app [:parametrit (case polku
+                                 :alkupvm :haun-alkupvm
+                                 :loppupvm :haun-loppupvm)] arvo)))
 
   ;; FORMITOIMINNOT
 

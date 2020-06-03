@@ -20,7 +20,8 @@
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as string])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defonce kuukaudet-strs {:tammikuu  "Tammikuu"
@@ -725,46 +726,59 @@
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti]} :parametrit :as app}]
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-alkupvm haun-loppupvm]} :parametrit :as app}]
       [:div#vayla
        (if syottomoodi
          [kulujen-syottolomake e! app]
          [:div
-          #_[debug/debug taulukko]
           [:div.flex-row
-           {:style {:margin-bottom "36px"}}
            [:h2 "Kulujen kohdistus"]
-           #_[napit/yleinen-toissijainen
-              "Tallenna Excel"
-              #(loki/log "En tallenna vielä")
-              {:vayla-tyyli? true
-               :luokka       "suuri"
-               :disabled     true}]
-           #_[napit/yleinen-toissijainen
-              "Tallenna PDF"
-              #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
-              {:vayla-tyyli? true
-               :disabled     true
-               :luokka       "suuri"}]
-           ;^{:key "raporttipdf"}
-           #_[:form {:target "_blank" :method "POST"
-                     :action (k/pdf-url :kulut)}
-              [:input {:type  "hidden" :name "parametrit"
-                       :value (t/clj->transit {})}]
-              [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
-               {:type         "submit"
-                :vayla-tyyli? true}]]
+           ^{:key "raporttixls"}
+           [:form {:style  {:margin-left "auto"}
+                   :target "_blank" :method "POST"
+                   :action (k/excel-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
+                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
+                                             :alkupvm     haun-alkupvm
+                                             :loppupvm    haun-loppupvm})}]
+            [:button {:type  "submit"
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
+           ^{:key "raporttipdf"}
+           [:form {:style  {:margin-left  "16px"
+                            :margin-right "64px"}
+                   :target "_blank" :method "POST"
+                   :action (k/pdf-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
+                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
+                                             :alkupvm     haun-alkupvm
+                                             :loppupvm    haun-loppupvm})}]
+            [:button {:type  "submit"
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
             {:vayla-tyyli? true
              :luokka       "suuri"}]]
 
-          ;; ks. VHAR-1761 milloin vihje voidaan poistaa
-          #_[kentat/vayla-lomakekentta
-             "Kirjoita tähän halutessasi lisätietoa"
-             :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
-             :arvo hakuteksti]
+          [:div.flex-row
+           #_[kentat/vayla-lomakekentta
+              "Kirjoita tähän halutessasi lisätietoa"
+              :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
+              :arvo hakuteksti]
+           [kentat/aikavali
+            {:valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
+             :pvm-alku                 (or haun-alkupvm
+                                           (-> @tila/yleiset :urakka :alkupvm))
+             :rajauksen-alkupvm           (-> @tila/yleiset :urakka :alkupvm)
+             :rajauksen-loppupvm          (-> @tila/yleiset :urakka :loppupvm)
+             :pvm-loppu                (or haun-loppupvm
+                                           (-> @tila/yleiset :urakka :loppupvm))
+             :ikoni                    ikonit/calendar
+             :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
+                                                                       :alkupvm  %1
+                                                                       :loppupvm %2}))}]]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 
