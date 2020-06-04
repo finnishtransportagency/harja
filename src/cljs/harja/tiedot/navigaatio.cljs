@@ -387,20 +387,21 @@
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista
           kayttajan-urakat (set (map key (:urakkaroolit @istunto/kayttaja)))]
-      (into []
-            (comp (filter #(or (= :kaikki v-ur-tyyppi)
-                               (= v-ur-tyyppi (:tyyppi %))
-                               (and (= v-ur-tyyppi :hoito)
-                                    (= (:tyyppi %) :teiden-hoito))
-                               (and (= v-ur-tyyppi :teiden-hoito)
-                                    (= (:tyyppi %) :hoito))
-                               (and (= v-ur-tyyppi :vesivayla)
-                                    (urakka-domain/vesivaylaurakka? %))))
-                  (filter #(or
-                             (kayttajan-urakat (:id %))
-                             (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
-                  (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
-            urakkalista))))
+      (when urakkalista
+        (into []
+              (comp (filter #(or (= :kaikki v-ur-tyyppi)
+                                 (= v-ur-tyyppi (:tyyppi %))
+                                 (and (= v-ur-tyyppi :hoito)
+                                      (= (:tyyppi %) :teiden-hoito))
+                                 (and (= v-ur-tyyppi :teiden-hoito)
+                                      (= (:tyyppi %) :hoito))
+                                 (and (= v-ur-tyyppi :vesivayla)
+                                      (urakka-domain/vesivaylaurakka? %))))
+                    (filter #(or
+                               (kayttajan-urakat (:id %))
+                               (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                    (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
+              urakkalista)))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
   (reaction (into []
