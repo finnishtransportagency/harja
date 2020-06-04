@@ -201,14 +201,17 @@
           :tyyppi :komponentti
           :komponentti (fn [_]
                          [yleiset/vihje
-                          "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman."])}
+                          "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman. Juurisyy on pakollinen tieto, kun poikkeama on työtapaturma"])}
          (remove
            nil?
            (mapcat
              (fn [n]
                (let [avain (keyword (str "juurisyy" n))
-                     selite-avain (keyword (str "juurisyy" n "-selite"))]
+                     selite-avain (keyword (str "juurisyy" n "-selite"))
+                     pakollinen? (and (= n 1)
+                                      (contains? (:tyyppi turvallisuuspoikkeama) :tyotapaturma))]
                  [{:tyyppi :valinta
+                   :pakollinen? pakollinen?
                    :uusi-rivi? true
                    :otsikko (str n ". juurisyy")
                    :valinnat (into [nil] turpodomain/juurisyyt)
