@@ -18,7 +18,10 @@
   (cheshire/encode (conj {:poistettavat-paikkauskohteet kohde-id}
                          {:poistettavat-paikkaukset (mapv
                                                       #(:harja.domain.paikkaus/id %)
-                                                      paikkaukset)})))
+                                                      paikkaukset)}
+                         ;; YHA throws, if below key is not present:
+                         ;; java.net.URISyntaxException: Illegal character in scheme name at index 0: {"palaute":"Paikkausten poisto epäonnistui. Lähetyksen tiedot puutteelliset.","virheet":[{"virheviesti":"object has missing required properties ([\"otsikko\",\"poistettavat-paikkauskustannukset\"])"}]}
+                         {:poistettavat-paikkauskustannukset []})))
 
 (defn muodosta
   "Muodostaa YHA:aan lähetettävän json-sanoman, jolla poistetaan paikkauskohteen kaikki paikkaukset YHA:sta.

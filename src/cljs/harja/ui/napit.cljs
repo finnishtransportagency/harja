@@ -75,6 +75,7 @@
                          luokka)
              :on-click #(do
                           (.preventDefault %)
+                          (.stopPropagation %)
                           (reset! kysely-kaynnissa? true)
                           (reset! nayta-virheviesti? false)
                           (go (let [tulos (<! (kysely))]

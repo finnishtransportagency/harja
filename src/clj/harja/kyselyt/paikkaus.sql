@@ -94,3 +94,9 @@ SELECT pt.ajorata
   FROM paikkaus p
   JOIN paikkauksen_tienkohta pt ON p.id = pt."paikkaus-id"
  WHERE p.id = :id
+
+--name: hae-paikkauskohteen-harja-id
+--single?: true
+SELECT id
+  FROM paikkauskohde
+ WHERE "ulkoinen-id" = :ulkoinen-id
