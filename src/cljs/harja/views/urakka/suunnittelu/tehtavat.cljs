@@ -20,9 +20,9 @@
 (defn sarakkeiden-leveys [sarake]
   (case sarake
     :tehtava "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-    :maara "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-    :maara-input "col-xs-12 col-sm-2 col-md-2 col-lg-2"
-    :maara-yksikko "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
+    :maara "leveys-70"
+    :maara-input "leveys-15"
+    :maara-yksikko "leveys-15"))
 
 
 (defn osien-paivitys-fn [tehtava maara yksikko]
