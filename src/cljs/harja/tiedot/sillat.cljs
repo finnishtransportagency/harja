@@ -20,9 +20,11 @@
     (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
 
 (defn on-poistettu?
+  "Silta ei ole enää urakan vastuulla. Se on lakkautettu, purettu tai siirretty kunnan vastuulle. Silta ei ole kokonaan poistettu Harjasta, koska siihen on tehty siltatarkastuksia."
   [silta]
   (or (some? (:loppupvm silta))
-      (some? (:lakkautuspvm silta))))
+      (some? (:lakkautuspvm silta))
+      (:kunnan-vastuulla silta)))
 
 (defn- varita-silta [silta]
   ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
