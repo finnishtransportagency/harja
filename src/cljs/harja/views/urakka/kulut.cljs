@@ -62,9 +62,7 @@
     :ei-hallinnollinen "Valitse:"))
 
 (defonce hallinnollinen-vihje-viesti
-         [:span "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. "
-          [:b "Näitä kuluja ei saa syöttää"]
-          "manuaalisesti muulloin kuin poikkeustilanteissa."])
+         "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. Näitä kuluja ei saa syöttää manuaalisesti muulloin kuin poikkeustilanteissa.")
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
