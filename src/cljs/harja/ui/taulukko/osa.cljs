@@ -29,7 +29,9 @@
 (defonce muuta-avain-syote
          {:arvo [:parametrit :value]
           :id [:osan-id]
+          :disabled? [:parametrit :disabled?]
           :class [:parametrit :class]
+          :placeholder [:parametrit :placeholder]
           :on-change [:toiminnot :on-change]
           :on-blur [:toiminnot :on-blur]
           :on-click [:toiminnot :on-click]

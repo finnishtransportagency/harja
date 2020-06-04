@@ -20,9 +20,9 @@
 (defn sarakkeiden-leveys [sarake]
   (case sarake
     :tehtava "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-    :maara "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-    :maara-input "col-xs-12 col-sm-2 col-md-2 col-lg-2"
-    :maara-yksikko "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
+    :maara "leveys-70"
+    :maara-input "leveys-15"
+    :maara-yksikko "leveys-15"))
 
 
 (defn osien-paivitys-fn [tehtava maara yksikko]
@@ -100,8 +100,12 @@
                                                                             :class #{(sarakkeiden-leveys :maara)})
                                                              #(p/aseta-arvo %
                                                                             :id (keyword (str vanhempi "/" id "-maara"))
-                                                                            :arvo (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))
+                                                                            :arvo (let [maara (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))]
+                                                                                    (if (nil? yksikko)
+                                                                                      ""
+                                                                                      maara))
                                                                             :class #{(sarakkeiden-leveys :maara-input) "input-default"}
+                                                                            :disabled? (nil? yksikko)
                                                                             :on-blur (fn [arvo]
                                                                                        (let [arvo (-> arvo (.. -target -value))]
                                                                                          (when (validi? arvo :numero)
@@ -113,7 +117,7 @@
                                                                                          (e!
                                                                                            (t/->PaivitaMaara osa/*this*
                                                                                                              (-> arvo (.. -target -value))
-                                                                                                             #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")}))))
+                                                                                                             #{(sarakkeiden-leveys :maara-input) (str "input" (if (validi? (-> arvo (.. -target -value)) :numero) "" "-error") "-default")}))))
                                                              #(p/aseta-arvo %
                                                                             :id :tehtava-yksikko
                                                                             :arvo (or yksikko "")
@@ -188,7 +192,9 @@
             disabloitu-alasveto? (fn [koll]
                                    (= 0 (count koll)))]
 
-        [:div
+        [:div.flex-row
+         {:style {:justify-content "flex-start"
+                  :align-items "flex-end"}}
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Toimenpide"]
           [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
@@ -205,12 +211,15 @@
                                         :format-fn  #(str "1.10." % "-30.9." (inc %))
                                         :disabled   (disabloitu-alasveto? hoitokaudet)}
            hoitokaudet]]
-         [:label.kopioi-tuleville-vuosille
-          [:input {:type      "checkbox"
-                   :checked   (:samat-kaikille valinnat)
-                   :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
-                   :disabled  (:noudetaan valinnat)}]
-          "Samat suunnitellut määrät kaikille hoitokausille"]]))))
+         [:div
+          [:input#kopioi-tuleville-vuosille.vayla-checkbox
+           {:type      "checkbox"
+            :checked   (:samat-kaikille valinnat)
+            :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
+            :disabled  (:noudetaan valinnat)}]
+          [:label
+           {:for "kopioi-tuleville-vuosille"}
+           "Samat suunnitellut määrät kaikille hoitokausille"]]]))))
 
 (defn tehtavat*
   [e! app]
@@ -220,12 +229,11 @@
                             {:hoitokausi         (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
-      (let [{taulukon-tehtavat :tehtavat-taulukko} app
-            {:keys [nimi]} (-> @tila/tila :yleiset :urakka)]
-        [:div
+      (let [{taulukon-tehtavat :tehtavat-taulukko} app]
+        [:div#vayla
          ;[debug/debug app]
-         [:h1 "Tehtävät ja määrät" [:span.pull-right nimi]]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
+         [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat
            [p/piirra-taulukko taulukon-tehtavat]
