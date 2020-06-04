@@ -97,15 +97,18 @@
   Yksittäisen paikkauksen poisto tapahtuu lähettämällä päivitetty paikkauskohde uudelleen YHA:aan.
   Tämä funktio poistaa paikkauskohteen YHA:sta kokonaisuudessaan."
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
+  ;; Paikkauskohteen ID:llä poistetaan, yksi kohde kerrallaan
   (integraatiotapahtuma/suorita-integraatio
-    db integraatioloki "yha" "poista-paikkauskohde" nil
+    db integraatioloki "yha" "poista-lahetetty-paikkauskohde" nil
     (fn [konteksti]
       (let [url (str url "paikkaus/poisto/")
-            http-asetukset {:metodi         :DELETE
+            http-asetukset {:metodi         :POST
                             :url            url
                             :kayttajatunnus kayttajatunnus
-                            :salasana       salasana}
+                            :salasana       salasana
+                            :otsikot {"Content-Type" "application/json"}}
             viestisisalto (paikkauskohteen-poistosanoma/muodosta db urakka-id kohde-id)
+            _ (log/debug "Lähetetään yhaan seuraavanlainen poisto JSON:" (pr-str viestisisalto))
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)]
         (kasittele-paikkauskohteen-poiston-vastaus body kohde-id)))))
 
