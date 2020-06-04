@@ -100,8 +100,12 @@
                                                                             :class #{(sarakkeiden-leveys :maara)})
                                                              #(p/aseta-arvo %
                                                                             :id (keyword (str vanhempi "/" id "-maara"))
-                                                                            :arvo (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))
+                                                                            :arvo (let [maara (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))]
+                                                                                    (if (nil? yksikko)
+                                                                                      ""
+                                                                                      maara))
                                                                             :class #{(sarakkeiden-leveys :maara-input) "input-default"}
+                                                                            :disabled? (nil? yksikko)
                                                                             :on-blur (fn [arvo]
                                                                                        (let [arvo (-> arvo (.. -target -value))]
                                                                                          (when (validi? arvo :numero)
@@ -113,7 +117,7 @@
                                                                                          (e!
                                                                                            (t/->PaivitaMaara osa/*this*
                                                                                                              (-> arvo (.. -target -value))
-                                                                                                             #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")}))))
+                                                                                                             #{(sarakkeiden-leveys :maara-input) (str "input" (if (validi? (-> arvo (.. -target -value)) :numero) "" "-error") "-default")}))))
                                                              #(p/aseta-arvo %
                                                                             :id :tehtava-yksikko
                                                                             :arvo (or yksikko "")
@@ -229,6 +233,7 @@
         [:div#vayla
          ;[debug/debug app]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
+         [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat
            [p/piirra-taulukko taulukon-tehtavat]
