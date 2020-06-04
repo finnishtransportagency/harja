@@ -294,7 +294,6 @@
                                           :luokka  #{"col-xs-offset-7" "col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
-                                 (loki/log "koko" koko (count (:rivit koko)))
                                  ;; pvm tulee muodossa vvvv/kk
                                  (let [[vvvv kk] (map #(js/parseInt %)
                                                       (str/split pvm #"/"))]

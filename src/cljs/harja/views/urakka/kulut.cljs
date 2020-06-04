@@ -671,8 +671,9 @@
                      :laskun-numero (-> % .-target .-value))
        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
        :virhe (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
+                         (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
                          (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
-                (str "Annetulla numerolla on jo olemassa kirjaus, jonka päivämäärä on " (-> tarkistukset
+                (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
                                                                                             :numerolla-tarkistettu-pvm
                                                                                             :erapaiva
                                                                                             pvm/pvm)
