@@ -705,7 +705,7 @@
         teksti (atom (date->teksti p))
         ;; pidetään edellinen data arvo tallessa, jotta voidaan muuttaa teksti oikeaksi
         ;; jos annetun data-atomin arvo muuttuu muualla kuin tässä komponentissa
-        vanha-data (cljs.core/atom {:data p
+        vanha-data (cljs.core/atom {:data            p
                                     :muokattu-tassa? true})
         muuta-data! (fn [arvo]
                       (swap! vanha-data assoc :data arvo :muokattu-tassa? true)
@@ -760,32 +760,32 @@
            (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
            [:span.pvm-kentta
             {:on-click #(do (reset! auki true) nil)
-             :style {:display "inline-block"}}
-            [:input.pvm {:class (when lomake? "form-control")
+             :style    {:display "inline-block"}}
+            [:input.pvm {:class       (when lomake? "form-control")
                          :placeholder (or placeholder "pp.kk.vvvv")
-                         :value nykyinen-teksti
-                         :on-focus #(do (when on-focus (on-focus)) (reset! auki true) %)
-                         :on-change #(muuta! data (-> % .-target .-value))
+                         :value       nykyinen-teksti
+                         :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
+                         :on-change   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= key-code-tab (-> % .-keyCode)) (= key-code-tab (-> % .-which))
                                                  (= key-code-enter (-> % .-keyCode)) (= key-code-enter (-> % .-which)))
                                          (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                          (reset! auki false)
                                          true)
-                         :on-blur #(let [arvo (.. % -target -value)
-                                         pvm (pvm/->pvm arvo)]
-                                     (when on-blur
-                                       (on-blur %))
-                                     (if (and pvm (not (validoi pvm)))
-                                       (do (muuta-data! nil)
-                                           (reset! teksti ""))
-                                       (teksti-paivamaaraksi! validoi data arvo)))}]
+                         :on-blur     #(let [arvo (.. % -target -value)
+                                             pvm (pvm/->pvm arvo)]
+                                         (when on-blur
+                                           (on-blur %))
+                                         (if (and pvm (not (validoi pvm)))
+                                           (do (muuta-data! nil)
+                                               (reset! teksti ""))
+                                           (teksti-paivamaaraksi! validoi data arvo)))}]
             (when @auki
-              [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
-                                                             (reset! auki false)
-                                                             (muuta-data! %)
-                                                             (reset! teksti (pvm/pvm %)))
-                                                 :pvm naytettava-pvm
+              [pvm-valinta/pvm-valintakalenteri {:valitse       #(when (validoi %)
+                                                                   (reset! auki false)
+                                                                   (muuta-data! %)
+                                                                   (reset! teksti (pvm/pvm %)))
+                                                 :pvm           naytettava-pvm
                                                  :pakota-suunta pakota-suunta
                                                  :valittava?-fn (when validoi?
                                                                   validoi)}])]))})))
@@ -1563,64 +1563,66 @@
                                                     (-> tila
                                                         (assoc-in [:syottobufferi polku] (.. % -target -value))
                                                         (assoc-in [:koskettu? polku] true))))]))]
-    (fn [{:keys [valinta-fn pvm-alku pvm-loppu disabled sumeutus-kun-molemmat-fn] :as _optiot}]
-      (let [{:keys [valittu-pvm syottobufferi koskettu?]} @sisaiset]
-        [:div.aikavali
-         [vayla-lomakekentta
-          "Aikaväli"
-          :ikoni ikoni
-          :placeholder "-valitse-"
-          :value (or (when (and pvm-alku pvm-loppu)
-                       (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
-                     "")
-          :on-click #(swap! auki? not)]
-         (when @auki?
-           [:div.aikavali-dropdown
-            [pvm-valintakentta {:valinta-fn               valinta-fn
-                                :otsikko                  "Alkupvm"
-                                :syottobufferi            (:alku syottobufferi)
-                                :kentan-tyyppi            :alkupvm
-                                :koskettu?                (:alku koskettu?)
-                                :valittu?                 (= :alkupvm valittu-pvm)
-                                :pvm-arvo                 pvm-alku
-                                :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
-                                :arvot                    {:alku  pvm-alku
-                                                           :loppu pvm-loppu}}]
-            [pvm-valintakentta {:valinta-fn               valinta-fn
-                                :otsikko                  "Loppupvm"
-                                :syottobufferi            (:loppu syottobufferi)
-                                :kentan-tyyppi            :loppupvm
-                                :koskettu?                (:loppu koskettu?)
-                                :valittu?                 (= :loppupvm valittu-pvm)
-                                :pvm-arvo                 pvm-loppu
-                                :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
-                                :arvot                    {:alku  pvm-alku
-                                                           :loppu pvm-loppu}}]
-            [:label (str "Klikkaa kalenterista " (case valittu-pvm
-                                                   :alkupvm "rajauksen alku"
-                                                   :loppupvm "rajauksen loppu"))
-             [pvm-valinta/pvm-valintakalenteri {:vayla-tyyli?  false
-                                                :flowissa?     true
-                                                :valitse       #(let [{:keys [alkupvm loppupvm]} (assoc {:alkupvm  pvm-alku
-                                                                                                         :loppupvm pvm-loppu}
-                                                                                                   valittu-pvm
-                                                                                                   %)]
-                                                                  (swap! sisaiset assoc :valittu-pvm (case valittu-pvm
-                                                                                                       :loppupvm :alkupvm
-                                                                                                       :alkupvm :loppupvm))
-                                                                  (valinta-fn valittu-pvm %)
-                                                                  (when (and alkupvm loppupvm)
-                                                                    (sumeutus-kun-molemmat-fn alkupvm loppupvm)))
-                                                :valittava?-fn #(and (pvm/valissa? %
-                                                                                   rajauksen-alkupvm
-                                                                                   rajauksen-loppupvm)
-                                                                     (case valittu-pvm
-                                                                       :loppupvm (pvm/jalkeen? %
-                                                                                               (or pvm-alku
-                                                                                                   rajauksen-alkupvm))
-                                                                       :alkupvm (pvm/ennen? %
-                                                                                            (or pvm-loppu
-                                                                                                rajauksen-loppupvm))))
-                                                :pvm           (case valittu-pvm
-                                                                 :alkupvm pvm-alku
-                                                                 :loppupvm pvm-loppu)}]]])]))))
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [{:keys [valinta-fn pvm-alku pvm-loppu disabled sumeutus-kun-molemmat-fn] :as _optiot}]
+        (let [{:keys [valittu-pvm syottobufferi koskettu?]} @sisaiset]
+          [:div.aikavali
+           [vayla-lomakekentta
+            "Aikaväli"
+            :ikoni ikoni
+            :placeholder "-valitse-"
+            :value (or (when (and pvm-alku pvm-loppu)
+                         (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
+                       "")
+            :on-click #(swap! auki? not)]
+           (when @auki?
+             [:div.aikavali-dropdown
+              [pvm-valintakentta {:valinta-fn               valinta-fn
+                                  :otsikko                  "Alkupvm"
+                                  :syottobufferi            (:alku syottobufferi)
+                                  :kentan-tyyppi            :alkupvm
+                                  :koskettu?                (:alku koskettu?)
+                                  :valittu?                 (= :alkupvm valittu-pvm)
+                                  :pvm-arvo                 pvm-alku
+                                  :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
+                                  :arvot                    {:alku  pvm-alku
+                                                             :loppu pvm-loppu}}]
+              [pvm-valintakentta {:valinta-fn               valinta-fn
+                                  :otsikko                  "Loppupvm"
+                                  :syottobufferi            (:loppu syottobufferi)
+                                  :kentan-tyyppi            :loppupvm
+                                  :koskettu?                (:loppu koskettu?)
+                                  :valittu?                 (= :loppupvm valittu-pvm)
+                                  :pvm-arvo                 pvm-loppu
+                                  :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
+                                  :arvot                    {:alku  pvm-alku
+                                                             :loppu pvm-loppu}}]
+              [:label (str "Klikkaa kalenterista " (case valittu-pvm
+                                                     :alkupvm "rajauksen alku"
+                                                     :loppupvm "rajauksen loppu"))
+               [pvm-valinta/pvm-valintakalenteri {:vayla-tyyli?  false
+                                                  :flowissa?     true
+                                                  :valitse       #(let [{:keys [alkupvm loppupvm]} (assoc {:alkupvm  pvm-alku
+                                                                                                           :loppupvm pvm-loppu}
+                                                                                                     valittu-pvm
+                                                                                                     %)]
+                                                                    (swap! sisaiset assoc :valittu-pvm (case valittu-pvm
+                                                                                                         :loppupvm :alkupvm
+                                                                                                         :alkupvm :loppupvm))
+                                                                    (valinta-fn valittu-pvm %)
+                                                                    (when (and alkupvm loppupvm)
+                                                                      (sumeutus-kun-molemmat-fn alkupvm loppupvm)))
+                                                  :valittava?-fn #(and (pvm/valissa? %
+                                                                                     rajauksen-alkupvm
+                                                                                     rajauksen-loppupvm)
+                                                                       (case valittu-pvm
+                                                                         :loppupvm (pvm/jalkeen? %
+                                                                                                 (or pvm-alku
+                                                                                                     rajauksen-alkupvm))
+                                                                         :alkupvm (pvm/ennen? %
+                                                                                              (or pvm-loppu
+                                                                                                  rajauksen-loppupvm))))
+                                                  :pvm           (case valittu-pvm
+                                                                   :alkupvm pvm-alku
+                                                                   :loppupvm pvm-loppu)}]]])])))))
