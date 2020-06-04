@@ -857,7 +857,7 @@
                                                                :valinta-nayta lupatyyppinayta-fn}
                                                :arvo-atom lupatyyppi-atomi}]]
              [:div.col-lg-4.col-md-12.col-sm-4.col-xs-12
-              [kentat/tee-otsikollinen-kentta {:otsikko [:span "Urakka"
+              [kentat/tee-otsikollinen-kentta {:otsikko [:span "Hoitourakka"
                                                          (when kayttajan-urakoiden-haku-kaynnissa?
                                                            ^{:key :urakoiden-haku-ajax-loader}
                                                            [ajax-loader-pieni "Haetaan urakoita..." {:style {:font-weight "normal"

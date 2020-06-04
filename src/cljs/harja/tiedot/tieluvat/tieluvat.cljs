@@ -197,8 +197,18 @@
         (assoc :kayttajan-urakoiden-haku-kaynnissa? true)))
   KayttajanUrakatHakuOnnistui
   (process-event [{kayttajan-urakat :vastaus} app]
-    (assoc app :kayttajan-urakoiden-haku-kaynnissa? false
-           :kayttajan-urakat (into [nil] (mapcat :urakat kayttajan-urakat))))
+    (try (assoc app
+                :kayttajan-urakoiden-haku-kaynnissa? false
+                :kayttajan-urakat (sort-by :nimi
+                                           (transduce (comp
+                                                        (filter #(= (:tyyppi %) :hoito))
+                                                        (mapcat :urakat))
+                                                      conj
+                                                      [nil]
+                                                      kayttajan-urakat)))
+         (catch :default _
+           (viesti/nayta! "Urakoiden hakuvastauksen käsittely epäonnistui!" :danger)
+           (assoc app :kayttajan-urakoiden-haku-kaynnissa? false))))
   KayttajanUrakatHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Urakoiden haku epäonnistui!" :danger)
