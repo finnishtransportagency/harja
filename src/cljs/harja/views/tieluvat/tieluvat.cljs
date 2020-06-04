@@ -785,7 +785,18 @@
         hakija-atomi (luo-atomi :hakija)
         myonnetty-atomi (luo-atomi :myonnetty)
         voimassaolo-atomi (luo-atomi :voimassaolo)
-        hae-luvat #(e! (tiedot/->PaivitaValinnat))
+        tarkasta-aikavalit! (fn []
+                              (let [myonnetty-pitaa-rukata? (when-let [myonnetty-aikavali @myonnetty-atomi]
+                                                              (= 1 (count (filter nil? myonnetty-aikavali))))
+                                    voimassaolo-pitaa-rukata? (when-let [voimassaolo-aikavali @voimassaolo-atomi]
+                                                                (= 1 (count (filter nil? voimassaolo-aikavali))))]
+                                (when myonnetty-pitaa-rukata?
+                                  (swap! myonnetty-atomi tiedot/lisaa-puuttuva-aika))
+                                (when voimassaolo-pitaa-rukata?
+                                  (swap! voimassaolo-atomi tiedot/lisaa-puuttuva-aika))))
+        hae-luvat (fn []
+                    (tarkasta-aikavalit!)
+                    (e! (tiedot/->PaivitaValinnat)))
         suodatin-avain (fn [avain]
                          (keyword (str "tilu-suodatin-" (name avain))))
         lisaa-watch (fn [atomi avain]
@@ -861,12 +872,9 @@
             [valinnat/aikavali myonnetty-atomi {:otsikko "Myönnetty välillä"}]
             [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"}]]]
           [:div.row.hae-painike
-            [harja.ui.napit/yleinen-ensisijainen "Hae lupia"
-             hae-luvat
-             {:disabled (or (and (:myonnetty valinnat)
-                                 (= 1 (count (filter nil? (:myonnetty valinnat)))))
-                            (and (:voimassaolo valinnat)
-                                 (= 1 (count (filter nil? (:voimassaolo valinnat))))))}]]]]))))
+            [napit/yleinen-ensisijainen
+             "Hae lupia"
+             hae-luvat]]]]))))
 
 (defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa? valinnat kayttajan-urakat kayttajan-urakoiden-haku-kaynnissa?]}]
   [:div.tienpidon-luvat-nakyma

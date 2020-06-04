@@ -89,6 +89,16 @@
              kentat))
           tielupa)))))
 
+(defn lisaa-puuttuva-aika
+  [[alku loppu]]
+  {:pre [(or alku loppu)
+         (not (and alku loppu))]
+   :post [(fn [[alku loppu]]
+            (and alku loppu))]}
+  (let [alku (or alku (pvm/paivan-alussa-opt (pvm/ajan-muokkaus loppu false 1 :kuukausi)))
+        loppu (or loppu (pvm/paivan-alussa-opt (pvm/myohaisin (pvm/nyt) alku)))]
+    [alku loppu]))
+
 (defn pelkat-vapaat-sijainnit
   "Tieluvalla on mainos-, johtoasennus- yms. tietoja, joilla on sijaintietoja.
   Lisäksi tieluvalla on yleinen 'sijainnit'-taulukko. Nämä saattavat sisältää redundanttia tietoja,
