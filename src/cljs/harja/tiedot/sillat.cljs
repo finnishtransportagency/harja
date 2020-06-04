@@ -13,6 +13,9 @@
 (def karttataso-sillat (atom false))
 (def jarjestys (atom :nimi))
 (def listaus (atom :kaikki))
+(def silta-varit {:tarkistettu "palegreen"
+                  :ei-tarkistettu "crimson"
+                  :poistettu "gainsboro"})
 
 (defn- on-tarkastettu-hoitokautena?
   [silta]
@@ -29,11 +32,10 @@
 
   (-> silta
       (assoc-in [:alue :fill] true)
-      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta)
-                                 "palegreen"
-                                 (if (on-poistettu? silta)
-                                   "gainsboro"
-                                   "crimson")))))
+      (assoc-in [:alue :color] (cond
+                                 (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
+                                 (on-poistettu? silta) (:poistettu silta-varit)
+                                 :else (:ei-tarkistettu silta-varit)))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat
@@ -59,12 +61,26 @@
 (defn- skaalaa-sillat-zoom-tason-mukaan [koko sillat]
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
   ;; piirretään tietyllä radiuksella... ikoni olisi hyvä saada.
-  (let [sillan-koko (* 0.003 koko)]
-    (when sillat
-      (into []
-            (comp (map #(assoc-in % [:alue :radius] sillan-koko))
-                  (map #(assoc % :tyyppi-kartalla :silta)))
-            sillat))))
+  (when sillat
+    (let [sillan-koko (* 0.003 koko)
+          sillat (into []
+                       (comp (map #(assoc-in % [:alue :radius] sillan-koko))
+                             (map #(assoc % :tyyppi-kartalla :silta)))
+                       sillat)
+          selitteet (cond-> []
+                            (some on-tarkastettu-hoitokautena? sillat)
+                            (conj {:vari (:tarkistettu silta-varit)
+                                   :teksti "Silta on tarkastettu kuluvalla hoitokaudella"})
+                            (some on-poistettu? sillat)
+                            (conj {:vari (:poistettu silta-varit)
+                                   :teksti "Silta ei enää ole urakan vastuulla"})
+                            (some #(and (not (on-tarkastettu-hoitokautena? %))
+                                        (not (on-poistettu? %)))
+                                  sillat)
+                            (conj {:vari (:ei-tarkistettu silta-varit)
+                                   :teksti "Siltaa ei ole tarkastettu kuluvalla hoitokaudella"}))]
+      (with-meta sillat
+                 {:selitteet selitteet}))))
 
 (def sillat-kartalla
   (reaction-writable
