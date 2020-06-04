@@ -61,7 +61,9 @@
 (defn- skaalaa-sillat-zoom-tason-mukaan [koko sillat]
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
   ;; piirretään tietyllä radiuksella... ikoni olisi hyvä saada.
-  (let [sillan-koko (* 0.003 koko)]
+  ;; Kun on zoomattu todella lähelle, piirretään pallukka isompana, jotta sitä saadaan klikattua  mobiililaitteilla
+  (let [sillan-koko (* 0.003 koko)
+        sillan-koko (if (< sillan-koko 10)(* 0.03 koko) sillan-koko)]
     (when sillat
       (into []
             (comp (map #(assoc-in % [:alue :radius] sillan-koko))
