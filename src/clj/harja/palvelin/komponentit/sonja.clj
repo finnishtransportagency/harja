@@ -87,8 +87,8 @@
     Jos 'jarjestelma' on annettu, niin tässä määritetyn jonon viestit käsitellään samassa sessiossa kuin muut
     kuuntelijat ja lähettäjät samalla 'jarjestelma' nimellä.")
 
-  (aloita-yhteys [this]
-    "Aloita sonja yhteys"))
+  (kasky [this kasky]
+    "Lähettää käskyn sonja komponentille"))
 
 (def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
@@ -128,23 +128,6 @@
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan!
          jms-toiminto!)
-
-(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava lopeta-tarkkailu-kanava tyyppi db]
-  (thread
-    (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
-                                         :default false)]
-      (when-not lopetetaan?
-        (try
-          (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
-            (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
-                                          :palvelin (fmt/leikkaa-merkkijono 512
-                                                                            (.toString (InetAddress/getLocalHost)))
-                                          :osa-alue "sonja"}))
-          (catch Throwable t
-            (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t)))))
-        (<!! (timeout 10000))
-        (recur (async/alts!! [lopeta-tarkkailu-kanava]
-                             :default false))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -592,11 +575,11 @@
                  :saikeen-sammutus-kanava saikeen-sammutus-kanava)
           jms-saije (luo-jms-saije this saikeen-sammutus-kanava)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
-      (assoc this
-        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava lopeta-tarkkailu-kanava (:tyyppi asetukset) db))))
+      this))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
     (>!! lopeta-tarkkailu-kanava true)
+    (async/close! lopeta-tarkkailu-kanava)
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
     (when-not @jms-saije-sammutettu?
       (>!! saikeen-sammutus-kanava true))
@@ -605,21 +588,12 @@
            (when (not @jms-saije-sammutettu?)
              (< (timeout 1000))
              (recur))))
-    (loop [[jms-saije-sammutettu? _] (async/alts!! [(:jms-saije @tila) (timeout 5000)])
-           kierroksia 1]
-      (if jms-saije-sammutettu?
-        (log/info "Sonja säije sammutettu")
-        (do
-          (log/info "Ei saatu sammutettua Sonja säijettä " (* kierroksia 5) " sekunnin sisällä.")
-          (when (< kierroksia 5)
-            (recur (async/alts!! [(:jms-saije @tila) (timeout 5000)])
-                   (inc kierroksia))))))
     (assoc this :tila nil
+                :yhteys-ok? nil
                 :yhteys-future nil
                 :kaskytyskanava nil
                 :lopeta-tarkkailu-kanava nil
-                :saikeen-sammutus-kanava nil
-                :yhteyden-tiedot nil))
+                :saikeen-sammutus-kanava nil))
 
   Sonja
   (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]
@@ -651,8 +625,8 @@
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil (str "istunto-" jonon-nimi)))
 
-  (aloita-yhteys [{kaskytyskanava :kaskytyskanava :as this}]
-    (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:aloita-yhteys nil})))
+  (kasky [{kaskytyskanava :kaskytyskanava} kaskyn-tiedot]
+    (laheta-viesti-kaskytyskanavaan! kaskytyskanava kaskyn-tiedot)))
 
 (defn luo-oikea-sonja [asetukset]
   (->SonjaYhteys asetukset nil nil))
@@ -676,8 +650,8 @@
       (laheta this jonon-nimi viesti otsikot nil))
     (laheta [this jonon-nimi viesti]
       (laheta this jonon-nimi viesti nil nil))
-    (aloita-yhteys [this]
-      (log/debug "Feikki Sonja, aloita muka yhteys"))))
+    (kasky [this kaskyn-tiedot]
+      (log/debug "Feikki Sonja sai käskyn"))))
 
 (defn luo-sonja [asetukset]
   (if (and asetukset (not (clj-str/blank? (:url asetukset))))

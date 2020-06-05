@@ -20,7 +20,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki
-                 [com.stuartsierra/component "0.4.0"]
+                 [com.stuartsierra/component "1.0.0"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "4.10.0"]

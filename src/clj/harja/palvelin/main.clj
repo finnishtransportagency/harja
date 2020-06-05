@@ -14,6 +14,7 @@
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
+    [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -294,6 +295,10 @@
                       :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
+
+      :komponenttien-tila (component/using
+                            (komponenttien-tila/->KomponentinTila)
+                            [:db :db-replica :sonja])
 
       ;; Tarkastustehtävät
 
@@ -678,7 +683,7 @@
                 ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
                 ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
                 ;; ennen kuin sen statusta aletaan seuraamaan
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
+                [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica])
 
       :vaylien-geometriahaku
       (component/using
@@ -715,7 +720,7 @@
   (go
     (log/info "Aloitaetaan Sonjayhteys")
     (loop []
-      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
+      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/kasky (:sonja jarjestelma) {:aloita-yhteys nil}))]
         (when vastaus
           (log/info "Sonja yhteys aloitettu"))
         (when kaskytysvirhe

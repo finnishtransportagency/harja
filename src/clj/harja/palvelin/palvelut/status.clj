@@ -3,6 +3,7 @@
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
             [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
+            [harja.palvelin.komponentit.komponenttien-tila :as komponentin-tila]
             [cheshire.core :refer [encode]]
             [harja.kyselyt.status :as q]
             [clojure.core.async :as async :refer [<! go-loop]]
@@ -68,13 +69,19 @@
           (boolean? kehitysmoodi?)
           (or (nil? timeout-ms) (integer? timeout-ms))]
     :post [(boolean? %)]}
-   (let [timeout-ms (or timeout-ms 10000)]
+   (let [timeout-ms (or timeout-ms 10000)
+         taman-palvelimen-tila-ok? (fn []
+                                     (get-in @komponentin-tila/komponenttien-tila [:sonja :kaikki-ok?]))
+         jonku-palvelimen-tila-ok? (fn []
+                                     (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
      (boolean
-       (first (async/alts!! [(go-loop [status-ok? (jarjestelman-tila/kaikki-yhteydet-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?))]
+       (first (async/alts!! [(go-loop [status-ok? (or (taman-palvelimen-tila-ok?)
+                                                      (jonku-palvelimen-tila-ok?))]
                                (if status-ok?
                                  status-ok?
                                  (do (<! (async/timeout 1000))
-                                     (recur (jarjestelman-tila/kaikki-yhteydet-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?))))))
+                                     (recur (or (taman-palvelimen-tila-ok?)
+                                                (jonku-palvelimen-tila-ok?))))))
                              (async/timeout timeout-ms)]))))))
 
 (defn tietokannan-tila! [status-komponentti db]

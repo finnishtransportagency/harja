@@ -131,7 +131,7 @@
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
         {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
-         db :db kaskytyskanava :kaskytyskanava yhteyden-tiedot :yhteyden-tiedot} (:sonja jarjestelma)
+         db :db kaskytyskanava :kaskytyskanava} (:sonja jarjestelma)
         {:keys [yhteys qcf istunnot jms-saije]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (= (:sonja asetukset) sonja-asetukset))
