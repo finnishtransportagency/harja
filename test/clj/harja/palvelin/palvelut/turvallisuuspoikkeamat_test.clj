@@ -157,6 +157,7 @@
             :tyyppi #{:tyotapaturma}
             :otsikko "Kävi möhösti"
             :tila :suljettu
+            :juurisyy1 :muu
             :vahinkoluokittelu #{:ymparistovahinko}
             :vaaralliset-aineet #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}
             :sijainti {:type :point :coordinates [0 0]}

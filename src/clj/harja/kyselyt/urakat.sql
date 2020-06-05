@@ -140,7 +140,9 @@ SELECT
   u.id,
   u.nimi,
   u.sampoid,
-  u.alue,
+  CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
+      THEN u.alue
+          END as alue,
   u.alkupvm,
   u.loppupvm,
   u.tyyppi,
