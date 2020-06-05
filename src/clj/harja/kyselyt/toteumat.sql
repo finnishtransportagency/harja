@@ -948,7 +948,10 @@ WHERE id = :id;
 
 -- name: merkitse-varustetoteuma-lahetetyksi<!
 UPDATE varustetoteuma
-SET lahetetty_tierekisteriin = TRUE
+SET lahetetty_tierekisteriin = TRUE,
+    lahetetty = now(),
+    tila = :tila :: lahetyksen_tila,
+    lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: varustetoteuman-toimenpiteelle-sijainti
