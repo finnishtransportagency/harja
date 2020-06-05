@@ -53,6 +53,7 @@
         _ (assert kohde "Kohdetta ei saatu haettua")
         kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
                       :harja.domain.muokkaustiedot/muokattu
+                      ::paikkaus/urakka-id
                       ::paikkaus/tarkistettu
                       ::paikkaus/tarkistaja-id
                       ::paikkaus/ilmoitettu-virhe)
