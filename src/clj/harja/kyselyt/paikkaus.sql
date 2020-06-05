@@ -89,12 +89,6 @@ SELECT (tr1).tie as tie,
        (tr2).let from tr_alku, tr_loppu
 WHERE (tr1).tie = (tr2).tie;
 
---name: hae-paikkauksen-ajorata
-SELECT pt.ajorata
-  FROM paikkaus p
-  JOIN paikkauksen_tienkohta pt ON p.id = pt."paikkaus-id"
- WHERE p.id = :id
-
 --name: hae-paikkauskohteen-harja-id
 --single?: true
 SELECT id

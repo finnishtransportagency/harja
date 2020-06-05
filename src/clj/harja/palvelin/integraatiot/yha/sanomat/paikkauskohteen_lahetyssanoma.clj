@@ -13,6 +13,12 @@
 
 (def +paikkauksen-vienti+ "json/yha/paikkausten-vienti-request.schema.json")
 
+(defn- parsi-tienkohdat [tienkohta]
+  {::paikkaus/reunat (mapv #(into {:reuna %}) (::paikkaus/reunat tienkohta))
+   ::paikkaus/ajouravalit (mapv #(into {:ajouravali %}) (::paikkaus/ajouravalit tienkohta))
+   ::paikkaus/ajourat (mapv #(into {:ajoura %}) (::paikkaus/ajourat tienkohta))
+   ::paikkaus/keskisaumat (mapv #(into {:keskisauma %}) (::paikkaus/keskisaumat tienkohta))})
+
 (defn muodosta-sanoma-json
   "Muodostaa tietokannasta haetuista urakka-, paikkauskohde-, paikkaus- ja paikkauksen_materiaali-tiedoista
   paikkauksen-vienti-request-skeeman mukaisen sanoman."
@@ -54,10 +60,13 @@
                                                                 ::paikkaus/urakka-id        urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
         paikkaukset (map
-                      #(assoc-in  % [::paikkaus/tierekisteriosoite :ajorata]
-                                  (:ajorata (first
-                                              (q-paikkaus/hae-paikkauksen-ajorata db
-                                                                                  {:id (::paikkaus/id %)}))))
+                      #(let [tienkohdat (first
+                                          (q-paikkaus/hae-paikkauksen-tienkohdat db
+                                                                                 {::paikkaus/paikkaus-id (::paikkaus/id %)}))
+                             tienkohdat-parsittu (parsi-tienkohdat tienkohdat)]
+                         (-> %
+                             (assoc-in [::paikkaus/tierekisteriosoite :ajorata] (::paikkaus/ajorata tienkohdat))
+                             (assoc-in [::paikkaus/tierekisteriosoite :tienkohdat] tienkohdat-parsittu)))
                       paikkaukset)
         json (muodosta-sanoma-json urakka kohde paikkaukset)]
 

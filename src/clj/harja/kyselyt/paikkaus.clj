@@ -17,9 +17,6 @@
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
 
-(def ^{:doc "Hae paikkauksen ajorata, parametreina [db, paikkauksen id], muodossa {:id 1}"}
-  hae-paikkauksen-ajorata)
-
 (defn hae-paikkaukset [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus
@@ -47,6 +44,12 @@
          ::paikkaus/paikkaus
          (conj paikkaus/paikkauksen-perustiedot
                [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkauksen-tienkohdat [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkauksen-tienkohta
+         paikkaus/tienkohta-perustiedot
          hakuehdot))
 
 (defn hae-paikkaustoteumat [db hakuehdot]
