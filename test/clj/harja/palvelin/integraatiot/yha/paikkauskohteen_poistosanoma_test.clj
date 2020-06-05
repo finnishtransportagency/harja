@@ -7,7 +7,7 @@
             [harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-poistosanoma :as paikkauskohteen-poistosanoma])
   (:use [slingshot.slingshot :only [try+]]))
 
-(def sanoma-oikein "{\"poistettavat-paikkauskohteet\":1,\"poistettavat-paikkaukset\":[1,2,3,4,5,6]}")
+(def sanoma-oikein "{\"poistettavat-paikkauskohteet\":[1],\"poistettavat-paikkaukset\":[1,2,3,4,5,6]}")
 
 (deftest tarkista-poistosanoman-muodostus
   (let [db (tietokanta/luo-tietokanta testitietokanta)

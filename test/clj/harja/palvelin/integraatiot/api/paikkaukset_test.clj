@@ -61,8 +61,9 @@
                                                     ::paikkaus/reunat [1]}]}
         odotettu-paikkauskohde {::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
                                                           ::paikkaus/nimi "Testipaikkauskohde"}}
-        odotettu-kohde {::paikkaus/nimi "Testipaikkauskohde"
-                        ::paikkaus/ulkoinen-id 1231234}
+        odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
+                                               :ulkoinen-id 1231234
+                                               :urakka-id 4}
         paikkaus (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
         materiaali (first (paikkaus-q/hae-paikkaukset-materiaalit db {::paikkaus/ulkoinen-id paikkaustunniste}))
         tienkohta (first (paikkaus-q/hae-paikkaukset-tienkohta db {::paikkaus/ulkoinen-id paikkaustunniste}))
@@ -110,8 +111,9 @@
                                     :harja.domain.paikkaus/hinta 2000M,
                                     :harja.domain.paikkaus/ulkoinen-id 234531,
                                     :harja.domain.paikkaus/tyyppi "kokonaishintainen"}]
-        odotettu-kohde {::paikkaus/nimi "Testipaikkauskohde"
-                        ::paikkaus/ulkoinen-id 466645}]
+        odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
+                                               :ulkoinen-id 466645
+                                               :urakka-id 4}]
 
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkauskustannukset kirjattu onnistuneesti"))
