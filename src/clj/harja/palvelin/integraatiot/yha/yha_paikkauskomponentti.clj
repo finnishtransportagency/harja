@@ -72,10 +72,12 @@
 (defn laheta-paikkauskohteet-yhaan-uudelleen
   "Yrittää lähettää edellisellä kerralla virheeseen päätyneet paikkauskohteet uudelleen YHA:aan."
   [integraatioloki db asetukset]
-  (let [hakuehdot [:tila :virhe]
-        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohde db hakuehdot)] ;; TODO: hae virheeseen menneet paikkaukset, palauta myös urakan id.
+  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"}
+        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
   (doseq [paikkauskohde uudelleen-lahetettavat-paikkauskohteet]
-    (laheta-paikkauskohde-yhaan integraatioloki db asetukset (:urakka-id paikkauskohde) (:id paikkauskohde)))))
+    (laheta-paikkauskohde-yhaan integraatioloki db asetukset
+                                (:harja.domain.paikkaus/urakka-id paikkauskohde)
+                                (:harja.domain.paikkaus/id paikkauskohde)))))
 
 (defn kasittele-paikkauskohteen-poiston-vastaus
   "Päivittää virheeseen menneen paikkauskohteen poiston jälkeen paikkauskohteen lähetystilan virheeksi.

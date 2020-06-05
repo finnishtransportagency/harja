@@ -63,6 +63,7 @@
          ::paikkaus/paikkauskohde
          (conj paikkaus/paikkauskohteen-perustiedot
                ::muokkaustiedot/luotu
+               ::paikkaus/urakka-id
                ::muokkaustiedot/muokattu)
          hakuehdot))
 
