@@ -7,7 +7,8 @@
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :as loki]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka.urakka :as tila]))
 
 (defrecord PaivitaMaara [solu arvo tyylit])
 (defrecord ValitseTaso [arvo taso])
@@ -19,7 +20,7 @@
 (defrecord TehtavaTallennusEpaonnistui [vastaus])
 (defrecord TallennaTehtavamaara [tehtava])
 (defrecord HaeMaarat [parametrit])
-(defrecord SamatKaikilleMoodi [samat?])
+(defrecord SamatTulevilleMoodi [samat?])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -104,14 +105,20 @@
     (let [{:keys [urakka-id tehtava-id maara]} tehtava
           numero-maara (-> maara (clj-str/replace #"," ".") js/parseFloat)
           numero? (not (js/isNaN numero-maara))
-          samat-kaikille? (:samat-kaikille valinnat)]
-      (if samat-kaikille?
-        (doseq [vuosi (keys (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat]))]
-          (let [maara (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat vuosi])
+          samat-tuleville? (:samat-tuleville valinnat)]
+      (if samat-tuleville?
+        (doseq [vuosi (mapv (comp keyword str)
+                            (range (:hoitokausi valinnat)
+                                   (-> @tila/yleiset
+                                       :urakka
+                                       :loppupvm
+                                       pvm/vuosi)))]
+          (let [maara (get-in tehtavat-ja-toimenpiteet
+                              [(-> tehtava-id str keyword) :maarat vuosi])
                 maara (if (string? maara)
                         (-> maara
-                          (clj-str/replace #"," ".")
-                          js/parseFloat)
+                            (clj-str/replace #"," ".")
+                            js/parseFloat)
                         maara)
                 maara (if (js/isNaN maara) 0 maara)]
             (tuck-apurit/post! :tallenna-tehtavamaarat
@@ -243,18 +250,25 @@
           (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :toimenpide] arvo))))))
   PaivitaMaara
   (process-event [{:keys [solu arvo tyylit]} {:keys [valinnat] :as app}]
-    (let [{:keys [hoitokausi samat-kaikille]} valinnat
+    (let [{:keys [hoitokausi samat-tuleville]} valinnat
           id (-> (p/osan-id solu)
                  name
                  (clj-str/split #"-")
                  first)
-          app (if samat-kaikille
-                (update-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat] (fn [m]
-                                                                                         (let [avaimet (keys m)]
-                                                                                           (reduce (fn [acc avain] (assoc acc avain arvo)) m avaimet))))
+          app (if samat-tuleville
+                (update-in app
+                           [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat]
+                           (fn [m]
+                             (let [avaimet (mapv (comp keyword str)
+                                                 (range hoitokausi
+                                                        (-> @tila/yleiset
+                                                            :urakka
+                                                            :loppupvm
+                                                            pvm/vuosi)))]
+                               (reduce (fn [acc avain] (assoc acc avain arvo)) m avaimet))))
                 (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] arvo))]
       (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo :class tyylit) app)))
 
-  SamatKaikilleMoodi
+  SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]
-    (assoc-in app [:valinnat :samat-kaikille] samat?)))
+    (assoc-in app [:valinnat :samat-tuleville] samat?)))

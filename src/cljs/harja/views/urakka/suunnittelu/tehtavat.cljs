@@ -214,12 +214,12 @@
          [:div
           [:input#kopioi-tuleville-vuosille.vayla-checkbox
            {:type      "checkbox"
-            :checked   (:samat-kaikille valinnat)
-            :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
+            :checked   (:samat-tuleville valinnat)
+            :on-change #(e! (t/->SamatTulevilleMoodi (not (:samat-tuleville valinnat))))
             :disabled  (:noudetaan valinnat)}]
           [:label
            {:for "kopioi-tuleville-vuosille"}
-           "Samat suunnitellut määrät kaikille hoitokausille"]]]))))
+           "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
 (defn tehtavat*
   [e! app]
