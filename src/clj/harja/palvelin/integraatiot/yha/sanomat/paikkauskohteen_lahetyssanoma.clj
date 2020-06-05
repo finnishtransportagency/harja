@@ -49,8 +49,8 @@
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
         kohde (first (q-paikkaus/hae-paikkauskohteet db {::paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
-                                                         ::paikkaus/urakka-id        urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
+        _ (assert kohde "Kohdetta ei saatu haettua")
         kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
                       :harja.domain.muokkaustiedot/muokattu
                       ::paikkaus/tarkistettu
