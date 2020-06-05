@@ -13,9 +13,9 @@
 (def karttataso-sillat (atom false))
 (def jarjestys (atom :nimi))
 (def listaus (atom :kaikki))
-(def silta-varit {:tarkistettu "palegreen"
+(def silta-varit {:tarkistettu    "palegreen"
                   :ei-tarkistettu "crimson"
-                  :poistettu "gainsboro"})
+                  :poistettu      "gainsboro"})
 
 (defn- on-tarkastettu-hoitokautena?
   [silta]
@@ -42,7 +42,7 @@
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat
            {:urakka-id (:id urakka)
-            :listaus listaus}))
+            :listaus   listaus}))
 
 (defonce paivita-kartta! (atom false))
 
@@ -64,37 +64,37 @@
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
   ;; piirretään tietyllä radiuksella... ikoni olisi hyvä saada.
   (when sillat
-  (let [sillan-koko (* 0.003 koko)
-        sillan-koko (if (< sillan-koko 10)(* 0.03 koko) sillan-koko)]
+    (let [sillan-koko (* 0.003 koko)
+          sillan-koko (if (< sillan-koko 10) (* 0.03 koko) sillan-koko)
           sillat (into []
                        (comp (map #(assoc-in % [:alue :radius] sillan-koko))
                              (map #(assoc % :tyyppi-kartalla :silta)))
                        sillat)
           selitteet (cond-> []
                             (some on-tarkastettu-hoitokautena? sillat)
-                            (conj {:vari (:tarkistettu silta-varit)
+                            (conj {:vari   (:tarkistettu silta-varit)
                                    :teksti "Silta on tarkastettu kuluvalla hoitokaudella"})
                             (some on-poistettu? sillat)
-                            (conj {:vari (:poistettu silta-varit)
+                            (conj {:vari   (:poistettu silta-varit)
                                    :teksti "Silta ei enää ole urakan vastuulla"})
                             (some #(and (not (on-tarkastettu-hoitokautena? %))
                                         (not (on-poistettu? %)))
                                   sillat)
-                            (conj {:vari (:ei-tarkistettu silta-varit)
+                            (conj {:vari   (:ei-tarkistettu silta-varit)
                                    :teksti "Siltaa ei ole tarkastettu kuluvalla hoitokaudella"}))]
       (with-meta sillat
                  {:selitteet selitteet}))))
 
 (def sillat-kartalla
   (reaction-writable
-   (skaalaa-sillat-zoom-tason-mukaan
-    @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
+    (skaalaa-sillat-zoom-tason-mukaan
+      @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
 
 
 (defn paivita-silta! [id funktio & args]
   (swap! paivita-kartta! not)
   (swap! sillat-kartalla (fn [sillat]
-                  (mapv (fn [silta]
-                          (if (= id (:id silta))
-                            (apply funktio silta args)
-                            silta)) sillat))))
+                           (mapv (fn [silta]
+                                   (if (= id (:id silta))
+                                     (apply funktio silta args)
+                                     silta)) sillat))))
