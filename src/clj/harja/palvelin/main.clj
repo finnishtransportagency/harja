@@ -297,7 +297,7 @@
                       :excel-vienti :excel-vienti})
 
       :komponenttien-tila (component/using
-                            (komponenttien-tila/->KomponentinTila)
+                            (komponenttien-tila/komponentin-tila (:komponenttien-tila asetukset))
                             [:db :db-replica :sonja])
 
       ;; Tarkastustehtävät

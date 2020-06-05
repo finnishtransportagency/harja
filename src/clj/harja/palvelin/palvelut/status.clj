@@ -7,44 +7,25 @@
             [cheshire.core :refer [encode]]
             [harja.kyselyt.status :as q]
             [clojure.core.async :as async :refer [<! go-loop]]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.tyokalut.muunnos :as muunnos])
   (:import (com.mchange.v2.c3p0 C3P0ProxyConnection)))
 
 (defn aseta-status! [komponentti status-komponentti koodi viesti]
   (swap! (:status status-komponentti) update komponentti assoc :status koodi :viesti viesti))
 
-(defn ms->s
-  "Muuttaa millisekunnit sekunneiksi"
-  [ms]
-  {:pre [(integer? ms)]
-   :post [(integer? %)]}
-  (let [arvo (/ ms 1000)]
-    (if (integer? arvo)
-      arvo
-      (Math/round arvo))))
-
 (declare kasittele-status!)
 
 (defn dbn-tila-ok?
-  ([db] (dbn-tila-ok? db nil))
-  ([db timeout-ms]
-   {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db)
-          (or (nil? timeout-ms) (integer? timeout-ms))]
-    :post [(boolean? %)]}
-   (let [timeout-ms (or timeout-ms 20000)
-         timeout-s (ms->s timeout-ms)]
-     (try (with-open [c (.getConnection (:datasource db))
-                      stmt (jdbc/prepare-statement c
-                                                   "SELECT 1;"
-                                                   {:timeout timeout-s
-                                                    :result-type :forward-only
-                                                    :concurrency :read-only})
-                      rs (.executeQuery stmt)]
-            (if (.next rs)
-              (= 1 (.getObject rs 1))
-              false))
-          (catch Throwable _
-            false)))))
+  [timeout-ms]
+  {:post [(boolean? %)]}
+  (boolean
+    (first (async/alts!! [(go-loop [status-ok? (get-in @komponentin-tila/komponenttien-tila [:db :kaikki-ok?])]
+                            (if status-ok?
+                              status-ok?
+                              (do (<! (async/timeout 1000))
+                                  (recur (get-in @komponentin-tila/komponenttien-tila [:db :kaikki-ok?])))))
+                          (async/timeout timeout-ms)]))))
 
 (defn replikoinnin-tila-ok?
   ([db-replica] (replikoinnin-tila-ok? db-replica nil))
@@ -53,7 +34,7 @@
           (or (nil? timeout-ms) (integer? timeout-ms))]
     :post [(boolean? %)]}
    (let [timeout-ms (or timeout-ms 100000)
-         timeout-s (ms->s timeout-ms)
+         timeout-s (muunnos/ms->s timeout-ms)
          replikoinnin-viive (try (q/hae-replikoinnin-viive db-replica)
                                  (catch Throwable _
                                    :virhe))]
@@ -85,21 +66,21 @@
                              (async/timeout timeout-ms)]))))))
 
 (defn tietokannan-tila! [status-komponentti db]
-  (let [timeout-ms 20000
-        yhteys-ok? (dbn-tila-ok? db timeout-ms)]
-    (kasittele-status! status-komponentti yhteys-ok? :db (str "Ei saatu yhteyttä kantaan " (ms->s timeout-ms) " sekunnin kuluessa."))
+  (let [timeout-ms 10000
+        yhteys-ok? (dbn-tila-ok? timeout-ms)]
+    (kasittele-status! status-komponentti yhteys-ok? :db (str "Ei saatu yhteyttä kantaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
     {:yhteys-master-kantaan-ok? yhteys-ok?}))
 
 (defn replikoinnin-tila! [status-komponentti db-replica]
   (let [timeout-ms 100000
         replikoinnin-tila-ok? (replikoinnin-tila-ok? db-replica timeout-ms)]
-    (kasittele-status! status-komponentti replikoinnin-tila-ok? :db-replica (str "Replikoinnin viive on suurempi kuin " (ms->s timeout-ms) " sekunttia"))
+    (kasittele-status! status-komponentti replikoinnin-tila-ok? :db-replica (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))
     {:replikoinnin-tila-ok? replikoinnin-tila-ok?}))
 
 (defn sonja-yhteyden-tila! [status-komponentti db kehitysmoodi?]
   (let [timeout-ms 10000
         yhteys-ok? (sonja-yhteyden-tila-ok? db kehitysmoodi? timeout-ms)]
-    (kasittele-status! status-komponentti yhteys-ok? :sonja (str "Ei saatu yhteyttä Sonjaan " (ms->s timeout-ms) " sekunnin kuluessa."))
+    (kasittele-status! status-komponentti yhteys-ok? :sonja (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
     {:sonja-yhteys-ok? yhteys-ok?}))
 
 (defn status-ja-viesti [status-komponentti testattavat-komponentit]

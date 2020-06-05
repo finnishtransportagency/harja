@@ -225,4 +225,8 @@
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
+
+ :komponenttien-tila {:sonja {:paivitys-tiheys-ms 10000}
+                      :db {:paivitys-tiheys-ms 10000
+                           :kyselyn-timeout-ms 20000}}
  }
