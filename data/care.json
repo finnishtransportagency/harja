@@ -1,4 +1,9 @@
 [
+ {
+    "date": "2020-6-5",
+    "title": "Pieniä uudistuksia ja korjauksia HARJAan",
+    "body": "Perjantaiaamun päivitysajossa tuotiin seuraavat uudistukset ja korjaukset HARJAn tuotantoympäristöön:<br><br><ul><li>Tielupien haku on siirretty painikkeen taakse<li>Lyhyempi nimi urakalle Ilmoitukset-näytöllä<li>Varustekirjausohjeessa Tierekisterin tietosisällön kuvaukseen linkki päivitetty<li>Turvallisuuspoikkeama UI: Työtapaturman juurisyy on pakollinen tieto<li>Tielupanäytön urakat listataan aakkosjärjestyksessä<li>Myönnetty-ajan valitseminen hakuehdoksi Tienpidon luvissa ei estä Hae lupa-painikkeen käyttöä</ul>" 
+  },
   {
     "date": "2020-6-5",
     "title": "MHU-urakoiden Laskutusyhteenveto on käytettävissä HARJAn tuotantoympäristössä",
