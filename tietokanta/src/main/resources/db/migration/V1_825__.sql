@@ -1,3 +1,3 @@
 UPDATE sanktiotyyppi
-SET nimi = 'Sanktiotyyppiä ei tarvita'
+SET nimi = 'Ei tarvita sanktiotyyppiä'
 WHERE nimi = 'Ei sanktiotyyppiä' AND urakkatyyppi = '{teiden-hoito}'
