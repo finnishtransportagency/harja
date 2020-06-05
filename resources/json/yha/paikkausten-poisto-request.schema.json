@@ -22,5 +22,5 @@
   },
   "type": "object",
   "required": [
-    "poistettavat-paikkaukset"
+    "poistettavat-paikkauskohteet"
   ]}
