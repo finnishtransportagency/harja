@@ -683,7 +683,7 @@
                 ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
                 ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
                 ;; ennen kuin sen statusta aletaan seuraamaan
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica])
+                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
       :vaylien-geometriahaku
       (component/using

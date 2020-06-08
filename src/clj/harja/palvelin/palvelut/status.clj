@@ -28,20 +28,16 @@
                           (async/timeout timeout-ms)]))))
 
 (defn replikoinnin-tila-ok?
-  ([db-replica] (replikoinnin-tila-ok? db-replica nil))
-  ([db-replica timeout-ms]
-   {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db-replica)
-          (or (nil? timeout-ms) (integer? timeout-ms))]
-    :post [(boolean? %)]}
-   (let [timeout-ms (or timeout-ms 100000)
-         timeout-s (muunnos/ms->s timeout-ms)
-         replikoinnin-viive (try (q/hae-replikoinnin-viive db-replica)
-                                 (catch Throwable _
-                                   :virhe))]
-     ;Vähän outo käsittely replikan ok-tilalle. Tämä sen takia, että kun ei jossain ympäristössä ole oikeasti replikaa (paikallinen, Circle), niin tuo kantaquery palauttaa nil.
-     (boolean (and (not= :virhe replikoinnin-viive)
-                   (not (and replikoinnin-viive
-                             (> replikoinnin-viive timeout-s))))))))
+  [timeout-ms]
+  {:pre [(integer? timeout-ms)]
+   :post [(boolean? %)]}
+  (boolean
+    (first (async/alts!! [(go-loop [status-ok? (get-in @komponentin-tila/komponenttien-tila [:db-replica :kaikki-ok?])]
+                            (if status-ok?
+                              status-ok?
+                              (do (<! (async/timeout 1000))
+                                  (recur (get-in @komponentin-tila/komponenttien-tila [:db-replica :kaikki-ok?])))))
+                          (async/timeout timeout-ms)]))))
 
 (defn sonja-yhteyden-tila-ok?
   ([db kehitysmoodi?] (sonja-yhteyden-tila-ok? db kehitysmoodi? nil))
@@ -65,15 +61,15 @@
                                                 (jonku-palvelimen-tila-ok?))))))
                              (async/timeout timeout-ms)]))))))
 
-(defn tietokannan-tila! [status-komponentti db]
+(defn tietokannan-tila! [status-komponentti]
   (let [timeout-ms 10000
         yhteys-ok? (dbn-tila-ok? timeout-ms)]
     (kasittele-status! status-komponentti yhteys-ok? :db (str "Ei saatu yhteyttä kantaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
     {:yhteys-master-kantaan-ok? yhteys-ok?}))
 
-(defn replikoinnin-tila! [status-komponentti db-replica]
+(defn replikoinnin-tila! [status-komponentti]
   (let [timeout-ms 100000
-        replikoinnin-tila-ok? (replikoinnin-tila-ok? db-replica timeout-ms)]
+        replikoinnin-tila-ok? (replikoinnin-tila-ok? timeout-ms)]
     (kasittele-status! status-komponentti replikoinnin-tila-ok? :db-replica (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))
     {:replikoinnin-tila-ok? replikoinnin-tila-ok?}))
 
@@ -107,14 +103,13 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
-           db-replica :db-replica
            :as this}]
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
           (let [testit (merge
-                         (tietokannan-tila! this db)
-                         (replikoinnin-tila! this db-replica)
+                         (tietokannan-tila! this)
+                         (replikoinnin-tila! this)
                          (sonja-yhteyden-tila! this db kehitysmoodi?))
                 {:keys [status viesti]} (status-ja-viesti this #{:db :db-replica :sonja :harja})]
             {:status status

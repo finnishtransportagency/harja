@@ -6,7 +6,9 @@
             [taoensso.timbre :as log]
             [clj-time.coerce :as tc]
             [harja.fmt :as fmt]
-            [harja.kyselyt.jarjestelman-tila :as q]
+            [harja.kyselyt
+             [jarjestelman-tila :as jarjestelman-tila-q]
+             [status :as status-q]]
             [harja.palvelin.komponentit.sonja :as sonja-ns]
             [harja.pvm :as pvm]
             [harja.tyokalut.muunnos :as muunnos])
@@ -68,14 +70,14 @@
                (assoc-in [:sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat jms-tila)))))))
 
 (defn- tallenna-sonjan-tila-kantaan [db jms-tila]
-  (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
-                                :palvelin (fmt/leikkaa-merkkijono 512
-                                                                  (.toString (InetAddress/getLocalHost)))
-                                :osa-alue "sonja"}))
+  (jarjestelman-tila-q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
+                                                  :palvelin (fmt/leikkaa-merkkijono 512
+                                                                                    (.toString (InetAddress/getLocalHost)))
+                                                  :osa-alue "sonja"}))
 
-(defn- aloita-sonjan-tarkkailu! [{:keys [paivitys-tiheys-ms]} db sonja lopeta-tarkkailu-kanava]
+(defn- aloita-sonjan-tarkkailu! [{:keys [paivitystiheys-ms]} db sonja lopeta-tarkkailu-kanava]
   (tarkkaile lopeta-tarkkailu-kanava
-             paivitys-tiheys-ms
+             paivitystiheys-ms
              (fn []
                (try
                  (let [jms-tila (:vastaus (<!! (sonja-ns/kasky sonja {:jms-tilanne nil})))]
@@ -90,9 +92,9 @@
          (fn [kt]
            (assoc-in kt [:db :kaikki-ok?] kanta-ok?))))
 
-(defn- aloita-db-tarkkailu! [{:keys [paivitys-tiheys-ms kyselyn-timeout-ms]} db lopeta-tarkkailu-kanava]
+(defn- aloita-db-tarkkailu! [{:keys [paivitystiheys-ms kyselyn-timeout-ms]} db lopeta-tarkkailu-kanava]
   (tarkkaile lopeta-tarkkailu-kanava
-             paivitys-tiheys-ms
+             paivitystiheys-ms
              (fn []
                (try (with-open [c (.getConnection (:datasource db))
                                 stmt (jdbc/prepare-statement c
@@ -108,26 +110,47 @@
                     (catch Throwable _
                       (tallenna-dbn-tila-cacheen false))))))
 
+(defn- tallenna-db-replikan-tila-cacheen [replica-ok?]
+  (swap! komponenttien-tila
+         (fn [kt]
+           (assoc-in kt [:db-replica :kaikki-ok?] replica-ok?))))
+
+(defn- aloita-db-replican-tarrkailu! [{:keys [paivitystiheys-ms replikoinnin-max-viive-ms]} db-replica lopeta-tarkkailu-kanava]
+  (tarkkaile lopeta-tarkkailu-kanava
+             paivitystiheys-ms
+             (fn []
+               (let [replikoinnin-viive (try (status-q/hae-replikoinnin-viive db-replica)
+                                             (catch Throwable _
+                                               :virhe))
+                     replica-ok? (boolean (and (not= :virhe replikoinnin-viive)
+                                               (not (and replikoinnin-viive
+                                                         (> replikoinnin-viive replikoinnin-max-viive-ms)))))]
+                 (tallenna-db-replikan-tila-cacheen replica-ok?)))))
+
 (defn- lopeta-sonjan-tarkkailu! [lopeta-tarkkailu-kanava]
   (>!! lopeta-tarkkailu-kanava true))
 
 (defn- lopeta-db-tarkkailu! [lopeta-tarkkailu-kanava]
   (>!! lopeta-tarkkailu-kanava true))
 
+(defn- lopeta-db-replican-tarkkailu! [lopeta-tarkkailu-kanava]
+  (>!! lopeta-tarkkailu-kanava true))
+
 (defn- tyhjenna-cache! []
   (reset! komponenttien-tila nil))
 
-(defrecord KomponentinTila [asetukset sonja-lopeta-tarkkailu-kanava db-lopeta-tarkkailu-kanava]
+(defrecord KomponentinTila [asetukset sonja-lopeta-tarkkailu-kanava db-lopeta-tarkkailu-kanava
+                            db-replica-lopeta-tarkkailu-kanava]
   component/Lifecycle
   (start [{:keys [db db-replica sonja]}]
     (aloita-sonjan-tarkkailu! (:sonja asetukset) db sonja sonja-lopeta-tarkkailu-kanava)
     (aloita-db-tarkkailu! (:db asetukset) db db-lopeta-tarkkailu-kanava)
-    (aloita-db-replican-tarrkailu! db db-replica))
+    (aloita-db-replican-tarrkailu! (:db-replica asetukset) db-replica db-replica-lopeta-tarkkailu-kanava))
   (stop [this]
     (lopeta-sonjan-tarkkailu! sonja-lopeta-tarkkailu-kanava)
     (lopeta-db-tarkkailu! db-lopeta-tarkkailu-kanava)
-    (lopeta-db-replican-tarkkailu!)
+    (lopeta-db-replican-tarkkailu! db-replica-lopeta-tarkkailu-kanava)
     (tyhjenna-cache!)))
 
 (defn komponentin-tila [asetukset]
-  (->KomponentinTila asetukset (chan) (chan)))
+  (->KomponentinTila asetukset (chan) (chan) (chan)))
