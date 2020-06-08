@@ -333,6 +333,7 @@
 
 (defn tallenna-erilliskustannus [db user ek]
   (log/debug "tallenna erilliskustannus:" ek)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-erilliskustannukset user (:urakka-id ek))
   (tarkistukset/vaadi-erilliskustannus-kuuluu-urakkaan db (:id ek) (:urakka-id ek))
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset (:urakka-id ek) user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:urakka-id ek) user))
@@ -527,7 +528,8 @@
                          :lahde "harja-ui"
                          :tyokonetyyppi nil
                          :tyokonetunniste nil
-                         :tyokoneen-lisatieto nil})))]
+                         :tyokoneen-lisatieto nil})))
+          urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id (:urakka t)}))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
       (doseq [tm toteumamateriaalit]
@@ -549,8 +551,9 @@
             (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
                                                     (:maara tm) (:id user)))))
 
-      (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus (:sopimus t)
-                                                                         :toteuma (:id toteuma)})
+      (doseq [sopimus-id urakan-sopimus-idt]
+        (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
+                                                                           :toteuma (:id toteuma)}))
 
       ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
       ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
@@ -579,6 +582,8 @@
                                  (:arvot %)
                                  (:tietolaji %)))
                (catch [:type virheet/+virhe-tietolajin-arvojen-kasittelyssa+] {:keys [virheet]}
+                 (assoc % :arvot {:virhe virheet}))
+               (catch [:type virheet/+virhe-tietolajin-arvojen-versiossa+] {:keys [virheet]}
                  (assoc % :arvot {:virhe virheet})))))
      (map konv/alaviiva->rakenne))))
 

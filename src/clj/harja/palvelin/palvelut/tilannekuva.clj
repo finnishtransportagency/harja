@@ -234,7 +234,6 @@
                           (map konv/alaviiva->rakenne)
                           (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                           (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-                          (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                         (if nykytilanne?

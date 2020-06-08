@@ -9,13 +9,16 @@
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
+            [harja.domain.tierekisteri :as tr]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
             [clj-time.core :as t]
             [harja.id :refer [id-olemassa?]]
             [clj-time.coerce :as c]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
+            [harja.pvm :as pvm])
+  (:import (java.util Date)))
 
 (defn kasittele-vain-yksi-vamma-ja-ruumiinosa [turpo]
   ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
@@ -224,6 +227,20 @@
       (when (not= turpon-todellinen-urakka-id urakka-id)
         (throw (SecurityException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan."))))))
 
+(defn turvallisuuspoikkeaman-data-validi?
+  [{:keys [otsikko tapahtunut tyyppi vahinkoluokittelu vakavuusaste
+           tr tila kuvaus juurisyy1]}]
+  (and (not (empty? otsikko))
+       (instance? Date tapahtunut)
+       (not (empty? tyyppi))
+       (not (empty? vahinkoluokittelu))
+       (not (nil? vakavuusaste))
+       (tr/validi-osoite? tr)
+       (not (nil? tila))
+       (not (empty? kuvaus))
+       (or (not (contains? tyyppi :tyotapaturma))
+           (not (nil? juurisyy1)))))
+
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (let [{:keys [id urakka urakan-tyotunnit]} tp]
     (log/debug "Tallennetaan turvallisuuspoikkeama " id " urakkaan " urakka)
@@ -275,7 +292,9 @@
 
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]
-                         (tallenna-turvallisuuspoikkeama (:turi this) (:db this) user tiedot)))
+                         (if (turvallisuuspoikkeaman-data-validi? (:tp tiedot))
+                           (tallenna-turvallisuuspoikkeama (:turi this) (:db this) user tiedot)
+                           {:virhe "Kaikkia pakollisia tietoja ei ole annettu"})))
     this)
 
   (stop [this]

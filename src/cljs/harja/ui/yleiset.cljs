@@ -49,7 +49,9 @@
   ([] (ajax-loader-pieni nil))
   ([viesti] (ajax-loader-pieni viesti nil))
   ([viesti opts]
-   [:div {:class (str "ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))}
+   [:div {:class (str "ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))
+          :style (when-let [tyyli (:style opts)]
+                   tyyli)}
     [:img {:src "images/ajax-loader.gif" :style {:height 16}}]
     (when viesti
       [:span.viesti (str " " viesti " ")])]))
@@ -313,7 +315,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
-          (loki/log ryhmissa? ryhmitellyt-itemit)
           [:div (merge
                   {:class (str (if vayla-tyyli?
                                  (str "select-" (if virhe? "error-" "") "default")

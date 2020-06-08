@@ -58,7 +58,7 @@
       (fn [konteksti]
         (paivita-lahetyksen-tila db kohde-id :odottaa_vastausta)
         (let [http-asetukset {:metodi         :POST
-                              :url            (str url "paikkaus/")
+                              :url            (str url "paikkaus/paivitys/")
                               :kayttajatunnus kayttajatunnus
                               :salasana       salasana
                               :otsikot {"Content-Type" "application/json"}}
@@ -100,7 +100,7 @@
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "poista-paikkauskohde" nil
     (fn [konteksti]
-      (let [url (str url "paikkauskohde/" kohde-id) ;; TODO: Selvitä oikea URL YHA:sta
+      (let [url (str url "paikkaus/poisto/")
             http-asetukset {:metodi         :DELETE
                             :url            url
                             :kayttajatunnus kayttajatunnus

@@ -37,6 +37,10 @@
 (defn sanktion-tiedot
   [optiot]
   (let [muokattu (atom @tiedot/valittu-sanktio)
+        ; Jos urakkana on teiden-hoito (MHU) käyttäjä ei saa vapaasti valita indeksiä sanktiolle.
+        ; Sanktioon kuuluva indeksi on pakollinen ja se on jo määritelty urakalle, joten se pakotetaan käyttöön.
+        _ (when (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                   (swap! muokattu assoc :indeksi (:indeksi @nav/valittu-urakka)))
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                                (:id @nav/valittu-urakka))
         tallennus-kaynnissa (atom false)
@@ -188,26 +192,27 @@
             :palstoja 1 :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)
-                           sanktiotyypit (sanktiot/lajin-sanktiotyypit arvo)
-                           paivitetty (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count sanktiotyypit)) (first sanktiotyypit))]
-                                          (assoc paivitetty
-                                            :tyyppi tyyppi
-                                            :toimenpideinstanssi
-                                            (when tpk
-                                              (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                        paivitetty)]
-
-                       (if-not (sanktio-domain/sakko? paivitetty)
-                         (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                         paivitetty)))
+                     (let [rivi (-> rivi
+                                    (assoc :laji arvo)
+                                    (dissoc :tyyppi)
+                                    (assoc :tyyppi nil))
+                           s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
+                           rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count s-tyypit)) (first s-tyypit))]
+                                  (assoc rivi
+                                    :tyyppi (dissoc tyyppi :laji)
+                                    :toimenpideinstanssi
+                                    (when tpk
+                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                  rivi)]
+                       (if-not (sanktio-domain/sakko? rivi)
+                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                         rivi)))
             :valinnat (sort mahdolliset-sanktiolajit)
             :valinta-nayta #(case %
                               :A "Ryhmä A"
                               :B "Ryhmä B"
                               :C "Ryhmä C"
                               :muistutus "Muistutus"
-                              :lupaussanktio "Lupaussanktio"
                               :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                               :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
                               :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
@@ -232,9 +237,12 @@
                        :toimenpideinstanssi
                        (when tpk
                          (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-            ;; Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata.
-            :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
-            :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
+            :valinta-arvo identity
+            :aseta-vaikka-sama? true
+            :valinnat-fn (fn [_]
+                           (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
+            :valinta-nayta (fn [arvo]
+                             (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
             :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
          (when (sanktio-domain/sakko? @muokattu)
@@ -246,6 +254,7 @@
          (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
+            :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
             :valinnat ["MAKU 2015" "MAKU 2010" "MAKU 2005"]
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1})

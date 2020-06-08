@@ -13,8 +13,6 @@
         sanoma (walk/keywordize-keys
                  (cheshire/decode sanoma-json))]
 
-    (println "Nimi " (get-in sanoma [:urakka :nimi]))
-
     (is (= "Oulun alueurakka 2014-2019" (get-in sanoma [:urakka :nimi])) "Urakan tiedot palautuvat.")
     (is (= 5 (-> (first (:paikkauskohteet sanoma))
                  (:paikkauskohde)

@@ -56,7 +56,7 @@
             ^{:key "kustannussuunnitelma"}
             [kustannussuunnitelma/kustannussuunnitelma])
 
-          "Tehtävät"
+          "Tehtävät ja määrät"
           :tehtavat
           (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                      (valilehti-mahdollinen? :tehtavat ur)
