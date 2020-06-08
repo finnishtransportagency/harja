@@ -44,6 +44,7 @@
      :ilmoitusid ilmoitus-id
      :ilmoitettu ilmoitettu
      :valitetty valitetty
+     :vastaanotettu (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
      :yhteydenottopyynto yhteydenottopyynto
      :otsikko otsikko
      :paikankuvaus paikankuvaus
@@ -63,23 +64,24 @@
                                                       yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                       sijainti vastaanottaja tunniste viesti-id
                                                       vastaanotettu]}]
-  (let [id (:id (ilmoitukset/luo-ilmoitus<!
+  (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        id (:id (ilmoitukset/luo-ilmoitus<!
                   db
-                  {:urakka urakka-id
-                   :ilmoitusid ilmoitus-id
-                   :ilmoitettu ilmoitettu
-                   :valitetty valitetty
-                   :yhteydenottopyynto yhteydenottopyynto
-                   :otsikko otsikko
-                   :paikankuvaus paikankuvaus
-                   :lisatieto lisatieto
-                   :ilmoitustyyppi ilmoitustyyppi
-                   :selitteet (konv/seq->array (map name selitteet))
-                   :urakkatyyppi urakkatyyppi
-                   :tunniste tunniste
-                   :viestiid viesti-id
-                   :vastaanotettu vastaanotettu
-                   :vastaanotettu-alunperin valitetty}))]
+                  {:urakka                  urakka-id
+                   :ilmoitusid              ilmoitus-id
+                   :ilmoitettu              ilmoitettu
+                   :valitetty               valitetty
+                   :yhteydenottopyynto      yhteydenottopyynto
+                   :otsikko                 otsikko
+                   :paikankuvaus            paikankuvaus
+                   :lisatieto               lisatieto
+                   :ilmoitustyyppi          ilmoitustyyppi
+                   :selitteet               (konv/seq->array (map name selitteet))
+                   :urakkatyyppi            urakkatyyppi
+                   :tunniste                tunniste
+                   :viestiid                viesti-id
+                   :vastaanotettu           nyt
+                   :vastaanotettu-alunperin nyt}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
