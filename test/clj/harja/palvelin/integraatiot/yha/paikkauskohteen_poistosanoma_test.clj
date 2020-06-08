@@ -13,7 +13,8 @@
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         _ (u "UPDATE paikkauskohde SET poistettu = TRUE where id = 1;")
         sanoma (paikkauskohteen-poistosanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
-        sanoma-avaimilla (walk/keywordize-keys (cheshire/decode sanoma))]
+        sanoma-avaimilla (walk/keywordize-keys (cheshire/decode sanoma))
+        _ (u "UPDATE paikkauskohde SET poistettu = FALSE where id = 1;")]
     (is (= sanoma-oikein sanoma) "Oikeanlainen sanoma palautuu.")
     (is (= 1 (count (:poistettavat-paikkauskohteet sanoma-avaimilla))) "Poistettavia paikkauskohteita on oikea määrä.")))
 
