@@ -16,7 +16,10 @@
             [harja.domain.paikkaus :as paikkaus]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha])
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [harja.kyselyt.paikkaus :as q-paikkaus]
+            [specql.op :as op]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- poista-paikkaustoteumat
@@ -39,7 +42,14 @@
                      id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)
-        kohde-idt (:poistettavat-paikkauskohteet data)]
+        kohde-idt (:poistettavat-paikkauskohteet data)
+        kohteet (q-paikkaus/hae-paikkauskohteet db {::paikkaus/ulkoinen-id (op/in kohde-idt)
+                                                    :harja.domain.paikkaus/urakka-id urakka-id})]
+    (when (empty? kohteet)
+      (virheet/heita-ei-hakutuloksia-apikutsulle-poikkeus
+        {:koodi virheet/+ei-hakutuloksia+
+         :viesti "Annetulla kohde id:llä ei löydy kohdetta."}))
+
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction [tx db]
       (poista-paikkauskohteet tx urakka-id kayttaja-id kohde-idt)
@@ -49,8 +59,8 @@
       (try+
         (when-let [harja-id (paikkaus-q/hae-paikkauskohteen-harja-id db {:ulkoinen-id kohde-id})]
           (yha-paikkauskomponentti/poista-paikkauskohde yhap urakka-id harja-id))
-        (catch Exception e
-          (log/error "Poista paikkauskohde YHA:sta epäonnistui, tiedot: " (pr-str e))))))
+        (catch [:type yha-paikkauskomponentti/+virhe-paikkauskohteen-poistossa+] {:keys [virheet]}
+          (log/error "Poista paikkauskohde YHA:sta epäonnistui, tiedot: " (pr-str virheet))))))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkauskohteet ja -kustannukset poistettu onnistuneesti"}))
 
 

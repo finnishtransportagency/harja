@@ -7,7 +7,7 @@
             [harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-poistosanoma :as paikkauskohteen-poistosanoma])
   (:use [slingshot.slingshot :only [try+]]))
 
-(def sanoma-oikein "{\"poistettavat-paikkauskohteet\":[1],\"poistettavat-paikkaukset\":[1,2,3,4,5,6]}")
+(def sanoma-oikein "{\"poistettavat-paikkauskohteet\":[1]}")
 
 (deftest tarkista-poistosanoman-muodostus
   (let [db (tietokanta/luo-tietokanta testitietokanta)
@@ -15,7 +15,7 @@
         sanoma (paikkauskohteen-poistosanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
         sanoma-avaimilla (walk/keywordize-keys (cheshire/decode sanoma))]
     (is (= sanoma-oikein sanoma) "Oikeanlainen sanoma palautuu.")
-    (is (= 6 (count (:poistettavat-paikkaukset sanoma-avaimilla))) "Poistettavia paikkauksia on oikea määrä.")))
+    (is (= 1 (count (:poistettavat-paikkauskohteet sanoma-avaimilla))) "Poistettavia paikkauskohteita on oikea määrä.")))
 
 (deftest ei-voi-poistaa-vaaran-urakan-kohteita
   (let [db (tietokanta/luo-tietokanta testitietokanta)] ;; kohde 1 on oulun urakan kohde]

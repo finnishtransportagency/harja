@@ -13,31 +13,23 @@
 
 (defn muodosta-sanoma-json
   "Muodostaa tietokannasta haetuista tiedoista paikkauksen-poisto-request-skeeman mukaisen sanoman."
-  [kohde-id paikkaukset]
-  (cheshire/encode (conj {:poistettavat-paikkauskohteet [kohde-id]}
-                         {:poistettavat-paikkaukset (mapv
-                                                      #(:harja.domain.paikkaus/id %)
-                                                      paikkaukset)})))
+  [kohde-id]
+  (cheshire/encode {:poistettavat-paikkauskohteet [kohde-id]}))
 
 (defn muodosta
   "Muodostaa YHA:aan lähetettävän json-sanoman, jolla poistetaan paikkauskohteen kaikki paikkaukset YHA:sta.
-  Yksittäiset paikkauskohteet poistetaan YHA:sta lähettämällä paikkauskohde YHA:aan uudelleen ilman poistettuja paikkauksia.
-  Paikkauskohteen id ei riitä tiedoksi YHA:lle vaan mukana lähetetään myös paikkauskohteen kaikkien paikkausten id:t."
+  Yksittäiset paikkaukset poistetaan YHA:sta paikkus/paivitys API:n kautta, päivityksinä."
   [db urakka-id kohde-id]
   (let [kohteet (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id               kohde-id
                                                     :harja.domain.paikkaus/urakka-id        urakka-id
-                                                    :harja.domain.muokkaustiedot/poistettu? true}) ;; Tarkistetaan että poistettava kohde on urakassa ja poistettu-tilassa.
-        paikkaukset (q-paikkaus/hae-paikkaukset db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
-                                                    :harja.domain.paikkaus/urakka-id        urakka-id})
-        ei-poistettavaa (cond
-                          (empty? kohteet) (format "Paikkauskohteen poistoa ei voi lähettää YHAan. Kohde %s ei kuulu urakkaan %s tai se ei ole poistettu-tilassa." kohde-id urakka-id)
-                          (empty? paikkaukset) (format "Paikkauskohteen poistoa ei voi lähettää YHAan. Kohteen %s paikkaukset eivät kuulu urakkaan %s tai yksikään ei ole poistettu-tilassa." kohde-id urakka-id)
-                          :default nil)
-        poisto-json (if (nil? ei-poistettavaa)
-                      (muodosta-sanoma-json kohde-id paikkaukset)
-                      (do (log/error ei-poistettavaa)
+                                                    :harja.domain.muokkaustiedot/poistettu? true})
+        ei-poistettavaa? (when (empty? kohteet)
+                          (format "Paikkauskohteen poistoa ei voi lähettää YHAan. Kohde %s ei kuulu urakkaan %s tai se ei ole poistettu-tilassa." kohde-id urakka-id))
+        poisto-json (if ei-poistettavaa?
+                      (do (log/error ei-poistettavaa?)
                           (throw+ {:type  :invalidi-yha-paikkaus-kohde
-                                   :error ei-poistettavaa})))]
+                                   :error ei-poistettavaa?}))
+                      (muodosta-sanoma-json kohde-id))]
 
     (if-let [virheet (json/validoi +paikkauksen-poisto+ poisto-json)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. JSON ei ole validi. Validointivirheet: %s" virheet)]
