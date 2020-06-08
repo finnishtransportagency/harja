@@ -120,9 +120,11 @@ ORDER by u.nimi;
 SELECT
   ilmoitusid,
   tunniste,
-  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu,
   tila,
+  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
+  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  "vastaanotettu-alunperin" as "valitetty-harjaan",
+  valitetty as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -143,7 +145,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
@@ -363,6 +366,7 @@ SET
   ilmoitusid         = :ilmoitusid,
   ilmoitettu         = :ilmoitettu,
   valitetty          = :valitetty,
+  vastaanotettu      = :vastaanotettu,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
   paikankuvaus       = :paikankuvaus,
