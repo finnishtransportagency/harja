@@ -231,5 +231,5 @@
                            :kyselyn-timeout-ms 20000}
                       :db-replica {:paivitystiheys-ms 10000
                                    :replikoinnin-max-viive-ms 100000}}
- :api-halytys {:sonja}
+ :api-halytys {:sonja-ms 1000}
  }
