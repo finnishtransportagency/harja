@@ -636,6 +636,54 @@
                      {:validoitava? true}
                      :laskun-numero (-> % .-target .-value))])))
 
+(defmulti vayla-kentta
+          (fn [{:keys [tyyppi]} & args] tyyppi))
+
+(defmethod vayla-kentta :rivi [{:keys [sisalto]} parametrit]
+  [:div.flex-row (for [s (remove nil? sisalto)]
+                   [vayla-kentta s])])
+
+(defmethod vayla-kentta :teksti [{:keys [elementti teksti]}]
+  [(if (nil? elementti)
+     :div
+     elementti)
+   teksti])
+
+(defmethod vayla-kentta :paluunappi [{:keys [teksti klikkaus-fn parametrit]}]
+  [napit/takaisin
+   teksti
+   klikkaus-fn
+   parametrit])
+
+(defmethod vayla-kentta :poistonappi [{:keys [teksti klikkaus-fn parametrit]}]
+  [napit/poista
+   teksti
+   klikkaus-fn
+   parametrit])
+
+(defmethod vayla-kentta :dropdown [{:keys []}])
+
+(defmethod vayla-kentta :palstoitettu-rivi [{:keys [kolumnit]}]
+  [:div.palstat
+   (doall
+     (map (fn [kolumni]
+            [:div.palsta
+             (for [s kolumni]
+               [vayla-kentta s])])
+          kolumnit))])
+
+(defmethod vayla-kentta :palsta [])
+
+(defmethod vayla-kentta :default [_ _]
+  [:div "Virhe"])
+
+(defn- uusi-lomake
+  [{e! :e! tila :tila lomake-skeema :lomake-skeema}]
+  [:div
+   (doall (mapcat (fn [[_osio sisallot]]
+                    (for [elementti sisallot]
+                      [vayla-kentta elementti])) lomake-skeema))])
+
 (defn- kulujen-syottolomake
   [e! _]
   (let [paivitys-fn (fn [& opts-polut-ja-arvot]
@@ -719,6 +767,23 @@
          (when (not= 0 haetaan)
            [:div.ajax-peitto [yleiset/ajax-loader "Odota"]])]))))
 
+(defn- nayta-kulun-poisto-modaali
+  [{tehtavaryhmat                 :tehtavaryhmat
+    e!                            :e!
+    {:keys [tehtavaryhma
+            kohdistukset
+            koontilaskun-kuukausi
+            erapaiva] :as lomake} :lomake}]
+  (modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?"}
+                [kulun-poistovarmistus-modaali {:varmistus-fn          (fn []
+                                                                         (modal/piilota!)
+                                                                         (e! (tiedot/->PoistaKulu (:id lomake))))
+                                                :kohdistukset          kohdistukset
+                                                :koontilaskun-kuukausi koontilaskun-kuukausi
+                                                :tehtavaryhma          tehtavaryhma
+                                                :laskun-pvm            (pvm/pvm erapaiva)
+                                                :tehtavaryhmat         tehtavaryhmat}]))
+
 (defn- kohdistetut*
   [e! app]
   (komp/luo
@@ -726,10 +791,47 @@
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-alkupvm haun-loppupvm]} :parametrit :as app}]
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-alkupvm haun-loppupvm]} :parametrit lomake :lomake tehtavaryhmat :tehtavaryhmat :as app}]
       [:div#vayla
        (if syottomoodi
-         [kulujen-syottolomake e! app]
+         [:div
+          [debug/debug lomake]
+          [debug/debug (:validius (meta lomake))]
+          [uusi-lomake {:e!            e!
+                        :tila          app
+                        :lomake-skeema {:otsikko    [{:tyyppi  :rivi
+                                                      :sisalto [{:tyyppi      :paluunappi
+                                                                 :teksti      "Takaisin"
+                                                                 :klikkaus-fn #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+                                                                 :parametrit  {:vayla-tyyli?  true
+                                                                               :teksti-nappi? true
+                                                                               :style         {:font-size "14px"}}}]}
+                                                     {:tyyppi  :rivi
+                                                      :sisalto [{:tyyppi    :teksti
+                                                                 :elementti :h2
+                                                                 :teksti    "Uusi kulu"}
+                                                                (when-not (nil? (:id lomake))
+                                                                  {:tyyppi :poistonappi
+                                                                   :teksti "Poista kulu"
+                                                                   :klikkaus-fn (r/partial nayta-kulun-poisto-modaali {:tehtavaryhmat tehtavaryhmat
+                                                                                                                       :e! e!
+                                                                                                                       :lomake lomake})
+                                                                           :parametrit {:vayla-tyyli?  true
+                                                                                        :teksti-nappi? true
+                                                                                        :style         {:font-size   "14px"
+                                                                                                        :margin-left "auto"}}})]}]
+                                        :sisalto    [{:tyyppi  :rivi
+                                                      :sisalto [{:tyyppi    :dropdown
+                                                                 :elementti :h2
+                                                                 :teksti    "Love you"}]}
+                                                     {:tyyppi   :palstoitettu-rivi
+                                                      :kolumnit [[{:tyyppi :teksti :teksti "Palsta 1"}]
+                                                                 [{:tyyppi :teksti :teksti "Palsta 2a"}
+                                                                  {:tyyppi :teksti :teksti "Palsta 2b"}]]}]
+                                        :alaotsikko [{:tyyppi    :teksti
+                                                      :elementti :h2
+                                                      :teksti    "Love you"}]}}]
+          [kulujen-syottolomake e! app]]
          [:div
           [:div.flex-row
            [:h2 "Kulujen kohdistus"]
@@ -771,8 +873,8 @@
             {:valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
              :pvm-alku                 (or haun-alkupvm
                                            (-> @tila/yleiset :urakka :alkupvm))
-             :rajauksen-alkupvm           (-> @tila/yleiset :urakka :alkupvm)
-             :rajauksen-loppupvm          (-> @tila/yleiset :urakka :loppupvm)
+             :rajauksen-alkupvm        (-> @tila/yleiset :urakka :alkupvm)
+             :rajauksen-loppupvm       (-> @tila/yleiset :urakka :loppupvm)
              :pvm-loppu                (or haun-loppupvm
                                            (-> @tila/yleiset :urakka :loppupvm))
              :ikoni                    ikonit/calendar
