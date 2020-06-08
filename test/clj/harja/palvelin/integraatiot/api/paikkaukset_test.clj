@@ -5,22 +5,28 @@
             [specql.op :as op]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
+            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
             [harja.domain.tierekisteri :as tierekisteri]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
+            [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]))
 
 (def kayttaja "yit-rakennus")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
+    :yha-paikkauskomponentti (component/using
+                               (yha-paikkauskomponentti/->YhaPaikkaukset {:url +yha-url+})
+                               [:db :integraatioloki])
     :api-paikkaukset (component/using
                        (api-paikkaukset/->Paikkaukset)
-                       [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])))
+                       [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :yha-paikkauskomponentti])))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
@@ -100,7 +106,9 @@
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
         poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
+        poistettu-ennen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE id = " 1 ";")))
         poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
+        poistettu-jalkeen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE id = " 1 ";")))
         odotetut-paikkaustoteumat [{:harja.domain.paikkaus/selite "Lähtömaksu",
                                     :harja.domain.paikkaus/urakka-id 4,
                                     :harja.domain.paikkaus/hinta 450.3M,
@@ -115,6 +123,8 @@
                                                :ulkoinen-id 466645
                                                :urakka-id 4}]
 
+    (is (false? poistettu-ennen) "Ei ole alussa poistettu")
+    (is (true? poistettu-jalkeen) "Poisto onnistui")
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkauskustannukset kirjattu onnistuneesti"))
     (is (= odotetut-paikkaustoteumat (mapv
@@ -126,60 +136,60 @@
                             ::paikkaus/kirjattu
                             ::muokkaustiedot/luotu
                             ::muokkaustiedot/muokattu)))
+    ;; palauttaa 500, koska yha-paikkauskomponenttia ei ole mockattu. No biggie.
+    (is (= 500 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
 
-    (is (= 200 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
+;; TODO: Rakenna testiaineisto yit-käyttäjälle. Ja testaa poistoja.
 
- ;; TODO: Rakenna testiaineisto yit-käyttäjälle. Ja testaa poistoja.
-
-    ;
-    ;;; Paikkauskohteen poisto
-    ;;;
-    ;;; Toisen urakoitsijan kohdetta ei voi poistaa
-    ;(is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id 666
-    ;                                                           ::paikkaus/urakka-id 4
-    ;                                                           ::muokkaustiedot/luoja-id 9
-    ;                                                           ::muokkaustiedot/poistettu? true}))) "Paikkauskohteen poisto epäonnistui (1).")
-    ;
-    ;;;; Saman käyttäjän, samalla ulkoisella id:llä eri urakkaan tallentamaa kohdetta ei päivitetty
-    ;(is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id 666
-    ;                                                           ::paikkaus/urakka-id 21
-    ;                                                           ::muokkaustiedot/luoja-id 9
-    ;                                                           ::muokkaustiedot/poistettu? false}))) "Paikkauskohteen poisto epäonnistui (2).")
-    ;;; Poistettavan kohteen kaikki paikkaukset merkittiin poistetuksi
-    ;(is (= 0 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/paikkauskohde-id 1
-    ;                                                       ::paikkaus/urakka-id 4
-    ;                                                       ::muokkaustiedot/luoja-id 9
-    ;                                                       ::muokkaustiedot/poistettu? false}))) "Paikkausten poisto epäonnistui (1).")
-    ;;; Poistettavan kohteen kaikki toteumat merkittiin poistetuksi
-    ;(is (= 0 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/paikkauskohde-id 1
-    ;                                                            ::paikkaus/urakka-id 4
-    ;                                                            ::muokkaustiedot/luoja-id 9
-    ;                                                            ::muokkaustiedot/poistettu? false}))) "Paikkauskustannusten poisto epäonnistui (1).")
-    ;
-    ;;; Paikkauksen poisto
-    ;;;
-    ;;; Poistettavat paikkaukset merkittiin poistetuksi
-    ;(is (= 2 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id (op/in #{221, 222})
-    ;                                                       ::paikkaus/urakka-id 4
-    ;                                                       ::muokkaustiedot/luoja-id 9
-    ;                                                       ::muokkaustiedot/poistettu? true}))) "Paikkausten poisto epäonnistui (2).")
-    ;;; Saman paikkauskohteen muut paikkaukset ovat vielä voimassa
-    ;(is (= 2 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/urakka-id 4
-    ;                                                       ::paikkaus/paikkauskohde-id 4
-    ;                                                       ::muokkaustiedot/luoja-id 9
-    ;                                                       ::muokkaustiedot/poistettu? false}))) "Paikkausten poisto epäonnistui (3).")
-    ;
-    ;;; Paikkaustoteuman poisto
-    ;;;
-    ;;; Poistettavat paikkaustoteumat merkittiin poistetuksi
-    ;(is (= 1 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id 133
-    ;                                                            ::paikkaus/urakka-id 4
-    ;                                                            ::muokkaustiedot/luoja-id 9
-    ;                                                            ::muokkaustiedot/poistettu? true}))) "Paikkauskustannusten poisto epäonnistui (2).")
-    ;;; Saman paikkauskohteen muut paikkaukset ovat vielä voimassa
-    ;(is (= 1 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/urakka-id 4
-    ;                                                            ::paikkaus/paikkauskohde-id 3
-    ;                                                            ::muokkaustiedot/luoja-id 9
-    ;                                                            ::muokkaustiedot/poistettu? false}))))) "Paikkauskustannusten poisto epäonnistui (3).")
-    ;
+;
+;;; Paikkauskohteen poisto
+;;;
+;;; Toisen urakoitsijan kohdetta ei voi poistaa
+;(is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id 666
+;                                                           ::paikkaus/urakka-id 4
+;                                                           ::muokkaustiedot/luoja-id 9
+;                                                           ::muokkaustiedot/poistettu? true}))) "Paikkauskohteen poisto epäonnistui (1).")
+;
+;;;; Saman käyttäjän, samalla ulkoisella id:llä eri urakkaan tallentamaa kohdetta ei päivitetty
+;(is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id 666
+;                                                           ::paikkaus/urakka-id 21
+;                                                           ::muokkaustiedot/luoja-id 9
+;                                                           ::muokkaustiedot/poistettu? false}))) "Paikkauskohteen poisto epäonnistui (2).")
+;;; Poistettavan kohteen kaikki paikkaukset merkittiin poistetuksi
+;(is (= 0 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/paikkauskohde-id 1
+;                                                       ::paikkaus/urakka-id 4
+;                                                       ::muokkaustiedot/luoja-id 9
+;                                                       ::muokkaustiedot/poistettu? false}))) "Paikkausten poisto epäonnistui (1).")
+;;; Poistettavan kohteen kaikki toteumat merkittiin poistetuksi
+;(is (= 0 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/paikkauskohde-id 1
+;                                                            ::paikkaus/urakka-id 4
+;                                                            ::muokkaustiedot/luoja-id 9
+;                                                            ::muokkaustiedot/poistettu? false}))) "Paikkauskustannusten poisto epäonnistui (1).")
+;
+;;; Paikkauksen poisto
+;;;
+;;; Poistettavat paikkaukset merkittiin poistetuksi
+;(is (= 2 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id (op/in #{221, 222})
+;                                                       ::paikkaus/urakka-id 4
+;                                                       ::muokkaustiedot/luoja-id 9
+;                                                       ::muokkaustiedot/poistettu? true}))) "Paikkausten poisto epäonnistui (2).")
+;;; Saman paikkauskohteen muut paikkaukset ovat vielä voimassa
+;(is (= 2 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/urakka-id 4
+;                                                       ::paikkaus/paikkauskohde-id 4
+;                                                       ::muokkaustiedot/luoja-id 9
+;                                                       ::muokkaustiedot/poistettu? false}))) "Paikkausten poisto epäonnistui (3).")
+;
+;;; Paikkaustoteuman poisto
+;;;
+;;; Poistettavat paikkaustoteumat merkittiin poistetuksi
+;(is (= 1 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id 133
+;                                                            ::paikkaus/urakka-id 4
+;                                                            ::muokkaustiedot/luoja-id 9
+;                                                            ::muokkaustiedot/poistettu? true}))) "Paikkauskustannusten poisto epäonnistui (2).")
+;;; Saman paikkauskohteen muut paikkaukset ovat vielä voimassa
+;(is (= 1 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/urakka-id 4
+;                                                            ::paikkaus/paikkauskohde-id 3
+;                                                            ::muokkaustiedot/luoja-id 9
+;                                                            ::muokkaustiedot/poistettu? false}))))) "Paikkauskustannusten poisto epäonnistui (3).")
+;
 

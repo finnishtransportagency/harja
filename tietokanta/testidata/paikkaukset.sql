@@ -12,7 +12,7 @@ INSERT INTO paikkauskohde ("luoja-id",
 )
 VALUES ((SELECT id
          FROM kayttaja
-         WHERE kayttajanimi = 'destia'
+         WHERE kayttajanimi = 'yit-rakennus'
          LIMIT 1),
         current_timestamp,
         666,
