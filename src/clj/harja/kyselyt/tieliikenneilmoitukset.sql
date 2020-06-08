@@ -282,8 +282,11 @@ WHERE i.id IN (:idt);
 SELECT
   ilmoitusid,
   tunniste,
+  tila,
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu,
+  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  "vastaanotettu-alunperin" as "valitetty-harjaan",
+  valitetty as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -304,7 +307,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
