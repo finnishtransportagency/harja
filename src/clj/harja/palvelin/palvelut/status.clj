@@ -17,65 +17,64 @@
 (declare kasittele-status!)
 
 (defn dbn-tila-ok?
-  [timeout-ms]
+  [timeout-ms komponenttien-tila]
   {:post [(boolean? %)]}
   (boolean
-    (first (async/alts!! [(go-loop [status-ok? (get-in @komponentin-tila/komponenttien-tila [:db :kaikki-ok?])]
+    (first (async/alts!! [(go-loop [status-ok? (get-in @komponenttien-tila [:db :kaikki-ok?])]
                             (if status-ok?
                               status-ok?
                               (do (<! (async/timeout 1000))
-                                  (recur (get-in @komponentin-tila/komponenttien-tila [:db :kaikki-ok?])))))
+                                  (recur (get-in @komponenttien-tila [:db :kaikki-ok?])))))
                           (async/timeout timeout-ms)]))))
 
 (defn replikoinnin-tila-ok?
-  [timeout-ms]
+  [timeout-ms komponenttien-tila]
   {:pre [(integer? timeout-ms)]
    :post [(boolean? %)]}
   (boolean
-    (first (async/alts!! [(go-loop [status-ok? (get-in @komponentin-tila/komponenttien-tila [:db-replica :kaikki-ok?])]
+    (first (async/alts!! [(go-loop [status-ok? (get-in @komponenttien-tila [:db-replica :kaikki-ok?])]
                             (if status-ok?
                               status-ok?
                               (do (<! (async/timeout 1000))
-                                  (recur (get-in @komponentin-tila/komponenttien-tila [:db-replica :kaikki-ok?])))))
+                                  (recur (get-in @komponenttien-tila [:db-replica :kaikki-ok?])))))
                           (async/timeout timeout-ms)]))))
 
 (defn sonja-yhteyden-tila-ok?
-  ([db kehitysmoodi?] (sonja-yhteyden-tila-ok? db kehitysmoodi? nil))
-  ([db kehitysmoodi? timeout-ms]
-   {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db)
-          (boolean? kehitysmoodi?)
-          (or (nil? timeout-ms) (integer? timeout-ms))]
-    :post [(boolean? %)]}
-   (let [timeout-ms (or timeout-ms 10000)
-         taman-palvelimen-tila-ok? (fn []
-                                     (get-in @komponentin-tila/komponenttien-tila [:sonja :kaikki-ok?]))
-         jonku-palvelimen-tila-ok? (fn []
-                                     (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
-     (boolean
-       (first (async/alts!! [(go-loop [status-ok? (or (taman-palvelimen-tila-ok?)
-                                                      (jonku-palvelimen-tila-ok?))]
-                               (if status-ok?
-                                 status-ok?
-                                 (do (<! (async/timeout 1000))
-                                     (recur (or (taman-palvelimen-tila-ok?)
-                                                (jonku-palvelimen-tila-ok?))))))
-                             (async/timeout timeout-ms)]))))))
+  [db kehitysmoodi? timeout-ms komponenttien-tila]
+  {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db)
+         (boolean? kehitysmoodi?)
+         (or (nil? timeout-ms) (integer? timeout-ms))]
+   :post [(boolean? %)]}
+  (let [timeout-ms (or timeout-ms 10000)
+        taman-palvelimen-tila-ok? (fn []
+                                    (get-in @komponenttien-tila [:sonja :kaikki-ok?]))
+        jonku-palvelimen-tila-ok? (fn []
+                                    (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
+    (boolean
+      (first (async/alts!! [(go-loop [status-ok? (or (taman-palvelimen-tila-ok?)
+                                                     (jonku-palvelimen-tila-ok?))]
+                              (if status-ok?
+                                status-ok?
+                                (do (<! (async/timeout 1000))
+                                    (recur (or (taman-palvelimen-tila-ok?)
+                                               (jonku-palvelimen-tila-ok?))))))
+                            (async/timeout timeout-ms)])))))
 
-(defn tietokannan-tila! [status-komponentti]
+(defn tietokannan-tila! [{:keys [komponenttien-tila] :as status-komponentti}]
   (let [timeout-ms 10000
-        yhteys-ok? (dbn-tila-ok? timeout-ms)]
+        yhteys-ok? (dbn-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila))]
     (kasittele-status! status-komponentti yhteys-ok? :db (str "Ei saatu yhteyttä kantaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
     {:yhteys-master-kantaan-ok? yhteys-ok?}))
 
-(defn replikoinnin-tila! [status-komponentti]
+(defn replikoinnin-tila! [{:keys [komponenttien-tila] :as status-komponentti}]
   (let [timeout-ms 100000
-        replikoinnin-tila-ok? (replikoinnin-tila-ok? timeout-ms)]
+        replikoinnin-tila-ok? (replikoinnin-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila))]
     (kasittele-status! status-komponentti replikoinnin-tila-ok? :db-replica (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))
     {:replikoinnin-tila-ok? replikoinnin-tila-ok?}))
 
-(defn sonja-yhteyden-tila! [status-komponentti db kehitysmoodi?]
+(defn sonja-yhteyden-tila! [{:keys [komponenttien-tila] :as status-komponentti} db kehitysmoodi?]
   (let [timeout-ms 10000
-        yhteys-ok? (sonja-yhteyden-tila-ok? db kehitysmoodi? timeout-ms)]
+        yhteys-ok? (sonja-yhteyden-tila-ok? db kehitysmoodi? timeout-ms (get komponenttien-tila :komponenttien-tila))]
     (kasittele-status! status-komponentti yhteys-ok? :sonja (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
     {:sonja-yhteys-ok? yhteys-ok?}))
 

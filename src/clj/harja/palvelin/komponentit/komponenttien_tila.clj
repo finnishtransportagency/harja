@@ -9,14 +9,11 @@
             [harja.kyselyt
              [jarjestelman-tila :as jarjestelman-tila-q]
              [status :as status-q]]
+            [harja.palvelin.tyokalut.event-apurit :as event-apurit]
             [harja.palvelin.komponentit.sonja :as sonja-ns]
             [harja.pvm :as pvm]
             [harja.tyokalut.muunnos :as muunnos])
   (:import (java.net InetAddress)))
-
-(defonce ^{:doc "Pidetään kaikkien seurattavien komponenttien tila täällä"}
-         komponenttien-tila
-         (atom {}))
 
 (defn- tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
   (thread
@@ -62,95 +59,49 @@
                                   (tc/to-local-date-time paivitetty))))
                tilat)))
 
-(defn- tallenna-sonjan-tila-cacheen [jms-tila]
+(defn- tallenna-sonjan-tila-cacheen [jms-tila komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (-> kt
                (assoc :sonja jms-tila)
                (assoc-in [:sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat jms-tila)))))))
 
-(defn- tallenna-sonjan-tila-kantaan [db jms-tila]
-  (jarjestelman-tila-q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
-                                                  :palvelin (fmt/leikkaa-merkkijono 512
-                                                                                    (.toString (InetAddress/getLocalHost)))
-                                                  :osa-alue "sonja"}))
+(defn- aloita-sonjan-tarkkailu! [komponentti-event komponenttien-tila]
+  (event-apurit/kuuntele-eventtia komponentti-event :sonja :tila tallenna-sonjan-tila-cacheen komponenttien-tila))
 
-(defn- aloita-sonjan-tarkkailu! [{:keys [paivitystiheys-ms]} db sonja lopeta-tarkkailu-kanava]
-  (tarkkaile lopeta-tarkkailu-kanava
-             paivitystiheys-ms
-             (fn []
-               (try
-                 (let [jms-tila (:vastaus (<!! (sonja-ns/kasky sonja {:jms-tilanne nil})))]
-                   (tallenna-sonjan-tila-cacheen jms-tila)
-                   (tallenna-sonjan-tila-kantaan db jms-tila))
-                 (catch Throwable t
-                   (tallenna-sonjan-tila-cacheen nil)
-                   (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
-
-(defn- tallenna-dbn-tila-cacheen [kanta-ok?]
+(defn- tallenna-dbn-tila-cacheen [kanta-ok? komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (assoc-in kt [:db :kaikki-ok?] kanta-ok?))))
 
-(defn- aloita-db-tarkkailu! [{:keys [paivitystiheys-ms kyselyn-timeout-ms]} db lopeta-tarkkailu-kanava]
-  (tarkkaile lopeta-tarkkailu-kanava
-             paivitystiheys-ms
-             (fn []
-               (try (with-open [c (.getConnection (:datasource db))
-                                stmt (jdbc/prepare-statement c
-                                                             "SELECT 1;"
-                                                             {:timeout (muunnos/ms->s kyselyn-timeout-ms)
-                                                              :result-type :forward-only
-                                                              :concurrency :read-only})
-                                rs (.executeQuery stmt)]
-                      (let [kanta-ok? (if (.next rs)
-                                        (= 1 (.getObject rs 1))
-                                        false)]
-                        (tallenna-dbn-tila-cacheen kanta-ok?)))
-                    (catch Throwable _
-                      (tallenna-dbn-tila-cacheen false))))))
+(defn- aloita-db-tarkkailu! [komponentti-event komponenttien-tila]
+  (event-apurit/kuuntele-eventtia komponentti-event :db :tila tallenna-dbn-tila-cacheen komponenttien-tila))
 
-(defn- tallenna-db-replikan-tila-cacheen [replica-ok?]
+(defn- tallenna-db-replikan-tila-cacheen [replica-ok? komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (assoc-in kt [:db-replica :kaikki-ok?] replica-ok?))))
 
-(defn- aloita-db-replican-tarrkailu! [{:keys [paivitystiheys-ms replikoinnin-max-viive-ms]} db-replica lopeta-tarkkailu-kanava]
-  (tarkkaile lopeta-tarkkailu-kanava
-             paivitystiheys-ms
-             (fn []
-               (let [replikoinnin-viive (try (status-q/hae-replikoinnin-viive db-replica)
-                                             (catch Throwable _
-                                               :virhe))
-                     replica-ok? (boolean (and (not= :virhe replikoinnin-viive)
-                                               (not (and replikoinnin-viive
-                                                         (> replikoinnin-viive replikoinnin-max-viive-ms)))))]
-                 (tallenna-db-replikan-tila-cacheen replica-ok?)))))
+(defn- aloita-db-replican-tarrkailu! [komponentti-event komponenttien-tila]
+  (event-apurit/kuuntele-eventtia komponentti-event :db-replica :tila tallenna-db-replikan-tila-cacheen komponenttien-tila))
 
-(defn- lopeta-sonjan-tarkkailu! [lopeta-tarkkailu-kanava]
-  (>!! lopeta-tarkkailu-kanava true))
 
-(defn- lopeta-db-tarkkailu! [lopeta-tarkkailu-kanava]
-  (>!! lopeta-tarkkailu-kanava true))
-
-(defn- lopeta-db-replican-tarkkailu! [lopeta-tarkkailu-kanava]
-  (>!! lopeta-tarkkailu-kanava true))
-
-(defn- tyhjenna-cache! []
+(defn- tyhjenna-cache! [komponenttien-tila]
   (reset! komponenttien-tila nil))
 
-(defrecord KomponentinTila [asetukset sonja-lopeta-tarkkailu-kanava db-lopeta-tarkkailu-kanava
-                            db-replica-lopeta-tarkkailu-kanava]
+(defrecord KomponentinTila [komponenttien-tila]
   component/Lifecycle
-  (start [{:keys [db db-replica sonja]}]
-    (aloita-sonjan-tarkkailu! (:sonja asetukset) db sonja sonja-lopeta-tarkkailu-kanava)
-    (aloita-db-tarkkailu! (:db asetukset) db db-lopeta-tarkkailu-kanava)
-    (aloita-db-replican-tarrkailu! (:db-replica asetukset) db-replica db-replica-lopeta-tarkkailu-kanava))
+  (start [{:keys [komponentti-event] :as this}]
+    (assoc this
+           ::sonja-kuuntelija (aloita-sonjan-tarkkailu! komponentti-event komponenttien-tila)
+           ::db-kuuntelija (aloita-db-tarkkailu! komponentti-event komponenttien-tila)
+           ::db-replica-kuuntelija (aloita-db-replican-tarrkailu! komponentti-event komponenttien-tila)))
   (stop [this]
-    (lopeta-sonjan-tarkkailu! sonja-lopeta-tarkkailu-kanava)
-    (lopeta-db-tarkkailu! db-lopeta-tarkkailu-kanava)
-    (lopeta-db-replican-tarkkailu! db-replica-lopeta-tarkkailu-kanava)
-    (tyhjenna-cache!)))
+    (event-apurit/lopeta-eventin-kuuntelu (::sonja-kuuntelija this))
+    (event-apurit/lopeta-eventin-kuuntelu (::db-kuuntelija this))
+    (event-apurit/lopeta-eventin-kuuntelu (::db-replica-kuuntelija this))
+    (tyhjenna-cache! komponenttien-tila)
+    this))
 
-(defn komponentin-tila [asetukset]
-  (->KomponentinTila asetukset (chan) (chan) (chan)))
+(defn komponentin-tila []
+  (->KomponentinTila (atom {})))

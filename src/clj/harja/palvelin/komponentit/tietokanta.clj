@@ -1,17 +1,71 @@
 (ns harja.palvelin.komponentit.tietokanta
   (:require [com.stuartsierra.component :as component]
-            [jeesql.autoreload :as autoreload])
+            [jeesql.autoreload :as autoreload]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.core.async :as async]
+
+            [harja.palvelin.tyokalut.event-apurit :as event-apurit]
+            [harja.kyselyt.status :as status-q]
+            [harja.tyokalut.muunnos :as muunnos])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
 
+(defn tarkkaile-kantaa [db lopeta-tarkkailu-kanava
+                        {:keys [paivitystiheys-ms kyselyn-timeout-ms]}
+                        event-julkaisija]
+  (event-apurit/tarkkaile lopeta-tarkkailu-kanava
+                          paivitystiheys-ms
+                          (fn []
+                            (try (with-open [c (.getConnection (:datasource db))
+                                             stmt (jdbc/prepare-statement c
+                                                                          "SELECT 1;"
+                                                                          {:timeout (muunnos/ms->s kyselyn-timeout-ms)
+                                                                           :result-type :forward-only
+                                                                           :concurrency :read-only})
+                                             rs (.executeQuery stmt)]
+                                   (let [kanta-ok? (if (.next rs)
+                                                     (= 1 (.getObject rs 1))
+                                                     false)]
+                                     (event-julkaisija :tila kanta-ok?)))
+                                 (catch Throwable _
+                                   (event-julkaisija :tila false))))))
+
+(defn tarkkaile-replicaa [db-replica lopeta-tarkkailu-kanava
+                          {:keys [paivitystiheys-ms replikoinnin-max-viive-ms]}
+                          event-julkaisija]
+  (event-apurit/tarkkaile lopeta-tarkkailu-kanava
+                          paivitystiheys-ms
+                          (fn []
+                            (let [replikoinnin-viive (try (status-q/hae-replikoinnin-viive db-replica)
+                                                          (catch Throwable _
+                                                            :virhe))
+                                  replica-ok? (boolean (and (not= :virhe replikoinnin-viive)
+                                                            (not (and replikoinnin-viive
+                                                                      (> replikoinnin-viive replikoinnin-max-viive-ms)))))]
+                              (event-julkaisija :tila replica-ok?)))))
+
+(defn luo-db-eventit [{:keys [komponentti-event] :as this} db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
+  (let [event-julkaisija (event-apurit/event-julkaisija komponentti-event db-nimi)]
+    (event-apurit/lisaa-aihe komponentti-event db-nimi)
+    (case db-nimi
+      :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
+      :db-replica (tarkkaile-replicaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
+      nil)))
+
 ;; Tietokanta on pelkkä clojure.java.jdbc kirjaston mukainen db-spec, joka sisältää pelkään yhteyspoolin
-(defrecord Tietokanta [datasource kehitysmoodi]
+(defrecord Tietokanta [datasourcea db-nimi tarkkailun-timeout-arvot kehitysmoodi]
   component/Lifecycle
   (start [this]
-    (when kehitysmoodi
-      (autoreload/start-autoreload))
-    this)
-  (stop [this]
+    (let [lopeta-tarkkailu-kanava (async/chan)]
+      (when db-nimi
+        (luo-db-eventit this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava))
+      (when kehitysmoodi
+        (autoreload/start-autoreload))
+      (assoc this ::lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava)))
+  (stop [{:keys [komponentti-event] :as this}]
+    (when db-nimi
+      (event-apurit/julkaise-event komponentti-event db-nimi :tila :suljetaan)
+      (async/>!! (:lopeta-tarkkailu-kanava this) true))
     (DataSources/destroy  datasource)
     (when kehitysmoodi
       (autoreload/stop-autoreload))
@@ -22,7 +76,7 @@
   "Luodaan Harja järjestelmälle tietokantakomponentti käyttäen yhteyspoolia PostgreSQL tietokantaan."
   ([asetukset]
    (luo-tietokanta asetukset false))
-  ([{:keys [palvelin portti tietokanta kayttaja salasana yhteyspoolin-koko]} kehitysmoodi]
+  ([{:keys [palvelin portti tietokanta kayttaja salasana yhteyspoolin-koko tarkkailun-timeout-arvot tarkkailun-nimi]} kehitysmoodi]
    ;; c3p0 voi käyttää loggaukseen esimerkiksi slf4j:sta, mutta fallbackina toimii aina stderr.
    ;; Tämä on ongelmallista, koska oletuksena c3p0 tuntuu loggaavan (lähes) kaiken, emmekä me halua
    ;; että stderriin tungetaan INFO-tason viestejä. Siksi tässä asetetaan ensiksi loggausmekanismi
@@ -48,4 +102,6 @@
                    ;; jotta selvitään tietokannan uudelleenkäynnistyksestä ilman poikkeuksia sovellukselle
                    (.setPreferredTestQuery "SELECT 1")
                    (.setTestConnectionOnCheckout true))
+                 tarkkailun-nimi
+                 tarkkailun-timeout-arvot
                  kehitysmoodi)))

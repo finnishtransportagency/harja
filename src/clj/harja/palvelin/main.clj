@@ -14,7 +14,9 @@
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
+    [harja.palvelin.komponentit.komponentti-event :as komponentti-event]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
+    [harja.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -177,8 +179,18 @@
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
-      :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
-      :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
+      :db (tietokanta/luo-tietokanta (assoc tietokanta
+                                            :tarkkailun-timeout-arvot
+                                            (select-keys (get-in asetukset [:komponenttien-tila :db])
+                                                         #{:paivitystiheys-ms :kyselyn-timeout-ms})
+                                            :tarkkailun-nimi :db)
+                                     kehitysmoodi)
+      :db-replica (tietokanta/luo-tietokanta (assoc tietokanta-replica
+                                                    :tarkkailun-timeout-arvot
+                                                    (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
+                                                                 #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
+                                                    :tarkkailun-nimi :db-replica)
+                                             kehitysmoodi)
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)
                               [:db])
@@ -220,8 +232,10 @@
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (component/using
-               (sonja/luo-sonja (:sonja asetukset))
-               [:db])
+               (sonja/luo-sonja (merge (:sonja asetukset)
+                                       (select-keys (get-in asetukset [:komponenttien-tila :sonja])
+                                                    #{:paivitystiheys-ms})))
+               [:db :komponentti-event])
       :sonja-sahkoposti
       (component/using
         (let [{:keys [vastausosoite jonot suora? palvelin]}
@@ -296,9 +310,13 @@
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
 
+      :komponentti-event (komponentti-event/komponentti-event)
       :komponenttien-tila (component/using
-                            (komponenttien-tila/komponentin-tila (:komponenttien-tila asetukset))
-                            [:db :db-replica :sonja])
+                            (komponenttien-tila/komponentin-tila)
+                            [:komponentti-event])
+      :uudelleen-kaynnistaja (component/using
+                               (uudelleen-kaynnistaja/->UudelleenKaynnistaja)
+                               [:komponenttien-tila])
 
       ;; Tarkastustehtävät
 
@@ -683,7 +701,7 @@
                 ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
                 ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
                 ;; ennen kuin sen statusta aletaan seuraamaan
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
 
       :vaylien-geometriahaku
       (component/using

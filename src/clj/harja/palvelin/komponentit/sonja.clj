@@ -9,6 +9,7 @@
             [hiccup.core :refer [html]]
             [clojure.string :as clj-str]
             [harja.pvm :as pvm]
+            [harja.palvelin.tyokalut.event-apurit :as event-apurit]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
@@ -128,6 +129,24 @@
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan!
          jms-toiminto!)
+
+(defn- tallenna-sonjan-tila-kantaan [db jms-tila]
+  (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
+                                :palvelin (fmt/leikkaa-merkkijono 512
+                                                                  (.toString (InetAddress/getLocalHost)))
+                                :osa-alue "sonja"}))
+
+(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava event-julkaisija db]
+  (event-apurit/tarkkaile lopeta-tarkkailu-kanava
+                          paivitystiheys-ms
+                          (fn []
+                            (try
+                              (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
+                                (tallenna-sonjan-tila-kantaan db jms-tila)
+                                (event-julkaisija :tila jms-tila))
+                              (catch Throwable t
+                                (event-julkaisija :tila :tilan-lukemisvirhe)
+                                (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -552,8 +571,8 @@
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
-  (start [{db :db
-           :as this}]
+  (start [{:keys [db komponentti-event] :as this}]
+    (event-apurit/lisaa-aihe komponentti-event :sonja)
     (let [JMS-oliot (atom JMS-alkutila)
           ;; yhteys-ok? ei kaiketi käytetä missään?
           yhteys-ok? (atom false)
@@ -562,6 +581,7 @@
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
+          event-julkaisija (event-apurit/event-julkaisija komponentti-event :sonja)
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
@@ -575,9 +595,11 @@
                  :saikeen-sammutus-kanava saikeen-sammutus-kanava)
           jms-saije (luo-jms-saije this saikeen-sammutus-kanava)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
-      this))
+      (assoc this
+             :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava event-julkaisija db))))
 
-  (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
+  (stop [{:keys [lopeta-tarkkailu-kanava komponentti-event kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
+    (event-apurit/julkaise-event komponentti-event :sonja :tila :suljetaan)
     (>!! lopeta-tarkkailu-kanava true)
     (async/close! lopeta-tarkkailu-kanava)
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
