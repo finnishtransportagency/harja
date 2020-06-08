@@ -60,15 +60,15 @@
       db integraatioloki "yha" "laheta-paikkauskohde" nil
       (fn [konteksti]
         (paivita-lahetyksen-tila db kohde-id :odottaa_vastausta)
-        (let [http-asetukset {:metodi         :POST
-                              :url            (str url "paikkaus/paivitys/")
+        (let [http-asetukset {:metodi :POST
+                              :url (str url "paikkaus/paivitys/")
                               :kayttajatunnus kayttajatunnus
-                              :salasana       salasana
+                              :salasana salasana
                               :otsikot {"Content-Type" "application/json"}}
               viestisisalto (paikkauskohteen-lahetyssanoma/muodosta db urakka-id kohde-id)
               {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)
-              enkoodattu-body (cheshire/decode vastaus true)])))
-    (kasittele-paikkauskohteen-lahettamisen-vastaus db kohde-id)
+              enkoodattu-body (cheshire/decode vastaus true)]
+          (kasittele-paikkauskohteen-lahettamisen-vastaus db kohde-id (:virheet enkoodattu-body)))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (kasittele-paikkauskohteen-lahettamisen-vastaus db kohde-id virheet)
       false)))
