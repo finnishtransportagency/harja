@@ -49,6 +49,12 @@
                 "format": "date-time",
                 "required": true
               },
+              "vastaanotettu-harjaan": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/vastaanotettu-harjaan",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
               "paivitetty-harjaan": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/paivitetty-harjaan",
                 "type": "string",
