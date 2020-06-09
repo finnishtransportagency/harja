@@ -48,9 +48,9 @@
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde (first (q-paikkaus/hae-paikkauskohteet db {::paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {::paikkaus/id kohde-id
+                                                         :harja.domain.paikkaus/urakka-id urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
-        _ (assert kohde "Kohdetta ei saatu haettua")
         kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
                       :harja.domain.muokkaustiedot/muokattu
                       ::paikkaus/urakka-id
@@ -58,7 +58,7 @@
                       ::paikkaus/tarkistaja-id
                       ::paikkaus/ilmoitettu-virhe)
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {::paikkaus/paikkauskohde-id kohde-id
-                                                                ::paikkaus/urakka-id        urakka-id
+                                                                ::paikkaus/urakka-id urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
         paikkaukset (map
                       #(let [tienkohdat (first
@@ -75,7 +75,7 @@
     (if-let [virheet (json/validoi +paikkauksen-vienti+ json false)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. JSON ei ole validi. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
-        (throw+ {:type  :invalidi-yha-paikkaus-json
+        (throw+ {:type :invalidi-yha-paikkaus-json
                  :error virheviesti}))
       json)))
 
