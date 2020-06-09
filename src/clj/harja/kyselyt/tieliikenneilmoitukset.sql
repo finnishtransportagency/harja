@@ -124,7 +124,11 @@ SELECT
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
   "vastaanotettu-alunperin" as "valitetty-harjaan",
-  valitetty as "paivitetty-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+  ELSE
+      vastaanotettu
+  END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -289,7 +293,11 @@ SELECT
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
   "vastaanotettu-alunperin" as "valitetty-harjaan",
-  valitetty as "paivitetty-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+  ELSE
+      vastaanotettu
+  END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
