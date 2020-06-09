@@ -1,10 +1,34 @@
 (ns harja.palvelin.tyokalut.event-apurit
-  (:require [clojure.core.async :as async]))
+  (:require [clojure.core.async :as async]
+            [harja.palvelin.tyokalut.interfact :as i])
+  (:import (harja.palvelin.tyokalut.komponentti_event KomponenttiEvent)))
 
-(defprotocol IEvent
-  (lisaa-aihe [this aihe] [this aihe aihe-fn] "Lisää aiheen, jota voidaan kuunnella")
-  (eventin-kuuntelija [this aihe event] "")
-  (julkaise-event [this aihe nimi data] "Julkaise 'data' aiheeseeen 'nimi'"))
+(defn lisaa-aihe!
+  ([this aihe]
+   {:pre [(instance? KomponenttiEvent this)
+          (ifn? aihe)]}
+   (i/lisaa-aihe this aihe))
+  ([this aihe aihe-fn]
+   {:pre [(instance? KomponenttiEvent this)
+          (ifn? aihe-fn)]
+    :post [(instance? KomponenttiEvent %)]}
+   (i/lisaa-aihe this aihe aihe-fn)))
+
+(defn eventin-kuuntelija!
+  [this aihe event]
+  {:pre [(instance? KomponenttiEvent this)
+         (or (string? event)
+             (keyword? event))]}
+  (i/eventin-kuuntelija this aihe event))
+
+(defn julkaise-event
+  [this aihe event data]
+  {:pre [(instance? KomponenttiEvent this)
+         (or (string? event)
+             (keyword? event))
+         (not (nil? data))]
+   :post [(boolean? %)]}
+  (i/julkaise-event this aihe event data))
 
 (defn event-julkaisija [this aihe]
   (fn [nimi data]
@@ -21,7 +45,7 @@
                             :default false))))))
 
 (defn kuuntele-eventtia [this aihe event f & args]
-  (let [kuuntelija (eventin-kuuntelija this aihe event)]
+  (let [kuuntelija (eventin-kuuntelija! this aihe event)]
     (async/go
       (loop [arvo (async/<! kuuntelija)]
         (apply f arvo args)

@@ -1,12 +1,11 @@
-(ns harja.palvelin.komponentit.komponentti-event
+(ns harja.palvelin.tyokalut.komponentti-event
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :as async]
             [clojure.walk :as walk]
-
-            [harja.palvelin.tyokalut.event-apurit :as event-apurit]))
+            [harja.palvelin.tyokalut.interfact :as i]))
 
 (defonce ^{:private true
-          :doc "Halutaan luoda singleton KomponenttiEvent:istä, joten pakotetaan se ottamaan parametrinsa
+           :doc "Halutaan luoda singleton KomponenttiEvent:istä, joten pakotetaan se ottamaan parametrinsa
                 täältä. Tehdään tästä myös private, jotta atomin arvoja voidaan muokata vain KomponenttiEvent
                 rekordin kautta."}
          komponentti-event-parametrit
@@ -23,29 +22,26 @@
                        (let [[k v] x]
                          (case k
                            ::subs (doseq [kanava v]
-                                   (async/close! kanava))
+                                    (async/close! kanava))
                            ::kanava (async/close! v)
                            nil)))))
     (reset! komponentti-event-parametrit {})
     this)
-  event-apurit/IEvent
+  i/IEvent
   (lisaa-aihe [this aihe aihe-fn]
-    {:pre [(ifn? aihe-fn)]
-     :post [(instance? KomponenttiEvent %)]}
     (swap! aiheet
            (fn [aiheet]
              ;; Tämä tarkistus pitää tehdä swap! sisällä, jotta idempotent käytös voidaan taata.
              ;; Useammasta threadista ajettaessa, swapin body saatetaan ajaa useaan otteeseen.
              (if (get aiheet aihe)
                aiheet
-               (let [kanava (async/chan)]
+               (let [kanava (async/chan (async/sliding-buffer 1000))]
                  (assoc aiheet aihe {::kanava kanava
                                      ::pub (async/pub kanava aihe-fn)})))))
     this)
   (lisaa-aihe [this aihe]
-    (event-apurit/lisaa-aihe this aihe aihe))
+    (i/lisaa-aihe this aihe aihe))
   (eventin-kuuntelija [this aihe event]
-    {:post [(instance? KomponenttiEvent %)]}
     (when (get @aiheet aihe)
       (let [kuuntelija (async/chan)]
         (swap! aiheet
@@ -58,8 +54,7 @@
         kuuntelija)))
   (julkaise-event [_ aihe nimi data]
     (if-let [julkaisu-kanava (get-in @aiheet [aihe ::kanava])]
-      (do (async/put! julkaisu-kanava {nimi data})
-          true)
+      (boolean (async/put! julkaisu-kanava {nimi data}))
       false)))
 
 (defn komponentti-event []

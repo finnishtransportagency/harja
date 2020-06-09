@@ -46,14 +46,14 @@
 
 (defn luo-db-eventit [{:keys [komponentti-event] :as this} db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
   (let [event-julkaisija (event-apurit/event-julkaisija komponentti-event db-nimi)]
-    (event-apurit/lisaa-aihe komponentti-event db-nimi)
+    (event-apurit/lisaa-aihe! komponentti-event db-nimi)
     (case db-nimi
       :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
       :db-replica (tarkkaile-replicaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
       nil)))
 
 ;; Tietokanta on pelkkä clojure.java.jdbc kirjaston mukainen db-spec, joka sisältää pelkään yhteyspoolin
-(defrecord Tietokanta [datasourcea db-nimi tarkkailun-timeout-arvot kehitysmoodi]
+(defrecord Tietokanta [datasource db-nimi tarkkailun-timeout-arvot kehitysmoodi]
   component/Lifecycle
   (start [this]
     (let [lopeta-tarkkailu-kanava (async/chan)]

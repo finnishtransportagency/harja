@@ -14,7 +14,6 @@
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
-    [harja.palvelin.komponentit.komponentti-event :as komponentti-event]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
     [harja.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]
 
@@ -38,6 +37,8 @@
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
+
+    [harja.palvelin.tyokalut.komponentti-event :as komponentti-event]
 
     ;; Harjan bisneslogiikkapalvelut
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -179,18 +180,22 @@
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
-      :db (tietokanta/luo-tietokanta (assoc tietokanta
-                                            :tarkkailun-timeout-arvot
-                                            (select-keys (get-in asetukset [:komponenttien-tila :db])
-                                                         #{:paivitystiheys-ms :kyselyn-timeout-ms})
-                                            :tarkkailun-nimi :db)
-                                     kehitysmoodi)
-      :db-replica (tietokanta/luo-tietokanta (assoc tietokanta-replica
-                                                    :tarkkailun-timeout-arvot
-                                                    (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
-                                                                 #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
-                                                    :tarkkailun-nimi :db-replica)
-                                             kehitysmoodi)
+      :db (component/using
+            (tietokanta/luo-tietokanta (assoc tietokanta
+                                              :tarkkailun-timeout-arvot
+                                              (select-keys (get-in asetukset [:komponenttien-tila :db])
+                                                           #{:paivitystiheys-ms :kyselyn-timeout-ms})
+                                              :tarkkailun-nimi :db)
+                                       kehitysmoodi)
+            [:komponentti-event])
+      :db-replica (component/using
+                    (tietokanta/luo-tietokanta (assoc tietokanta-replica
+                                                      :tarkkailun-timeout-arvot
+                                                      (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
+                                                                   #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
+                                                      :tarkkailun-nimi :db-replica)
+                                               kehitysmoodi)
+                    [:komponentti-event])
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)
                               [:db])

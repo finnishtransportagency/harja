@@ -572,7 +572,7 @@
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
   (start [{:keys [db komponentti-event] :as this}]
-    (event-apurit/lisaa-aihe komponentti-event :sonja)
+    (event-apurit/lisaa-aihe! komponentti-event :sonja)
     (let [JMS-oliot (atom JMS-alkutila)
           ;; yhteys-ok? ei kaiketi käytetä missään?
           yhteys-ok? (atom false)

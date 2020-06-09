@@ -1,29 +1,8 @@
 (ns harja.palvelin.komponentit.komponenttien-tila
   (:require [com.stuartsierra.component :as component]
-            [clojure.core.async :refer [thread timeout chan <!! >!!] :as async]
-            [clojure.java.jdbc :as jdbc]
-            [cheshire.core :as cheshire]
-            [taoensso.timbre :as log]
             [clj-time.coerce :as tc]
-            [harja.fmt :as fmt]
-            [harja.kyselyt
-             [jarjestelman-tila :as jarjestelman-tila-q]
-             [status :as status-q]]
             [harja.palvelin.tyokalut.event-apurit :as event-apurit]
-            [harja.palvelin.komponentit.sonja :as sonja-ns]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.muunnos :as muunnos])
-  (:import (java.net InetAddress)))
-
-(defn- tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
-  (thread
-    (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
-                                         :default false)]
-      (when-not lopetetaan?
-        (f)
-        (<!! (timeout timeout-ms))
-        (recur (async/alts!! [lopeta-tarkkailu-kanava]
-                             :default false))))))
+            [harja.pvm :as pvm]))
 
 (defn olion-tila-aktiivinen? [tila]
   (= tila "ACTIVE"))
