@@ -3,7 +3,7 @@
     {
       "ilmoitus": {
         "ilmoitusid": 3213123,
-        "tila": "vastaanotettu",
+        "tila": "aloitettu",
         "tunniste": "UV-1509-1a",
         "ilmoitettu": "2015-09-29T14:49:45",
         "valitetty-harjaan": "2015-09-29T14:50:45",
@@ -39,7 +39,8 @@
           }
         },
         "otsikko": "Vallien tasausta tarvitaan",
-        "paikankuvaus": "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."
+        "paikankuvaus": "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.",
+        "aiheutti-toimenpiteita": true
       }
     }
   ]
