@@ -310,8 +310,6 @@ ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorapintaisten kävely- ja pyöräilyväylienhoito', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	127, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 127;
 UPDATE toimenpidekoodi set emo = (select id from toimenpidekoodi where koodi = '23124') WHERE nimi = 'Maakivien (>1m3) poisto' AND emo = (select id from toimenpidekoodi where koodi ='20191'); -- korjataan ensin emo, jos rivi löytyy
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kesäsuola (CaCl2, materiaali)', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tonnia',	128, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 128;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Maakivien (>1m3) poisto', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'jm',	130, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 130;
 
@@ -385,8 +383,8 @@ INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Valu (Y7)'), jarjestys = 108;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Reunantäyttö', (select id from tehtavaryhma where nimi = 'Sorapientareet (O)'), 'tonni',	116, NULL, (select id from toimenpidekoodi where koodi = '23116'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorapientareet (O)'), jarjestys = 116;
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Liikenteen varmistaminen kelirikkokohteessa', (select id from tehtavaryhma where nimi = 'Sorastus (M)'),	'tonni', 132, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorastus (M)'), jarjestys = 132;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Liikenteen varmistaminen kelirikkokohteessa', (select id from tehtavaryhma where nimi = 'Sorastus (M)'),	'tonni', 129, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorastus (M)'), jarjestys = 129;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Soratien runkokelirikkokorjaukset', (select id from tehtavaryhma where nimi = 'RKR-korjaus (Q)'),	'tiem', 146, NULL, (select id from toimenpidekoodi where koodi = '14301'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'RKR-korjaus (Q)'), jarjestys = 146;
 
@@ -803,10 +801,10 @@ UPDATE toimenpidekoodi SET jarjestys = 124	WHERE nimi = 'Sorateiden hoito, hoito
 UPDATE toimenpidekoodi SET jarjestys = 125	WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 126	WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 127	WHERE nimi = 'Sorapintaisten kävely- ja pyöräilyväylienhoito' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 128	WHERE nimi = 'Maakivien (>1m3) poisto' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 129	WHERE nimi = 'Sorateiden pölynsidonta' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 130	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 130	WHERE nimi = 'Sorastus km' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 128	WHERE nimi = 'Sorateiden pölynsidonta' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 129	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 129	WHERE nimi = 'Sorastus km' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 130	WHERE nimi = 'Maakivien (>1m3) poisto' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 131	WHERE nimi = 'Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 132	WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 134	WHERE nimi = 'Muut Sorateiden hoitoon liittyvät tehtävät' AND tehtavaryhma IS NOT NULL;
