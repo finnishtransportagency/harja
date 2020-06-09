@@ -37,13 +37,13 @@
                aiheet
                (let [kanava (async/chan (async/sliding-buffer 1000))]
                  (assoc aiheet aihe {::kanava kanava
-                                     ::pub (async/pub kanava aihe-fn)})))))
+                                     ::pub (async/pub kanava aihe-fn (constantly (async/sliding-buffer 1000)))})))))
     this)
   (lisaa-aihe [this aihe]
     (i/lisaa-aihe this aihe aihe))
   (eventin-kuuntelija [this aihe event]
     (when (get @aiheet aihe)
-      (let [kuuntelija (async/chan)]
+      (let [kuuntelija (async/chan 1 (map ::data))]
         (swap! aiheet
                (fn [aiheet]
                  (update aiheet
@@ -52,9 +52,9 @@
                            (async/sub pub event kuuntelija)
                            (assoc aiheen-osat ::subs (conj subs kuuntelija))))))
         kuuntelija)))
-  (julkaise-event [_ aihe nimi data]
+  (julkaise-event [_ aihe event data]
     (if-let [julkaisu-kanava (get-in @aiheet [aihe ::kanava])]
-      (boolean (async/put! julkaisu-kanava {nimi data}))
+      (boolean (async/put! julkaisu-kanava {aihe event ::data data}))
       false)))
 
 (defn komponentti-event []
