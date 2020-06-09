@@ -27,10 +27,39 @@
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/tunniste",
                 "type": "string"
               },
+              "tila": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/tila",
+                "required": true,
+                "enum": [
+                  "kuittaamaton",
+                  "vastaanotettu",
+                  "aloitettu",
+                  "lopetettu"
+                ]
+              },
               "ilmoitettu": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitettu",
                 "type": "string",
+                "format": "date-time",
                 "required": true
+              },
+              "valitetty-harjaan": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/valitetty-harjaan",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
+              "vastaanotettu-harjaan": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/vastaanotettu-harjaan",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
+              "paivitetty-harjaan": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/paivitetty-harjaan",
+                "type": "string",
+                "format": "date-time",
+                "required": false
               },
               "ilmoitustyyppi": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitustyyppi",
@@ -81,7 +110,7 @@
               },
               "sijainti": {
                 "id": "urn:harja/ilmoitukset/0/sijainti",
-                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+                "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json",
                 "required": true
               },
               "tienumero": {
@@ -100,6 +129,10 @@
               "lisatieto": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/lisatieto",
                 "type": "string"
+              },
+              "aiheutti-toimenpiteita": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/aiheutti-toimenpiteita",
+                "type": "boolean"
               }
             }
           }
