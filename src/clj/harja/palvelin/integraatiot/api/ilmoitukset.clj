@@ -95,7 +95,6 @@
       nil
       (fn []
         (let [data {:ilmoitukset (mapv (fn [ilmoitus]
-                                         (println "**** ILMOITUS " ilmoitus)
                                          (sanomat/rakenna-ilmoitus
                                           (konversio/alaviiva->rakenne ilmoitus)))
                                        ilmoitukset)}
