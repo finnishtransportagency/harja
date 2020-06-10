@@ -1,38 +1,40 @@
 (ns harja.palvelin.tyokalut.event-apurit
   (:require [clojure.core.async :as async]
-            [harja.palvelin.tyokalut.interfact :as i])
+            [clojure.spec.alpha :as s]
+            [harja.palvelin.tyokalut.interfact :as i]
+            [harja.palvelin.tyokalut.komponentti-event :as ke])
   (:import (harja.palvelin.tyokalut.komponentti_event KomponenttiEvent)))
 
-(defn lisaa-aihe!
-  ([this aihe]
+(defn lisaa-jono!
+  ([this event]
    {:pre [(instance? KomponenttiEvent this)
-          (ifn? aihe)]}
-   (i/lisaa-aihe this aihe))
-  ([this aihe aihe-fn]
-   {:pre [(instance? KomponenttiEvent this)
-          (ifn? aihe-fn)]
+          (s/valid? ::ke/event-spec event)]
     :post [(instance? KomponenttiEvent %)]}
-   (i/lisaa-aihe this aihe aihe-fn)))
+   (i/lisaa-jono this event))
+  ([this event tyyppi]
+   {:pre [(instance? KomponenttiEvent this)
+          (s/valid? ::ke/event-spec event)
+          (s/valid? ::ke/tyyppi-spec tyyppi)]
+    :post [(instance? KomponenttiEvent %)]}
+   (i/lisaa-jono this event tyyppi)))
 
 (defn eventin-kuuntelija!
-  [this aihe event]
+  [this event]
   {:pre [(instance? KomponenttiEvent this)
-         (or (string? event)
-             (keyword? event))]}
-  (i/eventin-kuuntelija this aihe event))
+         (s/valid? ::ke/event-spec event)]}
+  (i/eventin-kuuntelija this event))
 
 (defn julkaise-event
-  [this aihe event data]
+  [this event data]
   {:pre [(instance? KomponenttiEvent this)
-         (or (string? event)
-             (keyword? event))
+         (s/valid? ::ke/event-spec event)
          (not (nil? data))]
    :post [(boolean? %)]}
-  (i/julkaise-event this aihe event data))
+  (i/julkaise-event this event data))
 
-(defn event-julkaisija [this aihe]
-  (fn [nimi data]
-    (julkaise-event this aihe nimi data)))
+(defn event-julkaisija [this event]
+  (fn [data]
+    (julkaise-event this event data)))
 
 (defn tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
   (async/go
@@ -44,12 +46,16 @@
         (recur (async/alts! [lopeta-tarkkailu-kanava]
                             :default false))))))
 
-(defn kuuntele-eventtia [this aihe event f & args]
-  (let [kuuntelija (eventin-kuuntelija! this aihe event)]
-    (async/go
-      (loop [arvo (async/<! kuuntelija)]
-        (apply f arvo args)
-        (recur (async/<! kuuntelija))))
+(defn kuuntele-eventtia [this event f & args]
+  (println (str "----> KUUNTELE EVENTTIÄ: " event))
+  (let [kuuntelija (eventin-kuuntelija! this event)]
+    (when kuuntelija
+      (async/go
+        (println (str "----> ALOITETAAN KUUNTELEMAAN EVENTTIÄ: " event))
+        (loop [arvo (async/<! kuuntelija)]
+          (println (str "----> EVENTISTÄ: " event " SAATIIN ARVO: " arvo))
+          (apply f arvo args)
+          (recur (async/<! kuuntelija)))))
     kuuntelija))
 
 (defn lopeta-eventin-kuuntelu [kuuntelija]

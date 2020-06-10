@@ -41,20 +41,24 @@
 (defn- tallenna-sonjan-tila-cacheen [jms-tila komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
+           (println "--> komponenttien-tila " kt)
+           (println "---> jms-tila " jms-tila)
+           (println "---> " (sonjayhteys-ok? (:olioiden-tilat jms-tila)))
            (-> kt
                (assoc :sonja jms-tila)
                (assoc-in [:sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat jms-tila)))))))
 
 (defn- aloita-sonjan-tarkkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :sonja :tila tallenna-sonjan-tila-cacheen komponenttien-tila))
+  (event-apurit/kuuntele-eventtia komponentti-event :sonja-tila tallenna-sonjan-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-dbn-tila-cacheen [kanta-ok? komponenttien-tila]
+  (println "----> TALLENNA DBN TILA CACHEEN")
   (swap! komponenttien-tila
          (fn [kt]
            (assoc-in kt [:db :kaikki-ok?] kanta-ok?))))
 
 (defn- aloita-db-tarkkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :db :tila tallenna-dbn-tila-cacheen komponenttien-tila))
+  (event-apurit/kuuntele-eventtia komponentti-event :db-tila tallenna-dbn-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-db-replikan-tila-cacheen [replica-ok? komponenttien-tila]
   (swap! komponenttien-tila
@@ -62,7 +66,7 @@
            (assoc-in kt [:db-replica :kaikki-ok?] replica-ok?))))
 
 (defn- aloita-db-replican-tarrkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :db-replica :tila tallenna-db-replikan-tila-cacheen komponenttien-tila))
+  (event-apurit/kuuntele-eventtia komponentti-event :db-replica-tila tallenna-db-replikan-tila-cacheen komponenttien-tila))
 
 
 (defn- tyhjenna-cache! [komponenttien-tila]

@@ -10,6 +10,9 @@
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
 
+(defn- db-tunnistin->db-tila-event [tunnistin]
+  (keyword (str (name tunnistin) "-tila")))
+
 (defn tarkkaile-kantaa [db lopeta-tarkkailu-kanava
                         {:keys [paivitystiheys-ms kyselyn-timeout-ms]}
                         event-julkaisija]
@@ -26,9 +29,11 @@
                                    (let [kanta-ok? (if (.next rs)
                                                      (= 1 (.getObject rs 1))
                                                      false)]
-                                     (event-julkaisija :tila kanta-ok?)))
+                                     (println "----> JULKAISE KANNAN TILA")
+                                     (event-julkaisija kanta-ok?)))
                                  (catch Throwable _
-                                   (event-julkaisija :tila false))))))
+                                   (println "----> JULKAISE KANNAN TILA")
+                                   (event-julkaisija false))))))
 
 (defn tarkkaile-replicaa [db-replica lopeta-tarkkailu-kanava
                           {:keys [paivitystiheys-ms replikoinnin-max-viive-ms]}
@@ -42,11 +47,12 @@
                                   replica-ok? (boolean (and (not= :virhe replikoinnin-viive)
                                                             (not (and replikoinnin-viive
                                                                       (> replikoinnin-viive replikoinnin-max-viive-ms)))))]
-                              (event-julkaisija :tila replica-ok?)))))
+                              (event-julkaisija replica-ok?)))))
 
 (defn luo-db-eventit [{:keys [komponentti-event] :as this} db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
-  (let [event-julkaisija (event-apurit/event-julkaisija komponentti-event db-nimi)]
-    (event-apurit/lisaa-aihe! komponentti-event db-nimi)
+  (let [event (db-tunnistin->db-tila-event db-nimi)
+        event-julkaisija (event-apurit/event-julkaisija komponentti-event event)]
+    (event-apurit/lisaa-jono! komponentti-event event :viimeisin)
     (case db-nimi
       :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
       :db-replica (tarkkaile-replicaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
@@ -64,7 +70,7 @@
       (assoc this ::lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava)))
   (stop [{:keys [komponentti-event] :as this}]
     (when db-nimi
-      (event-apurit/julkaise-event komponentti-event db-nimi :tila :suljetaan)
+      (event-apurit/julkaise-event komponentti-event (db-tunnistin->db-tila-event db-nimi) :suljetaan)
       (async/>!! (:lopeta-tarkkailu-kanava this) true))
     (DataSources/destroy  datasource)
     (when kehitysmoodi
