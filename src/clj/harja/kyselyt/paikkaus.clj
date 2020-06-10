@@ -10,6 +10,10 @@
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]))
 
+(def merkitse-paikkauskohde-tarkistetuksi!
+  "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
+)
+
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
 
@@ -30,7 +34,9 @@
   (fetch db
          ::paikkaus/paikkaus
          (conj paikkaus/paikkauksen-perustiedot
-               [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+               [::paikkaus/paikkauskohde (conj paikkaus/paikkauskohteen-perustiedot
+                                               ::muokkaustiedot/luotu
+                                               ::muokkaustiedot/muokattu)])
          hakuehdot))
 
 (defn hae-paikkaukset-tienkohta [db hakuehdot]
@@ -38,6 +44,12 @@
          ::paikkaus/paikkaus
          (conj paikkaus/paikkauksen-perustiedot
                [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkauksen-tienkohdat [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkauksen-tienkohta
+         paikkaus/tienkohta-perustiedot
          hakuehdot))
 
 (defn hae-paikkaustoteumat [db hakuehdot]
@@ -49,7 +61,10 @@
 (defn hae-paikkauskohteet [db hakuehdot]
   (fetch db
          ::paikkaus/paikkauskohde
-         paikkaus/paikkauskohteen-perustiedot
+         (conj paikkaus/paikkauskohteen-perustiedot
+               ::muokkaustiedot/luotu
+               ::paikkaus/urakka-id
+               ::muokkaustiedot/muokattu)
          hakuehdot))
 
 (defn onko-paikkaus-olemassa-ulkoisella-idlla? [db urakka-id ulkoinen-id luoja-id]
@@ -216,7 +231,9 @@
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
   [db urakka-id kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
-        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
+        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
+        ;; nollataan mahdollinen ilmoitettu virhe
+        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
@@ -289,17 +306,21 @@
   (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
                        ::muokkaustiedot/poistettu? false}))
 
-(defn hae-urakan-paikkaustoteumat [db urakka-id]
-  (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id
-                            ::muokkaustiedot/poistettu? false}))
-
 (defn hae-urakan-paikkauskohteet [db urakka-id]
   (let [paikkauskohteet (fetch db
                                ::paikkaus/paikkauskohde
                                (conj paikkaus/paikkauskohteen-perustiedot
+                                     ::muokkaustiedot/muokattu
+                                     ::muokkaustiedot/luotu
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
-                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
-    (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
+                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})
+        paikkauskohteet (into []
+                              (comp
+                                (map #(assoc % ::paikkaus/tierekisteriosoite
+                                               (first (hae-paikkauskohteen-tierekisteriosoite db {:kohde (::paikkaus/id %)}))))
+                                (map #(dissoc % ::paikkaus/paikkaukset)))
+                              paikkauskohteet)]
+paikkauskohteet))
 
 (defn hae-urakan-tyomenetelmat [db urakka-id]
   (let [paikkauksien-tyomenetelmat (fetch db

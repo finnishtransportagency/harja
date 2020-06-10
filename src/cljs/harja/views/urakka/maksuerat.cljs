@@ -220,6 +220,8 @@
                  "Lähetä"]))
             :leveys "10%"}]
           maksuerarivit]
+         [yleiset/vihje (str "Lähetetyt maksuerät luetaan Sampoon klo 12 ja klo 16."
+                             " Jos maksuerät pitää saada Sampoon nopeammin, ne on täytettävä Sampoon käsin.")]
 
          [:button.nappi-ensisijainen
           {:class (if (= (count kuittausta-odottavat)

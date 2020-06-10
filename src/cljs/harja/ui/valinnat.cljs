@@ -120,40 +120,58 @@
   ([valittu-aikavali-atom asetukset]
    (let [aikavalin-alku (atom (first @valittu-aikavali-atom))
          aikavalin-loppu (atom (second @valittu-aikavali-atom))
-
-         asetukset-atom (atom asetukset)]
+         asetukset-atom (atom asetukset)
+         uusi-aikavali (fn [paa uusi-arvo]
+                         {:pre [(contains? #{:alku :loppu} paa)]}
+                         (let [uusi-arvo (if (= :alku paa)
+                                           (pvm/paivan-alussa-opt uusi-arvo)
+                                           (pvm/paivan-lopussa-opt uusi-arvo))
+                               aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom)
+                               aikavali (if (= :alku paa)
+                                          [uusi-arvo @aikavalin-loppu]
+                                          [@aikavalin-alku uusi-arvo])]
+                           (if-not aikavalin-rajoitus
+                             (pvm/varmista-aikavali-opt aikavali paa)
+                             (pvm/varmista-aikavali-opt aikavali aikavalin-rajoitus paa))))
+         tarkasta-esitettavat-arvot! (fn [uusi-aikavali]
+                                       (r/next-tick (fn []
+                                                      (let [[uusi-alku uusi-loppu] uusi-aikavali]
+                                                        (when-not (= @aikavalin-alku uusi-alku)
+                                                          (reset! aikavalin-alku uusi-alku))
+                                                        (when-not (= @aikavalin-loppu uusi-loppu)
+                                                          (reset! aikavalin-loppu uusi-loppu))))))]
      (komp/luo
        (komp/sisaan-ulos #(do
                             (add-watch aikavalin-alku :ui-valinnat-aikavalin-alku
-                                       (fn [_ _ _ uusi-arvo]
-                                         (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)
-                                               aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom)]
-                                           (if-not aikavalin-rajoitus
-                                             (swap! valittu-aikavali-atom
-                                                    (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [uusi-arvo (second vanha-aikavali)] :alku)))
-                                             (swap! valittu-aikavali-atom
-                                                    (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [uusi-arvo (second vanha-aikavali)] aikavalin-rajoitus :alku)))))
-                                         (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))
+                                       (fn [_ _ vanha-arvo uusi-arvo]
+                                         (let [uusi-arvo (uusi-aikavali :alku uusi-arvo)]
+                                           (tarkasta-esitettavat-arvot! uusi-arvo)
+                                           (when-not (= vanha-arvo uusi-arvo)
+                                             (reset! valittu-aikavali-atom uusi-arvo))
+                                           (log "Uusi aikaväli: " (pr-str uusi-arvo)))))
                             (add-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu
+                                       (fn [_ _ vanha-arvo uusi-arvo]
+                                         (let [uusi-arvo (uusi-aikavali :loppu uusi-arvo)]
+                                           (tarkasta-esitettavat-arvot! uusi-arvo)
+                                           (when-not (= vanha-arvo uusi-arvo)
+                                             (reset! valittu-aikavali-atom uusi-arvo))
+                                           (log "Uusi aikaväli: " (pr-str uusi-arvo)))))
+                            (add-watch valittu-aikavali-atom
+                                       :aikavali-komponentin-kuuntelija
                                        (fn [_ _ _ uusi-arvo]
-                                         (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)
-                                               aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom)]
-                                           (if-not aikavalin-rajoitus
-                                             (swap! valittu-aikavali-atom
-                                                    (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [(first vanha-aikavali) uusi-arvo] :loppu)))
-                                             (swap! valittu-aikavali-atom
-                                                    (fn [vanha-aikavali]
-                                                      (pvm/varmista-aikavali-opt [(first vanha-aikavali) uusi-arvo] aikavalin-rajoitus :loppu)))))
-                                         (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom)))))
+                                         (let [alku (first uusi-arvo)
+                                               loppu (second uusi-arvo)]
+                                           (when-not (= alku @aikavalin-alku)
+                                             (reset! aikavalin-alku alku))
+                                           (when-not (= loppu @aikavalin-loppu)
+                                             (reset! aikavalin-loppu loppu))))))
                          #(do
                             (remove-watch aikavalin-alku :ui-valinnat-aikavalin-alku)
-                            (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)))
-       (fn [valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
-                                          aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                                          lomake? otsikko validointi]}]
+                            (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)
+                            (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
+       (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus
+                      aloitusaika-pakota-suunta paattymisaika-pakota-suunta
+                      lomake? otsikko validointi]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
          [:span {:class (if lomake?

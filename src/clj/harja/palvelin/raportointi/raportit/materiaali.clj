@@ -1,16 +1,13 @@
 (ns harja.palvelin.raportointi.raportit.materiaali
   "Materiaaliraportti"
   (:require [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.tyokalut.merkkijono :as merkkijono]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
@@ -36,23 +33,21 @@
                            (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
     (sort-by :elynumero lopullinen-tulos)))
 
-(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm urakkatyyppi]}]
+(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                                                                                             {:alku (konv/sql-timestamp alkupvm)
                                                                                                              :loppu (konv/sql-timestamp loppupvm)
-                                                                                                             :hallintayksikko hallintayksikko-id
-                                                                                                             :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))}))]
+                                                                                                             :hallintayksikko hallintayksikko-id}))]
     toteutuneet-materiaalit))
 
-(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm urakkatyyppi]}]
+(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
   (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       {:alku (konv/sql-timestamp alkupvm)
-                                                                                                       :loppu (konv/sql-timestamp loppupvm)
-                                                                                                       :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))}))]
+                                                                                                       :loppu (konv/sql-timestamp loppupvm)}))]
     toteutuneet-materiaalit))
 
 (defn- materiaalin-otsikko [t]
@@ -150,6 +145,7 @@
                                (for [m materiaaliotsikot]
                                 (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m)))))))]))))]
      (when-not (empty? toteumat)
-       [:teksti "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön."])]))
+       [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. "
+                     yleinen/materiaalitoteumien-paivitysinfo)])]))
 
     

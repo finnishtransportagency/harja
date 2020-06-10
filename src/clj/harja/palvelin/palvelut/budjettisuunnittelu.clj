@@ -102,12 +102,11 @@
                                   indeksiluvut-urakan-aikana (sequence
                                                                (comp (filter (fn [{:keys [kuukausi vuosi]}]
                                                                                (and (= 9 kuukausi)
-                                                                                    (>= vuosi (dec urakan-alkuvuosi)))))
+                                                                                    (>= vuosi urakan-alkuvuosi))))
                                                                      (remove (fn [{:keys [vuosi]}]
-                                                                               (>= vuosi (dec urakan-loppuvuosi))))
+                                                                               (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
-                                                                            ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
-                                                                            {:vuosi          (inc vuosi)
+                                                                            {:vuosi vuosi
                                                                              :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
@@ -282,7 +281,6 @@
                                                                                    olemassa-olevat-kiinteahintaiset-tyot))
                                                                            ajat)]
                               (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (kiin-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
                                   (update! db ::bs/kiinteahintainen-tyo
@@ -341,6 +339,7 @@
                                                              olemassa-olevat-jhkt))
                                                      jhk-tiedot)]
                               (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+                              (kiin-q/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (when-not (empty? olemassa-olevat-jhkt)
                                 (doseq [jhk olemassa-olevat-jhkt
                                         :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]

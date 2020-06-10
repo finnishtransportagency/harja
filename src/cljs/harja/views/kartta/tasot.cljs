@@ -22,7 +22,6 @@
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.tierekisteri :as tierekisteri]
             [harja.tiedot.sijaintivalitsin :as sijaintivalitsin]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
@@ -230,7 +229,6 @@
    :varusteet varusteet/varusteet-kartalla
    :muut-tyot muut-tyot/muut-tyot-kartalla
    :paallystyskohteet paallystys/paallystyskohteet-kartalla
-   :paikkauskohteet paikkaus/paikkauskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
    :sijaintivalitsin sijaintivalitsin/sijainti-kartalla
    :nakyman-geometriat nakyman-geometriat
@@ -303,7 +301,6 @@
        :varusteet (taso :varusteet)
        :muut-tyot (taso :muut-tyot)
        :paallystyskohteet (taso :paallystyskohteet)
-       :paikkauskohteet (taso :paikkauskohteet)
        :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
        :sijaintivalitsin (taso :sijaintivalitsin (inc oletus-zindex))
        :tienakyma-valitut (taso :tienakyma-valitut)
@@ -344,7 +341,6 @@
    :varusteet varusteet/karttataso-varustetoteuma
    :muut-tyot muut-tyot/karttataso-muut-tyot
    :paallystyskohteet paallystys/karttataso-paallystyskohteet
-   :paikkauskohteet paikkaus/karttataso-paikkauskohteet
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
    :sijaintivalitsin sijaintivalitsin/karttataso-sijainti
    :tilannekuva tilannekuva/karttataso-tilannekuva

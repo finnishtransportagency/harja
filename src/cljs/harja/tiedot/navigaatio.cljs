@@ -90,7 +90,6 @@
     [{:nimi "Hoito" :arvo :hoito}
      {:nimi "Tiemerkintä" :arvo :tiemerkinta}
      {:nimi "Päällystys" :arvo :paallystys}
-     {:nimi "Paikkaus" :arvo :paikkaus}
      {:nimi "Valaistus" :arvo :valaistus}
      {:nimi "Siltakorjaus" :arvo :siltakorjaus}
      {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
@@ -218,7 +217,6 @@
                     :hoito @urk/urakoitsijat-hoito
                     :teiden-hoito @urk/urakoitsijat-hoito
                     :paallystys @urk/urakoitsijat-paallystys
-                    :paikkaus @urk/urakoitsijat-paikkaus
                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
                     :valaistus @urk/urakoitsijat-valaistus
                     :siltakorjaus @urk/urakoitsijat-siltakorjaus
@@ -389,20 +387,21 @@
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista
           kayttajan-urakat (set (map key (:urakkaroolit @istunto/kayttaja)))]
-      (into []
-            (comp (filter #(or (= :kaikki v-ur-tyyppi)
-                               (= v-ur-tyyppi (:tyyppi %))
-                               (and (= v-ur-tyyppi :hoito)
-                                    (= (:tyyppi %) :teiden-hoito))
-                               (and (= v-ur-tyyppi :teiden-hoito)
-                                    (= (:tyyppi %) :hoito))
-                               (and (= v-ur-tyyppi :vesivayla)
-                                    (urakka-domain/vesivaylaurakka? %))))
-                  (filter #(or
-                             (kayttajan-urakat (:id %))
-                             (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
-                  (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
-            urakkalista))))
+      (when urakkalista
+        (into []
+              (comp (filter #(or (= :kaikki v-ur-tyyppi)
+                                 (= v-ur-tyyppi (:tyyppi %))
+                                 (and (= v-ur-tyyppi :hoito)
+                                      (= (:tyyppi %) :teiden-hoito))
+                                 (and (= v-ur-tyyppi :teiden-hoito)
+                                      (= (:tyyppi %) :hoito))
+                                 (and (= v-ur-tyyppi :vesivayla)
+                                      (urakka-domain/vesivaylaurakka? %))))
+                    (filter #(or
+                               (kayttajan-urakat (:id %))
+                               (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                    (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
+              urakkalista)))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
   (reaction (into []
@@ -503,5 +502,4 @@
 (defn yllapitourakka-valittu? []
   (let [urakkatyyppi (:arvo @urakkatyyppi)]
     (or (= urakkatyyppi :paallystys)
-        (= urakkatyyppi :paikkaus)
         (= urakkatyyppi :tiemerkinta))))

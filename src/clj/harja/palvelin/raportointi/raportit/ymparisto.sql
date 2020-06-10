@@ -9,17 +9,16 @@ SELECT
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
   mk.materiaalityyppi AS materiaali_tyyppi,
-  date_trunc('month', skm.alkupvm) AS kk,
-  SUM(skm.maara) AS maara
-FROM sopimuksen_kaytetty_materiaali skm
-  JOIN sopimus s ON skm.sopimus = s.id
-  JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
-  JOIN materiaalikoodi mk ON skm.materiaalikoodi = mk.id
+  date_trunc('month', rtm.paiva) AS kk,
+  SUM(rtm.kokonaismaara) AS maara
+FROM raportti_toteutuneet_materiaalit rtm
+  JOIN urakka u ON rtm."urakka-id" = u.id AND u.urakkanro IS NOT NULL
+  JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
 WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
-      AND (skm.alkupvm::DATE BETWEEN :alkupvm AND :loppupvm)
-      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, mk.yksikko, date_trunc('month', skm.alkupvm)
+      AND (rtm.paiva::DATE BETWEEN :alkupvm AND :loppupvm)
+      AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, mk.yksikko, date_trunc('month', rtm.paiva)
 UNION
 -- Haetaan hoitoluokittaiset käytöt urakan_materiaalin_kaytto_hoitoluokittain taulusta.
 SELECT

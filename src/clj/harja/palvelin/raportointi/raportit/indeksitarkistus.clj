@@ -1,6 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.indeksitarkistus
-  (:require [harja.palvelin.raportointi.raportit.laskutusyhteenveto
-             :refer [hae-laskutusyhteenvedon-tiedot]]
+  (:require [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [taoensso.timbre :as log]
@@ -82,7 +81,7 @@
                                        (map
                                          (fn [[alku loppu]]
                                            (->> urakka-idt
-                                                (mapcat #(hae-laskutusyhteenvedon-tiedot
+                                                (mapcat #(lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                                           db user {:urakka-id %
                                                                    :alkupvm alku
                                                                    :loppupvm loppu}))))

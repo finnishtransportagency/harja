@@ -603,7 +603,7 @@
       (when (nil? (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta))
         (warn (str "Rajapinalle " rajapinta " ei ole määritetty kuuntelijaa datan käsittlijään!\n"
                    "Annettu rajapinta: " rajapinta ". Olemassa olevat:\n"
-                   (with-out-str (cljs.pprint/pprint (keys (:kuuntelijat datan-kasittelija))))))))
+                   (pr-str (keys (:kuuntelijat datan-kasittelija)))))))
     (let [rajapintakasittelija (seuranta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
                                                                                                          @kuuntelija)
                                                          rajapinnan-dataf (if (and *jarjesta-data* jarjestys)
@@ -1143,6 +1143,12 @@
 
 (declare ->Grid)
 
+(defn grid-olemassa? [grid]
+  (not (nil?
+         (try (root grid)
+              (catch :default _
+                nil)))))
+
 (defrecord Grid [id alueet koko osat parametrit]
   p/IGrid
   (-osat [this]
@@ -1239,7 +1245,8 @@
                                                                     (add-watch data-atom
                                                                                tapahtuman-nimi
                                                                                (fn [_ _ vanha uusi]
-                                                                                 (when-not dk/*seuranta-muutos?*
+                                                                                 (when (and (not dk/*seuranta-muutos?*)
+                                                                                            (grid-olemassa? this))
                                                                                    (let [vanha-data (map #(get-in vanha %) polut)
                                                                                          uusi-data (map #(get-in uusi %) polut)
                                                                                          seurattava-data-muuttunut? (not= vanha-data uusi-data)
@@ -1393,10 +1400,9 @@
                                                   (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
                                                                    (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
                                                     (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
-                                                         "\n" (with-out-str (cljs.pprint/pprint
-                                                                              {:data-rajapinnasta (first data)
-                                                                               :grid-data (second data)
-                                                                               :osan-derefable (get data 2)}))))))))))
+                                                         "\n" (pr-str {:data-rajapinnasta (first data)
+                                                                       :grid-data (second data)
+                                                                       :osan-derefable (get data 2)})))))))))
      :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
      :render (fn [this]
                (if-let [error (.. this -state -error)]
@@ -1407,7 +1413,8 @@
                        _ (set! (.-domNode grid) (fn [] (dom/dom-node this)))
                        _ (when (instance? DynaaminenGrid grid)
                            @(get-in grid [:osien-maara-muuttui :trigger]))
-                       {luokat :class dom-id :id style :style} @(:parametrit grid)
+                       {luokat :class dom-id :id style :style
+                        data-cy :data-cy} @(:parametrit grid)
                        #_#__ (when-let [koko-fn (:koko-fn grid)]
                                @(koko-fn))
                        #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
@@ -1421,7 +1428,8 @@
                        (aseta-seurattava-koko! grid))
                    [:div.grid-taulukko {:class (apply str (interpose " " luokat))
                                         :id dom-id
-                                        :style style}
+                                        :style style
+                                        :data-cy data-cy}
                     [:div {:style {:display "grid"
                                    :position "relative"
                                    :top top
@@ -1600,7 +1608,8 @@
        (or (nil? koko) (s/valid? ::koko koko))
        (or (nil? osat) (s/valid? ::osat osat))))
 
-(defn grid-c [record {:keys [nimi alueet koko osat root-fn paivita-root! luokat dom-id toistettavan-osan-data toistettava-osa osien-maara-muuttui!] :as asetukset}]
+(defn grid-c [record {:keys [nimi alueet koko osat root-fn paivita-root! luokat dom-id data-cy
+                             toistettavan-osan-data toistettava-osa osien-maara-muuttui!] :as asetukset}]
   (let [root-id (gensym "grid")
         toistettavan-osan-data (when toistettavan-osan-data (r/partial toistettavan-osan-data))
         toistettava-osa (when toistettava-osa (r/partial toistettava-osa))
@@ -1609,7 +1618,8 @@
         osat (r/atom osat)
         alueet (r/atom alueet)
         parametrit (r/atom {:class (or luokat #{})
-                            :id dom-id})
+                            :id dom-id
+                            :data-cy data-cy})
         koko-fn (constantly koko)
         dynaaminen-grid? toistettava-osa
         gridi (cond-> (if dynaaminen-grid?

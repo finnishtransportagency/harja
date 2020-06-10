@@ -330,6 +330,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   tr:not(.vetolaatikko) .livi-grid {
     margin-bottom: 0px;
   }
+
+  .grid-otsikkokomponentti {
+    background-color: @harmaa9;
+    border: none;
+    tr, td, th {
+      border: none;
+    }
+  }
 }
 
 .livi-grid-infolaatikolla {
@@ -463,7 +471,7 @@ tr.otsikko {
   td {
     position: relative;
 
-    span[class^="livicon"] {
+    span[class^="livicon-chevron"] {
       position: absolute;
       left: 5px;
       top: 12px;
@@ -483,7 +491,7 @@ tr.otsikko {
       margin-left: 20px;
     }
 
-    span[class^="livicon"] {
+    span[class^="livicon-chevron"] {
       position: absolute;
       left: 5px;
       top: 12px;
@@ -570,4 +578,8 @@ span.ajax-loader-pisteet {
 
 .grid-huomio-varoitus {
   color: @varoitus;
+}
+
+.gridin-fonttikoko {
+  font-size: @fontin-koko-leipateksti;
 }

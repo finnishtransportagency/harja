@@ -1,16 +1,24 @@
 (ns harja.tiedot.urakka.paikkaukset-toteumat
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
+            [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+            [harja.domain.tierekisteri :as tierekisteri]
+            [clojure.string :as str])
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
-(def app (atom nil))
+(def tyhja-lomake {:kopio-itselle? true
+                   :saate nil
+                   :muut-vastaanottajat nil})
+
+(def app (atom {:lomakedata tyhja-lomake}))
 
 (def taso-nakyvissa? (atom false))
 
@@ -49,7 +57,6 @@
         paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
                                      tulos)]
     {:paikkaukset-grid kiinnostavat-tiedot
-     :haettu-uudet-paikkaukset? true
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
 
 (def toteumat-kartalla
@@ -76,13 +83,35 @@
                            {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
                                          :teksti "Paikkaukset"}]})))))
 
+
+(defn ilmoita-virheesta-paikkaustiedoissa [paikkaus]
+  (k/post! :ilmoita-virheesta-paikkaustiedoissa
+           (merge paikkaus
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)})))
+
+(defn merkitse-paikkaus-tarkistetuksi [paikkaus]
+  (log "merkitse-paikkaus-tarkistetuksi, " (pr-str paikkaus))
+  (k/post! :merkitse-paikkauskohde-tarkistetuksi
+           (merge paikkaus
+                  {::paikkaus/urakka-id (:id @nav/valittu-urakka)
+                   ::paikkaus/hakuparametrit (yhteiset-tiedot/filtterin-valinnat->kysely-params (:valinnat @yhteiset-tiedot/tila)) })))
+
+
+
 ;; Muokkaukset
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
 (defrecord SiirryKustannuksiin [paikkauskohde-id])
-(defrecord LisaaOtsikotGridiin [otsikon-lisays-fn])
 ;; Haut
 (defrecord PaikkauksetHaettu [tulos])
+
+;; Modal (sähköpostin lähetys paikkaustoteumassa olevasta virheestä)
+(defrecord AvaaVirheModal [paikkaus])
+(defrecord SuljeVirheModal [])
+(defrecord VirheIlmoitusOnnistui [vastaus])
+(defrecord MerkitseTarkistetuksiOnnistui [vastaus])
+(defrecord PaivitaLomakedata [lomakedata])
+(defrecord PaivitaMuutVastaanottajat [muut])
 
 (extend-protocol tuck/Event
   Nakymaan
@@ -110,9 +139,26 @@
                                                                                               paikkauskohteet))))))
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
     (assoc app :nakymassa? false))
-  LisaaOtsikotGridiin
-  (process-event [{otsikon-lisays-fn :otsikon-lisays-fn} app]
-    (assoc app
-           :paikkaukset-grid (mapcat otsikon-lisays-fn
-                                     (group-by ::paikkaus/nimi (:paikkaukset-grid app)))
-           :haettu-uudet-paikkaukset? false)))
+  AvaaVirheModal
+  (process-event [{paikkaus :paikkaus} app]
+    (assoc app :modalin-paikkaus paikkaus))
+  SuljeVirheModal
+  (process-event [_ app]
+    (assoc app :modalin-paikkaus nil
+               :lomakedata tyhja-lomake))
+  VirheIlmoitusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :modalin-paikkaus nil
+               :lomakedata tyhja-lomake))
+  MerkitseTarkistetuksiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (log "MerkitseTarkistetuksi, vastaus " (pr-str vastaus))
+    (assoc app :modalin-paikkaus nil))
+  PaivitaLomakedata
+  (process-event [{lomakedata :lomakedata} app]
+    (assoc app :lomakedata lomakedata))
+  PaivitaMuutVastaanottajat
+  (process-event [{muut :muut} app]
+    (assoc-in app [:lomakedata :muut-vastaanottajat] muut)))
+
+

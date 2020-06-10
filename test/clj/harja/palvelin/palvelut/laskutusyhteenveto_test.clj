@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
             [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -29,13 +29,13 @@
 
 (deftest laskutusyhteenvedon-tietojen-haku
   (testing "laskutusyhteenvedon-tietojen-haku"
-    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:urakka-id @oulun-alueurakan-2014-2019-id
                                 :alkupvm   (pvm/->pvm "1.8.2015")
                                 :loppupvm (pvm/->pvm "31.8.2015")})
-          haetut-tiedot-kajaani (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          haetut-tiedot-kajaani (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                   (:db jarjestelma)
                                   +kayttaja-jvh+
                                   {:urakka-id @kajaanin-alueurakan-2014-2019-id
@@ -282,7 +282,7 @@
 ;; HAR-1959: Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
 (deftest suolasakko-oikean-vuoden-laskutusyhteenvedossa
   (testing "suolasakko-oikean-vuoden-laskutusyhteenvedossa"
-    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:urakka-id @oulun-alueurakan-2014-2019-id
@@ -300,7 +300,7 @@
 
 (deftest suolasakko-oikein-hoitokauden-laskutusyhteenvedossa ;HAR-3477
   (testing "suolasakko-oikein-hoitokauden-laskutusyhteenvedossa"
-    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:urakka-id @oulun-alueurakan-2014-2019-id
@@ -319,7 +319,7 @@
 
 (deftest kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa ;HAR-3965
   (testing "kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa"
-    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:urakka-id @oulun-alueurakan-2014-2019-id

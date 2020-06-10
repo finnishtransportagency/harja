@@ -5,7 +5,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.kaytokset :as kaytokset]))
+            [harja.ui.taulukko.kaytokset :as kaytokset]
+            [harja.loki :as loki]))
 
 (def ^:dynamic *this* nil)
 
@@ -28,7 +29,9 @@
 (defonce muuta-avain-syote
          {:arvo [:parametrit :value]
           :id [:osan-id]
+          :disabled? [:parametrit :disabled?]
           :class [:parametrit :class]
+          :placeholder [:parametrit :placeholder]
           :on-change [:toiminnot :on-change]
           :on-blur [:toiminnot :on-blur]
           :on-click [:toiminnot :on-click]

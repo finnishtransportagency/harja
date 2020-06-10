@@ -120,20 +120,20 @@
         (reset! raportit/suoritettu-raportti nil)))
 
 
-(defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
+(defonce hoitourakassa? (reaction (#{:hoito :teiden-hoito} (:tyyppi @nav/valittu-urakka))))
 
 (defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
 
 (defonce vesivaylaurakassa? (reaction (urakka-domain/vesivayla-urakkatyypit (:tyyppi @nav/valittu-urakka))))
 
 (defonce valittu-hoitokausi (reaction-writable
-                              (when (= @valittu-urakkatyyppi :hoito)
+                              (when (#{:hoito :teiden-hoito} @valittu-urakkatyyppi)
                                 (if @hoitourakassa?
                                   @u/valittu-hoitokausi
                                   (pvm/paivamaaran-hoitokausi (pvm/nyt))))))
 
 (def valittu-vuosi (reaction-writable
-                     (if (= @valittu-urakkatyyppi :hoito)
+                     (if (#{:hoito :teiden-hoito} @valittu-urakkatyyppi)
                        nil
                        ;; Ylläpidossa vuosi-valintaa käytetään kk:n valitsemiseen,
                        ;; joten valitaan oletukseksi tämä vuosi
@@ -240,19 +240,23 @@
                           (or @vapaa-aikavali?
                               vain-hoitokausivalinta?
                               (and vain-kuukausivalinta?
-                                   ;; Hoidossa valitaan ensin hoitokausi, ja se määrää minkä vuoden
+                                   ;; Hoidossa /MHU:Ssa valitaan ensin hoitokausi, ja se määrää minkä vuoden
                                    ;; kuukauden voi valita.
                                    ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
                                    ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
                                    ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
                                    ;; disabloidaan vuosi-valinta vain hoidon urakoille
-                                   (= urakkatyyppi :hoito)))}
+                                   (#{:hoito :teiden-hoito} urakkatyyppi)))}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
          (reset! valittu-vuosi %)
          (reset! valittu-hoitokausi nil)
          (reset! valittu-kuukausi nil))]
-      (when (or (and (= urakkatyyppi :hoito)
+      ;; Erikoiskeissi, miksi hassunnäköisiä ehtoja:
+      ;; Jos valittuna on koko maa tai hallintayksikkö, mutta ei urakkaa, silloin
+      ;; urakkatyyppi (alasvetovalinnasta) on :hoito, mutta hoitourakassa? saa arvon null
+      ;; Jos taas on valittu yksittäinen MHU urakka, urakkatyyppi on :teiden-hoito, ja hoitourakassa? totuudellinen
+      (when (or (and (#{:hoito :teiden-hoito} urakkatyyppi)
                      (or hoitourakassa? (nil? ur)))
                 (and (= urakkatyyppi :vesivayla)
                      (or vesivaylaurakassa? (nil? ur))))

@@ -1,26 +1,110 @@
 (ns harja.views.urakka.paikkaukset-toteumat
-  (:require [tuck.core :as tuck]
+  (:require [cljs.core.async :refer [<! timeout]]
             [reagent.core :as r]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri]
-            [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
-            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [tuck.core :as tuck]
+
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
+
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.roolit :as roolit]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+
+            [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [harja.tiedot.istunto :as istunto]
+
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
+
             [harja.ui.debug :as debug]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
-            [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [cljs.core.async :refer [<! timeout]]
-            [taoensso.timbre :as log])
+            [harja.ui.modal :as modal]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+
+(defn- pinta-alojen-summa [paikkaukset]
+  (->> paikkaukset
+       (map :suirun-pinta-ala)
+       (reduce +)))
+
+(defn- massamenekin-summa [paikkaukset]
+  (->> paikkaukset
+       (map ::paikkaus/massamenekki)
+       (reduce +)))
+
+(defn ilmoita-virheesta-modal
+  "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
+  [e! app]
+  (let [paikkaukset (:modalin-paikkaus app)
+        {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
+        rivien-lkm (count paikkaukset)
+        pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
+        massamenekki (massamenekin-summa paikkaukset)
+        lomakedata (:lomakedata app)]
+    [modal/modal
+     {:otsikko (str "Lähetä sähköposti")
+      :luokka "ilmoita-virheesta-modal"
+      :nakyvissa? true
+      :sulje-fn #(e! (tiedot/->SuljeVirheModal))
+      :footer [:div
+               [napit/peruuta
+                "Peruuta"
+                #(e! (tiedot/->SuljeVirheModal))]
+
+               [napit/palvelinkutsu-nappi
+                "Ilmoita"
+                #(tiedot/ilmoita-virheesta-paikkaustiedoissa (merge paikkaus
+                                                                    {::paikkaus/saate (:saate lomakedata)
+                                                                     ::paikkaus/pinta-ala-summa pinta-ala
+                                                                     ::paikkaus/massamenekki-summa massamenekki
+                                                                     ::paikkaus/rivien-lukumaara rivien-lkm
+                                                                     ::paikkaus/kopio-itselle? (:kopio-itselle? lomakedata)
+                                                                     ::paikkaus/muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                                                                                      (:muut-vastaanottajat lomakedata))}))
+                {:disabled (not (lomake/voi-tallentaa? lomakedata))
+                 :luokka "nappi-myonteinen"
+                 :ikoni (ikonit/check)
+                 :kun-onnistuu (fn [vastaus]
+                                 (e! (tiedot/->VirheIlmoitusOnnistui vastaus))
+                                 (viesti/nayta! "Virheilmoitus lähetetty onnistuneesti!" :success viesti/viestin-nayttoaika-keskipitka))
+                 :kun-virhe #(viesti/nayta! "Sähköpostiviestin lähetys epäonnistui. Kokeile hetken päästä uudelleen." :warning viesti/viestin-nayttoaika-keskipitka)}]]}
+
+     [:div
+      [:p
+       "Harja lähettää sähköpostin urakoitsijalle: "
+       [:span.bold (get-in @yhteiset-tiedot/tila [:urakka :urakoitsija :nimi])]]
+       [lomake/lomake {:otsikko "Sähköpostiviestin sisältö"
+                       :muokkaa! #(e! (tiedot/->PaivitaLomakedata %))}
+        [{:nimi :tiedot :muokattava? (constantly false)
+          :tyyppi :komponentti :palstoja 3
+          :komponentti (fn []
+                         [:div {:style {:padding "10px" :border "1px solid #f0f0f0"}}
+                          [:p "Virhe kohteen " [:b nimi ] " paikkaustoteumassa. Tarkista ja korjaa tiedot urakoitsijan järjestelmässä ja lähetä kohteen tiedot uudelleen Harjaan." ]
+                          [:h4 "Kohteen tiedot"]
+                         (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
+                                         "Kohde" nimi
+                                         "Rivejä" rivien-lkm
+                                         "Pinta-ala yht. " (str pinta-ala "m\u00B2")
+                                         "Massamenekki" massamenekki)])}
+         varmista-kayttajalta/modal-muut-vastaanottajat
+         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
+                                                        :pakollinen? true
+                                                        :validoi [[:ei-tyhja "Anna tarkempi kuvaus virheistä."]]})
+         varmista-kayttajalta/modal-sahkopostikopio]
+        lomakedata]]]))
+
 
 (defn paikkaukset-vetolaatikko
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
@@ -79,6 +163,120 @@
       materiaalit-skeema
       materiaalit]]))
 
+(def ohje-teksti-tilaajalle
+  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
+
+(def ohje-teksti-urakoitsijalle
+  "Tarkista toteumatiedoista mahdolliset tilaajan raportoimat virheet. Virheet on raportoitu myös sähköpostitse urakan vastuuhenkilölle.")
+
+(def otsikkokomp-vasen-margin "20px")
+
+(def lahetyksen-tilan-teksti
+  {"lahetetty" "Lähetetty YHA:an"
+   "virhe" "Virhe lähetyksessä"
+   "odottaa_vastausta" "Odottaa vastausta"
+   nil "Ei lähetetty YHA:an"})
+
+(def ilmoitettu-virhe-max-merkkimaara 100)
+
+(defn- komponentti-otsikon-sisaan
+  [e! paikkaukset]
+  (let [paikkaus (first paikkaukset)
+        paikkauskohde (::paikkaus/paikkauskohde paikkaus)
+        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        lahetyksen-tila (::paikkaus/tila paikkauskohde)
+        ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
+        tarkistettu (::paikkaus/tarkistettu paikkauskohde)
+        urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+        solujen-tyyli {:margin-right ".5rem"
+                       :margin-left ".5rem"
+                       :flex 1}]
+    (fn [_]
+     [:div {:style {:display "flex"
+                   :justify-content "space-evenly"}}
+      (when-not urakoitsija-kayttajana?
+        [:span {:style solujen-tyyli}
+         (if tarkistettu
+           [:span
+            [:span {:style {:color "green"}} (ikonit/livicon-check)]
+            (str " Tarkistettu " (pvm/pvm-opt tarkistettu))]
+           [napit/palvelinkutsu-nappi "Merkitse tarkistetuksi"
+           #(tiedot/merkitse-paikkaus-tarkistetuksi paikkaus)
+           {:ikoni (ikonit/livicon-check)
+            :luokka "nappi-ensisijainen btn-xs"
+            :disabled (boolean tarkistettu)
+            :kun-onnistuu #(e! (tiedot/->PaikkauksetHaettu %))}])])
+
+      (when-not urakoitsija-kayttajana?
+        [:span {:style solujen-tyyli}
+         (if tarkistettu
+           ; TODO Tarkista halutut työmenetelmät YHAlta ja filtteröi lähetysnappi näkyviin/pois näkyvistä
+           ; TODO: Lisää myös sama tarkistuslogiikka backendin puolelle, ettei voi vahingossa livahtaa YHAn suuntaan tarpeettomia paikkauksia.
+           ;(if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
+           ;  "Lähetys YHA:an"
+           ;  "Ei lähetetä YHA:an")
+           (get lahetyksen-tilan-teksti lahetyksen-tila))])
+
+      (when-not urakoitsija-kayttajana?
+        [:span {:style solujen-tyyli}
+          [yleiset/linkki "Ilmoita virhe"
+           #(e! (tiedot/->AvaaVirheModal paikkaukset))
+           {:style {}
+            :ikoni (ikonit/envelope)}]]
+        )
+
+      (if (and ilmoitettu-virhe (not urakoitsija-kayttajana?))
+        [:span.virheviesti-sailio {:style {:flex "2 1 0%"}}
+         [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
+         [:span {:style {:word-break "break-word"}} (str (subs ilmoitettu-virhe 0 ilmoitettu-virhe-max-merkkimaara)
+                                                         (if (> (count ilmoitettu-virhe) ilmoitettu-virhe-max-merkkimaara) "..."))]])
+
+      [yleiset/linkki "Kustannukset"
+       #(do
+          (.preventDefault %)
+          (e! (tiedot/->SiirryKustannuksiin
+                (::paikkaus/id paikkauskohde))))
+       {:ikoni (ikonit/euro) :style {:flex 1}}]])))
+
+(defn otsikkokomponentti
+  [e! paikkaukset]
+  (let [paikkaus (first paikkaukset)
+        paikkauskohde (::paikkaus/paikkauskohde paikkaus)
+        alkupvm (get paikkaus ::paikkaus/alkuaika)
+        loppupvm (get paikkaus ::paikkaus/loppuaika)
+        ;; Asiakkaan kanssa sovittu, että yhtä paikkauskohdetta kohden on vain yksi työmenetelmä
+        ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
+        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        pinta-ala-sum (pinta-alojen-summa paikkaukset)
+        massamenekki-sum (massamenekin-summa paikkaukset)
+
+        aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
+                    (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
+                    (str "Luotu: " (pvm/pvm-aika-opt (::muokkaustiedot/luotu paikkauskohde))))]
+    [{:tyyli {}
+      :sisalto
+      (fn [_]
+        [:<>
+         [:tr.valiotsikko.grid-otsikkokomponentti
+          [:td {:colSpan 3}
+           [:span.bold {:style {:margin-left otsikkokomp-vasen-margin}}
+            (str "Yhteensä: " (count paikkaukset))]]
+          [:td {:colSpan 3}
+           [:span (str aikaleima)]]
+          [:td {:colSpan 1}]
+          [:td {:colSpan 1}
+           [:span.bold (pvm/pvm-aika-opt alkupvm)]]
+          [:td {:colSpan 1}
+           [:span.bold (pvm/pvm-aika-opt loppupvm)]]
+          [:td {:colSpan 1}
+           [:span.bold tyomenetelma]]
+          [:td {:colSpan 2}]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
+          [:td {:colSpan 2}]]])}]))
+
 (defn paikkaukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
@@ -96,11 +294,11 @@
                        [{:otsikko "Alku\u00ADaika"
                          :leveys 10
                          :nimi ::paikkaus/alkuaika
-                         :fmt yhteinen-view/aika-formatteri}
+                         :fmt pvm/pvm-aika-opt}
                         {:otsikko "Loppu\u00ADaika"
                          :leveys 10
                          :nimi ::paikkaus/loppuaika
-                         :fmt yhteinen-view/aika-formatteri}
+                         :fmt pvm/pvm-aika-opt}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
                          :leveys 10
                          :nimi ::paikkaus/tyomenetelma}
@@ -126,12 +324,15 @@
     (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
                     paikkaukset-grid paikkauket-vetolaatikko] :as app}]
       [:div
+       (if (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
+         [yleiset/vihje ohje-teksti-urakoitsijalle]
+         [yleiset/vihje ohje-teksti-tilaajalle])
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
          :salli-valiotsikoiden-piilotus? true
-         :valiotsikon-komponentti-flowhun? true
+         :valiotsikoiden-alkutila :kaikki-kiinni
          :tunniste ::paikkaus/id
          :sivuta 100
          :tyhja (if paikkauksien-haku-kaynnissa?
@@ -145,57 +346,20 @@
                         [paikkaukset-vetolaatikko e! rivi app])))
                paikkauket-vetolaatikko)}
         skeema
-        paikkaukset-grid]])))
 
-(def ohje-teksti-tarkistus-ja-yha
-  "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Jos tiedoissa on virheitä, valitse Ilmoita virhe.")
+        (mapcat
+          ;; Lisätään tässä kohti väliotsikot, välttyy turhilta eventeiltä
+          (fn [[otsikko paikkaukset]]
+            (cons (grid/otsikko otsikko {:id (get-in (first paikkaukset) [::paikkaus/paikkauskohde ::paikkaus/id])
+                                         :komponentti-otsikon-sisaan {:col-span 6
+                                                                      :sisalto (komponentti-otsikon-sisaan e! paikkaukset)
+                                                                      :otsikon-tyyli {:background-color "#dcdcdc"}}
 
-(defn otsikkokomponentti
-  [e! paikkaukset]
-  (let [paikkaus (first paikkaukset)
-        paikkauskohde-id (get-in paikkaus
-                                 [::paikkaus/paikkauskohde ::paikkaus/id])
-        alkupvm (get paikkaus ::paikkaus/alkuaika)
-        loppupvm (get paikkaus ::paikkaus/loppuaika)]
-    (log "paikkaus: " (pr-str paikkaus))
-    [{:tyyli {}
-      :sisalto
-      (fn [_]
-        [:div {:style {:margin-left "20px"
-                       :margin-right "20px"}}
+                                         :otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
+                  (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
+                           paikkaukset)))
+                (group-by ::paikkaus/nimi paikkaukset-grid))]])))
 
-         ;Kun teet VHAR-1308 ota käyttöön
-         #_[:div {:style {:height "30px"
-                          :float "right"}}
-            [napit/yleinen-ensisijainen "Ilmoita virhe" #(log "do nada")]
-            [napit/yleinen-toissijainen "Merkitse tarkistetuksi" #(log "do nada 2")]]
-         #_[:div {:style {:font-size ".65rem"}}
-            [:span.bold "Ohje: "]
-            [:span ohje-teksti-tarkistus-ja-yha]]
-
-         ;; huom! jos koetat saada taulukon sarakkeet oikean levyisiksi vrt. varsinaiseen taulukkoon,
-         ;; joudut kuljettamaan taulukon sarakkeiden leveydet tänne asti. Tehdään VHAR-1308 osana
-         [:table
-          [:thead
-           [:tr#paikkauksien-yhteenveto
-            [:td {:colSpan 2}
-             [:span.bold (str "Yhteensä: " (count paikkaukset))]]
-            [:td {:colSpan 3}]
-            [:td {:colSpan 1}
-             [:span.bold (when alkupvm
-                           (pvm/pvm alkupvm))]]
-            [:td {:colSpan 1}
-             [:span.bold (when loppupvm
-                           (pvm/pvm loppupvm))]]
-            [:td {:colSpan 7}]
-            [:td {:colSpan 1}
-             [:div {:style {:float "right"}}
-              [:a.livicon-arrow-right {:style {:float "right"}
-                                       :href "#"
-                                       :on-click #(do
-                                                    (.preventDefault %)
-                                                    (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))}
-               "Kustannukset"]]]]]]])}]))
 
 (defn toteumat* [e! app]
   (komp/luo
@@ -203,16 +367,6 @@
                            (reset! tiedot/taso-nakyvissa? true))
                       #(do (e! (tiedot/->NakymastaPois))
                            (reset! tiedot/taso-nakyvissa? false)))
-    ;; Syy, että miksi tämmöinen erillinen otsikoiden lisäysfunktio on tässä sen sijaan, että
-    ;; tuo otsikko laitettaisiin samantein paikkallensa tiedot/kasittele-haettu-tulos funktiossa
-    ;; niinkuin se tehdään kustannusten puolella on se, että harja.ui.grid ns:n requiraaminen
-    ;; tiedot ns:ssa aiheuttaa circular dependencyn.
-    (komp/kun-muuttuu (fn [e! {haettu-uudet-paikkaukset? :haettu-uudet-paikkaukset?}]
-                        (when haettu-uudet-paikkaukset?
-                          (e! (tiedot/->LisaaOtsikotGridiin (fn [[otsikko paikkaukset]]
-                                                              (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti e! paikkaukset)})
-                                                                    (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
-                                                                             paikkaukset))))))))
     (fn [e! app]
       [:span
        [kartta/kartan-paikka]
@@ -221,6 +375,8 @@
         [yhteinen-view/hakuehdot
          {:nakyma :toteumat
           :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
+        (when (:modalin-paikkaus app)
+          [ilmoita-virheesta-modal e! app])
         [paikkaukset e! app]]])))
 
 (defn toteumat [ur]

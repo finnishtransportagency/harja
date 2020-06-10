@@ -12,13 +12,6 @@
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defn aika-formatteri [aika]
-  (when-not (nil? aika)
-    [:div
-     [:span {:style {:width "100%"
-                     :display "inline-block"}}
-      (pvm/pvm aika)]
-     [:span (str "klo. " (pvm/aika aika))]]))
 
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as yhteinen-tila}]
   (let [tr-atom (atom (:tr valinnat))
@@ -48,8 +41,7 @@
                          :voi-valita-kartalta? voi-valita-trn-kartalta?}
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
-       [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka aikavali-atom {:otsikko aikavali-otsikko
-                                                                                   :vaihda-filtteri-urakan-paattyessa? false}]
+       [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko}]
        [:span.label-ja-kentta
         [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
         [:div.kentta

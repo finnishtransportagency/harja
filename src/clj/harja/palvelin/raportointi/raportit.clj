@@ -10,6 +10,7 @@
   [harja.palvelin.raportointi.raportit.erilliskustannukset]
   [harja.palvelin.raportointi.raportit.ilmoitus]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu]
   [harja.palvelin.raportointi.raportit.materiaali]
   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
@@ -66,7 +67,14 @@
     :konteksti #{"hallintayksikko" "urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito }}
+
+   {:nimi :laskutusyhteenveto-mhu
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"hallintayksikko" "urakka"}
+    :kuvaus "Laskutusyhteenveto"
+    :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu/suorita
+    :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi :laaduntarkastusraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -216,7 +224,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Ilmoitusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.ilmoitus/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito :paallystys :tiemerkinta :kaikki}}
+    :urakkatyyppi #{:hoito :teiden-hoito :paallystys :tiemerkinta :valaistus :kaikki}}
 
    {:nimi :siltatarkastus
     :parametrit [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}

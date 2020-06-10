@@ -1,62 +1,117 @@
 INSERT INTO paikkauskohde ("luoja-id",
+                           luotu,
                            "ulkoinen-id",
                            nimi,
-                           "urakka-id"
+                           "urakka-id",
+                           tila,
+                           "ilmoitettu-virhe",
+                           muokattu,
+                           "muokkaaja-id",
+                           tarkistettu,
+                           "tarkistaja-id"
 )
 VALUES ((SELECT id
          FROM kayttaja
-         WHERE kayttajanimi = 'destia'
+         WHERE kayttajanimi = 'yit-rakennus'
          LIMIT 1),
+        current_timestamp,
         666,
         'Testikohde',
         (SELECT id
          FROM urakka
-         WHERE sampoid = '1242141-OULU2')),
+         WHERE sampoid = '1242141-OULU2'),
+        'lahetetty'::lahetyksen_tila,
+        NULL,
+        NOW() + INTERVAL '2 day',
+        (SELECT id
+           FROM kayttaja
+          WHERE kayttajanimi = 'jvh'
+          LIMIT 1),
+       NOW(),
+(SELECT id
+   FROM kayttaja
+  WHERE kayttajanimi = 'jvh'
+  LIMIT 1)),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+   current_timestamp,
   666,
   'Testikohde toisessa urakassa sama urakoitsija ja ulkoinen id',
   (SELECT id
     FROM urakka
-    WHERE sampoid = '1245142-KAJ2')),
+    WHERE sampoid = '1245142-KAJ2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+   current_timestamp,
    1337,
    'Testikohde 2',
    (SELECT id
     FROM urakka
-    WHERE sampoid = '1242141-OULU2')),
+    WHERE sampoid = '1242141-OULU2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL),
    ((SELECT id
        FROM kayttaja
       WHERE kayttajanimi = 'destia'
       LIMIT 1),
+    current_timestamp,
     1338,
     'Testikohde 3',
     (SELECT id
        FROM urakka
-      WHERE sampoid = '1242141-OULU2')),
+      WHERE sampoid = '1242141-OULU2'),
+    NULL,
+    'Testikohteen numero XYZ tiedot eivät pitäneet paikkaansa. Tsekkaisitko ja lähetä korjaukset. T. Pete',
+    NULL,
+    NULL,
+    NULL,
+    NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+   current_timestamp,
    221337,
    '22 testikohteet',
    (SELECT id
     FROM urakka
-    WHERE sampoid = '1242141-OULU2')),
+    WHERE sampoid = '1242141-OULU2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'skanska'
     LIMIT 1),
+   current_timestamp,
    7331,
    'Testikohde Muhoksen paallystysurakassa',
    (SELECT id
     FROM urakka
-    WHERE sampoid = '4242523-TES2'));
+    WHERE sampoid = '4242523-TES2'),
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL);
 
 
 DO $$ DECLARE
@@ -238,57 +293,65 @@ BEGIN
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6661
-      LIMIT 1), 1, ARRAY [0], ARRAY [1], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6662
-      LIMIT 1), 2, ARRAY [0], ARRAY [1], ARRAY [1], NULL),
+      LIMIT 1), 2, ARRAY [1], ARRAY [1], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6663
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6664
-      LIMIT 1), 2, ARRAY [0], ARRAY [2], NULL, NULL),
+      LIMIT 1), 2, ARRAY [1], ARRAY [2], NULL, NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6665
-      LIMIT 1), 1, ARRAY [0], ARRAY [2], NULL, NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [2], NULL, NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 133
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 733
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
     -- 22 tien paikkaukset
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 221
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 222
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 223
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [2], ARRAY [1, 2], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 224
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL);
+      LIMIT 1), 1, ARRAY [2], ARRAY [1, 2], ARRAY [1], NULL);
 
   INSERT INTO paikkaustoteuma ("ulkoinen-id", "urakka-id", "paikkauskohde-id", "toteuma-id",
                                "luoja-id", tyyppi, selite, hinta, tyomenetelma, valmistumispvm,
                                tierekisteriosoite)
   VALUES -- Kokonaishintaiset
-    (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt', 3500, 'massapintaus', NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
-    (6662, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
-           'Liikennejärjestelyt 2', 400, 'massapintaus', NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
-    (133, oulun_alueurakan_id, hoito_paikkauskohde_3_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
+         (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 3500, 'massapintaus', NOW()::DATE, ROW (20, 1, 50, 1, 150, NULL)),
+         (6662, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt 2', 400, 'massapintaus', NOW()::DATE, ROW (4, 1, 20, 1, 150, NULL)),
+         (133, oulun_alueurakan_id, hoito_paikkauskohde_3_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+         (2355, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 1700, 'massapintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+         (2359, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 1300, 'massapintaus', NOW()::DATE, ROW (22, 1, 151, 1, 250, NULL)),
+         (2356, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+          'Liikennejärjestelyt', 1800, 'remix-pintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+  (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+      'Liikennejärjestelyt', 1900, 'kuumennuspintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;

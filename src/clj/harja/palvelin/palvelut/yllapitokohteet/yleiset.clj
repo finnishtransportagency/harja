@@ -87,6 +87,16 @@
         (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " kohteen-urakka)))))))
 
+(defn vaadi-paikkauskohde-kuuluu-urakkaan
+  [db urakka-id paikkauskohde-id]
+  "Tarkistaa, että paikkauskohde kuuluu annettuun urakkaan. Jos ei kuulu, heittää poikkeuksen."
+  (assert urakka-id "Urakka-id puuttuu")
+  (when (id/id-olemassa? paikkauskohde-id)
+    (let [kohteen-urakka (:id (first (q/hae-paikkauskohteen-urakka-id db {:id paikkauskohde-id})))]
+      (when (not= kohteen-urakka urakka-id)
+        (throw (SecurityException. (str "Paikkauskohde " paikkauskohde-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " kohteen-urakka)))))))
+
 (defn lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? [db user yllapitokohde-id]
   (assert yllapitokohde-id "Ylläpitokohde-id puuttuu")
   (let [kohteen-urakka-id (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
@@ -203,7 +213,6 @@
     (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
     (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
     (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-    (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
 

@@ -40,7 +40,7 @@
                                                (setText [_ t] (reset! txt t))
                                                (getText [_] @txt)
                                                (getJMSCorrelationID [_] correlation-id))))))]
-      (go (<! (async/timeout (rand-int 100)))               ;; sadan millisekunnin päästä lähetys
+      (go (<! (async/timeout 1))
           (log/debug "Lähetys menossa.")
           (doseq [k (get @kuuntelijat nimi)]
             (log/debug "Kutsutaan kuuntelijaa:" k)

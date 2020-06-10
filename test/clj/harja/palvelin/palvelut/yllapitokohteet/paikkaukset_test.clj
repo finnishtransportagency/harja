@@ -5,7 +5,10 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri]))
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.tierekisteri :as tierekisteri]
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -220,3 +223,248 @@
     (testaus-template [nil (java.util.Date.)])
     (testaus-template [(java.util.Date. (- (.getTime (java.util.Date.)) 86400000))
                        (java.util.Date. (+ (.getTime (java.util.Date.)) (* 5 86400000)))])))
+
+
+;; Paikkauskustannusten (paikkaustoteuma-taulu) testit
+(deftest hae-urakan-paikkauskustannukset-testi
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        kustannukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-paikkausurakan-kustannukset
+                                    +kayttaja-jvh+
+                                    {::paikkaus/urakka-id urakka-id
+                                     :ensimmainen-haku? true})
+        testikohde-id (some #(when (= "Testikohde" (get % ::paikkaus/nimi))
+                               (get % ::paikkaus/id))
+                            (:paikkauskohteet kustannukset))
+        testikohteen-kustannukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                  :hae-paikkausurakan-kustannukset
+                                                            +kayttaja-jvh+
+                                                            {::paikkaus/urakka-id urakka-id
+                                                             :paikkaus-idt #{testikohde-id}})
+        testikohteen-kustannus (first (:kustannukset testikohteen-kustannukset))]
+    (is (contains? kustannukset :paikkauskohteet))
+    (is (contains? kustannukset :kustannukset))
+    (is (contains? kustannukset :tyomenetelmat))
+    (is (not (contains? kustannukset :teiden-pituudet)))
+    (is (not (contains? kustannukset :paikkaukset)))
+    (is (not (contains? testikohteen-kustannukset :paikkauskustannukset)))
+    (is (= (count kustannukset) 3))
+
+    (is (= (count (:kustannukset kustannukset)) 3))
+
+    ;; Koska ei ensimmäinen haku, palauttaa vain avaimen :kustannukset
+    (is (= (count testikohteen-kustannukset) 1))
+    (is (= (count (:kustannukset testikohteen-kustannukset)) 1))
+    (is (= {:tie 20 :aosa 1 :aet 50 :let 150  :losa 1
+            :paikkauskohde {:id 1 :nimi "Testikohde"}
+            :tyomenetelma "massapintaus"
+            :paikkaustoteuma-id 1 :hinta 3500M
+            :paikkaustoteuma-poistettu nil}
+           (dissoc testikohteen-kustannus :valmistumispvm :kirjattu)))))
+
+(deftest hae-urakan-paikkauskustannukset-aikavali-testi
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        kustannukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-paikkausurakan-kustannukset
+                                     +kayttaja-jvh+
+                                     {::paikkaus/urakka-id urakka-id
+                                      :ensimmainen-haku? true})
+        ohi-aikavalin (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-paikkausurakan-kustannukset
+                                      +kayttaja-jvh+
+                                      {::paikkaus/urakka-id urakka-id
+                                       :aikavali [(pvm/->pvm "1.1.1992")
+                                                  (pvm/->pvm "1.1.1993")]})
+        aikavali-osuu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-paikkausurakan-kustannukset
+                                      +kayttaja-jvh+
+                                      {::paikkaus/urakka-id urakka-id
+                                       :aikavali [(pvm/eilinen)
+                                                  (pvm/nyt)]})]
+    (is (= (count (:kustannukset kustannukset))))
+    (is (= (count (:kustannukset ohi-aikavalin)) 0))
+    (is (= (count (:kustannukset aikavali-osuu)) 3))))
+
+(deftest hae-urakan-paikkauskustannukset-tr-osoitteen-paattely-testi
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        kustannukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-paikkausurakan-kustannukset
+                                     +kayttaja-jvh+
+                                     {::paikkaus/urakka-id urakka-id
+                                      :ensimmainen-haku? true})
+        paikkauskohteet (for [x (:paikkauskohteet kustannukset)] (dissoc x
+                                                                         ::paikkaus/tarkistaja-id
+                                                                         ::paikkaus/tarkistettu
+                                                                         ::paikkaus/tila
+                                                                         ::paikkaus/ilmoitettu-virhe
+                                                                         ::muokkaustiedot/luotu
+                                                                         ::muokkaustiedot/muokattu))]
+    (is (= paikkauskohteet [#:harja.domain.paikkaus{:id 1, :nimi "Testikohde", :ulkoinen-id 666, :tierekisteriosoite {:tie 20, :aosa 1, :aet 1, :losa 3, :let 250}}
+
+                            #:harja.domain.paikkaus{:id 3, :nimi "Testikohde 2", :ulkoinen-id 1337, :tierekisteriosoite {:tie 20, :aosa 3, :aet 200, :losa 3, :let 300}}
+
+                            #:harja.domain.paikkaus{:id 5, :nimi "22 testikohteet", :ulkoinen-id 221337, :tierekisteriosoite {:tie 22, :aosa 3, :aet 1, :losa 5, :let 1}}
+
+                            #:harja.domain.paikkaus{:id 4, :nimi "Testikohde 3", :ulkoinen-id 1338, :tierekisteriosoite {:tie 22, :aosa 4, :aet 1, :losa 5, :let 1}}]))))
+
+(deftest hae-urakan-paikkauskustannukset-tyomenetelmat-testi
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        kaikki-tyomenetelmat (:kustannukset
+                               (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :hae-paikkausurakan-kustannukset
+                                               +kayttaja-jvh+
+                                               {::paikkaus/urakka-id urakka-id}))
+        massapintaukset (:kustannukset
+                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-paikkausurakan-kustannukset
+                                          +kayttaja-jvh+
+                                          {::paikkaus/urakka-id urakka-id
+                                           :tyomenetelmat #{"massapintaus"}}))
+        kuumennuspintaukset (:kustannukset
+                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-paikkausurakan-kustannukset
+                                          +kayttaja-jvh+
+                                          {::paikkaus/urakka-id urakka-id
+                                           :tyomenetelmat #{"kuumennuspintaus"}}))
+        remix-pintaukset (:kustannukset
+                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-paikkausurakan-kustannukset
+                                          +kayttaja-jvh+
+                                          {::paikkaus/urakka-id urakka-id
+                                           :tyomenetelmat #{"remix-pintaus"}}))]
+    (is (= (count kaikki-tyomenetelmat) 4))
+    (is (= (count massapintaukset) 2))
+    (is (= (count kuumennuspintaukset) 1))
+    (is (= (count remix-pintaukset) 1))
+
+    (is (= (reduce + (keep :hinta kaikki-tyomenetelmat)) 6700M))
+    (is (= (reduce + (keep :hinta massapintaukset)) 3000M))
+    (is (= (reduce + (keep :hinta kuumennuspintaukset)) 1900M))
+    (is (= (reduce + (keep :hinta remix-pintaukset)) 1800M))))
+
+
+(defn- paikkauskustannus-rivit [{:keys [paikkauskohde-id hinta tyomenetelma valmistumispvm]}]
+  [{:aosa 19, :tie 20, :let 301, :paikkauskohde paikkauskohde-id, :losa 19, :aet 1,
+    :tyomenetelma tyomenetelma, :paikkaustoteuma-id -1, :hinta hinta, :valmistumispvm valmistumispvm}])
+
+(defn- valinnat-tallennushetkella [{:keys [:kohteet paikkauskohteiden-idt
+                                           :urakka-id urakka-id
+                                           :aikavali aikavali]}]
+  {:aikavali (or aikavali [(pvm/eilinen) (pvm/nyt)]), :tyomenetelmat #{"kuumennuspintaus" "remix-pintaus" "massapintaus"}, :paikkaus-idt paikkauskohteiden-idt, :harja.domain.paikkaus/urakka-id urakka-id})
+
+(deftest tallenna-paikkauskustannukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        paikkauskohde-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-paikkauskustannukset
+                                +kayttaja-jvh+
+                                {::paikkaus/urakka-id urakka-id
+                                 :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                              :urakka-id urakka-id})
+                                 :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                  :hinta 1234.56M
+                                                                  :tyomenetelma "kuumennuspintaus"
+                                                                  :valmistumispvm (pvm/nyt)})})
+        vastaus-eri-aikavali-hakuehdoissa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                          :tallenna-paikkauskustannukset
+                                                          +kayttaja-jvh+
+                                                          {::paikkaus/urakka-id urakka-id
+                                                           :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                                                        :urakka-id urakka-id
+                                                                                                        :aikavali [(pvm/->pvm "1.1.2010")
+                                                                                                                   (pvm/->pvm "1.1.2011")]})
+                                                           :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                                            :hinta 1234.56M
+                                                                                            :tyomenetelma "kuumennuspintaus"
+                                                                                            :valmistumispvm (pvm/nyt)})})
+        odotettu {:kustannukset [{:aosa 1, :tie 22, :let 150, :losa 1, :aet 40,
+                                  :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
+                                  :tyomenetelma "massapintaus", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :paikkaustoteuma-id 4, :hinta 1700M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
+                                  :paikkaustoteuma-poistettu nil}
+                                 {:aosa 1, :tie 22, :let 250, :losa 1, :aet 151,
+                                  :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
+                                  :tyomenetelma "massapintaus", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :paikkaustoteuma-id 5, :hinta 1300M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
+                                  :paikkaustoteuma-poistettu nil}
+                                 {:aosa 1, :tie 22, :let 150, :losa 1, :aet 40
+                                  :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
+                                  :tyomenetelma "remix-pintaus", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :paikkaustoteuma-id 6, :hinta 1800M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
+                                  :paikkaustoteuma-poistettu nil}
+                                 {:aosa 1, :tie 22, :let 150, :losa 1, :aet 40,
+                                  :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
+                                  :tyomenetelma "kuumennuspintaus", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :paikkaustoteuma-id 7, :hinta 1900M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
+                                  :paikkaustoteuma-poistettu nil}
+                                 {:aosa 19, :tie 20, :let 301, :losa 19, :aet 1
+                                  :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
+                                  :tyomenetelma "kuumennuspintaus", :kirjattu #inst "2020-04-13T07:24:38.083264000-00:00",
+                                  :paikkaustoteuma-id 8, :hinta 1234.56M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
+                                  :paikkaustoteuma-poistettu nil}]}]
+    (is (= (count vastaus) (count odotettu)))
+    (is (not-empty (:kustannukset vastaus)))
+    (is (not-empty (:kustannukset odotettu)))
+    (is (empty? (:kustannukset vastaus-eri-aikavali-hakuehdoissa)))
+
+    ;; ei vertailla aikaleimoja testikantaan luonnin hetkellä
+    (is (= (mapv #(dissoc % :kirjattu :valmistumispvm) (:kustannukset vastaus))
+           (mapv #(dissoc % :kirjattu :valmistumispvm) (:kustannukset odotettu))))))
+
+
+;; Ei luoteta frontin lähettämään tietoon urakka-idstä, vaan varmistetaan paikkauskohteen tiedoista tietokannasta
+(deftest tallenna-paikkauskustannukset-ei-onnistu-ellei-kohde-kuulu-urakkaan
+  (let [urakka-id @oulun-alueurakan-2005-2010-id ;; oikeesti on siis kyseessä Muhoksen urakassa oleva kohde, tämä on epäluotettava tieto frontilta jonka voi käyttäjä halutessaan spoofata
+        paikkauskohde-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)
+        _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                       :tallenna-paikkauskustannukset
+                                                       +kayttaja-jvh+
+                                                       {::paikkaus/urakka-id urakka-id
+                                                        :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                                                     :urakka-id urakka-id})
+                                                        :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                                         :hinta 1234.56M
+                                                                                         :tyomenetelma "kuumennuspintaus"
+                                                                                         :valmistumispvm (pvm/nyt)})})))]))
+
+
+(deftest tallenna-paikkauskustannukset-tarkista-pakolliset-tiedot
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        paikkauskohde-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)
+        kaikki-pakolliset-tiedot-on (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :tallenna-paikkauskustannukset
+                                                    +kayttaja-jvh+
+                                                    {::paikkaus/urakka-id urakka-id
+                                                     :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                                                  :urakka-id urakka-id})
+                                                     :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                                      :hinta 1234.56M
+                                                                                      :tyomenetelma "kuumennuspintaus"
+                                                                                      :valmistumispvm (pvm/nyt)})})
+        _ (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :tallenna-paikkauskustannukset
+                                                 +kayttaja-jvh+
+                                                 {::paikkaus/urakka-id urakka-id
+                                                  :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                                               :urakka-id urakka-id})
+                                                  :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                                   :tyomenetelma "kuumennuspintaus"
+                                                                                   :valmistumispvm (pvm/nyt)})})))
+        _ (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :tallenna-paikkauskustannukset
+                                                      +kayttaja-jvh+
+                                                      {::paikkaus/urakka-id urakka-id
+                                                       :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                                                    :urakka-id urakka-id})
+                                                       :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                                        :hinta 123
+                                                                                        :valmistumispvm (pvm/nyt)})})))
+        _ (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :tallenna-paikkauskustannukset
+                                                      +kayttaja-jvh+
+                                                      {::paikkaus/urakka-id urakka-id
+                                                       :hakuparametrit (valinnat-tallennushetkella {:kohteet #{paikkauskohde-id}
+                                                                                                    :urakka-id urakka-id})
+                                                       :rivit (paikkauskustannus-rivit {:paikkauskohde-id paikkauskohde-id
+                                                                                        :tyomenetelma "remix-pintaus"
+                                                                                        :hinta 123})})))]))

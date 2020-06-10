@@ -94,9 +94,6 @@ SELECT EXISTS(SELECT *
                    FROM paallystysilmoitus pi
                    WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE) OR
             EXISTS(SELECT *
-                   FROM paikkausilmoitus pai
-                   WHERE paikkauskohde = :id AND pai.poistettu IS NOT TRUE) OR
-            EXISTS(SELECT *
                    FROM tietyomaa ttm
                    WHERE yllapitokohde = :id) OR
             EXISTS(SELECT *
@@ -161,10 +158,6 @@ SELECT pi.paallystyskohde
 FROM paallystysilmoitus pi
 WHERE pi.paallystyskohde IN (:idt) AND pi.poistettu IS NOT TRUE
 UNION
-SELECT pai.paikkauskohde
-FROM paikkausilmoitus pai
-WHERE pai.paikkauskohde IN (:idt) AND pai.poistettu IS NOT TRUE
-UNION
 SELECT ttm.yllapitokohde
 FROM tietyomaa ttm
 WHERE ttm.yllapitokohde IN (:idt)
@@ -192,12 +185,6 @@ SELECT ((EXISTS(SELECT *
                            FROM yllapitokohde
                            WHERE id = :yllapitokohde_id) = :urakka_id)) OR
         (EXISTS(SELECT *
-                FROM paikkausilmoitus
-                WHERE paikkauskohde = :yllapitokohde_id
-                      AND (SELECT urakka
-                           FROM yllapitokohde
-                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
-        (EXISTS(SELECT *
                 FROM laatupoikkeama
                 WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id)) OR
         (EXISTS(SELECT *
@@ -219,8 +206,6 @@ SELECT
   ypk.muokattu,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.tunnus,
@@ -257,8 +242,6 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
@@ -273,7 +256,7 @@ WHERE
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                      OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi, u.id,
+GROUP BY ypk.id, pi.id, o.nimi, u.nimi, u.id,
   ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
   ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
 
@@ -855,6 +838,11 @@ VALUES
 SELECT urakka AS id
 FROM yllapitokohde
 WHERE id = :id;
+
+-- name: hae-paikkauskohteen-urakka-id
+SELECT "urakka-id" AS id
+  FROM paikkauskohde
+ WHERE id = :id;
 
 -- name: hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
 SELECT suorittava_tiemerkintaurakka AS id

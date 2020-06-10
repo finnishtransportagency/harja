@@ -20,7 +20,7 @@
                                    :palvelukutsu :hae-urakan-paikkauskohteet
                                    :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
                         :kustannukset {:itemit-avain :kustannukset
-                                       :aikavali-otsikko "Kirjausaika"
+                                       :aikavali-otsikko "Valmistumispäivämäärä"
                                        :voi-valita-trn-kartalta? false
                                        :palvelukutsu :hae-paikkausurakan-kustannukset
                                        :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
@@ -74,7 +74,8 @@
                               (map #(identity
                                       {:id (::paikkaus/id %)
                                        :nimi (::paikkaus/nimi %)
-                                       :valittu? true})
+                                       :valittu? true
+                                       :tierekisteriosoite (::paikkaus/tierekisteriosoite %)})
                                    (:paikkauskohteet tulos)))
           naytettavat-tulokset (itemit-avain tulos)]
       (palvelukutsu-onnistui-fn tulos)

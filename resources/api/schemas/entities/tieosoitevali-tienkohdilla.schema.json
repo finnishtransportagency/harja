@@ -45,7 +45,9 @@
           "ajorata": {
             "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat/0/ajorata",
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 2,
+            "required": true
           },
           "tienkohdat": {
             "$ref": "file:resources/api/schemas/entities/tienkohdat.schema.json"

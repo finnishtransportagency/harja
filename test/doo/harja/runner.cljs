@@ -8,7 +8,6 @@
             [harja.tiedot.muokkauslukko-test]
             [harja.views.kartta.infopaneeli-test]
             [harja.views.urakka.siltatarkastukset-test]
-            [harja.views.urakka.paikkausilmoitukset-test]
             [harja.views.urakka.yllapitokohteet-test]
             [harja.views.urakka.valitavoitteet-test]
             [harja.views.urakka.yleiset-test]
@@ -62,7 +61,6 @@
            'harja.tiedot.muokkauslukko-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.siltatarkastukset-test
-           'harja.views.urakka.paikkausilmoitukset-test
            'harja.views.urakka.yllapitokohteet-test
            'harja.views.urakka.valitavoitteet-test
            'harja.views.urakka.yleiset-test

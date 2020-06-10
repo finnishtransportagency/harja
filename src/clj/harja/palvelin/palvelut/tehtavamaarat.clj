@@ -31,6 +31,10 @@
   (into []
         (q/hae-tehtavahierarkia db)))
 
+(defn tehtavaryhmat-ja-toimenpiteet
+  [db user {:keys [urakka-id]}]
+  (into [] (q/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
+
 (defn- muodosta-hierarkia
   [kannasta]
   (loop [idt {}
@@ -57,7 +61,6 @@
                                              polut-arvot)))
             valitaso-id (luo-id-fn otsikko)
             paivitetty-idt (paivita-tarvittaessa idt otsikko valitaso-id)]
-        #_(println paivitetty-idt)
         (recur
           paivitetty-idt
           (-> tulos
@@ -190,7 +193,11 @@
       (julkaise-palvelu
         :tallenna-tehtavamaarat
         (fn [user tiedot]
-          (tallenna-tehtavamaarat (:db this) user tiedot))))
+          (tallenna-tehtavamaarat (:db this) user tiedot)))
+      (julkaise-palvelu
+        :tehtavaryhmat-ja-toimenpiteet
+        (fn [user tiedot]
+          (tehtavaryhmat-ja-toimenpiteet (:db this) user tiedot))))
     this)
 
   (stop [this]
@@ -199,4 +206,5 @@
     (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
+    (poista-palvelu (:http-palvelin this) :tehtavaryhmat-ja-toimenpiteet)
     this))

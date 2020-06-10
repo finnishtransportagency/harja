@@ -4,18 +4,28 @@
             [clojure.walk :as walk]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-lahetyssanoma :as paikkauskohteen-lahetyssanoma])
+            [harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-lahetyssanoma :as paikkauskohteen-lahetyssanoma]
+            [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [try+]]))
 
 (deftest tarkista-lahetyssanoman-muodostus
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         sanoma-json (paikkauskohteen-lahetyssanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
         sanoma (walk/keywordize-keys
-                 (cheshire/decode sanoma-json))]
-
-    (println "Nimi " (get-in sanoma [:urakka :nimi]))
-
+                 (cheshire/decode sanoma-json))
+        eka-paikkaus (-> (first (:paikkauskohteet sanoma))
+                         :paikkauskohde
+                         :paikkaukset
+                         first
+                         :paikkaus)]
     (is (= "Oulun alueurakka 2014-2019" (get-in sanoma [:urakka :nimi])) "Urakan tiedot palautuvat.")
+    (is (= 1
+           (get-in eka-paikkaus [:sijainti :ajorata])) "Ajorata läsnä")
+    (is (= {:ajourat [{:ajoura 1}]
+            :ajouravalit [{:ajouravali 1}]
+            :keskisaumat []
+            :reunat [{:reuna 1}]}
+           (get-in eka-paikkaus [:sijainti :tienkohdat])) "Tienkohdat läsnä")
     (is (= 5 (-> (first (:paikkauskohteet sanoma))
                  (:paikkauskohde)
                  (:paikkaukset)
