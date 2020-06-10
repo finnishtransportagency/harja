@@ -6,17 +6,17 @@
   "properties": {
     "id": {
       "id": "urn:harja/tyokone/id",
-      "required": false,
+      "required": true,
       "type": "string"
     },
     "tunnus": {
-      "id": "urn:harja/tyokone/tunniste",
-      "required": false,
+      "id": "urn:harja/tyokone/tunnus",
+      "required": true,
       "type": "string"
     },
     "tyokonetyyppi": {
       "id": "urn:harja/tyokone/tyyppi",
-      "required": false,
+      "required": true,
       "type": "string"
     }
   }
