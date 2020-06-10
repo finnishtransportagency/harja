@@ -13,6 +13,12 @@
 
 (def +paikkauksen-vienti+ "json/yha/paikkausten-vienti-request.schema.json")
 
+(defn- parsi-tienkohdat [tienkohta]
+  {::paikkaus/reunat (mapv #(into {:reuna %}) (::paikkaus/reunat tienkohta))
+   ::paikkaus/ajouravalit (mapv #(into {:ajouravali %}) (::paikkaus/ajouravalit tienkohta))
+   ::paikkaus/ajourat (mapv #(into {:ajoura %}) (::paikkaus/ajourat tienkohta))
+   ::paikkaus/keskisaumat (mapv #(into {:keskisauma %}) (::paikkaus/keskisaumat tienkohta))})
+
 (defn muodosta-sanoma-json
   "Muodostaa tietokannasta haetuista urakka-, paikkauskohde-, paikkaus- ja paikkauksen_materiaali-tiedoista
   paikkauksen-vienti-request-skeeman mukaisen sanoman."
@@ -42,22 +48,26 @@
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde (first (q-paikkaus/hae-paikkauskohteet db {::paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
-                                                         ::paikkaus/urakka-id        urakka-id
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {::paikkaus/id kohde-id
+                                                         :harja.domain.paikkaus/urakka-id urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
         kohde (dissoc kohde :harja.domain.muokkaustiedot/luotu
                       :harja.domain.muokkaustiedot/muokattu
+                      ::paikkaus/urakka-id
                       ::paikkaus/tarkistettu
                       ::paikkaus/tarkistaja-id
                       ::paikkaus/ilmoitettu-virhe)
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {::paikkaus/paikkauskohde-id kohde-id
-                                                                ::paikkaus/urakka-id        urakka-id
+                                                                ::paikkaus/urakka-id urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
         paikkaukset (map
-                      #(assoc-in  % [::paikkaus/tierekisteriosoite :ajorata]
-                                  (:ajorata (first
-                                              (q-paikkaus/hae-paikkauksen-ajorata db
-                                                                                  {:id (::paikkaus/id %)}))))
+                      #(let [tienkohdat (first
+                                          (q-paikkaus/hae-paikkauksen-tienkohdat db
+                                                                                 {::paikkaus/paikkaus-id (::paikkaus/id %)}))
+                             tienkohdat-parsittu (parsi-tienkohdat tienkohdat)]
+                         (-> %
+                             (assoc-in [::paikkaus/tierekisteriosoite :ajorata] (::paikkaus/ajorata tienkohdat))
+                             (assoc-in [::paikkaus/tierekisteriosoite :tienkohdat] tienkohdat-parsittu)))
                       paikkaukset)
         json (muodosta-sanoma-json urakka kohde paikkaukset)]
 
@@ -65,7 +75,7 @@
     (if-let [virheet (json/validoi +paikkauksen-vienti+ json false)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. JSON ei ole validi. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
-        (throw+ {:type  :invalidi-yha-paikkaus-json
+        (throw+ {:type :invalidi-yha-paikkaus-json
                  :error virheviesti}))
       json)))
 

@@ -181,7 +181,7 @@ pvm-popupin-sulkevat-nappaimet
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
     (fn [{:keys [pvm valitse luokat valittava?-fn disabled vayla-tyyli? sumeutus-fn]}]
-      (let [kiinni #(do (loki/log "Suljen")
+      (let [kiinni #(do #_(loki/log "Suljen")
                         (reset! % false))]
         [:div.kalenteri-kontti
          [:input {:disabled    disabled
@@ -194,15 +194,15 @@ pvm-popupin-sulkevat-nappaimet
 
                   :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
                   :on-click    #(do
-                                  (loki/log "click" @auki?)
+                                  #_(loki/log "click" @auki?)
                                   (reset! auki? true))
                   :on-focus    #(do
-                                  (loki/log "fokus" @auki?)
+                                  #_(loki/log "fokus" @auki?)
                                   (reset! auki? true))
                   :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
                                   (kiinni auki?))
                   :on-blur     (fn []
-                                 (loki/log "blur" @auki?)
+                                 #_(loki/log "blur" @auki?)
                                  (when sumeutus-fn (sumeutus-fn))
                                  (when (seq @suora-syotto-sisalto)
                                    (valitse (pvm/->pvm @suora-syotto-sisalto))
