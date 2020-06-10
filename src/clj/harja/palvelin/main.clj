@@ -57,7 +57,6 @@
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-    [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
@@ -400,9 +399,6 @@
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :paikkaus (component/using
-                  (paikkaus/->Paikkaus)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
@@ -665,7 +661,7 @@
 
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :yha-paikkauskomponentti])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

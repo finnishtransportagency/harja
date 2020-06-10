@@ -49,7 +49,9 @@
   ([] (ajax-loader-pieni nil))
   ([viesti] (ajax-loader-pieni viesti nil))
   ([viesti opts]
-   [:div {:class (str "ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))}
+   [:div {:class (str "ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))
+          :style (when-let [tyyli (:style opts)]
+                   tyyli)}
     [:img {:src "images/ajax-loader.gif" :style {:height 16}}]
     (when viesti
       [:span.viesti (str " " viesti " ")])]))
@@ -76,13 +78,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                (= kc 13))
        (.preventDefault %)
        (case kc
-         38 ;; nuoli ylös
+         38                                                 ;; nuoli ylös
          (ylos)
 
-         40 ;; nuoli alas
+         40                                                 ;; nuoli alas
          (alas)
 
-         13 ;; enter
+         13                                                 ;; enter
          (enter)))))
 
 (defn virheen-ohje
@@ -112,10 +114,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn linkki
   ([otsikko toiminto]
-    (linkki otsikko toiminto {}))
+   (linkki otsikko toiminto {}))
   ([otsikko toiminto {:keys [style ikoni]}]
-   [:a {:style style
-        :href "#"
+   [:a {:style    style
+        :href     "#"
         :on-click #(do (.preventDefault %) (toiminto))}
     [:span
      (when ikoni ikoni)
@@ -133,11 +135,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     [:span.raksiboksi
      [:div.input-group
       [:div.input-group-addon
-       [:input.klikattava {:type "checkbox"
-                           :checked (if checked "checked" "")
-                           :disabled (when disabled? "disabled")
+       [:input.klikattava {:type      "checkbox"
+                           :checked   (if checked "checked" "")
+                           :disabled  (when disabled? "disabled")
                            :on-change #(toiminto-fn %)}]
-       [:span.raksiboksi-teksti {:class (when-not disabled? "klikattava")
+       [:span.raksiboksi-teksti {:class    (when-not disabled? "klikattava")
                                  :on-click #(toiminto-fn %)} teksti]]
       (when komponentti
         komponentti)]
@@ -174,7 +176,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                  (if (< etaisyys-oikeaan-reunaan 75)
                    :alas-vasen
                    :alas-oikea))]
-    {:suunta suunta
+    {:suunta      suunta
      :max-korkeus (if (or (= suunta :alas-oikea) (= suunta :alas-vasen))
                     (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila)
                     (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila))}))
@@ -183,24 +185,24 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [max-korkeus avautumissuunta]
   (merge {:max-height (fmt/pikseleina max-korkeus)}
          (when (= avautumissuunta :alas-vasen)
-           {:top "calc(100% - 1px)"
-            :right "0"
+           {:top    "calc(100% - 1px)"
+            :right  "0"
             :bottom "auto"})
          (when (= avautumissuunta :alas-oikea)
-           {:top "calc(100% - 1px)"
+           {:top    "calc(100% - 1px)"
             :bottom "auto"})
          (when (= avautumissuunta :ylos-vasen)
            {:bottom "calc(100% - 1px)"
-            :right "0"
-            :top "auto"})
+            :right  "0"
+            :top    "auto"})
          (when (= avautumissuunta :ylos-oikea)
            {:bottom "calc(100% - 1px)"
-            :top "auto"})))
+            :top    "auto"})))
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-[{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn!]} _]
+  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn!]} _]
   (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
@@ -216,8 +218,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                           itemit-komponentteja? vaihtoehto
                           disabled? [:span.disabled (format-fn vaihtoehto)]
                           :else [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                              (reset! auki? false)
-                                                              nil)])]))
+                                                                    (reset! auki? false)
+                                                                    nil)])]))
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
@@ -249,22 +251,22 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                     i
                                                                     (recur (inc i)))))]
                                      (case kc
-                                       38 ;; nuoli ylös
+                                       38                   ;; nuoli ylös
                                        (if (or (nil? nykyinen-valittu-idx)
                                                (= 0 nykyinen-valittu-idx))
                                          (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
                                          (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
 
-                                       40 ;; nuoli alas
+                                       40                   ;; nuoli alas
                                        (if (or (nil? nykyinen-valittu-idx)
                                                (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
                                          (valitse-fn (nth vaihtoehdot 0))
                                          (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
-                                       13 ;; enter
+                                       13                   ;; enter
                                        (reset! auki? false)))))
 
-                               (do ;; Valitaan inputtia vastaava vaihtoehto
+                               (do                          ;; Valitaan inputtia vastaava vaihtoehto
                                  (reset! term (char kc))
                                  (when-let [itemi (first (filter (fn [vaihtoehto]
                                                                    (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
@@ -274,11 +276,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                    (reset! auki? false)))) nil)))
         alasvetolista (fn [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
                                    li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-                                   vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki?]}]
+                                   vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava?]}]
                         [:ul (if vayla-tyyli?
-                               {:style {:display (if auki?
-                                                   "block"
-                                                   "none")}}
+                               {:style (merge {:display (if auki?
+                                                          "block"
+                                                          "none")}
+                                              (when skrollattava?
+                                                {:overflow   "scroll"
+                                                 :max-height "420px"}))}
                                {:class "dropdown-menu livi-alasvetolista"
                                 :style (avautumissuunta-ja-korkeus-tyylit
                                          @max-korkeus @avautumissuunta)})
@@ -313,7 +318,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
-          (loki/log ryhmissa? ryhmitellyt-itemit)
           [:div (merge
                   {:class (str (if vayla-tyyli?
                                  (str "select-" (if virhe? "error-" "") "default")
@@ -323,17 +327,17 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   (when data-cy
                     {:data-cy data-cy}))
            [:button.nappi-alasveto
-            {:class (when disabled "disabled")
-             :type "button"
-             :disabled (if disabled "disabled" "")
-             :title title
-             :on-click (partial on-click-fn vaihtoehdot)
-             :on-focus on-focus
+            {:class       (when disabled "disabled")
+             :type        "button"
+             :disabled    (if disabled "disabled" "")
+             :title       title
+             :on-click    (partial on-click-fn vaihtoehdot)
+             :on-focus    on-focus
              :on-key-down (partial on-key-down-fn
-                            {:vaihtoehdot vaihtoehdot
-                             :valinta valinta
-                             :valitse-fn valitse-fn
-                             :format-fn format-fn})}
+                                   {:vaihtoehdot vaihtoehdot
+                                    :valinta     valinta
+                                    :valitse-fn  valitse-fn
+                                    :format-fn   format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if (and @auki? vayla-tyyli?)
               ^{:key :auki}
@@ -341,10 +345,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ^{:key :kiinni}
               [:span.livicon-chevron-down {:class (when disabled "disabled")}])]
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
-                                                          :disabled-vaihtoehdot :vayla-tyyli?})
+                                                          :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
-                                  :auki? @auki?})]])))))
+                                  :auki?     @auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -683,10 +687,10 @@ jatkon."
                       (/ (.-width parent-rect) 2)))))
       (fn [auki? sisalto]
         [:div.tooltip.bottom {:class (when auki? "in")
-                              :style {:position "absolute"
+                              :style {:position  "absolute"
                                       :min-width 150
-                                      :left (when-let [x @x]
-                                              x)}}
+                                      :left      (when-let [x @x]
+                                                   x)}}
          [:div.tooltip-arrow]
          [:div.tooltip-inner
           sisalto]]))))
@@ -697,7 +701,7 @@ jatkon."
     (komp/luo
       (fn [opts komponentti tooltipin-sisalto]
         [:div.inline-block
-         {:style {:position "relative"} ;:div.inline-block
+         {:style          {:position "relative"}            ;:div.inline-block
           :on-mouse-enter #(reset! tooltip-nakyy? true)
           :on-mouse-leave #(reset! tooltip-nakyy? false)}
          komponentti

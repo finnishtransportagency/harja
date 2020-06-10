@@ -375,8 +375,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
@@ -403,16 +401,12 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
-      AND ypk.urakka IN (:urakat)
-      AND (pai.tila :: TEXT != 'valmis' OR
-           (now() - pai.valmispvm_kohde) < INTERVAL '7 days');
+      AND ypk.urakka IN (:urakat);
 
 -- name: hae-paikkaukset-historiakuvaan
 -- Hakee historiakuvaan kaikki paikkauskohteet, jotka ovat olleet aktiivisia
@@ -421,8 +415,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
@@ -449,15 +441,12 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
-      AND ypk.urakka IN (:urakat)
-      AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));
+      AND ypk.urakka IN (:urakat);
 
 -- name: hae-toteumat
 -- fetch-size: 64

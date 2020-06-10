@@ -46,6 +46,12 @@
                [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
          hakuehdot))
 
+(defn hae-paikkauksen-tienkohdat [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkauksen-tienkohta
+         paikkaus/tienkohta-perustiedot
+         hakuehdot))
+
 (defn hae-paikkaustoteumat [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaustoteuma
@@ -57,6 +63,7 @@
          ::paikkaus/paikkauskohde
          (conj paikkaus/paikkauskohteen-perustiedot
                ::muokkaustiedot/luotu
+               ::paikkaus/urakka-id
                ::muokkaustiedot/muokattu)
          hakuehdot))
 
@@ -224,7 +231,9 @@
   "Käsittelee paikkauskohteen. Päivittää olemassa olevan tai lisää uuden."
   [db urakka-id kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
-        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
+        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)
+        ;; nollataan mahdollinen ilmoitettu virhe
+        kohde (assoc kohde ::paikkaus/ilmoitettu-virhe nil)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)

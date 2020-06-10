@@ -66,13 +66,13 @@
     (when silta-kannassa?
       (if (some :siltatarkastuksia? urakkatiedot)
         ;; Jos on tarkastuksia, annetaan olla kannassa ja logitetaan
-        (do (q-sillat/paivita-silta! db sql-parametrit)
+        (do (q-sillat/paivita-silta! db (assoc sql-parametrit :kunnan-vastuulla true))
             (logita-virhe-sillan-tuonnissa db
                                            "Kunnan hoitamalle sillalle merkattu tarkastuksia"
                                            (str "Silta " silta-taulun-id
                                                 " on merkattu kunnan hoitamaksi, mutta sillä on siltatarkastuksia.")))
         ;; Merkataan silta poistetuksi, jos ei ole tarkastuksia
-        (q-sillat/merkkaa-silta-poistetuksi! db {:silta-id silta-taulun-id})))))
+        (q-sillat/merkkaa-kunnan-silta-poistetuksi! db {:silta-id silta-taulun-id})))))
 
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
@@ -174,7 +174,9 @@
                         :lakkautuspvm lakkautuspvm
                         :muutospvm muutospvm
                         :urakat urakat
-                        :status status}]
+                        :status status
+                        :poistettu false
+                        :kunnan-vastuulla false}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
 

@@ -12,7 +12,7 @@ INSERT INTO paikkauskohde ("luoja-id",
 )
 VALUES ((SELECT id
          FROM kayttaja
-         WHERE kayttajanimi = 'destia'
+         WHERE kayttajanimi = 'yit-rakennus'
          LIMIT 1),
         current_timestamp,
         666,
@@ -293,48 +293,48 @@ BEGIN
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6661
-      LIMIT 1), 1, ARRAY [0], ARRAY [1], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6662
-      LIMIT 1), 2, ARRAY [0], ARRAY [1], ARRAY [1], NULL),
+      LIMIT 1), 2, ARRAY [1], ARRAY [1], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6663
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6664
-      LIMIT 1), 2, ARRAY [0], ARRAY [2], NULL, NULL),
+      LIMIT 1), 2, ARRAY [1], ARRAY [2], NULL, NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 6665
-      LIMIT 1), 1, ARRAY [0], ARRAY [2], NULL, NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [2], NULL, NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 133
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 733
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
     -- 22 tien paikkaukset
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 221
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 222
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [1], ARRAY [1, 2], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 223
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+      LIMIT 1), 1, ARRAY [2], ARRAY [1, 2], ARRAY [1], NULL),
     ((SELECT id
       FROM paikkaus
       WHERE "ulkoinen-id" = 224
-      LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL);
+      LIMIT 1), 1, ARRAY [2], ARRAY [1, 2], ARRAY [1], NULL);
 
   INSERT INTO paikkaustoteuma ("ulkoinen-id", "urakka-id", "paikkauskohde-id", "toteuma-id",
                                "luoja-id", tyyppi, selite, hinta, tyomenetelma, valmistumispvm,

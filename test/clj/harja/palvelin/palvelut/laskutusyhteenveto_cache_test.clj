@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
             [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -71,15 +71,15 @@
     (let [urakka-id @oulun-alueurakan-2014-2019-id
           varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
           cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-          eka-ajo (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          eka-ajo (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma) +kayttaja-jvh+
                                {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
                                 :loppupvm (pvm/->pvm "31.8.2015")})
-          toka-ajo (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          toka-ajo (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma) +kayttaja-jvh+
                                {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
                                 :loppupvm (pvm/->pvm "31.8.2015")})
-          haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma) +kayttaja-jvh+
                                {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
                                 :loppupvm (pvm/->pvm "31.8.2015")})
@@ -114,7 +114,7 @@
     (let [urakka-id @oulun-alueurakan-2014-2019-id
           varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
           cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          eka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                               (:db jarjestelma) +kayttaja-jvh+
                               {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                :loppupvm (pvm/->pvm "31.8.2015")})
@@ -162,7 +162,7 @@
                              :sopimusnumero @oulun-alueurakan-2014-2019-paasopimuksen-id
                              :tyot metsanharvennus-yksikkohinta-hyotykuorma})
             cache-tyhja-koska-yht-trigger (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-            toka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+            toka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                  (:db jarjestelma) +kayttaja-jvh+
                                  {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                   :loppupvm (pvm/->pvm "31.8.2015")})
@@ -198,7 +198,7 @@
                                                        " AND tehtava = " vesakonraivaus-tpk-id ";"))
           varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
           cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          eka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                               (:db jarjestelma) +kayttaja-jvh+
                               {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                :loppupvm (pvm/->pvm "31.8.2015")})
@@ -240,7 +240,7 @@
                             {:urakka-id @oulun-alueurakan-2014-2019-id
                              :tyot vesakonraivaus-muutoshinta-hyotykuorma})
             cache-tyhja-koska-yht-trigger (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-            toka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+            toka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                  (:db jarjestelma) +kayttaja-jvh+
                                  {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                   :loppupvm (pvm/->pvm "31.8.2015")})
@@ -272,7 +272,7 @@
           ek-summa 665
           varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
           cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          eka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                               (:db jarjestelma) +kayttaja-jvh+
                               {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                :loppupvm (pvm/->pvm "31.8.2015")})
@@ -313,7 +313,7 @@
                             :tallenna-erilliskustannus +kayttaja-jvh+
                             erilliskustannus-hyotykuorma)
             cache-tyhja-koska-yht-trigger (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-            toka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+            toka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                  (:db jarjestelma) +kayttaja-jvh+
                                  {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                   :loppupvm (pvm/->pvm "31.8.2015")})
@@ -347,7 +347,7 @@
     (let [urakka-id @oulun-alueurakan-2014-2019-id
           varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
           cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
-          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+          eka-tietojen-haku (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                               (:db jarjestelma) +kayttaja-jvh+
                               {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                :loppupvm (pvm/->pvm "31.8.2015")})

@@ -20,7 +20,10 @@
     "Sillanvalvoja"
     "Kelikeskus"
     "Sopimusvastaava"
-    "Tieliikennekeskus"})
+    "Tieliikennekeskus"
+    "Viranomais- ja vahingonkorvausasiat"
+    "Työmaavalvoja"
+    "Työmaavalvojan sijainen"})
 
 (defn tee-yhteyshenkilo [rooli etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo]
   {:yhteyshenkilo

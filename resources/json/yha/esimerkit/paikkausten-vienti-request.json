@@ -20,7 +20,38 @@
                 "aet": 1,
                 "losa": 5,
                 "let": 16,
-                "ajorata" : 1
+                "ajorata" : 1,
+                "tienkohdat": {
+                  "reunat": [
+                    {
+                      "reuna": 1
+                    }
+                  ],
+                  "ajourat": [
+                    {
+                      "ajoura": 2
+                    },
+                    {
+                      "ajoura": 3
+                    }
+                  ],
+                  "ajouravalit": [
+                    {
+                      "ajouravali": 5
+                    },
+                    {
+                      "ajouravali": 7
+                    }
+                  ],
+                  "keskisaumat": [
+                    {
+                      "keskisauma": 1
+                    },
+                    {
+                      "keskisauma": 1
+                    }
+                  ]
+                }
               },
               "tyomenetelma": "massapintaus",
               "massatyyppi": "asfalttibetoni",

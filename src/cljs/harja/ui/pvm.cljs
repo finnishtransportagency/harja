@@ -9,7 +9,8 @@
             [goog.events.EventType :as EventType]
             [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.loki :as loki]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
 
@@ -64,6 +65,7 @@
    :vuosi    näytettävä vuosi, oletus nykyinen
    :kuukausi näytettävä kuukausi (0 - 11)
    :valitse  funktio, jota kutsutaan kun päivämäärä valitaan
+   :flowissa?  position absoluten sijaan position static, jolloin voi käyttää normiflowissa
    :valittava?-fn funktio, jolle annetaan pvm. Paluuarvo truthy, jota
                   jonka perusteella tarkastetaan voiko päivää valita."
   [optiot]
@@ -73,6 +75,7 @@
         nayta (atom [(.getYear nyt) (.getMonth nyt)])
         scroll-kuuntelija (fn [this _]
                             (selvita-kalenterin-suunta this sijainti-atom))
+        flowissa? (:flowissa? optiot)
         {vayla-tyyli? :vayla-tyyli?} optiot
         tyyli-otsikkorivi (if vayla-tyyli? "calendar-header-row " "pvm-viikonpaivat ")
         tyyli-paivasolu (if vayla-tyyli? "calendar-cell " "pvm-paiva ")
@@ -101,6 +104,7 @@
                              ;; Etenkin jos kalenteri avataan ylöspäin, on tärkeää, että korkeus pysyy vakiona
                              ;; Muuten otsikkorivi hyppii sen mukaan paljonko kuussa on päiviä.
                              :height  "200px"}
+                            (if flowissa? {:position "static"} {})
                             (case @sijainti-atom
                               :ylos-oikea {:bottom "100%" :left 0}
                               :ylos-vasen {:bottom "100%" :right 0}
@@ -176,27 +180,40 @@ pvm-popupin-sulkevat-nappaimet
   [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [pvm valitse luokat valittava?-fn disabled]}]
-      [:div.kalenteri-kontti
-       [:input {:disabled    disabled
-                :type        :text
-                :class       (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                :value       (cond
-                               (seq @suora-syotto-sisalto) @suora-syotto-sisalto
-                               (not (nil? pvm)) (pvm/pvm pvm)
-                               :else "")
+    (fn [{:keys [pvm valitse luokat valittava?-fn disabled vayla-tyyli? sumeutus-fn]}]
+      (let [kiinni #(do #_(loki/log "Suljen")
+                        (reset! % false))]
+        [:div.kalenteri-kontti
+         [:input {:disabled    disabled
+                  :type        :text
+                  :class       (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
+                  :value       (cond
+                                 (seq @suora-syotto-sisalto) @suora-syotto-sisalto
+                                 (not (nil? pvm)) (pvm/pvm pvm)
+                                 :else "")
 
-                :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                :on-focus    #(reset! auki? true)
-                :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
-                                (reset! auki? false))
-                :on-blur     (fn []
-                               (when (seq @suora-syotto-sisalto)
-                                 (valitse (pvm/->pvm @suora-syotto-sisalto))
-                                 (reset! suora-syotto-sisalto "")))}]
-       (when @auki?
-         [pvm-valintakalenteri {:vayla-tyyli?  true
-                                :valitse       #(do (reset! auki? false)
+                  :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
+                  :on-click    #(do
+                                  #_(loki/log "click" @auki?)
+                                  (reset! auki? true))
+                  :on-focus    #(do
+                                  #_(loki/log "fokus" @auki?)
+                                  (reset! auki? true))
+                  :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
+                                  (kiinni auki?))
+                  :on-blur     (fn []
+                                 #_(loki/log "blur" @auki?)
+                                 (when sumeutus-fn (sumeutus-fn))
+                                 (when (seq @suora-syotto-sisalto)
+                                   (valitse (pvm/->pvm @suora-syotto-sisalto))
+                                   (reset! suora-syotto-sisalto "")))}]
+         (when @auki?
+           [pvm-valintakalenteri {:vayla-tyyli?  (if-not (nil? vayla-tyyli?)
+                                                   vayla-tyyli?
+                                                   true)
+                                  :valitse       #(do
+                                                    (loki/log "valinta" @auki?)
+                                                    (kiinni auki?)
                                                     (valitse %))
-                                :valittava?-fn valittava?-fn
-                                :pvm           pvm}])])))
+                                  :valittava?-fn valittava?-fn
+                                  :pvm           pvm}])]))))

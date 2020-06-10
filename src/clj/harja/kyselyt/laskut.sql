@@ -24,6 +24,34 @@ select liite.id               AS "liite-id",
        join liite liite on ll.liite = liite.id
        where l.id = :lasku-id;
 
+-- name: hae-laskuerittelyt-tietoineen-vientiin
+-- Hakee PDF/Excel -generointiin tarvittavien tietojen kanssa urakan kulut
+select
+       tpi.nimi as "toimenpide",
+       tr.nimi as "tehtavaryhma",
+       lk.summa,
+       me.numero as "maksuera",
+       l.erapaiva,
+       u.nimi as "urakka"
+from lasku l
+       join urakka u on l.urakka = u.id
+       join lasku_kohdistus lk on l.id = lk.lasku
+       join toimenpideinstanssi tpi on lk.toimenpideinstanssi = tpi.id
+       join maksuera me on lk.toimenpideinstanssi = me.toimenpideinstanssi
+       left join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+where l.urakka = :urakka
+    and l.erapaiva between :alkupvm ::date and :loppupvm ::date
+    and l.poistettu is not true;
+
+-- name: hae-pvm-laskun-numerolla
+-- Hakee laskun päivämäärän urakalle käyttäen laskun numeroa.  Yhtä laskun numeroa voi käyttää yhden pvm:n yhteydessä, mutta useampi lasku voi käyttää samaa numeroa samalla pvm:llä.
+select
+  l.erapaiva as "erapaiva"
+from lasku l
+where l.urakka = :urakka
+  and l.laskun_numero = :laskun-numero
+  and l.poistettu is not true;
+
 -- name: hae-kaikki-urakan-laskuerittelyt
 -- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
 SELECT l.id                   as "id",
@@ -48,6 +76,31 @@ from lasku l
 WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-laskuerittelyt
+-- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
+SELECT l.id                   as "id",
+       l.kokonaissumma        as "kokonaissumma",
+       l.erapaiva             as "erapaiva",
+       l.tyyppi               as "tyyppi",
+       l.laskun_numero        as "laskun-numero",
+       l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
+       l.lisatieto            as "lisatieto",
+       lk.id                  as "kohdistus-id",
+       lk.rivi                as "rivi",
+       lk.summa               as "summa",
+       lk.toimenpideinstanssi as "toimenpideinstanssi",
+       lk.tehtavaryhma        as "tehtavaryhma",
+       lk.tehtava             as "tehtava",
+       lk.suoritus_alku       as "suoritus-alku",
+       lk.suoritus_loppu      as "suoritus-loppu",
+       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
+       lk.maksueratyyppi      as "maksueratyyppi"
+from lasku l
+       JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
+WHERE l.urakka = :urakka
+  AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
+  AND l.poistettu IS NOT TRUE;
+
 -- name: linkita-lasku-ja-liite<!
 -- Linkittää liitteen ja laskun
 insert into lasku_liite (lasku, liite, luotu, luoja, poistettu)
@@ -61,28 +114,6 @@ set poistettu = true,
  muokkaaja = :kayttaja,
  muokattu = current_timestamp
  where ll.lasku = :lasku-id and ll.liite = :liite-id;
-
--- name: hae-urakan-laskuerittelyt
--- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
-SELECT l.id                   as "id",
-       l.kokonaissumma        as "kokonaissumma",
-       l.erapaiva             as "erapaiva",
-       l.tyyppi               as "tyyppi",
-       l.lisatieto            as "lisatieto",
-       lk.rivi                as "rivi",
-       lk.summa               as "summa",
-       lk.toimenpideinstanssi as "toimenpideinstanssi",
-       lk.tehtavaryhma        as "tehtavaryhma",
-       lk.tehtava             as "tehtava",
-       lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu",
-       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
-       lk.maksueratyyppi      as "maksueratyyppi"
-from lasku l
-       JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-WHERE l.urakka = :urakka
-  AND lk.suoritus_alku BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
-  AND l.poistettu IS NOT TRUE;
 
 -- name: hae-lasku
 SELECT l.id            as "id",

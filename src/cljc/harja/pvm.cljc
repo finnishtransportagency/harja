@@ -319,6 +319,9 @@
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
 
+(def yha-aikaleimalla
+  (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
+
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
@@ -392,6 +395,10 @@
 (defn aika-iso8601
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
+
+(defn aika-yha-format
+  [pvm]
+  (formatoi yha-aikaleimalla pvm))
 
 (defn kuukausi-ja-vuosi-valilyonnilla
   "Formatoi pvm:n muotoon: MM / yy"
@@ -925,8 +932,32 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                :cljs (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
 
-(defn lisaa-vuosia [paiva vuosia]
-  (t/plus paiva (t/years vuosia)))
+(defn ajan-muokkaus
+  "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä"
+  ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
+  ([dt lisaa? maara aikamaare]
+   (let [muokkaus (if lisaa?
+                    t/plus
+                    t/minus)
+         aikamaara (case aikamaare
+                     :sekuntti (t/seconds maara)
+                     :minuutti (t/minutes maara)
+                     :tunti (t/hours maara)
+                     :paiva (t/days maara)
+                     :viikko (t/weeks maara)
+                     :kuukausi (t/months maara)
+                     :vuosi (t/years maara))]
+     (muokkaus dt aikamaara))))
+
+(defn myohaisin
+  "Palauttaa myöhäisimmän ajan annetuista ajoista"
+  [& ajat]
+  (when-not (empty? ajat)
+    (reduce (fn [myohaisin-aika aika]
+              (if (jalkeen? myohaisin-aika aika)
+                myohaisin-aika
+                aika))
+            ajat)))
 
 #?(:clj
    (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm[pvm kk-maara]

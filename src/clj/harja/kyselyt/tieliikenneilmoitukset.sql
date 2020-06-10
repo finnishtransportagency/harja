@@ -120,9 +120,16 @@ ORDER by u.nimi;
 SELECT
   ilmoitusid,
   tunniste,
-  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu,
   tila,
+  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
+  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  valitetty as "valitetty-harjaan",
+  "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+  ELSE
+      vastaanotettu
+  END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -143,7 +150,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
@@ -282,8 +290,16 @@ WHERE i.id IN (:idt);
 SELECT
   ilmoitusid,
   tunniste,
+  tila,
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu,
+  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  valitetty as "valitetty-harjaan",
+  "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+      ELSE
+          vastaanotettu
+      END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -304,7 +320,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
@@ -359,6 +376,7 @@ SET
   ilmoitusid         = :ilmoitusid,
   ilmoitettu         = :ilmoitettu,
   valitetty          = :valitetty,
+  vastaanotettu      = :vastaanotettu,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
   paikankuvaus       = :paikankuvaus,

@@ -12,7 +12,6 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun p�
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('YHA1 pääsopimus', '2014-06-01','2018-09-30','5HE5228/10', (SELECT id FROM urakka WHERE nimi='YHA-päällystysurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('YHA2 pääsopimus', '2014-06-01','2018-09-30','5HE5558/10', (SELECT id FROM urakka WHERE nimi='YHA-paikkausurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen paikkauksen pääsopimus', '2007-06-01','2012-09-30','5H05229/10', (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pääsopimus', '2014-10-01','2016-09-30','5H05231/10', (SELECT id FROM urakka WHERE nimi='Päällysteiden paikkausurakka KAS ELY 2014-2016'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pääsopimus', '2005-10-01','2006-09-30','5H05276/10', (SELECT id FROM urakka WHERE nimi='Tienpäällystysurakka KAS ELY 1 2015'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Porintien pääsopimus', '2007-05-01','2007-08-22','8605228/10', (SELECT id FROM urakka WHERE nimi='Porintien päällystysurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022', '2013-01-01','2022-12-31','7H05228/10', (SELECT id FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2013-2022'));

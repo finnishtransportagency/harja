@@ -20,7 +20,8 @@
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as string])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defonce kuukaudet-strs {:tammikuu  "Tammikuu"
@@ -35,6 +36,19 @@
                          :lokakuu   "Lokakuu"
                          :marraskuu "Marraskuu"
                          :joulukuu  "Joulukuu"})
+
+(defonce kuukaudet-keyword->number {:tammikuu  1
+                                    :helmikuu  2
+                                    :maaliskuu 3
+                                    :huhtikuu  4
+                                    :toukokuu  5
+                                    :kesakuu   6
+                                    :heinakuu  7
+                                    :elokuu    8
+                                    :syyskuu   9
+                                    :lokakuu   10
+                                    :marraskuu 11
+                                    :joulukuu  12})
 
 (defonce hoitovuodet-strs {:1-hoitovuosi "1. hoitovuosi"
                            :2-hoitovuosi "2. hoitovuosi"
@@ -143,13 +157,31 @@
          (subvec kohdistukset (inc indeksi))))
 
 (defn paivamaaran-valinta
-  [{:keys [paivitys-fn erapaiva erapaiva-meta disabled]}]
-  [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
-                                               :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
-                                               :pvm           erapaiva
-                                               :pakota-suunta false
-                                               :disabled      disabled
-                                               :valittava?-fn #(true? true)}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+  [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi]}]
+  (let [hoitovuosi->vuosiluku (into {} (map-indexed (fn [indeksi vuosi]
+                                                      [(keyword (str (inc indeksi) "-hoitovuosi")) vuosi])
+                                                    (range (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                                                           (-> @tila/yleiset :urakka :loppupvm pvm/vuosi))))
+        kk (when-not (nil? koontilaskun-kuukausi)
+             (-> koontilaskun-kuukausi (string/split #"/") first keyword kuukaudet-keyword->number))
+        vuosi (when-not (nil? koontilaskun-kuukausi)
+                (-> koontilaskun-kuukausi
+                    (string/split #"/")
+                    second
+                    keyword
+                    hoitovuosi->vuosiluku))
+        vuosi (when-not (nil? vuosi)
+                (if (< kk 10)
+                  (inc vuosi)
+                  vuosi))]
+    [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
+                                                 :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
+                                                 :pvm           erapaiva
+                                                 :pakota-suunta false
+                                                 :disabled      disabled
+                                                 :valittava?-fn #(if-not (nil? koontilaskun-kuukausi)
+                                                                   (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi)))
+                                                                   false)}])) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
 
 (defn koontilaskun-kk-droppari
@@ -158,6 +190,7 @@
    {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta))
     :disabled     disabled
     :vayla-tyyli? true
+    :skrollattava? true
     :valinta      koontilaskun-kuukausi
     :valitse-fn   #(paivitys-fn {:validoitava? true}
                                 :koontilaskun-kuukausi %)
@@ -190,16 +223,17 @@
         valitse-toimenpide-fn #(paivitys-fn
                                  [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
         optiot (merge ryhmat
-                      {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
-                       :disabled     disabled
-                       :vayla-tyyli? true
-                       :valinta      valittu-asia
-                       :valitse-fn   (if lisatyo?
-                                       valitse-toimenpide-fn
-                                       valitse-tehtavaryhma-fn)
-                       :format-fn    (if lisatyo?
-                                       #(get % :toimenpide)
-                                       #(get % :tehtavaryhma))})]
+                      {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
+                       :disabled      disabled
+                       :vayla-tyyli?  true
+                       :valinta       valittu-asia
+                       :skrollattava? true
+                       :valitse-fn    (if lisatyo?
+                                        valitse-toimenpide-fn
+                                        valitse-tehtavaryhma-fn)
+                       :format-fn     (if lisatyo?
+                                        #(get % :toimenpide)
+                                        #(get % :tehtavaryhma))})]
     [:<>
      [yleiset/livi-pudotusvalikko optiot
       valinnat]
@@ -606,13 +640,13 @@
           :teksti-nappi? true}]])]))
 
 (defn laskun-tiedot
-  [{:keys [paivitys-fn haetaan]}
-   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva] :as lomake} :lomake}]
+  [{:keys [paivitys-fn e! haetaan]}
+   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva tarkistukset] :as lomake} :lomake}]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])]
     (lomakkeen-osio
-      "Laskun tiedot"
+      (str "Laskun tiedot")
       [kentat/vayla-lomakekentta
        "Koontilaskun kuukausi *"
        :komponentti koontilaskun-kk-droppari
@@ -623,17 +657,27 @@
       [kentat/vayla-lomakekentta
        "Laskun pvm *"
        :komponentti paivamaaran-valinta
-       :komponentin-argumentit {:disabled      (not= 0 haetaan)
-                                :erapaiva      erapaiva
-                                :paivitys-fn   paivitys-fn
-                                :erapaiva-meta erapaiva-meta}]
+       :komponentin-argumentit {:disabled              (not= 0 haetaan)
+                                :erapaiva              erapaiva
+                                :paivitys-fn           paivitys-fn
+                                :erapaiva-meta         erapaiva-meta
+                                :koontilaskun-kuukausi koontilaskun-kuukausi}]
       [kentat/vayla-lomakekentta
        "Koontilaskun numero"
        :disabled (not= 0 haetaan)
        :arvo laskun-numero
        :on-change #(paivitys-fn
                      {:validoitava? true}
-                     :laskun-numero (-> % .-target .-value))])))
+                     :laskun-numero (-> % .-target .-value))
+       :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
+       :virhe (when (and (not (nil? (:numerolla-tarkistettu-pvm tarkistukset)))
+                         (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
+                         (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
+                (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
+                                                                                            :numerolla-tarkistettu-pvm
+                                                                                            :erapaiva
+                                                                                            pvm/pvm)
+                     ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))])))
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -692,7 +736,8 @@
           {:style {:margin-top    "56px"
                    :margin-bottom "56px"}}
           [laskun-tiedot {:paivitys-fn paivitys-fn
-                          :haetaan     haetaan}
+                          :haetaan     haetaan
+                          :e!          e!}
            {:lomake lomake}]
           [lisatiedot
            {:paivitys-fn paivitys-fn
@@ -722,49 +767,61 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti]} :parametrit :as app}]
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-alkupvm haun-loppupvm]} :parametrit :as app}]
       [:div#vayla
        (if syottomoodi
          [kulujen-syottolomake e! app]
          [:div
-          #_[debug/debug taulukko]
           [:div.flex-row
-           {:style {:margin-bottom "36px"}}
            [:h2 "Kulujen kohdistus"]
-           #_[napit/yleinen-toissijainen
-              "Tallenna Excel"
-              #(loki/log "En tallenna vielä")
-              {:vayla-tyyli? true
-               :luokka       "suuri"
-               :disabled     true}]
-           #_[napit/yleinen-toissijainen
-              "Tallenna PDF"
-              #(e! (tiedot/->LuoDokumentti {:tyyppi :pdf}))
-              {:vayla-tyyli? true
-               :disabled     true
-               :luokka       "suuri"}]
-           ;^{:key "raporttipdf"}
-           #_[:form {:target "_blank" :method "POST"
-                     :action (k/pdf-url :kulut)}
-              [:input {:type  "hidden" :name "parametrit"
-                       :value (t/clj->transit {})}]
-              [napit/yleinen-toissijainen "Tallenna PDF" #(nil? %)
-               {:type         "submit"
-                :vayla-tyyli? true}]]
+           ^{:key "raporttixls"}
+           [:form {:style  {:margin-left "auto"}
+                   :target "_blank" :method "POST"
+                   :action (k/excel-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
+                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
+                                             :alkupvm     haun-alkupvm
+                                             :loppupvm    haun-loppupvm})}]
+            [:button {:type  "submit"
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
+           ^{:key "raporttipdf"}
+           [:form {:style  {:margin-left  "16px"
+                            :margin-right "64px"}
+                   :target "_blank" :method "POST"
+                   :action (k/pdf-url :kulut)}
+            [:input {:type  "hidden" :name "parametrit"
+                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
+                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
+                                             :alkupvm     haun-alkupvm
+                                             :loppupvm    haun-loppupvm})}]
+            [:button {:type  "submit"
+                      :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
            [napit/yleinen-ensisijainen
             "Uusi kulu"
             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
             {:vayla-tyyli? true
              :luokka       "suuri"}]]
 
-          ;; ks. VHAR-1761 milloin vihje voidaan poistaa
-          #_[kentat/vayla-lomakekentta
-             "Kirjoita tähän halutessasi lisätietoa"
-             :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
-             :arvo hakuteksti]
+          [:div.flex-row
+           #_[kentat/vayla-lomakekentta
+              "Kirjoita tähän halutessasi lisätietoa"
+              :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
+              :arvo hakuteksti]
+           [kentat/aikavali
+            {:valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
+             :pvm-alku                 (or haun-alkupvm
+                                           (-> @tila/yleiset :urakka :alkupvm))
+             :rajauksen-alkupvm        (-> @tila/yleiset :urakka :alkupvm)
+             :rajauksen-loppupvm       (-> @tila/yleiset :urakka :loppupvm)
+             :pvm-loppu                (or haun-loppupvm
+                                           (-> @tila/yleiset :urakka :loppupvm))
+             :ikoni                    ikonit/calendar
+             :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
+                                                                       :alkupvm  %1
+                                                                       :loppupvm %2}))}]]
           (when taulukko
             [p/piirra-taulukko taulukko])])])))
 

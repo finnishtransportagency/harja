@@ -95,7 +95,7 @@
     (let [id (::tielupa/id (tielupa-q/hae-ulkoisella-tunnistella db testiluvan-ulkoinen-tunniste))
           paivitetty-urakoitsijan-yhteyshenkilo "Yrjänä 'ÜBER' Yhteyshenkilo"
           paivitettava (assoc testitielupa ::tielupa/urakoitsija-yhteyshenkilo paivitetty-urakoitsijan-yhteyshenkilo
-                                           ::tielupa/id id)
+                              ::tielupa/id id)
           paivitetty (tielupa-q/hae-ulkoisella-tunnistella db testiluvan-ulkoinen-tunniste)]
       (tielupa-q/tallenna-tielupa db paivitettava)
       (is (= maara-luonnin-jalkeen (hae-maara)))
@@ -115,149 +115,134 @@
     (is (= (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123))))
     ))
 
-  (deftest sama-tie?
-    (is (true? (tielupa-q/sama-tie? 10 {::tielupa/tie 10})))
+(deftest sama-tie?
+  (is (true? (tielupa-q/sama-tie? 10 {::tielupa/tie 10})))
 
-    (is (false? (tielupa-q/sama-tie? 0 {::tielupa/tie 10})))
-    (is (false? (tielupa-q/sama-tie? 10 {::tielupa/tie nil})))
-    (is (false? (tielupa-q/sama-tie? 10 {::tielupa/foobar 10}))))
+  (is (false? (tielupa-q/sama-tie? 0 {::tielupa/tie 10})))
+  (is (false? (tielupa-q/sama-tie? 10 {::tielupa/tie nil})))
+  (is (false? (tielupa-q/sama-tie? 10 {::tielupa/foobar 10}))))
 
-  (deftest tr-piste-aiemmin-tai-sama?
-    (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 2 1))
-        "1/1 pitäisi olla ennen pistettä 2/1")
-    (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 1 2))
-        "1/1 on ennen 1/2")
-    (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 1 1))
-        "Pisteet ovat samat")
+(deftest tr-piste-aiemmin-tai-sama?
+  (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 2 1))
+      "1/1 pitäisi olla ennen pistettä 2/1")
+  (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 1 2))
+      "1/1 on ennen 1/2")
+  (is (true? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 1 1 1))
+      "Pisteet ovat samat")
 
-    (is (false? (tielupa-q/tr-piste-aiemmin-tai-sama? 2 1 1 1))
-        "2/1 ei ole ennen 1/1")
-    (is (false? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 2 1 1))
-        "1/2 ei ole ennen 1/1"))
+  (is (false? (tielupa-q/tr-piste-aiemmin-tai-sama? 2 1 1 1))
+      "2/1 ei ole ennen 1/1")
+  (is (false? (tielupa-q/tr-piste-aiemmin-tai-sama? 1 2 1 1))
+      "1/2 ei ole ennen 1/1"))
 
-  (deftest valilla?
-    (let [tielupa (fn [aosa aet losa let] {::tielupa/aosa aosa
-                                           ::tielupa/aet aet
-                                           ::tielupa/losa losa
-                                           ::tielupa/let let})]
-      (testing "Päällekkäisyys tunnistetaan, kun molemmat ovat välimatkoja"
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 2 1 3 1)))
-            "Tielupa on hakuehtojen välissä")
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 2 1 3 1)))
-            "Tielupa on hakuehtojen välissä")
+(deftest valilla?
+  (let [tielupa (fn [aosa aet losa let] {::tielupa/aosa aosa
+                                         ::tielupa/aet aet
+                                         ::tielupa/losa losa
+                                         ::tielupa/let let})]
+    (testing "Päällekkäisyys tunnistetaan, kun molemmat ovat välimatkoja"
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 2 1 3 1)))
+          "Tielupa on hakuehtojen välissä")
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 2 1 3 1)))
+          "Tielupa on hakuehtojen välissä")
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 2 1 10 1))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 2 1 10 1))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 2 1 10 1))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 2 1 10 1))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 0 1 3 1))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 0 1 3 1))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 0 1 3 1))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 0 1 3 1))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 0 1 10 1))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 0 1 10 1))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 0 1 10 1))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 0 1 10 1))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [1 100] (tielupa 1 10 1 50))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [1 100] (tielupa 1 10 1 50))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 4 1 10 1))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 4 1 10 1))))
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 0 1 1 1))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 0 1 1 1))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 4 1 10 1))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 4 1 10 1))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 0 1 1 1))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 0 1 1 1))))
 
-        (is (false? (tielupa-q/valilla?
-                      [1 1] [4 1] (tielupa 0 1 0 100))))
-        (is (false? (tielupa-q/valilla?
-                      [4 1] [1 1] (tielupa 10 1 30 1)))))
+      (is (false? (tielupa-q/valilla?
+                    [1 1] [4 1] (tielupa 0 1 0 100))))
+      (is (false? (tielupa-q/valilla?
+                    [4 1] [1 1] (tielupa 10 1 30 1)))))
 
-      (testing "Päällekkäisyys tunnistetaan, kun hakuehto on piste"
-        (is (true? (tielupa-q/valilla?
-                     [2 1] nil (tielupa 1 1 3 1))))
-        (is (true? (tielupa-q/valilla?
-                     [2 1] nil (tielupa 2 1 3 1))))
-        (is (true? (tielupa-q/valilla?
-                     [2 30] nil (tielupa 2 10 3 1))))
+    (testing "Päällekkäisyys tunnistetaan, kun hakuehto on piste"
+      (is (true? (tielupa-q/valilla?
+                   [2 1] nil (tielupa 1 1 3 1))))
+      (is (true? (tielupa-q/valilla?
+                   [2 1] nil (tielupa 2 1 3 1))))
+      (is (true? (tielupa-q/valilla?
+                   [2 30] nil (tielupa 2 10 3 1))))
 
-        (is (false? (tielupa-q/valilla?
-                      [2 30] nil (tielupa 2 40 3 1))))
-        (is (false? (tielupa-q/valilla?
-                      [1 30] nil (tielupa 2 40 3 1)))))
+      (is (false? (tielupa-q/valilla?
+                    [2 30] nil (tielupa 2 40 3 1))))
+      (is (false? (tielupa-q/valilla?
+                    [1 30] nil (tielupa 2 40 3 1)))))
 
-      (testing "Päällekkäisyys tunnistetaan, kun tieluvan sijainti on piste"
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 2 1 nil nil)))
-            "Tielupa on hakuehtojen välissä")
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 2 1 nil nil)))
-            "Tielupa on hakuehtojen välissä")
+    (testing "Päällekkäisyys tunnistetaan, kun tieluvan sijainti on piste"
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 2 1 nil nil)))
+          "Tielupa on hakuehtojen välissä")
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 2 1 nil nil)))
+          "Tielupa on hakuehtojen välissä")
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 2 1 nil nil))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 2 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 2 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 2 1 nil nil))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 1 1 nil nil))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 1 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 1 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 1 1 nil nil))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [1 100] (tielupa 1 10 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [1 100] (tielupa 1 10 nil nil))))
 
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 4 1 nil nil))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 4 1 nil nil))))
-        (is (true? (tielupa-q/valilla?
-                     [1 1] [4 1] (tielupa 2 1 nil nil))))
-        (is (true? (tielupa-q/valilla?
-                     [4 1] [1 1] (tielupa 2 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 4 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 4 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [1 1] [4 1] (tielupa 2 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [4 1] [1 1] (tielupa 2 1 nil nil))))
 
-        (is (false? (tielupa-q/valilla?
-                      [1 1] [4 1] (tielupa 0 1 nil nil))))
-        (is (false? (tielupa-q/valilla?
-                      [4 1] [1 1] (tielupa 0 1 nil nil)))))
+      (is (false? (tielupa-q/valilla?
+                    [1 1] [4 1] (tielupa 0 1 nil nil))))
+      (is (false? (tielupa-q/valilla?
+                    [4 1] [1 1] (tielupa 0 1 nil nil)))))
 
-      (testing "Päällekkäisyys tunnistetaan, kun molemmat ovat pisteitä"
-        (is (false? (tielupa-q/valilla?
-                      [2 1] nil (tielupa 1 1 nil nil))))
-        (is (true? (tielupa-q/valilla?
-                     [2 1] nil (tielupa 2 1 nil nil)))))))
+    (testing "Päällekkäisyys tunnistetaan, kun molemmat ovat pisteitä"
+      (is (false? (tielupa-q/valilla?
+                    [2 1] nil (tielupa 1 1 nil nil))))
+      (is (true? (tielupa-q/valilla?
+                   [2 1] nil (tielupa 2 1 nil nil)))))))
 
-  (deftest suodata-tieosoittella
-    (is (= (tielupa-q/suodata-tieosoitteella
-             [{::tielupa/sijainnit [{::tielupa/tie 20
-                                     ::tielupa/aosa 20
-                                     ::tielupa/aet 20}
-                                    {::tielupa/tie 20
-                                     ::tielupa/aosa 20
-                                     ::tielupa/aet 20}]}
-              {::tielupa/sijainnit [{::tielupa/tie 20
-                                     ::tielupa/aosa 20
-                                     ::tielupa/aet 20}
-                                    {::tielupa/tie 1
-                                     ::tielupa/aosa 1
-                                     ::tielupa/aet 1}]}
-              {::tielupa/sijainnit [{::tielupa/tie 1
-                                     ::tielupa/aosa 1
-                                     ::tielupa/aet 1}
-                                    {::tielupa/tie 1
-                                     ::tielupa/aosa 1
-                                     ::tielupa/aet 1}]}]
-             {::tielupa/tie 1
-              ::tielupa/aosa 1
-              ::tielupa/aet 1})
+(deftest suodata-tieosoittella
+  (is (= (tielupa-q/suodata-tieosoitteella
            [{::tielupa/sijainnit [{::tielupa/tie 20
+                                   ::tielupa/aosa 20
+                                   ::tielupa/aet 20}
+                                  {::tielupa/tie 20
+                                   ::tielupa/aosa 20
+                                   ::tielupa/aet 20}]}
+            {::tielupa/sijainnit [{::tielupa/tie 20
                                    ::tielupa/aosa 20
                                    ::tielupa/aet 20}
                                   {::tielupa/tie 1
@@ -268,13 +253,39 @@
                                    ::tielupa/aet 1}
                                   {::tielupa/tie 1
                                    ::tielupa/aosa 1
-                                   ::tielupa/aet 1}]}])
-        "Tielupa, jonka yksikään sijainti osuu halutulle välille, pitää palauttaa"))
+                                   ::tielupa/aet 1}]}]
+           {::tielupa/tie 1
+            ::tielupa/aosa 1
+            ::tielupa/aet 1})
+         [{::tielupa/sijainnit [{::tielupa/tie 20
+                                 ::tielupa/aosa 20
+                                 ::tielupa/aet 20}
+                                {::tielupa/tie 1
+                                 ::tielupa/aosa 1
+                                 ::tielupa/aet 1}]}
+          {::tielupa/sijainnit [{::tielupa/tie 1
+                                 ::tielupa/aosa 1
+                                 ::tielupa/aet 1}
+                                {::tielupa/tie 1
+                                 ::tielupa/aosa 1
+                                 ::tielupa/aet 1}]}])
+      "Tielupa, jonka yksikään sijainti osuu halutulle välille, pitää palauttaa"))
 
 
-  (deftest paattele-alueurakka
-    ;; TODO: Kirjoita testi, vaatii kyselyn alueurakan ja urakan tarkistamiseksi
-    ;; Sanomassa tr-osoite
-    ;; Sanomassa ei tr-osoitetta
-    ;;(assoc testitielupa ::tielupa/sijainnit [])
-    )
+(deftest paattele-alueurakka
+  ;; TODO: Kirjoita testi, vaatii kyselyn alueurakan ja urakan tarkistamiseksi
+  ;; Sanomassa tr-osoite
+  ;; Sanomassa ei tr-osoitetta
+  ;;(assoc testitielupa ::tielupa/sijainnit [])
+  )
+
+(deftest filteroi-tieluvat-urakan-perusteella
+  (let [urakka-id (ffirst (q (str "SELECT id
+                                   FROM   urakka
+                                   WHERE  nimi = 'Aktiivinen Oulu Testi';")))
+        kaikki-tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {})
+        tieluvat-filteroityna-urakalla (tielupa-q/hae-tieluvat-hakunakymaan ds {:urakka-id urakka-id})]
+    (is (every? #(= urakka-id %)
+                (mapcat ::tielupa/urakat tieluvat-filteroityna-urakalla))
+        "Tielupien filtteröinti urakalla ei toimi")
+    (is (> (count kaikki-tieluvat) (count tieluvat-filteroityna-urakalla)))))

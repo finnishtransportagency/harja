@@ -12,7 +12,8 @@
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
@@ -74,6 +75,7 @@
                          luokka)
              :on-click #(do
                           (.preventDefault %)
+                          (.stopPropagation %)
                           (reset! kysely-kaynnissa? true)
                           (reset! nayta-virheviesti? false)
                           (go (let [tulos (<! (kysely))]
