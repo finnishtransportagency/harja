@@ -146,7 +146,12 @@
           ]
         }
       }
-    ]
+    ],
+    "tyokone": {
+      "id": "TKT001",
+      "tunnus": "Alihankkija Oy, KA 2",
+      "tyokonetyyppi": "kuorma-auto"
+    }
   },
   "reittitoteumat": [
     {
@@ -284,7 +289,12 @@
               ]
             }
           }
-        ]
+        ],
+        "tyokone": {
+          "id": "TKT001",
+          "tunnus": "Alihankkija Oy, KA 2",
+          "tyokonetyyppi": "kuorma-auto"
+        }
       }
     }
   ]
