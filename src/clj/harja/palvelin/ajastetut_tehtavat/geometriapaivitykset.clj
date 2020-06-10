@@ -35,7 +35,7 @@
   (time/plus- (time/now) (time/seconds 10)))
 
 (defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku paivitys kayttajatunnus salasana]
-  (log/debug (format "Ajastetaan geometria-aineiston %s päivitys ajettavaksi %s minuutin välein." paivitystunnus tuontivali))
+  (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] Ajastetaan geometria-aineiston %s päivitys ajettavaksi %s minuutin välein." paivitystunnus tuontivali))
   (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
             (fn [_]
               (ava/kaynnista-paivitys (:integraatioloki this)
@@ -58,7 +58,7 @@
             (.exists tiedosto)
             (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm))
         (do
-          (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
+          (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
         (do
           ;; (log/debug (format "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
@@ -105,19 +105,19 @@
           tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
           shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           db (:db this)]
-      (log/debug "Paikallinen päivitystehtävä: " paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys)
+      (log/debug "[AJASTETTU-GEOMETRIAPAIVITYS] Paikallinen päivitystehtävä: " paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys)
       (when (and (not url) (not tuontikohdepolku))
-        (log/debug "Käynnistetään paikallinen paivitystehtava tiedostosta:" shapefile)
+        (log/debug "[AJASTETTU-GEOMETRIAPAIVITYS] Käynnistetään paikallinen paivitystehtava tiedostosta:" shapefile)
         (chime-at
           (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
           (fn [_]
             (try
               (when (tarvitaanko-paikallinen-paivitys? db paivitystunnus shapefile)
-                (log/debug (format "Ajetaan paikallinen päivitys geometria-aineistolle: %s" paivitystunnus))
+                (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] Ajetaan paikallinen päivitys geometria-aineistolle: %s" paivitystunnus))
                 (paivitys db shapefile)
                 (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus (harja.pvm/nyt)))
               (catch Exception e
-                (log/debug e (format "Paikallisessa geometriapäivityksessä %s tapahtui poikkeus." paivitystunnus))))))))))
+                (log/debug e (format "[AJASTETTU-GEOMETRIAPAIVITYS] Paikallisessa geometriapäivityksessä %s tapahtui poikkeus." paivitystunnus))))))))))
 
 ;; käyttö replissä esim :
 #_(let [db (:db harja.palvelin.main/harja-jarjestelma)
