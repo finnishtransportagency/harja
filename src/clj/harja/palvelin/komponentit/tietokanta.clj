@@ -29,10 +29,8 @@
                                    (let [kanta-ok? (if (.next rs)
                                                      (= 1 (.getObject rs 1))
                                                      false)]
-                                     (println "----> JULKAISE KANNAN TILA")
                                      (event-julkaisija kanta-ok?)))
                                  (catch Throwable _
-                                   (println "----> JULKAISE KANNAN TILA")
                                    (event-julkaisija false))))))
 
 (defn tarkkaile-replicaa [db-replica lopeta-tarkkailu-kanava

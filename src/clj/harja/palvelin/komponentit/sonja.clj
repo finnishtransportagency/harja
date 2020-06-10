@@ -142,7 +142,6 @@
                           (fn []
                             (try
                               (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
-                                (println "<<---->> jms-tila: " jms-tila)
                                 (tallenna-sonjan-tila-kantaan db jms-tila)
                                 (event-julkaisija jms-tila))
                               (catch Throwable t

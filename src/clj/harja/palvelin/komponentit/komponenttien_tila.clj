@@ -41,9 +41,6 @@
 (defn- tallenna-sonjan-tila-cacheen [jms-tila komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
-           (println "--> komponenttien-tila " kt)
-           (println "---> jms-tila " jms-tila)
-           (println "---> " (sonjayhteys-ok? (:olioiden-tilat jms-tila)))
            (-> kt
                (assoc :sonja jms-tila)
                (assoc-in [:sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat jms-tila)))))))
@@ -52,7 +49,6 @@
   (event-apurit/kuuntele-eventtia komponentti-event :sonja-tila tallenna-sonjan-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-dbn-tila-cacheen [kanta-ok? komponenttien-tila]
-  (println "----> TALLENNA DBN TILA CACHEEN")
   (swap! komponenttien-tila
          (fn [kt]
            (assoc-in kt [:db :kaikki-ok?] kanta-ok?))))

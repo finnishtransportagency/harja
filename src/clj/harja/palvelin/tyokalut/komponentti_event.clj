@@ -1,7 +1,6 @@
 (ns harja.palvelin.tyokalut.komponentti-event
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :as async]
-            [clojure.walk :as walk]
             [clojure.spec.alpha :as s]
             [harja.palvelin.tyokalut.interfact :as i]
             [taoensso.timbre :as log]))
@@ -22,19 +21,6 @@
          komponentti-event-parametrit
          (komponentti-event-parametrien-alustus))
 
-#_(defonce ^{:private true}
-         perus-broadcast
-         (let [b (i/perus-broadcast)]
-           {:broadcast b
-            :pub (async/pub (.jono b) ::event (constantly (async/sliding-buffer 1000)))}))
-
-#_(defonce ^{:private true}
-         viimeisin-broadcast
-         (let [b (i/viimeisin-broadcast ::event)]
-           {:broadcast b
-            :pub (async/pub (.jono b) ::event (constantly (async/sliding-buffer 1000)))
-            :cache (.cache jono)}))
-
 (defmulti kuuntelija!
           (fn [tyyppi _ _ _]
             tyyppi))
@@ -46,9 +32,7 @@
 
 (defmethod kuuntelija! :viimeisin
   [_ {bc :viimeisin-broadcast} event kuuntelija-kanava]
-  (println (str "VIIMEISIN SUB EVENTILLE: " event))
   (when-let [arvo (get @(.cache bc) event)]
-    (println "----> VIIMEISIN ARVO: " arvo " EVENTILLE: " event)
     (async/put! kuuntelija-kanava arvo))
   (async/sub (.broadcast bc) event kuuntelija-kanava)
   (swap! (.subscribers bc) conj kuuntelija-kanava))
@@ -67,6 +51,7 @@
     (reset! (:eventit komponentti-event-parametrit) {})
     (alter-var-root komponentti-event-parametrit (komponentti-event-parametrien-alustus))
     this)
+
   i/IEvent
   (lisaa-jono [this event tyyppi]
     (swap! eventit
@@ -79,20 +64,13 @@
     (when (get @eventit event)
       (let [kuuntelija-kanava (async/chan 1000
                                           (map (fn [v]
-                                                 (println (str "FOOFOFOFOFOFOFOFOFOFOFOFOF " v))
+                                                 (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
+                                                                 "  event: " event "\n"
+                                                                 "  tiedot: " v))
                                                  (::data v)))
                                           (fn [t]
                                             (log/error t (str "Kuuntelija kanavassa error eventille " event))))]
-        (println (str "LUODAAN KUUNTELIJAN KANAVA EVENTILLE: " event))
         (kuuntelija! (get @eventit event) this event kuuntelija-kanava)
-        #_(swap! eventit
-               (fn [eventit]
-                 (update eventit
-                         event
-                         kuuntelija
-                         this
-                         event
-                         kuuntelija-kanava)))
         kuuntelija-kanava)))
   (julkaise-event [_ event data]
     (let [julkaisu-kanavan-tyyppi (get @eventit event)
@@ -100,11 +78,7 @@
                             :perus (.kanava perus-broadcast)
                             :viimeisin (.kanava viimeisin-broadcast))]
       (if julkaisu-kanavan-tyyppi
-        (do
-          (println (str "--> JULKAISE KANAVAAN: " julkaisu-kanavan-tyyppi " EVENT: " event " DATA: " data))
-          (let [onnistui? (boolean (async/put! julkaisu-kanava {::event event ::data data}))]
-            (println (str "ONNISTUI?: " onnistui?))
-            onnistui?))
+        (boolean (async/put! julkaisu-kanava {::event event ::data data}))
         false))))
 
 (defn komponentti-event []

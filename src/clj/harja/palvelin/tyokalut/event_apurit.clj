@@ -47,13 +47,10 @@
                             :default false))))))
 
 (defn kuuntele-eventtia [this event f & args]
-  (println (str "----> KUUNTELE EVENTTIÄ: " event))
   (let [kuuntelija (eventin-kuuntelija! this event)]
     (when kuuntelija
       (async/go
-        (println (str "----> ALOITETAAN KUUNTELEMAAN EVENTTIÄ: " event))
         (loop [arvo (async/<! kuuntelija)]
-          (println (str "----> EVENTISTÄ: " event " SAATIIN ARVO: " arvo))
           (apply f arvo args)
           (recur (async/<! kuuntelija)))))
     kuuntelija))

@@ -13,7 +13,13 @@
 (defn perus-broadcast
   "Broadcast, joka lähettää eventin kaikille, jotka siihen ovat subscribanneet."
   [event-key]
-  (let [kanava (async/chan (async/sliding-buffer 1000))]
+  (let [kanava (async/chan (async/sliding-buffer 1000)
+                           (map (fn [arvo]
+                                  (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot perus-broadcast jonosta\n"
+                                                  "  tiedot: " arvo))
+                                  arvo))
+                           (fn [t]
+                             (log/error t "perus-broadcast jonossa tapahtui virhe")))]
     (->PerusBroadcast kanava
                       (async/pub kanava event-key (constantly (async/sliding-buffer 1000)))
                       (atom []))))
@@ -24,11 +30,11 @@
   (let [cache (atom nil)
         kanava (async/chan (async/sliding-buffer 1000)
                            (map (fn [arvo]
-                                  (println "--> KANAVAAN TULI ARVO: " arvo)
+                                  (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot viimeisin-broadcast jonosta\n"
+                                                  "  tiedot: " arvo))
                                   (swap! cache
                                          (fn [kakutetut-arvot]
                                            (assoc kakutetut-arvot (get arvo event-key) arvo)))
-                                  (println "ARVO KAKUTETTU!")
                                   arvo))
                            (fn [t]
                              (log/error t "viimeisin-broadcast kakuttamisessa tapahtui virhe!")))]
