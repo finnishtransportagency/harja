@@ -569,6 +569,8 @@
   [:span.livicon-check])
 (defn livicon-wrench []
   [:span.livicon-wrench])
+(defn livicon-exclamation []
+  [:span.livicon-exclamation])
 (defn livicon-eye []
   [:span.livicon-eye])
 (defn livicon-delete []
