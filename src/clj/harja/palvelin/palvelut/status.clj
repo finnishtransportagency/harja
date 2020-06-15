@@ -2,97 +2,123 @@
   (:require [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
+            [clojure.core.async :as async]
+            [clojure.set :as clj-set]
             [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
             [harja.palvelin.komponentit.komponenttien-tila :as komponentin-tila]
             [cheshire.core :refer [encode]]
-            [harja.kyselyt.status :as q]
-            [clojure.core.async :as async :refer [<! go-loop]]
-            [clojure.java.jdbc :as jdbc]
-            [harja.tyokalut.muunnos :as muunnos])
-  (:import (com.mchange.v2.c3p0 C3P0ProxyConnection)))
+            [harja.tyokalut.muunnos :as muunnos]))
 
-(defn aseta-status! [komponentti status-komponentti koodi viesti]
-  (swap! (:status status-komponentti) update komponentti assoc :status koodi :viesti viesti))
-
-(declare kasittele-status!)
+(defn tarkista-tila!
+  "Palauttaa kanavan, jonka sisällä testataan predikaattia. Kokeilee timeout-ms ajan, että palauttaako annettu predikaatti true. Jos ei palauta annetussa ajassa, palauttaa false."
+  [timeout-ms predicate]
+  {:pre [(integer? timeout-ms)
+         (ifn? predicate)]}
+  (async/go
+    (let [testin-lopettaja (async/chan)
+          testi (async/go-loop [status-ok? (predicate)
+                                kasketty-lopettamaan? (async/poll! testin-lopettaja)]
+                  (if (or status-ok? (not (nil? kasketty-lopettamaan?)))
+                    status-ok?
+                    (do (async/<! (async/timeout 1000))
+                        (recur (predicate)
+                               (async/poll! testin-lopettaja)))))
+          [arvo portti] (async/alts! [testi
+                                      (async/timeout timeout-ms)])]
+      (when-not (= portti testi)
+        (async/put! testin-lopettaja :lopeta))
+      (boolean arvo))))
 
 (defn dbn-tila-ok?
   [timeout-ms komponenttien-tila]
-  {:post [(boolean? %)]}
-  (boolean
-    (first (async/alts!! [(go-loop [status-ok? (get-in @komponenttien-tila [:db :kaikki-ok?])]
-                            (if status-ok?
-                              status-ok?
-                              (do (<! (async/timeout 1000))
-                                  (recur (get-in @komponenttien-tila [:db :kaikki-ok?])))))
-                          (async/timeout timeout-ms)]))))
+  (tarkista-tila! timeout-ms
+                  (fn []
+                    (get-in @komponenttien-tila [:db :kaikki-ok?]))))
 
 (defn replikoinnin-tila-ok?
   [timeout-ms komponenttien-tila]
-  {:pre [(integer? timeout-ms)]
-   :post [(boolean? %)]}
-  (boolean
-    (first (async/alts!! [(go-loop [status-ok? (get-in @komponenttien-tila [:db-replica :kaikki-ok?])]
-                            (if status-ok?
-                              status-ok?
-                              (do (<! (async/timeout 1000))
-                                  (recur (get-in @komponenttien-tila [:db-replica :kaikki-ok?])))))
-                          (async/timeout timeout-ms)]))))
+  (tarkista-tila! timeout-ms
+                  (fn []
+                    (get-in @komponenttien-tila [:db-replica :kaikki-ok?]))))
 
 (defn sonja-yhteyden-tila-ok?
   [db kehitysmoodi? timeout-ms komponenttien-tila]
-  {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db)
-         (boolean? kehitysmoodi?)
-         (or (nil? timeout-ms) (integer? timeout-ms))]
-   :post [(boolean? %)]}
-  (let [timeout-ms (or timeout-ms 10000)
-        taman-palvelimen-tila-ok? (fn []
+  (let [taman-palvelimen-tila-ok? (fn []
                                     (get-in @komponenttien-tila [:sonja :kaikki-ok?]))
         jonku-palvelimen-tila-ok? (fn []
                                     (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
-    (boolean
-      (first (async/alts!! [(go-loop [status-ok? (or (taman-palvelimen-tila-ok?)
-                                                     (jonku-palvelimen-tila-ok?))]
-                              (if status-ok?
-                                status-ok?
-                                (do (<! (async/timeout 1000))
-                                    (recur (or (taman-palvelimen-tila-ok?)
-                                               (jonku-palvelimen-tila-ok?))))))
-                            (async/timeout timeout-ms)])))))
+    (tarkista-tila! timeout-ms
+                    (fn []
+                      (or (taman-palvelimen-tila-ok?)
+                          (jonku-palvelimen-tila-ok?))))))
 
-(defn tietokannan-tila! [{:keys [komponenttien-tila] :as status-komponentti}]
-  (let [timeout-ms 10000
-        yhteys-ok? (dbn-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila))]
-    (kasittele-status! status-komponentti yhteys-ok? :db (str "Ei saatu yhteyttä kantaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
-    {:yhteys-master-kantaan-ok? yhteys-ok?}))
+(defn harjan-tila-ok?
+  [timeout-ms komponenttien-tila]
+  (tarkista-tila! timeout-ms
+                  (fn []
+                    (get-in @komponenttien-tila [:harja :kaikki-ok?]))))
 
-(defn replikoinnin-tila! [{:keys [komponenttien-tila] :as status-komponentti}]
-  (let [timeout-ms 100000
-        replikoinnin-tila-ok? (replikoinnin-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila))]
-    (kasittele-status! status-komponentti replikoinnin-tila-ok? :db-replica (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))
-    {:replikoinnin-tila-ok? replikoinnin-tila-ok?}))
+(defn tietokannan-tila [komponenttien-tila]
+  (async/go
+    (let [timeout-ms 10000
+          yhteys-ok? (async/<! (dbn-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+      {:ok? yhteys-ok?
+       :komponentti :db
+       :viesti (when-not yhteys-ok?
+                 (str "Ei saatu yhteyttä kantaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})))
 
-(defn sonja-yhteyden-tila! [{:keys [komponenttien-tila] :as status-komponentti} db kehitysmoodi?]
-  (let [timeout-ms 10000
-        yhteys-ok? (sonja-yhteyden-tila-ok? db kehitysmoodi? timeout-ms (get komponenttien-tila :komponenttien-tila))]
-    (kasittele-status! status-komponentti yhteys-ok? :sonja (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))
-    {:sonja-yhteys-ok? yhteys-ok?}))
+(defn replikoinnin-tila [komponenttien-tila]
+  (async/go
+    (let [timeout-ms 100000
+          replikoinnin-tila-ok? (async/<! (replikoinnin-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+      {:ok? replikoinnin-tila-ok?
+       :komponentti :db-replica
+       :viesti (when-not replikoinnin-tila-ok?
+                 (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))})))
 
-(defn status-ja-viesti [status-komponentti testattavat-komponentit]
-  (let [tilanne @(:status status-komponentti)
-        tilanteen-koonti (reduce-kv (fn [{edellinen-status :status
-                                          edelliset-viestit :viesti :as koottu} k {:keys [status viesti]}]
-                                      (if (contains? testattavat-komponentit k)
-                                        (assoc koottu
-                                               :status (if (= edellinen-status status 200)
-                                                         edellinen-status
-                                                         (max status edellinen-status))
-                                               :viesti (if viesti
-                                                         (conj edelliset-viestit viesti)
-                                                         edelliset-viestit))
-                                        koottu))
-                                    {:status 200 :viesti []}
-                                    tilanne)]
+(defn sonja-yhteyden-tila [komponenttien-tila db kehitysmoodi?]
+  (async/go
+    (let [timeout-ms 1000 #_120000
+          yhteys-ok? (async/<! (sonja-yhteyden-tila-ok? db kehitysmoodi? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+      {:ok? yhteys-ok?
+       :komponentti :sonja
+       :viesti (when-not yhteys-ok?
+                 (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})))
+
+(defn harjan-tila [komponenttien-tila]
+  (async/go
+    (let [timeout-ms 10000
+          kaikki-ok? (async/<! (harjan-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+      (println "---> harjan-tila " kaikki-ok?)
+      (println "--< " @(get komponenttien-tila :komponenttien-tila))
+
+      {:ok? kaikki-ok?
+       :komponentti :harja
+       :viesti (when-not kaikki-ok?
+                 (get-in @(get komponenttien-tila :komponenttien-tila) [:harja :viesti]))})))
+
+(defn- nimea-komponentin-tila [komponentti ok?]
+  (clj-set/rename-keys {komponentti ok?}
+                       {:harja :harja-ok?
+                        :sonja :sonja-yhteys-ok?
+                        :db :yhteys-master-kantaan-ok?
+                        :db-replica :replikoinnin-tila-ok?}))
+
+(defn koko-status [testit]
+  (let [tilanteen-koonti (async/<!! (async/reduce (fn [{edellinen-status :status
+                                                        edelliset-viestit :viesti :as koottu}
+                                                       {:keys [ok? komponentti viesti]}]
+                                                    (merge (assoc koottu
+                                                                  :status (if (and (= edellinen-status 200)
+                                                                                   ok?)
+                                                                            200
+                                                                            503)
+                                                                  :viesti (if viesti
+                                                                            (conj edelliset-viestit viesti)
+                                                                            edelliset-viestit))
+                                                           (nimea-komponentin-tila komponentti ok?)))
+                                                  {:status 200 :viesti []}
+                                                  testit))]
     (update tilanteen-koonti
             :viesti
             (fn [viestit]
@@ -102,40 +128,32 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
+           komponenttien-tila :komponenttien-tila
            :as this}]
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
-          (let [testit (merge
-                         (tietokannan-tila! this)
-                         (replikoinnin-tila! this)
-                         (sonja-yhteyden-tila! this db kehitysmoodi?))
-                {:keys [status viesti]} (status-ja-viesti this #{:db :db-replica :sonja :harja})]
+          (let [testit (async/merge
+                         [(tietokannan-tila komponenttien-tila)
+                          (replikoinnin-tila komponenttien-tila)
+                          (sonja-yhteyden-tila komponenttien-tila db kehitysmoodi?)
+                          (harjan-tila komponenttien-tila)])
+                {:keys [status] :as lahetettava-viesti} (koko-status testit)]
+            (println "------> lahetettava-viesti: " lahetettava-viesti)
             {:status status
              :headers {"Content-Type" "application/json; charset=UTF-8"}
              :body (encode
-                    (merge {:viesti viesti}
-                           testit))})))
+                    (dissoc lahetettava-viesti :status))})))
     (http-palvelin/julkaise-reitti
       http :app-status
       (GET "/app_status" _
-        (let [{:keys [status viesti]} (status-ja-viesti this #{:harja})]
+        (let [testit (async/merge
+                       [(harjan-tila komponenttien-tila)])
+              {:keys [status] :as lahetettava-viesti} (koko-status testit)]
           {:status status
            :headers {"Content-Type" "application/json; charset=UTF-8"}
            :body (encode
-                   {:viesti viesti})})))
-    #_(http-palvelin/julkaise-reitti
-      http :db-status
-      (GET "/db_status" _
-        (let [testit (merge
-                       (tietokannan-tila! this db)
-                       (replikoinnin-tila! this db-replica))
-              {:keys [status viesti]} (status-ja-viesti this #{:db :db-replica :harja})]
-          {:status status
-           :headers {"Content-Type" "application/json; charset=UTF-8"}
-           :body (encode
-                   (merge {:viesti viesti}
-                          testit))})))
+                   (select-keys lahetettava-viesti #{:viesti}))})))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -143,19 +161,4 @@
     this))
 
 (defn luo-status [kehitysmoodi?]
-  (->Status (atom {:harja {:status 503 :viesti "Harja käynnistyy"}}) kehitysmoodi?))
-
-(defn kasittele-status!
-  "Asettaa annetun komponenttiavaimen statuksen ja sen virheviestin. Tätä statusta voi sitten kysellä API:n kautta"
-  [status-komponentti yhteys-ok? komponenttiavain virheviesti]
-  {:pre [(instance? Status status-komponentti)
-         (boolean? yhteys-ok?)
-         (keyword? komponenttiavain)
-         (string? virheviesti)]}
-  (cond
-    (not yhteys-ok?)
-    (aseta-status! komponenttiavain status-komponentti 503 virheviesti)
-    (and yhteys-ok?
-         (not= (get-in @(:status status-komponentti) [komponenttiavain :status])
-               200))
-    (aseta-status! komponenttiavain status-komponentti 200 "")))
+  (->Status (atom {:viesti "Harja käynnistyy"}) kehitysmoodi?))

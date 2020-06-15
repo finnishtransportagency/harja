@@ -3,30 +3,31 @@
             [clojure.spec.alpha :as s]
             [harja.palvelin.tyokalut.interfact :as i]
             [harja.palvelin.tyokalut.komponentti-event :as ke])
-  (:import (harja.palvelin.tyokalut.komponentti_event KomponenttiEvent)))
+  ;(:import (harja.palvelin.tyokalut.komponentti_event KomponenttiEvent))
+  )
 
 (defn lisaa-jono!
   ([this event]
-   {:pre [(instance? KomponenttiEvent this)
+   {:pre [#_(instance? KomponenttiEvent this)
           (s/valid? ::ke/event-spec event)]
-    :post [(instance? KomponenttiEvent %)]}
+    :post [#_(instance? KomponenttiEvent %)]}
    (i/lisaa-jono this event))
   ([this event tyyppi]
-   {:pre [(instance? KomponenttiEvent this)
+   {:pre [#_(instance? KomponenttiEvent this)
           (s/valid? ::ke/event-spec event)
           (s/valid? ::ke/tyyppi-spec tyyppi)]
-    :post [(instance? KomponenttiEvent %)]}
+    :post [#_(instance? KomponenttiEvent %)]}
    (i/lisaa-jono this event tyyppi)))
 
 (defn eventin-kuuntelija!
   [this event]
-  {:pre [(instance? KomponenttiEvent this)
+  {:pre [#_(instance? KomponenttiEvent this)
          (s/valid? ::ke/event-spec event)]}
   (i/eventin-kuuntelija this event))
 
 (defn julkaise-event
   [this event data]
-  {:pre [(instance? KomponenttiEvent this)
+  {:pre [#_(instance? KomponenttiEvent this)
          (s/valid? ::ke/event-spec event)
          (not (nil? data))]
    :post [(boolean? %)]}

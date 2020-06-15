@@ -64,6 +64,14 @@
 (defn- aloita-db-replican-tarrkailu! [komponentti-event komponenttien-tila]
   (event-apurit/kuuntele-eventtia komponentti-event :db-replica-tila tallenna-db-replikan-tila-cacheen komponenttien-tila))
 
+(defn- tallenna-harjan-tila-cacheen [harjan-tila komponenttien-tila]
+  (swap! komponenttien-tila
+         (fn [kt]
+           (assoc kt :harja harjan-tila))))
+
+(defn- aloita-harjan-tarkkailu! [komponentti-event komponenttien-tila]
+  (event-apurit/kuuntele-eventtia komponentti-event :harja-tila tallenna-harjan-tila-cacheen komponenttien-tila))
+
 
 (defn- tyhjenna-cache! [komponenttien-tila]
   (reset! komponenttien-tila nil))
@@ -72,6 +80,7 @@
   component/Lifecycle
   (start [{:keys [komponentti-event] :as this}]
     (assoc this
+           ::harja-kuuntelija (aloita-harjan-tarkkailu! komponentti-event komponenttien-tila)
            ::sonja-kuuntelija (aloita-sonjan-tarkkailu! komponentti-event komponenttien-tila)
            ::db-kuuntelija (aloita-db-tarkkailu! komponentti-event komponenttien-tila)
            ::db-replica-kuuntelija (aloita-db-replican-tarrkailu! komponentti-event komponenttien-tila)))

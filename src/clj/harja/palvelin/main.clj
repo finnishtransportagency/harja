@@ -166,7 +166,8 @@
     [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
     [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
     [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
-    )
+
+    [harja.palvelin.tyokalut.event-apurit :as event-apurit])
 
   (:gen-class))
 
@@ -753,6 +754,19 @@
           (recur)
           vastaus)))))
 
+(defn- merkkaa-kaynnistyminen! []
+  (let [ke (komponentti-event/komponentti-event)]
+    (event-apurit/lisaa-jono! ke :harja-tila :viimeisin)
+    (event-apurit/julkaise-event ke :harja-tila {:viesti "Harja käynnistyy"
+                                                 :kaikki-ok? false})))
+
+(defn- merkkaa-kaynnistetyksi! []
+  (let [ke (komponentti-event/komponentti-event)]
+    (event-apurit/julkaise-event ke
+                                 :harja-tila
+                                 {:viesti "Harja käynnistetty"
+                                  :kaikki-ok? true})))
+
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
@@ -762,13 +776,14 @@
         (uncaughtException [_ thread e]
           (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
           (log/error "Virhe: " e))))
+    (merkkaa-kaynnistyminen!)
     (alter-var-root #'harja-jarjestelma
                     (constantly
                       (-> (lue-asetukset asetusfile)
                           luo-jarjestelma
                           component/start)))
     (aloita-sonja harja-jarjestelma)
-    (status/aseta-status! :harja (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (merkkaa-kaynnistetyksi!)
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?

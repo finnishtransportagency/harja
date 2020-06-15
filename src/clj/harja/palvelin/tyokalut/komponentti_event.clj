@@ -3,7 +3,15 @@
             [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
             [harja.palvelin.tyokalut.interfact :as i]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  #_(:gen-class
+    :main false
+    :init init
+    :post-init pinit
+    :state state
+    :constructors {[] []}
+    ;:methods [[komponentti [] harja.palvelin.tyokalut.komponentti_event.KomponenttiEvent]]
+    ))
 
 (s/def ::tyyppi-spec #{:perus :viimeisin})
 (s/def ::event-spec (s/or :keyword keyword?
@@ -14,12 +22,7 @@
    :perus-broadcast (i/perus-broadcast ::event)
    :viimeisin-broadcast (i/viimeisin-broadcast ::event)})
 
-(defonce ^{:private true
-           :doc "Halutaan luoda singleton KomponenttiEvent:istä, joten pakotetaan se ottamaan parametrinsa
-                täältä. Tehdään tästä myös private, jotta atomin arvoja voidaan muokata vain KomponenttiEvent
-                rekordin kautta."}
-         komponentti-event-parametrit
-         (komponentti-event-parametrien-alustus))
+#_(defonce ^{:private true} komponentti-event-parametrit (komponentti-event-parametrien-alustus))
 
 (defmulti kuuntelija!
           (fn [tyyppi _ _ _]
@@ -48,9 +51,11 @@
       (reset! (.subscribers bc) [])
       (async/close! (.kanava bc)))
     (reset! (.cache viimeisin-broadcast) nil)
-    (reset! (:eventit komponentti-event-parametrit) {})
-    (alter-var-root komponentti-event-parametrit (komponentti-event-parametrien-alustus))
-    this)
+    (reset! (:eventit this) {})
+    ;(alter-var-root komponentti-event-parametrit (komponentti-event-parametrien-alustus))
+    (merge this
+           ;komponentti-event-parametrit
+           (komponentti-event-parametrien-alustus)))
 
   i/IEvent
   (lisaa-jono [this event tyyppi]
@@ -81,6 +86,32 @@
         (boolean (async/put! julkaisu-kanava {::event event ::data data}))
         false))))
 
-(defn komponentti-event []
-  (let [{:keys [eventit perus-broadcast viimeisin-broadcast]} komponentti-event-parametrit]
+(def foo 2)
+
+(def ^{:private true
+       :static true
+       :doc "Halutaan luoda singleton KomponenttiEvent:istä, joten pakotetaan se ottamaan parametrinsa
+                täältä. Tehdään tästä myös private, jotta atomin arvoja voidaan muokata vain KomponenttiEvent
+                rekordin kautta."}
+  komponentti-event-singleton
+  #_nil
+  (let [{:keys [eventit perus-broadcast viimeisin-broadcast]} (komponentti-event-parametrien-alustus)]
     (->KomponenttiEvent eventit perus-broadcast viimeisin-broadcast)))
+
+#_(defn -init []
+  [[] nil])
+
+#_(defn -pinit [this]
+  (when (nil? komponentti-event-singleton)
+    (let [{:keys [eventit perus-broadcast viimeisin-broadcast]} (komponentti-event-parametrien-alustus)]
+      (alter-var-root komponentti-event-singleton (->KomponenttiEvent eventit perus-broadcast viimeisin-broadcast)))))
+
+#_(defn -komponentti [this]
+  (.state this))
+
+(defn komponentti-event []
+  #_(when (nil? komponentti-event-singleton)
+    (let [{:keys [eventit perus-broadcast viimeisin-broadcast]} (komponentti-event-parametrien-alustus)]
+      (alter-var-root komponentti-event-singleton (->KomponenttiEvent eventit perus-broadcast viimeisin-broadcast))))
+  #_(new harja.palvelin.tyokalut.komponentti_event)
+  komponentti-event-singleton)
