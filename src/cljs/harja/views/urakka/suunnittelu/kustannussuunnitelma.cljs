@@ -872,7 +872,7 @@
                                                                                                                                                               v)
                                                                                                                                                             rivi))
                                                                                                                                                     vuoden-hoidonjohtopalkkiot))
-                                                                                                                           :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                           :tunnisteen-kasittely (fn [data-sisalto-grid _]
                                                                                                                                                    (vec
                                                                                                                                                      (map-indexed (fn [i rivi]
                                                                                                                                                                     (vec
@@ -880,7 +880,6 @@
                                                                                                                                                                                      (when (or (instance? solu/Syote osa)
                                                                                                                                                                                                (instance? g-pohjat/SyoteTaytaAlas osa))
                                                                                                                                                                                        {:osa :maara
-                                                                                                                                                                                        :aika (:aika (get data j))
                                                                                                                                                                                         :osan-paikka [i j]}))
                                                                                                                                                                                    (grid/hae-grid rivi :lapset))))
                                                                                                                                                                   (grid/hae-grid data-sisalto-grid :lapset))))}}))
@@ -984,7 +983,7 @@
                                                                                                                                                               v)
                                                                                                                                                             rivi))
                                                                                                                                                     vuoden-hoidonjohtopalkkiot))
-                                                                                                                           :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                           :tunnisteen-kasittely (fn [data-sisalto-grid _]
                                                                                                                                                    (vec
                                                                                                                                                      (map-indexed (fn [i rivi]
                                                                                                                                                                     (vec
@@ -992,7 +991,6 @@
                                                                                                                                                                                      (when (or (instance? solu/Syote osa)
                                                                                                                                                                                                (instance? g-pohjat/SyoteTaytaAlas osa))
                                                                                                                                                                                        {:osa :maara
-                                                                                                                                                                                        :aika (:aika (get data j))
                                                                                                                                                                                         :osan-paikka [i j]}))
                                                                                                                                                                                    (grid/hae-grid rivi :lapset))))
                                                                                                                                                                   (grid/hae-grid data-sisalto-grid :lapset))))}}))
@@ -1284,7 +1282,7 @@
                                                                                                                                       v)
                                                                                                                                     rivi))
                                                                                                                             vuoden-hoidonjohtopalkkiot))
-                                                                                                   :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                   :tunnisteen-kasittely (fn [data-sisalto-grid _]
                                                                                                                            (vec
                                                                                                                              (map-indexed (fn [i rivi]
                                                                                                                                             (vec
@@ -1323,7 +1321,7 @@
                                                                     (mapv (fn [[_ v]]
                                                                             v)
                                                                           yhteenveto))
-                                                 :tunnisteen-kasittely (fn [osat data]
+                                                 :tunnisteen-kasittely (fn [osat _]
                                                                          (second
                                                                            (reduce (fn [[loytynyt? tunnisteet] osa]
                                                                                      (let [syote-osa? (instance? solu/Syote osa)
@@ -1648,7 +1646,7 @@
                                                                                                                                                                  v)
                                                                                                                                                                rivi))
                                                                                                                                                        vuoden-jh-korvaukset))
-                                                                                                                              :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                              :tunnisteen-kasittely (fn [data-sisalto-grid _]
                                                                                                                                                       (vec
                                                                                                                                                         (map-indexed (fn [i rivi]
                                                                                                                                                                        (vec
@@ -2010,14 +2008,13 @@
                                                                                                                 v)
                                                                                                               rivi))
                                                                                                       vuoden-hoidonjohtopalkkiot))
-                                                                             :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                             :tunnisteen-kasittely (fn [data-sisalto-grid _]
                                                                                                      (vec
                                                                                                        (map-indexed (fn [i rivi]
                                                                                                                       (vec
                                                                                                                         (map-indexed (fn [j osa]
                                                                                                                                        (when (instance? g-pohjat/SyoteTaytaAlas osa)
                                                                                                                                          {:osa :maara
-                                                                                                                                          :aika (:aika (get data j))
                                                                                                                                           :osan-paikka [i j]}))
                                                                                                                                      (grid/hae-grid rivi :lapset))))
                                                                                                                     (grid/hae-grid data-sisalto-grid :lapset))))}

@@ -9,12 +9,12 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
-(s/def ::keyfn fn?)
-(s/def ::comp fn?)
+(s/def ::keyfn ifn?)
+(s/def ::comp ifn?)
 
-(s/def ::jarjestys (s/or :sort-by fn?
-                         :sort-by-with-comp (s/keys :req-un [::keyfn ::comp])
-                         :mapit-avainten-mukaan (s/coll-of any? :kind vector?)))
+(s/def ::jarjestys (s/or :sort-by-with-comp (s/keys :req-un [::keyfn ::comp])
+                         :mapit-avainten-mukaan (s/coll-of any? :kind vector?)
+                         :sort-by ifn?))
 
 (def ^:dynamic *muutetaan-seurattava-arvo?* true)
 
@@ -49,8 +49,8 @@
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
-  (seq (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
-              data)))
+  (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
+         data))
 
 (defmethod jarjesta-data :default
   [_ data]
@@ -90,7 +90,7 @@
   [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
    ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
   IKuuntelija
-  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
+  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku identiteetti luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
     (let [kursorit (mapv (fn [polku]
                            (r/cursor data-atom polku))
                          polut)]
@@ -120,8 +120,10 @@
                                              (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data)))))
                                    (if (satisfies? IWithMeta rajapinnan-data)
                                      {:data rajapinnan-data
+                                      :identiteetti identiteetti
                                       :meta (meta rajapinnan-data)}
-                                     {:data rajapinnan-data})))
+                                     {:data rajapinnan-data
+                                      :identiteetti identiteetti})))
                     :dynaaminen? dynaaminen?
                     :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi}))))
   (poista-kuuntelija! [_ kuuntelijan-nimi]
@@ -129,7 +131,7 @@
       (r/dispose! r)
       (set! kuuntelijat
             (dissoc kuuntelijat kuuntelijan-nimi))))
-  (kuuntelijat-lisaaja! [this rajapinta [kuuntelija-lisaajan-nimi {:keys [luonti luonti-init haku] kuuntelija-lisaajan-polut :polut}]]
+  (kuuntelijat-lisaaja! [this rajapinta [kuuntelija-lisaajan-nimi {:keys [luonti luonti-init haku identiteetti] kuuntelija-lisaajan-polut :polut}]]
     (set! kuuntelija-lisaaja
           (assoc kuuntelija-lisaaja
                  kuuntelija-lisaajan-nimi
@@ -162,7 +164,7 @@
                                                               kuuntelijat)
                                      lisa-argumentit (:args (meta polut))]]
                          (when-not kuuntelu-luotu-jo?
-                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :luonti-init luonti-init :dynaaminen? true :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-polut kuuntelija-lisaajan-polut}])))))))))
+                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :identiteetti identiteetti :lisa-argumentit lisa-argumentit :luonti-init luonti-init :dynaaminen? true :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-polut kuuntelija-lisaajan-polut}])))))))))
   ISeuranta
   (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen? siivoa-tila] :as seuranta}]]
     (set! seurannat

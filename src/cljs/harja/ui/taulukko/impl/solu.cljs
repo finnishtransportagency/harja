@@ -130,6 +130,63 @@
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
 
+(defrecord Otsikko [id jarjesta-fn! parametrit]
+  gop/IPiirrettava
+  (-piirra [this]
+    (let [on-click (fn [this _]
+                     (binding [*this* this]
+                       ((:jarjesta-fn! this))))]
+      (r/create-class
+        {:constructor (fn [this props]
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-state this) #js {:error nil}))
+         :get-derived-state-from-error (fn [error]
+                                         #js {:error error})
+         :component-did-catch (fn [error error-info]
+                                (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                           error-info "\n")))
+         :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Otsikko")
+         :render (fn [this]
+                   (if-let [error (.. this -state -error)]
+                     [virhekasittely/rendaa-virhe error]
+                     (let [[_ this] (r/argv this)
+                           {:keys [id class]} (:parametrit this)
+                           taman-data (taman-derefable this)
+                           arvo (korjaa-NaN @taman-data this)]
+                       [:div.solu.solu-otsikko {:class (when class
+                                                         (apply str (interpose " " class)))
+                                                :id id
+                                                :data-cy (::nimi this)}
+                        ((::fmt this) arvo)
+                        [:span.klikattava.otsikon-jarjestys {:on-click (r/partial on-click this)}
+                         [ikonit/sort]]])))})))
+  gop/IGridOsa
+  (-id [this]
+    (:id this))
+  (-id? [this id]
+    (= (:id this) id))
+  (-nimi [this]
+    (::nimi this))
+  (-aseta-nimi [this nimi]
+    (assoc this ::nimi nimi))
+  sp/ISolu
+  sp/IFmt
+  (-lisaa-fmt [this f]
+    (assoc this ::fmt (r/partial f))))
+
+(defn otsikko
+  ([] (otsikko nil))
+  ([{:keys [parametrit fmt nimi jarjesta-fn!] :as asetukset}]
+   {:pre [(fmt-asetukset-oikein? asetukset)
+          ;; TODO tarkasta parametrit
+          (datan-kasittely-asetukset-oikein? asetukset)]
+    :post [(instance? Otsikko %)]}
+   (let [id (gensym "otsikko")]
+     (cond-> (->Otsikko id (or jarjesta-fn! sort) parametrit)
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             nimi (gop/aseta-nimi nimi)))))
+
 (defrecord Tyhja [id class]
   sp/ISolu
   gop/IPiirrettava

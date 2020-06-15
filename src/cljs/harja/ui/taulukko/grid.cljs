@@ -305,6 +305,15 @@
                            "Saatiin: " tapahtuman-nimi "\n"
                            "Hyväksytyt avaimet: " (apply str (interpose ", " (keys (root-asia (root osa) :tapahtumat)))))))))
 
+(defn jarjesta-grid-data! [grid rajapinta syvyys jarjestys-fn]
+  (let [jarjestykset-fns (some (fn [[_ rajapintakasittelija]]
+                                 (when (= (:rajapinta rajapintakasittelija) rajapinta)
+                                   (::g/jarjestys-fns rajapintakasittelija)))
+                               (::g/grid-rajapintakasittelijat grid))]
+    (println "jarjestykset-fns " jarjestykset-fns)
+    (binding [g/*jarjesta-data* true]
+      (swap! jarjestykset-fns assoc syvyys jarjestys-fn))))
+
 ;; PREDIKAATIT
 
 (defn rivi? [osa]

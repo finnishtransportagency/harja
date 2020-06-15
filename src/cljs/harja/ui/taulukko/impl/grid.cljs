@@ -6,6 +6,7 @@
             [harja.virhekasittely :as virhekasittely]
             [harja.loki :refer [log warn error]]
             [cljs.spec.alpha :as s]
+            [clojure.walk :as walk]
             [clojure.string :as clj-str]
             [clojure.set :as clj-set]
             [reagent.core :as r]
@@ -511,52 +512,52 @@
         (into {} data)
         data))))
 
-(defn muokkaa-data-syvyydessa [syvyys data f]
-  (let [data (muuta-vektoreiksi data syvyys)]
-    (loop [datan-index-polku (vec (repeat syvyys 0))
-           syvyys-pointteri (dec (count datan-index-polku))
-           osittain-muokattu-tulos data]
-      (let [[data-polussa datan-polku] (reduce (fn [[data polku-dataan] index]
-                                                 (cond
-                                                   (or (not (coll? data))
-                                                       (<= (count data) index)) [nil polku-dataan]
-                                                   (map? data) (let [map-entry (-> data seq (nth index))]
-                                                                 [(val map-entry) (conj polku-dataan (key map-entry))])
-                                                   (sequential? data) [(nth data index) (conj polku-dataan index)]))
-                                               [osittain-muokattu-tulos []]
-                                               datan-index-polku)]
-        (if (and (nil? data-polussa)
-                 (= syvyys-pointteri 0))
-          osittain-muokattu-tulos
-          (if data-polussa
-            (recur (update datan-index-polku (dec (count datan-index-polku)) inc)
-                   syvyys-pointteri
-                   (update-in osittain-muokattu-tulos datan-polku f datan-polku))
-            (recur (vec (concat (-> (take syvyys-pointteri datan-index-polku) vec (update (dec syvyys-pointteri) inc))
-                                (repeat (- syvyys syvyys-pointteri) 0)))
-                   (dec syvyys-pointteri)
-                   osittain-muokattu-tulos)))))))
+(defn muokkaa-data-syvyydessa
+  ([syvyys data f] (muokkaa-data-syvyydessa syvyys data f []))
+  ([syvyys data f datan-polku]
+   (cond
+     (= 0 syvyys) (f data datan-polku)
+     (map-entry? data) (muokkaa-data-syvyydessa syvyys (val data) f datan-polku)
+     (sequential? data) (map-indexed #(muokkaa-data-syvyydessa (dec syvyys) %2 f (conj datan-polku %1))
+                                     data)
+     (or (map? data)
+         (record? data)) (reduce (fn [m me]
+                                        (let [[k v] me]
+                                          (assoc m k (muokkaa-data-syvyydessa (dec syvyys) me f (conj datan-polku k)))))
+                                 data
+                                 (seq data))
+     :else data)))
 
 
-(defn jarjesta-data [data jarjestys jarjestykset]
+(defn jarjesta-data
+  "jarjestys: Oletusjärjstys, joka vastaa ::dk/jarjestys spekkiin.
+   jarjestykset: Setti järjestyksistä, jotka pitäisi ajaa tai boolean joka kertoo, että ajetaanko kaikki tai ei mitään
+   jarjestys-fns: Käyttäjän antama kustomijärjestys eri tasoille."
+  [data jarjestys jarjestykset jarjestys-fns]
   (loop [[jarjestys & loput-jarjestykset] jarjestys
          syvyys 0
          tulos data]
     (if (nil? jarjestys)
       tulos
-      (if (or (true? jarjestykset)
-              (and (set? jarjestykset) (contains? jarjestykset (:nimi (meta jarjestys)))))
-        (recur loput-jarjestykset
-               (inc syvyys)
-               (if (= 0 syvyys)
-                 (dk/jarjesta-data jarjestys tulos)
-                 (muokkaa-data-syvyydessa syvyys
-                                          tulos
-                                          (fn [data _]
-                                            (dk/jarjesta-data jarjestys data)))))
-        (recur loput-jarjestykset
-               (inc syvyys)
-               data)))))
+      (let [perusjarjestys? (or (true? jarjestykset)
+                                (and (set? jarjestykset) (contains? jarjestykset (:nimi (meta jarjestys)))))
+            kustomijarjestys? (fn? (get jarjestys-fns syvyys))]
+        (cond
+          kustomijarjestys? (recur loput-jarjestykset
+                                   (inc syvyys)
+                                   (muokkaa-data-syvyydessa syvyys
+                                                            tulos
+                                                            (fn [data _]
+                                                              ((get jarjestys-fns syvyys) data))))
+          perusjarjestys? (recur loput-jarjestykset
+                                 (inc syvyys)
+                                 (muokkaa-data-syvyydessa syvyys
+                                                          tulos
+                                                          (fn [data _]
+                                                            (dk/jarjesta-data jarjestys data))))
+          :else (recur loput-jarjestykset
+                       (inc syvyys)
+                       data))))))
 
 (defn osan-jalkelainen?
   [vanhempi-osa-id osa]
@@ -596,6 +597,59 @@
        kopio-eri-idlla
        (assoc kopio-eri-idlla ::root-id (::root-id tiedot-osa))))))
 
+(defn- jarjesta-cachen-mukaan [data cache identiteetti]
+  (reduce-kv (fn [data syvyys jarjestykset]
+               (muokkaa-data-syvyydessa (dec syvyys)
+                                        data
+                                        (fn [data _]
+                                          (let [order-map (if (= 1 syvyys)
+                                                            jarjestykset
+                                                            (first jarjestykset))]
+                                            (sort-by (fn [x]
+                                                       (get order-map ((get identiteetti syvyys) x)))
+                                                     data)))))
+             data
+             cache))
+
+(defn- jarjestys-mappiin [tulos cache-atom]
+  (reset! cache-atom
+          (reduce-kv (fn [m syvyys jarjestykset]
+                       (assoc m
+                              syvyys
+                              (muokkaa-data-syvyydessa (dec syvyys)
+                                                       jarjestykset
+                                                       (fn [jarjestys _]
+                                                         (zipmap jarjestys
+                                                                 (range))))))
+                     {}
+                     tulos)))
+
+(defn- tallenna-jarjestys-cacheen [jarjestetty-data cache-atom identiteetti]
+  (loop [[[syvyys identity-fn] & loput] (into (sorted-map) identiteetti)
+         tulos {}]
+    (if (nil? syvyys)
+      (jarjestys-mappiin tulos cache-atom)
+      (let [identity-fn (fn [arvo _] (identity-fn arvo))
+            muokattu-tulos (muokkaa-data-syvyydessa syvyys
+                                                    jarjestetty-data
+                                                    identity-fn)]
+        (recur loput
+               (assoc tulos
+                      syvyys (walk/postwalk (fn [x]
+                                              (if (or (map? x)
+                                                      (record? x))
+                                                (vals x)
+                                                x))
+                                            muokattu-tulos)))))))
+
+(defn- muuta-mapit-sequksi [x]
+  (walk/postwalk (fn [x]
+                   (if (or (map? x)
+                           (record? x))
+                     (seq x)
+                     x))
+                 x))
+
 (defn- rajapinnan-grid-kasittelija
   [grid grid-kasittelijan-polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
   (let [datan-kasittelija (get-in @taulukko-konteksti [(gop/id grid) :datan-kasittelija])]
@@ -604,30 +658,51 @@
         (warn (str "Rajapinalle " rajapinta " ei ole määritetty kuuntelijaa datan käsittlijään!\n"
                    "Annettu rajapinta: " rajapinta ". Olemassa olevat:\n"
                    (pr-str (keys (:kuuntelijat datan-kasittelija)))))))
-    (let [rajapintakasittelija (seuranta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
-                                                                                                         @kuuntelija)
-                                                         rajapinnan-dataf (if (and *jarjesta-data* jarjestys)
-                                                                            (jarjesta-data rajapinnan-data jarjestys *jarjesta-data*)
-                                                                            rajapinnan-data)]
-                                                     (when g-debug/GRID_DEBUG
-                                                       (swap! g-debug/debug
-                                                              (fn [tila]
-                                                                (update-in tila
-                                                                           [:rajapinnat rajapinta]
-                                                                           (fn [taman-tila]
-                                                                             (let [taman-tila (or taman-tila
-                                                                                                  (vec (repeat 2 nil)))]
-                                                                               (assoc taman-tila
-                                                                                      0 rajapinnan-data
-                                                                                      1 rajapinnan-dataf)))))))
-                                                     (datan-kasittely (if (and rajapinnan-meta (satisfies? IWithMeta rajapinnan-dataf))
-                                                                        (with-meta rajapinnan-dataf
-                                                                                   rajapinnan-meta)
-                                                                        rajapinnan-dataf)))))
+    (let [jarjestyksen-cache (atom nil)
+          jarjestys-fns (r/atom {})
+          jarjestetty? (atom false)
+          jarjestetty-rajapinta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta identiteetti :identiteetti} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
+                                                                                                                           @kuuntelija)
+                                                jarjestys-fns @jarjestys-fns
+                                                jarjestetaan? (boolean (and *jarjesta-data* (or jarjestys (not (empty? jarjestys-fns)))))
+                                                rajapinnan-dataf (cond
+                                                                   jarjestetaan? (jarjesta-data rajapinnan-data jarjestys *jarjesta-data* jarjestys-fns)
+                                                                   (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan rajapinnan-data @jarjestyksen-cache identiteetti)
+                                                                   :else rajapinnan-data)]
+                                            (reset! jarjestetty? jarjestetaan?)
+                                            (println "rajapinta: " rajapinta)
+                                            (when (= :datarivit rajapinta)
+                                              (println "rajapinnan-data: " rajapinnan-data)
+                                              (println "rajapinnan-dataf: " rajapinnan-dataf)
+                                              (println "jarjestys-fns: " jarjestys-fns)
+                                              (println "jarjestetaan?: " jarjestetaan?))
+                                            (when (and jarjestetaan? identiteetti)
+                                              (tallenna-jarjestys-cacheen rajapinnan-dataf jarjestyksen-cache identiteetti)
+                                              (println "TALLENNETTIIN JÄRJESTYS CACHEEN")
+                                              (println @jarjestyksen-cache))
+                                            (when g-debug/GRID_DEBUG
+                                              (swap! g-debug/debug
+                                                     (fn [tila]
+                                                       (update-in tila
+                                                                  [:rajapinnat rajapinta]
+                                                                  (fn [taman-tila]
+                                                                    (let [taman-tila (or taman-tila
+                                                                                         (vec (repeat 2 nil)))]
+                                                                      (assoc taman-tila
+                                                                             0 rajapinnan-data
+                                                                             1 rajapinnan-dataf)))))))
+                                            (if (and rajapinnan-meta (satisfies? IWithMeta rajapinnan-dataf))
+                                              (with-meta (muuta-mapit-sequksi rajapinnan-dataf)
+                                                         rajapinnan-meta)
+                                              (muuta-mapit-sequksi rajapinnan-dataf))))
+          rajapintakasittelija (seuranta (reaction (datan-kasittely @jarjestetty-rajapinta)))
           tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
       (assoc kasittelija
+             ::jarjestetty? jarjestetty?
+             ::jarjestetty-rajapinta jarjestetty-rajapinta
+             ::jarjestys-fns jarjestys-fns
              :rajapintakasittelija rajapintakasittelija
-             :osien-tunnisteet (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @rajapintakasittelija)))))
+             :osien-tunnisteet (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @jarjestetty-rajapinta)))))
 
 (defn- osan-data-yhdistaminen [grid-rajapintakasittelijat osa]
   (let [datan-kasittelija (get-in @taulukko-konteksti [(::root-id osa) :datan-kasittelija])]
@@ -645,6 +720,11 @@
                                           (warn (str "Osan " (or (gop/nimi osa) (gop/id osa)) " polku ei ole oikein."
                                                      " Nimi polku: " (::nimi-polku osa)
                                                      " Index polku: " (::index-polku osa))))
+                                      #_(when (= rajapinta :datarivit)
+                                        (println "--> grid-polku: " grid-polku))
+                                      (println "--> grid-polku: " grid-polku)
+                                      (println "--> osan-polku-dataan: " osan-polku-dataan)
+                                      (println "--> rajapintakasittelija: " rajapintakasittelija)
                                       (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
                                         (when g-debug/GRID_DEBUG
                                           (swap! g-debug/debug
@@ -745,18 +825,21 @@
        (with-meta [gop/piirra osa]
                   {:key (or (-> osa meta :key) (gop/id osa))})))])
 
-(defn- piirra-dynamic-gridin-osat [_ _]
+(defn- piirra-dynamic-gridin-osat [_ _ _]
   (r/create-class
     {:should-component-update (fn [_ vanhat uudet]
                                 (let [[_ _ piirra?] uudet]
                                   piirra?))
      :display-name "piirra-dynamic-gridin-osat"
-     :reagent-render (fn [grid _]
+     :reagent-render (fn [grid _ _]
+                       (println "piirra-dynamic-gridin-osat")
                        [:<>
                         (doall
                           (for [osa (p/lapset grid)]
-                            ^{:key (gop/id osa)}
-                            [gop/piirra osa]))])}))
+                            (do
+                              (println "---> osa: " osa)
+                              ^{:key (gop/id osa)}
+                              [gop/piirra osa])))])}))
 
 (defn lisaa-uuden-osan-rajapintakasittelijat [uusi-osa & gridkasittelijat]
   (let [polun-alku (::index-polku uusi-osa)
@@ -803,11 +886,8 @@
                        (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
                                                                          (apply dissoc rk (map first poistettavat-kasittelijat)))))))))
 
-(defn kasittele-osien-ja-rajapintakasittelijoiden-muutos! [grid gridin-data entinen-toistettavan-osan-data uudet-grid-kasittelijat]
-  (let [toistettavan-osan-data (:toistettavan-osan-data grid)
-        toistettavan-osan-data (toistettavan-osan-data gridin-data)
-        polun-alku (::nimi-polku grid)
-        toistettava-data-muuttunut? (not= toistettavan-osan-data @entinen-toistettavan-osan-data)
+(defn kasittele-osien-ja-rajapintakasittelijoiden-muutos! [grid toistettavan-osan-data toistettava-data-muuttunut? uudet-grid-kasittelijat]
+  (let [polun-alku (::nimi-polku grid)
         datan-maara (count uudet-grid-kasittelijat)
         osien-maara (count (p/lapset grid))
         luodut-grid-kasittelijat (reduce-kv (fn [m polku kasittelija]
@@ -819,27 +899,39 @@
                                                 (assoc m polku kasittelija)))
                                             {}
                                             (apply merge uudet-grid-kasittelijat))]
+    (println "LUODUT GRID KÄSITTELIJÄT: " (keys luodut-grid-kasittelijat))
     (when toistettava-data-muuttunut?
       (poista-osia! grid luodut-grid-kasittelijat)
       (lisaa-osia! grid luodut-grid-kasittelijat toistettavan-osan-data)
       (aseta-koot! (root grid))
       (when-let [f (and (js/Math.max 0 (- osien-maara datan-maara)) (get-in grid [:osien-maara-muuttui :osien-maara-muuttui!]))]
         (f grid))
-      (reset! entinen-toistettavan-osan-data toistettavan-osan-data)
       (swap! (get-in grid [:osien-maara-muuttui :trigger]) not))))
 
 (defn- dynaaminen-grid [grid]
-  (let [grid-kasittelijoiden-luonti (:luonti (get (::grid-rajapintakasittelijat (root grid))
-                                                  (::nimi-polku grid)))
+  (let [rajapintakasittelijan-tiedot (get (::grid-rajapintakasittelijat (root grid))
+                                          (::nimi-polku grid))
+        grid-kasittelijoiden-luonti (or (:luonti rajapintakasittelijan-tiedot)
+                                        (constantly nil))
         entinen-toistettavan-osan-data (atom nil)]
     (fn [grid]
-      (let [gridin-derefable (::osan-derefable grid)
+      (println "rajapintakasittelijan-tiedot " rajapintakasittelijan-tiedot)
+      (println "DYNAAMINEN GRID")
+      (let [gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
+                               gridin-derefable
+                               (do
+                                 (warn (str "Dynaamiselle gridille  ") (pr-str (type grid)) (str " (" (:id grid) ") ei ole annettu osan-derefablea!"))
+                                 (r/atom nil)))
             gridin-data @gridin-derefable
             rajapinnat-muuttunut? (if (and (contains? (meta grid-kasittelijoiden-luonti) :rajapinta-riippuu-datan-arvosta?)
                                            (-> grid-kasittelijoiden-luonti meta :rajapinta-riippuu-datan-arvosta? not))
                                     (not= (count @entinen-toistettavan-osan-data)
                                           (count gridin-data))
-                                    true)]
+                                    true)
+            data-jarjestetty? @(get rajapintakasittelijan-tiedot ::jarjestetty?)]
+        (println "gridin-data meta " (meta gridin-data))
+        (println "rajapinnat-muuttunut? " rajapinnat-muuttunut?)
+        (println "data-jarjestetty? " data-jarjestetty?)
         (if rajapinnat-muuttunut?
           (let [uudet-grid-kasittelijat (grid-kasittelijoiden-luonti gridin-data)
                 rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
@@ -849,11 +941,105 @@
                                                                        (transduce (map #(:rajapinta %))
                                                                                   conj
                                                                                   #{}
-                                                                                  (vals (::grid-rajapintakasittelijat (root grid))))))]
+                                                                                  (vals (::grid-rajapintakasittelijat (root grid))))))
+                toistettavan-osan-data (:toistettavan-osan-data grid)
+                toistettavan-osan-data (toistettavan-osan-data gridin-data)
+                toistettava-data-muuttunut? (not= toistettavan-osan-data @entinen-toistettavan-osan-data)]
+            (println "toistettava-data-muuttunut?: " toistettava-data-muuttunut?)
+            (println "rajapintakasittelijat-muuttunut? " rajapintakasittelijat-muuttunut?)
             (when rajapintakasittelijat-muuttunut?
-              (kasittele-osien-ja-rajapintakasittelijoiden-muutos! grid gridin-data entinen-toistettavan-osan-data uudet-grid-kasittelijat))
+              (kasittele-osien-ja-rajapintakasittelijoiden-muutos! grid toistettavan-osan-data toistettava-data-muuttunut? uudet-grid-kasittelijat)
+              (when toistettava-data-muuttunut?
+                (reset! entinen-toistettavan-osan-data toistettavan-osan-data)))
+            (when (and (not rajapintakasittelijat-muuttunut?)
+                       data-jarjestetty?)
+              (let [rajapintakasittelijat (::grid-rajapintakasittelijat (root grid))
+                    toistettavan-osan-data (:toistettavan-osan-data grid)
+                    polun-alku (::nimi-polku grid)
+                    toistettavan-osan-data (toistettavan-osan-data gridin-data)
+                    #_#_luodut-grid-kasittelijat (reduce-kv (fn [polut polku _]
+                                                          (let [polku (muodosta-uusi-polku polku polun-alku)]
+                                                            #_(assoc m polku kasittelija)
+                                                            (conj polut polku)))
+                                                        []
+                                                        (apply merge uudet-grid-kasittelijat))
+                    luodut-grid-kasittelijat (reduce-kv (fn [m polku kasittelija]
+                                                          (let [polku (muodosta-uusi-polku polku polun-alku)]
+                                                            (assoc m (:rajapinta kasittelija) polku)
+                                                            #_(assoc m polku kasittelija)))
+                                                        {}
+                                                        (apply merge uudet-grid-kasittelijat))
+                    grid-kasittelijoiden-polut (reduce-kv (fn [polut polku _]
+                                                            (let [polku (muodosta-uusi-polku polku polun-alku)]
+                                                              (conj polut polku)))
+                                                          []
+                                                          (apply merge uudet-grid-kasittelijat))
+                    kasiteltavat-grid-kasittelijoiden-polut (reduce (fn [grid-kasittelijat polku]
+                                                                      (if-let [[k v] (find rajapintakasittelijat polku)]
+                                                                        (assoc grid-kasittelijat k v)
+                                                                        grid-kasittelijat))
+                                                                    {}
+                                                                    grid-kasittelijoiden-polut)
+                    polut-joita-ei-kasitella (apply dissoc rajapintakasittelijat grid-kasittelijoiden-polut)
+                    _ (println "---- RAJAPINTAKÄSITTELIJÄT ---")
+                    _ (println rajapintakasittelijat)
+                    _ (println "------- grid-kasittelijoiden-polut -----")
+                    _ (println grid-kasittelijoiden-polut)
+                    _ (println "----------------")
+                    _ (println (reduce (fn [gks-uudet gks]
+                                         (merge gks-uudet
+                                                (into {}
+                                                      (map (fn [[polku kasittelija]]
+                                                             [(muodosta-uusi-polku polku polun-alku) (some (fn [[_ {:keys [rajapinta] :as rajapintakasittelija}]]
+                                                                                                             (when (= rajapinta (:rajapinta kasittelija))
+                                                                                                               rajapintakasittelija))
+                                                                                                           rajapintakasittelijat)]))
+                                                      gks)))
+                                       {}
+                                     uudet-grid-kasittelijat))
+                    _ (println "--------------")
+                    rajapintakasittelijat-jarjestetty #_(reduce (fn [x polku]
+                                                                (assoc x polku (get-in rajapintakasittelijat polku)))
+                                                              rajapintakasittelijat
+                                                              luodut-grid-kasittelijat)
+                    (loop [[[vanha-polku kasittelija] & kasittelijat] kasiteltavat-grid-kasittelijoiden-polut
+                           [uusi-polku & loput-uudet-polut] grid-kasittelijoiden-polut
+                           jarjestetyt-rajapintakasittelijat {}]
+                      (println "KÄSITTELIJÄ")
+                      (println kasittelija)
+                      (if (nil? uusi-polku)
+                        jarjestetyt-rajapintakasittelijat
+                        #_(let [rajapinta-wanha (some (fn [[]]))
+                              kasittelija (get luodut-grid-kasittelijat )])
+                        (recur kasittelijat
+                               loput-uudet-polut
+                               (assoc jarjestetyt-rajapintakasittelijat uusi-polku kasittelija))))
+                    rajapintakasittelijat #_(merge polut-joita-ei-kasitella rajapintakasittelijat-jarjestetty)
+                    (merge rajapintakasittelijat
+                           (reduce (fn [gks-uudet gks]
+                                     (merge gks-uudet
+                                            (into {}
+                                                  (map (fn [[polku kasittelija]]
+                                                         [(muodosta-uusi-polku polku polun-alku) (some (fn [[_ {:keys [rajapinta] :as rajapintakasittelija}]]
+                                                                                                         (when (= rajapinta (:rajapinta kasittelija))
+                                                                                                           rajapintakasittelija))
+                                                                                                       rajapintakasittelijat)]))
+                                                  gks)))
+                                   {}
+                                   uudet-grid-kasittelijat))
+                    osan-kasittely (fn [osa]
+                                     (osan-data-yhdistaminen rajapintakasittelijat osa))]
+                (println "------- rajapintakasittelijat-jarjestetty -----")
+                (println rajapintakasittelijat-jarjestetty)
+                (paivita-root! grid (fn [vanha-grid]
+                                      (assoc vanha-grid ::grid-rajapintakasittelijat rajapintakasittelijat)))
+                (paivita-kaikki-lapset! (osan-kasittely grid)
+                                        (constantly true)
+                                        osan-kasittely)
+                (reset! entinen-toistettavan-osan-data toistettavan-osan-data)
+                (reset! (get rajapintakasittelijan-tiedot ::jarjestetty?) false)))
             ^{:key (or (-> grid meta :key) (gop/id grid))}
-            [piirra-dynamic-gridin-osat grid rajapintakasittelijat-muuttunut?])
+            [piirra-dynamic-gridin-osat grid #_rajapintakasittelijat-muuttunut? true (gensym "foo")])
           ^{:key (or (-> grid meta :key) (gop/id grid))}
           [piirra-dynamic-gridin-osat grid false])))))
 
@@ -1426,6 +1612,7 @@
                    ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
                    #_(when aseta-koko-uusiksi?
                        (aseta-seurattava-koko! grid))
+                   (println "PIIRRÄ GRID")
                    [:div.grid-taulukko {:class (apply str (interpose " " luokat))
                                         :id dom-id
                                         :style style
