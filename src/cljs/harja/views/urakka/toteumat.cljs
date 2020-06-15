@@ -7,6 +7,7 @@
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
+            [harja.views.urakka.toteumat.akilliset-hoitotyot :as akilliset-htyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.toteumat.varusteet :as varusteet]
@@ -38,6 +39,12 @@
       (fn [{:keys [id] :as ur}]
         [bs/tabs {:style :tabs :classes "tabs-taso2"
                   :active (nav/valittu-valilehti-atom :toteumat)}
+
+         "Äkilliset hoitotyöt ja vaurioiden korjaukset" :akilliset-hoitotyot-ja-vaurioiden-korjaukset
+         (when (or
+                 true
+                 (oikeudet/urakat-toteumat-akilliset-hoitotyot id))
+           [akilliset-htyot/akilliset-hoitotyot])
 
          "Kokonaishintaiset työt" :kokonaishintaiset-tyot
          (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)

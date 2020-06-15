@@ -13,6 +13,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.ui.modal :as modal]
+            [harja.ui.lomake :as ui-lomake]
             [harja.ui.liitteet :as liitteet]
             [harja.loki :refer [log]]
             [harja.loki :as loki]
@@ -496,6 +497,17 @@
      {:vayla-tyyli? true
       :luokka       "suuri"}]]])
 
+(defn- vayla-radio [{:keys [id teksti ryhma oletus-valittu? disabloitu? muutos-fn]}]
+  [:div.flex-row
+   [:input#kulu-normaali.vayla-radio
+    {:id              id
+     :type            :radio
+     :name            ryhma
+     :default-checked oletus-valittu?
+     :disabled        disabloitu?
+     :on-change       muutos-fn}]
+   [:label {:for id} teksti]])
+
 (defn tehtavien-syotto
   [{:keys [paivitys-fn haetaan]}
    {{:keys [kohdistukset] :as lomake} :lomake
@@ -509,26 +521,44 @@
       [:div.palsta
        [:h3 {:style {:width "100%"}}
         "Mihin työhön kulu liittyy?"]
-       [:div.flex-row
-        [:input#kulu-normaali.vayla-radio
-         {:type            :radio
-          :name            "kulu-group"
-          :default-checked (cond
-                             (> (count kohdistukset) 1) false
-                             (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
-                             :else true)
-          :disabled        (not= 0 haetaan)
-          :on-change       #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
-                                                             resetoi-kohdistukset)
-                                  jalkiprosessointi-fn (if (.. % -target -checked)
-                                                         (fn [lomake]
-                                                           (vary-meta
-                                                             lomake
-                                                             maaramitallisen-validoinnit
-                                                             {:lomake  lomake
-                                                              :indeksi 0})))]
-                              (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
-        [:label {:for "kulu-normaali"} "Normaali suunniteltu tai määrämitattava hankintakulu"]]
+       [vayla-radio {:id              "kulu-normaali"
+                     :teksti          "Normaali suunniteltu tai määrämitattava hankintakulu"
+                     :ryhma           "kulu-group"
+                     :oletus-valittu? (cond
+                                        (> (count kohdistukset) 1) false
+                                        (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
+                                        :else true)
+                     :disabloitu?     (not= 0 haetaan)
+                     :muutos-fn       #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
+                                                                        resetoi-kohdistukset)
+                                             jalkiprosessointi-fn (if (.. % -target -checked)
+                                                                    (fn [lomake]
+                                                                      (vary-meta
+                                                                        lomake
+                                                                        maaramitallisen-validoinnit
+                                                                        {:lomake  lomake
+                                                                         :indeksi 0})))]
+                                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
+       #_[:div.flex-row
+          [:input#kulu-normaali.vayla-radio
+           {:type            :radio
+            :name            "kulu-group"
+            :default-checked (cond
+                               (> (count kohdistukset) 1) false
+                               (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
+                               :else true)
+            :disabled        (not= 0 haetaan)
+            :on-change       #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
+                                                               resetoi-kohdistukset)
+                                    jalkiprosessointi-fn (if (.. % -target -checked)
+                                                           (fn [lomake]
+                                                             (vary-meta
+                                                               lomake
+                                                               maaramitallisen-validoinnit
+                                                               {:lomake  lomake
+                                                                :indeksi 0})))]
+                                (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
+          [:label {:for "kulu-normaali"} "Normaali suunniteltu tai määrämitattava hankintakulu"]]
        [:div.flex-row
         [:input#kulu-useampi.vayla-radio
          {:type            :radio
@@ -636,53 +666,15 @@
                      {:validoitava? true}
                      :laskun-numero (-> % .-target .-value))])))
 
-(defmulti vayla-kentta
-          (fn [{:keys [tyyppi]} & args] tyyppi))
 
-(defmethod vayla-kentta :rivi [{:keys [sisalto]} parametrit]
-  [:div.flex-row (for [s (remove nil? sisalto)]
-                   [vayla-kentta s])])
 
-(defmethod vayla-kentta :teksti [{:keys [elementti teksti]}]
-  [(if (nil? elementti)
-     :div
-     elementti)
-   teksti])
-
-(defmethod vayla-kentta :paluunappi [{:keys [teksti klikkaus-fn parametrit]}]
-  [napit/takaisin
-   teksti
-   klikkaus-fn
-   parametrit])
-
-(defmethod vayla-kentta :poistonappi [{:keys [teksti klikkaus-fn parametrit]}]
-  [napit/poista
-   teksti
-   klikkaus-fn
-   parametrit])
-
-(defmethod vayla-kentta :dropdown [{:keys []}])
-
-(defmethod vayla-kentta :palstoitettu-rivi [{:keys [kolumnit]}]
-  [:div.palstat
-   (doall
-     (map (fn [kolumni]
-            [:div.palsta
-             (for [s kolumni]
-               [vayla-kentta s])])
-          kolumnit))])
-
-(defmethod vayla-kentta :palsta [])
-
-(defmethod vayla-kentta :default [_ _]
-  [:div "Virhe"])
-
-(defn- uusi-lomake
+#_(defn- uusi-lomake
   [{e! :e! tila :tila lomake-skeema :lomake-skeema}]
   [:div
    (doall (mapcat (fn [[_osio sisallot]]
                     (for [elementti sisallot]
-                      [vayla-kentta elementti])) lomake-skeema))])
+                      [vayla-kentta elementti]))
+                  lomake-skeema))])
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -795,42 +787,6 @@
       [:div#vayla
        (if syottomoodi
          [:div
-          [debug/debug lomake]
-          [debug/debug (:validius (meta lomake))]
-          [uusi-lomake {:e!            e!
-                        :tila          app
-                        :lomake-skeema {:otsikko    [{:tyyppi  :rivi
-                                                      :sisalto [{:tyyppi      :paluunappi
-                                                                 :teksti      "Takaisin"
-                                                                 :klikkaus-fn #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-                                                                 :parametrit  {:vayla-tyyli?  true
-                                                                               :teksti-nappi? true
-                                                                               :style         {:font-size "14px"}}}]}
-                                                     {:tyyppi  :rivi
-                                                      :sisalto [{:tyyppi    :teksti
-                                                                 :elementti :h2
-                                                                 :teksti    "Uusi kulu"}
-                                                                (when-not (nil? (:id lomake))
-                                                                  {:tyyppi :poistonappi
-                                                                   :teksti "Poista kulu"
-                                                                   :klikkaus-fn (r/partial nayta-kulun-poisto-modaali {:tehtavaryhmat tehtavaryhmat
-                                                                                                                       :e! e!
-                                                                                                                       :lomake lomake})
-                                                                           :parametrit {:vayla-tyyli?  true
-                                                                                        :teksti-nappi? true
-                                                                                        :style         {:font-size   "14px"
-                                                                                                        :margin-left "auto"}}})]}]
-                                        :sisalto    [{:tyyppi  :rivi
-                                                      :sisalto [{:tyyppi    :dropdown
-                                                                 :elementti :h2
-                                                                 :teksti    "Love you"}]}
-                                                     {:tyyppi   :palstoitettu-rivi
-                                                      :kolumnit [[{:tyyppi :teksti :teksti "Palsta 1"}]
-                                                                 [{:tyyppi :teksti :teksti "Palsta 2a"}
-                                                                  {:tyyppi :teksti :teksti "Palsta 2b"}]]}]
-                                        :alaotsikko [{:tyyppi    :teksti
-                                                      :elementti :h2
-                                                      :teksti    "Love you"}]}}]
           [kulujen-syottolomake e! app]]
          [:div
           [:div.flex-row

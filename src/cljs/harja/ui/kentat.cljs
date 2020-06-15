@@ -186,10 +186,12 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled?]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled?]
                                 :as   kentta} data]
   [:input {:class       (cond-> nil
-                                lomake? (str "form-control ")
+                                (and lomake?
+                                     (not vayla-tyyli?)) (str "form-control ")
+                                vayla-tyyli? (str "input-default komponentin-input ")
                                 disabled? (str "disabled"))
            :placeholder (placeholder kentta data)
            :on-change   #(let [v (-> % .-target .-value)]
@@ -504,20 +506,34 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? disabled?]} data]
+      (fn [{:keys [teksti nayta-rivina? vayla-tyyli? disabled?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
           [:div.boolean
-           (let [checkbox [:div.checkbox
-                           [:label {:on-click #(.stopPropagation %)}
-                            [:input {:id        input-id
-                                     :type      "checkbox"
-                                     :disabled  disabled?
-                                     :checked   arvo
-                                     :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                   (reset! data valittu?))}]
-                            teksti]]]
+           (let [vayla-checkbox [:div.flex-row
+                                 [:input.vayla-checkbox
+                                  {:id        input-id
+                                   :class     "check"
+                                   :type      "checkbox"
+                                   :disabled  disabled?
+                                   :checked   arvo
+                                   :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                 (reset! data valittu?))}]
+                                 [:label {:on-click #(.stopPropagation %)
+                                          :for      input-id}
+                                  teksti]]
+                 checkbox (if vayla-tyyli?
+                            vayla-checkbox
+                            [:div.checkbox
+                             [:label {:on-click #(.stopPropagation %)}
+                              [:input {:id        input-id
+                                       :type      "checkbox"
+                                       :disabled  disabled?
+                                       :checked   arvo
+                                       :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                     (reset! data valittu?))}]
+                              teksti]])]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
@@ -525,8 +541,20 @@
                   [:td checkbox]]]]
                checkbox))])))))
 
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
+  [:div.flex-row
+   [:input#kulu-normaali.vayla-radio
+    {:id              id
+     :type            :radio
+     :name            ryhma
+     :checked         valittu?
+     :default-checked oletus-valittu?
+     :disabled        disabloitu?
+     :on-change       muutos-fn}]
+   [:label {:for id} teksti]])
+
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?
-                                            oletusarvo]} data]
+                                            oletusarvo]} data {:keys [vayla-tyyli?]}]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
@@ -537,20 +565,30 @@
                (some (partial = oletusarvo) vaihtoehdot))
       (reset! data oletusarvo))
     [:div
-     (let [radiobuttonit (doall
+     (let [group-id (gensym (str "radio-group-"))
+           radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot]
                              ^{:key (str "radio-group-" (name vaihtoehto))}
-                             [:div.radio
-                              [:label
-                               [:input {:type      "radio"
-                                        ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
-                                        ;; jos parametri annettu
-                                        :checked   (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                       (= valittu vaihtoehto))
-                                        :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                      (if valittu?
-                                                        (reset! data vaihtoehto)))}]
-                               (vaihtoehto-nayta vaihtoehto)]]))]
+                             (if vayla-tyyli?
+                               [vayla-radio {:teksti    (vaihtoehto-nayta vaihtoehto)
+                                             :muutos-fn #(let [valittu? (-> % .-target .-checked)]
+                                                           (if valittu?
+                                                             (reset! data vaihtoehto)))
+                                             :valittu?  (or (and (nil? valittu) (= vaihtoehto oletusarvo))
+                                                            (= valittu vaihtoehto))
+                                             :ryhma     group-id
+                                             :id        (gensym (str "radio-group-" (name vaihtoehto)))}]
+                               [:div.radio
+                                [:label
+                                 [:input {:type      "radio"
+                                          ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
+                                          ;; jos parametri annettu
+                                          :checked   (or (and (nil? valittu) (= vaihtoehto oletusarvo))
+                                                         (= valittu vaihtoehto))
+                                          :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                        (if valittu?
+                                                          (reset! data vaihtoehto)))}]
+                                 (vaihtoehto-nayta vaihtoehto)]])))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -1167,7 +1205,7 @@
                       (tasot/poista-geometria! :tr-valittu-osoite)
                       (kartta/zoomaa-geometrioihin))))
 
-      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot?]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
@@ -1199,7 +1237,8 @@
                             alkuosa-avain       alkuosa
                             alkuetaisyys-avain  alkuetaisyys
                             loppuosa-avain      loppuosa
-                            loppuetaisyys-avain loppuetaisyys})]
+                            loppuetaisyys-avain loppuetaisyys})
+              luokat (if vayla-tyyli? "input-default" "")]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
@@ -1209,15 +1248,15 @@
            [tierekisterikentat
             pakollinen?
             [tr-kentan-elementti lomake? muuta! blur
-             "Tie" numero numero-avain @karttavalinta-kaynnissa?]
+             "Tie" numero numero-avain @karttavalinta-kaynnissa? luokat]
             [tr-kentan-elementti lomake? muuta! blur
-             "aosa" alkuosa alkuosa-avain @karttavalinta-kaynnissa?]
+             "aosa" alkuosa alkuosa-avain @karttavalinta-kaynnissa? luokat]
             [tr-kentan-elementti lomake? muuta! blur
-             "aet" alkuetaisyys alkuetaisyys-avain @karttavalinta-kaynnissa?]
+             "aet" alkuetaisyys alkuetaisyys-avain @karttavalinta-kaynnissa? luokat]
             [tr-kentan-elementti lomake? muuta! blur
-             "losa" loppuosa loppuosa-avain @karttavalinta-kaynnissa?]
+             "losa" loppuosa loppuosa-avain @karttavalinta-kaynnissa? luokat]
             [tr-kentan-elementti lomake? muuta! blur
-             "let" loppuetaisyys loppuetaisyys-avain @karttavalinta-kaynnissa?]
+             "let" loppuetaisyys loppuetaisyys-avain @karttavalinta-kaynnissa? luokat]
             tr-otsikot?
             (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
               [napit/poista nil
@@ -1448,6 +1487,7 @@
 (defn vayla-lomakekentta
   "Väylä-tyylinen tekstikenttä"
   [otsikko & params]
+  (loki/log "pa" params)
   (let [avaimet->proppi {:arvo :value}
         id (gensym "kulukentta-")
         propit (into {:type :text
@@ -1457,7 +1497,10 @@
                                (avain avaimet->proppi)
                                avain)
                              arvo]))
-                     (partition 2 params))
+                     (if (and (= 1 (count params))
+                              (map? (first params)))
+                       (first params)
+                       (partition 2 params)))
         {komponentti            :komponentti
          komponentin-argumentit :komponentin-argumentit
          tyylit                 :tyylit

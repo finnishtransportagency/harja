@@ -161,6 +161,8 @@
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
 
+(def akilliset-ja-vauriot-default {})
+
 (def kulut-default {:parametrit  {:haetaan 0}
                     :taulukko    nil
                     :lomake      kulut-lomake-default
@@ -169,10 +171,15 @@
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 
+(def toteumat-default-arvot {:akilliset-hoitotyot-ja-vaurioiden-korjaukset akilliset-ja-vauriot-default})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
-                     :suunnittelu suunnittelu-default-arvot}))
+                     :suunnittelu suunnittelu-default-arvot
+                     :toteumat    toteumat-default-arvot}))
 
+
+(defonce akilliset-hoitotyot-ja-vaurioiden-korjaukset (cursor tila [:toteumat :akilliset-hoitotyot-ja-vaurioiden-korjaukset]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
