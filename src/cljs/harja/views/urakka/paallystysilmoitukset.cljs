@@ -1078,6 +1078,26 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
+(defn- paallystysmassat-taulukko [e! {:keys [paallystysmassat] :as app}]
+  [grid/grid
+  {:otsikko ""
+   :tunniste :id
+   :tyhja        (if (nil? paallystysmassat) [ajax-loader "Haetaan massatyyppejä..."] "Ei massatyyppejä")
+   :voi-lisata?  false
+   :voi-kumota?  false
+   :voi-poistaa? (constantly false)
+   :voi-muokata? true}
+  [{:otsikko "Massatyyppi" :hae #(str (get % :massatyyppitunnus) " - " (get % :nimi)) :muokattava? (constantly false) :tyyppi :string :leveys 20}
+   {:otsikko "RC-%" :nimi :rc :fmt #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
+   {:otsikko "Raekoko" :nimi :raekoko :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
+   {:otsikko "Kiviainesesiintymä" :nimi :esiintyma :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 15}
+   {:otsikko "KM-arvo" :nimi :km_arvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
+   {:otsikko "Muotoarvo" :nimi :muotoarvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
+   {:otsikko "Sideainetyyppi" :nimi :sideainetyyppi :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
+   {:otsikko "Pitoisuus" :nimi :pitoisuus :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
+   {:otsikko "Lisäaineet" :nimi :lisaaineet :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 25}]
+   paallystysmassat])
+
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
   (let [urakka-id (:id urakka)]
     [grid/grid
@@ -1176,6 +1196,8 @@
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
+         [:h3 "Päällystysmassat"]
+         [paallystysmassat-taulukko e! app]
          [:h3 "Päällystysilmoitukset"]
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
@@ -1220,7 +1242,8 @@
     (komp/sisaan-ulos
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] true))
-        (e! (paallystys/->HaePaallystysilmoitukset)))
+        (e! (paallystys/->HaePaallystysilmoitukset))
+        (e! (paallystys/->HaePaallystysmassat)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
     (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]

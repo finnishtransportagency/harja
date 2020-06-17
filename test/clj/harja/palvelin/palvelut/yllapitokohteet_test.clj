@@ -1552,3 +1552,18 @@
         (is (map? yhteyshenkilot) "Yhteyshenkilöt palautuivat")
         (is (= 3 (count (:fim-kayttajat yhteyshenkilot))) "FIM käyttäjäin lkm")
         (is (= 2 (count (:yhteyshenkilot yhteyshenkilot))) "Yhteyshenkilöiden lkm")))))
+
+(defn poista-muokkaustiedot
+  [rivi]
+  (dissoc rivi :muokkaaja :muokattu :luoja :luotu))
+
+(deftest urakan-paallystysmassojen-haku
+  (let [massa1-odotettu (poista-muokkaustiedot {:km_arvo "AN14", :lisaaineet "Pippuria ja suolaa", :rc nil, :sideainetyyppi "70/100", :muotoarvo "20", :luotu "2020-06-15T04:37:30.104074000-00:00", :esiintyma "Kaislakallio", :pitoisuus 5.40M, :luoja 11, :urakka 7, :nimi "Alfattibetoni", :raekoko 16, :muokkaaja nil, :massatyyppitunnus "AB-16", :id 1, :poistettu false, :muokattu nil})
+        massa2-odotettu (poista-muokkaustiedot {:km_arvo "AN7", :lisaaineet "Chiliä ja Currya", :rc nil, :sideainetyyppi "70/100", :muotoarvo "10", :luotu "2020-06-15T04:37:30.104074000-00:00", :esiintyma "Karjukallio", :pitoisuus 5.80M, :luoja 11, :urakka 7, :nimi "Kivimastiksiasfaltti", :raekoko 16, :muokkaaja nil, :massatyyppitunnus "SMA 16", :id 2, :poistettu false, :muokattu nil})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-paallystysmassat +kayttaja-jvh+
+                                {:urakka-id (hae-utajarven-paallystysurakan-id)})]
+
+    (is (= 2 (count vastaus)) "Saatiin testiurakoiden oikea määrä")
+    (is (= massa1-odotettu (poista-muokkaustiedot (first (filter #(= (:km_arvo %) "AN14") vastaus)))))
+    (is (= massa2-odotettu (poista-muokkaustiedot (first (filter #(= (:km_arvo %) "AN7") vastaus)))))))
