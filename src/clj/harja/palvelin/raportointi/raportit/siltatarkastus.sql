@@ -23,13 +23,13 @@ SELECT
     l.koko AS liite_koko,
     l.nimi AS liite_nimi
   FROM silta s
-           LEFT JOIN siltatarkastus st ON st.id in (SELECT id
-                                                      FROM siltatarkastus st
-                                                     WHERE st.silta = s.id
-                                                       AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
-                                                       AND st.poistettu = FALSE
-                                                     ORDER BY tarkastusaika DESC
-                                                     LIMIT 1)
+           LEFT JOIN LATERAL (SELECT id, tarkastusaika, tarkastaja
+                                FROM siltatarkastus st
+                               WHERE st.silta = s.id
+                                     AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                     AND st.poistettu = FALSE
+                               ORDER BY tarkastusaika DESC
+                               LIMIT 1) st on TRUE
            LEFT JOIN siltatarkastus_kohde_liite skl ON skl.siltatarkastus IN (st.id)
            LEFT JOIN liite l ON skl.liite = l.id
  WHERE s.urakat @> ARRAY[:urakka] ::INT[]
