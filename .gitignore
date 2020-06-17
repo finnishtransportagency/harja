@@ -8,6 +8,7 @@ target
 .repl/
 dev-resources/js/harja.js
 dev-resources/js/out/
+dev-resources/tmp/*
 logs/
 doc/
 dev/

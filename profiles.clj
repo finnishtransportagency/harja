@@ -7,10 +7,15 @@
                       [com.bhauman/figwheel-main "0.2.1"]
                       [com.bhauman/rebel-readline-cljs "0.1.4"]]
        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
-       :resource-paths ["dev-resources/js" "resources/public/css" "resources"]
+       :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                  [test2junit "1.4.2"]
-                 [lein-eftest "0.5.0"]]
+                 [lein-eftest "0.5.0"]
+                 [lein-with-env-vars "0.2.0"]]
+       :clean-targets ["dev-resources/tmp"]
+       :env-vars {:HARJA_DEV_YMPARISTO true}
+       ;; Käytetään tätä hookkia, jotta ei tarvitse erikseen kirjoitella leiningenille "with-env-vars", jotta nuo env-vars:it olisi käytössä
+       :hooks [leiningen.with-env-vars/auto-inject]
        ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
        ;; :resource-paths ["opt/sonic/7.6.2/*"]
        }
