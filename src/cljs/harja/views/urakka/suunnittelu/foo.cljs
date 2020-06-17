@@ -20,20 +20,11 @@
 (extend-protocol tuck/Event
   JarjestaData
   (process-event [{:keys [otsikko]} {g :grid :as app}]
-    (println "otsikko: " otsikko)
     (when-not (nil? otsikko)
       (grid/jarjesta-grid-data! g
                                 :datarivit
                                 0
                                 (fn [datarivit]
-                                  (println "------ DATARIVIT -----")
-                                  (println (if (= :rivi otsikko)
-                                             (sort-by key datarivit)
-                                             (sort-by (fn [[_ v]]
-                                                        (reduce #(+ %1 (:a %2))
-                                                                0
-                                                                v))
-                                                      datarivit)))
                                   (if (= :rivi otsikko)
                                     (sort-by key datarivit)
                                     (sort-by (fn [[_ v]]
@@ -122,7 +113,6 @@
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
                           & args]
-  (println "PÄIVITETTÄVÄ ASIA: " paivitettava-asia)
   (jarjesta-data ajettavat-jarejestykset
                  (triggeroi-seurannat triggeroi-seuranta?
                                       (case paivitettava-asia
@@ -156,8 +146,6 @@
       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
 
 (defn jarjesta-fn! []
-  (println "jarjesta-fn!")
-  (println "THIS SOLU: " solu/*this*)
   (e! (->JarjestaData (grid/hae-osa solu/*this* :nimi))))
 
 (defn foo* [_ _]
@@ -197,13 +185,7 @@
                                                                      :luokat #{"salli-ylipiirtaminen"}
                                                                      :osien-maara-muuttui! (fn [g _] (paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
                                                                      :toistettavan-osan-data (fn [rivit]
-                                                                                               (println "##########")
-                                                                                               (println "#  RIVIT #")
-                                                                                               (println "##########")
-                                                                                               (println rivit)
-                                                                                               rivit
-                                                                                               #_(let [rivit (:data alkudata)]
-                                                                                                 (group-by :rivi rivit)))
+                                                                                               rivit)
                                                                      :toistettava-osa (fn [rivit-ryhmiteltyna]
                                                                                         (mapv (fn [[rivi rivien-arvot]]
                                                                                                 (with-meta
@@ -401,7 +383,6 @@
                                                                                                                       (key arvo))}}}
 
                                                                                    {:aseta-arvo! (fn [tila arvo {:keys [rivi-index arvon-avain]}]
-                                                                                                   (println "arvo: " arvo)
                                                                                                    (let [arvo (try (js/Number arvo)
                                                                                                                    (catch :default _
                                                                                                                      arvo))
@@ -412,12 +393,8 @@
                                                                                                                               i
                                                                                                                               (recur loput-rivit
                                                                                                                                      (inc i)))))]
-                                                                                                     (println "kastattu arvo: " arvo " tyyppi: " (type arvo))
-                                                                                                     (println "vektorin-index: " vektorin-index)
                                                                                                      (assoc-in tila [:data vektorin-index arvon-avain] arvo)))
                                                                                     :aseta-yhteenveto! (fn [tila arvo iden]
-                                                                                                         (println "arvo: " arvo)
-                                                                                                         (println "iden: " iden)
                                                                                                          tila)}
                                                                                    {:yhteenveto-seuranta {:polut [[:data]]
                                                                                                           :init (fn [tila]
@@ -427,7 +404,6 @@
                                                                                                                                  {}
                                                                                                                                  (:data tila))))
                                                                                                           :aseta (fn [tila data]
-                                                                                                                   (println "----> YHTEENSÄ")
                                                                                                                    (assoc tila :data-yhteensa
                                                                                                                           (reduce (fn [m {:keys [rivi] :as data-map}]
                                                                                                                                     (update m rivi #(merge-with + % (dissoc data-map :rivi))))
@@ -450,7 +426,6 @@
                                                                                            (compare a b))}]
                                                                       :datan-kasittely identity
                                                                       :luonti (fn [data-ryhmiteltyna-nimen-perusteella]
-                                                                                (println "data-ryhmiteltyna-nimen-perusteella: " data-ryhmiteltyna-nimen-perusteella)
                                                                                 (map-indexed (fn [index [rivin-otsikko _]]
                                                                                                {[:. index ::data-yhteenveto] {:rajapinta (keyword (str "data-yhteenveto-" rivin-otsikko))
                                                                                                                               :solun-polun-pituus 1
@@ -469,7 +444,6 @@
                                                                                                                            :solun-polun-pituus 2
                                                                                                                            :jarjestys [{:keyfn :a
                                                                                                                                         :comp (fn [a1 a2]
-                                                                                                                                                (println "[a1 a2] " [a1 a2])
                                                                                                                                                 (let [muuta-numeroksi (fn [x]
                                                                                                                                                                         (try (js/Number x)
                                                                                                                                                                              (catch :default _

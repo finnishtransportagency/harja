@@ -310,7 +310,6 @@
                                  (when (= (:rajapinta rajapintakasittelija) rajapinta)
                                    (::g/jarjestys-fns rajapintakasittelija)))
                                (::g/grid-rajapintakasittelijat grid))]
-    (println "jarjestykset-fns " jarjestykset-fns)
     (binding [g/*jarjesta-data* true]
       (swap! jarjestykset-fns assoc syvyys jarjestys-fn))))
 
