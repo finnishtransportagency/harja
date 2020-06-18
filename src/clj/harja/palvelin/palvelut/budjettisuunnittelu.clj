@@ -113,9 +113,13 @@
                               (if (= 5 urakan-indeksien-maara)
                                 (vec indeksiluvut-urakan-aikana)
                                 (mapv (fn [index]
-                                        (if (> (inc index) urakan-indeksien-maara)
-                                          (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
-                                          (nth indeksiluvut-urakan-aikana index)))
+                                        (if (empty? indeksiluvut-urakan-aikana)
+                                          ;; VHAR-2484 urakoille, jotka eivät ole vielä alkaneet, indeksikertoimeksi 1
+                                          {:vuosi (+ urakan-alkuvuosi index)
+                                           :indeksikerroin 1.00}
+                                          (if (> (inc index) urakan-indeksien-maara)
+                                           (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
+                                           (nth indeksiluvut-urakan-aikana index))))
                                       (range 0 5))))))
 
 (defn tallenna-urakan-tavoite
