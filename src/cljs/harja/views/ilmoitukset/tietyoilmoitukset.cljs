@@ -15,9 +15,15 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
             [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [datafrisk.core :as df])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
+
+(defn- debug-state [app]
+  [:span
+   [:div.row
+    [df/DataFriskShell app]]])
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
@@ -42,7 +48,8 @@
              tallennus-kaynnissa? :tallennus-kaynnissa?
              kayttajan-urakat :kayttajan-urakat :as app}]
       [:span
-       [ui-debug/debug @tiedot/tietyoilmoitukset]
+       [ui-debug/debug valittu-ilmoitus #_@tiedot/tietyoilmoitukset]
+       [debug-state app]
        [kartta/kartan-paikka]
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! app tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]

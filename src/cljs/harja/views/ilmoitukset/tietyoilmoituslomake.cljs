@@ -25,7 +25,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.loki :as loki]
+            [harja.ui.debug :as ui-debug])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -112,24 +114,22 @@
        nr-tiedot-atom])))
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
-  [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
-                  :voi-muokata? true
-                  :voi-poistaa? false
-                  :voi-lisata? false
-                  :voi-kumota? false
+  [muokkaus-grid {:otsikko            "Ajoneuvon kokorajoitukset"
+                  :voi-muokata?       true
+                  :voi-poistaa?       false
+                  :voi-lisata?        false
+                  :voi-kumota?        false
                   :piilota-toiminnot? true}
    [{:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
-     :tyyppi :positiivinen-numero}
+     :tyyppi  :positiivinen-numero}
     {:otsikko "Maks. leveys (m)" :nimi ::t/max-leveys
-     :tyyppi :positiivinen-numero}
+     :tyyppi  :positiivinen-numero}
     {:otsikko "Maks. pituus (m)" :nimi ::t/max-pituus
-     :tyyppi :positiivinen-numero}
+     :tyyppi  :positiivinen-numero}
     {:otsikko "Maks. paino (kg)" :nimi ::t/max-paino
-     :tyyppi :positiivinen-numero}]
+     :tyyppi  :positiivinen-numero}]
    (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
-           #(e!
-              (tiedot/->IlmoitustaMuokattu
-                (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+           #(e! (tiedot/->PaivitaKokorajoitukset (get % 0))))])
 
 
 (defn- grid-virheita?
@@ -152,14 +152,7 @@
      :tyyppi :pvm-aika
      :validoi [[:pvm-kentan-jalkeen ::t/pysaytysten-alku "Lopun on oltava alun jälkeen"]]}]
    (r/wrap {0 (select-keys ilmoitus [::t/pysaytysten-alku ::t/pysaytysten-loppu])}
-           #(do
-              (e!
-                (tiedot/->IlmoitustaMuokattu
-                  (-> ilmoitus
-                      (merge (select-keys (get % 0)
-                                          [::t/pysaytysten-alku ::t/pysaytysten-loppu]))
-                      (assoc-in [:komponentissa-virheita? :pysaytysajat]
-                                (grid-virheita? %)))))))])
+           #(e! (tiedot/->PaivitaPysaytysAjat (get % 0) grid-virheita?)))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 (def viikonpaivat ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"])
@@ -203,9 +196,11 @@
        tyoajat-atom])))
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
+  (loki/log "valittu kutsuttu")
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
 
 (defn- valitse-tyon-tyyppi [tyotyypit tyyppi valittu?]
+  (loki/log (pr-str (map ::t/tyyppi tyotyypit)))
   (if-not valittu?
     (vec (remove #(= (::t/tyyppi %) tyyppi) tyotyypit))
     (conj (or tyotyypit [])
@@ -222,12 +217,14 @@
             tt))
         tyotyypit))
 
-(defn- tyotyypit []
+(defn- tyotyypit [e!]
   (let [osio (fn [nimi otsikko vaihtoehdot]
-               {:otsikko "Tienrakennustyöt"
+               {:otsikko otsikko
                 :nimi nimi
                 :hae ::t/tyotyypit
-                :aseta #(assoc %1 ::t/tyotyypit %2)
+                :aseta (fn [a b]
+                         #_(loki/log "aseta " a b (e! (tiedot/->PaivitaTyotyypit b)))
+                         (assoc a ::t/tyotyypit b))
                 :tyyppi :checkbox-group
                 :vaihtoehdot (map first vaihtoehdot)
                 :vaihtoehto-nayta t/tyotyyppi-vaihtoehdot-map
@@ -362,6 +359,7 @@
 
 (defn lomake [e! app tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
+   [ui-debug/debug ilmoitus]
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
     [lomake/lomake {:otsikko (if (::t/id ilmoitus) "Muokkaa ilmoitusta" "Uusi tietyöilmoitus")
@@ -457,7 +455,7 @@
                            (pvm/pvm (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus)))))]]
          :validoi [[:pvm-toisen-pvmn-jalkeen (::t/alku ilmoitus)
                     "Lopetuksen pitää olla alun jälkeen"]]})
-      (tyotyypit)
+      (tyotyypit e!)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
        :tyyppi :komponentti
