@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet-test
   (:require [clojure.test :refer :all]
+
             [clojure.core.match :refer [match]]
             [clojure.core.async :refer [<!! timeout]]
             [clojure.java.io :as io]
@@ -29,6 +30,8 @@
              [tyokalut :as yha-tyokalut]
              [yha-komponentti :as yha]]
 
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
 
@@ -1555,15 +1558,16 @@
 
 (defn poista-muokkaustiedot
   [rivi]
-  (dissoc rivi :muokkaaja :muokattu :luoja :luotu))
+  (dissoc rivi ::m/muokkaaja ::m/muokattu ::m/luotu))
 
 (deftest urakan-paallystysmassojen-haku
-  (let [massa1-odotettu (poista-muokkaustiedot {:km_arvo "AN14", :lisaaineet "Pippuria ja suolaa", :rc nil, :sideainetyyppi "70/100", :muotoarvo "20", :luotu "2020-06-15T04:37:30.104074000-00:00", :esiintyma "Kaislakallio", :pitoisuus 5.40M, :luoja 11, :urakka 7, :nimi "Alfattibetoni", :raekoko 16, :muokkaaja nil, :massatyyppitunnus "AB-16", :id 1, :poistettu false, :muokattu nil})
-        massa2-odotettu (poista-muokkaustiedot {:km_arvo "AN7", :lisaaineet "Chiliä ja Currya", :rc nil, :sideainetyyppi "70/100", :muotoarvo "10", :luotu "2020-06-15T04:37:30.104074000-00:00", :esiintyma "Karjukallio", :pitoisuus 5.80M, :luoja 11, :urakka 7, :nimi "Kivimastiksiasfaltti", :raekoko 16, :muokkaaja nil, :massatyyppitunnus "SMA 16", :id 2, :poistettu false, :muokattu nil})
+  (let [massa1-odotettu (poista-muokkaustiedot {::paallystysilmoitus-domain/km-arvo "AN14", ::paallystysilmoitus-domain/lisaaineet "Pippuria ja suolaa", ::paallystysilmoitus-domain/rc (bigdec 1), ::paallystysilmoitus-domain/sideainetyyppi "70/100", ::paallystysilmoitus-domain/muotoarvo "20", ::m/luotu "2020-06-15T04:37:30.104074000-00:00", ::paallystysilmoitus-domain/esiintyma "Kaislakallio", ::paallystysilmoitus-domain/pitoisuus 5.40M, ::m/luoja-id 11, :harja.domain.urakka/id 7, ::paallystysilmoitus-domain/nimi "Alfattibetoni", ::paallystysilmoitus-domain/raekoko 16, ::m/muokkaaja nil, ::paallystysilmoitus-domain/massatyyppitunnus "AB-16", ::paallystysilmoitus-domain/paallystysmassa-id 1, ::m/poistettu? false, ::m/muokattu nil})
+        massa2-odotettu (poista-muokkaustiedot {::paallystysilmoitus-domain/km-arvo "AN7", ::paallystysilmoitus-domain/lisaaineet "Chiliä ja Currya", ::paallystysilmoitus-domain/rc (bigdec 2), ::paallystysilmoitus-domain/sideainetyyppi "70/100", ::paallystysilmoitus-domain/muotoarvo "10", ::m/luotu "2020-06-15T04:37:30.104074000-00:00", ::paallystysilmoitus-domain/esiintyma "Karjukallio", ::paallystysilmoitus-domain/pitoisuus 5.80M, ::m/luoja-id 11, :harja.domain.urakka/id 7, ::paallystysilmoitus-domain/nimi "Kivimastiksiasfaltti", ::paallystysilmoitus-domain/raekoko 16, ::m/muokkaaja nil, ::paallystysilmoitus-domain/massatyyppitunnus "SMA 16", ::paallystysilmoitus-domain/paallystysmassa-id 2, ::m/poistettu? false, ::m/muokattu nil})
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-paallystysmassat +kayttaja-jvh+
-                                {:urakka-id (hae-utajarven-paallystysurakan-id)})]
+                                {:harja.domain.urakka/id (hae-utajarven-paallystysurakan-id)})]
+    (log/debug (pr-str vastaus))
 
     (is (= 2 (count vastaus)) "Saatiin testiurakoiden oikea määrä")
-    (is (= massa1-odotettu (poista-muokkaustiedot (first (filter #(= (:km_arvo %) "AN14") vastaus)))))
-    (is (= massa2-odotettu (poista-muokkaustiedot (first (filter #(= (:km_arvo %) "AN7") vastaus)))))))
+    (is (= massa1-odotettu (poista-muokkaustiedot (first (filter #(= (::paallystysilmoitus-domain/km-arvo %) "AN14") vastaus)))))
+    (is (= massa2-odotettu (poista-muokkaustiedot (first (filter #(= (::paallystysilmoitus-domain/km-arvo %) "AN7") vastaus)))))))

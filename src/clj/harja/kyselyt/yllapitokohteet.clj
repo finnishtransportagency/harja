@@ -3,7 +3,9 @@
             [harja.geo :as geo]
             [jeesql.postgres :as postgres]
             [harja.kyselyt.konversio :as konv]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [specql.core :refer [fetch update! insert! upsert! delete!]]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus]))
 
 (defqueries "harja/kyselyt/yllapitokohteet.sql"
   ;; PENDING: ylläpitokohteen poiston päättely on edelleen melko hidas.
@@ -38,3 +40,11 @@
                        (map konv/alaviiva->rakenne))
                      (hae-yllapitokohteiden-tiedot-sahkopostilahetykseen db {:idt kohde-idt}))]
     tiedot))
+
+
+(defn hae-urakan-paallystysmassat
+  [db hakuehdot]
+  (fetch db
+         ::paallystysilmoitus/paallystysmassa
+         paallystysilmoitus/paallystysmassan-tiedot
+         hakuehdot))

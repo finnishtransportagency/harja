@@ -1072,6 +1072,3 @@ WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
 -- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.
 SELECT vuodet FROM yllapitokohde
 WHERE id = :id;
-
---name: hae-urakan-paallystysmassat
-SELECT * FROM paallystysmassa WHERE urakka = :urakka-id;

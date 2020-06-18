@@ -703,12 +703,9 @@
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn- hae-urakan-paallystysmassat
-  [db user {:keys [urakka-id]}]
-  (log/debug "hae urakan paallystemassat, " (pr-str urakka-id))
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [massat (q/hae-urakan-paallystysmassat db {:urakka-id urakka-id})]
-    (log/debug "Data haettu, tässä se " (pr-str massat))
-    massat))
+  [db user hakuehdot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (:harja.domain.urakka/id hakuehdot))
+  (q/hae-urakan-paallystysmassat db hakuehdot))
 
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika

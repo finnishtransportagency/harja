@@ -1196,6 +1196,7 @@
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
+         ; TODO: Näytetään massat käyttöliittymässä vasta kun ominaisuus on käytettävissä
          [:h3 "Päällystysmassat"]
          [paallystysmassat-taulukko e! app]
          [:h3 "Päällystysilmoitukset"]
