@@ -178,7 +178,7 @@
 ; - Soluun liittyvät haut
 (defn solun-asia [solu haettava-asia]
   (case haettava-asia
-    :tunniste-rajapinnan-dataan (::g/tunniste-rajapinnan-dataan solu)
+    :tunniste-rajapinnan-dataan ((::g/tunniste-rajapinnan-dataan solu))
     :osan-derefable (::g/osan-derefable solu)))
 
 (defn solun-arvo [solu]

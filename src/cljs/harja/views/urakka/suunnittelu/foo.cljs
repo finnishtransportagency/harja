@@ -9,6 +9,7 @@
             [harja.ui.taulukko.impl.solu :as solu]
             [harja.ui.taulukko.grid-oletusarvoja :as konf]
             [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.napit :as napit]
             [clojure.string :as clj-str]
             [harja.fmt :as fmt])
   (:require-macros [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]))
@@ -16,6 +17,8 @@
 (defonce ^:mutable e! nil)
 
 (defrecord JarjestaData [otsikko])
+(defrecord LisaaRivi [])
+(defrecord MuokkaaUudenRivinNimea [nimi])
 
 (extend-protocol tuck/Event
   JarjestaData
@@ -32,7 +35,26 @@
                                                        0
                                                        v))
                                              datarivit)))))
-    app))
+    app)
+  LisaaRivi
+  (process-event [_ {:keys [uusi-rivi data] :as app}]
+    ;; Rivillä on fixatut 3 lasta, joten lisätään kaikille niille data
+    (let [uuden-rivin-nimi (keyword uusi-rivi)
+          rivi-olemassa? (some #(= uuden-rivin-nimi (:rivi %))
+                               data)
+          seuraava-index (inc (reduce #(max %1 (get %2 ::index)) 0 data))]
+      (if rivi-olemassa?
+        app
+        (-> app
+            (update :data (fn [data]
+                            (apply conj data (map (fn [i]
+                                                    {:rivi uuden-rivin-nimi
+                                                     ::index i})
+                                                  (range seuraava-index (+ seuraava-index 3))))))
+            (assoc :uusi-rivi nil)))))
+  MuokkaaUudenRivinNimea
+  (process-event [{:keys [nimi]} app]
+    (assoc app :uusi-rivi nimi)))
 
 (defonce alkudata {:data [{:rivi :foo :a 1 :b 2 :c 3}
                           {:rivi :foo :a 2 :b 3 :c 4}
@@ -114,15 +136,15 @@
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
                           & args]
   (jarjesta-data ajettavat-jarejestykset
-                 (triggeroi-seurannat triggeroi-seuranta?
-                                      (case paivitettava-asia
-                                        :aseta-arvo! (apply grid/aseta-rajapinnan-data!
-                                                            (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                                                            :aseta-arvo!
-                                                            arvo
-                                                            (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                            args)
-                                        (println (str "YRITETTIIN " paivitettava-asia))))))
+    (triggeroi-seurannat triggeroi-seuranta?
+      (case paivitettava-asia
+        :aseta-arvo! (apply grid/aseta-rajapinnan-data!
+                            (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                            :aseta-arvo!
+                            arvo
+                            (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                            args)
+        (println (str "YRITETTIIN " paivitettava-asia))))))
 
 (defn tayta-alas-napin-toiminto [e! asettajan-nimi maara-solun-index rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
@@ -136,14 +158,14 @@
                              :ajettavat-jarejestykset #{:mapit}}
                             true)))
     #_(when (= asettajan-nimi :aseta-rahavaraukset!)
-      (e! (t/->TallennaKustannusarvoitu tallennettava-asia
-                                        (vec (keep (fn [rivi]
-                                                     (let [maara-solu (grid/get-in-grid rivi [1])
-                                                           piillotettu? (grid/piillotettu? rivi)]
-                                                       (when-not piillotettu?
-                                                         (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                   rivit-alla))))
-      (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
+        (e! (t/->TallennaKustannusarvoitu tallennettava-asia
+                                          (vec (keep (fn [rivi]
+                                                       (let [maara-solu (grid/get-in-grid rivi [1])
+                                                             piillotettu? (grid/piillotettu? rivi)]
+                                                         (when-not piillotettu?
+                                                           (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                     rivit-alla))))
+        (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
 
 (defn jarjesta-fn! []
   (e! (->JarjestaData (grid/hae-osa solu/*this* :nimi))))
@@ -267,6 +289,8 @@
                                                                                                                                                                                                      1)
                                                                                                                                                                                             {:on-change (fn [arvo]
                                                                                                                                                                                                           (when arvo
+                                                                                                                                                                                                            (println "ASETETAAN ARVO: " arvo)
+                                                                                                                                                                                                            (println "SOLULLE: " solu/*this*)
                                                                                                                                                                                                             (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                  :arvo arvo
                                                                                                                                                                                                                                  :solu solu/*this*
@@ -281,7 +305,7 @@
                                                                                                                                                                                                           (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                :arvo arvo
                                                                                                                                                                                                                                :solu solu/*this*
-                                                                                                                                                                                                                               :ajettavat-jarejestykset true
+                                                                                                                                                                                                                               :ajettavat-jarejestykset :deep
                                                                                                                                                                                                                                :triggeroi-seuranta? true}
                                                                                                                                                                                                                               true)
                                                                                                                                                                                                           (println "(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan) " (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))
@@ -383,17 +407,17 @@
                                                                                                                       (key arvo))}}}
 
                                                                                    {:aseta-arvo! (fn [tila arvo {:keys [rivi-index arvon-avain]}]
+                                                                                                   (println "-> aseta-arvo! arvo: " arvo)
+                                                                                                   (println "-> aseta-arvo! parmas [rivi-index arvon-avain]: " [rivi-index arvon-avain])
                                                                                                    (let [arvo (try (js/Number arvo)
                                                                                                                    (catch :default _
-                                                                                                                     arvo))
-                                                                                                         vektorin-index (loop [[rivi & loput-rivit] (:data tila)
-                                                                                                                               i 0]
-                                                                                                                          (let [tama-rivi-index (::index rivi)]
-                                                                                                                            (if (= tama-rivi-index rivi-index)
-                                                                                                                              i
-                                                                                                                              (recur loput-rivit
-                                                                                                                                     (inc i)))))]
-                                                                                                     (assoc-in tila [:data vektorin-index arvon-avain] arvo)))
+                                                                                                                     arvo))]
+                                                                                                     (update tila :data (fn [data]
+                                                                                                                          (mapv (fn [{index ::index :as rivin-data}]
+                                                                                                                                  (if (= index rivi-index)
+                                                                                                                                    (assoc rivin-data arvon-avain arvo)
+                                                                                                                                    rivin-data))
+                                                                                                                                data)))))
                                                                                     :aseta-yhteenveto! (fn [tila arvo iden]
                                                                                                          tila)}
                                                                                    {:yhteenveto-seuranta {:polut [[:data]]
@@ -426,57 +450,70 @@
                                                                                            (compare a b))}]
                                                                       :datan-kasittely identity
                                                                       :luonti (fn [data-ryhmiteltyna-nimen-perusteella]
-                                                                                (map-indexed (fn [index [rivin-otsikko _]]
-                                                                                               {[:. index ::data-yhteenveto] {:rajapinta (keyword (str "data-yhteenveto-" rivin-otsikko))
-                                                                                                                              :solun-polun-pituus 1
-                                                                                                                              :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c]]
-                                                                                                                              :datan-kasittely (fn [yhteenveto]
-                                                                                                                                                 (mapv (fn [[_ v]]
-                                                                                                                                                         v)
-                                                                                                                                                       yhteenveto))
-                                                                                                                              :tunnisteen-kasittely (fn [osat _]
-                                                                                                                                                      (mapv (fn [osa]
-                                                                                                                                                              (when (instance? solu/Syote osa)
-                                                                                                                                                                {:osa :maara
-                                                                                                                                                                 :rivin-otsikko rivin-otsikko}))
-                                                                                                                                                            (grid/hae-grid osat :lapset)))}
-                                                                                                [:. index ::data-sisalto] {:rajapinta (keyword (str "data-" rivin-otsikko))
-                                                                                                                           :solun-polun-pituus 2
-                                                                                                                           :jarjestys [{:keyfn :a
-                                                                                                                                        :comp (fn [a1 a2]
-                                                                                                                                                (let [muuta-numeroksi (fn [x]
-                                                                                                                                                                        (try (js/Number x)
-                                                                                                                                                                             (catch :default _
-                                                                                                                                                                               x)))]
-                                                                                                                                                  (compare (muuta-numeroksi a1) (muuta-numeroksi a2))))}
-                                                                                                                                       ^{:nimi :mapit} [:rivi :a :b :c]]
-                                                                                                                           :datan-kasittely (fn [data]
-                                                                                                                                              (mapv (fn [rivi]
-                                                                                                                                                      (mapv (fn [[_ v]]
-                                                                                                                                                              v)
-                                                                                                                                                            rivi))
-                                                                                                                                                    data))
-                                                                                                                           :tunnisteen-kasittely (fn [_ data]
-                                                                                                                                                   (vec
-                                                                                                                                                     (map-indexed (fn [i rivi]
-                                                                                                                                                                    (let [rivi-index (some #(when (= ::index (first %))
-                                                                                                                                                                                              (second %))
-                                                                                                                                                                                           rivi)]
-                                                                                                                                                                      (vec
-                                                                                                                                                                        (keep-indexed (fn [j [k _]]
-                                                                                                                                                                                        (when-not (= k ::index)
-                                                                                                                                                                                          {:rivi-index rivi-index
-                                                                                                                                                                                           :arvon-avain k
-                                                                                                                                                                                           :osan-paikka [i j]}))
-                                                                                                                                                                                      rivi))))
-                                                                                                                                                                  data)))}})
-                                                                                             data-ryhmiteltyna-nimen-perusteella))}}))))
-    (fn [e*! {:keys [grid] :as app}]
+                                                                                (let [data-avaimet #{:rivi :a :b :c}]
+                                                                                  (map-indexed (fn [index [rivin-otsikko _]]
+                                                                                                 {[:. index ::data-yhteenveto] {:rajapinta (keyword (str "data-yhteenveto-" rivin-otsikko))
+                                                                                                                                :solun-polun-pituus 1
+                                                                                                                                :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c]]
+                                                                                                                                :datan-kasittely (fn [yhteenveto]
+                                                                                                                                                   (mapv (fn [[_ v]]
+                                                                                                                                                           v)
+                                                                                                                                                         yhteenveto))
+                                                                                                                                :tunnisteen-kasittely (fn [osat _]
+                                                                                                                                                        (mapv (fn [osa]
+                                                                                                                                                                (when (instance? solu/Syote osa)
+                                                                                                                                                                  {:osa :maara
+                                                                                                                                                                   :rivin-otsikko rivin-otsikko}))
+                                                                                                                                                              (grid/hae-grid osat :lapset)))}
+                                                                                                  [:. index ::data-sisalto] {:rajapinta (keyword (str "data-" rivin-otsikko))
+                                                                                                                             :solun-polun-pituus 2
+                                                                                                                             :jarjestys [{:keyfn :a
+                                                                                                                                          :comp (fn [a1 a2]
+                                                                                                                                                  (let [muuta-numeroksi (fn [x]
+                                                                                                                                                                          (try (js/Number x)
+                                                                                                                                                                               (catch :default _
+                                                                                                                                                                                 x)))]
+                                                                                                                                                    (compare (muuta-numeroksi a1) (muuta-numeroksi a2))))}
+                                                                                                                                         ^{:nimi :mapit} [:rivi :a :b :c]]
+                                                                                                                             :datan-kasittely (fn [data]
+                                                                                                                                                (mapv (fn [rivi]
+                                                                                                                                                        (mapv (fn [[k v]]
+                                                                                                                                                                (when (contains? data-avaimet k)
+                                                                                                                                                                  v))
+                                                                                                                                                              rivi))
+                                                                                                                                                      data))
+                                                                                                                             :tunnisteen-kasittely (fn [_ data]
+                                                                                                                                                     (println "")
+                                                                                                                                                     (println "TUNNISTEEN KÄSITTELY")
+                                                                                                                                                     (println "--> data " data)
+                                                                                                                                                     (vec
+                                                                                                                                                       (map-indexed (fn [i rivi]
+                                                                                                                                                                      (let [rivi-index (some #(when (= ::index (first %))
+                                                                                                                                                                                                (second %))
+                                                                                                                                                                                             rivi)]
+                                                                                                                                                                        (vec
+                                                                                                                                                                          (keep-indexed (fn [j [k _]]
+                                                                                                                                                                                          (when-not (= k ::index)
+                                                                                                                                                                                            {:rivi-index rivi-index
+                                                                                                                                                                                             :arvon-avain k
+                                                                                                                                                                                             :osan-paikka [i j]}))
+                                                                                                                                                                                        rivi))))
+                                                                                                                                                                    data)))}})
+                                                                                               data-ryhmiteltyna-nimen-perusteella)))}}))))
+    (fn [e*! {:keys [grid uusi-rivi] :as app}]
       (set! e! e*!)
       [:div
        (if grid
          [grid/piirra grid]
-         [:span "Odotellaan..."])])))
+         [:span "Odotellaan..."])
+       [:div {:style {:margin-top "15px" :margin-bottom "5px"}}
+        [:label {:for "rivin-nimi"} "Rivin nimi"]
+        [:input#rivin-nimi {:on-change #(e! (->MuokkaaUudenRivinNimea (.. % -target -value)))
+                            :value uusi-rivi
+                            :style {:display "block"}}]]
+       [napit/uusi "Lisää rivi"
+        (fn []
+          (e! (->LisaaRivi)))]])))
 
 (defn foo []
   [tuck/tuck tila foo*])
