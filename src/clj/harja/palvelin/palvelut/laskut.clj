@@ -129,6 +129,12 @@
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
                                              (:toimenpideinstanssi laskurivi)}))
 
+(defn- tarkista-laskun-numeron-paivamaara [db user {:keys [urakka] :as hakuehdot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka)
+  (let [erapaivat (q/hae-pvm-laskun-numerolla db hakuehdot)]
+    (if (empty? erapaivat)
+      false
+      (first erapaivat))))
 
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
@@ -137,7 +143,11 @@
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as _laskuerittely}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
+  (let [tarkistettu-erapaiva (tarkista-laskun-numeron-paivamaara db user {:urakka urakka :laskun-numero laskun-numero})
+        erapaiva (if (false? tarkistettu-erapaiva)
+                   erapaiva
+                   (:erapaiva tarkistettu-erapaiva))
+        yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
                          :kokonaissumma         kokonaissumma
                          :urakka                urakka
                          :tyyppi                tyyppi
@@ -308,6 +318,9 @@
       (julkaise-palvelu http :poista-laskun-liite
                         (fn [user hakuehdot]
                           (poista-laskun-liite db user hakuehdot)))
+      (julkaise-palvelu http :tarkista-laskun-numeron-paivamaara
+                        (fn [user hakuehdot]
+                          (tarkista-laskun-numeron-paivamaara db user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel
@@ -322,7 +335,8 @@
                      :tallenna-lasku
                      :poista-lasku
                      :poista-laskurivi
-                     :poista-laskun-liite)
+                     :poista-laskun-liite
+                     :tarkista-laskun-numeron-paivamaara)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)

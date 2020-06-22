@@ -11,9 +11,15 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.sanomat.paikkaussanoma :as paikkaussanoma]
             [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
+            [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.domain.paikkaus :as paikkaus]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [harja.kyselyt.paikkaus :as q-paikkaus]
+            [specql.op :as op]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- poista-paikkaustoteumat
@@ -31,17 +37,30 @@
   [db urakka-id kayttaja-id paikkauskohteet]
   (paikkaus-q/paivita-paikkauskohteet-poistetuksi db kayttaja-id urakka-id paikkauskohteet))
 
-(defn poista-paikkaustiedot [db {id :id} data kayttaja]
+(defn poista-paikkaustiedot [db yhap {id :id} data kayttaja]
   (log/debug (format "Poistetaan paikkaustietoja urakasta: %s käyttäjän: %s toimesta"
                      id kayttaja))
   (let [urakka-id (Integer/parseInt id)
-        kayttaja-id (:id kayttaja)]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (poista-paikkauskohteet db urakka-id kayttaja-id (:poistettavat-paikkauskohteet data))
-    (poista-paikkaukset db urakka-id kayttaja-id (:poistettavat-paikkaukset data))
-    (poista-paikkaustoteumat db urakka-id kayttaja-id (:poistettavat-paikkauskustannukset data))
+        kayttaja-id (:id kayttaja)
+        kohde-idt (:poistettavat-paikkauskohteet data)
+        kohteet (q-paikkaus/hae-paikkauskohteet db {::paikkaus/ulkoinen-id (op/in kohde-idt)
+                                                    :harja.domain.paikkaus/urakka-id urakka-id})]
+    (when (empty? kohteet)
+      (virheet/heita-ei-hakutuloksia-apikutsulle-poikkeus
+        {:koodi virheet/+ei-hakutuloksia+
+         :viesti "Annetulla kohde id:llä ei löydy kohdetta."}))
 
-    )
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (jdbc/with-db-transaction [tx db]
+      (poista-paikkauskohteet tx urakka-id kayttaja-id kohde-idt)
+      (poista-paikkaukset tx urakka-id kayttaja-id (:poistettavat-paikkaukset data))
+      (poista-paikkaustoteumat tx urakka-id kayttaja-id (:poistettavat-paikkauskustannukset data)))
+    (doseq [kohde-id kohde-idt]
+      (try+
+        (when-let [harja-id (paikkaus-q/hae-paikkauskohteen-harja-id db {:ulkoinen-id kohde-id})]
+          (yha-paikkauskomponentti/poista-paikkauskohde yhap urakka-id harja-id))
+        (catch [:type yha-paikkauskomponentti/+virhe-paikkauskohteen-poistossa+] {:keys [virheet]}
+          (log/error "Poista paikkauskohde YHA:sta epäonnistui, tiedot: " (pr-str virheet))))))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkauskohteet ja -kustannukset poistettu onnistuneesti"}))
 
 
@@ -79,7 +98,10 @@
 
 (defrecord Paikkaukset []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db
+           integraatioloki :integraatioloki
+           yha-paikkaus :yha-paikkauskomponentti
+           :as this}]
     (julkaise-reitti
       http :kirjaa-paikkaus
       (POST "/api/urakat/:id/paikkaus" request
@@ -114,7 +136,7 @@
                          json-skeemat/paikkausten-poisto-request
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (poista-paikkaustiedot db parametrit data kayttaja))))
+                           (poista-paikkaustiedot db yha-paikkaus parametrit data kayttaja))))
       true)
     this)
 

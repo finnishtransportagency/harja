@@ -51,9 +51,9 @@
             :id (get-in toteuma [:tunniste :id])
             :urakka urakka-id
             :luoja (:id kirjaaja)
-            :tyokonetyyppi (:tyyppi tyokone)
-            :tyokonetunniste (:tunniste tyokone)
-            :tyokoneen-lisatieto (:lisatieto tyokone)}))))
+            :tyokonetyyppi (:tyokonetyyppi tyokone)
+            :tyokonetunniste (:id tyokone)
+            :tyokoneen-lisatieto (:tunnus tyokone)}))))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
@@ -103,9 +103,9 @@
             :loppuosa nil
             :loppuetaisyys nil
             :lahde "harja-api"
-            :tyokonetyyppi (:tyyppi tyokone)
-            :tyokonetunniste (:tunniste tyokone)
-            :tyokoneen-lisatieto (:lisatieto tyokone)}))))
+            :tyokonetyyppi (:tyokonetyyppi tyokone)
+            :tyokonetunniste (:id tyokone)
+            :tyokoneen-lisatieto (:tunnus tyokone)}))))
 
 (defn paivita-tai-luo-uusi-toteuma
   ([db urakka-id kirjaaja toteuma] (paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma nil))

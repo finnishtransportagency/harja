@@ -11,6 +11,9 @@
  :output-dir "resources/public/js/"
  :asset-path "js/"
 
+ ;; frontti kaatuu, mm. VHAR-2413 ilman prefixiä
+ :rename-prefix "h"
+
  ;:parallel-build false Failaa randomisti
  :libs ["src/js/kuvataso.js"]
  :closure-output-charset "US-ASCII"}
