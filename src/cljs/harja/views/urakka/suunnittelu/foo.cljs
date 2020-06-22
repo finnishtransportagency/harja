@@ -136,17 +136,14 @@
          (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))))))
 
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
-                           :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
-                          & args]
+                           :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}]
   (jarjesta-data ajettavat-jarejestykset
     (triggeroi-seurannat triggeroi-seuranta?
-      (case paivitettava-asia
-        :aseta-arvo! (apply grid/aseta-rajapinnan-data!
-                            (grid/osien-yhteinen-asia solu :datan-kasittelija)
-                            :aseta-arvo!
-                            arvo
-                            (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                            args)))))
+      (grid/aseta-rajapinnan-data!
+        (grid/osien-yhteinen-asia solu :datan-kasittelija)
+        paivitettava-asia
+        arvo
+        (grid/solun-asia solu :tunniste-rajapinnan-dataan)))))
 
 (defn tayta-alas-napin-toiminto [e! asettajan-nimi maara-solun-index rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
@@ -157,8 +154,7 @@
         (paivita-solun-arvo {:paivitettava-asia asettajan-nimi
                              :arvo arvo
                              :solu maara-solu
-                             :ajettavat-jarejestykset #{:mapit}}
-                            true)))
+                             :ajettavat-jarejestykset #{:mapit}})))
     #_(when (= asettajan-nimi :aseta-rahavaraukset!)
         (e! (t/->TallennaKustannusarvoitu tallennettava-asia
                                           (vec (keep (fn [rivi]
@@ -229,39 +225,8 @@
                                                                                                                                                                      (laajenna-solua-klikattu this auki? dom-id [::data] #_{:sulkemis-polku [:.. :.. :.. 1]}))
                                                                                                                                                                    :auki-alussa? false
                                                                                                                                                                    :parametrit {:class #{"table-default" "lihavoitu"}}})
-                                                                                                                                                   (solu/syote {:toiminnot {:on-change (fn [arvo]
-                                                                                                                                                                                         (paivita-solun-arvo {:paivitettava-asia :aseta-yhteenveto!
-                                                                                                                                                                                                              :arvo arvo
-                                                                                                                                                                                                              :solu solu/*this*
-                                                                                                                                                                                                              :ajettavat-jarejestykset #{:mapit}}))
-                                                                                                                                                                            :on-blur (fn [arvo]
-                                                                                                                                                                                       (when arvo
-                                                                                                                                                                                         (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
-                                                                                                                                                                                                              :arvo arvo
-                                                                                                                                                                                                              :solu solu/*this*
-                                                                                                                                                                                                              :ajettavat-jarejestykset true
-                                                                                                                                                                                                              :triggeroi-seuranta? true}
-                                                                                                                                                                                                             true)
-                                                                                                                                                                                         (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
-                                                                                                                                                                                               tallennettavien-arvojen-osat (if (= ::datarivi (grid/hae-osa vanhempiosa :nimi))
-                                                                                                                                                                                                                              (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
-                                                                                                                                                                                                                              (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))
-                                                                                                                                                                                               tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
-                                                                                                                                                                                                                                  :tunniste-rajapinnan-dataan)
-                                                                                                                                                                                                                tallennettavien-arvojen-osat)]
-                                                                                                                                                                                           #_(e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet))
-                                                                                                                                                                                           #_(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
-                                                                                                                                                                            :on-key-down (fn [event]
-                                                                                                                                                                                           (when (= "Enter" (.. event -key))
-                                                                                                                                                                                             (.. event -target blur)))}
-                                                                                                                                                                :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                                                                                             {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                                                                                                 :on-blur [:positiivinen-numero
-                                                                                                                                                                                           :eventin-arvo]}
-                                                                                                                                                                :parametrit {:size 2
-                                                                                                                                                                             :class #{"input-default"}}
-                                                                                                                                                                :fmt summa-formatointi
-                                                                                                                                                                :fmt-aktiivinen summa-formatointi-aktiivinen})
+                                                                                                                                                   (solu/teksti {:parametrit {:class #{"table-default"}}
+                                                                                                                                                                 :fmt summa-formatointi})
                                                                                                                                                    (solu/teksti {:parametrit {:class #{"table-default"}}
                                                                                                                                                                  :fmt summa-formatointi})
                                                                                                                                                    (solu/teksti {:parametrit {:class #{"table-default" "harmaa-teksti"}}
@@ -294,8 +259,7 @@
                                                                                                                                                                                                             (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                  :arvo arvo
                                                                                                                                                                                                                                  :solu solu/*this*
-                                                                                                                                                                                                                                 :ajettavat-jarejestykset false #_#{:mapit}}
-                                                                                                                                                                                                                                false)))
+                                                                                                                                                                                                                                 :ajettavat-jarejestykset false #_#{:mapit}})))
                                                                                                                                                                                              :on-focus (fn [_]
                                                                                                                                                                                                          (grid/paivita-osa! solu/*this*
                                                                                                                                                                                                                             (fn [solu]
@@ -306,8 +270,7 @@
                                                                                                                                                                                                                                :arvo arvo
                                                                                                                                                                                                                                :solu solu/*this*
                                                                                                                                                                                                                                :ajettavat-jarejestykset :deep
-                                                                                                                                                                                                                               :triggeroi-seuranta? true}
-                                                                                                                                                                                                                              true)
+                                                                                                                                                                                                                               :triggeroi-seuranta? true})
                                                                                                                                                                                                           (println "(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan) " (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))
                                                                                                                                                                                                           #_(e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
                                                                                                                                                                                                           #_(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
@@ -355,7 +318,12 @@
                                        :footer any?
 
                                        :aseta-arvo! any?
-                                       :aseta-yhteenveto! any?}]
+                                       :aseta-yhteenveto! any?}
+                            yhteensa-data-paivitetty (fn [data]
+                                                       (reduce (fn [m {:keys [rivi] :as data-map}]
+                                                                 (update m rivi #(merge-with + % (dissoc data-map :rivi))))
+                                                               {}
+                                                               data))]
                         (e! (tuck-apurit/->MuutaTila [:grid] g))
                         (grid/rajapinta-grid-yhdistaminen! g
                                                            rajapinta
@@ -392,8 +360,8 @@
                                                                                                                          ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
                                                                                                                          {(keyword (str "data-yhteenveto-" rivin-otsikko)) ^{:args [rivin-otsikko]} [[:data-yhteensa rivin-otsikko]]})
                                                                                                                        data-yhteensa)))
-                                                                                                      :haku (fn [& args]
-                                                                                                              (assoc (first args) :rivin-otsikko (second args)))}
+                                                                                                      :haku (fn [yhteenvetorivin-data yhteenvetorivin-nimi]
+                                                                                                              (assoc yhteenvetorivin-data :rivin-otsikko yhteenvetorivin-nimi))}
                                                                                     :data-sisalto {:polut [[:data]]
                                                                                                    :luonti (fn [data]
                                                                                                              (mapv (fn [[rivin-otsikko _]]
@@ -417,22 +385,21 @@
                                                                                                                                   (if (= index rivi-index)
                                                                                                                                     (assoc rivin-data arvon-avain arvo)
                                                                                                                                     rivin-data))
-                                                                                                                                data)))))
-                                                                                    :aseta-yhteenveto! (fn [tila arvo iden]
-                                                                                                         tila)}
+                                                                                                                                data)))))}
                                                                                    {:yhteenveto-seuranta {:polut [[:data]]
                                                                                                           :init (fn [tila]
-                                                                                                                  (assoc tila :data-yhteensa
-                                                                                                                         (reduce (fn [m {:keys [rivi] :as data-map}]
-                                                                                                                                   (update m rivi #(merge-with + % (dissoc data-map :rivi))))
-                                                                                                                                 {}
-                                                                                                                                 (:data tila))))
+                                                                                                                  (assoc tila :data-yhteensa (yhteensa-data-paivitetty (:data tila))))
                                                                                                           :aseta (fn [tila data]
-                                                                                                                   (assoc tila :data-yhteensa
-                                                                                                                          (reduce (fn [m {:keys [rivi] :as data-map}]
-                                                                                                                                    (update m rivi #(merge-with + % (dissoc data-map :rivi))))
-                                                                                                                                  {}
-                                                                                                                                  data)))}})
+                                                                                                                   (assoc tila :data-yhteensa (yhteensa-data-paivitetty data)))}
+                                                                                    :b-sarakkeen-seuranta {:polut [[:data]]
+                                                                                                           :luonti (fn [data]
+                                                                                                                     (vec
+                                                                                                                       (map-indexed (fn [index _]
+                                                                                                                                      ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
+                                                                                                                                      {(keyword (str "b-sarakkeen-arvo-" index)) ^{:args [index]} [[:data index :a]]})
+                                                                                                                                    data)))
+                                                                                                           :aseta (fn [tila a index]
+                                                                                                                    (assoc-in tila [:data index :b] (* 10 a)))}})
                                                            {[::otsikko] {:rajapinta :otsikot
                                                                          :solun-polun-pituus 1
                                                                          :datan-kasittely identity}
