@@ -26,18 +26,25 @@
     (when-not (nil? otsikko)
       (let [jarjestys-fn (with-meta (fn [datarivit]
                                       (if (= :rivi otsikko)
+                                        ;; Jos järjestetään otsikkosarakkeen mukaan, käytetään aakkosjärjestystä
                                         (sort-by key datarivit)
+                                        ;; Jos järjestetään minkään muun sarakkeen mukaan, käytetään rivin yhteensä arvoa ja järkätään ASCENDING järjestyksessä
                                         (sort-by (fn [[_ v]]
                                                    (reduce #(+ %1 (:a %2))
                                                            0
                                                            v))
                                                  datarivit)))
+                                    ;; Annetaan metana tämän funktion nimi, jotta ei tarvitse ylikirjoittaa gridillä jo olevaa järjestysfunktiota, jos kyseessä on saman niminen funktio
                                     {:nimi (str "jarjesta-otsikot-" otsikko)})]
+        ;; Halutaan järjestää juurikin dataosia jarjestys-fn mukaisesti. Eli grid, jonka nimi on ::data eikä ::otsikko tai ::yhteenveto osioita.
+        ;; ::data osion rajapinnaksi on määritetty :datarivit ja halutaan järjestää kaikki data siinä rajapinnassa, joten syvyydeksi määritetään 0.
         (grid/lisaa-jarjestys-fn-gridiin! g
                                           :datarivit
                                           0
                                           jarjestys-fn)
+        ;; Yllä oleva rivi lisäsi tuon funktion, muttei triggeröinyt järjestystä. Tämä rivi triggeröi järjestyksen.
         (grid/jarjesta-grid-data! g :datarivit)))
+    ;; Ei haluta muuttaa app statea mitenkään, niin palautetaan vain app
     app)
   LisaaRivi
   (process-event [_ {:keys [uusi-rivi data] :as app}]
@@ -45,20 +52,24 @@
     (let [uuden-rivin-nimi (keyword uusi-rivi)
           rivi-olemassa? (some #(= uuden-rivin-nimi (:rivi %))
                                data)
-          seuraava-index (inc (reduce #(max %1 (get %2 ::index)) 0 data))]
+          seuraava-rivitunnistin (inc (reduce #(max %1 (get %2 ::rivitunnistin)) 0 data))]
+      ;; Jos yritetään luoda jo olemassa oleva rivi uudelleen, palautetaan app state ilman muutoksia
       (if rivi-olemassa?
         app
         (-> app
+            ;; Lisätään uuden rivin kolme datapointtia
             (update :data (fn [data]
                             (apply conj data (map (fn [i]
                                                     {:rivi uuden-rivin-nimi
-                                                     ::index i})
-                                                  (range seuraava-index (+ seuraava-index 3))))))
+                                                     ::rivitunnistin i})
+                                                  (range seuraava-rivitunnistin (+ seuraava-rivitunnistin 3))))))
+            ;; Tyhjennetään "Lisää rivi" kenttä
             (assoc :uusi-rivi nil)))))
   MuokkaaUudenRivinNimea
   (process-event [{:keys [nimi]} app]
     (assoc app :uusi-rivi nimi)))
 
+;; Data on vektori mappeja. Pidtään myös Otsikkorivin arvot omalla rivillään
 (defonce alkudata {:data [{:rivi :foo :a 1 :b 2 :c 3}
                           {:rivi :foo :a 2 :b 3 :c 4}
                           {:rivi :foo :a 3 :b 4 :c 5}
@@ -68,29 +79,28 @@
                           {:rivi :baz :a 400 :b 200 :c 300}
                           {:rivi :baz :a 200 :b 300 :c 400}
                           {:rivi :baz :a 300 :b 400 :c 500}]
-                   :gridin-otsikot ["RIVIN NIMI" "A" "B" "C"]
-                   :suodattimet {:naytettavat-rivit #{:foo :bar :baz}}})
+                   :gridin-otsikot ["RIVIN NIMI" "A" "B" "C"]})
 
 (def tila (atom alkudata))
 
 (defn summa-formatointi [teksti]
-  (if (or (nil? teksti) (= "" teksti) (js/isNaN teksti))
-    "0,00"
-    (let [teksti (clj-str/replace (str teksti) "," ".")]
-      (fmt/desimaaliluku teksti 2 true))))
-
-(defn summa-formatointi-uusi [teksti]
+  ;; Halutaan aina näyttää jokin numero. Joten jos arvona on jokin "tyjä" arvo, näytetään "0,00". js/isNaN palauttaa false,
+  ;; jos "teksti" arvo sisältää pilkun.
   (if (nil? teksti)
-    ""
+    "0,00"
+    ;; Korvataan piste erotin pilkulla
     (let [teksti (clj-str/replace (str teksti) "," ".")]
       (if (or (= "" teksti) (js/isNaN teksti))
         "0,00"
+        ;; Sallitaan vain kahden desimaalin tarkkuus
         (fmt/desimaaliluku teksti 2 true)))))
 
 (defn summa-formatointi-aktiivinen [teksti]
+  ;; Summa-formatointi-aktiivinen eroaa summa-formatointi funktiosta siten, että sallitaan tyhjä ("") arvo
   (let [teksti-ilman-pilkkua (clj-str/replace (str teksti) "," ".")]
     (cond
       (or (nil? teksti) (= "" teksti)) ""
+      ;; fmt/desimaaliluku poistaa "turhat" nollat lopusta, niin laitetaan ne takaisin
       (re-matches #".*\.0*$" teksti-ilman-pilkkua) (apply str (fmt/desimaaliluku teksti-ilman-pilkkua nil true)
                                                           (drop 1 (re-find #".*(\.|,)(0*)" teksti)))
       :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
@@ -267,8 +277,7 @@
                                                                                                                                                                                                                                :arvo arvo
                                                                                                                                                                                                                                :solu solu/*this*
                                                                                                                                                                                                                                :ajettavat-jarejestykset :deep
-                                                                                                                                                                                                                               :triggeroi-seuranta? true})
-                                                                                                                                                                                                          (println "(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan) " (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))))
+                                                                                                                                                                                                                               :triggeroi-seuranta? true})))
                                                                                                                                                                                              :on-key-down (fn [event]
                                                                                                                                                                                                             (when (= "Enter" (.. event -key))
                                                                                                                                                                                                               (.. event -target blur)))}
@@ -334,7 +343,7 @@
                                                                                                                        :data
                                                                                                                        (fn [data]
                                                                                                                          (vec (map-indexed (fn [index m]
-                                                                                                                                             (assoc m ::index index))
+                                                                                                                                             (assoc m ::rivitunnistin index))
                                                                                                                                            data)))))
                                                                                                 :haku (fn [data]
                                                                                                         (group-by :rivi data))}
@@ -360,25 +369,33 @@
                                                                                     :data-sisalto {:polut [[:data]]
                                                                                                    :luonti (fn [data]
                                                                                                              (mapv (fn [[rivin-otsikko _]]
-                                                                                                                     {(keyword (str "data-" rivin-otsikko)) ^{:args [rivin-otsikko]} [[:data]]})
+                                                                                                                     {(keyword (str "data-" rivin-otsikko)) ^{:args [rivin-otsikko]} [[:data] [:kirjoitettu-data]]})
                                                                                                                    (group-by :rivi data)))
-                                                                                                   :haku (fn [data rivin-otsikko]
-                                                                                                           (filterv #(= (:rivi %) rivin-otsikko) data))
+                                                                                                   :haku (fn [data kirjoitettu-data rivin-otsikko]
+                                                                                                           (vec
+                                                                                                             (keep (fn [{rivi :rivi rivitunnistin ::rivitunnistin :as rivin-data}]
+                                                                                                                     (when (= rivi rivin-otsikko)
+                                                                                                                       (if (contains? kirjoitettu-data rivitunnistin)
+                                                                                                                         (merge rivin-data (get kirjoitettu-data rivitunnistin))
+                                                                                                                         rivin-data)))
+                                                                                                                   data)))
                                                                                                    :identiteetti {1 (fn [arvo]
-                                                                                                                      (::index arvo))
+                                                                                                                      (::rivitunnistin arvo))
                                                                                                                   2 (fn [arvo]
                                                                                                                       (key arvo))}}}
 
-                                                                                   {:aseta-arvo! (fn [tila arvo {:keys [rivi-index arvon-avain]}]
-                                                                                                   (let [arvo (try (js/Number arvo)
-                                                                                                                   (catch :default _
-                                                                                                                     arvo))]
-                                                                                                     (update tila :data (fn [data]
-                                                                                                                          (mapv (fn [{index ::index :as rivin-data}]
-                                                                                                                                  (if (= index rivi-index)
-                                                                                                                                    (assoc rivin-data arvon-avain arvo)
-                                                                                                                                    rivin-data))
-                                                                                                                                data)))))}
+                                                                                   {:aseta-arvo! (fn [tila arvo {:keys [rivitunnistin arvon-avain]}]
+                                                                                                   (let [numeerinen-arvo (try (js/Number (clj-str/replace (or arvo "") "," "."))
+                                                                                                                              (catch :default _
+                                                                                                                                arvo))]
+                                                                                                     (-> tila
+                                                                                                         (update :data (fn [data]
+                                                                                                                         (mapv (fn [{tama-rivitunnistin ::rivitunnistin :as rivin-data}]
+                                                                                                                                 (if (= tama-rivitunnistin rivitunnistin)
+                                                                                                                                   (assoc rivin-data arvon-avain numeerinen-arvo)
+                                                                                                                                   rivin-data))
+                                                                                                                               data)))
+                                                                                                         (assoc-in [:kirjoitettu-data rivitunnistin arvon-avain] arvo))))}
                                                                                    {:yhteenveto-seuranta {:polut [[:data]]
                                                                                                           :init (fn [tila]
                                                                                                                   (assoc tila :data-yhteensa (yhteensa-data-paivitetty (:data tila))))
@@ -430,7 +447,7 @@
                                                                                                                              :jarjestys [{:keyfn :a
                                                                                                                                           :comp (fn [a1 a2]
                                                                                                                                                   (let [muuta-numeroksi (fn [x]
-                                                                                                                                                                          (try (js/Number x)
+                                                                                                                                                                          (try (js/Number (clj-str/replace (or x "") "," "."))
                                                                                                                                                                                (catch :default _
                                                                                                                                                                                  x)))]
                                                                                                                                                     (compare (muuta-numeroksi a1) (muuta-numeroksi a2))))}
@@ -445,27 +462,31 @@
                                                                                                                              :tunnisteen-kasittely (fn [_ data]
                                                                                                                                                      (vec
                                                                                                                                                        (map-indexed (fn [i rivi]
-                                                                                                                                                                      (let [rivi-index (some #(when (= ::index (first %))
+                                                                                                                                                                      (let [rivitunnistin (some #(when (= ::rivitunnistin (first %))
                                                                                                                                                                                                 (second %))
                                                                                                                                                                                              rivi)]
                                                                                                                                                                         (vec
                                                                                                                                                                           (keep-indexed (fn [j [k _]]
-                                                                                                                                                                                          (when-not (= k ::index)
-                                                                                                                                                                                            {:rivi-index rivi-index
+                                                                                                                                                                                          (when-not (= k ::rivitunnistin)
+                                                                                                                                                                                            {:rivitunnistin rivitunnistin
                                                                                                                                                                                              :arvon-avain k
                                                                                                                                                                                              :osan-paikka [i j]}))
                                                                                                                                                                                         rivi))))
                                                                                                                                                                     data)))}})
                                                                                                data-ryhmiteltyna-nimen-perusteella)))}}))))
     (fn [e*! {:keys [grid uusi-rivi] :as app}]
+      ;; Asetetaan tämän nimiavaruuden e! arvoksi e*!, jotta tuota tuckin muutosfunktiota ei tarvitse passata jokaiselle komponentille
       (set! e! e*!)
       [:div
+       ;; Piirretään grid, vasta kun sen määrittäminen on valmis
        (if grid
          [grid/piirra grid]
          [:span "Odotellaan..."])
        [:div {:style {:margin-top "15px" :margin-bottom "5px"}}
         [:label {:for "rivin-nimi"} "Rivin nimi"]
+        ;; Tällä voi lisätä uuden datarivin, joka sitten näytetään UI:lla
         [:input#rivin-nimi {:on-change #(e! (->MuokkaaUudenRivinNimea (.. % -target -value)))
+                            ;; Uuden rivin voi lisätä painamalla entteriä
                             :on-key-down (fn [event]
                                            (when (= "Enter" (.. event -key))
                                              (e! (->LisaaRivi))))
@@ -473,6 +494,7 @@
                             :style {:display "block"}}]]
        [napit/uusi "Lisää rivi"
         (fn []
+          ;; Uuden rivin voi lisätä painamalla nappia
           (e! (->LisaaRivi)))]])))
 
 (defn foo []
