@@ -19,8 +19,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.tiedot.istunto :as istunto]
             [harja.transit :as transit]
-            [clojure.set :as set]
-            [harja.loki :as loki])
+            [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -219,7 +218,7 @@
 (defrecord PaivitaTienPinnat [tienpinnat avain])
 (defrecord PaivitaTyoajat [tyoajat virheita?])
 (defrecord PaivitaSahkopostilahetyksenTila [sahkopostien-tiedot ilmoituksen-tiedot])
-(defrecord PaivitaTyotyypit [tyotyypit])
+(defrecord PaivitaTyotyypit [tyyppi valittu?])
 (defrecord PaivitaPysaytysAjat [ajat virheita?])
 (defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf? sahkopostitiedot])
 (defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf? laheta-sahkoposti?])
@@ -353,9 +352,13 @@
         (assoc-in [:valittu-ilmoitus :komponentissa-virheita? :tyoajat] virheita?)))
 
   PaivitaTyotyypit
-  (process-event [{tyotyypit :tyotyypit} app]
-    (loki/log tyotyypit)
-    app)
+  (process-event [{tyyppi :tyyppi valittu? :valittu?} app]
+    (let [tyotyypit (get-in app [:valittu-ilmoitus ::t/tyotyypit])
+          tyotyypit (if-not valittu?
+                      (vec (remove #(= (::t/tyyppi %) tyyppi) tyotyypit))
+                      (conj (or tyotyypit [])
+                            {::t/tyyppi tyyppi}))]
+      (assoc-in app [:valittu-ilmoitus ::t/tyotyypit] tyotyypit)))
 
   PaivitaSahkopostilahetyksenTila
   (process-event [{sahkopostien-tiedot  :sahkopostien-tiedot
