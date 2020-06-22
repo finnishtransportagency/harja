@@ -690,7 +690,7 @@
 
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :yha-paikkauskomponentti])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

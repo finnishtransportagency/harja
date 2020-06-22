@@ -300,7 +300,7 @@
 (def ilmoituksien-lkm-perffitestissa 10000)
 
 (defn- lisaa-testi-ilmoitus [urakka-id tyyppi tila]
-  (u (str "INSERT INTO ilmoitus (urakka, ilmoitettu, valitetty, ilmoitustyyppi, tila) VALUES (" urakka-id ",  (select now() - interval '2 days'), ((select now() - interval '2 days') + interval '5 minutes'), '" tyyppi"'::ilmoitustyyppi, '" tila"'::ilmoituksen_tila);")))
+  (u (str "INSERT INTO ilmoitus (urakka, ilmoitettu, valitetty, vastaanotettu, \"vastaanotettu-alunperin\", ilmoitustyyppi, tila) VALUES (" urakka-id ",  (select now() - interval '2 days'), ((select now() - interval '2 days') + interval '5 minutes'), ((select now() - interval '2 days') + interval '5 minutes'), ((select now() - interval '2 days') + interval '5 minutes'), '" tyyppi"'::ilmoitustyyppi, '" tila"'::ilmoituksen_tila);")))
 
 (deftest hae-ilmoitukset-ei-ole-liian-hidas
   (let [urakka-idt (mapv first (q (str "SELECT id FROM urakka;")))]

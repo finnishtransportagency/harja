@@ -90,7 +90,7 @@
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
         (if (toimenpide-lahetetty-tierekisteriin? db toimenpide)
-          (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
+          (log/debug (prn-str "XXXXXXXXX  Toimenpide on jo lähetetty, ohitetaan." toimenpide))
 
           (let [vastaus
                 (case toimenpide-tyyppi
@@ -113,10 +113,12 @@
             ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
             ;; sama payload lähetetään Harjaan uudelleen.
             ;; --> Pitää tutkia mitä tierekisteri palauttaa samalle kutsulle
+            (println "*** Vastaus tierekisteriltä " vastaus)
             (when (:onnistunut vastaus)
               (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
-              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))
-
+              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db  { :id (:varustetoteuma-id toimenpide)
+                                                                     :tila "lahetetty"
+                                                                     :lahetysvirhe nil}))))
         (when (= toimenpide-tyyppi :varusteen-lisays)
           {:uusi-tunniste tunniste})))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))

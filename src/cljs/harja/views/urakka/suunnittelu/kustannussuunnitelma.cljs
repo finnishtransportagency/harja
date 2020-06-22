@@ -2364,7 +2364,7 @@
      (when (contains? t/toimenpiteet-rahavarauksilla toimenpide)
          ^{:key "rahavaraukset-otsikko"}
          [:<>
-          [:h3 "Toimenpiteen rahavarukset"]
+          [:h3 "Toimenpiteen rahavaraukset"]
           [yleis-suodatin (dissoc suodattimet :hankinnat)]
           (if rahavaraukset-taulukko-valmis?
             [grid/piirra rahavaraukset-grid]

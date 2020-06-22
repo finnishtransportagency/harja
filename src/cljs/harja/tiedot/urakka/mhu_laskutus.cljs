@@ -34,11 +34,12 @@
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
-(defrecord HaeAliurakoitsijat [])
 (defrecord HaeUrakanLaskutJaTiedot [hakuparametrit])
+(defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
 
-(defrecord KutsuEpaonnistui [tulos])
+(defrecord KutsuEpaonnistui [tulos parametrit])
 
+(defrecord TarkistusOnnistui [tulos parametrit])
 (defrecord MaksueraHakuOnnistui [tulos])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
@@ -51,7 +52,7 @@
 (defn parsi-summa [summa]
   (cond
     (not (string? summa)) summa
-    (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
+    (re-matches #"-?\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
         (string/replace "," ".")
@@ -256,9 +257,18 @@
                                                 solut)))
         flattaus-fn (fn [kaikki nykyinen]
                       ;; Yhdistä perustiedot ja kohdistukset
-                      (apply conj kaikki (map #(merge nykyinen (select-keys nykyinen [:kohdistukset]) %) (:kohdistukset nykyinen))))
+                      (apply conj
+                             kaikki
+                             (map
+                               #(merge nykyinen
+                                       (select-keys nykyinen
+                                                    [:kohdistukset])
+                                       %)
+                               (:kohdistukset nykyinen))))
         flattaa (fn [flatattavat]
-                  (let [flatatut (reduce flattaus-fn [] flatattavat)]
+                  (let [flatatut (reduce flattaus-fn
+                                         []
+                                         flatattavat)]
                     (sort-by :toimenpideinstanssi flatatut)))
         even? (r/atom true)
         luo-laskun-nro-otsikot (fn [rs [laskun-nro {summa :summa rivit :rivit}]]
@@ -269,30 +279,50 @@
                                      (if (= 0 laskun-nro)
                                        rs
                                        (valiotsikko-rivi
-                                         (r/partial p/lisaa-rivi! rs {:rivi             jana/->Rivi
-                                                                      :pelkka-palautus? true
-                                                                      :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin"}}})
-                                         {:otsikko "Koontilasku nro " :arvo laskun-nro :luokka #{"col-xs-4"}}
-                                         {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-offset-7" "col-xs-1"}}))
+                                         (r/partial p/lisaa-rivi!
+                                                    rs
+                                                    {:rivi             jana/->Rivi
+                                                     :pelkka-palautus? true
+                                                     :rivin-parametrit {:class #{"table-default"
+                                                                                 "table-default-header"
+                                                                                 "table-default-thin"}}})
+                                         {:otsikko "Koontilasku nro "
+                                          :arvo    laskun-nro
+                                          :luokka  #{"col-xs-4"}}
+                                         {:otsikko ""
+                                          :arvo    (fmt/euro summa)
+                                          :luokka  #{"col-xs-offset-7" "col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
                                  ;; pvm tulee muodossa vvvv/kk
-                                 (let [[vvvv kk] (map #(js/parseInt %) (str/split pvm #"/"))]
+                                 (let [[vvvv kk] (map #(js/parseInt %)
+                                                      (str/split pvm #"/"))]
                                    (reduce luo-laskun-nro-otsikot
                                            (valiotsikko-rivi
-                                             (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
-                                                                            :pelkka-palautus? true
-                                                                            :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin-strong"}}})
+                                             (r/partial p/lisaa-rivi!
+                                                        koko
+                                                        {:rivi             jana/->Rivi
+                                                         :pelkka-palautus? true
+                                                         :rivin-parametrit {:class (cond-> #{"table-default"
+                                                                                             "table-default-header"
+                                                                                             "table-default-thin-strong"}
+                                                                                           (not= (count (:rivit koko))
+                                                                                              1)
+                                                                                           (conj "top-margin-16px"))}})
                                              {:otsikko ""
-                                              :arvo (str (pvm/kk-fmt kk) "kuu " vvvv
-                                                         " yhteensä") :luokka #{"col-xs-4"}}
+                                              :arvo    (str (pvm/kk-fmt kk)
+                                                            "kuu "
+                                                            vvvv
+                                                            " yhteensä")
+                                              :luokka  #{"col-xs-4"}}
                                              {:otsikko ""
                                               :arvo    (fmt/euro summa)
                                               :luokka  #{"col-xs-offset-7" "col-xs-1"}})
                                            rivit)))
         jaottele-riveiksi-taulukkoon (fn [taulukko rivit]
                                        (let [taulukko-rivit (reduce luo-paivamaara-otsikot
-                                                                    taulukko rivit)]
+                                                                    taulukko
+                                                                    rivit)]
                                          (p/paivita-taulukko! taulukko-rivit)))]
     (muodosta-taulukko :kohdistetut-kulut-taulukko
                        {:otsikot     {:janan-tyyppi jana/Rivi
@@ -397,6 +427,12 @@
 
   ;; SUCCESS
 
+  TarkistusOnnistui
+  (process-event [{tulos :tulos {:keys [ei-async-laskuria]} :parametrit} app]
+    (->
+      app
+      (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))
+      (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)))
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
     (->
@@ -471,8 +507,8 @@
   ;; FAIL
 
   KutsuEpaonnistui
-  (process-event [{:keys [tulos]} app]
-    (update-in app [:parametrit :haetaan] dec))
+  (process-event [{{:keys [ei-async-laskuria]} :parametrit} app]
+    (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
 
   ;; HAUT
 
@@ -490,13 +526,6 @@
                           :epaonnistui        ->KutsuEpaonnistui
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 2))
-  HaeAliurakoitsijat
-  (process-event [_ app]
-    (tuck-apurit/get! :aliurakoitsijat
-                      {:onnistui           ->AliurakoitsijahakuOnnistui
-                       :epaonnistui        ->KutsuEpaonnistui
-                       :paasta-virhe-lapi? true})
-    (update-in app [:parametrit :haetaan] inc))
   HaeUrakanLaskut
   (process-event [{{:keys [id alkupvm loppupvm]} :hakuparametrit} app]
     (tuck-apurit/post! (if (and alkupvm loppupvm)
@@ -525,6 +554,17 @@
 
   ;; VIENNIT
 
+  OnkoLaskunNumeroKaytossa
+  (process-event [{laskun-numero :laskun-numero} app]
+    (tuck-apurit/post! :tarkista-laskun-numeron-paivamaara
+                       {:laskun-numero laskun-numero
+                        :urakka        (-> @tila/yleiset :urakka :id)}
+                       {:onnistui               ->TarkistusOnnistui
+                        :onnistui-parametrit    [{:ei-async-laskuria true}]
+                        :epaonnistui            ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:ei-async-laskuria true}]
+                        :paasta-virhe-lapi?     true})
+    app)
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
     (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot))
@@ -569,13 +609,8 @@
     (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
-    [_ {aliurakoitsijat                  :aliurakoitsijat
-        {:keys [kohdistukset
-                koontilaskun-kuukausi
-                aliurakoitsija liitteet
-                laskun-numero lisatieto
-                erapaiva id] :as lomake} :lomake
-        maksuerat                        :maksuerat :as app}]
+    [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
+                laskun-numero lisatieto erapaiva id] :as lomake} :lomake :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
@@ -654,8 +689,8 @@
                  (-> @tila/yleiset :urakka polku)
                  arvo)]
       (assoc-in app [:parametrit (case polku
-                                 :alkupvm :haun-alkupvm
-                                 :loppupvm :haun-loppupvm)] arvo)))
+                                   :alkupvm :haun-alkupvm
+                                   :loppupvm :haun-loppupvm)] arvo)))
 
   ;; FORMITOIMINNOT
 

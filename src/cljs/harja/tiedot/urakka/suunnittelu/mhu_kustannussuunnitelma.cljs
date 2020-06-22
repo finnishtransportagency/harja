@@ -1752,9 +1752,14 @@
     (assoc-in app [:domain :kuluva-hoitokausi] (kuluva-hoitokausi)))
   YleisSuodatinArvot
   (process-event [_ app]
-    (-> app
-        (assoc-in [:suodattimet :hoitokauden-numero] (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))
-        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true)))
+    (let [urakan-alkupvm (-> @tiedot/tila :yleiset :urakka :alkupvm)
+          ;; Tulevissa urakoissa estettävä hoitokauden numeron asettuminen 0:ksi tai nilliksi
+          default-hoitokausi (if (pvm/ennen? (pvm/nyt) urakan-alkupvm)
+                               1
+                               (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
+      (-> app
+          (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
+          (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc-in app [:domain :indeksit] vastaus))
