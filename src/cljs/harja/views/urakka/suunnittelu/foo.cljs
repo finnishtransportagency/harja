@@ -135,7 +135,7 @@
      (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
          (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))))))
 
-(defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
+(defn paivita-solun-arvo! [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}]
   (jarjesta-data ajettavat-jarejestykset
     (triggeroi-seurannat triggeroi-seuranta?
@@ -145,25 +145,15 @@
         arvo
         (grid/solun-asia solu :tunniste-rajapinnan-dataan)))))
 
-(defn tayta-alas-napin-toiminto [e! asettajan-nimi maara-solun-index rivit-alla arvo]
+(defn tayta-alla-olevat-rivit! [asettajan-nimi rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
     (doseq [rivi rivit-alla
-            :let [maara-solu (grid/get-in-grid rivi [maara-solun-index])
-                  piillotettu? (grid/piillotettu? rivi)]]
-      (when-not piillotettu?
-        (paivita-solun-arvo {:paivitettava-asia asettajan-nimi
-                             :arvo arvo
-                             :solu maara-solu
-                             :ajettavat-jarejestykset #{:mapit}})))
-    #_(when (= asettajan-nimi :aseta-rahavaraukset!)
-        (e! (t/->TallennaKustannusarvoitu tallennettava-asia
-                                          (vec (keep (fn [rivi]
-                                                       (let [maara-solu (grid/get-in-grid rivi [1])
-                                                             piillotettu? (grid/piillotettu? rivi)]
-                                                         (when-not piillotettu?
-                                                           (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                     rivit-alla))))
-        (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
+            :let [a-sarakkeen-solu (grid/get-in-grid rivi [1])]]
+      (paivita-solun-arvo! {:paivitettava-asia asettajan-nimi
+                            :arvo arvo
+                            :solu a-sarakkeen-solu
+                            :ajettavat-jarejestykset false
+                            :triggeroi-seuranta? false}))))
 
 (defn jarjesta-fn! []
   (e! (->JarjestaData (grid/hae-osa solu/*this* :nimi))))
@@ -251,22 +241,29 @@
                                                                                                                                                                (with-meta
                                                                                                                                                                  (g-pohjat/->SyoteTaytaAlas (gensym "a")
                                                                                                                                                                                             false
-                                                                                                                                                                                            (partial tayta-alas-napin-toiminto
-                                                                                                                                                                                                     :aseta-arvo!
-                                                                                                                                                                                                     1)
+                                                                                                                                                                                            (fn [rivit-alla arvo]
+                                                                                                                                                                                              (let [grid (grid/root (first rivit-alla))]
+                                                                                                                                                                                                (tayta-alla-olevat-rivit! :aseta-arvo! rivit-alla arvo)
+                                                                                                                                                                                                (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
+                                                                                                                                                                                                                      :arvo arvo
+                                                                                                                                                                                                                      :solu solu/*this*
+                                                                                                                                                                                                                      :ajettavat-jarejestykset :deep
+                                                                                                                                                                                                                      :triggeroi-seuranta? true})
+                                                                                                                                                                                                (grid/jarjesta-grid-data! grid
+                                                                                                                                                                                                                          (keyword (str "data-" rivi)))))
                                                                                                                                                                                             {:on-change (fn [arvo]
                                                                                                                                                                                                           (when arvo
-                                                                                                                                                                                                            (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
+                                                                                                                                                                                                            (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                  :arvo arvo
                                                                                                                                                                                                                                  :solu solu/*this*
-                                                                                                                                                                                                                                 :ajettavat-jarejestykset false #_#{:mapit}})))
+                                                                                                                                                                                                                                 :ajettavat-jarejestykset false})))
                                                                                                                                                                                              :on-focus (fn [_]
                                                                                                                                                                                                          (grid/paivita-osa! solu/*this*
                                                                                                                                                                                                                             (fn [solu]
                                                                                                                                                                                                                               (assoc solu :nappi-nakyvilla? true))))
                                                                                                                                                                                              :on-blur (fn [arvo]
                                                                                                                                                                                                         (when arvo
-                                                                                                                                                                                                          (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
+                                                                                                                                                                                                          (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                :arvo arvo
                                                                                                                                                                                                                                :solu solu/*this*
                                                                                                                                                                                                                                :ajettavat-jarejestykset :deep
@@ -373,8 +370,6 @@
                                                                                                                       (key arvo))}}}
 
                                                                                    {:aseta-arvo! (fn [tila arvo {:keys [rivi-index arvon-avain]}]
-                                                                                                   (println "-> aseta-arvo! arvo: " arvo)
-                                                                                                   (println "-> aseta-arvo! parmas [rivi-index arvon-avain]: " [rivi-index arvon-avain])
                                                                                                    (let [arvo (try (js/Number arvo)
                                                                                                                    (catch :default _
                                                                                                                      arvo))]
