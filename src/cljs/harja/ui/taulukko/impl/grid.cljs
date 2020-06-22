@@ -682,8 +682,11 @@
                                                                                                                            @kuuntelija)
                                                 jarjestys-fns @jarjestys-fns
                                                 jarjestetaan? (boolean (and *jarjesta-data* (or jarjestys (not (empty? jarjestys-fns)))))
+                                                jarjestykset (if (= *jarjesta-data* :deep)
+                                                               true
+                                                               *jarjesta-data*)
                                                 rajapinnan-dataf (cond
-                                                                   jarjestetaan? (jarjesta-data rajapinnan-data jarjestys *jarjesta-data* jarjestys-fns)
+                                                                   jarjestetaan? (jarjesta-data rajapinnan-data jarjestys jarjestykset jarjestys-fns)
                                                                    (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan rajapinnan-data @jarjestyksen-cache identiteetti)
                                                                    :else rajapinnan-data)]
                                             (when (= :deep *jarjesta-data*)

@@ -271,9 +271,7 @@
                                                                                                                                                                                                                                :solu solu/*this*
                                                                                                                                                                                                                                :ajettavat-jarejestykset :deep
                                                                                                                                                                                                                                :triggeroi-seuranta? true})
-                                                                                                                                                                                                          (println "(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan) " (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))
-                                                                                                                                                                                                          #_(e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                                                                                                                                                                                          #_(e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                                                                                                                                                                                                          (println "(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan) " (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))))
                                                                                                                                                                                              :on-key-down (fn [event]
                                                                                                                                                                                                             (when (= "Enter" (.. event -key))
                                                                                                                                                                                                               (.. event -target blur)))}
@@ -450,9 +448,6 @@
                                                                                                                                                               rivi))
                                                                                                                                                       data))
                                                                                                                              :tunnisteen-kasittely (fn [_ data]
-                                                                                                                                                     (println "")
-                                                                                                                                                     (println "TUNNISTEEN KÄSITTELY")
-                                                                                                                                                     (println "--> data " data)
                                                                                                                                                      (vec
                                                                                                                                                        (map-indexed (fn [i rivi]
                                                                                                                                                                       (let [rivi-index (some #(when (= ::index (first %))
@@ -476,6 +471,9 @@
        [:div {:style {:margin-top "15px" :margin-bottom "5px"}}
         [:label {:for "rivin-nimi"} "Rivin nimi"]
         [:input#rivin-nimi {:on-change #(e! (->MuokkaaUudenRivinNimea (.. % -target -value)))
+                            :on-key-down (fn [event]
+                                           (when (= "Enter" (.. event -key))
+                                             (e! (->LisaaRivi))))
                             :value uusi-rivi
                             :style {:display "block"}}]]
        [napit/uusi "Lisää rivi"
