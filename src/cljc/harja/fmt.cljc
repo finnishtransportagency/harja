@@ -64,11 +64,12 @@
      (euro nayta-euromerkki summa))))
 
 
-(defn formatoi-arvo-raportille [arvo]
-  (as-> arvo arvo
-        (format "%.2f" arvo)
-        (clojure.string/replace arvo "," ".")
-        (clojure.core/bigdec arvo)))
+#?(:clj
+   (defn formatoi-arvo-raportille [arvo]
+     (as-> arvo arvo
+           (format "%.2f" arvo)
+           (s/replace arvo "," ".")
+           (clojure.core/bigdec arvo))))
 
 (defn yksikolla
   "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"

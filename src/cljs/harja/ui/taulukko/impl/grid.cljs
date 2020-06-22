@@ -598,26 +598,6 @@
        (assoc kopio-eri-idlla ::root-id (::root-id tiedot-osa))))))
 
 (defn- jarjesta-cachen-mukaan [data cache identiteetti]
-  (println "jarjesta-cachen-mukaan")
-  (println "-> data: " data)
-  (println "-> cache: " cache)
-  (println "-> tulos: " (reduce-kv (fn [data syvyys jarjestykset]
-                                     (muokkaa-data-syvyydessa (dec syvyys)
-                                                              data
-                                                              (fn [data _]
-                                                                (let [order-map (if (= 1 syvyys)
-                                                                                  jarjestykset
-                                                                                  (first jarjestykset))
-                                                                      data (if (map? data)
-                                                                             (merge (zipmap (keys order-map)
-                                                                                            (repeat nil))
-                                                                                    data)
-                                                                             data)]
-                                                                  (sort-by (fn [x]
-                                                                             (get order-map ((get identiteetti syvyys) x)))
-                                                                           data)))))
-                                   data
-                                   cache))
   (reduce-kv (fn [data syvyys jarjestykset]
                (muokkaa-data-syvyydessa (dec syvyys)
                                         data
@@ -637,16 +617,6 @@
              cache))
 
 (defn- jarjestys-mappiin [tulos cache-atom]
-  (println "jarjestys-mappiin: " (reduce-kv (fn [m syvyys jarjestykset]
-                                              (assoc m
-                                                     syvyys
-                                                     (muokkaa-data-syvyydessa (dec syvyys)
-                                                                              jarjestykset
-                                                                              (fn [jarjestys _]
-                                                                                (zipmap jarjestys
-                                                                                        (range))))))
-                                            {}
-                                            tulos))
   (reset! cache-atom
           (reduce-kv (fn [m syvyys jarjestykset]
                        (assoc m
@@ -663,8 +633,7 @@
   (loop [[[syvyys identity-fn] & loput] (into (sorted-map) identiteetti)
          tulos {}]
     (if (nil? syvyys)
-      (do (println "tallenna-jarjestys-cacheen TULOS: " tulos)
-          (jarjestys-mappiin tulos cache-atom))
+      (jarjestys-mappiin tulos cache-atom)
       (let [identity-fn (fn [arvo _] (identity-fn arvo))
             muokattu-tulos (muokkaa-data-syvyydessa syvyys
                                                     jarjestetty-data
@@ -691,11 +660,6 @@
   ([grid polku]
    (let [rajapintakasittelijat (::grid-rajapintakasittelijat (root grid))
          gridin-nimipolku (or polku (::nimi-polku grid))]
-     (println "##################################")
-     (println "jarjesta!")
-     (println "-> rajapintakasittelijat " (keys rajapintakasittelijat))
-     (println "-> gridin-nimipolku " gridin-nimipolku)
-     (println "-> jarjesty-trigger: " (get-in rajapintakasittelijat [gridin-nimipolku ::jarjestys-trigger]))
      (when-let [trigger-atom (get-in rajapintakasittelijat [gridin-nimipolku ::jarjestys-trigger])]
        (swap! trigger-atom
               (fn [entinenen-arvo]
@@ -710,7 +674,7 @@
                    "Annettu rajapinta: " rajapinta ". Olemassa olevat:\n"
                    (pr-str (keys (:kuuntelijat datan-kasittelija)))))))
     (let [jarjestyksen-cache (atom nil)
-          jarjestys-fns (r/atom {})
+          jarjestys-fns (atom {})
           ;; Tällä ei ole muuta tarkoitusta kuin triggeröidä jarjestetty-rajapinta
           jarjestys-trigger (r/atom 0)
           jarjestetty? (atom false)
@@ -718,8 +682,6 @@
                                                                                                                            @kuuntelija)
                                                 jarjestys-fns @jarjestys-fns
                                                 jarjestetaan? (boolean (and *jarjesta-data* (or jarjestys (not (empty? jarjestys-fns)))))
-                                                _ (println "*jarjesta-data* " *jarjesta-data*)
-                                                _ (println "jarjestys: " jarjestys)
                                                 rajapinnan-dataf (cond
                                                                    jarjestetaan? (jarjesta-data rajapinnan-data jarjestys *jarjesta-data* jarjestys-fns)
                                                                    (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan rajapinnan-data @jarjestyksen-cache identiteetti)
@@ -731,11 +693,6 @@
                                                     (jarjesta! grid polku))
                                                   (recur (vec (butlast polku))))))
                                             @jarjestys-trigger
-                                            (println "rajapinnan-data: " rajapinnan-data)
-                                            (println (cond
-                                                       jarjestetaan? "jarjestetaan?"
-                                                       (not (nil? @jarjestyksen-cache)) "@jarjestyksen-cache"
-                                                       :else ":else"))
                                             (reset! jarjestetty? jarjestetaan?)
                                             (when (and jarjestetaan? identiteetti)
                                               (tallenna-jarjestys-cacheen rajapinnan-dataf jarjestyksen-cache identiteetti))
@@ -762,7 +719,7 @@
              ::jarjestys-fns jarjestys-fns
              ::jarjestys-trigger jarjestys-trigger
              :rajapintakasittelija rajapintakasittelija
-             :osien-tunnisteet (reaction (println "@jarjestetty-rajapinta " @jarjestetty-rajapinta) (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @jarjestetty-rajapinta))))))
+             :osien-tunnisteet (reaction (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @jarjestetty-rajapinta))))))
 
 (defn- osan-data-yhdistaminen [grid-rajapintakasittelijat osa]
   (let [datan-kasittelija (get-in @taulukko-konteksti [(::root-id osa) :datan-kasittelija])]

@@ -305,12 +305,25 @@
                            "Saatiin: " tapahtuman-nimi "\n"
                            "Hyväksytyt avaimet: " (apply str (interpose ", " (keys (root-asia (root osa) :tapahtumat)))))))))
 
-(defn jarjesta-grid-data! [grid rajapinta syvyys jarjestys-fn]
+(defn jarjesta-grid-data! [grid rajapinta]
+  (let [nimipolku (some (fn [[nimipolku rajapintakasittelija]]
+                          (when (= (:rajapinta rajapintakasittelija) rajapinta)
+                            nimipolku))
+                        (::g/grid-rajapintakasittelijat grid))]
+    (binding [g/*jarjesta-data* :deep]
+      (g/jarjesta! grid nimipolku))))
+
+(defn lisaa-jarjestys-fn-gridiin! [grid rajapinta syvyys jarjestys-fn]
   (let [jarjestykset-fns (some (fn [[_ rajapintakasittelija]]
                                  (when (= (:rajapinta rajapintakasittelija) rajapinta)
                                    (::g/jarjestys-fns rajapintakasittelija)))
-                               (::g/grid-rajapintakasittelijat grid))]
-    (binding [g/*jarjesta-data* true]
+                               (::g/grid-rajapintakasittelijat grid))
+        lisattavan-jarjestys-fn-nimi (get (meta jarjestys-fn) :nimi)
+        olemassaolevan-jarjestys-fn-nimi (when-let [jarjestys-fn (get @jarjestykset-fns syvyys)]
+                                           (get (meta jarjestys-fn) :nimi))
+        lisataan-jarjestys? (or (not= lisattavan-jarjestys-fn-nimi olemassaolevan-jarjestys-fn-nimi)
+                                (nil? lisattavan-jarjestys-fn-nimi))]
+    (when lisataan-jarjestys?
       (swap! jarjestykset-fns assoc syvyys jarjestys-fn))))
 
 ;; PREDIKAATIT

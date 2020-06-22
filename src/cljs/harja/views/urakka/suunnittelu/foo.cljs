@@ -24,17 +24,20 @@
   JarjestaData
   (process-event [{:keys [otsikko]} {g :grid :as app}]
     (when-not (nil? otsikko)
-      (grid/jarjesta-grid-data! g
-                                :datarivit
-                                0
-                                (fn [datarivit]
-                                  (if (= :rivi otsikko)
-                                    (sort-by key datarivit)
-                                    (sort-by (fn [[_ v]]
-                                               (reduce #(+ %1 (:a %2))
-                                                       0
-                                                       v))
-                                             datarivit)))))
+      (let [jarjestys-fn (with-meta (fn [datarivit]
+                                      (if (= :rivi otsikko)
+                                        (sort-by key datarivit)
+                                        (sort-by (fn [[_ v]]
+                                                   (reduce #(+ %1 (:a %2))
+                                                           0
+                                                           v))
+                                                 datarivit)))
+                                    {:nimi (str "jarjesta-otsikot-" otsikko)})]
+        (grid/lisaa-jarjestys-fn-gridiin! g
+                                          :datarivit
+                                          0
+                                          jarjestys-fn)
+        (grid/jarjesta-grid-data! g :datarivit)))
     app)
   LisaaRivi
   (process-event [_ {:keys [uusi-rivi data] :as app}]
@@ -143,8 +146,7 @@
                             :aseta-arvo!
                             arvo
                             (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                            args)
-        (println (str "YRITETTIIN " paivitettava-asia))))))
+                            args)))))
 
 (defn tayta-alas-napin-toiminto [e! asettajan-nimi maara-solun-index rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
@@ -289,8 +291,6 @@
                                                                                                                                                                                                      1)
                                                                                                                                                                                             {:on-change (fn [arvo]
                                                                                                                                                                                                           (when arvo
-                                                                                                                                                                                                            (println "ASETETAAN ARVO: " arvo)
-                                                                                                                                                                                                            (println "SOLULLE: " solu/*this*)
                                                                                                                                                                                                             (paivita-solun-arvo {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                  :arvo arvo
                                                                                                                                                                                                                                  :solu solu/*this*
