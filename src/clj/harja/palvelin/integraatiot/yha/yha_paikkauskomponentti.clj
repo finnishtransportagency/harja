@@ -7,7 +7,9 @@
              [paikkauskohteen-lahetyssanoma :as paikkauskohteen-lahetyssanoma]
              [paikkauskohteen-poistosanoma :as paikkauskohteen-poistosanoma]]
             [harja.kyselyt.paikkaus :as q-paikkaus]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [cheshire.core :as cheshire])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-paikkauskohteen-lahetyksessa+ ::yha-virhe-paikkauskohteen-lahetyksessa)
@@ -29,7 +31,8 @@
   ([db kohde-id tila virheet]
     (q-paikkaus/paivita-paikkauskohteen-tila db {:harja.domain.paikkaus/id kohde-id
                                                  :harja.domain.paikkaus/tila (name tila)
-                                                 :harja.domain.paikkaus/virhe (when virheet (mapv #(:viesti %) (concat virheet virheet virheet))) })))
+                                                 :harja.domain.paikkaus/virhe (when virheet
+                                                                                (mapv #(:virheviesti %) virheet))})))
 
 (defn kasittele-paikkauskohteen-lahettamisen-vastaus
   "Päivittää virheeseen menneen paikkauskohteen lähteyksen jälkeen paikkauskohteen lähetystilan virheeksi.
@@ -57,14 +60,15 @@
       db integraatioloki "yha" "laheta-paikkauskohde" nil
       (fn [konteksti]
         (paivita-lahetyksen-tila db kohde-id :odottaa_vastausta)
-        (let [http-asetukset {:metodi         :POST
-                              :url            (str url "paikkaus/paivitys/")
+        (let [http-asetukset {:metodi :POST
+                              :url (str url "paikkaus/paivitys/")
                               :kayttajatunnus kayttajatunnus
-                              :salasana       salasana
+                              :salasana salasana
                               :otsikot {"Content-Type" "application/json"}}
               viestisisalto (paikkauskohteen-lahetyssanoma/muodosta db urakka-id kohde-id)
-              {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)])))
-    (kasittele-paikkauskohteen-lahettamisen-vastaus db kohde-id)
+              {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)
+              enkoodattu-body (cheshire/decode vastaus true)]
+          (kasittele-paikkauskohteen-lahettamisen-vastaus db kohde-id (:virheet enkoodattu-body)))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (kasittele-paikkauskohteen-lahettamisen-vastaus db kohde-id virheet)
       false)))
@@ -72,10 +76,12 @@
 (defn laheta-paikkauskohteet-yhaan-uudelleen
   "Yrittää lähettää edellisellä kerralla virheeseen päätyneet paikkauskohteet uudelleen YHA:aan."
   [integraatioloki db asetukset]
-  (let [hakuehdot [:tila :virhe]
-        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohde db hakuehdot)] ;; TODO: hae virheeseen menneet paikkaukset, palauta myös urakan id.
-  (doseq [paikkauskohde uudelleen-lahetettavat-paikkauskohteet]
-    (laheta-paikkauskohde-yhaan integraatioloki db asetukset (:urakka-id paikkauskohde) (:id paikkauskohde)))))
+  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"}
+        lahetettavat-kohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
+  (doseq [paikkauskohde lahetettavat-kohteet]
+    (laheta-paikkauskohde-yhaan integraatioloki db asetukset
+                                (:harja.domain.paikkaus/urakka-id paikkauskohde)
+                                (:harja.domain.paikkaus/id paikkauskohde)))))
 
 (defn kasittele-paikkauskohteen-poiston-vastaus
   "Päivittää virheeseen menneen paikkauskohteen poiston jälkeen paikkauskohteen lähetystilan virheeksi.
@@ -97,32 +103,49 @@
   Yksittäisen paikkauksen poisto tapahtuu lähettämällä päivitetty paikkauskohde uudelleen YHA:aan.
   Tämä funktio poistaa paikkauskohteen YHA:sta kokonaisuudessaan."
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
+  ;; Paikkauskohteen ID:llä poistetaan, yksi kohde kerrallaan
   (integraatiotapahtuma/suorita-integraatio
-    db integraatioloki "yha" "poista-paikkauskohde" nil
+    db integraatioloki "yha" "poista-lahetetty-paikkauskohde" nil
     (fn [konteksti]
       (let [url (str url "paikkaus/poisto/")
-            http-asetukset {:metodi         :DELETE
+            http-asetukset {:metodi         :POST
                             :url            url
                             :kayttajatunnus kayttajatunnus
-                            :salasana       salasana}
+                            :salasana       salasana
+                            :otsikot {"Content-Type" "application/json"}}
             viestisisalto (paikkauskohteen-poistosanoma/muodosta db urakka-id kohde-id)
-            {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)]
-        (kasittele-paikkauskohteen-poiston-vastaus body kohde-id)))))
+            {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)
+            enkoodattu-body (cheshire/decode body true)]
+        (kasittele-paikkauskohteen-poiston-vastaus db kohde-id (:virheet enkoodattu-body))))))
 
 (defn poista-paikkauskohteet-yhasta-uudelleen
   "Yrittää poistaa YHA:sta paikkauskohteet, jotka edellisellä poistokerralla päätyivät virheeseen."
-  ;; TODO: kohde kerrallaan vai monta samassa sanomassa?
   [integraatioloki db asetukset]
-  (let [hakuehdot [:tila :virhe
-                   :poistettu true]
-        uudelleen-poistettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohde db hakuehdot)];; TODO: hae virheeseen menneet paikkaukset, myös urakka-id
-  (doseq [paikkauskohde uudelleen-poistettavat-paikkauskohteet]
-    (poista-paikkauskohde-yhasta integraatioloki db asetukset (:urakka-id paikkauskohde) (:id paikkauskohde)))))
+  (let [hakuehdot {:harja.domain.paikkaus/tila "virhe"
+                   :harja.domain.muokkaustiedot/poistettu? true}
+        poistettavat-kohteet (q-paikkaus/hae-paikkauskohteet db hakuehdot)]
+  (doseq [paikkauskohde poistettavat-kohteet]
+    (poista-paikkauskohde-yhasta integraatioloki db asetukset
+                                 (:harja.domain.paikkaus/urakka-id paikkauskohde)
+                                 (:harja.domain.paikkaus/id paikkauskohde)))))
+
+(defn- laheta-tiedot-yhaan-uudelleen! [integraatioloki db asetukset]
+  (ajastettu-tehtava/ajasta-paivittain [1 10 0]
+                                       (fn [_]
+                                         (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
+                                         (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
+                                         (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset))))
+
 
 (defrecord YhaPaikkaukset [asetukset]
   component/Lifecycle
-  (start [this] this)
-  (stop [this] this)
+  (start [{:keys [integraatioloki db] :as this}]
+
+    (assoc this ::uudelleen-lahetykset-yhaan
+                (laheta-tiedot-yhaan-uudelleen! integraatioloki db asetukset)))
+  (stop [this]
+    ((::uudelleen-lahetykset-yhaan this))
+    this)
 
   PaikkaustietojenLahetys
 
@@ -132,5 +155,5 @@
     (laheta-paikkauskohteet-yhaan-uudelleen (:integraatioloki this) (:db this) asetukset))
   (poista-paikkauskohde [this urakka-id kohde-id]
     (poista-paikkauskohde-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
-  (poista-paikkauskohteet-uudelleen [this ]
+  (poista-paikkauskohteet-uudelleen [this]
     (poista-paikkauskohteet-yhasta-uudelleen (:integraatioloki this) (:db this) asetukset)))

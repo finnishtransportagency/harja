@@ -155,10 +155,20 @@
                                            (tarkasta-esitettavat-arvot! uusi-arvo)
                                            (when-not (= vanha-arvo uusi-arvo)
                                              (reset! valittu-aikavali-atom uusi-arvo))
-                                           (log "Uusi aikaväli: " (pr-str uusi-arvo))))))
+                                           (log "Uusi aikaväli: " (pr-str uusi-arvo)))))
+                            (add-watch valittu-aikavali-atom
+                                       :aikavali-komponentin-kuuntelija
+                                       (fn [_ _ _ uusi-arvo]
+                                         (let [alku (first uusi-arvo)
+                                               loppu (second uusi-arvo)]
+                                           (when-not (= alku @aikavalin-alku)
+                                             (reset! aikavalin-alku alku))
+                                           (when-not (= loppu @aikavalin-loppu)
+                                             (reset! aikavalin-loppu loppu))))))
                          #(do
                             (remove-watch aikavalin-alku :ui-valinnat-aikavalin-alku)
-                            (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)))
+                            (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)
+                            (remove-watch valittu-aikavali-atom :aikavali-komponentin-kuuntelija)))
        (fn [_ {:keys [nayta-otsikko? aikavalin-rajoitus
                       aloitusaika-pakota-suunta paattymisaika-pakota-suunta
                       lomake? otsikko validointi]}]

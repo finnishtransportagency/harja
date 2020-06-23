@@ -328,7 +328,7 @@ SET alkanut           = :alkanut,
   tyyppi              = :tyyppi :: toteumatyyppi,
   sopimus             = :sopimus,
   poistettu           = FALSE,
-  tyokonetyyppi       = :tyokonetyyppi ::tyokone,
+  tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
   tyokoneen_lisatieto = :tyokoneen-lisatieto
 WHERE ulkoinen_id = :id AND urakka = :urakka AND luoja = :luoja;
@@ -344,7 +344,7 @@ INTO toteuma
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
                  FALSE, :suorittaja, :ytunnus, :lisatieto, :ulkoinen_id, :reitti,
         :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys, :lahde :: lahde,
-        :tyokonetyyppi::tyokone, :tyokonetunniste, :tyokoneen-lisatieto);
+        :tyokonetyyppi, :tyokonetunniste, :tyokoneen-lisatieto);
 
 -- name: poista-toteuma!
 UPDATE toteuma
@@ -1079,7 +1079,10 @@ WHERE id = :id;
 
 -- name: merkitse-varustetoteuma-lahetetyksi<!
 UPDATE varustetoteuma
-SET lahetetty_tierekisteriin = TRUE
+SET lahetetty_tierekisteriin = TRUE,
+    lahetetty = now(),
+    tila = :tila :: lahetyksen_tila,
+    lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: varustetoteuman-toimenpiteelle-sijainti

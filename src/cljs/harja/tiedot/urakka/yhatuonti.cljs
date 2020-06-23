@@ -17,7 +17,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [cljs.core.async :as async]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -333,19 +334,20 @@
          (kasittele-epaonnistunut-kohteiden-paivitys vastaus harja-urakka-id))
        vastaus))))
 
+(def +yha-tuonnin-vihje+
+  "Uusien kohteiden tuominen ei poista Harjaan tehtyjä muutoksia jo aiemmin tuotuihin kohteisiin. Vain mahdolliset uudet kohteet tuodaan YHA:sta Harjaan.")
+
 (defn paivita-kohdeluettelo [urakka oikeus]
   (r/with-let [progress (r/atom {})]
     (tarkkaile! "PROGRESS: " progress)
     [:div
      [napit/palvelinkutsu-nappi
       "Hae uudet YHA-kohteet"
-      #(do
-         (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
-         (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}
-                              (fn [p]
-                                (if (map? p)
-                                  (swap! progress merge p)
-                                  (swap! progress update :progress + p)))))
+      #(paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}
+                            (fn [p]
+                              (if (map? p)
+                                (swap! progress merge p)
+                                (swap! progress update :progress + p))))
       {:luokka "nappi-ensisijainen"
        :disabled (or
                    @yha-kohteiden-paivittaminen-kaynnissa?
@@ -354,6 +356,7 @@
        :kun-valmis (fn [_] (reset! progress {}))
        :kun-onnistuu (fn [_]
                        (log "[YHA] Kohdeluettelo päivitetty"))}]
+     [yleiset/vihje +yha-tuonnin-vihje+]
      (let [{:keys [progress viesti max]} @progress]
        (when progress
          [:div
