@@ -229,7 +229,10 @@
   (when (tk/valittu? yllapito (case tyyppi
                                 "paallystys" tk/paallystys
                                 "paikkaus" tk/paikkaus))
-    (let [vastaus (into []
+    ;; paikkaustyötä on kirjattu osittain ylläpitokohteisiin päällystysurakoissa, ja sittemmin enemmän
+    ;; paikkauskohteisiin API:n kautta. Tässä hanskataan molemmat tapaukset. Jatkossa kenties suunta kohti
+    ;; vain paikkauskohteita ja serverillä piirtämistä
+    (let [yllapitokohteet (into []
                         (comp
                           (map konv/alaviiva->rakenne)
                           (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
@@ -244,17 +247,30 @@
                                                                          {:urakat urakat
                                                                           :loppu (konv/sql-date loppu)
                                                                           :alku (konv/sql-date alku)}))))
-          vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
+          yllapitokohteet (yllapitokohteet-q/liita-kohdeosat-kohteisiin db yllapitokohteet :id
                                                                 {:alue alue
                                                                  :toleranssi toleranssi})
-          vastaus (remove #(empty? (:kohdeosat %)) vastaus)
-
-          osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
-          vastaus (mapv #(assoc %
+          yllapitokohteet (remove #(empty? (:kohdeosat %)) yllapitokohteet)
+          osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db yllapitokohteet)
+          yllapitokohteet (mapv #(assoc %
                            :pituus
                            (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
-                        vastaus)]
-      vastaus)))
+                        yllapitokohteet)
+
+          ;; uudentyyppiset paikkaukset paikkaus, paikkauskohde tauluista
+          paikkauskohteet (into []
+                                (comp
+                                  (map #(assoc % :tila :kohde-valmis))
+                                  (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi])))
+                                (q/hae-paikkauskohteet-tilannekuvaan db {:urakat urakat}))
+          paikkauskohteet (when-not (empty? paikkauskohteet)
+                            (yllapitokohteet-q/liita-paikkaukset-paikkauskohteisiin db paikkauskohteet
+                                                                                    :id
+                                                                                    {:alue alue
+                                                                                     :toleranssi toleranssi
+                                                                                     :alkupvm (konv/sql-date alku)
+                                                                                     :loppupvm (konv/sql-date loppu)}))]
+      (concat yllapitokohteet paikkauskohteet))))
 
 (defn- hae-paikkaustyot
   [db user suodattimet urakat]
