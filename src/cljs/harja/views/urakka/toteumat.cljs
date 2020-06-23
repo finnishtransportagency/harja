@@ -8,6 +8,7 @@
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
+            [harja.views.urakka.toteumat.maarien-toteumat :as maarien-toteumat-nakyma]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.toteumat.varusteet :as varusteet]
             [harja.views.urakka.toteumat.suola :refer [suolatoteumat pohjavesialueen-suola]]
@@ -20,7 +21,8 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -75,4 +77,11 @@
          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [varusteet/varusteet])]))))
+           [varusteet/varusteet])
+
+         "Määrien toteumat" :maarien-toteumat
+         ;; TODO: Oikeat tarkistukset tänne miten?
+         (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+                    (oikeudet/urakat-toteumat-varusteet id)
+                    (#{:teiden-hoito} (:tyyppi ur)))
+           [maarien-toteumat-nakyma/maarien-toteumat])]))))

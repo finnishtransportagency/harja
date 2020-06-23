@@ -21,6 +21,9 @@
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.toteuma :as toteuma]
+            [harja.domain.sopimus :as sopimus]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.transit :as transit]
             [clojure.core.async :as async]
             [harja.pvm :as pvm]
@@ -30,7 +33,9 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.interpolointi :as interpolointi]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [specql.core :refer [fetch update! insert! upsert! delete!]]
+            [specql.core :as specql]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -353,6 +358,74 @@
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
+(defn hae-urakan-maarien-toteumat [db user {:keys [urakka-id tehtavaryhma alkupvm loppupvm] :as tiedot}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (println "hae-urakan-maarien-toteumat :: tiedot" (pr-str tiedot))
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (let [t (if (= "Kaikki" tehtavaryhma) nil tehtavaryhma)
+          res (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
+                                                             :tehtavaryhma t
+                                                             :alkupvm alkupvm
+                                                             :loppupvm loppupvm})]
+      res)
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
+(defn hae-urakan-toimenpiteet [db user {:keys [urakka-id]}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (toteumat-q/listaa-urakan-toteutumien-toimenpiteet db)
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
+(defn hae-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma]}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (toteumat-q/listaa-toimenpiteiden-tehtavat db {:tehtavaryhma tehtavaryhma})
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
+(defn tallenna-toteuma! [db user {:keys [toteuma-id toteuma-tehtava-id urakka-id tehtavaryhma tehtava maara loppupvm lisatieto]}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (let [_ (log/debug "urakka-id maara loppupvm lisatieto toteuma-id toteuma-tehtava-id" urakka-id maara loppupvm lisatieto toteuma-id toteuma-tehtava-id)
+          loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") loppupvm)
+          sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
+          t (upsert! db ::toteuma/toteuma
+                     (merge (if toteuma-id
+                              {::toteuma/id toteuma-id
+                               ::muokkaustiedot/muokkaaja-id (:id user)
+                               ::muokkaustiedot/muokattu (pvm/nyt)}
+                              {::muokkaustiedot/luotu (pvm/nyt)
+                               ::muokkaustiedot/luoja-id (:id user)})
+                            {::toteuma/urakka-id urakka-id
+                             ::toteuma/alkanut loppupvm
+                             ::toteuma/paattynyt loppupvm
+                             ::toteuma/tyyppi "kokonaishintainen"
+                             ::toteuma/lahde "harja-ui"
+                             ::toteuma/sopimus-id (::sopimus/id sopimus)}))
+          _ (log/debug " t " (pr-str t))
+          tt (upsert! db ::toteuma/toteuma-tehtava
+                      (merge (if toteuma-tehtava-id
+                               {::toteuma/id toteuma-tehtava-id
+                                ::toteuma/muokattu (pvm/nyt)
+                                ::toteuma/muokkaaja (:id user)}
+                               {::toteuma/luotu (pvm/nyt)
+                                ::toteuma/luoja (:id user)})
+                             {::toteuma/toteuma-id (::toteuma/id t)
+                              ::toteuma/muokattu (pvm/nyt)
+                              ::toteuma/toimenpidekoodi (:id tehtava)
+                              ::toteuma/maara (bigdec maara)
+
+                              ::toteuma/tehtava-lisatieto lisatieto}))
+          _ (println "tt" (pr-str tt))]
+      (::toteuma/id tt))
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
+(defn hae-maarien-toteuma [db user {:keys [id urakka-id]}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (let [toteuma (first (toteumat-q/hae-maarien-toteuma db {:id id}))
+          _ (println "toteuma " (pr-str toteuma))]
+      toteuma)
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (def muut-tyot-rahasumma-xf
   (map #(if (:tehtava_paivanhinta %)
@@ -883,6 +956,21 @@
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
+      :urakan-maarien-toteumat
+      (fn [user tiedot]
+        (hae-urakan-maarien-toteumat db-replica user tiedot))
+      :urakan-toteumien-toimenpiteet
+      (fn [user tiedot]
+        (hae-urakan-toimenpiteet db-replica user tiedot))
+      :toimenpiteiden-tehtavat
+      (fn [user tiedot]
+        (hae-toimenpiteiden-tehtavat db-replica user tiedot))
+      :tallenna-toteuma
+      (fn [user tiedot]
+        (tallenna-toteuma! db-replica user tiedot))
+      :hae-maarien-toteuma
+      (fn [user tiedot]
+        (hae-maarien-toteuma db-replica user tiedot))
       :urakan-toteutuneet-muut-tyot
       (fn [user tiedot]
         (hae-urakan-muut-tyot db-replica user tiedot))
@@ -926,7 +1014,6 @@
     this)
 
   (stop [this]
-
     (poista-palvelut
       (:http-palvelin this)
       :urakan-toteuma
@@ -937,6 +1024,11 @@
       :paivita-yk-hint-toteumien-tehtavat
       :urakan-erilliskustannukset
       :tallenna-erilliskustannus
+      :urakan-maarien-toteumat
+      :urakan-toteumien-toimenpiteet
+      :toimenpiteiden-tehtavat
+      :tallenna-toteuma
+      :hae-maarien-toteuma
       :urakan-toteutuneet-muut-tyot
       :tallenna-muiden-toiden-toteuma
       :tallenna-toteuma-ja-toteumamateriaalit

@@ -126,7 +126,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        otsikko)]]))
 
 (defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
-  [:a {:href linkki :target "_blank"} otsikko])
+  [:a {:href linkki
+       :target "_blank"
+       :rel "noopener noreferrer"} otsikko])
 
 (defn raksiboksi
   [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]

@@ -319,6 +319,9 @@
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
 
+(def iso8601-format
+  (luo-format "yyyy-MM-dd"))
+
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
 
@@ -395,6 +398,10 @@
 (defn aika-iso8601
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
+
+(defn iso8601
+  [pvm]
+  (formatoi iso8601-format pvm))
 
 (defn aika-yha-format
   [pvm]

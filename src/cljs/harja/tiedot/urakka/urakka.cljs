@@ -5,7 +5,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :as loki]
             [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [reagent.core :as r]))
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
@@ -171,7 +172,8 @@
 
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
-                     :suunnittelu suunnittelu-default-arvot}))
+                     :suunnittelu suunnittelu-default-arvot
+                     :toteumat {:maarien-toteumat {:toimenpiteet nil}}}))
 
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
@@ -181,6 +183,22 @@
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+
+(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
+                                                             :toteutuneet-maarat nil
+                                                             :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                                      (pvm/vuosi (pvm/nyt))
+                                                                                      (dec (pvm/vuosi (pvm/nyt))))
+                                                             :aikavali-alkupvm nil
+                                                             :aikavali-loppupvm nil
+                                                             :toteuma {:toimenpide nil
+                                                                       :tehtava nil
+                                                                       :toteuma-id nil
+                                                                       :toteuma-tehtava-id nil
+                                                                       :lisatieto nil
+                                                                       :maara nil
+                                                                       :loppupvm (pvm/nyt)}
+                                                             :syottomoodi false}}))
 
 (add-watch nav/valittu-urakka :urakan-id-watch
            (fn [_ _ _ uusi-urakka]
