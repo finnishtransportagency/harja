@@ -166,6 +166,7 @@
     (is (not (contains? vastaus :tarkastus)))
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
+    (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))
     (is (>= (count (:tietyomaat vastaus)) 1))
     (is (>= (count (:tietyoilmoitukset vastaus)) 1))))
