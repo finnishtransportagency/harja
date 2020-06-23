@@ -801,7 +801,8 @@
                               :rahavaraukset-kuukausitasolla? any?
                               :kuukausitasolla? any?
 
-                              :aseta-rahavaraukset! any?})
+                              :aseta-rahavaraukset! any?
+                              :aseta-rahavaraukset-yhteenveto! any?})
 
 (defn rahavarausten-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma

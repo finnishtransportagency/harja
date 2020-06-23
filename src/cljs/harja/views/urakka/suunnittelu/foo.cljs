@@ -3,12 +3,14 @@
             [tuck.core :as tuck]
             [harja.ui.komponentti :as komp]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
+
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.impl.solu :as solu]
+            [harja.ui.taulukko.impl.grid :as impl-grid]
             [harja.ui.taulukko.grid-oletusarvoja :as konf]
-            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.protokollat.grid :as p]
+            [harja.ui.taulukko.protokollat.grid-osa :as gop]
             [harja.ui.napit :as napit]
             [clojure.string :as clj-str]
             [harja.fmt :as fmt])
@@ -30,7 +32,7 @@
                                         (sort-by key datarivit)
                                         ;; Jos järjestetään minkään muun sarakkeen mukaan, käytetään rivin yhteensä arvoa ja järkätään ASCENDING järjestyksessä
                                         (sort-by (fn [[_ v]]
-                                                   (reduce #(+ %1 (:a %2))
+                                                   (reduce #(+ %1 (get %2 otsikko))
                                                            0
                                                            v))
                                                  datarivit)))
@@ -83,17 +85,27 @@
 
 (def tila (atom alkudata))
 
+;; defsolu on makro, jonka avulla voi luoda helposti taulukon hyväksymiä soluja. Perussolut on määritetty
+;; harja.ui.taulukko.impl.solu ns:ssa ja sieltä voi ottaa mallia miten solu tulisi toteuttaa. Kumminkin, jos haluaa
+;; määritellä vain solun render funktion ilman, että implementoi kaikkia mahdollisia protokollia, voi käyttää defsolu
+;; makroa, joka määrittelee perusoletuksilla kyseiset protokollat. Makro luo myös konstruktori metodin, jota voi käyttää
+;; perus defrecordin luomien konstruktorien lisäksi. Konstruktorin nimi on käytännössä PascalCasesta muutettu kebab-caseksi.
+;; Eli tässä esimerkkitapauksessa konstruktorin nimi on vayla-checkbox. Argumenteiksi annetaan defsolulle määritetyt parametrit.
+;; Eli tässä "vaihda-fn" ja "txt". Defsolu käyttää defrecordia.
 (defsolu VaylaCheckbox
          [vaihda-fn txt]
          {:pre [(fn? vaihda-fn)]}
          (fn disable-rivit [this]
+           ;; solu/taman-derefable on sellainen funktio, jota todennäköisesti kaikissa soluissa halutaan kutsua sillä
+           ;; sen avulla saa solun datan. Jos luo solun, jonka ulkonäköä ei ole tarkoitus muuttaa ajon aikana, ei tätä
+           ;; funktiota tarvitse kutsua.
            (let [taman-data (solu/taman-derefable this)
-                 disable? (or @taman-data false)
+                 checked? (or @taman-data false)
                  osan-id (str (grid/hae-osa this :id))]
              [:div
               [:input.vayla-checkbox {:id osan-id
                                       :type "checkbox"
-                                      :checked disable?
+                                      :checked checked?
                                       :on-change (partial (:vaihda-fn this) this)}]
               [:label {:for osan-id} (:txt this)]])))
 
@@ -123,6 +135,7 @@
   (clj-str/replace arvo #"\s" ""))
 
 (defn paivita-raidat! [g]
+  ;; paivita-luokat funktion avulla riville lisätään oikea CSS-luokka, jotta rivin väri muuttuu oikeaksi
   (let [paivita-luokat (fn [luokat odd?]
                          (if odd?
                            (-> luokat
@@ -131,6 +144,7 @@
                            (-> luokat
                                (conj "table-default-even")
                                (disj "table-default-odd"))))]
+    ;; Halutaan päivittää raidat kaikkiin näkyviin riveihin
     (loop [[rivi & loput-rivit] (grid/nakyvat-rivit g)
            index 0]
       (if rivi
@@ -139,15 +153,22 @@
                               :parametrit
                               (fn [parametrit]
                                 (update parametrit :class (fn [luokat]
+                                                            ;; disable-valinta on checkboxin sisätävän rivin nimi.
+                                                            ;; Yhteenvetorivi ja checkboxrivi halutaan värjätä samalla
+                                                            ;; värillä, joten indexin päivitys jätetään väliin.
                                                             (if (= ::disable-valinta rivin-nimi)
                                                               (paivita-luokat luokat (not (odd? index)))
                                                               (paivita-luokat luokat (odd? index)))))))
           (recur loput-rivit
+                 ;; Täällä pitää tehdä sama check kuin muutama rivi ylempänä.
                  (if (= ::disable-valinta rivin-nimi)
                    index
                    (inc index))))))))
 
-(defn rivi->rivi-kuukausifiltterilla [disable-rivit?-rajapinta disable-rivit?-polku rivi]
+;; Määritetään, että miten yhteenvetorivi tulisi muuttaa riviksi, jossa on myös checkbox alla.
+;; Toteutuksessa päädytään luomaan taulukko, jonka sisälle luodaan kaksi riviä. Ylemmälle riville
+;; laitetaan vanha yhteenvetorivi eri nimellä ja alemmalle riville checkboxin sisältämä rivi
+(defn rivi->rivi-disablevalinnalla [disable-rivit?-polku rivi]
   (let [sarakkeiden-maara (count (grid/hae-grid rivi :lapset))]
     (with-meta
       (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
@@ -157,9 +178,8 @@
                                    ::disable-valinta 1})
                   :osat [(-> rivi
                              (grid/aseta-nimi ::yhteenveto-auki)
-                             (grid/paivita-grid! :parametrit
-                                                 (fn [parametrit]
-                                                   (assoc parametrit :style {:z-index 10})))
+                             ;; Päivitetään Laajenna solun :auki-alussa? arvo trueksi, jotta solun caret-ikoni päivittyy
+                             ;; oikein
                              (grid/paivita-grid! :lapset
                                                  (fn [osat]
                                                    (mapv (fn [osa]
@@ -170,10 +190,12 @@
                          (grid/rivi {:osat (vec
                                              (cons (vayla-checkbox (fn [this event]
                                                                      (.preventDefault event)
-                                                                     (let [disable-rivit? (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
-                                                                                                                  disable-rivit?-rajapinta)]
-                                                                       (e! (tuck-apurit/->MuutaTila disable-rivit?-polku (not disable-rivit?)))))
+                                                                     ;; Kun checkboxia painetaan, haetaan solun nykyinen arvo käyttämällä
+                                                                     ;; grid/solun-arvo funktiota ja invertoidaan sen tulos
+                                                                     (let [disable-rivit? (not (grid/solun-arvo this))]
+                                                                       (e! (tuck-apurit/->MuutaTila disable-rivit?-polku disable-rivit?))))
                                                                    "Disabloi rivit")
+                                                   ;; Loppuihin sarakkeisiin laitetaan vain tyhjä solu
                                                    (repeatedly (dec sarakkeiden-maara) (fn [] (solu/tyhja)))))
                                      :koko {:seuraa {:seurattava ::otsikko
                                                      :sarakkeet :sama
@@ -182,8 +204,10 @@
                                     [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})
       {:key (str "foo-disable-" rivi)})))
 
-(defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
-  (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::yhteenveto-auki])
+;; Sama operaatio kuin rivi->rivi-disablevalinnalla funktiossa, mutta toisin päin.
+;; Eli otetaan pelkästään yhteenvetorivi jolloinka checkboxrivi jää pois.
+(defn rivi-disablevalinnalla->rivi [rivi-disablevalinnalla]
+  (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-disablevalinnalla [::yhteenveto-auki])
                                        :lapset
                                        (fn [osat]
                                          (mapv (fn [osa]
@@ -194,47 +218,64 @@
                    ::data-yhteenveto))
 
 (defn rivi-disablevalinnalla!
-  [laajennasolu kuukausitasolla?-rajapinta kuukausitasolla?-polku & datan-kasittely]
+  [laajennasolu disabletasolla?-polku & datan-kasittely]
+  ;; grid/vaihda-osa! funktio ottaa osan, joka halutaan vaihtaa ja osan, jolla se tulisi vaihtaa.
+  ;; Lisäksi uudelle osalle pitää määrittää datan käsittelijät
   (apply grid/vaihda-osa!
          (grid/vanhempi laajennasolu)
-         (partial rivi->rivi-kuukausifiltterilla kuukausitasolla?-rajapinta kuukausitasolla?-polku)
+         (partial rivi->rivi-disablevalinnalla disabletasolla?-polku)
          datan-kasittely))
 
 (defn rivi-ilman-disablevalintaa!
   [laajennasolu & datan-kasittely]
   (apply grid/vaihda-osa!
          (-> laajennasolu grid/vanhempi grid/vanhempi)
-         rivi-kuukausifiltterilla->rivi
+         rivi-disablevalinnalla->rivi
          datan-kasittely))
 
+;; Näytetään checkbox, jolla voi disabloida a sarakkeen inputkentät, jos rivikontti aukaistaan.
+;; Sulettaessa, tätä checkboxriviä ei näytetä.
+(defn muuta-yhteenvetorivi! [auki? solu rivin-nimi yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn]
+  (let [rajapinta (keyword (str "data-disable-" rivin-nimi))
+        #_#_yhteenveto-grid-rajapinta-asetukset (yhteenveto-grid-rajapinta-asetukset-fn rivin-nimi)
+        #_#_aukaistu-yhteeveto-rajapinta-asetukset (aukaistu-yhteenveto-rajapinta-asetukset-fn yhteenveto-grid-rajapinta-asetukset rajapinta)]
+    (if auki?
+      (rivi-disablevalinnalla! solu
+                               [:data-disable rivin-nimi]
+                               #_#_[:. ::yhteenveto-auki] (first aukaistu-yhteeveto-rajapinta-asetukset)
+                               #_#_[:. ::disable-valinta] (second aukaistu-yhteeveto-rajapinta-asetukset))
+      (rivi-ilman-disablevalintaa! solu
+                                   #_#_[:.] yhteenveto-grid-rajapinta-asetukset))))
+
+(defn hoida-rivien-nakyvyys! [auki? laajennasolu polku-dataan]
+  (let [aukeamis-polku [:.. :.. 1]
+        sulkemis-polku [:.. :.. :.. 1]]
+    ;; grid/osa-polusta funktiolle voi polun määrittää samaan tyyliin kuin terminaalissa navigoidaan kansioita.
+    ;; Eli halutaan viitata ::data-sisalto osaan kun ollaan aukasemassa rivikonttia. Käytössä on ::data-yhteenveto
+    ;; rivin laajenna solu, niin pitää mennä kaksi kertaa puussa ylöspäin, jotta saavutetaan ::data osio.
+    ;; ::data osion toinen lapsihan sitten on ::data-sisalto.
+    (if auki?
+      (do (grid/nayta! (grid/osa-polusta laajennasolu aukeamis-polku))
+          (paivita-raidat! (grid/osa-polusta (grid/root laajennasolu) polku-dataan)))
+      (do (grid/piillota! (grid/osa-polusta laajennasolu sulkemis-polku))
+          (paivita-raidat! (grid/osa-polusta (grid/root laajennasolu) polku-dataan))))))
+
 (defn laajenna-solua-klikattu
-  ([solu yhteenveto-grid-rajapinta-asetukset rivin-nimi auki? polku-dataan] (laajenna-solua-klikattu solu yhteenveto-grid-rajapinta-asetukset rivin-nimi auki? polku-dataan nil))
-  ([solu yhteenveto-grid-rajapinta-asetukset rivin-nimi auki? polku-dataan
-    {:keys [aukeamis-polku sulkemis-polku]
-     :or {aukeamis-polku [:.. :.. 1]
-          sulkemis-polku [:.. :.. 1]}}]
-   (let [rajapinta (keyword (str "data-disable-" rivin-nimi))]
-     (if auki?
-       (rivi-disablevalinnalla! solu
-                                rajapinta
-                                [:data-disable rivin-nimi]
-                                [:. ::yhteenveto-auki] yhteenveto-grid-rajapinta-asetukset
-                                [:. ::disable-valinta] {:rajapinta rajapinta
-                                                        :solun-polun-pituus 1
-                                                        :datan-kasittely (fn [disable?]
-                                                                           [disable? nil nil nil])})
-       (rivi-ilman-disablevalintaa! solu
-                                    [:.. ::data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
-     (if auki?
-       (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
-           (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan)))
-       (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
-           (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan)))))))
+  [solu yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn rivin-nimi auki? polku-dataan]
+  (muuta-yhteenvetorivi! auki? solu rivin-nimi yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn)
+  (hoida-rivien-nakyvyys! auki? solu polku-dataan))
 
 (defn paivita-solun-arvo! [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}]
+  ;; jarjesta-data ja triggeroi-seurannat ovat simppeleitä makroja. Ne vain wrappaa sisällensä jonkin koodinpätkän,
+  ;; jonka aikana tehdään makron nimen mukaisia asioita. Eli (jarjesta-data true [ body ]) aiheuttaa sen, että
+  ;; body:n ajon aikana data järjestetään. Tämä järjestys heijastuu sitten UI:lle. HUOM! jos "body" sisältää async- tai
+  ;; laiskasti suoritettavaa koodia, ei järjestystä välttämättä suoriteta.
   (jarjesta-data ajettavat-jarejestykset
     (triggeroi-seurannat triggeroi-seuranta?
+      ;; grid/aseta-rajapinnan-data! ottaa argumentikseen data käsittelijän ja "post" rajapinnan nimen. Loput argumentit
+      ;; annetaan rajapinnan funktiolle. Eli tääsä rajapintafunktio saa argumentikseen uuden arvon ja tunnisteen dataan,
+      ;; jota ollaan muokkaamassa.
       (grid/aseta-rajapinnan-data!
         (grid/osien-yhteinen-asia solu :datan-kasittelija)
         paivitettava-asia
@@ -265,20 +306,27 @@
   (komp/luo
     (komp/piirretty (fn [_]
                       (let [dom-id "foo"
-                            yhteenveto-grid-rajapinta-asetukset (fn [rivin-otsikko]
-                                                                  {:rajapinta (keyword (str "data-yhteenveto-" rivin-otsikko))
-                                                                   :solun-polun-pituus 1
-                                                                   :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c]]
-                                                                   :datan-kasittely (fn [yhteenveto]
-                                                                                      (mapv (fn [[_ v]]
-                                                                                              v)
-                                                                                            yhteenveto))
-                                                                   :tunnisteen-kasittely (fn [osat _]
-                                                                                           (mapv (fn [osa]
-                                                                                                   (when (instance? solu/Syote osa)
-                                                                                                     {:osa :maara
-                                                                                                      :rivin-otsikko rivin-otsikko}))
-                                                                                                 (grid/hae-grid osat :lapset)))})
+                            yhteenveto-grid-rajapinta-asetukset-fn (fn [rivin-otsikko]
+                                                                     {:rajapinta (keyword (str "data-yhteenveto-" rivin-otsikko))
+                                                                      :solun-polun-pituus 1
+                                                                      :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c]]
+                                                                      :datan-kasittely (fn [yhteenveto]
+                                                                                         (mapv (fn [[_ v]]
+                                                                                                 v)
+                                                                                               yhteenveto))
+                                                                      :tunnisteen-kasittely (fn [osat _]
+                                                                                              (mapv (fn [osa]
+                                                                                                      (when (instance? solu/Syote osa)
+                                                                                                        {:osa :maara
+                                                                                                         :rivin-otsikko rivin-otsikko}))
+                                                                                                    (grid/hae-grid osat :lapset)))})
+                            aukaistu-yhteenveto-rajapinta-asetukset-fn (fn [yhteenveto-grid-rajapinta-asetukset rajapinta]
+                                                                         [yhteenveto-grid-rajapinta-asetukset
+                                                                          {:rajapinta rajapinta
+                                                                           :solun-polun-pituus 1
+                                                                           :datan-kasittely (fn [disable?]
+                                                                                              [disable? nil nil nil])}])
+                            ;;
                             g (grid/grid {:nimi ::root
                                           :dom-id dom-id
                                           :root-fn (fn [] (get-in @tila [:grid]))
@@ -329,7 +377,7 @@
                                                                                                                                                             :rivit :sama}}
                                                                                                                                             :osat [(solu/laajenna {:aukaise-fn
                                                                                                                                                                    (fn [this auki?]
-                                                                                                                                                                     (laajenna-solua-klikattu this (yhteenveto-grid-rajapinta-asetukset rivi) rivi auki? [::data] #_{:sulkemis-polku [:.. :.. :.. 1]}))
+                                                                                                                                                                     (laajenna-solua-klikattu this yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn rivi auki? [::data]))
                                                                                                                                                                    :auki-alussa? false
                                                                                                                                                                    :parametrit {:class #{"table-default" "lihavoitu"}}})
                                                                                                                                                    (solu/teksti {:parametrit {:class #{"table-default"}}
@@ -453,7 +501,9 @@
                                                                                                                                              (assoc m ::rivitunnistin index))
                                                                                                                                            data)))))
                                                                                                 :haku (fn [data]
-                                                                                                        (group-by :rivi data))}
+                                                                                                        (group-by :rivi data))
+                                                                                                :identiteetti {1 (fn [arvo]
+                                                                                                                   (key arvo))}}
                                                                                     :footer {:polut [[:data-yhteensa]]
                                                                                              :haku (fn [data-yhteensa]
                                                                                                      (reduce-kv (fn [m _ {:keys [a b c]}]
@@ -544,41 +594,48 @@
                                                                                    :comp (fn [a b]
                                                                                            (compare a b))}]
                                                                       :datan-kasittely identity
-                                                                      :luonti (fn [data-ryhmiteltyna-nimen-perusteella]
+                                                                      :luonti (fn [data-ryhmiteltyna-nimen-perusteella g]
                                                                                 (let [data-avaimet #{:rivi :a :b :c}]
                                                                                   (map-indexed (fn [index [rivin-otsikko _]]
-                                                                                                 {[:. index ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset rivin-otsikko)
-                                                                                                  [:. index ::data-sisalto] {:rajapinta (keyword (str "data-" rivin-otsikko))
-                                                                                                                             :solun-polun-pituus 2
-                                                                                                                             :jarjestys [{:keyfn :a
-                                                                                                                                          :comp (fn [a1 a2]
-                                                                                                                                                  (let [muuta-numeroksi (fn [x]
-                                                                                                                                                                          (try (js/Number (clj-str/replace (or x "") "," "."))
-                                                                                                                                                                               (catch :default _
-                                                                                                                                                                                 x)))]
-                                                                                                                                                    (compare (muuta-numeroksi a1) (muuta-numeroksi a2))))}
-                                                                                                                                         ^{:nimi :mapit} [:rivi :a :b :c]]
-                                                                                                                             :datan-kasittely (fn [data]
-                                                                                                                                                (mapv (fn [rivi]
-                                                                                                                                                        (mapv (fn [[k v]]
-                                                                                                                                                                (when (contains? data-avaimet k)
-                                                                                                                                                                  v))
-                                                                                                                                                              rivi))
-                                                                                                                                                      data))
-                                                                                                                             :tunnisteen-kasittely (fn [_ data]
-                                                                                                                                                     (vec
-                                                                                                                                                       (map-indexed (fn [i rivi]
-                                                                                                                                                                      (let [rivitunnistin (some #(when (= ::rivitunnistin (first %))
-                                                                                                                                                                                                   (second %))
-                                                                                                                                                                                                rivi)]
-                                                                                                                                                                        (vec
-                                                                                                                                                                          (keep-indexed (fn [j [k _]]
-                                                                                                                                                                                          (when-not (= k ::rivitunnistin)
-                                                                                                                                                                                            {:rivitunnistin rivitunnistin
-                                                                                                                                                                                             :arvon-avain k
-                                                                                                                                                                                             :osan-paikka [i j]}))
-                                                                                                                                                                                        rivi))))
-                                                                                                                                                                    data)))}})
+                                                                                                 (merge
+                                                                                                   (if (grid/osan-tyyppi? (grid/get-in-grid g [index 0]) impl-grid/Grid)
+                                                                                                     (let [rajapinta (keyword (str "data-disable-" rivin-otsikko))
+                                                                                                           yhteenveto-grid-rajapinta-asetukset (yhteenveto-grid-rajapinta-asetukset-fn rivin-otsikko)
+                                                                                                           aukaistu-yhteeveto-rajapinta-asetukset (aukaistu-yhteenveto-rajapinta-asetukset-fn yhteenveto-grid-rajapinta-asetukset rajapinta)]
+                                                                                                       {[:. index 0 ::yhteenveto-auki] (first aukaistu-yhteeveto-rajapinta-asetukset)
+                                                                                                        [:. index 0 ::disable-valinta] (second aukaistu-yhteeveto-rajapinta-asetukset)})
+                                                                                                     {[:. index ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset-fn rivin-otsikko)})
+                                                                                                   {[:. index ::data-sisalto] {:rajapinta (keyword (str "data-" rivin-otsikko))
+                                                                                                                               :solun-polun-pituus 2
+                                                                                                                               :jarjestys [{:keyfn :a
+                                                                                                                                            :comp (fn [a1 a2]
+                                                                                                                                                    (let [muuta-numeroksi (fn [x]
+                                                                                                                                                                            (try (js/Number (clj-str/replace (or x "") "," "."))
+                                                                                                                                                                                 (catch :default _
+                                                                                                                                                                                   x)))]
+                                                                                                                                                      (compare (muuta-numeroksi a1) (muuta-numeroksi a2))))}
+                                                                                                                                           ^{:nimi :mapit} [:rivi :a :b :c]]
+                                                                                                                               :datan-kasittely (fn [data]
+                                                                                                                                                  (mapv (fn [rivi]
+                                                                                                                                                          (mapv (fn [[k v]]
+                                                                                                                                                                  (when (contains? data-avaimet k)
+                                                                                                                                                                    v))
+                                                                                                                                                                rivi))
+                                                                                                                                                        data))
+                                                                                                                               :tunnisteen-kasittely (fn [_ data]
+                                                                                                                                                       (vec
+                                                                                                                                                         (map-indexed (fn [i rivi]
+                                                                                                                                                                        (let [rivitunnistin (some #(when (= ::rivitunnistin (first %))
+                                                                                                                                                                                                     (second %))
+                                                                                                                                                                                                  rivi)]
+                                                                                                                                                                          (vec
+                                                                                                                                                                            (keep-indexed (fn [j [k _]]
+                                                                                                                                                                                            (when-not (= k ::rivitunnistin)
+                                                                                                                                                                                              {:rivitunnistin rivitunnistin
+                                                                                                                                                                                               :arvon-avain k
+                                                                                                                                                                                               :osan-paikka [i j]}))
+                                                                                                                                                                                          rivi))))
+                                                                                                                                                                      data)))}}))
                                                                                                data-ryhmiteltyna-nimen-perusteella)))}})
                         (grid/grid-tapahtumat g
                                               tila

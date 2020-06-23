@@ -334,12 +334,18 @@
 (defn pudotusvalikko? [osa]
   (instance? solu/Pudotusvalikko osa))
 
+(defn osan-tyyppi? [osa tyyppi]
+  (= (type osa) tyyppi))
+
 ;; PIIRRA
 
 (defn piirra [osa]
   (gop/piirra osa))
 
 ;; MISC
+
+(defn osan-entinen-tyyppi [osa]
+  (get-in osa [::g/osa-vaihdettu :vanha-tyyppi]))
 
 (defn siivoa-grid! [grid]
   (doseq [[_ {:keys [seurannan-lopetus!]}] (::g/grid-tapahtumat grid)]
