@@ -735,7 +735,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi on-datepicker-select]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -747,7 +747,9 @@
                                     :muokattu-tassa? true})
         muuta-data! (fn [arvo]
                       (swap! vanha-data assoc :data arvo :muokattu-tassa? true)
-                      (reset! data arvo))
+                      (reset! data arvo)
+                      (when on-datepicker-select
+                        (on-datepicker-select arvo)))
         validoi-fn (fn [validoi? validointi uusi-paiva]
                      (if validoi?
                        (cond
@@ -781,7 +783,7 @@
                             (pvm/pvm p)
                             ""))))
        :reagent-render
-       (fn [{:keys [on-focus on-blur placeholder rivi validointi]} data]
+       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)

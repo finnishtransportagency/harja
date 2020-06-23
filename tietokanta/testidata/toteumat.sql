@@ -418,3 +418,6 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
     ROW(NOW() - interval '56 minute',st_makepoint(430969, 7198125) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
         ARRAY[ROW(3, 3)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata
   ]::reittipistedata[]);
+
+-- Määritellään vain halutut tehtävät mahdolliseksi lisätä suunnitellulle tehtävälle käsin
+UPDATE toimenpidekoodi set kasin_lisattava_maara = TRUE WHERE ID in (1428,1431,1430,1429,3062,1439,1403,3021,3022, 3025, 3026, 3023, 3024,3027, 3028, 3063,3064, 3065, 3066, 3067, 1414,3040, 3068, 3041, 3042, 3043, 3069,3050, 3051);
