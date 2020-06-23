@@ -501,7 +501,8 @@ SELECT t.id        AS toteuma_id,
        t.alkanut                  AS toteuma_aika,
        tk.yksikko                 AS yksikko,
        tr1.otsikko                AS toimenpide_otsikko,
-       tr1.id                     AS toimenpide_id
+       tr1.id                     AS toimenpide_id,
+       tt.id                      AS toteuma_tehtava_id
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
          toteuma t,
