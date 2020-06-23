@@ -22,6 +22,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.tyokalut.xml :as xml])
   (:use org.httpkit.fake))
@@ -942,3 +944,39 @@
                                           :tr-numero 20}]}}
            (paallystys/lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus kohdeosat))
         "Kohdeosille on lisätty id:t oikein, kun ajorataa ja kaistaa ei ole")))
+
+(defn poista-muokkaustiedot
+  [rivi]
+  (dissoc rivi ::m/muokkaaja ::m/muokattu ::m/luotu ::m/poistettu? ::paallystysilmoitus-domain/paallystysmassa-id))
+
+(deftest urakan-paallystysmassojen-haku
+  (let [massa1-odotettu (poista-muokkaustiedot {::paallystysilmoitus-domain/km-arvo "AN14", ::paallystysilmoitus-domain/lisaaineet "Pippuria ja suolaa", ::paallystysilmoitus-domain/rc (bigdec 1), ::paallystysilmoitus-domain/sideainetyyppi "70/100", ::paallystysilmoitus-domain/muotoarvo "20", ::m/luotu "2020-06-15T04:37:30.104074000-00:00", ::paallystysilmoitus-domain/esiintyma "Kaislakallio", ::paallystysilmoitus-domain/pitoisuus 5.40M, ::m/luoja-id 11, :harja.domain.urakka/id 7, ::paallystysilmoitus-domain/nimi "Alfattibetoni", ::paallystysilmoitus-domain/raekoko 16, ::m/muokkaaja nil, ::paallystysilmoitus-domain/massatyyppitunnus "AB-16", ::paallystysilmoitus-domain/paallystysmassa-id 1, ::m/poistettu? false, ::m/muokattu nil})
+        massa2-odotettu (poista-muokkaustiedot {::paallystysilmoitus-domain/km-arvo "AN7", ::paallystysilmoitus-domain/lisaaineet "Chiliä ja Currya", ::paallystysilmoitus-domain/rc (bigdec 2), ::paallystysilmoitus-domain/sideainetyyppi "70/100", ::paallystysilmoitus-domain/muotoarvo "10", ::m/luotu "2020-06-15T04:37:30.104074000-00:00", ::paallystysilmoitus-domain/esiintyma "Karjukallio", ::paallystysilmoitus-domain/pitoisuus 5.80M, ::m/luoja-id 11, :harja.domain.urakka/id 7, ::paallystysilmoitus-domain/nimi "Kivimastiksiasfaltti", ::paallystysilmoitus-domain/raekoko 16, ::m/muokkaaja nil, ::paallystysilmoitus-domain/massatyyppitunnus "SMA 16", ::paallystysilmoitus-domain/paallystysmassa-id 2, ::m/poistettu? false, ::m/muokattu nil})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-paallystysmassat +kayttaja-jvh+
+                                {:urakka-id (hae-utajarven-paallystysurakan-id)})]
+    (is (= 2 (count vastaus)) "Saatiin testiurakoiden oikea määrä")
+    (is (= massa1-odotettu (poista-muokkaustiedot (first (filter #(= (::paallystysilmoitus-domain/km-arvo %) "AN14") vastaus)))))
+    (is (= massa2-odotettu (poista-muokkaustiedot (first (filter #(= (::paallystysilmoitus-domain/km-arvo %) "AN7") vastaus)))))))
+
+(deftest urakan-paallystysmassojen-lisays
+  (let [uusi-massa
+        {::paallystysilmoitus-domain/km-arvo "AE22",
+         ::paallystysilmoitus-domain/lisaaineet "Aspartaamia",
+         ::paallystysilmoitus-domain/rc (bigdec 1),
+         ::paallystysilmoitus-domain/sideainetyyppi "70/1111",
+         ::paallystysilmoitus-domain/muotoarvo "21",
+         ::paallystysilmoitus-domain/esiintyma "Lummesuo",
+         ::paallystysilmoitus-domain/pitoisuus 2.40M,
+         ::paallystysilmoitus-domain/nimi "Siirappisokeri",
+         ::paallystysilmoitus-domain/raekoko 32,
+         ::paallystysilmoitus-domain/massatyyppitunnus "H2SO4"}
+        massat (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakan-paallystysmassat +kayttaja-jvh+
+                               {:urakka-id (hae-utajarven-paallystysurakan-id)})]
+    (is (= 2 (count massat)) "Testiurakoita on 2 ennen uuden tallennusta")
+    (let [massat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-urakan-paallystysmassa  +kayttaja-jvh+ uusi-massa)]
+      (is (= 3 (count massat)) "Testiurakoita on 3 uuden massan tallentamisen jälkeen")
+      (is (= uusi-massa (poista-muokkaustiedot (first (filter #(= (::paallystysilmoitus-domain/km-arvo %) "AE22") massat))))))
+    ))

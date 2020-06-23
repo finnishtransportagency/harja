@@ -48,3 +48,9 @@
          ::paallystysilmoitus/paallystysmassa
          paallystysilmoitus/paallystysmassan-tiedot
          hakuehdot))
+
+(defn tallenna-urakan-paallystysmassa
+  [db hakuehdot]
+  (insert! db
+         ::paallystysilmoitus/paallystysmassa
+         hakuehdot))

@@ -702,10 +702,6 @@
        :yhteyshenkilot (vec yhteyshenkilot)})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn- hae-urakan-paallystysmassat
-  [db user hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (:harja.domain.urakka/id hakuehdot))
-  (q/hae-urakan-paallystysmassat db hakuehdot))
 
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
@@ -770,9 +766,6 @@
       (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
                         (fn [user tiedot]
                           (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))
-      (julkaise-palvelu http :hae-urakan-paallystysmassat
-                        (fn [user tiedot]
-                          (hae-urakan-paallystysmassat db user tiedot)))
       (assoc this ::sahkopostin-lahetys
                   (tee-ajastettu-sahkopostin-lahetystehtava
                     db fim email
@@ -787,9 +780,7 @@
                      :tallenna-yllapitokohdeosat
                      :hae-yllapitourakan-aikataulu
                      :tallenna-yllapitokohteiden-aikataulu
-                     :hae-urakan-paallystysmassat
                      :sahkopostin-lahetys)
-
     (when sahkopostin-lahetys
       (sahkopostin-lahetys))
     (dissoc this ::sahkopostin-lahetys)))

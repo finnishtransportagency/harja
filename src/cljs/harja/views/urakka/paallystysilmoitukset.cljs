@@ -1087,15 +1087,15 @@
    :voi-kumota?  false
    :voi-poistaa? (constantly false)
    :voi-muokata? true}
-  [{:otsikko "Massatyyppi" :hae #(str (get % :massatyyppitunnus) " - " (get % :nimi)) :muokattava? (constantly false) :tyyppi :string :leveys 20}
-   {:otsikko "RC-%" :nimi :rc :fmt #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
-   {:otsikko "Raekoko" :nimi :raekoko :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
-   {:otsikko "Kiviainesesiintymä" :nimi :esiintyma :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 15}
-   {:otsikko "KM-arvo" :nimi :km_arvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
-   {:otsikko "Muotoarvo" :nimi :muotoarvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
-   {:otsikko "Sideainetyyppi" :nimi :sideainetyyppi :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
-   {:otsikko "Pitoisuus" :nimi :pitoisuus :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
-   {:otsikko "Lisäaineet" :nimi :lisaaineet :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 25}]
+  [{:otsikko "Massatyyppi" :hae #(str (get % ::pot/massatyyppitunnus) " - " (get % ::pot/nimi)) :muokattava? (constantly false) :tyyppi :string :leveys 20}
+   {:otsikko "RC-%" :nimi ::pot/rc :fmt #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
+   {:otsikko "Raekoko" :nimi ::pot/raekoko :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
+   {:otsikko "Kiviainesesiintymä" :nimi ::pot/esiintyma :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 15}
+   {:otsikko "KM-arvo" :nimi ::pot/km_arvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
+   {:otsikko "Muotoarvo" :nimi ::pot/muotoarvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
+   {:otsikko "Sideainetyyppi" :nimi ::pot/sideainetyyppi :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
+   {:otsikko "Pitoisuus" :nimi ::pot/pitoisuus :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
+   {:otsikko "Lisäaineet" :nimi ::pot/lisaaineet :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 25}]
    paallystysmassat])
 
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
