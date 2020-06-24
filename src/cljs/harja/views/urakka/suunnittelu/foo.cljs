@@ -697,5 +697,71 @@
           ;; Uuden rivin voi lisätä painamalla nappia
           (e! (->LisaaRivi)))]])))
 
+(defn luo-css-luokat! [luokat]
+  (let [tyyli-elementti (.createElement js/document "style")
+        tyylit (apply str (interpose " " (map (fn [[luokan-nimi css-maaritelma]]
+                                                (str "." luokan-nimi " " css-maaritelma))
+                                              luokat)))]
+    (set! (.-type tyyli-elementti) "text/css")
+    (set! (.-innerHTML tyyli-elementti) tyylit)
+    (-> (.getElementsByTagName js/document "head")
+        (aget 0)
+        (.appendChild tyyli-elementti))))
+
+(defn pelilauta []
+  (luo-css-luokat! {"musta" "{ background-color: black; }"
+                   "valkoinen" "{ background-color: white; }"
+                    "vihrea-merkki" "{ color: green; }"})
+  (let [korkeus-px 40
+        g (grid/grid {:nimi ::lauta
+                      :dom-id "pelilauta"
+                      :root-fn (fn [] (get-in @tila [:pelilauta :grid]))
+                      :paivita-root! (fn [f]
+                                       (swap! tila
+                                              (fn [tila]
+                                                (update-in tila [:pelilauta :grid] f))))
+                      :alueet [{:sarakkeet [0 8] :rivit [0 8]}]
+                      :koko (-> konf/auto
+                                (assoc-in [:sarake :oletus-leveys] (str korkeus-px "px"))
+                                (assoc-in [:rivi :oletus-korkeus] (str korkeus-px "px")))
+                      :osat (vec
+                              (mapcat (fn [rivi-index]
+                                        (let [aloitus-n (if (odd? rivi-index) 1 0)]
+                                          (map (fn [sarake-index]
+                                                 (solu/ikoni {:toiminnot {:on-mouse-over (fn [_]
+                                                                                           (swap! tila assoc-in [:pelilauta :paikka] [rivi-index (- sarake-index aloitus-n)]))}
+                                                              :parametrit {:class (conj #{"vihrea-merkki"}
+                                                                                        (if (odd? sarake-index)
+                                                                                          "musta"
+                                                                                          "valkoinen"))}}))
+                                               (range aloitus-n (+ aloitus-n 8)))))
+                                      (range 0 8)))})
+        rajapinta {:ikonin-paikka any?}]
+    (e! (tuck-apurit/->MuutaTila [:pelilauta :grid] g))
+    (grid/rajapinta-grid-yhdistaminen! g
+                                       rajapinta
+                                       (grid/datan-kasittelija tila
+                                                               rajapinta
+                                                               {:ikonin-paikka {:polut [[:pelilauta :paikka]]
+                                                                                :haku identity}}
+
+                                                               {}
+                                                               {})
+                                       {[] {:rajapinta :ikonin-paikka
+                                            :solun-polun-pituus 1
+                                            :datan-kasittely (fn [data-rajapinnasta]
+                                                               (when data-rajapinnasta
+                                                                 (println "data-rajapinnasta (eli paikka) " data-rajapinnasta)
+                                                                 (let [[rivi sarake] data-rajapinnasta]
+                                                                   (conj (vec (repeat (+ (* rivi 8) sarake) nil))
+                                                                         {:ikoni ikonit/check}))))}})
+    (fn []
+      (if-let [g (get-in @tila [:pelilauta :grid])]
+        [:div {:style {:max-width (str (* 8 korkeus-px) "px")}}
+         [grid/piirra g]]
+        [:span "Odotellaan pelilautaa..."]))))
+
 (defn foo []
-  [tuck/tuck tila foo*])
+  [:<>
+   [tuck/tuck tila foo*]
+   [pelilauta]])

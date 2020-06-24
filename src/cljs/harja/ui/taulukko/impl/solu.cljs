@@ -55,7 +55,7 @@
                          toiminnot))))
 
 (defn global-event-handlers [this {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
-                                     on-key-up]}]
+                                     on-key-up on-mouse-over]}]
   {:on-blur (when on-blur
               (on-blur this))
    :on-change (when on-change
@@ -71,7 +71,9 @@
    :on-key-press (when on-key-press
                    (on-key-press this))
    :on-key-up (when on-key-up
-                (on-key-up this))})
+                (on-key-up this))
+   :on-mouse-over (when on-mouse-over
+                    (on-mouse-over this))})
 
 (defn fmt-asetukset-oikein? [{:keys [fmt fmt-aktiivinen]}]
   (and (or (nil? fmt) (fn? fmt))
@@ -590,13 +592,14 @@
                            {:keys [id class]} (:parametrit this)
                            taman-data (taman-derefable this)
                            {:keys [ikoni teksti]} @taman-data]
-                       [:div.solu.solu-ikoni {:class (when class
-                                                       (apply str (interpose " " class)))
-                                              :id id
-                                              :data-cy (::nimi this)}
-                        [:span (merge (global-event-handlers this kaytokset-lisatty)
-                                      {:style {:cursor (when-not (empty? (:toiminnot this))
-                                                         "pointer")}})
+                       [:div.solu.solu-ikoni (merge {:class (when class
+                                                              (apply str (interpose " " class)))
+                                                     :id id
+                                                     :data-cy (::nimi this)}
+                                                    (global-event-handlers this kaytokset-lisatty)
+                                                    {:style {:cursor (when-not (empty? (:toiminnot this))
+                                                                       "pointer")}})
+                        [:span
                          (when (fn? ikoni)
                            [ikoni])
                          teksti]])))})))
