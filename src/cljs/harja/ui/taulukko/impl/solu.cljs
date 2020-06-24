@@ -570,8 +570,9 @@
 (defrecord Ikoni [id toiminnot kayttaytymiset parametrit]
   gop/IPiirrettava
   (-piirra [this]
-    (let [kaytokset-lisatty (lisaa-kaytokset (:toiminnot this)
-                                             (:kayttaytymiset this))]
+    (let [kaytokset-lisatty (when (:toiminnot this)
+                              (lisaa-kaytokset (:toiminnot this)
+                                               (:kayttaytymiset this)))]
       (r/create-class
         {:constructor (fn [this props]
                         (set! (.-domNode this) (fn [] (dom/dom-node this)))

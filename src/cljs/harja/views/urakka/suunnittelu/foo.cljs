@@ -209,10 +209,6 @@
                          (grid/rivi {:osat (vec
                                              (cons (vayla-checkbox (fn [this event]
                                                                      (.preventDefault event)
-                                                                     (println "this " this)
-                                                                     (println "disable-rivit?-polku " disable-rivit?-polku)
-                                                                     (println "(grid/solun-arvo this) " (grid/solun-arvo this))
-
                                                                      ;; Kun checkboxia painetaan, haetaan solun nykyinen arvo käyttämällä
                                                                      ;; grid/solun-arvo funktiota ja invertoidaan sen tulos
                                                                      (let [disable-rivit? (not (grid/solun-arvo this))]
@@ -326,11 +322,7 @@
                                                                       :solun-polun-pituus 1
                                                                       :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c :poista]]
                                                                       :datan-kasittely (fn [yhteenveto]
-                                                                                         (println "yhteenveto " yhteenveto)
-                                                                                         (mapv (fn [[k v]]
-                                                                                                 (if (= k :poista)
-                                                                                                   (into {} v)
-                                                                                                   v))
+                                                                                         (mapv val
                                                                                                yhteenveto))
                                                                       :tunnisteen-kasittely (fn [osat _]
                                                                                               (mapv (fn [osa]
