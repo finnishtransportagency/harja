@@ -1188,6 +1188,15 @@
          :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
        paallystysilmoitukset])))
 
+(defn nayta-massakirjasto-modal!
+  [urakka]
+
+  (modal/nayta!
+    {:otsikko "Massakirjasto"
+     :footer [napit/sulje #(modal/piilota!)]}
+      [:p [:id urakka]]
+  ))
+
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
@@ -1197,6 +1206,12 @@
             sopimus-id (first valittu-sopimusnumero)]
         [:div
          ; TODO: Näytetään massat käyttöliittymässä vasta kun ominaisuus on käytettävissä
+         [:h3 "Massakirjasto"]
+         ; TODO: Tähän kohti implementoidaan massakirjasto-modal, joka sisältäisi urakkaan sidotun massakirjasto-datan sekä tallennusmahdollisuudet niihin.
+         [:button.namiska
+          {:on-click #(nayta-massakirjasto-modal! urakka)}
+          [:span "Aloita Foobar-hommat"]]
+
          [:h3 "Päällystysmassat"]
          [paallystysmassat-taulukko e! app]
          [:h3 "Päällystysilmoitukset"]
