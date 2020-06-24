@@ -2,6 +2,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [harja.ui.komponentti :as komp]
+            [harja.ui.ikonit :as ikonit]
             [harja.tyokalut.tuck :as tuck-apurit]
 
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
@@ -21,6 +22,7 @@
 (defrecord JarjestaData [otsikko])
 (defrecord LisaaRivi [])
 (defrecord MuokkaaUudenRivinNimea [nimi])
+(defrecord PoistaRivi [tunniste])
 
 (extend-protocol tuck/Event
   JarjestaData
@@ -69,7 +71,24 @@
             (assoc :uusi-rivi nil)))))
   MuokkaaUudenRivinNimea
   (process-event [{:keys [nimi]} app]
-    (assoc app :uusi-rivi nimi)))
+    (assoc app :uusi-rivi nimi))
+  PoistaRivi
+  (process-event [{{:keys [rivin-otsikko]} :tunniste} app]
+    (let [poistettavien-rivien-tunnistimet (transduce
+                                             (comp (filter #(= (:rivi %) rivin-otsikko))
+                                                   (map ::rivitunnistin))
+                                             conj
+                                             #{}
+                                             (:data app))]
+      (-> app
+          (update :data (fn [data]
+                          (filterv #(not (= (:rivi %) rivin-otsikko))
+                                   data)))
+          (update :data-disable dissoc rivin-otsikko)
+          (update :kirjoitettu-data (fn [rivitunnistimien-arvot]
+                                      (into {}
+                                            (remove #(contains? poistettavien-rivien-tunnistimet (key %)))
+                                            rivitunnistimien-arvot)))))))
 
 ;; Data on vektori mappeja. Pidtään myös Otsikkorivin arvot omalla rivillään
 (defonce alkudata {:data [{:rivi :foo :a 1 :b 2 :c 3}
@@ -106,7 +125,7 @@
               [:input.vayla-checkbox {:id osan-id
                                       :type "checkbox"
                                       :checked checked?
-                                      :on-change (partial (:vaihda-fn this) this)}]
+                                      :on-change (r/partial (:vaihda-fn this) this)}]
               [:label {:for osan-id} (:txt this)]])))
 
 (defn summa-formatointi [teksti]
@@ -190,6 +209,10 @@
                          (grid/rivi {:osat (vec
                                              (cons (vayla-checkbox (fn [this event]
                                                                      (.preventDefault event)
+                                                                     (println "this " this)
+                                                                     (println "disable-rivit?-polku " disable-rivit?-polku)
+                                                                     (println "(grid/solun-arvo this) " (grid/solun-arvo this))
+
                                                                      ;; Kun checkboxia painetaan, haetaan solun nykyinen arvo käyttämällä
                                                                      ;; grid/solun-arvo funktiota ja invertoidaan sen tulos
                                                                      (let [disable-rivit? (not (grid/solun-arvo this))]
@@ -218,34 +241,26 @@
                    ::data-yhteenveto))
 
 (defn rivi-disablevalinnalla!
-  [laajennasolu disabletasolla?-polku & datan-kasittely]
+  [laajennasolu disabletasolla?-polku]
   ;; grid/vaihda-osa! funktio ottaa osan, joka halutaan vaihtaa ja osan, jolla se tulisi vaihtaa.
   ;; Lisäksi uudelle osalle pitää määrittää datan käsittelijät
-  (apply grid/vaihda-osa!
+  (grid/vaihda-osa!
          (grid/vanhempi laajennasolu)
-         (partial rivi->rivi-disablevalinnalla disabletasolla?-polku)
-         datan-kasittely))
+         (partial rivi->rivi-disablevalinnalla disabletasolla?-polku)))
 
 (defn rivi-ilman-disablevalintaa!
-  [laajennasolu & datan-kasittely]
-  (apply grid/vaihda-osa!
+  [laajennasolu ]
+  (grid/vaihda-osa!
          (-> laajennasolu grid/vanhempi grid/vanhempi)
-         rivi-disablevalinnalla->rivi
-         datan-kasittely))
+         rivi-disablevalinnalla->rivi))
 
 ;; Näytetään checkbox, jolla voi disabloida a sarakkeen inputkentät, jos rivikontti aukaistaan.
 ;; Sulettaessa, tätä checkboxriviä ei näytetä.
-(defn muuta-yhteenvetorivi! [auki? solu rivin-nimi yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn]
-  (let [rajapinta (keyword (str "data-disable-" rivin-nimi))
-        #_#_yhteenveto-grid-rajapinta-asetukset (yhteenveto-grid-rajapinta-asetukset-fn rivin-nimi)
-        #_#_aukaistu-yhteeveto-rajapinta-asetukset (aukaistu-yhteenveto-rajapinta-asetukset-fn yhteenveto-grid-rajapinta-asetukset rajapinta)]
-    (if auki?
-      (rivi-disablevalinnalla! solu
-                               [:data-disable rivin-nimi]
-                               #_#_[:. ::yhteenveto-auki] (first aukaistu-yhteeveto-rajapinta-asetukset)
-                               #_#_[:. ::disable-valinta] (second aukaistu-yhteeveto-rajapinta-asetukset))
-      (rivi-ilman-disablevalintaa! solu
-                                   #_#_[:.] yhteenveto-grid-rajapinta-asetukset))))
+(defn muuta-yhteenvetorivi! [auki? solu rivin-nimi]
+  (if auki?
+    (rivi-disablevalinnalla! solu
+                             [:data-disable rivin-nimi])
+    (rivi-ilman-disablevalintaa! solu)))
 
 (defn hoida-rivien-nakyvyys! [auki? laajennasolu polku-dataan]
   (let [aukeamis-polku [:.. :.. 1]
@@ -261,8 +276,8 @@
           (paivita-raidat! (grid/osa-polusta (grid/root laajennasolu) polku-dataan))))))
 
 (defn laajenna-solua-klikattu
-  [solu yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn rivin-nimi auki? polku-dataan]
-  (muuta-yhteenvetorivi! auki? solu rivin-nimi yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn)
+  [solu rivin-nimi auki? polku-dataan]
+  (muuta-yhteenvetorivi! auki? solu rivin-nimi)
   (hoida-rivien-nakyvyys! auki? solu polku-dataan))
 
 (defn paivita-solun-arvo! [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
@@ -309,23 +324,28 @@
                             yhteenveto-grid-rajapinta-asetukset-fn (fn [rivin-otsikko]
                                                                      {:rajapinta (keyword (str "data-yhteenveto-" rivin-otsikko))
                                                                       :solun-polun-pituus 1
-                                                                      :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c]]
+                                                                      :jarjestys [^{:nimi :mapit} [:rivin-otsikko :a :b :c :poista]]
                                                                       :datan-kasittely (fn [yhteenveto]
-                                                                                         (mapv (fn [[_ v]]
-                                                                                                 v)
+                                                                                         (println "yhteenveto " yhteenveto)
+                                                                                         (mapv (fn [[k v]]
+                                                                                                 (if (= k :poista)
+                                                                                                   (into {} v)
+                                                                                                   v))
                                                                                                yhteenveto))
                                                                       :tunnisteen-kasittely (fn [osat _]
                                                                                               (mapv (fn [osa]
                                                                                                       (when (instance? solu/Syote osa)
                                                                                                         {:osa :maara
-                                                                                                         :rivin-otsikko rivin-otsikko}))
+                                                                                                         :rivin-otsikko rivin-otsikko})
+                                                                                                      (when (instance? solu/Ikoni osa)
+                                                                                                        {:rivin-otsikko rivin-otsikko}))
                                                                                                     (grid/hae-grid osat :lapset)))})
                             aukaistu-yhteenveto-rajapinta-asetukset-fn (fn [yhteenveto-grid-rajapinta-asetukset rajapinta]
                                                                          [yhteenveto-grid-rajapinta-asetukset
                                                                           {:rajapinta rajapinta
                                                                            :solun-polun-pituus 1
                                                                            :datan-kasittely (fn [disable?]
-                                                                                              [disable? nil nil nil])}])
+                                                                                              [disable? nil nil nil nil])}])
                             ;;
                             g (grid/grid {:nimi ::root
                                           :dom-id dom-id
@@ -344,18 +364,20 @@
                                                                                   2 "40px"}))
                                           :osat [(grid/rivi {:nimi ::otsikko
                                                              :koko (-> konf/livi-oletuskoko
-                                                                       (assoc-in [:sarake :leveydet] {0 "3fr"
-                                                                                                      3 "1fr"})
-                                                                       (assoc-in [:sarake :oletus-leveys] "2fr"))
-                                                             :osat (mapv (fn [nimi] (solu/otsikko {:jarjesta-fn! jarjesta-fn!
-                                                                                                   :parametrit {:class #{"table-default" "table-default-header"}}
-                                                                                                   :nimi nimi})
-                                                                           #_(solu/teksti {:parametrit {:class #{"table-default" "table-default-header"}}}))
-                                                                         [:rivi :a :b :c])
+                                                                       (assoc-in [:sarake :leveydet] {0 "9fr"
+                                                                                                      4 "1fr"})
+                                                                       (assoc-in [:sarake :oletus-leveys] "3fr"))
+                                                             :osat (conj (mapv (fn [nimi]
+                                                                                 (solu/otsikko {:jarjesta-fn! jarjesta-fn!
+                                                                                                :parametrit {:class #{"table-default" "table-default-header"}}
+                                                                                                :nimi nimi}))
+                                                                               [:rivi :a :b :c])
+                                                                         (solu/tyhja #{"table-default" "table-default-header"}))
                                                              :luokat #{"salli-ylipiirtaminen"}}
-                                                            [{:sarakkeet [0 4] :rivit [0 1]}])
+                                                            [{:sarakkeet [0 5] :rivit [0 1]}])
                                                  (grid/dynamic-grid {:nimi ::data
                                                                      :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
+                                                                     :osatunnisteet #(map key %)
                                                                      :koko konf/auto
                                                                      :luokat #{"salli-ylipiirtaminen"}
                                                                      :osien-maara-muuttui! (fn [g _] (paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
@@ -377,7 +399,7 @@
                                                                                                                                                             :rivit :sama}}
                                                                                                                                             :osat [(solu/laajenna {:aukaise-fn
                                                                                                                                                                    (fn [this auki?]
-                                                                                                                                                                     (laajenna-solua-klikattu this yhteenveto-grid-rajapinta-asetukset-fn aukaistu-yhteenveto-rajapinta-asetukset-fn rivi auki? [::data]))
+                                                                                                                                                                     (laajenna-solua-klikattu this rivi auki? [::data]))
                                                                                                                                                                    :auki-alussa? false
                                                                                                                                                                    :parametrit {:class #{"table-default" "lihavoitu"}}})
                                                                                                                                                    (solu/teksti {:parametrit {:class #{"table-default"}}
@@ -385,9 +407,12 @@
                                                                                                                                                    (solu/teksti {:parametrit {:class #{"table-default"}}
                                                                                                                                                                  :fmt summa-formatointi})
                                                                                                                                                    (solu/teksti {:parametrit {:class #{"table-default" "harmaa-teksti"}}
-                                                                                                                                                                 :fmt summa-formatointi})]
+                                                                                                                                                                 :fmt summa-formatointi})
+                                                                                                                                                   (solu/ikoni {:nimi "poista"
+                                                                                                                                                                :toiminnot {:on-click (fn [_]
+                                                                                                                                                                                        (e! (->PoistaRivi (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))))}})]
                                                                                                                                             :luokat #{"salli-ylipiirtaminen"}}
-                                                                                                                                           [{:sarakkeet [0 4] :rivit [0 1]}])
+                                                                                                                                           [{:sarakkeet [0 5] :rivit [0 1]}])
                                                                                                                                 {:key (str rivi "-yhteenveto")})
                                                                                                                      (with-meta
                                                                                                                        (grid/taulukko {:nimi ::data-sisalto
@@ -451,9 +476,10 @@
                                                                                                                                                                  {:key (str rivi "-" index "-yhteensa")})
                                                                                                                                                                (with-meta
                                                                                                                                                                  (solu/teksti {:parametrit {:class #{"table-default"}}})
-                                                                                                                                                                 {:key (str rivi "-" index "-indeksikorjattu")})]
+                                                                                                                                                                 {:key (str rivi "-" index "-indeksikorjattu")})
+                                                                                                                                                               (solu/tyhja)]
                                                                                                                                                         :luokat #{"salli-ylipiirtaminen"}}
-                                                                                                                                                       [{:sarakkeet [0 4] :rivit [0 1]}])
+                                                                                                                                                       [{:sarakkeet [0 5] :rivit [0 1]}])
                                                                                                                                             {:key (str rivi "-" index)}))
                                                                                                                                         (range 3)))
                                                                                                                        {:key (str rivi "-data-sisalto")})]})
@@ -468,8 +494,9 @@
                                                                          (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum"}}
                                                                                        :fmt summa-formatointi})
                                                                          (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
-                                                                                       :fmt summa-formatointi}))}
-                                                            [{:sarakkeet [0 4] :rivit [0 1]}])]})
+                                                                                       :fmt summa-formatointi})
+                                                                         (solu/tyhja #{"table-default" "table-default-sum"}))}
+                                                            [{:sarakkeet [0 5] :rivit [0 1]}])]})
 
                             rajapinta {:otsikot any?
                                        :yhteensarivit any?
@@ -522,11 +549,13 @@
                                                                                                                          {(keyword (str "data-yhteenveto-" rivin-otsikko)) ^{:args [rivin-otsikko]} [[:data-yhteensa rivin-otsikko]]})
                                                                                                                        data-yhteensa)))
                                                                                                       :haku (fn [yhteenvetorivin-data yhteenvetorivin-nimi]
-                                                                                                              (assoc yhteenvetorivin-data :rivin-otsikko yhteenvetorivin-nimi))}
+                                                                                                              (assoc yhteenvetorivin-data :rivin-otsikko yhteenvetorivin-nimi
+                                                                                                                     :poista {:ikoni ikonit/livicon-trash}))}
                                                                                     :data-disable {:polut [[:data]]
                                                                                                    :luonti-init (fn [tila data]
                                                                                                                   (assoc tila :data-disable (reduce (fn [m {rivin-nimi :rivi}]
                                                                                                                                                       (assoc m rivin-nimi false))
+                                                                                                                                                    {}
                                                                                                                                                     data)))
                                                                                                    :luonti (fn [data]
                                                                                                              (mapv (fn [{:keys [rivi]}]
@@ -583,7 +612,7 @@
                                                                          :datan-kasittely identity}
                                                             [::yhteenveto] {:rajapinta :footer
                                                                             :solun-polun-pituus 1
-                                                                            :jarjestys [[:rivin-otsikko :a :b :c]]
+                                                                            :jarjestys [[:rivin-otsikko :a :b :c :poista]]
                                                                             :datan-kasittely (fn [yhteensa]
                                                                                                (mapv (fn [[_ nimi]]
                                                                                                        nimi)

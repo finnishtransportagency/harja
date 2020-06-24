@@ -1035,6 +1035,10 @@
                                                  :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
                                                  :koko konf/auto
                                                  :luokat #{"salli-ylipiirtaminen"}
+                                                 :osatunnisteet (fn [{:keys [tyypit valittu-toimenpide hoitokauden-numero]}]
+                                                                  (mapv (fn [tyyppi]
+                                                                          #{tyyppi valittu-toimenpide hoitokauden-numero})
+                                                                        tyypit))
                                                  :osien-maara-muuttui! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
                                                  :toistettavan-osan-data (fn [{:keys [arvot valittu-toimenpide hoitokauden-numero]}]
                                                                            {:valittu-toimenpide valittu-toimenpide

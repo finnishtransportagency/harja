@@ -12,6 +12,7 @@
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma :as kustannussuunnitelma]
             [harja.views.urakka.suunnittelu.foo :as foo]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
@@ -54,6 +55,7 @@
                      (valilehti-mahdollinen? :kustannussuunnitelma ur)
                      (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "kustannussuunnitelma"}
+            #_[kustannussuunnitelma/kustannussuunnitelma]
             [foo/foo])
 
           "Tehtävät ja määrät"

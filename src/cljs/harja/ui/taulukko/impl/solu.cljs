@@ -54,6 +54,25 @@
                          kayttaytymiset
                          toiminnot))))
 
+(defn global-event-handlers [this {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
+                                     on-key-up]}]
+  {:on-blur (when on-blur
+              (on-blur this))
+   :on-change (when on-change
+                (on-change this))
+   :on-click (when on-click
+               (on-click this))
+   :on-focus (when on-focus
+               (on-focus this))
+   :on-input (when on-input
+               (on-input this))
+   :on-key-down (when on-key-down
+                  (on-key-down this))
+   :on-key-press (when on-key-press
+                   (on-key-press this))
+   :on-key-up (when on-key-up
+                (on-key-up this))})
+
 (defn fmt-asetukset-oikein? [{:keys [fmt fmt-aktiivinen]}]
   (and (or (nil? fmt) (fn? fmt))
        (or (nil? fmt-aktiivinen) (fn? fmt-aktiivinen))))
@@ -288,8 +307,7 @@
   gop/IPiirrettava
   (-piirra [this]
     (let [aktiivinen? (atom false)
-          {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
-                  on-key-up]} (lisaa-kaytokset (merge-with (fn [kayttajan-lisaama tassa-lisatty]
+          kaytokset-lisatty (lisaa-kaytokset (merge-with (fn [kayttajan-lisaama tassa-lisatty]
                                                              (comp kayttajan-lisaama
                                                                    tassa-lisatty))
                                                            (:toiminnot this)
@@ -323,56 +341,41 @@
                            parametrit (into {}
                                             (remove (fn [[_ arvo]]
                                                       (nil? arvo))
-                                                    {;; Inputin parametrit
-                                                     :class (when class
-                                                              (apply str (interpose " " class)))
-                                                     :style style
-                                                     :data-cy (:id this)
-                                                     :id id
-                                                     :type type
-                                                     :value (if @aktiivinen?
-                                                              ((::fmt-aktiivinen this) arvo)
-                                                              ((::fmt this) arvo))
-                                                     :name name
-                                                     :read-only readonly?
-                                                     :required required?
-                                                     :tab-index tabindex
-                                                     :disabled disabled?
-                                                     ;; checkbox or radio paramterit
-                                                     :checked checked?
-                                                     :default-checked default-checked?
-                                                     :indeterminate indeterminate?
-                                                     ;; kuvan parametrit
-                                                     :alt alt
-                                                     :height height
-                                                     :src src
-                                                     :width width
-                                                     ;; numero/teksti input
-                                                     :auto-complete autocomplete
-                                                     :max max
-                                                     :max-length max-length
-                                                     :min min
-                                                     :min-length min-length
-                                                     :pattern pattern
-                                                     :placeholder placeholder
-                                                     :size size
-                                                     ;; GlobalEventHandlers
-                                                     :on-blur (when on-blur
-                                                                (on-blur this))
-                                                     :on-change (when on-change
-                                                                  (on-change this))
-                                                     :on-click (when on-click
-                                                                 (on-click this))
-                                                     :on-focus (when on-focus
-                                                                 (on-focus this))
-                                                     :on-input (when on-input
-                                                                 (on-input this))
-                                                     :on-key-down (when on-key-down
-                                                                    (on-key-down this))
-                                                     :on-key-press (when on-key-press
-                                                                     (on-key-press this))
-                                                     :on-key-up (when on-key-up
-                                                                  (on-key-up this))}))]
+                                                    (merge
+                                                      {;; Inputin parametrit
+                                                       :class (when class
+                                                                (apply str (interpose " " class)))
+                                                       :style style
+                                                       :data-cy (:id this)
+                                                       :id id
+                                                       :type type
+                                                       :value (if @aktiivinen?
+                                                                ((::fmt-aktiivinen this) arvo)
+                                                                ((::fmt this) arvo))
+                                                       :name name
+                                                       :read-only readonly?
+                                                       :required required?
+                                                       :tab-index tabindex
+                                                       :disabled disabled?
+                                                       ;; checkbox or radio paramterit
+                                                       :checked checked?
+                                                       :default-checked default-checked?
+                                                       :indeterminate indeterminate?
+                                                       ;; kuvan parametrit
+                                                       :alt alt
+                                                       :height height
+                                                       :src src
+                                                       :width width
+                                                       ;; numero/teksti input
+                                                       :auto-complete autocomplete
+                                                       :max max
+                                                       :max-length max-length
+                                                       :min min
+                                                       :min-length min-length
+                                                       :pattern pattern
+                                                       :placeholder placeholder
+                                                       :size size}
+                                                      (global-event-handlers this kaytokset-lisatty))))]
                        [:input.solu.solu-syote parametrit])))})))
   gop/IGridOsa
   (-id [this]
@@ -564,33 +567,38 @@
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
 
-(defrecord Ikoni [id parametrit]
+(defrecord Ikoni [id toiminnot kayttaytymiset parametrit]
   gop/IPiirrettava
   (-piirra [this]
-    (r/create-class
-      {:constructor (fn [this props]
-                      (set! (.-domNode this) (fn [] (dom/dom-node this)))
-                      (set! (.-state this) #js {:error nil}))
-       :get-derived-state-from-error (fn [error]
-                                       #js {:error error})
-       :component-did-catch (fn [error error-info]
-                              (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
-                                         error-info "\n")))
-       :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Ikoni")
-       :render (fn [this]
-                 (if-let [error (.. this -state -error)]
-                   [virhekasittely/rendaa-virhe error]
-                   (let [[_ this] (r/argv this)
-                         {:keys [id class]} (:parametrit this)
-                         taman-data (taman-derefable this)
-                         {:keys [ikoni teksti]} @taman-data]
-                     [:div.solu.solu-ikoni {:class (when class
-                                                     (apply str (interpose " " class)))
-                                            :id id
-                                            :data-cy (::nimi this)}
-                      [:span (when (fn? ikoni)
-                               [ikoni])
-                       teksti]])))}))
+    (let [kaytokset-lisatty (lisaa-kaytokset (:toiminnot this)
+                                             (:kayttaytymiset this))]
+      (r/create-class
+        {:constructor (fn [this props]
+                        (set! (.-domNode this) (fn [] (dom/dom-node this)))
+                        (set! (.-state this) #js {:error nil}))
+         :get-derived-state-from-error (fn [error]
+                                         #js {:error error})
+         :component-did-catch (fn [error error-info]
+                                (warn (str "SOLU: " (or (gop/nimi this) "Nimetön") "(" (gop/id this) ")" " kaatui virheeseen: "
+                                           error-info "\n")))
+         :display-name (str (or (gop/nimi this) "Nimetön") " (" (gop/id this) ")" " - tyyppi: Ikoni")
+         :render (fn [this]
+                   (if-let [error (.. this -state -error)]
+                     [virhekasittely/rendaa-virhe error]
+                     (let [[_ this] (r/argv this)
+                           {:keys [id class]} (:parametrit this)
+                           taman-data (taman-derefable this)
+                           {:keys [ikoni teksti]} @taman-data]
+                       [:div.solu.solu-ikoni {:class (when class
+                                                       (apply str (interpose " " class)))
+                                              :id id
+                                              :data-cy (::nimi this)}
+                        [:span (merge (global-event-handlers this kaytokset-lisatty)
+                                      {:style {:cursor (when-not (empty? (:toiminnot this))
+                                                         "pointer")}})
+                         (when (fn? ikoni)
+                           [ikoni])
+                         teksti]])))})))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -609,13 +617,13 @@
 
 (defn ikoni
   ([] (ikoni nil))
-  ([{:keys [parametrit fmt nimi] :as asetukset}]
+  ([{:keys [parametrit toiminnot kayttaytymiset fmt nimi] :as asetukset}]
    {:pre [(fmt-asetukset-oikein? asetukset)
           ;; TODO tarkasta parametrit
           ]
     :post [(instance? Ikoni %)]}
    (let [id (gensym "teksti")]
-     (cond-> (->Ikoni id parametrit)
+     (cond-> (->Ikoni id toiminnot kayttaytymiset parametrit)
              (nil? fmt) (sp/lisaa-fmt identity)
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
