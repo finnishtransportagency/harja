@@ -159,17 +159,17 @@
 
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
-    (is (>= (count (:toteumat vastaus)) 1))
+    (is (= (count (:toteumat vastaus)) 2))
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
-    (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
+    (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (>= (count (:laatupoikkeamat vastaus)) 1))
-    (is (>= (count (:paallystys vastaus)) 1))
-    (is (>= (count (:paikkaus vastaus)) 1))
-    (is (>= (count (:ilmoitukset vastaus)) 1))
-    (is (>= (count (:tietyomaat vastaus)) 1))
-    (is (>= (count (:tietyoilmoitukset vastaus)) 1))))
+    (is (= (count (:laatupoikkeamat vastaus)) 47))
+    (is (= (count (:paallystys vastaus)) 1))
+    (is (= (count (:paikkaus vastaus)) 6))
+    (is (= (count (:ilmoitukset vastaus)) 48))
+    (is (= (count (:tietyomaat vastaus)) 1))
+    (is (= (count (:tietyoilmoitukset vastaus)) 4))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :laatupoikkeamat)
