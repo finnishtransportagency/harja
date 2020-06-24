@@ -420,7 +420,10 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                          tr1.otsikko                AS otsikko,
                          t.alkanut                  AS alkanut,
                          tt.maara                   AS maara,
-                         EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi"
+                         CASE
+                             WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)
+                             WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)
+                            END AS "hoitokauden-alkuvuosi"
                       FROM toteuma_tehtava tt,
                            toimenpidekoodi tk,
                            toteuma t,
@@ -433,7 +436,8 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                         AND tr1.id = tk.tehtavaryhma
                         AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
                         AND (:alkupvm::DATE IS NULL OR
-                             alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+                             t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+-- Haetaan ne tehtävät, joilla on määrätoteuma
 SELECT ut.id                      AS id,
        t.toteuma_id               AS toteuma_id,
        t.toteuma_tehtava_id       AS toteuma_tehtava_id,
@@ -455,12 +459,18 @@ SELECT ut.id                      AS id,
 
     WHERE ut.tehtava = tk.id
       AND tr1.id = tk.tehtavaryhma
+
       AND ut.urakka = :urakka
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
-      AND (:alkupvm::DATE IS NULL OR
-           alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+      AND (:alkupvm::DATE IS NULL OR (ut."hoitokauden-alkuvuosi" = CASE
+                                                                       WHEN EXTRACT(MONTH FROM :alkupvm::DATE) >= 10
+                                                                           THEN EXTRACT(YEAR FROM :alkupvm::DATE)
+                                                                       WHEN EXTRACT(MONTH FROM :alkupvm::DATE) <= 9
+                                                                           THEN (EXTRACT(YEAR FROM :alkupvm::DATE) - 1) END AND
+                                      (t.alkanut IS NULL OR t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)))
 UNION
 -- ei union all, koska ei haluta duplikaatteja
+-- Haetaan ne tehtävät, joilla ei ole määrää lisättynä
 SELECT tk.id                      AS id,
        t.id                       AS toteuma_id,
        tt.id                      AS toteuma_tehtava_id,
@@ -483,13 +493,13 @@ SELECT tk.id                      AS id,
                             FROM urakka_tehtavamaara ut
                             WHERE ut.urakka = :urakka
                               AND (:alkupvm::DATE IS NULL OR
-                                   alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+                                   ut.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
       AND t.id = tt.toteuma
       AND t.urakka = :urakka
       AND tr1.id = tk.tehtavaryhma
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
       AND (:alkupvm::DATE IS NULL OR
-           alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
+           t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
 
 -- name: hae-maarien-toteuma
 -- Hae yksittäinen toteuma muokkaukseen
@@ -502,7 +512,8 @@ SELECT t.id        AS toteuma_id,
        tk.yksikko                 AS yksikko,
        tr1.otsikko                AS toimenpide_otsikko,
        tr1.id                     AS toimenpide_id,
-       tt.id                      AS toteuma_tehtava_id
+       tt.id                      AS toteuma_tehtava_id,
+       t.lisatieto                AS lisatieto
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
          toteuma t,

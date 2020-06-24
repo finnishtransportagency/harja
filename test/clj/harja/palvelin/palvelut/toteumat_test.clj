@@ -12,6 +12,7 @@
             [taoensso.timbre :as log]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
+            [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
@@ -40,7 +41,10 @@
                                           [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri]))))))
+                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                          :tehtavamaarat (component/using
+                                           (tehtavamaarat/->Tehtavamaarat)
+                                           [:http-palvelin :db]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -535,3 +539,79 @@
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
+
+;; MH-urakoille määrien toteumat, äkilliset hoitotyöt ja lisätyöt
+
+(defn- lisaa-maarien-toteuma [toteuma]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-toteuma +kayttaja-jvh+
+                  toteuma)
+  )
+
+;; Haetaan ensin toteumien listaus sivun tiedot
+(deftest lisaa-maarien-toteuma-test
+  (let [_ (lisaa-maarien-toteuma {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                  :tehtavaryhma "6 MUUTA"
+                                  :maara 1
+                                  :tehtava {:id 3050 :otsikko "Pysäkkikatoksen uusiminen" :yksikko "kpl"}
+                                  :loppupvm "24.06.2020"
+                                  :lisatieto nil})
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
+        toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :urakan-maarien-toteumat +kayttaja-jvh+
+                                         {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                          ;:tehtavaryhma "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+                                          ;:tehtavaryhma "1.0 TALVIHOITO"
+                                          :tehtavaryhma "Kaikki"
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm})]
+    (is (= 1 (count toteumat-vastaus)) "Yksi lisätty toteuma pitäisi löytyä")))
+
+(deftest muokkaa-maarien-toteuma-test
+  (let [tallenna-toteuma {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                          :tehtavaryhma "6 MUUTA"
+                          :maara 1
+                          :tehtava {:id 3050 :otsikko "Pysäkkikatoksen uusiminen" :yksikko "kpl"}
+                          :loppupvm "24.06.2020"
+                          :lisatieto nil}
+
+        tallennettu-toteuma (lisaa-maarien-toteuma tallenna-toteuma)
+
+        ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
+        haettu-toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :hae-maarien-toteuma +kayttaja-jvh+
+                                       {:id tallennettu-toteuma})]
+
+    (is (= (:lisatieto haettu-toteuma) (:lisatieto tallenna-toteuma)) "Toteuman lisätieto täsmää tallennuksen jälkeen")
+    (is (= (:tehtava haettu-toteuma) (get-in tallenna-toteuma [:tehtava :otsikko])) "Toteuman tehtava täsmää tallennuksen jälkeen")
+    (is (= (:toimenpide_otsikko haettu-toteuma) (:tehtavaryhma tallenna-toteuma)) "Toteuman tehtäväryhmä/toimenpide täsmää tallennuksen jälkeen")
+    (is (= (:toteutunut haettu-toteuma) (bigdec (:maara tallenna-toteuma))) "Toteuman määrä täsmää tallennuksen jälkeen")
+    (is (= (:yksikko haettu-toteuma) (get-in tallenna-toteuma [:tehtava :yksikko])) "Toteuman yksikkö täsmää tallennuksen jälkeen")))
+
+#_(deftest hae-toteumalistaus-test
+    (let [hoitokauden-alkuvuosi 2019
+          _ (lisaa-toteuma @oulun-maanteiden-hoitourakan-2019-2024-id "6 MUUTA" 1
+                           {:id 3050 :otsikko "Pysäkkikatoksen uusiminen" :yksikko "kpl"}
+                           "24.06.2020" nil)
+          alkupvm "2019-10-01"
+          loppupvm "2020-09-30"
+          ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
+          toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :urakan-maarien-toteumat +kayttaja-jvh+
+                                           {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                            :tehtavaryhma "Kaikki"
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm})
+          _ (log/debug "toteumat-vastaus " (pr-str toteumat-vastaus))
+          ;; Haetaan suunniteltuja tehtäviä
+          ;; tehtavamaara-hierarkia ottaa hakuparametreina: urakka-id hoitokauden-alkuvuosi
+          suunnitelmat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :tehtavamaarat-hierarkiassa +kayttaja-jvh+
+                                               {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          _ (log/debug "suunnitelmat-vastaus" (pr-str suunnitelmat-vastaus))
+          ;; Tarkistetaan, että kaikki 2019 alkavan hoitokauden suunnitellut tehtävät löytyy vastauksesta
+          ]
+      (is (= 1 (count toteumat-vastaus)) "Yksi lisätty toteuma pitäisi löytyä")))

@@ -416,7 +416,7 @@
 
                               ::toteuma/tehtava-lisatieto lisatieto}))
           _ (println "tt" (pr-str tt))]
-      (::toteuma/id tt))
+      (::toteuma/id t))
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn hae-maarien-toteuma [db user {:keys [id urakka-id]}]
@@ -969,7 +969,7 @@
         (hae-toimenpiteiden-tehtavat db-replica user tiedot))
       :tallenna-toteuma
       (fn [user tiedot]
-        (tallenna-toteuma! db-replica user tiedot))
+        (tallenna-toteuma! db user tiedot))
       :hae-maarien-toteuma
       (fn [user tiedot]
         (hae-maarien-toteuma db-replica user tiedot))
