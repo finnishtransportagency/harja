@@ -35,7 +35,7 @@
     (->Ryhma otsikko-tai-optiot
              {:ulkoasu :oletus} skeemat)))
 
-(defn palsta [{:keys [lukumaara]} & palstan-optiot-ja-skeemat]
+(defn palstat [{:keys [lukumaara]} & palstan-optiot-ja-skeemat]
   "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
   (->Palstat {:lukumaara lukumaara} palstan-optiot-ja-skeemat))
 

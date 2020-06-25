@@ -1042,7 +1042,7 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
+(defn- tierekisterikentat-table [{:keys [pakollinen? disabled?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
                                  piste? vaadi-vali?]
   [:table
    (when tr-otsikot?
@@ -1085,7 +1085,7 @@
 (defn- tierekisterikentat-rivitetty
   "Erilainen tyyli TR valitsimelle, jos lomake on hyvin kapea.
   Rivittää tierekisterivalinnan usealle riville."
-  [pakollinen? tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe]
+  [{:keys [pakollinen? disabled?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe]
   [:table
    [:tbody
     [:tr
@@ -1207,7 +1207,7 @@
                       (tasot/poista-geometria! :tr-valittu-osoite)
                       (kartta/zoomaa-geometrioihin))))
 
-      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli?]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli? disabled?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
@@ -1247,57 +1247,64 @@
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
 
-           [tierekisterikentat
-            pakollinen?
-            [tr-kentan-elementti lomake? muuta! blur
-             "Tie" numero numero-avain @karttavalinta-kaynnissa? luokat]
-            [tr-kentan-elementti lomake? muuta! blur
-             "aosa" alkuosa alkuosa-avain @karttavalinta-kaynnissa? luokat]
-            [tr-kentan-elementti lomake? muuta! blur
-             "aet" alkuetaisyys alkuetaisyys-avain @karttavalinta-kaynnissa? luokat]
-            [tr-kentan-elementti lomake? muuta! blur
-             "losa" loppuosa loppuosa-avain @karttavalinta-kaynnissa? luokat]
-            [tr-kentan-elementti lomake? muuta! blur
-             "let" loppuetaisyys loppuetaisyys-avain @karttavalinta-kaynnissa? luokat]
-            tr-otsikot?
-            (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
-              [napit/poista nil
-               #(do (tasot/poista-geometria! :tr-valittu-osoite)
-                    (reset! data {})
-                    (reset! @sijainti-atom nil)
-                    (reset! virheet nil))
-               {:luokka   "nappi-tyhjenna"
-                :disabled (empty? @data)}])
+           (let [optiot {:pakollinen pakollinen?}]
+             [tierekisterikentat
+              optiot
+              [tr-kentan-elementti lomake? muuta! blur
+               "Tie" numero numero-avain (or disabled?
+                                             @karttavalinta-kaynnissa?) luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "aosa" alkuosa alkuosa-avain (or disabled?
+                                                @karttavalinta-kaynnissa?) luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "aet" alkuetaisyys alkuetaisyys-avain (or disabled?
+                                                         @karttavalinta-kaynnissa?) luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "losa" loppuosa loppuosa-avain (or disabled?
+                                                  @karttavalinta-kaynnissa?) luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "let" loppuetaisyys loppuetaisyys-avain (or disabled?
+                                                           @karttavalinta-kaynnissa?) luokat]
+              tr-otsikot?
+              (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
+                [napit/poista nil
+                 #(do (tasot/poista-geometria! :tr-valittu-osoite)
+                      (reset! data {})
+                      (reset! @sijainti-atom nil)
+                      (reset! virheet nil))
+                 {:luokka   "nappi-tyhjenna"
+                  :disabled (empty? @data)}])
 
-            (when voi-valita-kartalta?
-              (if-not @karttavalinta-kaynnissa?
-                [napit/yleinen-ensisijainen
-                 (tr-valintanapin-teksti osoite-alussa osoite)
-                 #(do
-                    (reset! osoite-ennen-karttavalintaa osoite)
-                    (when-let [sijainti @sijainti-atom]
-                      (reset! sijainti-ennen-karttavalintaa @sijainti))
-                    (reset! data {})
-                    (reset! karttavalinta-kaynnissa? true))
-                 {:ikoni (ikonit/map-marker)}]
-                [tr/karttavalitsin
-                 {:kun-peruttu #(do
-                                  (reset! data @osoite-ennen-karttavalintaa)
-                                  (when-let [sijainti @sijainti-atom]
-                                    (reset! sijainti @sijainti-ennen-karttavalintaa))
-                                  (reset! karttavalinta-kaynnissa? false))
-                  :paivita     #(swap! data merge (normalisoi %))
-                  :kun-valmis  #(do
-                                  (reset! data (normalisoi %))
-                                  (reset! karttavalinta-kaynnissa? false)
-                                  (log "Saatiin tr-osoite! " (pr-str %))
-                                  (go (>! tr-osoite-ch %)))}]))
+              (when voi-valita-kartalta?
+                (if-not @karttavalinta-kaynnissa?
+                  [napit/yleinen-ensisijainen
+                   (tr-valintanapin-teksti osoite-alussa osoite)
+                   #(do
+                      (reset! osoite-ennen-karttavalintaa osoite)
+                      (when-let [sijainti @sijainti-atom]
+                        (reset! sijainti-ennen-karttavalintaa @sijainti))
+                      (reset! data {})
+                      (reset! karttavalinta-kaynnissa? true))
+                   {:ikoni    (ikonit/map-marker)
+                    :disabled disabled?}]
+                  [tr/karttavalitsin
+                   {:kun-peruttu #(do
+                                    (reset! data @osoite-ennen-karttavalintaa)
+                                    (when-let [sijainti @sijainti-atom]
+                                      (reset! sijainti @sijainti-ennen-karttavalintaa))
+                                    (reset! karttavalinta-kaynnissa? false))
+                    :paivita     #(swap! data merge (normalisoi %))
+                    :kun-valmis  #(do
+                                    (reset! data (normalisoi %))
+                                    (reset! karttavalinta-kaynnissa? false)
+                                    (log "Saatiin tr-osoite! " (pr-str %))
+                                    (go (>! tr-osoite-ch %)))}]))
 
-            (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
-              (when (vkm/virhe? sijainti)
-                [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))
-            piste?
-            vaadi-vali?]])))))
+              (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
+                (when (vkm/virhe? sijainti)
+                  [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))
+              piste?
+              vaadi-vali?])])))))
 
 (defmethod tee-kentta :sijaintivalitsin
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.
@@ -1625,54 +1632,54 @@
                          (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
                        "")
             :on-click #(swap! auki? not)
-          :read-only true]
-         (when @auki?
-           [:div.aikavali-dropdown
-            [pvm-valintakentta {:valinta-fn               valinta-fn
-                                :otsikko                  "Alkupvm"
-                                :syottobufferi            (:alku syottobufferi)
-                                :kentan-tyyppi            :alkupvm
-                                :koskettu?                (:alku koskettu?)
-                                :valittu?                 (= :alkupvm valittu-pvm)
-                                :pvm-arvo                 pvm-alku
-                                :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
-                                :arvot                    {:alku  pvm-alku
-                                                           :loppu pvm-loppu}}]
-            [pvm-valintakentta {:valinta-fn               valinta-fn
-                                :otsikko                  "Loppupvm"
-                                :syottobufferi            (:loppu syottobufferi)
-                                :kentan-tyyppi            :loppupvm
-                                :koskettu?                (:loppu koskettu?)
-                                :valittu?                 (= :loppupvm valittu-pvm)
-                                :pvm-arvo                 pvm-loppu
-                                :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
-                                :arvot                    {:alku  pvm-alku
-                                                           :loppu pvm-loppu}}]
-            [:label (str "Klikkaa kalenterista " (case valittu-pvm
-                                                   :alkupvm "rajauksen alku"
-                                                   :loppupvm "rajauksen loppu"))
-             [pvm-valinta/pvm-valintakalenteri {:vayla-tyyli?  false
-                                                :flowissa?     true
-                                                :valitse       #(let [{:keys [alkupvm loppupvm]} (assoc {:alkupvm  pvm-alku
-                                                                                                         :loppupvm pvm-loppu}
-                                                                                                   valittu-pvm
-                                                                                                   %)]
-                                                                  (swap! sisaiset assoc :valittu-pvm (case valittu-pvm
-                                                                                                       :loppupvm :alkupvm
-                                                                                                       :alkupvm :loppupvm))
-                                                                  (valinta-fn valittu-pvm %)
-                                                                  (when (and alkupvm loppupvm)
-                                                                    (sumeutus-kun-molemmat-fn alkupvm loppupvm)))
-                                                :valittava?-fn #(and (pvm/valissa? %
-                                                                                   rajauksen-alkupvm
-                                                                                   rajauksen-loppupvm)
-                                                                     (case valittu-pvm
-                                                                       :loppupvm (pvm/jalkeen? %
-                                                                                               (or pvm-alku
-                                                                                                   rajauksen-alkupvm))
-                                                                       :alkupvm (pvm/ennen? %
-                                                                                            (or pvm-loppu
-                                                                                                rajauksen-loppupvm))))
-                                                :pvm           (case valittu-pvm
-                                                                 :alkupvm pvm-alku
-                                                                 :loppupvm pvm-loppu)}]]])])))))
+            :read-only true]
+           (when @auki?
+             [:div.aikavali-dropdown
+              [pvm-valintakentta {:valinta-fn               valinta-fn
+                                  :otsikko                  "Alkupvm"
+                                  :syottobufferi            (:alku syottobufferi)
+                                  :kentan-tyyppi            :alkupvm
+                                  :koskettu?                (:alku koskettu?)
+                                  :valittu?                 (= :alkupvm valittu-pvm)
+                                  :pvm-arvo                 pvm-alku
+                                  :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
+                                  :arvot                    {:alku  pvm-alku
+                                                             :loppu pvm-loppu}}]
+              [pvm-valintakentta {:valinta-fn               valinta-fn
+                                  :otsikko                  "Loppupvm"
+                                  :syottobufferi            (:loppu syottobufferi)
+                                  :kentan-tyyppi            :loppupvm
+                                  :koskettu?                (:loppu koskettu?)
+                                  :valittu?                 (= :loppupvm valittu-pvm)
+                                  :pvm-arvo                 pvm-loppu
+                                  :sumeutus-kun-molemmat-fn sumeutus-kun-molemmat-fn
+                                  :arvot                    {:alku  pvm-alku
+                                                             :loppu pvm-loppu}}]
+              [:label (str "Klikkaa kalenterista " (case valittu-pvm
+                                                     :alkupvm "rajauksen alku"
+                                                     :loppupvm "rajauksen loppu"))
+               [pvm-valinta/pvm-valintakalenteri {:vayla-tyyli?  false
+                                                  :flowissa?     true
+                                                  :valitse       #(let [{:keys [alkupvm loppupvm]} (assoc {:alkupvm  pvm-alku
+                                                                                                           :loppupvm pvm-loppu}
+                                                                                                     valittu-pvm
+                                                                                                     %)]
+                                                                    (swap! sisaiset assoc :valittu-pvm (case valittu-pvm
+                                                                                                         :loppupvm :alkupvm
+                                                                                                         :alkupvm :loppupvm))
+                                                                    (valinta-fn valittu-pvm %)
+                                                                    (when (and alkupvm loppupvm)
+                                                                      (sumeutus-kun-molemmat-fn alkupvm loppupvm)))
+                                                  :valittava?-fn #(and (pvm/valissa? %
+                                                                                     rajauksen-alkupvm
+                                                                                     rajauksen-loppupvm)
+                                                                       (case valittu-pvm
+                                                                         :loppupvm (pvm/jalkeen? %
+                                                                                                 (or pvm-alku
+                                                                                                     rajauksen-alkupvm))
+                                                                         :alkupvm (pvm/ennen? %
+                                                                                              (or pvm-loppu
+                                                                                                  rajauksen-loppupvm))))
+                                                  :pvm           (case valittu-pvm
+                                                                   :alkupvm pvm-alku
+                                                                   :loppupvm pvm-loppu)}]]])])))))
