@@ -141,7 +141,7 @@ SELECT
   u.nimi,
   u.sampoid,
   CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
-      THEN u.alue
+      THEN ST_SimplifyPreserveTopology(u.alue, 50)
           END as alue,
   u.alkupvm,
   u.loppupvm,
