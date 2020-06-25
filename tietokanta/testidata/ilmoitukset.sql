@@ -1154,7 +1154,7 @@ DECLARE
   toimenpide_counter INTEGER;
   toimenpiteita_n INTEGER;
   ilmoituksia_n INTEGER;
-  urakkatyyppi_ URAKKATYYPPI := 'hoito'::urakkatyyppi; -- Kyseessä on oikeasti teiden-hoito, mutta T-LOIK:sta tulee 'hoito'
+  urakkatyyppi_ URAKKATYYPPI := 'teiden-hoito'::urakkatyyppi; -- Kyseessä on oikeasti teiden-hoito, mutta T-LOIK:sta tulee 'hoito'
   ilmoittaja_etunimi_ TEXT := 'Ilmoittaja';
   ilmoittaja_sukunimi_ TEXT := 'Rovanieminen';
   ilmoittaja_tyyppi_ TEXT := 'muu';
