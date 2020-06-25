@@ -755,15 +755,15 @@ WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
 SELECT
-  u.id                             AS urakka_id,
-  CASE
-  WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
-    THEN hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
-  ELSE hoidon_paaurakan_geometria(u.id)
-  END                              AS urakka_alue
-FROM urakka u
-  LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
-WHERE u.id IN (:idt);
+    u.id                             AS urakka_id,
+    CASE
+        WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
+            THEN ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(alueurakka.alueurakkanro), 50)
+        ELSE ST_SimplifyPreserveTopology(hoidon_paaurakan_geometria(u.id), 50)
+        END                              AS urakka_alue
+  FROM urakka u
+           LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
+ WHERE u.id IN (:idt);
 
 -- name: hae-urakan-sampo-id
 -- single?: true
