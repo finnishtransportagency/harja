@@ -106,8 +106,7 @@
                       aluekokonaisuudet)
          urakat-alueineen (into {} (map
                                      (fn [ur]
-                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
-                                                                      (get-in ur [:alueurakka :alue]))])
+                                       [(get-in ur [:urakka :id]) (get-in ur [:urakka :alue])])
                                      (urakat/urakoiden-alueet
                                        db
                                        user
