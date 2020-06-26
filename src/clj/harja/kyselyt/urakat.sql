@@ -758,8 +758,8 @@ SELECT
     u.id                             AS urakka_id,
     CASE
         WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
-            THEN ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(alueurakka.alueurakkanro), 1000)
-        ELSE ST_SimplifyPreserveTopology(hoidon_paaurakan_geometria(u.id), 1000)
+            THEN ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(alueurakka.alueurakkanro), 50)
+        ELSE ST_SimplifyPreserveTopology(hoidon_paaurakan_geometria(u.id), 50)
         END                              AS urakka_alue
   FROM urakka u
            LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
