@@ -33,8 +33,9 @@
            sijainti     ::t/sijainti} lomake
           urakka-id (-> @tila/yleiset :urakka :id)]
       (tuck-apurit/post! :tallenna-toteuma
-                         {:tehtava   tehtava
-                          :urakka-id urakka-id}
+                         {:tehtava    tehtava
+                          :urakka-id  urakka-id
+                          :toimenpide toimenpide}
                          {:onnistui    ->LomakkeenLahetysOnnistui
                           :epaonnistui ->LomakkeenLahetysEpaonnistui}))
     app)
