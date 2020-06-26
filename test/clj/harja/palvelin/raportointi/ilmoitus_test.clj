@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.testi :refer :all]
+            [harja.testi :refer :all :as testi]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
