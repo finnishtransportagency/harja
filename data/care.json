@@ -1,5 +1,10 @@
 [
- {
+  {
+    "date": "2020-6-26",
+    "title": "Tilannekuvan käyttö on nyt merkittävästi nopeampaa",
+    "body": "Harjan Tilannekuvaan saapuessa haetaan urakoiden tiedot ja urakkarajat nyt merkittävästi entistä nopeammin, mikä vaikuttaa koko Tilannekuvan käyttökokemukseen. Kerrottehan meille palautetta, mitä muuta haluaisitte tilannekuvassa parannettavan jatkossa." 
+  },
+  {
     "date": "2020-6-5",
     "title": "Pieniä uudistuksia ja korjauksia HARJAan",
     "body": "Perjantaiaamun päivitysajossa tuotiin seuraavat uudistukset ja korjaukset HARJAn tuotantoympäristöön:<br><br><ul><li>Tielupien haku on siirretty painikkeen taakse<li>Lyhyempi nimi urakalle Ilmoitukset-näytöllä<li>Varustekirjausohjeessa Tierekisterin tietosisällön kuvaukseen linkki päivitetty<li>Turvallisuuspoikkeama UI: Työtapaturman juurisyy on pakollinen tieto<li>Tielupanäytön urakat listataan aakkosjärjestyksessä<li>Myönnetty-ajan valitseminen hakuehdoksi Tienpidon luvissa ei estä Hae lupa-painikkeen käyttöä</ul>" 
