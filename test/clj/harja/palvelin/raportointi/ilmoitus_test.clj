@@ -52,7 +52,7 @@
 
 (deftest hae-ilmoitukset-raportille-hoito-ja-teiden-hoito-test
   (let [db (tietokanta/luo-tietokanta testitietokanta)
-        odotettu [{:kuittaus {:kuittaustyyppi nil},
+        odotettu '({:kuittaus {:kuittaustyyppi nil},
                    :sijainti nil,
                    :ilmoitustyyppi :kysely,
                    :urakka 26,
@@ -108,7 +108,7 @@
                    :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
                    :selitteet [],
                    :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}]
+                   :ilmoittaja {:tyyppi nil}})
         [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
         ilmoitukset
         (ilmoitusraportti/hae-ilmoitukset-raportille
