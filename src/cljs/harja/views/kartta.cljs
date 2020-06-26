@@ -254,7 +254,6 @@
                              :L ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
                              :XL ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
                              ["" nil])]
-    ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 

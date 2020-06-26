@@ -19,6 +19,11 @@
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
+#_(defn- debug-state [app]
+  [:span
+   [:div.row
+    [df/DataFriskShell app]]])
+
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
@@ -42,7 +47,6 @@
              tallennus-kaynnissa? :tallennus-kaynnissa?
              kayttajan-urakat :kayttajan-urakat :as app}]
       [:span
-       [ui-debug/debug @tiedot/tietyoilmoitukset]
        [kartta/kartan-paikka]
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! app tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]
