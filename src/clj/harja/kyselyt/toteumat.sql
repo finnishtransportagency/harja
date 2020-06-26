@@ -558,8 +558,7 @@ SELECT t.id        AS toteuma_id,
 
 
 -- name: listaa-urakan-toteutumien-toimenpiteet
--- Listaa kaikki tehtävät, joita voidaan näyttää toteutuneiden määrien yhteydessä. Kaikille tehtäville
--- ei ole mahdollista lisätä toteutuneita määriä, joten vain validit otetaan matkaan.
+-- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
 SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
     FROM tehtavaryhma tr
     WHERE tr.emo IS NULL

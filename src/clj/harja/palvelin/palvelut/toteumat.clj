@@ -397,34 +397,37 @@
           sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
           ;; Tyyppivaihtoehtoja on kolme. "kokonaishintainen" on määrien toteumille, "lisatyo" on lisätöille
           ;; ja "akillinen-hoitotyo" Äkillisille hoitotöille
-          tyyppi (if (nil? tyyppi)  "kokonaishintainen" tyyppi)
-          t (upsert! db ::toteuma/toteuma
-                     (merge (if toteuma-id
-                              {::toteuma/id toteuma-id
-                               ::muokkaustiedot/muokkaaja-id (:id user)
-                               ::muokkaustiedot/muokattu (pvm/nyt)}
-                              {::muokkaustiedot/luotu (pvm/nyt)
-                               ::muokkaustiedot/luoja-id (:id user)})
-                            {::toteuma/urakka-id urakka-id
-                             ::toteuma/alkanut loppupvm
-                             ::toteuma/paattynyt loppupvm
-                             ::toteuma/tyyppi tyyppi
-                             ::toteuma/lahde "harja-ui"
-                             ::toteuma/sopimus-id (::sopimus/id sopimus)}))
-          tt (upsert! db ::toteuma/toteuma-tehtava
-                      (merge (if toteuma-tehtava-id
-                               {::toteuma/id toteuma-tehtava-id
-                                ::toteuma/muokattu (pvm/nyt)
-                                ::toteuma/muokkaaja (:id user)}
-                               {::toteuma/luotu (pvm/nyt)
-                                ::toteuma/luoja (:id user)})
-                             {::toteuma/toteuma-id (::toteuma/id t)
-                              ::toteuma/muokattu (pvm/nyt)
-                              ::toteuma/toimenpidekoodi (:id tehtava)
-                              ::toteuma/maara (when maara (bigdec maara))
-
-                              ::toteuma/tehtava-lisatieto lisatieto}))]
-      (::toteuma/id t))
+          tyyppi (if (nil? tyyppi)  "kokonaishintainen" tyyppi)]
+      (if (> 0 maara)
+        (throw+ {:type "Error"
+                 :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
+        (jdbc/with-db-transaction [db db]
+                                  (let [t (upsert! db ::toteuma/toteuma
+                                                   (merge (if toteuma-id
+                                                            {::toteuma/id toteuma-id
+                                                             ::muokkaustiedot/muokkaaja-id (:id user)
+                                                             ::muokkaustiedot/muokattu (pvm/nyt)}
+                                                            {::muokkaustiedot/luotu (pvm/nyt)
+                                                             ::muokkaustiedot/luoja-id (:id user)})
+                                                          {::toteuma/urakka-id urakka-id
+                                                           ::toteuma/alkanut loppupvm
+                                                           ::toteuma/paattynyt loppupvm
+                                                           ::toteuma/tyyppi tyyppi
+                                                           ::toteuma/lahde "harja-ui"
+                                                           ::toteuma/sopimus-id (::sopimus/id sopimus)}))
+                                        tt (upsert! db ::toteuma/toteuma-tehtava
+                                                    (merge (if toteuma-tehtava-id
+                                                             {::toteuma/id toteuma-tehtava-id
+                                                              ::toteuma/muokattu (pvm/nyt)
+                                                              ::toteuma/muokkaaja (:id user)}
+                                                             {::toteuma/luotu (pvm/nyt)
+                                                              ::toteuma/luoja (:id user)})
+                                                           {::toteuma/toteuma-id (::toteuma/id t)
+                                                            ::toteuma/muokattu (pvm/nyt)
+                                                            ::toteuma/toimenpidekoodi (:id tehtava)
+                                                            ::toteuma/maara (when maara (bigdec maara))
+                                                            ::toteuma/tehtava-lisatieto lisatieto}))]
+                                    (::toteuma/id t)))))
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
