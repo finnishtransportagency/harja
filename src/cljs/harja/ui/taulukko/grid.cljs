@@ -2,11 +2,12 @@
   (:require [harja.ui.taulukko.impl.grid :as g]
             [harja.ui.taulukko.impl.alue :as alue]
             [harja.ui.taulukko.impl.solu :as solu]
+            [harja.ui.taulukko.impl.datan-kasittely :as dk]
             [harja.ui.taulukko.protokollat.grid :as gp]
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
-            [harja.ui.taulukko.impl.datan-kasittely :as dk]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [reagent.ratom]))
 
 (declare aseta-root-fn!)
 
@@ -112,6 +113,9 @@
    (g/etsi-osa osa etsittavan-osan-tunniste))
   ([osa etsittavan-osan-tunniste lapset]
    (g/etsi-osa osa etsittavan-osan-tunniste lapset)))
+
+(defn hae-kaikki-osat [osa predikaatti]
+  (g/hae-kaikki-osat osa predikaatti))
 
 (defn gridin-rivit [grid pred]
   {:pre [(satisfies? gp/IGrid grid)
@@ -305,13 +309,17 @@
                            "Saatiin: " tapahtuman-nimi "\n"
                            "Hyväksytyt avaimet: " (apply str (interpose ", " (keys (root-asia (root osa) :tapahtumat)))))))))
 
-(defn jarjesta-grid-data! [grid rajapinta]
-  (let [nimipolku (some (fn [[nimipolku rajapintakasittelija]]
-                          (when (= (:rajapinta rajapintakasittelija) rajapinta)
-                            nimipolku))
-                        (::g/grid-rajapintakasittelijat grid))]
-    (binding [g/*jarjesta-data* :deep]
-      (g/jarjesta! grid nimipolku))))
+(defn jarjesta-grid-data!
+  ([grid]
+   (binding [g/*jarjesta-data* :deep]
+     (g/jarjesta! grid)))
+  ([grid rajapinta]
+   (let [nimipolku (some (fn [[nimipolku rajapintakasittelija]]
+                           (when (= (:rajapinta rajapintakasittelija) rajapinta)
+                             nimipolku))
+                         (::g/grid-rajapintakasittelijat grid))]
+     (binding [g/*jarjesta-data* :deep]
+       (g/jarjesta! grid nimipolku)))))
 
 (defn lisaa-jarjestys-fn-gridiin! [grid rajapinta syvyys jarjestys-fn]
   (let [jarjestykset-fns (some (fn [[_ rajapintakasittelija]]
@@ -330,6 +338,12 @@
 
 (defn rivi? [osa]
   (instance? alue/Rivi osa))
+
+(defn staattinen-taulukko? [osa]
+  (instance? g/Grid osa))
+
+(defn solu? [osa]
+  (implements? sp/ISolu osa))
 
 (defn pudotusvalikko? [osa]
   (instance? solu/Pudotusvalikko osa))

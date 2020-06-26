@@ -146,7 +146,7 @@
       (gop/id? osa etsittava-osa)
       (= (gop/nimi osa) etsittava-osa))))
 
-(defn- etsi-osa
+(defn etsi-osa
   ([osa etsittavan-osan-tunniste]
    (if (oikea-osa? osa etsittavan-osan-tunniste)
      osa
@@ -163,6 +163,20 @@
                                                   (remove nil?))
                                             lapset)]
          (recur nil etsittavan-osan-tunniste kaikki-lapsen-lapset))))))
+
+(defn hae-kaikki-osat
+  "Käytännössä sama kuin etsi-osa, mutta hyväksyy tunnisteen sijasta predikaatin ja palauttaa
+   kaikki osumat vektorissa."
+  ([osa predikaatti] (hae-kaikki-osat osa predikaatti [osa] []))
+  ([_ predikaatti lapset loydokset]
+   (let [taman-kieroksen-loydokset (filter predikaatti lapset)
+         lapsien-lapset (sequence (comp (mapcat p/lapset)
+                                        (remove nil?))
+                                  lapset)
+         kaikki-loydokset (vec (concat loydokset taman-kieroksen-loydokset))]
+     (if (empty? lapsien-lapset)
+       kaikki-loydokset
+       (recur nil predikaatti lapsien-lapset kaikki-loydokset)))))
 
 (defn gridin-osat-vektoriin
   ([grid pred f]
