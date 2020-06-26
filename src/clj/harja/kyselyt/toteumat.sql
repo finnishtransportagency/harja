@@ -420,6 +420,7 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                          tr1.otsikko                AS otsikko,
                          t.alkanut                  AS alkanut,
                          tt.maara                   AS maara,
+                         t.tyyppi                   as tyyppi,
                          CASE
                              WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)
                              WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)
@@ -432,6 +433,7 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                                JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
                       WHERE tk.id = tt.toimenpidekoodi
                         AND t.id = tt.toteuma
+                        AND t.poistettu IS NOT TRUE
                         AND t.urakka = :urakka
                         AND tr1.id = tk.tehtavaryhma
                         AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
@@ -448,6 +450,7 @@ SELECT ut.id                      AS id,
        ut.maara                   AS suunniteltu_maara,
        t.maara                    AS toteutunut,
        t.alkanut                  AS toteuma_aika,
+       t.tyyppi                   AS tyyppi,
        tk.yksikko                 AS yksikko
     FROM urakka_tehtavamaara ut
              LEFT JOIN toteumat t
@@ -481,6 +484,7 @@ SELECT tk.id                      AS id,
        -1                         AS suunniteltu_maara,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
+       t.tyyppi                   AS tyyppi,
        tk.yksikko                 AS yksikko
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
@@ -495,6 +499,7 @@ SELECT tk.id                      AS id,
                               AND (:alkupvm::DATE IS NULL OR
                                    ut.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
       AND t.id = tt.toteuma
+      AND t.poistettu IS NOT TRUE
       AND t.urakka = :urakka
       AND tr1.id = tk.tehtavaryhma
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
@@ -513,7 +518,8 @@ SELECT t.id        AS toteuma_id,
        tr1.otsikko                AS toimenpide_otsikko,
        tr1.id                     AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
-       t.lisatieto                AS lisatieto
+       tt.lisatieto               AS lisatieto,
+       t.tyyppi                   AS tyyppi
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
          toteuma t,
