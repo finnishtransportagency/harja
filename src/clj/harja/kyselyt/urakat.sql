@@ -141,7 +141,7 @@ SELECT
   u.nimi,
   u.sampoid,
   CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
-      THEN u.alue
+      THEN ST_SimplifyPreserveTopology(u.alue, 50)
           END as alue,
   u.alkupvm,
   u.loppupvm,
@@ -185,7 +185,7 @@ SELECT
     THEN ST_Simplify(tlu.alue, 50)
   WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
     THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
-      hoidon_alueurakan_geometria(u.urakkanro)
+      ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
   ELSE ST_Simplify(au.alue, 50)
   END                                     AS alueurakan_alue
 
@@ -755,16 +755,15 @@ WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
 SELECT
-  hoidon_paaurakan_geometria(u.id) AS urakka_alue,
-  u.id                             AS urakka_id,
-  CASE
-  WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
-    THEN hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
-  ELSE hoidon_paaurakan_geometria(u.id)
-  END                              AS alueurakka_alue
-FROM urakka u
-  LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
-WHERE u.id IN (:idt);
+    u.id                             AS urakka_id,
+    CASE
+        WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
+            THEN ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(alueurakka.alueurakkanro), 1000)
+        ELSE ST_SimplifyPreserveTopology(hoidon_paaurakan_geometria(u.id), 1000)
+        END                              AS urakka_alue
+  FROM urakka u
+           LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
+ WHERE u.id IN (:idt);
 
 -- name: hae-urakan-sampo-id
 -- single?: true

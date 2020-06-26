@@ -296,10 +296,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                [:div.harja-alasvetolista-ryhma
                                 [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                                 (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
-                                  ^{:key (hash vaihtoehto)}
+                                  ^{:key (gensym (hash vaihtoehto))}
                                   [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
                              (for [vaihtoehto vaihtoehdot]
-                               ^{:key (hash vaihtoehto)}
+                               ^{:key (gensym (hash vaihtoehto))}
                                [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(when @auki?
