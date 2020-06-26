@@ -529,7 +529,33 @@ SELECT t.id        AS toteuma_id,
     WHERE t.id = :id
       AND tk.id = tt.toimenpidekoodi
       AND t.id = tt.toteuma
+      AND t.poistettu IS NOT TRUE
       AND tr1.id = tk.tehtavaryhma;
+
+-- name: hae-akillinen-toteuma
+-- Hae yksittäinen äkillinen hoitottyö toteuma muokkaukseen
+SELECT t.id        AS toteuma_id,
+       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       tk.nimi                    AS tehtava,
+       tk.id                      AS tehtava_id,
+       tt.maara                   AS toteutunut,
+       t.alkanut                  AS toteuma_aika,
+       tk.yksikko                 AS yksikko,
+       tr.otsikko                AS toimenpide_otsikko,
+       tr.id                     AS toimenpide_id,
+       tt.id                      AS toteuma_tehtava_id,
+       tt.lisatieto                AS lisatieto,
+       t.tyyppi                   AS tyyppi
+    FROM toteuma_tehtava tt,
+         toimenpidekoodi tk,
+         toteuma t,
+         tehtavaryhma tr
+    WHERE t.id = :id
+      AND tk.id = tt.toimenpidekoodi
+      AND t.id = tt.toteuma
+      AND t.poistettu IS NOT TRUE
+      AND tr.id = tk.tehtavaryhma;
+
 
 -- name: listaa-urakan-toteutumien-toimenpiteet
 -- Listaa kaikki tehtävät, joita voidaan näyttää toteutuneiden määrien yhteydessä. Kaikille tehtäville
@@ -540,8 +566,9 @@ SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
       AND tr.tyyppi = 'ylataso'
     ORDER BY otsikko ASC, tr.id ASC;
 
--- name: listaa-toimenpiteiden-tehtavat
--- Listaa kaikki tehtävät tehtäväryhmän perusteella
+-- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
+-- Listaa kaikki tehtävät tehtäväryhmän perusteella määrien toteumille. Äkillisille hoitotöille
+-- on ihan oma tehtäväryhmä ja tätä ei voida käyttää siihen
 SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
     FROM toimenpidekoodi tk,
          tehtavaryhma tr1
@@ -550,14 +577,12 @@ SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
     WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND kasin_lisattava_maara = true
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
 
--- name: tallenna-toteuma<!
-INSERT INTO toteuma (urakka, sopimus, luotu, luoja, alkanut, paattynyt, tyyppi, lahde)--,alkanut_vuosi
-VALUES (:urakka-id, (SELECT id FROM sopimus WHERE urakka = :urakka-id), NOW(),
-        :luoja-id, :alkupvm, :loppupvm, 'kokonaishintainen', 'harja-ui') RETURNING id;
-
--- name: tallenna-toteuma-tehtava<!
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, lisatieto)
-VALUES (:toteuma-id, NOW(), :toimenpidekoodi-id, :maara::NUMERIC, :luoja-id, :lisatieto);
+-- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat
+SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
+    FROM toimenpidekoodi tk,
+         tehtavaryhma tr
+    WHERE tr.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA'
+      AND tk.tehtavaryhma = tr.id;
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
