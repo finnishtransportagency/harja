@@ -295,7 +295,7 @@
 (defn- hae-tehtavat [toimenpide]
   (let [tehtavaryhma (when toimenpide
                        (:otsikko toimenpide))]
-    (tuck-apurit/post! :toimenpiteiden-tehtavat
+    (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
                        {:tehtavaryhma tehtavaryhma}
                        {:onnistui ->TehtavatHakuOnnistui
                         :epaonnistui ->TehtavatHakuEpaonnistui
