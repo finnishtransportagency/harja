@@ -69,6 +69,45 @@ GROUP BY tpi_id;
 -- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain kolme.
 SELECT tpi_id,
        :urakka_id                       as urakka_id,
+       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kuluina kirjatut hankinnat ja lisätyöt sekä suunnitelluista kustannuksista poimitut hoidon johdon kulut
+FROM (SELECT
+          SUM((mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutettu +
+              (mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutetaan)              AS kokonaishintaisten_summa ,-- Hankinnat
+          lyht.alkupvm,
+          lyht.loppupvm,
+          (mhu_laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id
+      FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+               SELECT
+                   hk.alkupvm,
+                   hk.loppupvm,
+                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                                       date_trunc('month', hk.loppupvm) :: DATE,
+                                                       (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
+                                                       :urakka_id :: INTEGER)
+               FROM (SELECT *
+                     FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
+                     WHERE loppupvm < now()) AS hk
+               UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+               SELECT
+                   hk.alkupvm,
+                   hk.loppupvm,
+                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                                       date_trunc('month', now()) :: DATE,
+                                                       (date_trunc('month', now()) + INTERVAL '1 MONTH - 1 day') :: DATE, :urakka_id :: INTEGER)
+               FROM (SELECT *
+                     FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
+                     WHERE alkupvm < now() AND loppupvm > now()) AS hk
+           ) AS lyht
+      GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
+GROUP BY tpi_id;
+
+-- name: vanha-hae-teiden-hoidon-urakan-maksuerien-summat
+-- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
+-- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
+-- eri maksuerätyypeille.
+-- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain kolme.
+SELECT tpi_id,
+       :urakka_id                       as urakka_id,
        SUM(kokonaishintaisten_summa)    AS kokonaishintainen, -- Kuluina kirjatut hankinnat ja lisätyöt sekä suunnitelluista kustannuksista poimitut hoidon johdon kulut
        SUM(akilliset_hoitotyot_summa)   AS "akillinen-hoitotyo",
        SUM(vahinkojen_korjaukset_summa) AS "vahinkojen-korjaukset",
