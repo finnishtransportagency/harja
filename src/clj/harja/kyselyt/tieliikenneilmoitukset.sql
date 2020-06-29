@@ -106,7 +106,10 @@ WHERE i.id IN
          (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
-         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (:urakkatyyppi_annettu IS FALSE OR
+         CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
+          u2.tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+          ELSE u2.tyyppi = :urakkatyyppi::urakkatyyppi END) AND
          (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
