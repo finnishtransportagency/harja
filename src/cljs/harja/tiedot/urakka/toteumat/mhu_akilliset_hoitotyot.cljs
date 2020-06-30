@@ -16,11 +16,15 @@
 (extend-protocol
   tuck/Event
   PaivitaLomake
-  (process-event [{{useampi? ::t/useampi-toteuma :as lomake} :lomake} app]
+  (process-event [{{useampi? ::t/useampi-toteuma
+                    tyyppi ::t/tyyppi
+                    :as lomake} :lomake} app]
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])]
       (-> app
           (assoc :lomake lomake)
-          (update :lomake (if (not= useampi? useampi-aiempi?)
+          (update :lomake (if (and
+                                (= tyyppi :maaramitattava)
+                                (not= useampi? useampi-aiempi?))
                             (fn [lomake]
                               (if (true? useampi?)
                                 (update lomake ::t/toteumat conj {})
