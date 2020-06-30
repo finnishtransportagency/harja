@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom cursor]]
             [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.toteuma :as t]
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
@@ -162,7 +163,21 @@
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
 
-(def akilliset-ja-vauriot-default {})
+(def toteumat-default-arvot {:maarien-toteumat {:syottomoodi           false
+                                                :toimenpiteet          nil
+                                                :toteutuneet-maarat    nil
+                                                :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                         (pvm/vuosi (pvm/nyt))
+                                                                         (dec (pvm/vuosi (pvm/nyt))))
+                                                :aikavali-alkupvm      nil
+                                                :aikavali-loppupvm     nil
+                                                :lomake                {::t/toteumat [{::t/toimenpide         nil
+                                                                                       ::t/tehtava            nil
+                                                                                       ::t/toteuma-id         nil
+                                                                                       ::t/toteuma-tehtava-id nil
+                                                                                       ::t/lisatieto          nil
+                                                                                       ::t/maara              nil
+                                                                                       ::t/loppupvm           (pvm/nyt)}]}}})
 
 (def kulut-default {:parametrit  {:haetaan 0}
                     :taulukko    nil
@@ -172,15 +187,13 @@
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 
-(def toteumat-default-arvot {:akilliset-hoitotyot-ja-vaurioiden-korjaukset akilliset-ja-vauriot-default})
-
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot}))
 
 
-(defonce akilliset-hoitotyot-ja-vaurioiden-korjaukset (cursor tila [:toteumat :akilliset-hoitotyot-ja-vaurioiden-korjaukset]))
+(defonce toteumat-maarat (cursor tila [:toteumat :maarien-toteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
@@ -190,21 +203,21 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 
-(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
-                                                             :toteutuneet-maarat nil
+(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
+                                                             :toteutuneet-maarat    nil
                                                              :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                                       (pvm/vuosi (pvm/nyt))
                                                                                       (dec (pvm/vuosi (pvm/nyt))))
-                                                             :aikavali-alkupvm nil
-                                                             :aikavali-loppupvm nil
-                                                             :toteuma {:toimenpide nil
-                                                                       :tehtava nil
-                                                                       :toteuma-id nil
-                                                                       :toteuma-tehtava-id nil
-                                                                       :lisatieto nil
-                                                                       :maara nil
-                                                                       :loppupvm (pvm/nyt)}
-                                                             :syottomoodi false}}))
+                                                             :aikavali-alkupvm      nil
+                                                             :aikavali-loppupvm     nil
+                                                             :toteuma               {:toimenpide         nil
+                                                                                     :tehtava            nil
+                                                                                     :toteuma-id         nil
+                                                                                     :toteuma-tehtava-id nil
+                                                                                     :lisatieto          nil
+                                                                                     :maara              nil
+                                                                                     :loppupvm           (pvm/nyt)}
+                                                             :syottomoodi           false}}))
 
 (add-watch nav/valittu-urakka :urakan-id-watch
            (fn [_ _ _ uusi-urakka]

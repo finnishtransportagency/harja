@@ -19,32 +19,45 @@
   (loki/log "tyhjään"))
 
 (defn- maaramitattavat-toteumat
-  [{{toteumat ::t/toteumat} :data :as kaikki}]
+  [e! {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
   (loki/log "data" kaikki)
-  [:<>
-   [:div "Dippadii"]
-   [kentat/tee-kentta
-    {:otsikko               "Tehtävä"
-     :nimi                  ::t/tehtava
-     :pakollinen?           true
-     ::ui-lomake/col-luokka ""
-     :tyyppi                :valinta
-     :valinnat              #{:yks :kaks :kol}}
-    (r/wrap :yks #(loki/log "tehtävä"))]
-   [kentat/tee-kentta
-    {:otsikko               "Toteutunut määrä"
-     ::ui-lomake/col-luokka ""
-     :nimi                  ::t/maara
-     :pakollinen?           true
-     :tyyppi                :numero}
-    (r/wrap :yks #(loki/log "tehtävä"))]
-   [kentat/tee-kentta
-    {:otsikko               "Lisätieto"
-     ::ui-lomake/col-luokka ""
-     :nimi                  ::t/lisatieto
-     :pakollinen?           true
-     :tyyppi                :string}
-    (r/wrap :yks #(loki/log "tehtävä"))]])
+  [:div.col-xs-12
+   (doall
+     (map-indexed
+       (fn [indeksi {tehtava   ::t/tehtava
+                     maara     ::t/maara
+                     lisatieto ::t/lisatieto
+                     :as       toteuma}]
+         [:<>
+          [kentat/tee-kentta
+           {:otsikko               "Tehtävä"
+            :nimi                  ::t/tehtava
+            :pakollinen?           true
+            ::ui-lomake/col-luokka ""
+            :tyyppi                :valinta
+            :valinnat              #{:yks :kaks :kol}}
+           (r/wrap tehtava
+                   (fn [arvo]
+                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/tehtava] arvo)))))]
+          [kentat/tee-kentta
+           {:otsikko               "Toteutunut määrä"
+            ::ui-lomake/col-luokka ""
+            :nimi                  ::t/maara
+            :pakollinen?           true
+            :tyyppi                :numero}
+           (r/wrap maara
+                   (fn [arvo]
+                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/maara] arvo)))))]
+          [kentat/tee-kentta
+           {:otsikko               "Lisätieto"
+            ::ui-lomake/col-luokka ""
+            :nimi                  ::t/lisatieto
+            :pakollinen?           true
+            :tyyppi                :string}
+           (r/wrap lisatieto
+                   (fn [arvo]
+                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/lisatieto] arvo)))))]])
+       toteumat))])
 
 (defn- akilliset-hoitotyot*
   [e! {lomake :lomake :as app}]
@@ -60,7 +73,7 @@
                         {:otsikko     "Päivittäinen työaika"
                          :nimi        ::t/toteumat
                          :tyyppi      :komponentti
-                         :komponentti maaramitattavat-toteumat}]
+                         :komponentti (r/partial maaramitattavat-toteumat e!)}]
         lisatyo [{:otsikko               "Pvm"
                   :nimi                  ::t/pvm
                   ::ui-lomake/col-luokka ""
@@ -94,6 +107,7 @@
                                   :pakollinen?           false
                                   :tyyppi                :string}]]
     [:div#vayla
+     [debug/debug app]
      [debug/debug lomake]
      [:div (pr-str ei-sijaintia)]
      [ui-lomake/lomake
@@ -157,4 +171,4 @@
 
 (defn akilliset-hoitotyot
   []
-  [tuck/tuck tila/akilliset-hoitotyot-ja-vaurioiden-korjaukset akilliset-hoitotyot*])
+  [tuck/tuck tila/toteumat-maarat akilliset-hoitotyot*])

@@ -2,7 +2,8 @@
   (:require [tuck.core :as tuck]
             [harja.domain.toteuma :as t]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tiedot.urakka.urakka :as tila]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.loki :as loki]))
 
 (defrecord PaivitaLomake [lomake])
 (defrecord LahetaLomake [lomake])
@@ -15,8 +16,16 @@
 (extend-protocol
   tuck/Event
   PaivitaLomake
-  (process-event [{lomake :lomake} app]
-    (assoc app :lomake lomake))
+  (process-event [{{useampi? ::t/useampi-toteuma :as lomake} :lomake} app]
+    (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])]
+      (-> app
+          (assoc :lomake lomake)
+          (update :lomake (if (not= useampi? useampi-aiempi?)
+                            (fn [lomake]
+                              (if (true? useampi?)
+                                (update lomake ::t/toteumat conj {})
+                                (update lomake ::t/toteumat #(conj [] (first %)))))
+                            identity)))))
   LomakkeenLahetysEpaonnistui
   (process-event [_ app]
     app)
