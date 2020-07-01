@@ -13,7 +13,7 @@
 
 (defn- laheta! [e! data]
   (loki/log "data " data)
-  (e! (tiedot/->LahetaLomake {})))
+  (e! (tiedot/->LahetaLomake data)))
 
 (defn- tyhjenna! [e! data]
   (loki/log "tyhjään"))

@@ -20,17 +20,32 @@
   tuck/Event
   LahetaLomake
   (process-event [{lomake :lomake} app]
-    (let [{kuvaus       ::t/kuvaus
-           pvm          ::t/pvm
-           tehtava      ::t/tehtava
-           toimenpide   ::t/toimenpide
-           ei-sijaintia ::t/ei-sijaintia
-           sijainti     ::t/sijainti} lomake
+    (let [{kuvaus     ::t/kuvaus
+           pvm        ::t/pvm
+           tyyppi     ::t/tyyppi
+           tehtava    ::t/tehtava
+           toimenpide ::t/toimenpide
+           toteumat   ::t/toteumat} lomake
           urakka-id (-> @tila/yleiset :urakka :id)]
+      (loki/log "tyyppi" tyyppi)
       (tuck-apurit/post! :tallenna-toteuma
-                         {:tehtava    tehtava
-                          :urakka-id  urakka-id
-                          :toimenpide toimenpide}
+                         (case tyyppi
+                           :maaramitattava {:tehtava    tehtava
+                                            :urakka-id  urakka-id
+                                            :toimenpide toimenpide
+                                            :tyyppi     tyyppi
+                                            :toteumat   toteumat}
+                           :akillinen-hoitotyo {:tehtava    tehtava
+                                                :urakka-id  urakka-id
+                                                :toimenpide toimenpide
+                                                :tyyppi     tyyppi
+                                                :toteumat   toteumat}
+                           :lisatyo {:tehtava    tehtava
+                                     :urakka-id  urakka-id
+                                     :toimenpide toimenpide
+                                     :tyyppi     tyyppi
+                                     :toteumat   toteumat}
+                           {:mita :viyy})
                          {:onnistui    ->LomakkeenLahetysOnnistui
                           :epaonnistui ->LomakkeenLahetysEpaonnistui}))
     app)
@@ -45,11 +60,11 @@
   (process-event [_ app]
     app)
   PaivitaLomake
-  (process-event [{{useampi? ::t/useampi-toteuma
-                    tyyppi ::t/tyyppi
-                    sijainti ::t/sijainti
+  (process-event [{{useampi?     ::t/useampi-toteuma
+                    tyyppi       ::t/tyyppi
+                    sijainti     ::t/sijainti
                     ei-sijaintia ::t/ei-sijaintia
-                    :as lomake} :lomake} app]
+                    :as          lomake} :lomake} app]
     ; WIP tää pitää korjata sijaintien osalta jos on yksi toteuma
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])]
       (-> app

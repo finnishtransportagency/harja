@@ -388,11 +388,12 @@
     (toteumat-q/listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat db)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn tallenna-toteuma! [db user {:keys [toteuma-id toteuma-tehtava-id tyyppi urakka-id tehtavaryhma tehtava maara loppupvm lisatieto]}]
+(defn tallenna-toteuma! [db user {:keys [toteuma-id toteuma-tehtava-id tyyppi urakka-id tehtavaryhma tehtava maara loppupvm lisatieto toteumat] :as kamat}]
   ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
     (let [_ (log/debug "tallenna-toteuma! :: urakka-id;" urakka-id "maara:" maara "loppupvm lisatieto toteuma-id toteuma-tehtava-id"  loppupvm lisatieto toteuma-id toteuma-tehtava-id)
           _ (log/debug "tallenna-toteuma! :: tehtava" (pr-str tehtava))
+          _ (log/debug "tallenna-totuema!" (pr-str kamat))
           loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") loppupvm)
           sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
           ;; Tyyppivaihtoehtoja on kolme. "kokonaishintainen" on määrien toteumille, "lisatyo" on lisätöille
