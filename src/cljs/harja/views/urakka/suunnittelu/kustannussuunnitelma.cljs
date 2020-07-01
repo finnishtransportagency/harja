@@ -4,6 +4,7 @@
             [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.napit :as napit]
@@ -2591,6 +2592,9 @@
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma
            [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+           (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
+             [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
+                                              (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
            [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
            [haitari-laatikko
             "Tavoite- ja kattohinta lasketaan automaattisesti"
