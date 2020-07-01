@@ -37,7 +37,7 @@
 
 (defn palstat [{:keys [lukumaara]} & palstan-optiot-ja-skeemat]
   "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
-  (->Palstat {:lukumaara lukumaara} palstan-optiot-ja-skeemat))
+  (->Palstat {:lukumaara lukumaara} (remove nil? palstan-optiot-ja-skeemat)))
 
 (defn palstoja? [x]
   (instance? Palstat x))

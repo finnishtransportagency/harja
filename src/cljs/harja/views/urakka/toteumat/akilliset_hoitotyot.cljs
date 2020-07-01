@@ -21,48 +21,88 @@
 (defn- maaramitattavat-toteumat
   [e! {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
   (loki/log "data" kaikki)
-  [:div.col-xs-12
+  [:div
    (doall
      (map-indexed
-       (fn [indeksi {tehtava   ::t/tehtava
-                     maara     ::t/maara
-                     lisatieto ::t/lisatieto
-                     :as       toteuma}]
-         [:<>
-          [kentat/tee-kentta
-           {:otsikko               "Tehtävä"
-            :nimi                  ::t/tehtava
-            :pakollinen?           true
-            ::ui-lomake/col-luokka ""
-            :tyyppi                :valinta
-            :valinnat              #{:yks :kaks :kol}}
-           (r/wrap tehtava
-                   (fn [arvo]
-                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/tehtava] arvo)))))]
-          [kentat/tee-kentta
-           {:otsikko               "Toteutunut määrä"
-            ::ui-lomake/col-luokka ""
-            :nimi                  ::t/maara
-            :pakollinen?           true
-            :tyyppi                :numero}
-           (r/wrap maara
-                   (fn [arvo]
-                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/maara] arvo)))))]
-          [kentat/tee-kentta
-           {:otsikko               "Lisätieto"
-            ::ui-lomake/col-luokka ""
-            :nimi                  ::t/lisatieto
-            :pakollinen?           true
-            :tyyppi                :string}
-           (r/wrap lisatieto
-                   (fn [arvo]
-                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/lisatieto] arvo)))))]])
-       toteumat))])
+       (fn [indeksi {tehtava      ::t/tehtava
+                     maara        ::t/maara
+                     lisatieto    ::t/lisatieto
+                     sijainti     ::t/sijainti
+                     ei-sijaintia ::t/ei-sijaintia
+                     :as          toteuma}]
+         [(if (= 1 (count toteumat))
+            :<>
+            :div.row.lomakerivi.lomakepalstat)
+          [(if (= 1 (count toteumat))
+             :<>
+             :div.lomakepalsta)
+           [:div.row.lomakerivi
+            [:label "Tehtävä"]
+            [kentat/tee-kentta
+             {:pakollinen?           true
+              ::ui-lomake/col-luokka ""
+              :vayla-tyyli?          true
+              :tyyppi                :valinta
+              :valinnat              #{:yks :kaks :kol}}
+             (r/wrap tehtava
+                     (fn [arvo]
+                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/tehtava] arvo)))))]]
+           [:div.row.lomakerivi
+            [:label "Toteutunut määrä"]
+            [kentat/tee-kentta
+             {::ui-lomake/col-luokka ""
+              :vayla-tyyli?          true
+              :pakollinen?           true
+              :tyyppi                :numero}
+             (r/wrap maara
+                     (fn [arvo]
+                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/maara] arvo)))))]]
+           [:div.row.lomakerivi
+            [:label "Lisätieto"]
+            [kentat/tee-kentta
+             {::ui-lomake/col-luokka ""
+              :vayla-tyyli?          true
+              :pakollinen?           true
+              :tyyppi                :string}
+             (r/wrap lisatieto
+                     (fn [arvo]
+                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/lisatieto] arvo)))))]]]
+          (when (not= (count toteumat) 1)
+            [:div.lomakepalsta
+             [:div.row.lomakerivi
+              [:label "Lisätieto"]
+              [kentat/tee-kentta
+               {::ui-lomake/col-luokka ""
+                :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                :pakollinen?           (not ei-sijaintia)
+                :disabled?             ei-sijaintia
+                :tyyppi                :tierekisteriosoite}
+               (r/wrap sijainti
+                       (fn [arvo]
+                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/sijainti] arvo)))))]]
+             [:div.row.lomakerivi
+              [:label "Lisätieto"]
+              [kentat/tee-kentta
+               {::ui-lomake/col-luokka ""
+                :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                :tyyppi                :checkbox}
+               (r/wrap sijainti
+                       (fn [arvo]
+                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/ei-sijaintia] arvo)))))]]])])
+       toteumat))
+   (when (> (count toteumat) 1)
+     [napit/tallenna
+      "Lisää tehtävä"
+      #(e! (tiedot/->LisaaToteuma lomake))
+      {:ikoni         [harja.ui.ikonit/plus-sign]
+       :vayla-tyyli?  true
+       :teksti-nappi? true}])])
 
 (defn- akilliset-hoitotyot*
   [e! {lomake :lomake :as app}]
   (let [{ei-sijaintia ::t/ei-sijaintia
-         tyyppi       ::t/tyyppi} lomake
+         tyyppi       ::t/tyyppi
+         toteumat     ::t/toteumat} lomake
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava [{:otsikko               "Työ valmis"
@@ -70,10 +110,11 @@
                          ::ui-lomake/col-luokka ""
                          :pakollinen?           true
                          :tyyppi                :pvm}
-                        {:otsikko     "Päivittäinen työaika"
-                         :nimi        ::t/toteumat
-                         :tyyppi      :komponentti
-                         :komponentti (r/partial maaramitattavat-toteumat e!)}]
+                        {:otsikko               "Päivittäinen työaika"
+                         :nimi                  ::t/toteumat
+                         ::ui-lomake/col-luokka ""
+                         :tyyppi                :komponentti
+                         :komponentti           (r/partial maaramitattavat-toteumat e!)}]
         lisatyo [{:otsikko               "Pvm"
                   :nimi                  ::t/pvm
                   ::ui-lomake/col-luokka ""
@@ -156,17 +197,20 @@
            :lisatyo lisatyo
            :akillinen-hoitotyo akilliset-ja-korjaukset
            [])
-         {:otsikko "Sijainti *"}
-         [{:nimi                  ::t/sijainti
-           ::ui-lomake/col-luokka ""
-           :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-           :pakollinen?           (not ei-sijaintia)
-           :disabled?             ei-sijaintia
-           :tyyppi                :tierekisteriosoite}
-          {:nimi                  ::t/ei-sijaintia
-           ::ui-lomake/col-luokka ""
-           :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-           :tyyppi                :checkbox}])]
+         ; WIP tää pitää korjata sijaintien osalta jos on yksi toteuma
+         (when (= (count toteumat) 1)
+           {:otsikko "Sijainti *"})
+         (when (= (count toteumat) 1)
+           [{:nimi                  ::t/sijainti
+             ::ui-lomake/col-luokka ""
+             :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+             :pakollinen?           (not ei-sijaintia)
+             :disabled?             ei-sijaintia
+             :tyyppi                :tierekisteriosoite}
+            {:nimi                  ::t/ei-sijaintia
+             ::ui-lomake/col-luokka ""
+             :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+             :tyyppi                :checkbox}]))]
       lomake]]))
 
 (defn akilliset-hoitotyot

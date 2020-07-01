@@ -284,7 +284,7 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -294,7 +294,9 @@
                                                         (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                         "})?"))]
           [:input {:class       (cond-> nil
-                                        lomake? (str "form-control ")
+                                        (and lomake?
+                                             (not vayla-tyyli?)) (str "form-control ")
+                                        vayla-tyyli? (str "input-default komponentin-input ")
                                         disabled? (str "disabled"))
                    :type        "text"
                    :disabled    disabled?
