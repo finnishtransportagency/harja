@@ -32,11 +32,10 @@
        :const true}
 bufferi 1000)
 
-;; 30s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
-;; karttaa siirretään tai zoomataan
-(def ^{:doc "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
+;; Vaihdettu 60s etteivät tiedot häviä liian pian tarkastellessa (VHAR-1057)
+(def ^{:doc "Päivitystiheys tilannekuvassa, kun parametrit eivät muutu"
        :const true}
-hakutiheys-nykytilanne 30000)
+hakutiheys-nykytilanne 60000)
 
 (def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}
