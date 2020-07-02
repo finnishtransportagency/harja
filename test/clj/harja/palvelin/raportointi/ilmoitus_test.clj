@@ -52,70 +52,26 @@
 
 (deftest hae-ilmoitukset-raportille-hoito-ja-teiden-hoito-test
   (let [db (tietokanta/luo-tietokanta testitietokanta)
-        odotettu '({:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :kysely,
-                   :urakka 26,
-                   :hallintayksikko
-                   {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero "12"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}
-                  {:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :toimenpidepyynto,
-                   :urakka 31,
-                   :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}
-                  {:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :tiedoitus,
-                   :urakka 31,
-                   :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}
-                  {:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :toimenpidepyynto,
-                   :urakka 31,
-                   :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}
-                  {:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :tiedoitus,
-                   :urakka 31,
-                   :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}
-                  {:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :tiedoitus,
-                   :urakka 31,
-                   :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}}
-                  {:kuittaus {:kuittaustyyppi nil},
-                   :sijainti nil,
-                   :ilmoitustyyppi :toimenpidepyynto,
-                   :urakka 31,
-                   :hallintayksikko {:id 13, :nimi "Lappi", :elynumero "14"},
-                   :selitteet [],
-                   :urakkatyyppi nil,
-                   :ilmoittaja {:tyyppi nil}})
+        odotettu-urakasta-26 {:kuittaus {:kuittaustyyppi nil},
+                              :sijainti nil,
+                              :ilmoitustyyppi :kysely,
+                              :urakka 26,
+                              :hallintayksikko
+                              {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero "12"},
+                              :selitteet [],
+                              :urakkatyyppi nil,
+                              :ilmoittaja {:tyyppi nil}}
         [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
         ilmoitukset
         (ilmoitusraportti/hae-ilmoitukset-raportille
           db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
                              :urakoitsija nil :urakkatyyppi :hoito
                              :alkupvm alkupvm :loppupvm loppupvm})]
-    (is (= odotettu (map #(dissoc % :ilmoitettu) ilmoitukset)))
+    (is (= 7 (count ilmoitukset)))
+    (is (= odotettu-urakasta-26 (dissoc
+                                  (first (filter #(= 26 (:urakka %))
+                                                ilmoitukset))
+                                  :ilmoitettu)))
     (is (not (empty? ilmoitukset)))
     (is (= (count ilmoitukset) 7))))
 
