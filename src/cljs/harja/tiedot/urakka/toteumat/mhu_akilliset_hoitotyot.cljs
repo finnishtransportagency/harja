@@ -20,32 +20,22 @@
   tuck/Event
   LahetaLomake
   (process-event [{lomake :lomake} app]
-    (let [{kuvaus     ::t/kuvaus
-           pvm        ::t/pvm
+    (let [{loppupvm   ::t/pvm
            tyyppi     ::t/tyyppi
-           tehtava    ::t/tehtava
            toimenpide ::t/toimenpide
            toteumat   ::t/toteumat} lomake
           urakka-id (-> @tila/yleiset :urakka :id)]
-      (loki/log "tyyppi" tyyppi)
       (tuck-apurit/post! :tallenna-toteuma
-                         (case tyyppi
-                           :maaramitattava {:tehtava    tehtava
-                                            :urakka-id  urakka-id
-                                            :toimenpide toimenpide
-                                            :tyyppi     tyyppi
-                                            :toteumat   toteumat}
-                           :akillinen-hoitotyo {:tehtava    tehtava
-                                                :urakka-id  urakka-id
-                                                :toimenpide toimenpide
-                                                :tyyppi     tyyppi
-                                                :toteumat   toteumat}
-                           :lisatyo {:tehtava    tehtava
-                                     :urakka-id  urakka-id
-                                     :toimenpide toimenpide
-                                     :tyyppi     tyyppi
-                                     :toteumat   toteumat}
-                           {:mita :viyy})
+                         {:urakka-id  urakka-id
+                          :toimenpide toimenpide
+                          :tyyppi     tyyppi
+                          :loppupvm   loppupvm
+                          :toteumat   (mapv #(into {}
+                                                   (map
+                                                     (fn [[k v]]
+                                                       [(-> k name keyword) v])
+                                                     %))
+                                            toteumat)}
                          {:onnistui    ->LomakkeenLahetysOnnistui
                           :epaonnistui ->LomakkeenLahetysEpaonnistui}))
     app)

@@ -110,8 +110,7 @@
                          ::ui-lomake/col-luokka ""
                          :pakollinen?           true
                          :tyyppi                :pvm}
-                        {:otsikko               "Päivittäinen työaika"
-                         :nimi                  ::t/toteumat
+                        {:nimi                  ::t/toteumat
                          ::ui-lomake/col-luokka ""
                          :tyyppi                :komponentti
                          :komponentti           (r/partial maaramitattavat-toteumat e!)}]
@@ -128,7 +127,7 @@
                   :valinnat              [:lisatyo]}
                  {:otsikko               "Kuvaus"
                   ::ui-lomake/col-luokka ""
-                  :nimi                  ::t/kuvaus
+                  :nimi                  ::t/lisatieto
                   :pakollinen?           false
                   :tyyppi                :string}]
         akilliset-ja-korjaukset [{:otsikko               "Pvm"
@@ -144,7 +143,7 @@
                                   :valinnat              [:akilliset-hoitotyot :vahinkojen-korjaukset :tilaajan-varaukset]}
                                  {:otsikko               "Kuvaus"
                                   ::ui-lomake/col-luokka ""
-                                  :nimi                  ::t/kuvaus
+                                  :nimi                  ::t/lisatieto
                                   :pakollinen?           false
                                   :tyyppi                :string}]]
     [:div#vayla
