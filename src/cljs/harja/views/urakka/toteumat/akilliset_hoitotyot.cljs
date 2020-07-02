@@ -98,7 +98,7 @@
        :vayla-tyyli?  true
        :teksti-nappi? true}])])
 
-(defn- akilliset-hoitotyot*
+(defn- maarien-toteuman-syottolomake*
   [e! {lomake :lomake :as app}]
   (let [{ei-sijaintia ::t/ei-sijaintia
          tyyppi       ::t/tyyppi
@@ -214,4 +214,4 @@
 
 (defn akilliset-hoitotyot
   []
-  [tuck/tuck tila/toteumat-maarat akilliset-hoitotyot*])
+  [tuck/tuck tila/toteumat-maarat maarien-toteuman-syottolomake*])

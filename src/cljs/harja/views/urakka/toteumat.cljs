@@ -42,12 +42,6 @@
         [bs/tabs {:style :tabs :classes "tabs-taso2"
                   :active (nav/valittu-valilehti-atom :toteumat)}
 
-         "Äkilliset hoitotyöt ja vaurioiden korjaukset" :akilliset-hoitotyot-ja-vaurioiden-korjaukset
-         (when (or
-                 true
-                 (oikeudet/urakat-toteumat-akilliset-hoitotyot id))
-           [akilliset-htyot/akilliset-hoitotyot])
-
          "Kokonaishintaiset työt" :kokonaishintaiset-tyot
          (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
                     (not mhu-urakka?))

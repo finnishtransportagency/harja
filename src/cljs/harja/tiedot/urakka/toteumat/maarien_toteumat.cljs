@@ -53,13 +53,13 @@
     (do
       (js/console.log "ValitseToimenpide" (pr-str toimenpide))
       (hae-toteutuneet-maarat urakka toimenpide
-                              (get-in app [:maarien-toteumat :toteuma :vuosi])
-                              (get-in app [:maarien-toteumat :toteuma :aikavali-alkupvm])
-                              (get-in app [:maarien-toteumat :toteuma :aikavali-loppupvm]))
+                              (get-in app [:toteuma :vuosi])
+                              (get-in app [:toteuma :aikavali-alkupvm])
+                              (get-in app [:toteuma :aikavali-loppupvm]))
       (hae-tehtavat toimenpide)
       (-> app
-          (assoc-in [:maarien-toteumat :toteuma :toimenpide] toimenpide)
-          (assoc-in [:maarien-toteumat :toteuma :tehtava] nil)
+          (assoc-in [:toteuma :toimenpide] toimenpide)
+          (assoc-in [:toteuma :tehtava] nil)
           (validoi-lomake))))
 
   ValitseTehtava
@@ -67,7 +67,7 @@
     (do
       (js/console.log "ValitseTehtava" (pr-str tehtava))
       (-> app
-          (assoc-in [:maarien-toteumat :toteuma :tehtava] tehtava)
+          (assoc-in [:toteuma :tehtava] tehtava)
           (validoi-lomake))))
 
   AsetaMaara
@@ -75,15 +75,15 @@
     (do
       (js/console.log "AsetaMaara" (pr-str maara))
       (-> app
-          (assoc-in [:maarien-toteumat :toteuma :maara] maara)
+          (assoc-in [:toteuma :maara] maara)
           (validoi-lomake))))
 
   AsetaLisatieto
   (process-event [{arvo :arvo} app]
     (do
       (js/console.log "AsetaLisatieto" (pr-str arvo))
-      (-> app
-          (assoc-in [:maarien-toteumat :toteuma :lisatieto] arvo)
+      (-> apps
+          (assoc-in [:toteuma :lisatieto] arvo)
           (validoi-lomake))))
 
   AsetaLoppuPvm
@@ -91,7 +91,7 @@
     (do
       (js/console.log "AsetaLoppuPvm" (pr-str arvo) (pr-str (pvm/pvm arvo)) )
       (-> app
-          (assoc-in [:maarien-toteumat :toteuma :loppupvm] arvo)
+          (assoc-in [:toteuma :loppupvm] arvo)
           (validoi-lomake))))
 
   ;; Vain yksi rivi voi olla avattuna kerralla, joten tallennetaan avain app-stateen tai poistetaan se, jos se oli jo valittuna
@@ -99,9 +99,9 @@
   (process-event [{avain :avain} app]
     (do
       (js/console.log "AvaaRivi" (pr-str avain))
-      (if (= avain (get-in app [:maarien-toteumat :valittu-rivi]))
-        (assoc-in app [:maarien-toteumat :valittu-rivi] nil)
-        (assoc-in app [:maarien-toteumat :valittu-rivi] avain))))
+      (if (= avain (get-in app [:valittu-rivi]))
+        (assoc-in app [:valittu-rivi] nil)
+        (assoc-in app [:valittu-rivi] avain))))
 
   MuokkaaToteumaa
   (process-event [{toteuma-id :toteuma-id} app]
@@ -110,7 +110,7 @@
                        {:onnistui ->ToteumaHakuOnnistui
                         :epaonnistui ->ToteumaHakuEpaonnistui
                         :paasta-virhe-lapi? true})
-    app)                                                    ;(assoc app [:maarien-toteumat :syottomoodi] true)
+    app)                                                    ;(assoc app [:syottomoodi] true)
 
   ToteumaHakuOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -119,14 +119,14 @@
           valittu-toimenpide {:id (:toimenpide_id vastaus) :otsikko (:toimenpide_otsikko vastaus)}]
       (hae-tehtavat valittu-toimenpide)
       (-> app
-          (assoc-in [:maarien-toteumat :syottomoodi] true)
-          (assoc-in [:maarien-toteumat :toteuma :toteuma-id] (:toteuma_id vastaus))
-          (assoc-in [:maarien-toteumat :toteuma :toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
-          (assoc-in [:maarien-toteumat :toteuma :loppupvm] (:toteuma_aika vastaus))
-          (assoc-in [:maarien-toteumat :toteuma :maara] (:toteutunut vastaus))
-          (assoc-in [:maarien-toteumat :toteuma :tehtava] valittu-tehtava)
-          (assoc-in [:maarien-toteumat :toteuma :toimenpide] valittu-toimenpide)
-          (assoc-in [:maarien-toteumat :toteuma :vuosi] (:hoitokauden-alkuvuosi vastaus))
+          (assoc-in [:syottomoodi] true)
+          (assoc-in [:toteuma :toteuma-id] (:toteuma_id vastaus))
+          (assoc-in [:toteuma :toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
+          (assoc-in [:toteuma :loppupvm] (:toteuma_aika vastaus))
+          (assoc-in [:toteuma :maara] (:toteutunut vastaus))
+          (assoc-in [:toteuma :tehtava] valittu-tehtava)
+          (assoc-in [:toteuma :toimenpide] valittu-toimenpide)
+          (assoc-in [:toteuma :vuosi] (:hoitokauden-alkuvuosi vastaus))
           (validoi-lomake))))
 
   ToteumaHakuEpaonnistui
@@ -137,7 +137,7 @@
 
   ToimenpiteetHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc-in app [:maarien-toteumat :toimenpiteet] vastaus))
+    (assoc-in app [:toimenpiteet] vastaus))
 
   ToimenpiteetHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -149,22 +149,22 @@
   (process-event [{urakka :urakka vuosi :vuosi} app]
     (do
       (js/console.log "ValitseHoitokausi" (pr-str vuosi))
-      (hae-toteutuneet-maarat urakka (get-in app [:maarien-toteumat :toteuma :toimenpide]) vuosi nil nil)
+      (hae-toteutuneet-maarat urakka (get-in app [:toteuma :toimenpide]) vuosi nil nil)
       (-> app
-          (assoc-in [:maarien-toteumat :hoitokauden-alkuvuosi] vuosi)
-          (assoc-in [:maarien-toteumat :toteuma :aikavali-alkupvm] nil)
-          (assoc-in [:maarien-toteumat :toteuma :aikavali-loppupvm] nil))))
+          (assoc-in [:hoitokauden-alkuvuosi] vuosi)
+          (assoc-in [:toteuma :aikavali-alkupvm] nil)
+          (assoc-in [:toteuma :aikavali-loppupvm] nil))))
 
   ValitseAikavali
   (process-event
     [{:keys [polku arvo]} app]
     (let [_ (js/console.log "ValitseAikavali :: polku arvo" (pr-str polku) (pr-str arvo))
           arvo (if (nil? arvo)
-                 (get-in app [:maarien-toteumat polku])
+                 (get-in app [polku])
                  arvo)]
       (-> app
-          (assoc-in [:maarien-toteumat :hoitokauden-alkuvuosi] nil)
-          (assoc-in [:maarien-toteumat (case polku
+          (assoc-in [:hoitokauden-alkuvuosi] nil)
+          (assoc-in [(case polku
                                              :alkupvm :aikavali-alkupvm
                                              :loppupvm :aikavali-loppupvm)] arvo))))
 
@@ -195,8 +195,8 @@
   ToteutuneetMaaratHakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (-> app
-        (assoc-in [:maarien-toteumat :toteutuneet-maarat] vastaus)
-        (assoc-in [:maarien-toteumat :toteutuneet-maarat-grouped] (group-by :tehtava vastaus))))
+        (assoc-in [:toteutuneet-maarat] vastaus)
+        (assoc-in [:toteutuneet-maarat-grouped] (group-by :tehtava vastaus))))
 
   ToteutuneetMaaratHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -207,7 +207,7 @@
   TehtavatHakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (-> app
-        (assoc-in [:maarien-toteumat :tehtavat] vastaus)
+        (assoc-in [:tehtavat] vastaus)
         (validoi-lomake)))
 
   TehtavatHakuEpaonnistui
@@ -220,15 +220,15 @@
   (process-event [{auki :auki tehtava :tehtava toimenpide :toimenpide} app]
     (js/console.log "ToteumanSyotto " (pr-str auki) (pr-str tehtava) (pr-str toimenpide))
     (cond-> app
-            (not (nil? tehtava)) (assoc-in [:maarien-toteumat :toteuma :tehtava] tehtava)
-            (not (nil? toimenpide)) (assoc-in [:maarien-toteumat :toteuma :toimenpide] toimenpide)
-            true (assoc-in [:maarien-toteumat :syottomoodi] auki)
-            true (assoc-in [:maarien-toteumat :toteuma :vuosi] nil)
-            true (assoc-in [:maarien-toteumat :toteuma :toteuma-id] nil)
-            true (assoc-in [:maarien-toteumat :toteuma :toteuma-tehtava-id] nil)
-            true (assoc-in [:maarien-toteumat :toteuma :lisatieto] nil)
-            true (assoc-in [:maarien-toteumat :toteuma :maara] nil)
-            true (assoc-in [:maarien-toteumat :toteuma :loppupvm] (pvm/nyt))))
+            (not (nil? tehtava)) (assoc-in [:toteuma :tehtava] tehtava)
+            (not (nil? toimenpide)) (assoc-in [:toteuma :toimenpide] toimenpide)
+            true (assoc-in [:syottomoodi] auki)
+            true (assoc-in [:toteuma :vuosi] nil)
+            true (assoc-in [:toteuma :toteuma-id] nil)
+            true (assoc-in [:toteuma :toteuma-tehtava-id] nil)
+            true (assoc-in [:toteuma :lisatieto] nil)
+            true (assoc-in [:toteuma :maara] nil)
+            true (assoc-in [:toteuma :loppupvm] (pvm/nyt))))
 
   PoistaToteuma
   (process-event [{id :id} app]
@@ -238,14 +238,14 @@
   TallennaToteuma
   (process-event [_ app]
     (let [urakka-id (:id @nav/valittu-urakka)
-          toimenpide (get-in app [:maarien-toteumat :toteuma :toimenpide])
-          tehtava (get-in app [:maarien-toteumat :toteuma :tehtava])
-          maara (get-in app [:maarien-toteumat :toteuma :maara])
-          loppupvm (get-in app [:maarien-toteumat :toteuma :loppupvm])
-          lisatieto (get-in app [:maarien-toteumat :toteuma :lisatieto])]
+          toimenpide (get-in app [:toteuma :toimenpide])
+          tehtava (get-in app [:toteuma :tehtava])
+          maara (get-in app [:toteuma :maara])
+          loppupvm (get-in app [:toteuma :loppupvm])
+          lisatieto (get-in app [:toteuma :lisatieto])]
       (tuck-apurit/post! :tallenna-toteuma
-                         {:toteuma-id (get-in app [:maarien-toteumat :toteuma :toteuma-id])
-                          :toteuma-tehtava-id (get-in app [:maarien-toteumat :toteuma :toteuma-id])
+                         {:toteuma-id (get-in app [:toteuma :toteuma-id])
+                          :toteuma-tehtava-id (get-in app [:toteuma :toteuma-id])
                           :urakka-id urakka-id
                           :tehtavaryhma (:otsikko toimenpide)
                           :maara maara
@@ -262,10 +262,10 @@
     (viesti/nayta! "Toteuma tallennettu!")
     ;; Päivitä määrät välittömästi lisäyksen jälkeen
     (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
-                            (get-in app [:maarien-toteumat :toteuma :toimenpide])
-                            (get-in app [:maarien-toteumat :hoitokauden-alkuvuosi])
-                            (get-in app [:maarien-toteumat :aikavali-alkupvm])
-                            (get-in app [:maarien-toteumat :aikavali-loppupvm]))
+                            (get-in app [:toteuma :toimenpide])
+                            (get-in app [:hoitokauden-alkuvuosi])
+                            (get-in app [:aikavali-alkupvm])
+                            (get-in app [:aikavali-loppupvm]))
     app)
 
   TallennaToteumaEpaonnistui
@@ -302,18 +302,18 @@
                         :paasta-virhe-lapi? true})))
 
 (defn- validoi-lomake [app]
-  (let [toimenpiteella-tehtavia? (> (count (get-in app [:maarien-toteumat :tehtavat])) 0)
+  (let [toimenpiteella-tehtavia? (> (count (get-in app [:tehtavat])) 0)
         tehtava-valittu? (if toimenpiteella-tehtavia?
-                           (not (nil? (get-in app [:maarien-toteumat :toteuma :tehtava])))
+                           (not (nil? (get-in app [:toteuma :tehtava])))
                            true)
         valid? (if (and
-                     (not (nil? (get-in app [:maarien-toteumat :toteuma :toimenpide])))
+                     (not (nil? (get-in app [:toteuma :toimenpide])))
                      tehtava-valittu?
-                     (not (nil? (get-in app [:maarien-toteumat :toteuma :maara])))
-                     (not (nil? (get-in app [:maarien-toteumat :toteuma :loppupvm]))))
+                     (not (nil? (get-in app [:toteuma :maara])))
+                     (not (nil? (get-in app [:toteuma :loppupvm]))))
                  true
                  false)]
-    (assoc-in app [:maarien-toteumat :lomake-validoitu?] valid?)))
+    (assoc-in app [:lomake-validoitu?] valid?)))
 
 (defn paivita-raidat! [g]
   (let [paivita-luokat (fn [luokat odd?]

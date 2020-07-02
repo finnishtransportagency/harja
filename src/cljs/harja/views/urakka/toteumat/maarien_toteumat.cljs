@@ -39,7 +39,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [tuck.core :as tuck]
             [harja.ui.modal :as modal]
-            [datafrisk.core :as df])
+            [datafrisk.core :as df]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -79,11 +80,11 @@
         tehtava (some (fn [t]
                         (when (= tehtavan-nimi (:tehtava t))
                           t))
-                      (get-in app [:maarien-toteumat :tehtavat]))
+                      (get-in app [:tehtavat]))
         toimenpide (some (fn [t]
                         (when (= tehtavaryhma-otsikko (:otsikko t))
                           t))
-                      (get-in app [:maarien-toteumat :toimenpiteet]))]
+                      (get-in app [:toimenpiteet]))]
     [:a {:href "#"
             :on-click (fn [event]
                         (do
@@ -102,7 +103,7 @@
                                   (:toteuma_aika (first (second rivi))))
                               true false)
                   lapsi-rivit (if (and
-                                    (= (get-in app [:maarien-toteumat :valittu-rivi]) (first rivi))
+                                    (= (get-in app [:valittu-rivi]) (first rivi))
                                     (not (nil? (:toteutunut (first (second rivi))))))
                                 (second rivi)
                                 nil)
@@ -124,7 +125,7 @@
                                                  (str (laske-prosentti (:suunniteltu_maara (first (second rivi))) toteutunut-maara) " %"))]]]
 
                 ;; "+ Lisää toteuma" rivi - jos rivi on auki
-                (when (= (get-in app [:maarien-toteumat :valittu-rivi]) (first rivi))
+                (when (= (get-in app [:valittu-rivi]) (first rivi))
                   [^{:key (str "lisää-toteuma-" (hash rivi))}
                    [:tr {:class (str (if (odd? @row-index-atom) "pariton" "parillinen"))}
                     [:td {:style {:width "50%"}} [lisaa-toteuma-linkki e! app (first rivi) (:tehtavaryhma (first (second rivi)))]]
@@ -146,7 +147,7 @@
                     lapsi-rivit)
                   ;; Jos lapsi-rivejä ei ole, mutta toteuma löytyy, niin lisätään se
                   (when (and
-                          (= (get-in app [:maarien-toteumat :valittu-rivi]) (first rivi))
+                          (= (get-in app [:valittu-rivi]) (first rivi))
                           (> toteutunut-maara 0))
                     [^{:key (str "toteuma-" (hash rivi))}
                      (do
@@ -179,24 +180,25 @@
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)  ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
-        toteutuneet-maarat (get-in app [:maarien-toteumat :toteutuneet-maarat])
-        ryhmitellyt-maarat (get-in app [:maarien-toteumat :toteutuneet-maarat-grouped])
-        toimenpiteet (get-in app [:maarien-toteumat :toimenpiteet])
-        tehtavat (get-in app [:maarien-toteumat :tehtavat])
-        valittu-toimenpide (if (nil? (get-in app [:maarien-toteumat :toteuma :toimenpide]))
+        toteutuneet-maarat (get-in app [:toteutuneet-maarat])
+        ryhmitellyt-maarat (get-in app [:toteutuneet-maarat-grouped])
+        toimenpiteet (get-in app [:toimenpiteet])
+        tehtavat (get-in app [:tehtavat])
+        valittu-toimenpide (if (nil? (get-in app [:toteuma :toimenpide]))
                              {:otsikko "Kaikki" :id 0}
-                             (get-in app [:maarien-toteumat :toteuma :toimenpide]))
-        valittu-hoitokausi (if (nil? (get-in app [:maarien-toteumat :hoitokauden-alkuvuosi]))
+                             (get-in app [:toteuma :toimenpide]))
+        valittu-hoitokausi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
                              2019
-                             (get-in app [:maarien-toteumat :hoitokauden-alkuvuosi]))
-        aikavali-alkupvm (get-in app [:maarien-toteumat :aikavali-alkupvm])
-        aikavali-loppupvm (get-in app [:maarien-toteumat :aikavali-loppupvm])
-        syottomoodi (get-in app [:maarien-toteumat :syottomoodi])
+                             (get-in app [:hoitokauden-alkuvuosi]))
+        aikavali-alkupvm (get-in app [:aikavali-alkupvm])
+        aikavali-loppupvm (get-in app [:aikavali-loppupvm])
+        syottomoodi (get-in app [:syottomoodi])
         dom-id "maarien-toteumat-taulukko"
         ;g (maarien-toteumat/uusi-gridi dom-id)
         ;_ (new-grid/aseta-gridin-polut g)
         ]
     [:div#kustannussuunnitelma.maarien-toteumat
+     [debug/debug app]
      [:div "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan."]
      [:div
       [:div.label-ja-alasveto.iso-alasveto
@@ -226,7 +228,7 @@
                                      (let [_ (js/console.log ":sumeutus-kun-molemmat-fn :: alkupvm-loppupvm" (pr-str alkupvm) (pr-str loppupvm))]
                                        (e! (maarien-toteumat/->HaeToteutuneetMaarat
                                              (:id @nav/valittu-urakka)
-                                             (get-in app [:maarien-toteumat :toteuma :toimenpide])
+                                             (get-in app [:toteuma :toimenpide])
                                              nil
                                              alkupvm loppupvm))))}]]
       [:div.label-ja-alasveto
@@ -262,25 +264,25 @@
 (defonce maara-atom (r/atom 0))
 (defonce toteuma-valmis-atom (r/atom (pvm/nyt)))
 (defn toteuman-syotto [e! app]
-  (let [syottomoodi (get-in app [:maarien-toteumat :syottomoodi])
-        toimenpiteet (get-in app [:maarien-toteumat :toimenpiteet])
-        valittu-toimenpide (get-in app [:maarien-toteumat :toteuma :toimenpide])
+  (let [syottomoodi (get-in app [:syottomoodi])
+        toimenpiteet (get-in app [:toimenpiteet])
+        valittu-toimenpide (get-in app [:toteuma :toimenpide])
         valittu-toimenpide (if (= 0 (:id valittu-toimenpide))
                              {:id 0 :otsikko " - valitse - "}
                              valittu-toimenpide)
-        tehtavat (get-in app [:maarien-toteumat :tehtavat])
+        tehtavat (get-in app [:tehtavat])
         valittu-tehtava (cond
                           (empty? tehtavat)
                           {:tehtava "- ei käsin lisättäviä tehtäviä - " :id 0}
                           (and (not (empty? tehtavat))
-                               (nil? (get-in app [:maarien-toteumat :toteuma :tehtava])))
+                               (nil? (get-in app [:toteuma :tehtava])))
                           {:tehtava "- valitse - " :id 0}
                           :default
-                          (get-in app [:maarien-toteumat :toteuma :tehtava]))
-        maara (get-in app [:maarien-toteumat :toteuma :maara])
-        _ (reset! toteuma-valmis-atom (get-in app [:maarien-toteumat :toteuma :loppupvm]))
-        lisatieto (get-in app [:maarien-toteumat :toteuma :lisatieto])
-        lomake-validoitu? (get-in app [:maarien-toteumat :lomake-validoitu?])]
+                          (get-in app [:toteuma :tehtava]))
+        maara (get-in app [:toteuma :maara])
+        _ (reset! toteuma-valmis-atom (get-in app [:toteuma :loppupvm]))
+        lisatieto (get-in app [:toteuma :lisatieto])
+        lomake-validoitu? (get-in app [:lomake-validoitu?])]
 
     [:div.ajax-peitto-kontti.lomake
      [:div.palstat
@@ -387,15 +389,15 @@
                         (e! (maarien-toteumat/->HaeToimenpiteet))
                         (e! (maarien-toteumat/->HaeToteutuneetMaarat
                               (:id @nav/valittu-urakka)
-                              (get-in app [:maarien-toteumat :toteuma :toimenpide])
-                              (get-in app [:maarien-toteumat :hoitokauden-alkuvuosi]) nil nil)))))
+                              (get-in app [:toteuma :toimenpide])
+                              (get-in app [:hoitokauden-alkuvuosi]) nil nil)))))
     (fn [e! app]
-      (let [syottomoodi (get-in app [:maarien-toteumat :syottomoodi])]
+      (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
          (if syottomoodi
-           [toteuman-syotto e! app]
+           [harja.views.urakka.toteumat.akilliset-hoitotyot/maarien-toteuman-syottolomake* e! app]
            [maarien-toteumalistaus e! app])
          [debug-state app]]))))
 
 (defn maarien-toteumat []
-  (tuck/tuck tila/toteumat-maarien-toteumat maarien-toteumat*))
+  (tuck/tuck tila/toteumat-maarat maarien-toteumat*))
