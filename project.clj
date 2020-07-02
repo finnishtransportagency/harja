@@ -82,6 +82,11 @@
 
                  [reagent "0.9.1"]
 
+
+                 [data-frisk-reagent "0.4.5"]
+
+
+
                  [alandipert/storage-atom "2.0.1"]
 
                  [clj-time "0.15.0"]
@@ -91,10 +96,9 @@
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.17"] ; TODO Voisi päivittää, mutta dk.ative/docjure käyttää 3.17, ja tulee ikäviä erroreita jos tän päivittää
-                                        ; docjuressa on kyllä pullero, joka tuon hoitaisi, niin jospa se joskus mergettäisiin
-                 [org.apache.poi/poi-scratchpad "3.17"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.17"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "4.1.0"]
+                 [org.apache.poi/poi-scratchpad "4.1.0"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "4.1.0"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -122,8 +126,7 @@
                  [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.14.0-SNAPSHOT"] ; TODO Päivitä tämä heti, kun https://github.com/mjul/docjure/pull/81 mergetty tai joku vastaava tehty
-                                        ; Päivitä samalla apache poi
+                 [dk.ative/docjure "1.14.0"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.1.0"]
@@ -140,9 +143,9 @@
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]]
 
-  :managed-dependencies [[org.apache.poi/poi "3.17"]
-                         [org.apache.poi/poi-scratchpad "3.17"]
-                         [org.apache.poi/poi-ooxml "3.17"]]
+  :managed-dependencies [[org.apache.poi/poi "4.1.0"]
+                         [org.apache.poi/poi-scratchpad "4.1.0"]
+                         [org.apache.poi/poi-ooxml "4.1.0"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]

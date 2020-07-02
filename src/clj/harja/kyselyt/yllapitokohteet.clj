@@ -31,6 +31,26 @@
           (assoc kohde :kohdeosat kohteen-kohdeosat)))
       kohteet))))
 
+(defn liita-paikkaukset-paikkauskohteisiin
+  [db kohteet kohde-id-avain {:keys [alue toleranssi alkupvm loppupvm]}]
+  (let [idt (map kohde-id-avain kohteet)
+        kohdeosat (into []
+                        kohdeosa-xf
+                        (if alue
+                          (hae-paikkauskohteen-paikkaukset-alueelle
+                            db (merge alue {:idt idt :toleranssi toleranssi
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm}))
+                          (hae-paikkauskohteen-paikkaukset
+                            db {:idt idt
+                                :alkupvm alkupvm
+                                :loppupvm loppupvm})))]
+    (mapv
+      (fn [kohde]
+        (let [kohteen-kohdeosat (filterv #(= (:yllapitokohde-id %) (kohde-id-avain kohde)) kohdeosat)]
+          (assoc kohde :kohdeosat kohteen-kohdeosat)))
+      kohteet)))
+
 (defn yllapitokohteiden-tiedot-sahkopostilahetykseen [db kohde-idt]
   (let [tiedot (into []
                      (comp

@@ -1752,9 +1752,17 @@
     (assoc-in app [:domain :kuluva-hoitokausi] (kuluva-hoitokausi)))
   YleisSuodatinArvot
   (process-event [_ app]
-    (-> app
-        (assoc-in [:suodattimet :hoitokauden-numero] (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))
-        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true)))
+    (let [urakan-alkupvm (-> @tiedot/tila :yleiset :urakka :alkupvm)
+          ;; Jos urakan alkuvuosi sama kuin kuluva vuosi, asetetaann hoitokauden oletusnumero ykköseksi
+          ;; Samposta voi tulla virheellisesti urakoita, joiden alkupvm määritelty 1.1.202X, vaikka oikeasti
+          ;; alkavat 1.10.202X. Tämä käsittely estää UI:n kaatumisen moisessa tapauksessa, muuten toimii normaalisti
+          default-hoitokausi (if (= (pvm/vuosi (pvm/nyt))
+                                    (pvm/vuosi urakan-alkupvm))
+                               1
+                               (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
+      (-> app
+          (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
+          (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc-in app [:domain :indeksit] vastaus))

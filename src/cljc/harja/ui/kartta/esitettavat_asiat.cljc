@@ -502,7 +502,7 @@
   [toimenpide]
   (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
                      [toimenpide] false)]
-    {:nimi toimenpide :teksti toimenpide
+    {:teksti toimenpide
      :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
