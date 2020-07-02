@@ -63,60 +63,61 @@ FROM (SELECT
 GROUP BY tpi_id;
 
 -- name: hae-teiden-hoidon-urakan-maksuerien-summat
--- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
--- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
--- eri maksuerätyypeille.
--- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain kolme.
+-- Hakee urakan id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
+-- Jokaiselle toimenpideinstanssille palautetaan id sekä maksuerän summa.
+-- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain yksi (kokonaishintainen).
 SELECT tpi_id,
        :urakka_id                       as urakka_id,
-       SUM(kokonaishintaisten_summa)    AS kokonaishintainen, -- Kuluina kirjatut hankinnat ja lisätyöt sekä suunnitelluista kustannuksista poimitut hoidon johdon kulut
-       SUM(akilliset_hoitotyot_summa)   AS "akillinen-hoitotyo",
-       SUM(vahinkojen_korjaukset_summa) AS "vahinkojen-korjaukset",
-       SUM(muutostyot_summa) AS "lisatyot",
-       SUM(sanktiot_summa) AS "sanktiot",
-       SUM(bonukset_summa) AS "bonukset"
+       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden viimeisenä päivänä.
 FROM (SELECT
-          SUM((laskutusyhteenveto_teiden_hoito).kht_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).kht_laskutetaan)                 AS kokonaishintaisten_summa, -- Hankinnat
-          SUM((laskutusyhteenveto_teiden_hoito).akilliset_hoitotyot_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).akilliset_hoitotyot_laskutetaan) AS akilliset_hoitotyot_summa,
-          SUM((laskutusyhteenveto_teiden_hoito).vahinkojen_korjaukset_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).vahinkojen_korjaukset_laskutetaan) AS "vahinkojen_korjaukset_summa",
-          SUM((laskutusyhteenveto_teiden_hoito).muutostyot_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).muutostyot_laskutetaan) AS "muutostyot_summa",
-          SUM((laskutusyhteenveto_teiden_hoito).sakot_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).sakot_laskutetaan) AS "sanktiot_summa",
-          SUM((laskutusyhteenveto_teiden_hoito).bonukset_laskutettu +
-              (laskutusyhteenveto_teiden_hoito).bonukset_laskutetaan) AS "bonukset_summa",
-          (laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id,
+          SUM((mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutettu) AS kokonaishintaisten_summa,
           lyht.alkupvm,
-          lyht.loppupvm
+          lyht.loppupvm,
+          (mhu_laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id
       FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
-                   laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
-                                                   date_trunc('month', hk.loppupvm) :: DATE,
-                                                   (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
-                                                   :urakka_id :: INTEGER)
+                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                                       date_trunc('month', hk.loppupvm) :: DATE,
+                       -- luvut halutaan maksuerälle vasta kuukauden viimeisenä päivänä
+                                                       (SELECT CASE
+                                                                   WHEN
+                                                                       (now()::DATE =
+                                                                        (SELECT (date_trunc('MONTH', now()::DATE) +
+                                                                                 INTERVAL '1 MONTH - 1 day')::DATE))
+                                                                       THEN
+                                                                       now()::DATE
+                                                                   ELSE
+                                                                       (date_trunc('month', now()::DATE) - INTERVAL '1 day')::DATE
+                                                                   END)                       ,
+                                                       :urakka_id :: INTEGER)
                FROM (SELECT *
                      FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
-                     WHERE loppupvm < now()) AS hk
+                     WHERE loppupvm < now()::DATE) AS hk
                UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
-                   laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
-                                                   date_trunc('month', now()) :: DATE,
-                                                   (date_trunc('month', now()) + INTERVAL '1 MONTH - 1 day') :: DATE, :urakka_id :: INTEGER)
+                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                                       date_trunc('month', now()::DATE) ::DATE,
+                                                       (SELECT CASE
+                                                                   WHEN
+                                                                       (now()::DATE =
+                                                                        (SELECT (date_trunc('MONTH', now()::DATE) +
+                                                                                 INTERVAL '1 MONTH - 1 day')::DATE))
+                                                                       THEN
+                                                                       now()::DATE
+                                                                   ELSE
+                                                                       (date_trunc('month', now()::DATE) - INTERVAL '1 day')::DATE
+                                                                   END)                       ,
+                                                       :urakka_id :: INTEGER)
                FROM (SELECT *
                      FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
-                     WHERE alkupvm < now() AND loppupvm > now()) AS hk
+                     WHERE alkupvm <= now()::DATE AND loppupvm >= now()::DATE) AS hk
            ) AS lyht
       GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
 GROUP BY tpi_id;
-
-
 
 -- name: hae-urakan-maksuerat
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
