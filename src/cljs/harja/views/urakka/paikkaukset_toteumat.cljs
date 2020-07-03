@@ -96,7 +96,7 @@
                                          "Kohde" nimi
                                          "Rivejä" rivien-lkm
                                          "Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                                         "Massamenekki" massamenekki)])}
+                                         "Massamenekki " (str massamenekki "kg/m\u00B2"))])}
          varmista-kayttajalta/modal-muut-vastaanottajat
          (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
                                                         :pakollinen? true
@@ -312,7 +312,7 @@
                          :leveys 5
                          :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
                          :nimi :suirun-pinta-ala}
-                        {:otsikko "Massa\u00ADmenek\u00ADki"
+                        {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
                          :leveys 5
                          :nimi ::paikkaus/massamenekki}
                         {:otsikko "Raekoko"
