@@ -1,4 +1,8 @@
-[
+[{
+    "date": "2020-7-03",
+    "title": "Siltatarkastusraportti toimii taas nopeasti",
+    "body": "Harjan Siltatarkastusraportin tekeminen oli hidastunut vuosien myötä lähes käyttökelvottomaksi. Syyksi paljastui tehoton tietokantakysely, joka lisääntyneen tietomäärän myötä lopulta hidastui. Tietokantakysely on nyt korjattu ja raportti toimii taas erittäin nopeasti. Korjauksesta tarkempia teknisiä tietoja voi lukea seuraavasta blogikirjoituksesta: <a>https://dev.solita.fi/2020/06/30/interpret-postgresql-query-plans.html</a>" 
+  },
   {
     "date": "2020-6-26",
     "title": "Tilannekuvan käyttö on nyt merkittävästi nopeampaa",
