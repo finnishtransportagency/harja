@@ -145,7 +145,7 @@
                                (for [m materiaaliotsikot]
                                 (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m)))))))]))))]
      (when-not (empty? toteumat)
-       [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. "
-                     yleinen/materiaalitoteumien-paivitysinfo)])]))
+       [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. ")])
+     [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]]))
 
     
