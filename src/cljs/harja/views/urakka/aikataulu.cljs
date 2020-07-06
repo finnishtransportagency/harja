@@ -359,13 +359,14 @@
                                                             (reset! tiedot/aikataulurivit vastaus)
                                                             (kumousboksi/ehdota-kumoamista! paivitettyjen-vanha-tila)))))
                          (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
-      (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
-                                             :urakka-id urakka-id
-                                             :voi-muokata-paallystys? voi-muokata-paallystys?
-                                             :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                             :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                                             :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})
-           aikataulurivit)]]))
+      (some->> aikataulurivit
+        (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
+                                              :urakka-id urakka-id
+                                              :voi-muokata-paallystys? voi-muokata-paallystys?
+                                              :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                              :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
+                                              :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?}))
+               (filter #(not (empty? (:harja.ui.aikajana/ajat %)))))]]))
 
 (defn- paallystysurakan-tarkka-aikataulu
   [urakka-id sopimus-id rivi vuosi nakyma voi-muokata-paallystys? voi-muokata-tiemerkinta?]
