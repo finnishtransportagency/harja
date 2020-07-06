@@ -1,7 +1,7 @@
-(ns harja.views.urakka.toteumat.akilliset-hoitotyot
+(ns harja.views.urakka.toteumat.maarien-toteuma-lomake
   (:require [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.toteumat.mhu-akilliset-hoitotyot :as tiedot]
+            [harja.tiedot.urakka.toteumat.maarien-toteuma-lomake :as tiedot]
             [harja.ui.lomake :as ui-lomake]
             [harja.domain.toteuma :as t]
             [harja.ui.debug :as debug]
@@ -16,10 +16,11 @@
   (e! (tiedot/->LahetaLomake data)))
 
 (defn- tyhjenna! [e! data]
-  (loki/log "tyhjään"))
+  (loki/log "tyhjään")
+  (e! (tiedot/->TyhjennaLomake data)))
 
 (defn- maaramitattavat-toteumat
-  [e! {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
+  [{:keys [e! toimenpiteet tehtavat]} {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
   (loki/log "data" kaikki)
   [:div
    (doall
@@ -43,7 +44,8 @@
               ::ui-lomake/col-luokka ""
               :vayla-tyyli?          true
               :tyyppi                :valinta
-              :valinnat              #{:yks :kaks :kol}}
+              :valinnat              tehtavat
+              :valinta-nayta         :tehtava}
              (r/wrap tehtava
                      (fn [arvo]
                        (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/tehtava] arvo)))))]]
@@ -99,7 +101,7 @@
        :teksti-nappi? true}])])
 
 (defn- maarien-toteuman-syottolomake*
-  [e! {lomake :lomake :as app}]
+  [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
   (let [{ei-sijaintia ::t/ei-sijaintia
          tyyppi       ::t/tyyppi
          toteumat     ::t/toteumat} lomake
@@ -113,7 +115,9 @@
                         {:nimi                  ::t/toteumat
                          ::ui-lomake/col-luokka ""
                          :tyyppi                :komponentti
-                         :komponentti           (r/partial maaramitattavat-toteumat e!)}]
+                         :komponentti           (r/partial maaramitattavat-toteumat {:e!           e!
+                                                                                     :toimenpiteet toimenpiteet
+                                                                                     :tehtavat     tehtavat})}]
         lisatyo [{:otsikko               "Pvm"
                   :nimi                  ::t/pvm
                   ::ui-lomake/col-luokka ""
@@ -151,7 +155,9 @@
      [debug/debug lomake]
      [:div (pr-str ei-sijaintia)]
      [ui-lomake/lomake
-      {:muokkaa!     #(e! (tiedot/->PaivitaLomake %))
+      {:muokkaa!     (fn [data]
+                       (loki/log "dataa " data)
+                       (e! (tiedot/->PaivitaLomake data)))
        :voi-muokata? true
        :palstoja     2
        :footer-fn    (fn [data]
@@ -174,7 +180,8 @@
            :nimi                  ::t/toimenpide
            ::ui-lomake/col-luokka ""
            :pakollinen?           true
-           :valinnat              #{:eka :toka}
+           :valinnat              toimenpiteet
+           :valinta-nayta         :otsikko
            :tyyppi                :valinta}])
        {:tyyppi           :radio-group
         :nimi             ::t/tyyppi

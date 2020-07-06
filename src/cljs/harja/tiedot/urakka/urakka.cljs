@@ -171,13 +171,14 @@
                                                                          (dec (pvm/vuosi (pvm/nyt))))
                                                 :aikavali-alkupvm      nil
                                                 :aikavali-loppupvm     nil
-                                                :lomake                {::t/toteumat [{::t/toimenpide         nil
-                                                                                       ::t/tehtava            nil
-                                                                                       ::t/toteuma-id         nil
-                                                                                       ::t/toteuma-tehtava-id nil
-                                                                                       ::t/lisatieto          nil
-                                                                                       ::t/maara              nil
-                                                                                       ::t/loppupvm           (pvm/nyt)}]}}})
+                                                :lomake                {::t/toimenpide nil
+                                                                        ::t/tyyppi     nil
+                                                                        ::t/toteumat   [{::t/tehtava            nil
+                                                                                         ::t/toteuma-id         nil
+                                                                                         ::t/toteuma-tehtava-id nil
+                                                                                         ::t/lisatieto          nil
+                                                                                         ::t/maara              nil
+                                                                                         ::t/loppupvm           (pvm/nyt)}]}}})
 
 (def kulut-default {:parametrit  {:haetaan 0}
                     :taulukko    nil

@@ -1,23 +1,49 @@
-(ns harja.tiedot.urakka.toteumat.mhu-akilliset-hoitotyot
+(ns harja.tiedot.urakka.toteumat.maarien-toteuma-lomake
   (:require [tuck.core :as tuck]
             [harja.domain.toteuma :as t]
+            [harja.ui.lomake :as ui-lomake]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.loki :as loki]))
 
-(defrecord PaivitaLomake [lomake])
+(defrecord HaeTehtavat [parametrit])
+(defrecord HakuOnnistui [tulos parametrit])
+(defrecord HakuEpaonnistui [tulos parametrit])
 (defrecord LahetaLomake [lomake])
-(defrecord TyhjennaLomake [lomake])
 (defrecord LisaaToteuma [lomake])
 (defrecord LomakkeenLahetysOnnistui [tulos])
 (defrecord LomakkeenLahetysEpaonnistui [tulos])
+(defrecord PaivitaLomake [lomake])
+(defrecord TyhjennaLomake [lomake])
 
 (def oletuslomake {})
 
 (def uusi-toteuma {})
 
+(defn- hae-tehtavat
+  [toimenpide]
+  (let [tehtavaryhma (when toimenpide
+                       (:otsikko toimenpide))]
+    (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
+                       {:tehtavaryhma tehtavaryhma}
+                       {:onnistui               ->HakuOnnistui
+                        :onnistui-parametrit    [{:polku :tehtavat}]
+                        :epaonnistui            ->HakuEpaonnistui
+                        :epaonnistui-parametrit []
+                        :paasta-virhe-lapi?     true})))
+
 (extend-protocol
   tuck/Event
+  HaeTehtavat
+  (process-event [{{:keys [toimenpide]} :parametrit} app]
+    (hae-tehtavat toimenpide)
+    app)
+  HakuOnnistui
+  (process-event [{tulos :tulos {:keys [polku]} :parametrit} app]
+    (assoc app polku tulos))
+  HakuEpaonnistui
+  (process-event [{tulos :tulos {:keys []} :parametrit} app] ;:TODO: Tee
+    app)
   LahetaLomake
   (process-event [{lomake :lomake} app]
     (let [{loppupvm   ::t/pvm
@@ -43,18 +69,23 @@
   (process-event [{lomake :lomake} app]
     (let [lomake (update lomake ::t/toteumat conj uusi-toteuma)]
       (assoc app :lomake lomake)))
-  LomakkeenLahetysEpaonnistui
+  LomakkeenLahetysEpaonnistui                               ;TODO: tee
   (process-event [_ app]
     app)
-  LomakkeenLahetysOnnistui
+  LomakkeenLahetysOnnistui                                  ;TODO: tee
   (process-event [_ app]
     app)
   PaivitaLomake
-  (process-event [{{useampi?     ::t/useampi-toteuma
-                    tyyppi       ::t/tyyppi
-                    sijainti     ::t/sijainti
-                    ei-sijaintia ::t/ei-sijaintia
-                    :as          lomake} :lomake} app]
+  (process-event [{{useampi?          ::t/useampi-toteuma
+                    tyyppi            ::t/tyyppi
+                    sijainti          ::t/sijainti
+                    ei-sijaintia      ::t/ei-sijaintia
+                    toimenpide        ::t/toimenpide
+                    viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
+                    :as               lomake} :lomake} app]
+    (case viimeksi-muokattu
+      ::t/toimenpide (hae-tehtavat toimenpide)
+      :default)
     ; WIP tää pitää korjata sijaintien osalta jos on yksi toteuma
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])]
       (-> app
@@ -69,4 +100,4 @@
                             identity)))))
   TyhjennaLomake
   (process-event [{lomake :lomake} app]
-    app))
+    (assoc app :syottomoodi false)))

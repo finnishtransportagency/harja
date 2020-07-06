@@ -507,6 +507,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                            (validoi skeema)
                                            (assoc ::muokatut (conj (or (::muokatut uudet-tiedot)
                                                                        #{}) nimi))
+                                           (assoc ::viimeksi-muokattu-kentta nimi)
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div

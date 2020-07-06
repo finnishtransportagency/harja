@@ -40,7 +40,8 @@
             [tuck.core :as tuck]
             [harja.ui.modal :as modal]
             [datafrisk.core :as df]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.views.urakka.toteumat.maarien-toteuma-lomake :as toteuma-lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -395,7 +396,7 @@
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
          (if syottomoodi
-           [harja.views.urakka.toteumat.akilliset-hoitotyot/maarien-toteuman-syottolomake* e! app]
+           [toteuma-lomake/maarien-toteuman-syottolomake* e! app]
            [maarien-toteumalistaus e! app])
          [debug-state app]]))))
 

@@ -7,7 +7,7 @@
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
-            [harja.views.urakka.toteumat.akilliset-hoitotyot :as akilliset-htyot]
+            [harja.views.urakka.toteumat.maarien-toteuma-lomake :as akilliset-htyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.maarien-toteumat :as maarien-toteumat-nakyma]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
