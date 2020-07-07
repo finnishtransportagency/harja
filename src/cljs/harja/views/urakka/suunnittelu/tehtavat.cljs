@@ -194,7 +194,7 @@
 
         [:div.flex-row
          {:style {:justify-content "flex-start"
-                  :align-items "flex-end"}}
+                  :align-items     "flex-end"}}
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Toimenpide"]
           [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
