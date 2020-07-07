@@ -25,7 +25,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.loki :as loki]
+            [harja.ui.debug :as ui-debug])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -241,7 +243,6 @@
   (apply
     lomake/ryhma
     otsikko
-
     (concat kentat-ennen
             [{:nimi        (keyword (name avain) "-etunimi")
               :otsikko     "Yhteyshenkilön etunimi"
@@ -351,14 +352,15 @@
                    :tallennus-kaynnissa? tallennus-kaynnissa?
                    :ikoni                (ikonit/envelope)}])]))
 
-(defn lomake [e! app tallennus-kaynnissa? ilmoitus kayttajan-urakat]
+(defn lomake [e! {ilmoitus :valittu-ilmoitus :as app} tallennus-kaynnissa? _ kayttajan-urakat]
   [:div
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
-    [lomake/lomake {:otsikko   (if (::t/id ilmoitus) "Muokkaa ilmoitusta" "Uusi tietyöilmoitus")
-                    :muokkaa!  #(e! (tiedot/->IlmoitustaMuokattu %))
-                    :footer-fn (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
-                    :luokka    "ryhma-reuna"}
+    [lomake/lomake {:otsikko                           (if (::t/id ilmoitus) "Muokkaa ilmoitusta" "Uusi tietyöilmoitus")
+                    :muokkaa!                          #(e! (tiedot/->IlmoitustaMuokattu %))
+                    :footer-fn                         (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
+                    :luokka                            "ryhma-reuna"
+                    :tarkkaile-ulkopuolisia-muutoksia? true}
      [(lomake/ryhma
         "Urakka"
         {:nimi          ::t/urakka-id
