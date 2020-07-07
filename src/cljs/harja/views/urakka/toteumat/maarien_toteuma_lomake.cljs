@@ -144,7 +144,8 @@
                                   :pakollinen?           true
                                   ::ui-lomake/col-luokka ""
                                   :tyyppi                :valinta
-                                  :valinnat              [:akilliset-hoitotyot :vahinkojen-korjaukset :tilaajan-varaukset]}
+                                  :valinnat              tehtavat
+                                  :valinta-nayta         :tehtava}
                                  {:otsikko               "Kuvaus"
                                   ::ui-lomake/col-luokka ""
                                   :nimi                  ::t/lisatieto

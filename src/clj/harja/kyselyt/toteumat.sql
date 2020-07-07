@@ -577,10 +577,14 @@ SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
 
 -- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat
-SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
+SELECT  tk.id AS id,
+        tr.nimi AS tehtava,
+        tk.yksikko AS yksikko
     FROM toimenpidekoodi tk,
          tehtavaryhma tr
-    WHERE tr.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA'
+    WHERE (tr.nimi like '%Äkilliset hoitotyöt%'
+      or tr.nimi like '%Tilaajan rahavaraus%'
+      or tr.nimi like '%Vahinkojen korjaukset%')
       AND tk.tehtavaryhma = tr.id;
 
 -- name: luo-erilliskustannus<!

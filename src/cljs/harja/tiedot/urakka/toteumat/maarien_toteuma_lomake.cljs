@@ -21,16 +21,34 @@
 (def uusi-toteuma {})
 
 (defn- hae-tehtavat
-  [toimenpide]
-  (let [tehtavaryhma (when toimenpide
-                       (:otsikko toimenpide))]
-    (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
-                       {:tehtavaryhma tehtavaryhma}
-                       {:onnistui               ->HakuOnnistui
-                        :onnistui-parametrit    [{:polku :tehtavat}]
-                        :epaonnistui            ->HakuEpaonnistui
-                        :epaonnistui-parametrit []
-                        :paasta-virhe-lapi?     true})))
+  ([toimenpide]
+   (hae-tehtavat toimenpide :maaramitattava))
+  ([toimenpide tyyppi]
+   (let [tehtavaryhma (when toimenpide
+                        (:otsikko toimenpide))
+         rajapinta (case tyyppi
+                     :akillinen-hoitotyo :akillisten-hoitotoiden-toimenpiteiden-tehtavat
+                     :maarien-toteutumien-toimenpiteiden-tehtavat)
+         toimenpide-re-string (when toimenpide
+                                (cond
+                                  (re-find #"TALVIHOITO" tehtavaryhma) "Talvihoito"
+                                  (re-find #"LIIKENNEYMPÄRISTÖN HOITO" tehtavaryhma) "Liikenneympäristön hoito"
+                                  (re-find #"SORATEIDEN HOITO" tehtavaryhma) "Sorateiden hoito"
+                                  :else ""))
+         parametrit {:polku    :tehtavat
+                     :filtteri (when (= tyyppi :akillinen-hoitotyo)
+                                 #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %)))}]
+     (when-not (and
+                 toimenpide
+                 (= tyyppi :lisatyo))
+       (tuck-apurit/post! rajapinta
+                          {:tehtavaryhma tehtavaryhma
+                           :urakka-id    (-> @tila/yleiset :urakka :id)}
+                          {:onnistui               ->HakuOnnistui
+                           :onnistui-parametrit    [parametrit]
+                           :epaonnistui            ->HakuEpaonnistui
+                           :epaonnistui-parametrit []
+                           :paasta-virhe-lapi?     true})))))
 
 (extend-protocol
   tuck/Event
@@ -39,8 +57,10 @@
     (hae-tehtavat toimenpide)
     app)
   HakuOnnistui
-  (process-event [{tulos :tulos {:keys [polku]} :parametrit} app]
-    (assoc app polku tulos))
+  (process-event [{tulos :tulos {:keys [polku filtteri]} :parametrit} app]
+    (assoc app polku (if filtteri
+                       (filter filtteri tulos)
+                       tulos)))
   HakuEpaonnistui
   (process-event [{tulos :tulos {:keys []} :parametrit} app] ;:TODO: Tee
     app)
@@ -84,9 +104,10 @@
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
                     :as               lomake} :lomake} app]
     (case viimeksi-muokattu
-      ::t/toimenpide (hae-tehtavat toimenpide)
+      ::t/toimenpide (hae-tehtavat toimenpide tyyppi)
+      ::t/tyyppi (hae-tehtavat toimenpide tyyppi)
       :default)
-    ; WIP tää pitää korjata sijaintien osalta jos on yksi toteuma
+    ; :TODO: tää pitää korjata sijaintien osalta jos on yksi toteuma
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])]
       (-> app
           (assoc :lomake lomake)
