@@ -39,10 +39,9 @@
        (map :suirun-pinta-ala)
        (reduce +)))
 
-(defn- massamenekin-summa [paikkaukset]
-  (->> paikkaukset
-       (map ::paikkaus/massamenekki)
-       (reduce +)))
+(defn- massamenekin-keskiarvo [paikkaukset]
+       (let [menekit (map ::paikkaus/massamenekki paikkaukset)]
+       (/ (reduce + menekit) (count menekit))))
 
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
@@ -51,7 +50,7 @@
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
-        massamenekki (massamenekin-summa paikkaukset)
+        massamenekki (massamenekin-keskiarvo paikkaukset)
         lomakedata (:lomakedata app)]
     [modal/modal
      {:otsikko (str "Lähetä sähköposti")
@@ -97,13 +96,14 @@
                                          "Kohde" nimi
                                          "Rivejä" rivien-lkm
                                          "Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                                         "Massamenekki" massamenekki)])}
+                                         "Massamenekki " (str massamenekki "kg/m\u00B2"))])}
          varmista-kayttajalta/modal-muut-vastaanottajat
          (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
                                                         :pakollinen? true
                                                         :validoi [[:ei-tyhja "Anna tarkempi kuvaus virheistä."]]})
          varmista-kayttajalta/modal-sahkopostikopio]
-        lomakedata]]]))
+        lomakedata]
+      [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
 
 (defn paikkaukset-vetolaatikko
@@ -207,29 +207,29 @@
             :disabled (boolean tarkistettu)
             :kun-onnistuu #(e! (tiedot/->PaikkauksetHaettu %))}])])
 
-      (when-not urakoitsija-kayttajana?
+      (if-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
          (if tarkistettu
-           ; TODO Tarkista halutut työmenetelmät YHAlta ja filtteröi lähetysnappi näkyviin/pois näkyvistä
-           ; TODO: Lisää myös sama tarkistuslogiikka backendin puolelle, ettei voi vahingossa livahtaa YHAn suuntaan tarpeettomia paikkauksia.
            ;(if (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? tyomenetelma)
            ;  "Lähetys YHA:an"
            ;  "Ei lähetetä YHA:an")
-           (get lahetyksen-tilan-teksti lahetyksen-tila))])
+           (get lahetyksen-tilan-teksti lahetyksen-tila))]
+        [:span {:style solujen-tyyli}])
 
-      (when-not urakoitsija-kayttajana?
+      (if-not urakoitsija-kayttajana?
         [:span {:style solujen-tyyli}
           [yleiset/linkki "Ilmoita virhe"
            #(e! (tiedot/->AvaaVirheModal paikkaukset))
            {:style {}
             :ikoni (ikonit/envelope)}]]
-        )
+        [:span {:style solujen-tyyli}])
 
-      (if (and ilmoitettu-virhe (not urakoitsija-kayttajana?))
-        [:span.virheviesti-sailio {:style {:flex "2 1 0%"}}
-         [:span.bold "VIRHE raportoitu, päivitä tiedot rajapinnan kautta: "]
-         [:span {:style {:word-break "break-word"}} (str (subs ilmoitettu-virhe 0 ilmoitettu-virhe-max-merkkimaara)
-                                                         (if (> (count ilmoitettu-virhe) ilmoitettu-virhe-max-merkkimaara) "..."))]])
+      (if ilmoitettu-virhe
+        [:span {:style {:color "red"
+                        :flex "2 1 0%"}}
+         (ikonit/ikoni-ja-teksti [ikonit/livicon-exclamation]
+                                 "Korjausta pyydetty, päivitä toteumat")]
+        [:span {:style solujen-tyyli}])
 
       [yleiset/linkki "Kustannukset"
        #(do
@@ -248,7 +248,7 @@
         ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
         pinta-ala-sum (pinta-alojen-summa paikkaukset)
-        massamenekki-sum (massamenekin-summa paikkaukset)
+        massamenekki-sum (massamenekin-keskiarvo paikkaukset)
 
         aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
                     (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
@@ -312,7 +312,7 @@
                          :leveys 5
                          :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
                          :nimi :suirun-pinta-ala}
-                        {:otsikko "Massa\u00ADmenek\u00ADki"
+                        {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
                          :leveys 5
                          :nimi ::paikkaus/massamenekki}
                         {:otsikko "Raekoko"

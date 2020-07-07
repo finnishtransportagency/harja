@@ -33,7 +33,6 @@
             (filter (fn [{:keys [urakka_id]}]
                       (oikeus-fn urakka_id user)))
             (harja.geo/muunna-pg-tulokset :urakka_alue)
-            (harja.geo/muunna-pg-tulokset :alueurakka_alue)
             (map konv/alaviiva->rakenne))
           (q/hae-urakoiden-geometriat db urakka-idt))))
 

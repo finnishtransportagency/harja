@@ -17,10 +17,10 @@
                                                                                                :laskutukseen-perustuen-valinta #{}}
                                                               :kopioidaan-tuleville-vuosille? true}})
 
-(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
-                                                                  :toimenpide     nil
-                                                                  :valitaso       nil
-                                                                  :noudetaan      0}}
+(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
+                                                                  :toimenpide      nil
+                                                                  :valitaso        nil
+                                                                  :noudetaan       0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
 
 (defn ei-pakollinen [v-fn]

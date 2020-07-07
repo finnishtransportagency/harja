@@ -106,7 +106,10 @@ WHERE i.id IN
          (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
-         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (:urakkatyyppi_annettu IS FALSE OR
+         CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
+          u2.tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+          ELSE u2.tyyppi = :urakkatyyppi::urakkatyyppi END) AND
          (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
@@ -120,9 +123,16 @@ ORDER by u.nimi;
 SELECT
   ilmoitusid,
   tunniste,
-  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu,
   tila,
+  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
+  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  valitetty as "valitetty-harjaan",
+  "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+  ELSE
+      vastaanotettu
+  END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -143,7 +153,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
@@ -282,8 +293,16 @@ WHERE i.id IN (:idt);
 SELECT
   ilmoitusid,
   tunniste,
+  tila,
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu,
+  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  valitetty as "valitetty-harjaan",
+  "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+      ELSE
+          vastaanotettu
+      END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -304,7 +323,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
@@ -359,6 +379,7 @@ SET
   ilmoitusid         = :ilmoitusid,
   ilmoitettu         = :ilmoitettu,
   valitetty          = :valitetty,
+  vastaanotettu      = :vastaanotettu,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
   paikankuvaus       = :paikankuvaus,

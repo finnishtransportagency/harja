@@ -3,7 +3,7 @@
   "$id": "http://www.vayla.fi/json/harja",
   "title": "Paikkausten teknisten tietojen poisto YHA:sta",
   "description": "Paikkausten vienti on vienyt tietoja paikkaustoteumista YHA:aan. Tällä sanomalla voidaan poistaa lähetettyjä tietoja YHA:sta.",
-  "$comment": "YHA:n kanssa on sovittu, että poistossa tulee aina poistettavien paikkausten id:t. Paikkauksia ei poisteta pelkän paikkauskohteen id:n perusteella.",
+  "$comment": "YHA:n kanssa on sovittu, että poistossa tulee aina poistettavan paikkauskohteen id eikä paikkauksia poisteta yksitellen ID:n perusteella. Yksittäiset paikkaukset voidaan poistaa päivitysrajapinnan kautta.",
   "definitions": {
     "poistettavat-paikkauskohteet": {
       "type": "array",
@@ -11,16 +11,9 @@
       "items": {
         "type": "integer"
       }
-    },
-    "poistettavat-paikkaukset": {
-      "type": "array",
-      "maxItems": 200,
-      "items": {
-        "type": "integer"
-      }
     }
   },
   "type": "object",
   "required": [
-    "poistettavat-paikkaukset"
+    "poistettavat-paikkauskohteet"
   ]}

@@ -36,7 +36,8 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 

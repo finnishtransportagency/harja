@@ -72,18 +72,45 @@
                    (hae %)
                    (get % nimi))))
 
+(defn- aikataulun-comparator
+  "Järjestää aikataulun mukaan, puuttuvan aikataulut viimeiseksi"
+  [x y]
+  (let [c (cond
+            (and  (nil? (:aikataulu-kohde-alku x))
+                  (nil? (:aikataulu-kohde-alku y)))
+            0
+
+            (nil? (:aikataulu-kohde-alku x))
+            1
+            (nil? (:aikataulu-kohde-alku y))
+            -1
+
+            :else
+            (compare (:aikataulu-kohde-alku x)
+                     (:aikataulu-kohde-alku y)))]
+    (if (not= c 0)
+      c
+      (let [c (compare (:kohdenumero x )
+                       (:kohdenumero y))]
+        c))))
+
 (defn suorita [db user {jarjestys :jarjestys
                         nayta-tarkka-aikajana? :nayta-tarkka-aikajana?
                         nayta-valitavoitteet? :nayta-valitavoitteet?
                         vuosi :vuosi :as parametrit}]
   (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
-        aikataulu (if (or (nil? jarjestys))
-                    aikataulu
-                    (sort-by (case jarjestys
-                               :aika :aikataulu-kohde-alku
-                               :kohdenumero :kohdenumero
-                               :tr tr/tieosoitteen-jarjestys) aikataulu))
+        aikataulu (sort (case jarjestys
+                             :aika aikataulun-comparator
+                             :kohdenumero #(compare (:kohdenumero %1) (:kohdenumero %2))
+                             :tr #(compare (tr/tieosoitteen-jarjestys %1)
+                                           (tr/tieosoitteen-jarjestys %2))
+
+                             aikataulun-comparator)
+                           aikataulu)
+        aikajanan-rivit (some->> aikataulu
+                          (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?}))
+                             (filter #(not (empty? (:harja.ui.aikajana/ajat %)))))
         sarakkeet (filter some? (kohdeluettelo-sarakkeet (:tyyppi parametrit)))]
     [:raportti {:nimi (str "Ylläpidon aikataulu" (when vuosi
                                                    (str " vuonna " vuosi)))
@@ -92,8 +119,7 @@
       ;; Välitavoitteita ei piirretä PDF-raporttiin, koska tod.näk. niitä ei siinä haluta nähdä.
       ;; Järkevä käyttö vaatisi muutenkin hoverointia, mikä ei PDF-raportilla toimi.
       ;; Jos välitavoitteet kuitenkin rapsallekin halutaan, niin tästä voi passata eteenpäin.
-      (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?})
-           aikataulu)]
+      aikajanan-rivit]
      [:taulukko {:otsikko "Kohdeluettelo"}
       (mapv #(dissoc % :fmt :hae) sarakkeet)
 

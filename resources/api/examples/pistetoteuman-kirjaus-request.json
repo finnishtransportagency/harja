@@ -38,6 +38,11 @@
         "x": 440820,
         "y": 7209885
       }
+    },
+    "tyokone": {
+      "id": "TKT001",
+      "tunnus": "Alihankkija Oy, KA 2",
+      "tyokonetyyppi": "kuorma-auto"
     }
   },
   "pistetoteumat": [
@@ -68,6 +73,11 @@
             "x": 440820,
             "y": 7209885
           }
+        },
+        "tyokone": {
+          "id": "TKT001",
+          "tunnus": "Alihankkija Oy, KA 2",
+          "tyokonetyyppi": "kuorma-auto"
         }
       }
     }

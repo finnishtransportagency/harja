@@ -12,6 +12,7 @@
 (def testikohteen-ulkoinen-id 666567)
 (def testipaikkaustoteuman-ulkoinen-id 666987)
 (def destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';")))
+(def yit-rakennus-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'yit-rakennus';")))
 (def oikean-urakan-id (hae-oulun-alueurakan-2014-2019-id))
 
 (def testipaikkaus
@@ -64,7 +65,7 @@
 (deftest onko-olemassa-ulkoisella-idlla
   (let [db (tietokanta/luo-tietokanta testitietokanta)]
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkauskohteesta.")
-    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666 destian-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkauskohde.")
+    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666 yit-rakennus-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkauskohde.")
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 1234 666 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkauskohdetta.")
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkauskohdetta.")
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkauskohdetta.")

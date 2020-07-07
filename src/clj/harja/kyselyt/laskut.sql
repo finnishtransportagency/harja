@@ -43,6 +43,15 @@ where l.urakka = :urakka
     and l.erapaiva between :alkupvm ::date and :loppupvm ::date
     and l.poistettu is not true;
 
+-- name: hae-pvm-laskun-numerolla
+-- Hakee laskun päivämäärän urakalle käyttäen laskun numeroa.  Yhtä laskun numeroa voi käyttää yhden pvm:n yhteydessä, mutta useampi lasku voi käyttää samaa numeroa samalla pvm:llä.
+select
+  l.erapaiva as "erapaiva"
+from lasku l
+where l.urakka = :urakka
+  and l.laskun_numero = :laskun-numero
+  and l.poistettu is not true;
+
 -- name: hae-kaikki-urakan-laskuerittelyt
 -- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
 SELECT l.id                   as "id",

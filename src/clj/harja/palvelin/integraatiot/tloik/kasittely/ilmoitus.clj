@@ -5,7 +5,8 @@
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.string :as str]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
 
 (defn urakkatyyppi [urakkatyyppi]
   (case (str/lower-case urakkatyyppi)
@@ -44,6 +45,7 @@
      :ilmoitusid ilmoitus-id
      :ilmoitettu ilmoitettu
      :valitetty valitetty
+     :vastaanotettu (pvm/nyt)
      :yhteydenottopyynto yhteydenottopyynto
      :otsikko otsikko
      :paikankuvaus paikankuvaus
@@ -65,21 +67,21 @@
                                                       vastaanotettu]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
-                  {:urakka urakka-id
-                   :ilmoitusid ilmoitus-id
-                   :ilmoitettu ilmoitettu
-                   :valitetty valitetty
-                   :yhteydenottopyynto yhteydenottopyynto
-                   :otsikko otsikko
-                   :paikankuvaus paikankuvaus
-                   :lisatieto lisatieto
-                   :ilmoitustyyppi ilmoitustyyppi
-                   :selitteet (konv/seq->array (map name selitteet))
-                   :urakkatyyppi urakkatyyppi
-                   :tunniste tunniste
-                   :viestiid viesti-id
-                   :vastaanotettu vastaanotettu
-                   :vastaanotettu-alunperin valitetty}))]
+                  {:urakka                  urakka-id
+                   :ilmoitusid              ilmoitus-id
+                   :ilmoitettu              ilmoitettu
+                   :valitetty               valitetty
+                   :yhteydenottopyynto      yhteydenottopyynto
+                   :otsikko                 otsikko
+                   :paikankuvaus            paikankuvaus
+                   :lisatieto               lisatieto
+                   :ilmoitustyyppi          ilmoitustyyppi
+                   :selitteet               (konv/seq->array (map name selitteet))
+                   :urakkatyyppi            urakkatyyppi
+                   :tunniste                tunniste
+                   :viestiid                viesti-id
+                   :vastaanotettu           (pvm/nyt)
+                   :vastaanotettu-alunperin (pvm/nyt)}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
