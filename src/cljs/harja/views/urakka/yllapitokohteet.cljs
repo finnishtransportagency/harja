@@ -380,7 +380,7 @@
                        :valinta-nayta tyomenetelma-valinta-nayta-fn
                        :kentta-arity-3? valinta-arity-3?)
                      (when-not (contains? dissoc-cols :massamaara)
-                       {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
+                       {:otsikko "Massa\u00ADmenekki (kg/m²)" :nimi :massamaara
                         :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
                         :tayta-alas? tayta-alas?-fn
                         :tayta-fn tayta-massamaara-fn
