@@ -667,8 +667,10 @@ FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
 WHERE hal.id IN (:hallintayksikot);
 
--- name: hae-valittujen-urakoiden-viimeisin-toteuma
+-- name: hae-viimeisin-toteuma
+-- VHAR-2590 urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
+-- Tilannekuva tsekkaa tämän nykyisellään kerran minuutissa, joten voidaan hakea uudet
+-- toteumat aina jos Harjaan on tullut uusi toteuma ed. tarkistuksen jälkeen. Se on
+-- pienempi paha kuin täysin jumiutuva max(id) kysely.
 -- single?: true
-SELECT max(id)
-  FROM toteuma
- WHERE urakka in (:urakat);
+SELECT max(id) FROM toteuma;
