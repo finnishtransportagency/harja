@@ -3,7 +3,7 @@
 SELECT
   id,
   nimi,
-  ST_SimplifyPreserveTopology(alue, 50),
+  alue,
   liikennemuoto,
   lpad(cast(elynumero AS VARCHAR), 2, '0') AS elynumero
 FROM organisaatio

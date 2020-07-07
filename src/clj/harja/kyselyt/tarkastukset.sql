@@ -579,7 +579,11 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id
                    FROM urakka
                    WHERE hallintayksikko = :hallintayksikko
-                         AND (:urakkatyyppi :: urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                         AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
+                              CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
+                                    tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+                                    ELSE tyyppi = :urakkatyyppi::urakkatyyppi
+                         END))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito' :: tarkastustyyppi
@@ -627,7 +631,11 @@ FROM tarkastus t
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id
                    FROM urakka
-                   WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                   WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR
+                          CASE WHEN :urakkatyyppi = 'hoito'  -- huomioidaan myös teiden-hoito -urakkatyyppi
+                               THEN tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+                               ELSE tyyppi = :urakkatyyppi::urakkatyyppi
+                       END))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito' :: tarkastustyyppi

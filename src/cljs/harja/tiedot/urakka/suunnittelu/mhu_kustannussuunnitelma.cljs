@@ -1753,8 +1753,11 @@
   YleisSuodatinArvot
   (process-event [_ app]
     (let [urakan-alkupvm (-> @tiedot/tila :yleiset :urakka :alkupvm)
-          ;; Tulevissa urakoissa estettävä hoitokauden numeron asettuminen 0:ksi tai nilliksi
-          default-hoitokausi (if (pvm/ennen? (pvm/nyt) urakan-alkupvm)
+          ;; Jos urakan alkuvuosi sama kuin kuluva vuosi, asetetaann hoitokauden oletusnumero ykköseksi
+          ;; Samposta voi tulla virheellisesti urakoita, joiden alkupvm määritelty 1.1.202X, vaikka oikeasti
+          ;; alkavat 1.10.202X. Tämä käsittely estää UI:n kaatumisen moisessa tapauksessa, muuten toimii normaalisti
+          default-hoitokausi (if (= (pvm/vuosi (pvm/nyt))
+                                    (pvm/vuosi urakan-alkupvm))
                                1
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
       (-> app

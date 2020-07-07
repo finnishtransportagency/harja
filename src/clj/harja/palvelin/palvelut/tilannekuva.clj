@@ -452,7 +452,7 @@
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-      {:viimeisin-toteuma (q/hae-valittujen-urakoiden-viimeisin-toteuma db {:urakat urakat})
+      {:viimeisin-toteuma (q/hae-viimeisin-toteuma db)
        :selitteet (q/hae-toteumien-selitteet db
                                              {:alku (konv/sql-date alku)
                                               :loppu (konv/sql-date loppu)
