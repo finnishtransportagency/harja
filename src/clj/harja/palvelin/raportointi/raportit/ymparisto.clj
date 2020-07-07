@@ -316,6 +316,6 @@
 
        materiaalit)]
      (when-not (empty? materiaalit)
-       [:teksti (str "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta. "
-                     yleinen/materiaalitoteumien-paivitysinfo)])]))
+       [:teksti (str "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
+     [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]]))
 
