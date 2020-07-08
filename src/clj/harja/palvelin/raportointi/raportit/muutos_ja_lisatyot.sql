@@ -107,9 +107,13 @@ WHERE
   mht.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
-                                   (:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                    u.tyyppi =
-                                    :urakkatyyppi :: urakkatyyppi)))
+                                   (:urakkatyyppi :: urakkatyyppi IS NULL OR (
+                                       CASE WHEN :urakkatyyppi = 'hoito' THEN
+                                            u.tyyppi IN ('hoito', 'teiden-hoito')
+                                       ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+                                       END
+                                       )
+                                    )))
   AND (:hallintayksikko_annettu IS FALSE OR
        u.id IN (SELECT id
                 FROM urakka
