@@ -71,12 +71,13 @@
            toimenpide ::t/toimenpide
            toteumat   ::t/toteumat} lomake
           urakka-id (-> @tila/yleiset :urakka :id)]
+      (loki/log toteumat)
       (tuck-apurit/post! :tallenna-toteuma
                          {:urakka-id  urakka-id
                           :toimenpide toimenpide
                           :tyyppi     tyyppi
                           :loppupvm   loppupvm
-                          :toteumat   (mapv #(into {}
+                          :toteumat   (mapv #(into {}       ; siivotaan namespacet lähetettävästä
                                                    (map
                                                      (fn [[k v]]
                                                        [(-> k name keyword) v])
@@ -103,22 +104,44 @@
                     toimenpide        ::t/toimenpide
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
                     :as               lomake} :lomake} app]
+    ; sivuvaikutusten triggeröintiin
     (case viimeksi-muokattu
       ::t/toimenpide (hae-tehtavat toimenpide tyyppi)
       ::t/tyyppi (hae-tehtavat toimenpide tyyppi)
       :default)
     ; :TODO: tää pitää korjata sijaintien osalta jos on yksi toteuma
-    (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])]
-      (-> app
-          (assoc :lomake lomake)
-          (update :lomake (if (and
-                                (= tyyppi :maaramitattava)
-                                (not= useampi? useampi-aiempi?))
-                            (fn [lomake]
-                              (if (true? useampi?)
-                                (update lomake ::t/toteumat conj uusi-toteuma)
-                                (update lomake ::t/toteumat #(conj [] (first %)))))
-                            identity)))))
+    (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
+          paivitettava-toteumat-vektoriin #{::t/lisatieto ::t/maara ::t/tehtava ::t/sijainti}
+          app (assoc app :lomake lomake)
+          uusi-app (update app :lomake (fn [l]
+                                         (cond-> l
+                                                 (and (true? useampi?)
+                                                      (= tyyppi :maaramitattava)
+                                                      (not= useampi? useampi-aiempi?))
+                                                 (update ::t/toteumat conj uusi-toteuma)
+
+                                                 (and (not (true? useampi?))
+                                                      (= tyyppi :maaramitattava)
+                                                      (not= useampi? useampi-aiempi?))
+                                                 (update ::t/toteumat #(conj [] (first %)))
+
+                                                 (and (not (true? useampi?))
+                                                      (some #(do
+                                                               (loki/log % viimeksi-muokattu (= viimeksi-muokattu %))
+                                                               (= viimeksi-muokattu %))
+                                                            paivitettava-toteumat-vektoriin))
+                                                 (assoc-in [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake)))))]
+      #_(-> app
+            (update :lomake (if (and
+                                  (= tyyppi :maaramitattava)
+                                  (not= useampi? useampi-aiempi?))
+                              (fn [lomake]
+                                (if (true? useampi?)
+                                  (update lomake ::t/toteumat conj uusi-toteuma)
+                                  (update lomake ::t/toteumat #(conj [] (first %)))))
+                              identity)))
+      (loki/log "ual" uusi-app lomake)
+      uusi-app))
   TyhjennaLomake
   (process-event [{lomake :lomake} app]
     (assoc app :syottomoodi false)))

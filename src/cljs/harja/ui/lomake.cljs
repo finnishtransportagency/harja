@@ -34,8 +34,9 @@
     (->Ryhma otsikko-tai-optiot
              {:ulkoasu :oletus} skeemat)))
 
-(defn palstat [{:keys [lukumaara]} & palstan-optiot-ja-skeemat]
+(defn palstat
   "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
+  [{:keys [lukumaara]} & palstan-optiot-ja-skeemat]
   (->Palstat {:lukumaara lukumaara} (remove nil? palstan-optiot-ja-skeemat)))
 
 (defn palstoja? [x]
@@ -265,13 +266,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                          (vaihda! (aseta data uusi-arvo))
                          (vaihda! (assoc data nimi uusi-arvo))))))))
     (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
-         data muokattava? muokkaa muokkaa-kenttaa-fn _ tarkkaile-ulkopuolisia-muutoksia?]
+         data muokattava? muokkaa muokkaa-kenttaa-fn _ opts]
       (reset! seurannan-muuttujat
               {:vaihda! (muokkaa-kenttaa-fn nimi)
                :data    data
                :s       s})
       ; jos ulkopuolelta data on päivitetty esim. rajapinnasta saadun päivitetyn tiedon myötä, pitää resetoida arvo ja tila
-      (when tarkkaile-ulkopuolisia-muutoksia?
+      (when (:tarkkaile-ulkopuolisia-muutoksia? opts)
         (let [data-arvo (if hae
                           (hae data)
                           (get data nimi))]
@@ -370,6 +371,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
                                     varoitukset muokatut virheet huomautukset rivi-opts]}]
+  (loki/log "palsta" palsta)
   [:div {:class (str "lomakepalsta")}
    (when (-> palsta :optiot :otsikko)
      [:h2 (-> palsta :optiot :otsikko)])

@@ -151,6 +151,7 @@
                                   :nimi                  ::t/lisatieto
                                   :pakollinen?           false
                                   :tyyppi                :string}]]
+    (loki/log "tyyppi" tyyppi)
     [:div#vayla
      [debug/debug app]
      [debug/debug lomake]

@@ -429,15 +429,17 @@
                          :tilaajan-varaukset    "muut-rahavaraukset"
                          :vahinkojen-korjaukset "vahinkojen-korjaukset"
                          :lisatyo               "lisatyo"} tyyppi))]
-      (if false #_(> 0 maara)
+      ; vain määrämitattavilla on määrä... niinhän se nimikin sanoo, tosiaan :D
+      (if (some #(and (> 0 (:maara %))
+                      (= "kokonaishintainen" tyyppi)) toteumat)
         (throw+ {:type    "Error"
                  :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
         (jdbc/with-db-transaction [db db]
-                                  (for [{maara                                                        :maara
-                                         lisatieto                                                    :lisatieto
-                                         tehtava                                                      :tehtava
-                                         {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} :sijainti
-                                         :as                                                          _toteuma} toteumat]
+                                  (doseq [{maara                                                        :maara
+                                           lisatieto                                                    :lisatieto
+                                           tehtava                                                      :tehtava
+                                           {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} :sijainti
+                                           :as                                                          _toteuma} toteumat]
                                     (let [t (upsert! db ::toteuma/toteuma
                                                      (merge (if toteuma-id
                                                               {::toteuma/id                  toteuma-id
@@ -468,6 +470,7 @@
                                                               ::toteuma/toimenpidekoodi   (:id tehtava)
                                                               ::toteuma/maara             (when maara (bigdec maara))
                                                               ::toteuma/tehtava-lisatieto lisatieto}))]
+
                                       (::toteuma/id t))))))
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
