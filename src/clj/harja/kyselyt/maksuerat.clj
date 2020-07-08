@@ -12,3 +12,9 @@
       "vesivayla-kanavien-korjaus" (harja.kyselyt.maksuerat/hae-kanavaurakan-maksuerien-summat db urakka-id)
       "teiden-hoito" (harja.kyselyt.maksuerat/hae-teiden-hoidon-urakan-maksuerien-summat db urakka-id)
       (harja.kyselyt.maksuerat/hae-hoitourakan-maksuerien-summat db urakka-id))))
+
+(defn hae-urakan-maksuerat [db urakka-id]
+      (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
+           (case urakan-tyyppi
+                 "teiden-hoito" (harja.kyselyt.maksuerat/hae-teiden-hoidon-urakan-maksuerat db urakka-id)
+                 (harja.kyselyt.maksuerat/hae-hoitourakan-maksuerat db urakka-id))))
