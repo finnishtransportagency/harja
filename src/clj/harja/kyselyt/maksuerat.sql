@@ -80,22 +80,12 @@ FROM (SELECT
                    hk.loppupvm,
                    mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
                                                        date_trunc('month', hk.loppupvm) :: DATE,
-                       -- luvut halutaan maksuerälle vasta kuukauden viimeisenä päivänä
-                                                       (SELECT CASE
-                                                                   WHEN
-                                                                       (now()::DATE =
-                                                                        (SELECT (date_trunc('MONTH', now()::DATE) +
-                                                                                 INTERVAL '1 MONTH - 1 day')::DATE))
-                                                                       THEN
-                                                                       now()::DATE
-                                                                   ELSE
-                                                                       (date_trunc('month', now()::DATE) - INTERVAL '1 day')::DATE
-                                                                   END)                       ,
+                                                       (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
                                                        :urakka_id :: INTEGER)
                FROM (SELECT *
                      FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
                      WHERE loppupvm < now()::DATE) AS hk
-               UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+               UNION ALL -- laskutusyhteenvedot kuluvalle hoitokaudelle
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
@@ -114,7 +104,7 @@ FROM (SELECT
                                                        :urakka_id :: INTEGER)
                FROM (SELECT *
                      FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
-                     WHERE alkupvm <= now()::DATE AND loppupvm >= now()::DATE) AS hk
+                     WHERE alkupvm < now()::DATE AND loppupvm > now()::DATE) AS hk
            ) AS lyht
       GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
 GROUP BY tpi_id;
