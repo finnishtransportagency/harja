@@ -39,10 +39,9 @@
        (map :suirun-pinta-ala)
        (reduce +)))
 
-(defn- massamenekin-summa [paikkaukset]
-  (->> paikkaukset
-       (map ::paikkaus/massamenekki)
-       (reduce +)))
+(defn- massamenekin-keskiarvo [paikkaukset]
+       (let [menekit (map ::paikkaus/massamenekki paikkaukset)]
+       (/ (reduce + menekit) (count menekit))))
 
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
@@ -51,7 +50,7 @@
         {::paikkaus/keys [kohde-id urakka-id nimi pinta-ala massamenekki] :as paikkaus} (first paikkaukset)
         rivien-lkm (count paikkaukset)
         pinta-ala (* 0.01 (Math/round (* 100 (pinta-alojen-summa paikkaukset))))
-        massamenekki (massamenekin-summa paikkaukset)
+        massamenekki (massamenekin-keskiarvo paikkaukset)
         lomakedata (:lomakedata app)]
     [modal/modal
      {:otsikko (str "Lähetä sähköposti")
@@ -97,7 +96,7 @@
                                          "Kohde" nimi
                                          "Rivejä" rivien-lkm
                                          "Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                                         "Massamenekki" massamenekki)])}
+                                         "Massamenekki " (str massamenekki "kg/m\u00B2"))])}
          varmista-kayttajalta/modal-muut-vastaanottajat
          (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
                                                         :pakollinen? true
@@ -249,7 +248,7 @@
         ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
         pinta-ala-sum (pinta-alojen-summa paikkaukset)
-        massamenekki-sum (massamenekin-summa paikkaukset)
+        massamenekki-sum (massamenekin-keskiarvo paikkaukset)
 
         aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
                     (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
@@ -313,7 +312,7 @@
                          :leveys 5
                          :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
                          :nimi :suirun-pinta-ala}
-                        {:otsikko "Massa\u00ADmenek\u00ADki"
+                        {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
                          :leveys 5
                          :nimi ::paikkaus/massamenekki}
                         {:otsikko "Raekoko"

@@ -4,14 +4,13 @@
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
-            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.loki :refer [log logt tarkkaile!] :as loki]
             [harja.ui.komponentti :as komp]
             [taoensso.truss :as truss :refer-macros [have have! have?]]
             [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.ui.leijuke :as leijuke]
-            [harja.ui.ikonit :as ikonit]
-            [harja.loki :as loki])
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 ; kokoelma palstoja jota käytetään lomakkeen muodostamiseen
@@ -244,8 +243,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? {:keys [vayla-tyyli?] :as kentta-opts}]
   (let [{:keys [nimi hae aseta]} s
         hae (or hae #(get % nimi))
-        init-arvo (hae data)
-        arvo (atom init-arvo)
+        init-arvo (atom (hae data))
+        arvo (atom (hae data))
         seurannan-muuttujat (atom {:vaihda! (muokkaa-kenttaa-fn nimi)
                                    :data    data
                                    :s       s})]
@@ -266,11 +265,22 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                          (vaihda! (aseta data uusi-arvo))
                          (vaihda! (assoc data nimi uusi-arvo))))))))
     (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
-         data muokattava? muokkaa muokkaa-kenttaa-fn _ _]
+         data muokattava? muokkaa muokkaa-kenttaa-fn _ tarkkaile-ulkopuolisia-muutoksia?]
       (reset! seurannan-muuttujat
               {:vaihda! (muokkaa-kenttaa-fn nimi)
                :data    data
                :s       s})
+      ; jos ulkopuolelta data on päivitetty esim. rajapinnasta saadun päivitetyn tiedon myötä, pitää resetoida arvo ja tila
+      (when tarkkaile-ulkopuolisia-muutoksia?
+        (let [data-arvo (if hae
+                          (hae data)
+                          (get data nimi))]
+          (when (not= @arvo
+                      data-arvo)
+            (do
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" @arvo "->" data-arvo)
+              (reset! init-arvo data-arvo)
+              (reset! arvo data-arvo)))))
       (let [kentta (cond
                      (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                    :data              data} komponentti-args)]
@@ -307,7 +317,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label? aseta-vaikka-sama?] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia?] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli?] :as opts}]
   [:div.form-group {:class (str (or
@@ -334,7 +344,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
        [:span
         [:span.kentan-label otsikko]
         (when yksikko [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? opts]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
 
     (when (and muokattu?
                (not (empty? virheet)))
@@ -381,7 +391,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
-   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli?] :as rivi-opts}]
+   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia?] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
@@ -407,10 +417,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                             :huomautukset       huomautukset
                             :rivi-opts          rivi-opts})
            ^{:key nimi}
-           [kentta (assoc s
-                     :col-luokka col-luokka
-                     :focus (= nimi nykyinen-fokus)
-                     :on-focus (r/partial aseta-fokus! nimi))
+           [kentta (cond-> s
+                           true (assoc
+                                  :col-luokka col-luokka
+                                  :focus (= nimi nykyinen-fokus)
+                                  :on-focus (r/partial aseta-fokus! nimi))
+                           tarkkaile-ulkopuolisia-muutoksia? (assoc
+                                                               :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?))
             data muokkaa-kenttaa-fn muokattava? muokkaa
             (get muokatut nimi)
             (get virheet nimi)
@@ -479,7 +492,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita?] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -537,7 +550,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                   varoitukset
                                   huomautukset
                                   #(muokkaa-kenttaa-fn (:nimi %))
-                                  {:vayla-tyyli? vayla-tyyli?}]]
+                                  {:vayla-tyyli? vayla-tyyli?
+                                   :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
                      (if otsikko
                        ^{:key i}
                        [:span

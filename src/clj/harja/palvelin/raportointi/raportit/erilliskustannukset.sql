@@ -26,7 +26,11 @@ FROM erilliskustannus e
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE (:urakka_annettu IS FALSE OR e.sopimus in
                                    (SELECT id FROM sopimus WHERE urakka = :urakka))
-      AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)))
+      AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND (:urakkatyyppi::urakkatyyppi IS NULL OR
+                                                                     CASE WHEN :urakkatyyppi = 'hoito'
+                                                                         THEN u.tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+                                                                         ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi
+                                                                     END)))
       AND (:urakka_annettu IS TRUE OR u.urakkanro IS NOT NULL)
       AND (:hallintayksikko_annettu IS FALSE OR
            u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko))
