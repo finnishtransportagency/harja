@@ -35,7 +35,12 @@
     (:sahkoposti lahettaja)
     id))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
+(defn valitetty-urakkaan [nykyinen-urakka nykyinen-valitysajankohta urakka-id]
+      (if (= urakka-id nykyinen-urakka)
+        nykyinen-valitysajankohta
+        (pvm/nyt)))
+
+(defn paivita-ilmoitus [db id urakka-id valitetty-urakkaan {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
                                                 valitetty otsikko paikankuvaus lisatieto
                                                 yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                 sijainti vastaanottaja tunniste viesti-id]}]
@@ -46,6 +51,7 @@
      :ilmoitettu ilmoitettu
      :valitetty valitetty
      :vastaanotettu (pvm/nyt)
+     :valitetty-urakkaan valitetty-urakkaan
      :yhteydenottopyynto yhteydenottopyynto
      :otsikko otsikko
      :paikankuvaus paikankuvaus
@@ -93,10 +99,15 @@
                      (:viesti-id ilmoitus)
                      urakka-id))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
-        nykyinen-id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
+        ilmoitus (first (ilmoitukset/hae-id-ja-urakka-ilmoitus-idlla db ilmoitus-id))
+        nykyinen-id (:id ilmoitus)
+        nykyinen-urakka (:urakka ilmoitus)
+        nykyinen-valitysajankohta (:valitetty-urakkaan ilmoitus)
         urakkatyyppi (urakkatyyppi (:urakkatyyppi ilmoitus))
         uusi-id (if nykyinen-id
-                  (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
+                  (paivita-ilmoitus db nykyinen-id
+                                    (valitetty-urakkaan nykyinen-urakka nykyinen-valitysajankohta urakka-id)
+                                    urakka-id ilmoitus)
                   (luo-ilmoitus db urakka-id urakkatyyppi ilmoitus))]
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" (:ilmoitus-id ilmoitus)))
     (when-not urakka-id
