@@ -28,6 +28,7 @@
                         (:otsikko toimenpide))
          rajapinta (case tyyppi
                      :akillinen-hoitotyo :akillisten-hoitotoiden-toimenpiteiden-tehtavat
+                     :lisatyo :lisatoiden-toimenpiteiden-tehtavat
                      :maarien-toteutumien-toimenpiteiden-tehtavat)
          toimenpide-re-string (when toimenpide
                                 (cond

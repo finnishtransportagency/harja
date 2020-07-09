@@ -128,7 +128,8 @@
                   :pakollinen?           true
                   ::ui-lomake/col-luokka ""
                   :tyyppi                :valinta
-                  :valinnat              [:lisatyo]}
+                  :valinta-nayta         :tehtava
+                  :valinnat              tehtavat}
                  {:otsikko               "Kuvaus"
                   ::ui-lomake/col-luokka ""
                   :nimi                  ::t/lisatieto

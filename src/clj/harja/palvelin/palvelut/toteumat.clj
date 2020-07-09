@@ -388,6 +388,13 @@
     (toteumat-q/listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat db)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
+; lisätöillä ei ole oikeasti omia tehtäviä, mutta niile on olemassa dummytehtävät
+(defn hae-lisatoiden-toimenpiteiden-tehtavat [db user {:keys [urakka-id]}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (toteumat-q/listaa-lisatoiden-tehtavat db)
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
 ;(def ___malli
 ;  ; nämä jos muokataan
 ;  {:toteuma-id         1
@@ -430,8 +437,9 @@
                          :vahinkojen-korjaukset "vahinkojen-korjaukset"
                          :lisatyo               "lisatyo"} tyyppi))]
       ; vain määrämitattavilla on määrä... niinhän se nimikin sanoo, tosiaan :D
-      (if (some #(and (> 0 (:maara %))
-                      (= "kokonaishintainen" tyyppi)) toteumat)
+      (if (some #(and
+                   (= "kokonaishintainen" tyyppi)
+                   (> 0 (:maara %))) toteumat)
         (throw+ {:type    "Error"
                  :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
         (jdbc/with-db-transaction [db db]
@@ -1042,6 +1050,9 @@
       :akillisten-hoitotoiden-toimenpiteiden-tehtavat
       (fn [user tiedot]
         (hae-akillisten-hoitotoiden-toimenpiteiden-tehtavat db-replica user tiedot))
+      :lisatoiden-toimenpiteiden-tehtavat
+      (fn [user tiedot]
+        (hae-lisatoiden-toimenpiteiden-tehtavat db-replica user tiedot))
       :tallenna-toteuma
       (fn [user tiedot]
         (tallenna-toteuma! db user tiedot))

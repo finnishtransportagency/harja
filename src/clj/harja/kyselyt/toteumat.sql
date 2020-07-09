@@ -587,6 +587,15 @@ SELECT  tk.id AS id,
       or tr.nimi like '%Vahinkojen korjaukset%')
       AND tk.tehtavaryhma = tr.id;
 
+-- name: listaa-lisatoiden-tehtavat
+SELECT  tk.id AS id,
+        tk.nimi as tehtava,
+        tk.yksikko AS yksikko
+FROM toimenpidekoodi tk,
+     tehtavaryhma tr
+WHERE tk.nimi like '%Lisätyö%'
+  AND tk.tehtavaryhma = tr.id;
+
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
 INSERT
