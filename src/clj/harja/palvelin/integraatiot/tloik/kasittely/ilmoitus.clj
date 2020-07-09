@@ -90,7 +90,8 @@
                    :tunniste                tunniste
                    :viestiid                viesti-id
                    :vastaanotettu           (pvm/nyt)
-                   :vastaanotettu-alunperin (pvm/nyt)}))]
+                   :vastaanotettu-alunperin (pvm/nyt)
+                   :valitetty-urakkaan      (pvm/nyt)}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
