@@ -338,7 +338,7 @@ WHERE ilmoitusid = :ilmoitusid;
 
 -- name: hae-id-ja-urakka-ilmoitus-idlla
 -- Hakee ilmoituksen id:n ja urakan ilmoitus-id:llä
-SELECT id, urakka, "valitetty-urakkaan"
+SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
 
