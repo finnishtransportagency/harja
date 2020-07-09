@@ -29,7 +29,7 @@
                                   :harja.domain.tierekisteri/tie 20
                                   :harja.domain.tierekisteri/aosa 1
                                   :harja.domain.tierekisteri/losa 1}
-   ::paikkaus/massatyyppi "asfalttibetoni"
+   ::paikkaus/massatyyppi "AB, Asfalttibetoni"
    ::paikkaus/kuulamylly "2"
    ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id testikohteen-ulkoinen-id
                                          ::paikkaus/nimi "Testikohde"}
@@ -152,18 +152,18 @@
     (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id destian-kayttaja-id)))
 
     ;; ulkoisella id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "kivimastiks"))
+    (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "SMA, Kivimastiksiasfaltti"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
-    (is (= "kivimastiks" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")
+    (is (= "SMA, Kivimastiksiasfaltti" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")
 
     ;; harjan id:lla paivittaminen
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id (assoc testipaikkaus
                                                            ::paikkaus/id (::paikkaus/id (hae-testipaikkaus db))
-                                                           ::paikkaus/massatyyppi "pehmeät ab / bitumi"))
+                                                           ::paikkaus/massatyyppi "PAB-B, Pehmeät asfalttibetonit"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
-    (is (= "pehmeät ab / bitumi" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")))
+    (is (= "PAB-B, Pehmeät asfalttibetonit" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")))
 
 (deftest kohteiden-paivittaminen
   (let [db (tietokanta/luo-tietokanta testitietokanta)

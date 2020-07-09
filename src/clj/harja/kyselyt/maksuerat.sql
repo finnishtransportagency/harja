@@ -109,7 +109,7 @@ FROM (SELECT
       GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
 GROUP BY tpi_id;
 
--- name: hae-urakan-maksuerat
+-- name: hae-hoitourakan-maksuerat
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
 -- Huom! Maksuerän summat haetaan hae-urakan-maksueratiedot kyselyllä, joka
 -- muodostaa ne laskutusyhteenvetoa kutsumalla.
@@ -177,6 +177,49 @@ FROM maksuera m
   JOIN kustannussuunnitelma k ON m.numero = k.maksuera
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
 WHERE tpi.urakka = :urakkaid;
+
+-- name: hae-teiden-hoidon-urakan-maksuerat
+-- (MHU) Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
+-- Huom! Maksuerän summat haetaan hae-teiden-hoidon-urakan-maksueratiedot kyselyllä, joka
+-- muodostaa ne laskutusyhteenvetoa kutsumalla.
+SELECT
+    m.numero                 AS numero,
+    m.tyyppi                 AS maksuera_tyyppi,
+    m.nimi                   AS maksuera_nimi,
+    m.tila                   AS maksuera_tila,
+    m.lahetetty              AS maksuera_lahetetty,
+    tpi.id                   AS toimenpideinstanssi_id,
+    tpi.nimi                 AS toimenpideinstanssi_nimi,
+    tpi.alkupvm              AS toimenpideinstanssi_alkupvm,
+    tpi.loppupvm             AS toimenpideinstanssi_loppupvm,
+    s.sampoid                AS sopimus_sampoid,
+    k.tila                   AS kustannussuunnitelma_tila,
+    k.lahetetty              AS kustannussuunnitelma_lahetetty,
+    -- Tuotenumero
+    (SELECT emo.tuotenumero
+     FROM toimenpidekoodi emo
+     WHERE emo.id = tpk.emo) AS tuotenumero,
+    -- Kustannussuunnitelman summa
+    COALESCE((SELECT Sum(COALESCE(summa, 0))
+              FROM kiinteahintainen_tyo
+              WHERE toimenpideinstanssi = tpi.id),0)
+                 +
+    COALESCE((SELECT Sum(COALESCE(summa, 0))
+              FROM kustannusarvioitu_tyo
+              WHERE toimenpideinstanssi = tpi.id),0)
+                 +
+    COALESCE((SELECT Sum(COALESCE((tunnit * tuntipalkka), 0))
+              FROM johto_ja_hallintokorvaus
+              WHERE "urakka-id" = u.id), 0)
+         AS kustannussuunnitelma_summa
+FROM maksuera m
+         JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+         JOIN urakka u ON u.id = tpi.urakka
+         JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
+         JOIN kustannussuunnitelma k ON m.numero = k.maksuera
+         JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+WHERE tpi.urakka = :urakkaid;
+
 
 -- name: hae-lahetettava-maksuera
 -- Hakee numeron perusteella maksueran lähettämiseen tarvittavat tiedot
