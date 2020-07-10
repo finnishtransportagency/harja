@@ -708,9 +708,12 @@ FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id
-                   FROM urakka
+                   FROM urakka u
                    WHERE hallintayksikko = :hallintayksikko
-                         AND (:urakkatyyppi :: urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                         AND (:urakkatyyppi :: urakkatyyppi IS NULL OR (
+                       CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+                            ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+                       END)))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie' :: tarkastustyyppi
@@ -748,8 +751,11 @@ FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id
-                   FROM urakka
-                   WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                   FROM urakka u
+                   WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR (
+                       CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito','teiden-hoito')
+                            ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+                       END)))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie' :: tarkastustyyppi
