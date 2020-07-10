@@ -112,6 +112,8 @@
      :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
               {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
               {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+              {:otsikko "Tiedotettu HARJAan" :tyyppi :pvm-aika :nimi :ilmoitettu} ;;TODO MAARIT
+              {:otsikko "Tiedotettu urakkaan" :tyyppi :pvm-aika :nimi :ilmoitettu} ;; TODO MAARIT
               {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
               {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
               {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
