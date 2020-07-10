@@ -377,7 +377,7 @@ VALUES
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
    :vastaanotettu-alunperin :: TIMESTAMPTZ,
-   :valitetty-urakkaan :: TIMESTAMPTZ);
+   :valitetty-urakkaan :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
