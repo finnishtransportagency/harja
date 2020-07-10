@@ -122,7 +122,7 @@
                     aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
     max-maara]
-   (let [ilmoitettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :ilmoitettu-vakioaikavali :ilmoitettu-alkuaika :ilmoitettu-loppuaika))
+   (let [ilmoitettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :tiedotettu-vakioaikavali :tiedotettu-alkuaika :tiedotettu-loppuaika))
          ilmoitettu-aikavali-alku (when (first ilmoitettu-aikavali)
                                     (konv/sql-timestamp (first ilmoitettu-aikavali)))
          ilmoitettu-aikavali-loppu (when (second ilmoitettu-aikavali)

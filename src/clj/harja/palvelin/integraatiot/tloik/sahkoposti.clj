@@ -80,6 +80,8 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         [["Urakka" (:urakkanimi ilmoitus)]
          ["Tunniste" (:tunniste ilmoitus)]
          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
+         ["Tiedotettu HARJAan" (:ilmoitettu ilmoitus)] ;;TODO Maarit
+         ["Tiedotettu urakkaan" (:ilmoitettu ilmoitus)] ;; TODO Maarit
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
          ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
