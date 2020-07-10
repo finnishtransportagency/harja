@@ -181,6 +181,13 @@ ON CONFLICT (nimi) DO UPDATE SET emo = (select id from tehtavaryhma where nimi =
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Tilaajan rahavaraus (T3)',	(select id from tehtavaryhma where nimi = 'Välitaso Muut liik.ymp.hoitosasiat'),	'alataso',	159, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Muut liik.ymp.hoitosasiat'), jarjestys = 159;
 
+---- dummy
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('1.0 TALVIHOITO', 'Lisätyöt (talvihoito)', (select id from tehtavaryhma where nimi = 'Välitaso Talvihoito'), 'alataso', 990, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
+on conflict (nimi) do update set emo = (select id from tehtavaryhma where nimi = 'Välitaso Talvihoito'), jarjestys = 990;
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('2.0 LIIKENNEYPÄRISTÖN HOITO', 'Lisätyöt (l.ymp.hoito)', (select id from tehtavaryhma where nimi = 'Välitaso Muut liik.ymp.hoitosasiat'), 'alataso', 991, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
+on conflict (nimi) do update set emo = (select id from tehtavaryhma where nimi = 'Välitaso Muut liik.ymp.hoitosasiat'), jarjestys = 991;
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('3 Sorateiden hoito', 'Lisätyöt (sorateiden hoito)', (select id from tehtavaryhma where nimi = 'Välitaso Sorateiden hoito'), 'alataso', 992, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
+on conflict (nimi) do update set emo = (select id from tehtavaryhma where nimi = 'Välitaso Soratieden hoito'), jarjestys = 992;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- MHU: Uudet tehtävät. Näille ei löydynyt vastaavuutta vanhoista tehtävistä. -----------------------------------------------------------------------------------------------------
@@ -408,6 +415,46 @@ ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)', (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)'),	NULL,	136, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)'), jarjestys = 136;
 
+--- MHU: Lisätyöt - nämä ovat dummy-tehtäviä, joita käytetään lisätöitä kirjatessa selventämään.
+
+insert into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+values ('Lisätyö (talvihoito)',
+        (select id from tehtavaryhma where nimi = 'Lisätyöt (talvihoito)'),
+        null,
+        990,
+        NULL,
+        (select id from toimenpidekoodi where koodi = '23104'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        4,
+        true)
+on conflict(nimi, emo) do update set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Lisätyöt (talvihoito)'), jarjestys = 990;
+
+insert into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+values ('Lisätyö (l.ymp.hoito)',
+        (select id from tehtavaryhma where nimi = 'Lisätyöt (l.ymp.hoito)'),
+        null,
+        990,
+        NULL,
+        (select id from toimenpidekoodi where koodi = '23116'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        4,
+        true)
+on conflict(nimi, emo) do update set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Lisätyöt (l.ymp.hoito)'), jarjestys = 991;
+
+insert into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+values ('Lisätyö (sorateiden hoito)',
+        (select id from tehtavaryhma where nimi = 'Lisätyöt (sorateiden hoito)'),
+        null,
+        990,
+        NULL,
+        (select id from toimenpidekoodi where koodi = '23124'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        4,
+        true)
+on conflict(nimi, emo) do update set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Lisätyöt (sorateiden hoito)'), jarjestys = 992;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- MHU: Olemassa olleiden tehtävien tehtäväryhmämäppäykset     --------------------------------------------------------------------------------------------------------------------
