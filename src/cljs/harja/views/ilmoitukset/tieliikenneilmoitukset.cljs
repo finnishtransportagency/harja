@@ -120,7 +120,6 @@
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
-s
    [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
                                tiedot/aikavalit
                                valinnat-nyt
