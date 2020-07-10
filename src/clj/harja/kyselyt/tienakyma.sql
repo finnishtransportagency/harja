@@ -97,7 +97,7 @@ WHERE sijainti IS NOT NULL AND
 
 -- name: hae-ilmoitukset
 SELECT i.id, i.urakka, i.ilmoitusid, i.tunniste, i.ilmoitettu,
-       i.valitetty, i.yhteydenottopyynto, i.otsikko,
+       i.valitetty, i."valitetty-urakkaan", i.yhteydenottopyynto, i.otsikko,
        i.paikankuvaus, i.lisatieto, i.tila, i.ilmoitustyyppi,
        i.selitteet, i.urakkatyyppi,
        i.sijainti,
