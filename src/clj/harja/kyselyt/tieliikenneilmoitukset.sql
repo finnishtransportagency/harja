@@ -9,6 +9,7 @@ SELECT
   --ulompi_i.ilmoitettu, TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   ulompi_i.valitetty as ilmoitettu,
   ulompi_i.valitetty,
+  ulompi_i."valitetty-urakkaan",
   ulompi_i.yhteydenottopyynto,
   ulompi_i.otsikko,
   ulompi_i.lisatieto,
@@ -91,6 +92,7 @@ SELECT
   i.urakka,
   -- i.ilmoitettu,
   i.valitetty as ilmoitettu,        -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
+  i."valitetty-urakkaan",
   i.ilmoitustyyppi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
@@ -126,6 +128,7 @@ SELECT
   tila,
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  "valitetty-urakkaan",
   valitetty as "valitetty-harjaan",
   "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
   CASE
@@ -169,6 +172,7 @@ SELECT
   -- i.ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   i.valitetty as ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -241,6 +245,7 @@ SELECT
   -- i.ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   i.valitetty as ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -297,6 +302,7 @@ SELECT
   -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
   valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
   valitetty as "valitetty-harjaan",
+  "valitetty-urakkaan",
   "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
   CASE
       WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
