@@ -122,11 +122,11 @@
                     aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
     max-maara]
-   (let [ilmoitettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :tiedotettu-vakioaikavali :tiedotettu-alkuaika :tiedotettu-loppuaika))
-         ilmoitettu-aikavali-alku (when (first ilmoitettu-aikavali)
-                                    (konv/sql-timestamp (first ilmoitettu-aikavali)))
-         ilmoitettu-aikavali-loppu (when (second ilmoitettu-aikavali)
-                                     (konv/sql-timestamp (second ilmoitettu-aikavali)))
+   (let [tiedotettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :tiedotettu-vakioaikavali :tiedotettu-alkuaika :tiedotettu-loppuaika))
+         tiedotettu-aikavali-alku (when (first tiedotettu-aikavali)
+                                    (konv/sql-timestamp (first tiedotettu-aikavali)))
+         tiedotettu-aikavali-loppu (when (second tiedotettu-aikavali)
+                                     (konv/sql-timestamp (second tiedotettu-aikavali)))
          toimenpiteet-aloitettu-aikavali (aikavaliehto hakuehdot :toimenpiteet-aloitettu-vakioaikavali :toimenpiteet-aloitettu-alkuaika :toimenpiteet-aloitettu-loppuaika)
          toimenpiteet-aloitettu-aikavali-alku (when (first toimenpiteet-aloitettu-aikavali)
                                                 (konv/sql-timestamp (first toimenpiteet-aloitettu-aikavali)))
@@ -144,7 +144,7 @@
                     :vesivayla :vesivayla-hoito
                     urakkatyyppi)
                   hallintayksikko
-                  (first ilmoitettu-aikavali) (second ilmoitettu-aikavali))
+                  (first tiedotettu-aikavali) (second tiedotettu-aikavali))
          _ (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))
@@ -154,8 +154,8 @@
          vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita)
          debug-viesti (str "Haetaan ilmoituksia: "
                            (viesti urakat "urakoista" "ilman urakoita")
-                           (viesti ilmoitettu-aikavali-alku "alkaen" "ilman alkuaikaa")
-                           (viesti ilmoitettu-aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                           (viesti tiedotettu-aikavali-alku "alkaen" "ilman alkuaikaa")
+                           (viesti tiedotettu-aikavali-loppu "päättyen" "ilman päättymisaikaa")
                            (viesti toimenpiteet-aloitettu-aikavali-alku "toimenpiteet alkaen" "ilman toimenpiteiden alkuaikaa")
                            (viesti toimenpiteet-aloitettu-aikavali-loppu "toimenpiteet päättyen" "ilman toimenpiteiden päättymisaikaa")
                            (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
@@ -179,16 +179,16 @@
                    ilmoitus-xf
                    (q/hae-ilmoitukset db
                                       {:urakat urakat
-                                       :alku_annettu (hakuehto-annettu? ilmoitettu-aikavali-alku)
-                                       :loppu_annettu (hakuehto-annettu? ilmoitettu-aikavali-loppu)
+                                       :alku_annettu (hakuehto-annettu? tiedotettu-aikavali-alku)
+                                       :loppu_annettu (hakuehto-annettu? tiedotettu-aikavali-loppu)
                                        :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
                                        :toimenpiteet_loppu_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-loppu)
                                        :kuittaamattomat (contains? tilat :kuittaamaton)
                                        :vastaanotetut (contains? tilat :vastaanotettu)
                                        :aloitetut (contains? tilat :aloitettu)
                                        :lopetetut (contains? tilat :lopetettu)
-                                       :alku ilmoitettu-aikavali-alku
-                                       :loppu ilmoitettu-aikavali-loppu
+                                       :alku tiedotettu-aikavali-alku
+                                       :loppu tiedotettu-aikavali-loppu
                                        :toimenpiteet_alku toimenpiteet-aloitettu-aikavali-alku
                                        :toimenpiteet_loppu toimenpiteet-aloitettu-aikavali-loppu
                                        :tyypit_annettu (hakuehto-annettu? tyypit)

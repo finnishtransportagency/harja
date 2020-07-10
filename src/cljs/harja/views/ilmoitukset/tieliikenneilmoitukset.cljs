@@ -268,8 +268,8 @@
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
          :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
-        {:otsikko "Tiedotettu urakkaan" :nimi :ilmoitettu
-         :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
+        {:otsikko "Tiedotettu urakkaan" :nimi :valitetty-urakkaan
+         :hae (comp pvm/pvm-aika :valitetty-urakkaan) :leveys 6}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))

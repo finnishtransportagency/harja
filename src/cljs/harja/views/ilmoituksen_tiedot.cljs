@@ -39,8 +39,8 @@
           "Id: " (:ilmoitusid ilmoitus)
           "Tunniste: " (:tunniste ilmoitus)
           "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-          "Tiedotettu HARJAan: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus)) ;;TODO Maarit
-          "Tiedotettu urakkaan: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus)) ;;TODO Maarit
+          "Tiedotettu HARJAan: " (pvm/pvm-aika-sek (:valitetty ilmoitus))
+          "Tiedotettu urakkaan: " (pvm/pvm-aika-sek (:valitetty-urakkaan ilmoitus))
           "Yhteydenottopyyntö:" (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
           "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
           "Otsikko: " (:otsikko ilmoitus)
