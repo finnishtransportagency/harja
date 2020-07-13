@@ -519,7 +519,12 @@ SELECT t.id        AS toteuma_id,
        tr1.id                     AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
        tt.lisatieto               AS lisatieto,
-       t.tyyppi                   AS tyyppi
+       t.tyyppi                   AS tyyppi,
+       t.tr_numero                as sijainti_numero,
+       t.tr_alkuosa               as sijainti_alku,
+       t.tr_alkuetaisyys          as sijainti_alkuetaisyys,
+       t.tr_loppuosa              as sijainti_loppu,
+       t.tr_loppuetaisyys         as sijainti_loppuetaisyys
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
          toteuma t,

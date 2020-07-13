@@ -149,7 +149,7 @@
                   ;; Jos lapsi-rivejä ei ole, mutta toteuma löytyy, niin lisätään se
                   (when (and
                           (= (get-in app [:valittu-rivi]) (first rivi))
-                          (> toteutunut-maara 0))
+                          #_(> toteutunut-maara 0))
                     [^{:key (str "toteuma-" (hash rivi))}
                      (do
                        (reset! row-index-atom (inc @row-index-atom))

@@ -1227,7 +1227,9 @@
               osoite @data
 
               [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
-              (map #(when osoite (osoite %)) avaimet)
+              (map #(when osoite
+                      (loki/log "osoite %" osoite %)
+                      (osoite %)) avaimet)
 
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
@@ -1243,6 +1245,7 @@
                             loppuosa-avain      loppuosa
                             loppuetaisyys-avain loppuetaisyys})
               luokat (if vayla-tyyli? "input-default" "")]
+          (loki/log "sijainti >" @sijainti avaimet numero alkuosa numero-avain alkuosa-avain)
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}

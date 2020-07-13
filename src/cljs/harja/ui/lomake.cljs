@@ -243,7 +243,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   "Määritellään kentän input"
   [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? {:keys [vayla-tyyli?] :as kentta-opts}]
   (let [{:keys [nimi hae aseta]} s
-        hae (or hae #(get % nimi))
+        hae (or hae #(if (vector? nimi)
+                       (get-in % nimi)
+                       (get % nimi)))
         init-arvo (atom (hae data))
         arvo (atom (hae data))
         seurannan-muuttujat (atom {:vaihda! (muokkaa-kenttaa-fn nimi)
@@ -255,16 +257,22 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  ;; Resetoi data, jos uusi data annettu
                  (if (not= uusi-arvo vanha-arvo)
                    (let [{:keys [s data vaihda!]} @seurannan-muuttujat
-                         {:keys [aseta nimi]} s]
+                         {:keys [aseta nimi]} s
+                         assoc-fn (if (vector? nimi)
+                                    assoc-in
+                                    assoc)]
                      (if aseta
                        (vaihda! (aseta data uusi-arvo))
-                       (vaihda! (assoc data nimi uusi-arvo))))
+                       (vaihda! (assoc-fn data nimi uusi-arvo))))
                    (when (and (= uusi-arvo vanha-arvo) aseta-vaikka-sama?)
                      (let [{:keys [s data vaihda!]} @seurannan-muuttujat
-                           {:keys [aseta nimi]} s]
+                           {:keys [aseta nimi]} s
+                           assoc-fn (if (vector? nimi)
+                                      assoc-in
+                                      assoc)]
                        (if aseta
                          (vaihda! (aseta data uusi-arvo))
-                         (vaihda! (assoc data nimi uusi-arvo))))))))
+                         (vaihda! (assoc-fn data nimi uusi-arvo))))))))
     (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
          data muokattava? muokkaa muokkaa-kenttaa-fn _ opts]
       (reset! seurannan-muuttujat
@@ -273,8 +281,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                :s       s})
       ; jos ulkopuolelta data on päivitetty esim. rajapinnasta saadun päivitetyn tiedon myötä, pitää resetoida arvo ja tila
       (when (:tarkkaile-ulkopuolisia-muutoksia? opts)
-        (let [data-arvo (if hae
+        (let [data-arvo (cond
+                          hae
                           (hae data)
+
+                          (vector? nimi)
+                          (get-in data nimi)
+
+                          :else
                           (get data nimi))]
           (when (not= @arvo
                       data-arvo)
@@ -303,7 +317,10 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                    [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
                              [:div.form-control-static
                               (if fmt
-                                (fmt ((or hae #(get % nimi)) data))
+                                (fmt ((or hae #(let [get-fn (if (vector? nimi)
+                                                              get-in
+                                                              get)]
+                                                 (get-fn % nimi))) data))
                                 (nayta-arvo s arvo))]))
             kentta (if yksikko-kentalle
                      [:div.kentta-ja-yksikko

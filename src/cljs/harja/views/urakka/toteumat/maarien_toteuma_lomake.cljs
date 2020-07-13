@@ -105,6 +105,7 @@
   (let [{ei-sijaintia ::t/ei-sijaintia
          tyyppi       ::t/tyyppi
          toteumat     ::t/toteumat} lomake
+        sijainti     (-> toteumat first ::t/sijainti)
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava [{:otsikko               "Työ valmis"
@@ -208,14 +209,17 @@
            [])
          ; WIP tää pitää korjata sijaintien osalta jos on yksi toteuma
          (when (= (count toteumat) 1)
-           {:otsikko "Sijainti *"})
+           {:otsikko "Sijainti 1 *"})
          (when (= (count toteumat) 1)
-           [{:nimi                  ::t/sijainti
+           [{:nimi                  [::t/toteumat 0 ::t/sijainti]
              ::ui-lomake/col-luokka ""
              :teksti                "Kyseiseen tehtävään ei ole sijaintia"
              :pakollinen?           (not ei-sijaintia)
              :disabled?             ei-sijaintia
-             :tyyppi                :tierekisteriosoite}
+             :tyyppi                :tierekisteriosoite
+             :sijainti              (r/wrap sijainti
+                                            (constantly true))
+             }
             {:nimi                  ::t/ei-sijaintia
              ::ui-lomake/col-luokka ""
              :teksti                "Kyseiseen tehtävään ei ole sijaintia"
