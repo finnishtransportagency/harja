@@ -39,7 +39,7 @@ FROM tehtavaryhma tr1
                       tpk4.poistettu is not true AND tpk4.piilota is not true
          JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
          JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
-WHERE tr1.emo is null
+WHERE tr1.emo is null and tr3.nimi not like '%Lisätyöt%'
 order by tr3.jarjestys;
 
 -- name: hae-tehtavahierarkia
@@ -70,7 +70,7 @@ FROM tehtavaryhma tr1
          LEFT JOIN toimenpidekoodi tpk4
                    ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                       tpk4.poistettu is not true AND tpk4.piilota is not true
-         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id and tpk4.nimi not like '%Lisätyö%'
 WHERE tr1.emo is null
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
@@ -103,6 +103,9 @@ FROM tehtavaryhma tr1
                    ON tr3.id = tpk4.tehtavaryhma AND tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                       tpk4.poistettu is not true AND tpk4.piilota is not true AND tpk4.nimi NOT IN
                                                                                   (
+                                                                                   'Lisätyö (talvihoito)',
+                                                                                   'Lisätyö (l.ymp.hoito)',
+                                                                                   'Lisätyö (sorateiden hoito)',
                                                                                    'Äkillinen hoitotyö (talvihoito)',
                                                                                    'Äkillinen hoitotyö (l.ymp.hoito)',
                                                                                    'Äkillinen hoitotyö (soratiet)',
