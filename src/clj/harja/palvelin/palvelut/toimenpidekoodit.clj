@@ -23,15 +23,22 @@
 
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
-  [db user {:keys [nimi emo yksikko hinnoittelu api-seuranta] :as rivi}]
-  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/seq->array hinnoittelu) api-seuranta (:id user))]
-    {:taso 4
-     :emo emo
-     :nimi nimi
-     :yksikko yksikko
-     :hinnoittelu hinnoittelu
-     :apiseuranta api-seuranta
-     :id (:id luotu)}))
+  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko hinnoittelu api-seuranta] :as rivi}]
+      (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo
+                                             voimassaolon-alkuvuosi voimassaolon-loppuvuosi
+                                             yksikko
+                                             (konv/seq->array hinnoittelu)
+                                             api-seuranta
+                                             (:id user))]
+           {:taso                    4
+            :emo                     emo
+            :nimi                    nimi
+            :voimassaolon-alkuvuosi  voimassaolon-alkuvuosi
+            :voimassaolon-loppuvuosi voimassaolon-loppuvuosi
+            :yksikko                 yksikko
+            :hinnoittelu             hinnoittelu
+            :apiseuranta             api-seuranta
+            :id                      (:id luotu)}))
 
 (defn poista-toimenpidekoodi
   "Merkitsee toimenpidekoodin poistetuksi. Palauttaa true jos koodi merkittiin poistetuksi, false muuten."
@@ -40,12 +47,13 @@
 
 (defn muokkaa-toimenpidekoodi
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
-
-  [db user {:keys [nimi emo yksikko id hinnoittelu api-seuranta passivoitu?] :as rivi}]
+  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko id hinnoittelu api-seuranta passivoitu?] :as rivi}]
   (= 1 (q/muokkaa-toimenpidekoodi! db
                                    {:id id
                                     :kayttajaid (:id user)
                                     :nimi nimi
+                                    :voimassaolon-alkuvuosi voimassaolon-alkuvuosi
+                                    :voimassaolon-loppuvuosi voimassaolon-loppuvuosi
                                     :yksikko yksikko
                                     :hinnoittelu (konv/seq->array hinnoittelu)
                                     :apiseuranta api-seuranta

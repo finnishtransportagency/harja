@@ -72,6 +72,7 @@
 
 
 (defn tallenna-tehtavat [tehtavat uudet-tehtavat]
+      (println "UUDET " uudet-tehtavat)
   (go (let [lisattavat
             (mapv #(assoc % :emo (:id @valittu-taso3))
                   (into []
@@ -115,6 +116,10 @@
    ["yksikkohintainen" "kokonaishintainen"]
    ["kokonaishintainen" "muutoshintainen"]
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
+
+
+(def +hoitokausi-valinnat+
+       (range 2020 2035 1))
 
 (defn hae-emo [kaikki-tehtavat tehtava]
   (second (first (filter #(= (:id (second %))
@@ -276,9 +281,13 @@
             [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
               :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
               :leveys 8}
+             {:otsikko "Voimassaolo alkaa" :nimi :voimassaolon-alkuvuosi :tyyppi :valinta :leveys 2
+              :valinnat +hoitokausi-valinnat+}
+             {:otsikko "Voimassaolo päättyy" :nimi :voimassaolon-loppuvuosi :tyyppi :valinta :leveys 2
+              :valinnat +hoitokausi-valinnat+}
              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
               :leveys 2}
-             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 3
+             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet
               :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}

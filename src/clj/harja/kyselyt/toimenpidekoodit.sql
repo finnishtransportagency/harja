@@ -6,6 +6,8 @@ SELECT
   t.nimi,
   t.emo,
   t.taso,
+  t.voimassaolo_alkuvuosi as "voimassaolon-alkuvuosi",
+  t.voimassaolo_loppuvuosi as "voimassaolon-loppuvuosi",
   t.yksikko,
   t.jarjestys,
   t.hinnoittelu,
@@ -21,8 +23,8 @@ FROM toimenpidekoodi t
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
-INSERT INTO toimenpidekoodi (nimi, emo, taso, yksikko, hinnoittelu, api_seuranta, luoja, luotu, muokattu)
-VALUES (:nimi, :emo, 4, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseuranta, :kayttajaid, NOW(), NOW());
+INSERT INTO toimenpidekoodi (nimi, emo, taso, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, yksikko, hinnoittelu, api_seuranta, luoja, luotu, muokattu)
+VALUES (:nimi, :emo, 4, :voimassaolon-alkuvuosi, :voimassaolon-loppuvuosi, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseuranta, :kayttajaid, NOW(), NOW());
 
 -- name: poista-toimenpidekoodi!
 -- Poistaa (merkitsee poistetuksi) annetun toimenpidekoodin.
@@ -33,9 +35,15 @@ WHERE id = :id;
 -- name: muokkaa-toimenpidekoodi!
 -- Muokkaa annetun toimenpidekoodin nimen.
 UPDATE toimenpidekoodi
-SET muokkaaja = :kayttajaid, muokattu = NOW(), poistettu = :poistettu,
-  nimi        = :nimi, yksikko = :yksikko,
-  hinnoittelu = :hinnoittelu :: hinnoittelutyyppi [], api_seuranta = :apiseuranta
+SET muokkaaja         = :kayttajaid,
+    muokattu          = NOW(),
+    poistettu         = :poistettu,
+    nimi              = :nimi,
+    voimassaolo_alkuvuosi  = :voimassaolon-alkuvuosi,
+    voimassaolo_loppuvuosi = :voimassaolon-loppuvuosi,
+    yksikko           = :yksikko,
+    hinnoittelu       = :hinnoittelu :: hinnoittelutyyppi[],
+    api_seuranta      = :apiseuranta
 WHERE id = :id;
 
 -- name: viimeisin-muokkauspvm
