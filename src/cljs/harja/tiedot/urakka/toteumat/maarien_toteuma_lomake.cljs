@@ -24,6 +24,7 @@
   ([toimenpide]
    (hae-tehtavat toimenpide :maaramitattava))
   ([toimenpide tyyppi]
+   (loki/log "haen tehtavat" toimenpide)
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
          rajapinta (case tyyppi
@@ -32,24 +33,27 @@
                      :maarien-toteutumien-toimenpiteiden-tehtavat)
          toimenpide-re-string (when toimenpide
                                 (cond
-                                  (re-find #"TALVIHOITO" tehtavaryhma) "Talvihoito"
-                                  (re-find #"LIIKENNEYMPÄRISTÖN HOITO" tehtavaryhma) "Liikenneympäristön hoito"
-                                  (re-find #"SORATEIDEN HOITO" tehtavaryhma) "Sorateiden hoito"
+                                  (re-find #"TALVIHOITO" tehtavaryhma) "alvihoito"
+                                  (re-find #"LIIKENNEYMPÄRISTÖN HOITO" tehtavaryhma) "Liikenneympäristön hoito|l.ymp.hoito"
+                                  (re-find #"SORATEIDEN HOITO" tehtavaryhma) "Soratiet|sorateiden"
                                   :else ""))
          parametrit {:polku    :tehtavat
-                     :filtteri (when (= tyyppi :akillinen-hoitotyo)
-                                 #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %)))}]
-     (when-not (and
-                 toimenpide
-                 (= tyyppi :lisatyo))
-       (tuck-apurit/post! rajapinta
-                          {:tehtavaryhma tehtavaryhma
-                           :urakka-id    (-> @tila/yleiset :urakka :id)}
-                          {:onnistui               ->HakuOnnistui
-                           :onnistui-parametrit    [parametrit]
-                           :epaonnistui            ->HakuEpaonnistui
-                           :epaonnistui-parametrit []
-                           :paasta-virhe-lapi?     true})))))
+                     :filtteri (case tyyppi
+                                 :akillinen-hoitotyo
+                                 #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
+
+                                 :lisatyo
+                                 #(re-find (re-pattern (str "(" toimenpide-re-string ")")) (:tehtava %))
+
+                                 (constantly true))}]
+     (tuck-apurit/post! rajapinta
+                        {:tehtavaryhma tehtavaryhma
+                         :urakka-id    (-> @tila/yleiset :urakka :id)}
+                        {:onnistui               ->HakuOnnistui
+                         :onnistui-parametrit    [parametrit]
+                         :epaonnistui            ->HakuEpaonnistui
+                         :epaonnistui-parametrit []
+                         :paasta-virhe-lapi?     true}))))
 
 (extend-protocol
   tuck/Event
@@ -110,27 +114,35 @@
       :default)
     ; :TODO: tää pitää korjata sijaintien osalta jos on yksi toteuma
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
+          tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
           paivitettava-toteumat-vektoriin #{::t/lisatieto ::t/maara ::t/tehtava ::t/sijainti}
           app (assoc app :lomake lomake)
           uusi-app (update app :lomake (fn [l]
-                                         (cond-> l
-                                                 ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
-                                                 (and (true? useampi?)
-                                                      (= tyyppi :maaramitattava)
-                                                      (not= useampi? useampi-aiempi?))
-                                                 (update ::t/toteumat conj uusi-toteuma)
+                                         (let [l (cond-> l
+                                                         ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
+                                                         (and (true? useampi?)
+                                                              (= tyyppi :maaramitattava)
+                                                              (not= useampi? useampi-aiempi?))
+                                                         (update ::t/toteumat conj uusi-toteuma)
 
-                                                 (and (not (true? useampi?))
-                                                      (= tyyppi :maaramitattava)
-                                                      (not= useampi? useampi-aiempi?))
-                                                 (update ::t/toteumat #(conj [] (first %)))
+                                                         ; tai resetoidaan
+                                                         (and (not (true? useampi?))
+                                                              (= tyyppi :maaramitattava)
+                                                              (not= useampi? useampi-aiempi?))
+                                                         (update ::t/toteumat #(conj [] (first %)))
 
-                                                 (and (not (true? useampi?))
-                                                      (some #(do
-                                                               (loki/log % viimeksi-muokattu (= viimeksi-muokattu %))
-                                                               (= viimeksi-muokattu %))
-                                                            paivitettava-toteumat-vektoriin))
-                                                 (assoc-in [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake)))))]
+                                                         ; tätä ei tarvinne enää, koska fiksailtu?
+                                                         (and (not (true? useampi?))
+                                                              (some #(= viimeksi-muokattu %)
+                                                                    paivitettava-toteumat-vektoriin))
+                                                         (assoc-in [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake)))]
+                                           ; siivotaan tyyppiä vaihdettaessa turhat kentät
+                                           (if (not= tyyppi tyyppi-aiempi)
+                                             (case tyyppi
+                                               :akillinen-hoitotyo (update l ::t/toteumat (fn [ts] (mapv #(dissoc % ::t/maara) ts)))
+                                               :lisatyo (update l ::t/toteumat (fn [ts] (mapv #(dissoc % ::t/maara) ts)))
+                                               l)
+                                             l))))]
       #_(-> app
             (update :lomake (if (and
                                   (= tyyppi :maaramitattava)
