@@ -21,6 +21,12 @@
               (map #(konv/array->vec % :hinnoittelu)))
         (q/hae-kaikki-toimenpidekoodit db)))
 
+(defn hae-tehtavaryhmat
+      "Palauttaa tehtäväryhmän id:n, nimen ja järjestyksen"
+      [db kayttaja]
+      (into []
+            (q/hae-tehtavaryhmat db)))
+
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
   [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko hinnoittelu api-seuranta] :as rivi}]
@@ -79,26 +85,30 @@
     (mapv #(hash-map :nimi %) tehtavat)))
 
 (defrecord Toimenpidekoodit []
-  component/Lifecycle
-  (start [this]
-    (doto (:http-palvelin this)
-      (julkaise-palvelu
-        :hae-toimenpidekoodit
-        (fn [kayttaja]
-          (oikeudet/ei-oikeustarkistusta!)
-          (hae-toimenpidekoodit (:db this) kayttaja))
-        {:last-modified (fn [user]
-                          (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
-      (julkaise-palvelu
-        :tallenna-tehtavat
-        (fn [user tiedot]
-          (tallenna-tehtavat (:db this) user tiedot)))
-      (julkaise-palvelu
-        :hae-reaaliaikaseurannan-tehtavat
-        (fn [_]
-          (oikeudet/ei-oikeustarkistusta!)
-          (hae-reaaliaikaseurannan-tehtavat))))
-    this)
+           component/Lifecycle
+           (start [this]
+                  (doto (:http-palvelin this)
+                        (julkaise-palvelu
+                          :hae-toimenpidekoodit
+                          (fn [kayttaja]
+                              (oikeudet/ei-oikeustarkistusta!)
+                              (hae-toimenpidekoodit (:db this) kayttaja))
+                          {:last-modified (fn [user]
+                                              (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
+                        (julkaise-palvelu
+                          :hae-tehtavaryhmat
+                          (fn [user]
+                              (hae-tehtavaryhmat (:db this) user)))
+                        (julkaise-palvelu
+                          :tallenna-tehtavat
+                          (fn [user tiedot]
+                              (tallenna-tehtavat (:db this) user tiedot)))
+                        (julkaise-palvelu
+                          :hae-reaaliaikaseurannan-tehtavat
+                          (fn [_]
+                              (oikeudet/ei-oikeustarkistusta!)
+                              (hae-reaaliaikaseurannan-tehtavat))))
+                  this)
 
   (stop [this]
     (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat :hae-reaaliaikaseurannan-tehtavat]]

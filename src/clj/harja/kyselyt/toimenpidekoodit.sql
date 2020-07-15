@@ -192,3 +192,9 @@ SELECT exists(
     SELECT id
     FROM toimenpidekoodi
     WHERE koodi = :koodi AND piilota IS NOT TRUE);
+
+-- name: hae-tehtavaryhmat
+SELECT id, nimi, jarjestys
+FROM tehtavaryhma
+WHERE tyyppi = 'alataso'
+ORDER BY jarjestys;

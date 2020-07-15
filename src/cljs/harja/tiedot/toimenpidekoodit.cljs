@@ -12,4 +12,5 @@
 
 (defonce koodit-tasoittain (reaction (group-by :taso (sort-by :koodi (vals @koodit)))))
 
+(def tehtavaryhmat "id->nimi mäppäys kaikista tehtäväryhmistä" (atom nil))
 (def tyokoneiden-reaaliaikaseuranna-tehtavat "työkoneiden reaaliaikaseurannan seurattavat tehtävät" (atom nil))

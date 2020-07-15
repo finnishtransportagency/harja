@@ -64,12 +64,14 @@
                           (get koodit-tasoittain 4))))
       []))))
 
+(defonce tehtavaryhmat
+         (reaction (sort-by :jarjestys @tehtavaryhmat)))
 
-
+(defn resetoi-tehtavaryhmat [ryhmat]
+      (reset! tehtavaryhmat ryhmat))
 
 (defn resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat [tehtavat]
   (reset! tyokoneiden-reaaliaikaseuranna-tehtavat tehtavat))
-
 
 (defn tallenna-tehtavat [tehtavat uudet-tehtavat]
   (go (let [lisattavat
@@ -117,8 +119,10 @@
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
 
 
-(def +hoitokausi-valinnat+
+(def vuosi-valinnat
        (range 2020 2035 1))
+
+
 
 (defn hae-emo [kaikki-tehtavat tehtava]
   (second (first (filter #(= (:id (second %))
@@ -281,9 +285,9 @@
               :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
               :leveys 8}
              {:otsikko "Voimassaolo alkaa" :nimi :voimassaolon-alkuvuosi :tyyppi :valinta :leveys 2
-              :valinnat +hoitokausi-valinnat+}
+              :valinnat vuosi-valinnat}
              {:otsikko "Voimassaolo päättyy" :nimi :voimassaolon-loppuvuosi :tyyppi :valinta :leveys 2
-              :valinnat +hoitokausi-valinnat+}
+              :valinnat vuosi-valinnat}
              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
               :leveys 2}
              {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
@@ -305,6 +309,12 @@
               :tasaa :keskita
               :fmt fmt/totuus
               :leveys 1}
+             {:otsikko "Tehtäväryhä"
+              :nimi :tehtavaryhma
+              :tyyppi :valinta
+              :valinnat @tehtavaryhmat
+              :leveys 3}
+
 
              {:otsikko "Luoja"
               :nimi :luoja
@@ -318,8 +328,10 @@
 
     {:displayName "toimenpidekoodit"
      :component-did-mount
-     (fn [this]
-       (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
-                 tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))]
-             (resetoi-koodit toimenpidekoodit)
-             (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat))))}))
+                  (fn [this]
+                      (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
+                                tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))
+                                tehtavaryhmat (<! (k/get! :hae-tehtavaryhmat))]
+                               (resetoi-koodit toimenpidekoodit)
+                               (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat)
+                               (resetoi-tehtavaryhmat tehtavaryhmat))))}))
