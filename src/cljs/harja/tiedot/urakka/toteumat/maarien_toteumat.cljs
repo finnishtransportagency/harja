@@ -133,9 +133,9 @@
       (hae-tehtavat valittu-toimenpide)
       (-> app
           (assoc-in [:syottomoodi] true)
-          (assoc-in [:lomake ::t/toteuma-id] (:toteuma_id vastaus))
-          (assoc-in [:lomake ::t/toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
-          (assoc-in [:lomake ::t/loppupvm] (:toteuma_aika vastaus))
+          (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] (:toteuma_id vastaus))
+          (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
+          (assoc-in [:lomake ::t/pvm] (:toteuma_aika vastaus))
           (assoc-in [:lomake ::t/toteumat 0 ::t/maara] (:toteutunut vastaus))
           (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] valittu-tehtava)
           (assoc-in [:lomake ::t/toteumat 0 ::t/sijainti] sijainti)

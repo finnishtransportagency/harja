@@ -30,7 +30,7 @@
                      lisatieto    ::t/lisatieto
                      sijainti     ::t/sijainti
                      ei-sijaintia ::t/ei-sijaintia
-                     :as          toteuma}]
+                     :as          _toteuma}]
          [(if (= 1 (count toteumat))
             :<>
             :div.row.lomakerivi.lomakepalstat)
@@ -102,10 +102,10 @@
 
 (defn- maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
-  (let [{ei-sijaintia ::t/ei-sijaintia
-         tyyppi       ::t/tyyppi
-         toteumat     ::t/toteumat} lomake
-        sijainti     (-> toteumat first ::t/sijainti)
+  (let [{tyyppi   ::t/tyyppi
+         toteumat ::t/toteumat} lomake
+        {ei-sijaintia ::t/ei-sijaintia
+         sijainti     ::t/sijainti} (-> toteumat first)
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava [{:otsikko               "Työ valmis"
@@ -207,9 +207,8 @@
            :lisatyo lisatyo
            :akillinen-hoitotyo akilliset-ja-korjaukset
            [])
-         ; WIP tää pitää korjata sijaintien osalta jos on yksi toteuma
          (when (= (count toteumat) 1)
-           {:otsikko "Sijainti 1 *"})
+           {:otsikko "Sijainti *"})
          (when (= (count toteumat) 1)
            [{:nimi                  [::t/toteumat 0 ::t/sijainti]
              ::ui-lomake/col-luokka ""
@@ -218,9 +217,9 @@
              :disabled?             ei-sijaintia
              :tyyppi                :tierekisteriosoite
              :sijainti              (r/wrap sijainti
-                                            (constantly true))
+                                            (constantly true)) ; lomake päivittyy eri funkkarilla, niin never mind this, mutta annetaan sijainti silti
              }
-            {:nimi                  ::t/ei-sijaintia
+            {:nimi                  [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""
              :teksti                "Kyseiseen tehtävään ei ole sijaintia"
              :tyyppi                :checkbox}]))]

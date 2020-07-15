@@ -396,34 +396,35 @@
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 ;(def ___malli
-;  ; nämä jos muokataan
-;  {:toteuma-id         1
-;   :toteuma-tehtava-id 1
-;   ; yleiset tiedot
-;   :toimenpide         1
-;   :urakka-id          1
-;   :tyyppi             :keyword
-;   :pvm                1
-;   :toteumat           [{:maara     1
-;                         :lisatieto "asd"
-;                         :tehtava   1
-;                         :sijainti  {}
-;                         ; nämä yllä ovat määrämitattavalla
-;                         :tehtava   1
-;                         :lisatieto "adf"
-;                         :sijainti  {}
-;                         ; mämä yllä ovat äkillisellä
-;                         :lisatieto "asf"
-;                         :sijainti  {}
-;                         ; mämä ovat lisätyöllä
-;                         }]
-;   })
+;    {
+;     ; yleiset tiedot
+;     :toimenpide 1
+;     :urakka-id  1
+;     :tyyppi     :keyword
+;     :pvm        1
+;     :toteumat   [{
+;                   :toteuma-id         1 - muokatessa
+;                   :toteuma-tehtava-id 1 - muokatessa
+;                   :maara              1
+;                   :lisatieto          "asd"
+;                   :tehtava            1
+;                   :sijainti           {}
+;                   ; nämä yllä ovat määrämitattavalla
+;                   :tehtava            1
+;                   :lisatieto          "adf"
+;                   :sijainti           {}
+;                   ; mämä yllä ovat äkillisellä
+;                   :lisatieto          "asf"
+;                   :sijainti           {}
+;                   ; mämä ovat lisätyöllä
+;                   }]
+;     })
 
-(defn tallenna-toteuma! [db user {:keys [toteuma-id toteuma-tehtava-id tyyppi urakka-id tehtavaryhma tehtava maara loppupvm lisatieto toteumat] :as kamat}]
+(defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat] :as kamat}]
   ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
-    (let [_ (log/debug "tallenna-toteuma! :: urakka-id;" urakka-id "maara:" maara "loppupvm lisatieto toteuma-id toteuma-tehtava-id" loppupvm lisatieto toteuma-id toteuma-tehtava-id)
-          _ (log/debug "tallenna-toteuma! :: tehtava" (pr-str tehtava))
+    (let [                                                  ;_ (log/debug "tallenna-toteuma! :: urakka-id;" urakka-id "maara:" maara "loppupvm lisatieto toteuma-id toteuma-tehtava-id" loppupvm lisatieto toteuma-id toteuma-tehtava-id)
+          ;_ (log/debug "tallenna-toteuma! :: tehtava" (pr-str tehtava))
           _ (log/debug "tallenna-totuema!" (pr-str kamat))
           loppupvm (konv/sql-date loppupvm) #_(.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") loppupvm)
           sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
@@ -447,6 +448,8 @@
                                     (for [{maara                                                        :maara
                                            lisatieto                                                    :lisatieto
                                            tehtava                                                      :tehtava
+                                           toteuma-id                                                   :toteuma-id
+                                           toteuma-tehtava-id                                           :toteuma-tehtava-id
                                            {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} :sijainti
                                            :as                                                          _toteuma} toteumat]
                                       (let [t (upsert! db ::toteuma/toteuma

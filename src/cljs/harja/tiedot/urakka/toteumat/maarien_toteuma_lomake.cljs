@@ -100,8 +100,6 @@
   PaivitaLomake
   (process-event [{{useampi?          ::t/useampi-toteuma
                     tyyppi            ::t/tyyppi
-                    sijainti          ::t/sijainti
-                    ei-sijaintia      ::t/ei-sijaintia
                     toimenpide        ::t/toimenpide
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
                     :as               lomake} :lomake} app]
@@ -116,6 +114,7 @@
           app (assoc app :lomake lomake)
           uusi-app (update app :lomake (fn [l]
                                          (cond-> l
+                                                 ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
                                                  (and (true? useampi?)
                                                       (= tyyppi :maaramitattava)
                                                       (not= useampi? useampi-aiempi?))
