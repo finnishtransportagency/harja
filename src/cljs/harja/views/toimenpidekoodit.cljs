@@ -72,7 +72,6 @@
 
 
 (defn tallenna-tehtavat [tehtavat uudet-tehtavat]
-      (println "UUDET " uudet-tehtavat)
   (go (let [lisattavat
             (mapv #(assoc % :emo (:id @valittu-taso3))
                   (into []
