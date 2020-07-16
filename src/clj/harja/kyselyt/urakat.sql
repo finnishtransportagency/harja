@@ -674,43 +674,51 @@ SELECT EXISTS(
     WHERE tpi.urakka = :urakkaid
           AND tpk.id = :tehtavaid);
 
+
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
-SELECT u.id
+SELECT u.id,
+       :urakkatyyppi as urakkatyyppi,
+       COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
+                st_distance(vua.alue, st_makepoint(:x, :y)),
+                st_distance(pua.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
-  LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+         LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+         LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
+         LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
 WHERE (CASE
-       WHEN :urakkatyyppi='hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
-       ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
-       END)
-      AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
-      AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-           OR
-           (:urakkatyyppi = 'valaistus' AND
-            exists(SELECT id
-                   FROM valaistusurakka vu
-                   WHERE vu.valaistusurakkanro = u.urakkanro
-                         AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-           OR
-           ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-            exists(SELECT id
-                   FROM paallystyspalvelusopimus pps
-                   WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
-                         AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
-           OR
-           ((:urakkatyyppi = 'tekniset-laitteet') AND
-            exists(SELECT id
-                   FROM tekniset_laitteet_urakka tlu
-                   WHERE tlu.urakkanro = u.urakkanro
-                         AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-           OR
-           ((:urakkatyyppi = 'siltakorjaus') AND
-            exists(SELECT id
-                   FROM siltapalvelusopimus sps
-                   WHERE sps.urakkanro = u.urakkanro
-                         AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
-ORDER BY id ASC;
+           WHEN :urakkatyyppi='hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+           ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+    END)
+  AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+  AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
+  AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+    OR
+       (:urakkatyyppi = 'valaistus' AND
+        exists(SELECT id
+               FROM valaistusurakka vu
+               WHERE vu.valaistusurakkanro = u.urakkanro
+                 AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+    OR
+       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+        exists(SELECT id
+               FROM paallystyspalvelusopimus pps
+               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
+                 AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+    OR
+       ((:urakkatyyppi = 'tekniset-laitteet') AND
+        exists(SELECT id
+               FROM tekniset_laitteet_urakka tlu
+               WHERE tlu.urakkanro = u.urakkanro
+                 AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+    OR
+       ((:urakkatyyppi = 'siltakorjaus') AND
+        exists(SELECT id
+               FROM siltapalvelusopimus sps
+               WHERE sps.urakkanro = u.urakkanro
+                 AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
+ORDER BY etaisyys ASC;
+
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero, "ely-nimi", nimi, luotu, luoja)
