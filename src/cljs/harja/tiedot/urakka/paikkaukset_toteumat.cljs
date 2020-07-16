@@ -30,6 +30,11 @@
                                    :tr-loppuosa (::tierekisteri/losa tierekisteriosoite)
                                    :tr-loppuetaisyys (::tierekisteri/let tierekisteriosoite)}))
 
+(defn massan-maara
+      "Massamäärä tonneina (t). Massamenekki on massan määrä kiloina neliömetrillä. Pinta-ala on alue neliömetreinä."
+      [pinta-ala massamenekki]
+      (/ (* massamenekki pinta-ala) 1000))
+
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
                                  :as paikkaus} teiden-pituudet]
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
@@ -37,13 +42,17 @@
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
                                                                ::paikkaus/paikkauskohde ::paikkaus/sijainti})
         suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
-        suirun-tiedot {:suirun-pituus suirun-pituus
-                       :suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))}
+        suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))
+        suirun-tiedot {:suirun-pituus    suirun-pituus
+                       :suirun-pinta-ala suirun-pinta-ala}
+        massamaara {:massamaara (massan-maara
+                                  suirun-pinta-ala
+                                  (::paikkaus/massamenekki paikkaus))}
         sijainti {::paikkaus/sijainti (-> (::paikkaus/sijainti paikkaus)
                                           (assoc :type :moniviiva
                                                  :viivat asioiden-ulkoasu/paikkaukset))}
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
-    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti suirun-tiedot)))
+    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti suirun-tiedot massamaara)))
 
 (defn kiinnostavat-tiedot-vetolaatikko
   [paikkaus teiden-pituudet]
