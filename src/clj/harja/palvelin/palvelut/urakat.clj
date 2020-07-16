@@ -38,16 +38,13 @@
 
 (defn hae-urakka-id-sijainnilla
   [db urakkatyyppi x y]
-      (println "urakkatyyppi " urakkatyyppi)
-      (println "x " x)
-      (println "y " y)
   (loop [radius 50
          k 1]
     ;; Palautetaan nil, jos ei löydy urakkaa kilometrin säteeltä tai
     ;; ollaan loopattu jo 10 kertaa eikä olla löydätty vain yhtä urakkaa
     (when (and (< radius 1000)
                (< k 10))
-      (let [urakat (distinct (map #(dissoc % :etaisyys )
+      (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi )
                                   (q/hae-urakka-sijainnilla db urakkatyyppi x y radius)))]
         (cond
           (empty? urakat) (recur (* 2 radius) (inc k))
@@ -78,7 +75,7 @@
   hoidon alueurakka. Mikäli alueelta ei löydy alueurakkaa, haetaan lähin hoidon alueurakka"
   [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
-  (let [urakka-idt (distinct (map #(dissoc % :etaisyys )
+  (let [urakka-idt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi))
                                   (q/hae-urakka-sijainnilla db urakkatyyppi x y 1000)))]
     (if (empty? urakka-idt)
       (if (#{"hoito" "teiden-hoito"} urakkatyyppi)
@@ -86,7 +83,7 @@
         (map :id (q/hae-lahin-hoidon-alueurakka db x y 10000))
 
         ;; Jos ei löytynyt urakkaa annetulla tyypillä, haetaan alueella toimiva hoidon alueurakka
-        (let [hoidon-urakkaidt (distinct (map #(dissoc % :etaisyys )
+        (let [hoidon-urakkaidt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi ))
                                               (q/hae-urakka-sijainnilla db "hoito" x y 10)))]
           (if hoidon-urakkaidt
             hoidon-urakkaidt
