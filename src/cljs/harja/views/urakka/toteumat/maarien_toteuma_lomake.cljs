@@ -22,89 +22,99 @@
 (defn- maaramitattavat-toteumat
   [{:keys [e! toimenpiteet tehtavat]} {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
   (loki/log "data" kaikki)
-  [:div
-   (doall
-     (map-indexed
-       (fn [indeksi {tehtava      ::t/tehtava
-                     maara        ::t/maara
-                     lisatieto    ::t/lisatieto
-                     sijainti     ::t/sijainti
-                     ei-sijaintia ::t/ei-sijaintia
-                     :as          _toteuma}]
-         [(if (= 1 (count toteumat))
-            :<>
-            :div.row.lomakerivi.lomakepalstat)
-          [(if (= 1 (count toteumat))
-             :<>
-             :div.lomakepalsta)
-           [:div.row.lomakerivi
-            [:label "Tehtävä"]
-            [kentat/tee-kentta
-             {:pakollinen?           true
-              ::ui-lomake/col-luokka ""
-              :vayla-tyyli?          true
-              :tyyppi                :valinta
-              :valinnat              tehtavat
-              :valinta-nayta         :tehtava}
-             (r/wrap tehtava
-                     (fn [arvo]
-                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/tehtava] arvo)))))]]
-           [:div.row.lomakerivi
-            [:label "Toteutunut määrä"]
-            [kentat/tee-kentta
-             {::ui-lomake/col-luokka ""
-              :vayla-tyyli?          true
-              :pakollinen?           true
-              :tyyppi                :numero}
-             (r/wrap maara
-                     (fn [arvo]
-                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/maara] arvo)))))]]
-           [:div.row.lomakerivi
-            [:label "Lisätieto"]
-            [kentat/tee-kentta
-             {::ui-lomake/col-luokka ""
-              :vayla-tyyli?          true
-              :pakollinen?           true
-              :tyyppi                :string}
-             (r/wrap lisatieto
-                     (fn [arvo]
-                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/lisatieto] arvo)))))]]]
-          (when (not= (count toteumat) 1)
-            [:div.lomakepalsta
+  (let [paivita! (fn [polku indeksi arvo]
+                   (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))]
+    [:div
+     (doall
+       (map-indexed
+         (fn [indeksi {tehtava      ::t/tehtava
+                       maara        ::t/maara
+                       lisatieto    ::t/lisatieto
+                       sijainti     ::t/sijainti
+                       ei-sijaintia ::t/ei-sijaintia
+                       toteuma-id   ::t/toteuma-id
+                       poistettu    ::t/poistettu
+                       :as          _toteuma}]
+           [(if (= 1 (count toteumat))
+              :<>
+              :div.row.lomakerivi.lomakepalstat)
+            [(if (= 1 (count toteumat))
+               :<>
+               :div.lomakepalsta)
+             (when (and toteuma-id
+                        (not= (count toteumat) 1))
+               [:div.lomakepalsta
+                [:div.row.lomakerivi
+                 [:label "Poista toteuma"]
+                 [kentat/tee-kentta {::ui-lomake/col-luokka ""
+                                     :teksti                "Pooista toteuma"
+                                     :tyyppi                :checkbox}
+                  (r/wrap poistettu
+                          (r/partial paivita! ::t/poistettu indeksi))]]])
+             [:div.row.lomakerivi
+              [:label "Tehtävä"]
+              [kentat/tee-kentta
+               {:pakollinen?           true
+                ::ui-lomake/col-luokka ""
+                :vayla-tyyli?          true
+                :tyyppi                :valinta
+                :valinnat              tehtavat
+                :valinta-nayta         :tehtava}
+               (r/wrap tehtava
+                       (r/partial paivita! ::t/tehtava indeksi))]]
+             [:div.row.lomakerivi
+              [:label "Toteutunut määrä"]
+              [kentat/tee-kentta
+               {::ui-lomake/col-luokka ""
+                :vayla-tyyli?          true
+                :pakollinen?           true
+                :tyyppi                :numero}
+               (r/wrap maara
+                       (r/partial paivita! ::t/maara indeksi))]]
              [:div.row.lomakerivi
               [:label "Lisätieto"]
               [kentat/tee-kentta
                {::ui-lomake/col-luokka ""
-                :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-                :pakollinen?           (not ei-sijaintia)
-                :disabled?             ei-sijaintia
-                :tyyppi                :tierekisteriosoite}
-               (r/wrap sijainti
-                       (fn [arvo]
-                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/sijainti] arvo)))))]]
-             [:div.row.lomakerivi
-              [:label "Lisätieto"]
-              [kentat/tee-kentta
-               {::ui-lomake/col-luokka ""
-                :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-                :tyyppi                :checkbox}
-               (r/wrap sijainti
-                       (fn [arvo]
-                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi ::t/ei-sijaintia] arvo)))))]]])])
-       toteumat))
-   (when (> (count toteumat) 1)
-     [napit/tallenna
-      "Lisää tehtävä"
-      #(e! (tiedot/->LisaaToteuma lomake))
-      {:ikoni         [harja.ui.ikonit/plus-sign]
-       :vayla-tyyli?  true
-       :teksti-nappi? true}])])
+                :vayla-tyyli?          true
+                :pakollinen?           true
+                :tyyppi                :string}
+               (r/wrap lisatieto
+                       (r/partial paivita! ::t/lisatieto indeksi))]]]
+            (when (not= (count toteumat) 1)
+              [:div.lomakepalsta
+               [:div.row.lomakerivi
+                [:label "Lisätieto"]
+                [kentat/tee-kentta
+                 {::ui-lomake/col-luokka ""
+                  :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                  :pakollinen?           (not ei-sijaintia)
+                  :disabled?             ei-sijaintia
+                  :tyyppi                :tierekisteriosoite}
+                 (r/wrap sijainti
+                         (r/partial paivita! ::t/sijainti indeksi))]]
+               [:div.row.lomakerivi
+                [:label "Lisätieto"]
+                [kentat/tee-kentta
+                 {::ui-lomake/col-luokka ""
+                  :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                  :tyyppi                :checkbox}
+                 (r/wrap ei-sijaintia
+                         (r/partial paivita! ::t/ei-sijaintia indeksi))]]])])
+         toteumat))
+     (when (> (count toteumat) 1)
+       [napit/tallenna
+        "Lisää tehtävä"
+        #(e! (tiedot/->LisaaToteuma lomake))
+        {:ikoni         [harja.ui.ikonit/plus-sign]
+         :vayla-tyyli?  true
+         :teksti-nappi? true}])]))
 
 (defn- maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
   (let [{tyyppi   ::t/tyyppi
          toteumat ::t/toteumat} lomake
         {ei-sijaintia ::t/ei-sijaintia
+         toteuma-id   ::t/toteuma-id
          sijainti     ::t/sijainti} (-> toteumat first)
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
@@ -177,7 +187,12 @@
                          {:vayla-tyyli? true
                           :luokka       "suuri"}]])
        :vayla-tyyli? true}
-      [(ui-lomake/palstat
+      [(when (and toteuma-id
+                  (= (count toteumat) 1))
+         {:tyyppi  :checkbox
+          :nimi    [::t/toteumat 0 ::t/poistettu]
+          :otsikko "Poista toteuma"})
+       (ui-lomake/palstat
          {}
          {:otsikko "Mihin toimenpiteeseen työ liittyy?"}
          [{:otsikko               "Toimenpide"

@@ -90,7 +90,7 @@
   (process-event [{arvo :arvo} app]
     (do
       (js/console.log "AsetaLisatieto" (pr-str arvo))
-      (-> apps
+      (-> app
           (assoc-in [:toteuma :lisatieto] arvo)
           (validoi-lomake))))
 

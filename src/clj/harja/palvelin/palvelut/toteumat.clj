@@ -395,6 +395,14 @@
     (toteumat-q/listaa-lisatoiden-tehtavat db)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
+(defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
+  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+    (do
+      (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
+      (toteumat-q/poista-toteuma! db (:id user) toteuma-id))
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
 ;(def ___malli
 ;    {
 ;     ; yleiset tiedot
@@ -423,7 +431,7 @@
 (defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat] :as kamat}]
   ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
-    (let [                                                  ;_ (log/debug "tallenna-toteuma! :: urakka-id;" urakka-id "maara:" maara "loppupvm lisatieto toteuma-id toteuma-tehtava-id" loppupvm lisatieto toteuma-id toteuma-tehtava-id)
+    (let [;_ (log/debug "tallenna-toteuma! :: urakka-id;" urakka-id "maara:" maara "loppupvm lisatieto toteuma-id toteuma-tehtava-id" loppupvm lisatieto toteuma-id toteuma-tehtava-id)
           ;_ (log/debug "tallenna-toteuma! :: tehtava" (pr-str tehtava))
           _ (log/debug "tallenna-totuema!" (pr-str kamat))
           loppupvm (konv/sql-date loppupvm) #_(.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") loppupvm)
@@ -450,9 +458,13 @@
                                            tehtava                                                      :tehtava
                                            toteuma-id                                                   :toteuma-id
                                            toteuma-tehtava-id                                           :toteuma-tehtava-id
+                                           poistettu                                                    :poistettu
                                            {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} :sijainti
                                            :as                                                          _toteuma} toteumat]
-                                      (let [t (upsert! db ::toteuma/toteuma
+                                      (if poistettu
+                                        (poista-maarien-toteuma! db user {:urakka-id urakka-id
+                                                                          :toteuma-id toteuma-id})
+                                        (let [t (upsert! db ::toteuma/toteuma
                                                        (merge (if toteuma-id
                                                                 {::toteuma/id                  toteuma-id
                                                                  ::muokkaustiedot/muokkaaja-id (:id user)
@@ -483,15 +495,7 @@
                                                                 ::toteuma/maara             (when maara (bigdec maara))
                                                                 ::toteuma/tehtava-lisatieto lisatieto}))]
 
-                                        (::toteuma/id t)))))))
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
-(defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
-  ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
-  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
-    (do
-      (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
-      (toteumat-q/poista-toteuma! db (:id user) toteuma-id))
+                                        (::toteuma/id t))))))))
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn hae-maarien-toteuma [db user {:keys [id urakka-id]}]

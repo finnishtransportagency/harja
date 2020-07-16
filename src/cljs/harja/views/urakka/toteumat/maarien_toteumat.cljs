@@ -264,7 +264,7 @@
 
 (defonce maara-atom (r/atom 0))
 (defonce toteuma-valmis-atom (r/atom (pvm/nyt)))
-(defn toteuman-syotto [e! app]
+#_(defn toteuman-syotto [e! app]
   (let [syottomoodi (get-in app [:syottomoodi])
         toimenpiteet (get-in app [:toimenpiteet])
         valittu-toimenpide (get-in app [:toteuma :toimenpide])
