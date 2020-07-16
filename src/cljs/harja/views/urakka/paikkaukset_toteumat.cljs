@@ -43,6 +43,11 @@
        (let [menekit (map ::paikkaus/massamenekki paikkaukset)]
        (/ (reduce + menekit) (count menekit))))
 
+(defn- massamaaran-summa [paikkaukset]
+       (->> paikkaukset
+            (map :massamaara)
+            (reduce +)))
+
 (defn ilmoita-virheesta-modal
   "Modaali, jossa kerrotaan paikkaustoteumassa olevasta virheestä."
   [e! app]
@@ -248,7 +253,8 @@
         ;; Siksi voidaan ottaa listan ensimmäisestä paikkauksesta tämä tietoo ja nopeuttaa suoriutumista
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
         pinta-ala-sum (pinta-alojen-summa paikkaukset)
-        massamenekki-sum (massamenekin-keskiarvo paikkaukset)
+        massamenekki-avg (massamenekin-keskiarvo paikkaukset)
+        massamaara-sum (massamaaran-summa paikkaukset)
 
         aikaleima (if (::muokkaustiedot/muokattu paikkauskohde)
                     (str "Päivitetty: " (pvm/pvm-aika-opt (::muokkaustiedot/muokattu paikkauskohde)))
@@ -274,7 +280,9 @@
           [:td
            [:span.bold (* 0.01 (Math/round (* 100 (float pinta-ala-sum))))]]
           [:td
-           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-sum))))]]
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamenekki-avg))))]]
+          [:td
+           [:span.bold (* 0.01 (Math/round (* 100 (float massamaara-sum))))]]
           [:td {:colSpan 2}]]])}]))
 
 (defn paikkaukset [e! app]
@@ -290,13 +298,13 @@
         skeema (into []
                      (concat
                        [{:tyyppi :vetolaatikon-tila :leveys 1}]
-                       (yllapitokohteet/tierekisteriosoite-sarakkeet 5 tierekisteriosoite-sarakkeet)
+                       (yllapitokohteet/tierekisteriosoite-sarakkeet 4 tierekisteriosoite-sarakkeet)
                        [{:otsikko "Alku\u00ADaika"
-                         :leveys 10
+                         :leveys 8
                          :nimi ::paikkaus/alkuaika
                          :fmt pvm/pvm-aika-opt}
                         {:otsikko "Loppu\u00ADaika"
-                         :leveys 10
+                         :leveys 8
                          :nimi ::paikkaus/loppuaika
                          :fmt pvm/pvm-aika-opt}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
@@ -315,6 +323,9 @@
                         {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
                          :leveys 5
                          :nimi ::paikkaus/massamenekki}
+                        {:otsikko "Massa\u00ADmaa\u00ADra (t)"
+                         :leveys 5
+                         :nimi :massamaara}
                         {:otsikko "Raekoko"
                          :leveys 5
                          :nimi ::paikkaus/raekoko}
