@@ -23,8 +23,8 @@ FROM toimenpidekoodi t
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
-INSERT INTO toimenpidekoodi (nimi, emo, taso, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, yksikko, hinnoittelu, api_seuranta, luoja, luotu, muokattu)
-VALUES (:nimi, :emo, 4, :voimassaolon-alkuvuosi, :voimassaolon-loppuvuosi, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseuranta, :kayttajaid, NOW(), NOW());
+INSERT INTO toimenpidekoodi (nimi, emo, taso, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, yksikko, hinnoittelu, api_seuranta, tehtavaryhma, luoja, luotu, muokattu)
+VALUES (:nimi, :emo, 4, :voimassaolon-alkuvuosi, :voimassaolon-loppuvuosi, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseuranta, :tehtavaryhma, :kayttajaid, NOW(), NOW());
 
 -- name: poista-toimenpidekoodi!
 -- Poistaa (merkitsee poistetuksi) annetun toimenpidekoodin.
@@ -43,7 +43,8 @@ SET muokkaaja         = :kayttajaid,
     voimassaolo_loppuvuosi = :voimassaolon-loppuvuosi,
     yksikko           = :yksikko,
     hinnoittelu       = :hinnoittelu :: hinnoittelutyyppi[],
-    api_seuranta      = :apiseuranta
+    api_seuranta      = :apiseuranta,
+    tehtavaryhma      = :tehtavaryhma
 WHERE id = :id;
 
 -- name: viimeisin-muokkauspvm

@@ -6,7 +6,9 @@
             [harja.tiedot.toimenpidekoodit :refer
              [koodit
               koodit-tasoittain
-              tyokoneiden-reaaliaikaseuranna-tehtavat]]
+              tyokoneiden-reaaliaikaseuranna-tehtavat
+              tehtavaryhmat
+              tehtavaryhmat-jarjestyksessa]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
@@ -64,9 +66,6 @@
                           (get koodit-tasoittain 4))))
       []))))
 
-(defonce tehtavaryhmat
-         (reaction (sort-by :jarjestys @tehtavaryhmat)))
-
 (defn resetoi-tehtavaryhmat [ryhmat]
       (reset! tehtavaryhmat ryhmat))
 
@@ -118,11 +117,8 @@
    ["kokonaishintainen" "muutoshintainen"]
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
 
-
 (def vuosi-valinnat
        (range 2020 2035 1))
-
-
 
 (defn hae-emo [kaikki-tehtavat tehtava]
   (second (first (filter #(= (:id (second %))
@@ -209,7 +205,8 @@
             taso1 @valittu-taso1
             taso2 @valittu-taso2
             taso3 @valittu-taso3
-            valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))]
+            valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))
+            ryhmat @tehtavaryhmat-jarjestyksessa]
 
         [:div.container-fluid.toimenpidekoodit
          [:h3 "Tehtävien hallinta"]
@@ -308,14 +305,13 @@
               :tyyppi :checkbox
               :tasaa :keskita
               :fmt fmt/totuus
-              :leveys 1}
-             {:otsikko "Tehtäväryhä"
+              :leveys 2}
+             {:otsikko "Tehtäväryhmä"
               :nimi :tehtavaryhma
               :tyyppi :valinta
-              :valinnat @tehtavaryhmat
+              :valinnat ryhmat
+              :valinta-nayta :nimi
               :leveys 3}
-
-
              {:otsikko "Luoja"
               :nimi :luoja
               :tyyppi :string

@@ -29,12 +29,13 @@
 
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
-  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko hinnoittelu api-seuranta] :as rivi}]
+  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko hinnoittelu api-seuranta tehtavaryhma] :as rivi}]
       (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo
                                              voimassaolon-alkuvuosi voimassaolon-loppuvuosi
                                              yksikko
                                              (konv/seq->array hinnoittelu)
                                              api-seuranta
+                                             (:id tehtavaryhma)
                                              (:id user))]
            {:taso                    4
             :emo                     emo
@@ -44,6 +45,7 @@
             :yksikko                 yksikko
             :hinnoittelu             hinnoittelu
             :apiseuranta             api-seuranta
+            :tehtavaryhma            (:id tehtavaryhma)
             :id                      (:id luotu)}))
 
 (defn poista-toimenpidekoodi
@@ -53,7 +55,7 @@
 
 (defn muokkaa-toimenpidekoodi
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
-  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko id hinnoittelu api-seuranta passivoitu?] :as rivi}]
+  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko id hinnoittelu api-seuranta tehtavaryhma passivoitu?] :as rivi}]
   (= 1 (q/muokkaa-toimenpidekoodi! db
                                    {:id id
                                     :kayttajaid (:id user)
@@ -63,6 +65,7 @@
                                     :yksikko yksikko
                                     :hinnoittelu (konv/seq->array hinnoittelu)
                                     :apiseuranta api-seuranta
+                                    :tehtavaryhma (:id tehtavaryhma)
                                     :poistettu passivoitu?})))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
