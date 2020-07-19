@@ -124,6 +124,8 @@
                                       :meta (meta rajapinnan-data)}
                                      {:data rajapinnan-data
                                       :identiteetti identiteetti})))
+                    :polut polut
+                    :lisa-argumentit lisa-argumentit
                     :dynaaminen? dynaaminen?
                     :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi}))))
   (poista-kuuntelija! [_ kuuntelijan-nimi]
@@ -151,9 +153,13 @@
                          (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (when polut-muuttunut?
-                       (doseq [[kuuntelun-nimi {:keys [dynaaminen?] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
+                       (doseq [[kuuntelun-nimi {:keys [dynaaminen? polut lisa-argumentit] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
-                                                                (nil? (some #(= (ffirst %) kuuntelun-nimi)
+                                                                (nil? (some (fn [m]
+                                                                              (let [[luodun-kuuntelun-nimi luodun-kuuntelijan-polut] (first m)]
+                                                                                (and (= luodun-kuuntelun-nimi kuuntelun-nimi)
+                                                                                     (= luodun-kuuntelijan-polut polut)
+                                                                                     (= (:args (meta luodun-kuuntelijan-polut)) lisa-argumentit))))
                                                                             uudet-polut))
                                                                 (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi))]]
                          (when kuuntelu-poistettava?

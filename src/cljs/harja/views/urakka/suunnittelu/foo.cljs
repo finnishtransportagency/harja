@@ -503,7 +503,7 @@
                                                               [{:sarakkeet [0 5] :rivit [0 1]}])]})
 
                               rajapinta {:otsikot any?
-                                         :yhteensarivit any?
+                                         #_#_:yhteensarivit any?
                                          :datarivit any?
                                          :footer any?
 
@@ -521,7 +521,7 @@
                                                                                      rajapinta
                                                                                      {:otsikot {:polut [[:gridin-otsikot]]
                                                                                                 :haku identity}
-                                                                                      :yhteensarivit {:polut [[:data-yhteensa]]
+                                                                                      #_#_:yhteensarivit {:polut [[:data-yhteensa]]
                                                                                                       :haku identity}
                                                                                       :datarivit {:polut [[:data]]
                                                                                                   :luonti-init (fn [tila data]
@@ -708,18 +708,50 @@
               ;; Uuden rivin voi lisätä painamalla nappia
               (e! (->LisaaRivi)))]])))))
 
+(comment
+  {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
+   :body [{:foo {::data-yhteenveto {}
+                 :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}
+           :bar [{}]}]
+   ::yhteenveto {}}
+
+  {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
+   :body [[{::data-yhteenveto {}
+            ::yksiloiva-tieto :foo
+            :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}
+           {::data-yhteenveto {}
+            ::yksiloiva-tieto :bar
+            :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}]]
+   ::yhteenveto {}}
+
+  ;; Staattisella (:rivit) taulukolla
+  [{:nimi "" :a "A" :b "B" :c "C"}
+   {:foo {::data-yhteenveto {}
+          :body [[{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]]}
+    :bar [{}]}
+   {}]
+
+  {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
+   :body [[{::data-yhteenveto {}
+            :body [[{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]]}
+           {::data-yhteenveto {}
+            :body [[{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]]}]]
+   ::yhteenveto {}})
+
 (defn dynaaminen-taulukko-ylempi-api []
   (let [tilacursor (r/cursor tila [:dynaaminen-taulukko-ylempi-api])
         testitaulukko (fn [tila-atom dom-id grid-polku data-polku]
                         (let [syote-tayta-alas-predef (taulukko/predef :syote-tayta-alas nil)
                               input-predef (taulukko/predef :input nil)
                               numero-predef (taulukko/predef :numero nil)
+                              laajenna-predef (taulukko/predef :laajenna nil)
                               yhteenvetorivi (fn [f]
                                                (vec
-                                                 (concat [{:predefs #{:laajenna}
-                                                           :laajenna-conf {:aukaise-fn f}}]
+                                                 (concat [(solu/laajenna (merge laajenna-predef
+                                                                                {:parametrit {:class #{"table-default" "lihavoitu"}}}))]
                                                          (map (fn [sarake]
-                                                                {:predefs #{:numero}
+                                                                {:solu (solu/teksti {:parametrit {:class #{"table-default"}}
+                                                                                     :fmt (get numero-predef :fmt)})
                                                                  :riippuu-toisesta {:riippuvuudet [[:/ ::data ::data-sisalto ^:sarake sarake]]
                                                                                     :kasittely-fn (fn [sarakkeen-arvot]
                                                                                                     (reduce + 0 sarakkeen-arvot))}})
@@ -731,16 +763,17 @@
                                                          :dom-id dom-id
                                                          :grid-polku grid-polku
                                                          :data-polku data-polku}
-                                                  :vaihto-osat {:yhteenveto-checkboxilla {:body {:conf {:static? true}
-                                                                                                 :osat [(yhteenvetorivi (fn [this _]
-                                                                                                                          (grid/vaihda-osa-takaisin! this)))
-                                                                                                        (vec
+                                                  :vaihto-osat {:yhteenveto-checkboxilla {:body [{:conf {:jarjestys [:rivi :a :b :c :poista]}
+                                                                                                  :osat (yhteenvetorivi (fn [this _]
+                                                                                                                          (taulukko/vaihda-osa-takaisin! this (grid/osa-polusta this [:.. :..]))))}
+                                                                                                 {:conf {:jarjestys [:rivi :a :b :c :poista]}
+                                                                                                  :osat (vec
                                                                                                           (cons (vayla-checkbox (fn [this event]
                                                                                                                                   (.preventDefault event)
                                                                                                                                   (let [disable-rivit? (not (grid/solun-arvo this))]
-                                                                                                                                    (e! (tuck-apurit/->MuutaTila disable-rivit?-polku disable-rivit?))))
+                                                                                                                                    (e! (tuck-apurit/->MuutaTila [:data-disable] disable-rivit?))))
                                                                                                                                 "Disabloi rivit")
-                                                                                                                (repeatedly 4 (fn [] (solu/tyhja)))))]}}}
+                                                                                                                (repeatedly 4 (fn [] (solu/tyhja)))))}]}}
                                                   :datavaikutukset-taulukkoon {:rahavaraukset-disablerivit {:polut [[:data-disable]]
                                                                                                             :toiminto! (fn [g _ data-disable]
                                                                                                                          (doseq [rivikontti (-> g (grid/get-in-grid [::data]) (grid/hae-grid :lapset))
@@ -757,23 +790,26 @@
                                                                                        (assoc-in [:sarake :leveydet] {0 "9fr"
                                                                                                                       4 "1fr"})
                                                                                        (assoc-in [:sarake :oletus-leveys] "3fr"))
-                                                                             :luokat #{"salli-ylipiirtaminen"}}
+                                                                             :luokat #{"salli-ylipiirtaminen"}
+                                                                             :jarjestys [:rivi :a :b :c :poista]}
                                                                       :osat (conj (mapv (fn [nimi]
                                                                                           (solu/otsikko {:jarjesta-fn! jarjesta-fn!
                                                                                                          :parametrit {:class #{"table-default" "table-default-header"}}
                                                                                                          :nimi nimi}))
                                                                                         [:rivi :a :b :c])
                                                                                   (solu/tyhja #{"table-default" "table-default-header"}))}
-                                                             :body [{:conf {:nimi ::data}
+                                                             :body [{:conf {:nimi ::data
+                                                                            :yksiloivakentta :rivin-nimi}
                                                                      :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]}
                                                                                        :header {:conf {:nimi ::data-yhteenveto
-                                                                                                       :vaihdettava-osa :yhteenveto-checkboxilla}
+                                                                                                       :vaihdettava-osa :yhteenveto-checkboxilla
+                                                                                                       :jarjestys [:rivi :a :b :c :poista]}
                                                                                                 :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                         (taulukko/vaihda-osa! this (grid/osien-yhteinen-asia (grid/vanhempi this) :nimi-polku))))}
                                                                                        :body [{:conf {:nimi ::data-sisalto
                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
                                                                                                :body (mapv (fn [index]
-                                                                                                             {:conf {}
+                                                                                                             {:conf {:jarjestys [:rivi :a :b :c :poista]}
                                                                                                               :osat [(solu/tyhja)
                                                                                                                      (grid/aseta-nimi (g-pohjat/syote-tayta-alas false
                                                                                                                                                                  (get syote-tayta-alas-predef :nappia-painettu!)
@@ -793,21 +829,22 @@
                                                                                                                                    :fmt (get numero-predef :fmt)})
                                                                                                                      (solu/tyhja)]})
                                                                                                            (range 3))}]}}]
-                                                             :footer {:conf {:nimi ::yhteenveto}
+                                                             :footer {:conf {:nimi ::yhteenveto
+                                                                             :jarjestys [:rivi :a :b :c :poista]}
                                                                       :osat (vec
                                                                               (concat [(solu/tyhja #{"table-default" "table-default-sum"})]
                                                                                       (map (fn [sarake]
-                                                                                             {:predefs #{:numero}
-                                                                                              :solu :numero
+                                                                                             {:solu (solu/teksti {:parametrit {:class #{"table-default"}}
+                                                                                                                  :fmt (get numero-predef :fmt)})
                                                                                               :riippuu-toisesta {:riippuvuudet [[:/ ::data ^:sarake sarake]]
                                                                                                                  :kasittely-fn (fn [sarakkeen-arvot]
                                                                                                                                  (reduce + 0 sarakkeen-arvot))}})
                                                                                            [:a :b :c])
                                                                                       [(solu/tyhja #{"table-default" "table-default-sum"})]))}}}]
-                          (grid/tee-taulukko! taulukkomaaritelma)))]
+                          (taulukko/tee-taulukko! taulukkomaaritelma)))]
     (komp/luo
       (komp/piirretty (fn [_]
-                        #_(testigrid tila
+                        (testitaulukko tila
                                    "dynaaminen-taulukko-ylempi-api"
                                    [:dynaaminen-taulukko-ylempi-api :grid]
                                    [:dynaaminen-taulukko-ylempi-api :data])))

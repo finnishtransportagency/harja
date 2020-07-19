@@ -746,8 +746,25 @@
                                                                                 solun-polun-pituus-oikein?)
                                                                            (and (:derefable (meta grid-polku))
                                                                                 grid-polku-sopii-osaan?))]
+                                    (when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
+                                               (= grid-polku [1]))
+                                      (println "---------------")
+                                      (println "rajapintakasittelija " rajapintakasittelija)
+                                      (println "osien-tunnisteet " osien-tunnisteet)
+                                      (println "solun-polun-pituus " solun-polun-pituus)
+                                      (println "rajapinta " rajapinta)
+                                      (println "yhdista-derefable-tahan-osaan? " yhdista-derefable-tahan-osaan?)
+                                      (println "grid-polku-sopii-osaan? " grid-polku-sopii-osaan?)
+                                      (println "grid-polku " grid-polku)
+                                      (println "nimi-polku " (::nimi-polku osa))
+                                      (println "index-polku " (::index-polku osa))
+                                      (println "solun-polun-pituus-oikein? " solun-polun-pituus-oikein?)
+                                      (println "osan-polku-dataan " osan-polku-dataan))
                                     (when yhdista-derefable-tahan-osaan?
                                       (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
+                                        (when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
+                                                   (= grid-polku [1]))
+                                          (println "osan-derefable " osan-derefable))
                                         (when g-debug/GRID_DEBUG
                                           (swap! g-debug/debug
                                                  (fn [tila]
@@ -912,19 +929,30 @@
                                         (constantly nil))
         entinen-toistettavan-osan-data (atom nil)]
     (fn [grid]
+      (println "(::osan-derefable grid)")
+      (println (::osan-derefable grid))
+      (println @(::osan-derefable grid))
+      (println "rajapintakasittelijan-tiedot " rajapintakasittelijan-tiedot)
+      (println "(::nimi-polku grid) " (::nimi-polku grid))
+      (println (::grid-rajapintakasittelijat (root grid)))
       (let [gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
                                gridin-derefable
                                (do
                                  (warn (str "Dynaamiselle gridille  ") (pr-str (type grid)) (str " (" (:id grid) ") ei ole annettu osan-derefablea!"))
                                  (r/atom nil)))
+            _ (println "1")
             gridin-data @gridin-derefable
+            _ (println "2")
             rajapinnat-muuttunut? (if (and (contains? (meta grid-kasittelijoiden-luonti) :rajapinta-riippuu-datan-arvosta?)
                                            (-> grid-kasittelijoiden-luonti meta :rajapinta-riippuu-datan-arvosta? not))
                                     (not= (count @entinen-toistettavan-osan-data)
                                           (count gridin-data))
                                     true)
+            _ (println "3")
             data-jarjestetty? @(get rajapintakasittelijan-tiedot ::jarjestetty?)
+            _ (println "4")
             uudet-grid-kasittelijat (grid-kasittelijoiden-luonti gridin-data grid)]
+        (println "5")
         (if rajapinnat-muuttunut?
           (let [rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
                                                                                   conj
@@ -1632,7 +1660,7 @@
                                                                                                                 ::tunniste-rajapinnan-dataan
                                                                                                                 ::triggeroi-seuranta!})))
                                                                         ::nimi uuden-osan-nimi
-                                                                        ::osa-vaihdettu {:vanha-tyyppi (type vaihdettava-osa)
+                                                                        #_#_::osa-vaihdettu {:vanha-tyyppi (type vaihdettava-osa)
                                                                                          :vanhan-id (gop/id vaihdettava-osa)})]
                                               (when-let [poistuvat-osat (and vaihdettava-osa-grid?
                                                                              (gridin-osat-vektoriin vaihdettava-osa #(satisfies? p/IGrid %) gop/id))]
@@ -1644,6 +1672,7 @@
                                                 (swap! ((get-in @taulukko-konteksti [(::root-id root-grid) :koko-fn]))
                                                        (fn [koot]
                                                          (assoc koot (gop/id vaihdettava-osa) (get uuden-osan-koot (gop/id uusi-osa))))))
+                                              paivitetty-osa
                                               (if (and uusi-osa-grid? vaihdettava-osa-grid?)
                                                 (assoc paivitetty-osa :id vaihdettavan-osan-id)
                                                 paivitetty-osa))))]
