@@ -47,7 +47,9 @@
                     :alkupvm         alkupvm
                     :loppupvm        loppupvm
                     :hoitoluokat     hoitoluokat
-                    :urakkatyyppi    (name urakkatyyppi)}
+                    :urakkatyyppi    (if (= urakkatyyppi :hoito)
+                                       #{"hoito" "teiden-hoito"}
+                                       #{(name urakkatyyppi)})}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
