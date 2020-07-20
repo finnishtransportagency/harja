@@ -233,11 +233,10 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         urakkatyyppi (when urakkatyyppi
-                       (if (= urakkatyyppi :vesivayla)
-                         (into [] urakka/vesivayla-urakkatyypit)
-                         (if (= urakkatyyppi :hoito)
-                           ["hoito" "teiden-hoito"]
-                           [urakkatyyppi])))
+                       (case urakkatyyppi
+                         :vesivayla (into [] urakka/vesivayla-urakkatyypit)
+                         :hoito ["hoito" "teiden-hoito"]
+                         [urakkatyyppi]))
         ;; Näytettävät alueet (hallintayksiköt) koko maan raporttia varten
         naytettavat-alueet (naytettavat-alueet
                              db
