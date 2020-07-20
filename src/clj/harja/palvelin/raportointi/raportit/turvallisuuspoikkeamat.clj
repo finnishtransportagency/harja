@@ -235,7 +235,9 @@
         urakkatyyppi (when urakkatyyppi
                        (if (= urakkatyyppi :vesivayla)
                          (into [] urakka/vesivayla-urakkatyypit)
-                         [urakkatyyppi]))
+                         (if (= urakkatyyppi :hoito)
+                           ["hoito" "teiden-hoito"]
+                           [urakkatyyppi])))
         ;; Näytettävät alueet (hallintayksiköt) koko maan raporttia varten
         naytettavat-alueet (naytettavat-alueet
                              db
