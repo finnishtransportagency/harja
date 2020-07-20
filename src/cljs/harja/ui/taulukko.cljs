@@ -290,9 +290,9 @@
     (grid/rivi {:nimi (or nimi (str (gensym)))
                 :koko (or koko
                           (and *otsikon-nimi*
-                               {:seurattava *otsikon-nimi*
-                                :sarakkeet :sama
-                                :rivit :sama})
+                               {:seuraa {:seurattava *otsikon-nimi*
+                                         :sarakkeet :sama
+                                         :rivit :sama}})
                           konf/livi-oletuskoko)
                 :osat (mapv muodosta-grid-osa! (:osat rivimaaritelma))
                 :luokat (clj-set/union #{"salli-ylipiirtaminen"} luokat)}
@@ -326,7 +326,10 @@
                                         (grid/hae-kaikki-osat header-osa
                                                               (every-pred grid/rivi?
                                                                           #(boolean (grid/hae-osa % :nimi))
-                                                                          #(not (nil? (get (grid/hae-grid % :koko) :seurattava))))))]
+                                                                          #(nil? (get (grid/hae-grid % :koko) :seurattava)))))]
+     (println "HEADEROSA KOKO MÄÄRITYKSELLÄ: " headerosa-koko-maarityksella)
+     (when headerosa-koko-maarityksella
+       (println "nimi " (grid/hae-osa headerosa-koko-maarityksella :nimi)))
      (binding [*otsikon-nimi* (if headerosa-koko-maarityksella
                                 (grid/hae-osa headerosa-koko-maarityksella :nimi)
                                 *otsikon-nimi*)]
@@ -398,10 +401,11 @@
         :bar [{:a 3 :b 4}
               {:a 3 :b 4}]}}
 
-(defn uusi-gridpolku [entinen-polku root-osa? taman-osan-index]
+(defn uusi-gridpolku [entinen-polku root-osa? taman-osan-index taman-osan-nimi]
   (cond
     #_#_(and entinen-staattinen-taulukko? (integer? (last entinen-polku))) entinen-polku
     root-osa? entinen-polku
+    taman-osan-nimi (conj entinen-polku taman-osan-nimi)
     :else (conj entinen-polku taman-osan-index)))
 
 (defn muodosta-rajapinnan-nimi-polusta [polku]
@@ -670,7 +674,9 @@
     {:rajapinta rajapinnan-nimi
      :solun-polun-pituus 1
      :jarjestys jarjestys
-     :datan-kasittely identity}))
+     :datan-kasittely (fn [rivin-data]
+                        (println "RIVIN DATA RAJAPINNALLE - " rajapinnan-nimi ": " rivin-data)
+                        (vec (vals rivin-data)))}))
 
 (defmethod muodosta-rajapintakasittelija-taulukko-maaritelma :default
   [osamaaritelma rajapinnan-nimi]
@@ -731,7 +737,7 @@
          rivi? (rivi? osamaaritelma)
          root-osa? (nil? entinen-osamaaritelma)
          vaihdettava-osa (get-in osamaaritelma [:conf :vaihdettava-osa])
-         osan-polut {:gridpolku (uusi-gridpolku edellinen-gridpolku root-osa? taman-osan-index)
+         osan-polut {:gridpolku (uusi-gridpolku edellinen-gridpolku root-osa? taman-osan-index (get-in osamaaritelma [:conf :nimi]))
                      :datapolku (uusi-datapolku edellinen-datapolku root-osa? taman-osan-index (get-in osamaaritelma [:conf :nimi]))
                      :osapolku (conj edellinen-osapolku
                                      (cond

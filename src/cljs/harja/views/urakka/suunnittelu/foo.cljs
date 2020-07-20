@@ -787,29 +787,37 @@
                                                                                                                                              disable-rivit?)))}}
                                                   :taulukko {:header {:conf {:nimi ::otsikko
                                                                              :koko (-> konf/livi-oletuskoko
-                                                                                       (assoc-in [:sarake :leveydet] {0 "9fr"
+                                                                                       (assoc-in [:sarake :leveydet] {0 "6fr"
                                                                                                                       4 "1fr"})
                                                                                        (assoc-in [:sarake :oletus-leveys] "3fr"))
                                                                              :luokat #{"salli-ylipiirtaminen"}
-                                                                             :jarjestys [:rivi :a :b :c :poista]}
+                                                                             :jarjestys [[:rivi :a :b :c :poista]]}
                                                                       :osat (conj (mapv (fn [nimi]
                                                                                           (solu/otsikko {:jarjesta-fn! jarjesta-fn!
                                                                                                          :parametrit {:class #{"table-default" "table-default-header"}}
                                                                                                          :nimi nimi}))
                                                                                         [:rivi :a :b :c])
                                                                                   (solu/tyhja #{"table-default" "table-default-header"}))}
+                                                             #_(comment {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
+                                                                         :body [[{::data-yhteenveto {}
+                                                                                  ::yksiloiva-tieto :foo
+                                                                                  :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}
+                                                                                 {::data-yhteenveto {}
+                                                                                  ::yksiloiva-tieto :bar
+                                                                                  :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}]]
+                                                                         ::yhteenveto {}})
                                                              :body [{:conf {:nimi ::data
                                                                             :yksiloivakentta :rivin-nimi}
                                                                      :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]}
                                                                                        :header {:conf {:nimi ::data-yhteenveto
                                                                                                        :vaihdettava-osa :yhteenveto-checkboxilla
-                                                                                                       :jarjestys [:rivi :a :b :c :poista]}
+                                                                                                       :jarjestys [[:rivi :a :b :c :poista]]}
                                                                                                 :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                         (taulukko/vaihda-osa! this (grid/osien-yhteinen-asia (grid/vanhempi this) :nimi-polku))))}
                                                                                        :body [{:conf {:nimi ::data-sisalto
                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
                                                                                                :body (mapv (fn [index]
-                                                                                                             {:conf {:jarjestys [:rivi :a :b :c :poista]}
+                                                                                                             {:conf {:jarjestys [[:rivi :a :b :c :poista]]}
                                                                                                               :osat [(solu/tyhja)
                                                                                                                      (grid/aseta-nimi (g-pohjat/syote-tayta-alas false
                                                                                                                                                                  (get syote-tayta-alas-predef :nappia-painettu!)
@@ -830,7 +838,7 @@
                                                                                                                      (solu/tyhja)]})
                                                                                                            (range 3))}]}}]
                                                              :footer {:conf {:nimi ::yhteenveto
-                                                                             :jarjestys [:rivi :a :b :c :poista]}
+                                                                             :jarjestys [[:rivi :a :b :c :poista]]}
                                                                       :osat (vec
                                                                               (concat [(solu/tyhja #{"table-default" "table-default-sum"})]
                                                                                       (map (fn [sarake]
