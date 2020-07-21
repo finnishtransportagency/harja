@@ -1,7 +1,7 @@
 (ns harja.views.urakka.toteumat.maarien-toteuma-lomake
   (:require [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.toteumat.maarien-toteuma-lomake :as tiedot]
+            [harja.tiedot.urakka.toteumat.maarien-toteumat :as tiedot]
             [harja.ui.lomake :as ui-lomake]
             [harja.domain.toteuma :as t]
             [harja.ui.debug :as debug]
@@ -20,7 +20,7 @@
   (e! (tiedot/->TyhjennaLomake data)))
 
 (defn- maaramitattavat-toteumat
-  [{:keys [e! toimenpiteet tehtavat]} {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
+  [{:keys [e! tehtavat]} {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
   (loki/log "data" kaikki)
   (let [paivita! (fn [polku indeksi arvo]
                    (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))]
@@ -83,17 +83,17 @@
             (when (not= (count toteumat) 1)
               [:div.lomakepalsta
                [:div.row.lomakerivi
-                [:label "Lisätieto"]
+                [:label "Sijainti"]
                 [kentat/tee-kentta
                  {::ui-lomake/col-luokka ""
                   :teksti                "Kyseiseen tehtävään ei ole sijaintia"
                   :pakollinen?           (not ei-sijaintia)
                   :disabled?             ei-sijaintia
-                  :tyyppi                :tierekisteriosoite}
+                  :tyyppi                :tierekisteriosoite
+                  :sijainti (r/wrap sijainti (constantly true))}
                  (r/wrap sijainti
                          (r/partial paivita! ::t/sijainti indeksi))]]
                [:div.row.lomakerivi
-                [:label "Lisätieto"]
                 [kentat/tee-kentta
                  {::ui-lomake/col-luokka ""
                   :teksti                "Kyseiseen tehtävään ei ole sijaintia"

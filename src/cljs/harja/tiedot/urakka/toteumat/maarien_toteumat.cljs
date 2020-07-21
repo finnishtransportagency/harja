@@ -8,12 +8,14 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.domain.toteuma :as t]
             [harja.pvm :as pvm]
+            [harja.ui.lomake :as ui-lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.taulukko.grid :as new-grid]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.taulukko.grid-oletusarvoja :as konf]
             [harja.ui.taulukko.impl.solu :as solu]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.loki :as loki])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -29,6 +31,7 @@
 (defrecord ValitseTehtava [tehtava])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseAikavali [polku arvo])
+(defrecord AsetaFiltteri [polku arvo])
 (defrecord HaeToteutuneetMaarat [urakka-id toimenpide hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
 (defrecord ToteutuneetMaaratHakuOnnistui [vastaus])
 (defrecord ToteutuneetMaaratHakuEpaonnistui [vastaus])
@@ -37,15 +40,17 @@
 (defrecord ToteumaHakuOnnistui [vastaus])
 (defrecord ToteumaHakuEpaonnistui [vastaus])
 (defrecord ToteumanSyotto [auki tehtava toimenpide])
-(defrecord AsetaLoppuPvm [arvo])
-(defrecord AsetaMaara [maara])
-(defrecord AsetaLisatieto [arvo])
-(defrecord PoistaToteuma [id])
 (defrecord TallennaToteuma [])
 (defrecord TallennaToteumaOnnistui [vastaus])
 (defrecord TallennaToteumaEpaonnistui [vastaus])
-(defrecord TehtavatHakuOnnistui [vastaus])
+(defrecord TehtavatHakuOnnistui [vastaus parametrit])
 (defrecord TehtavatHakuEpaonnistui [vastaus])
+
+(defrecord HaeTehtavat [parametrit])
+(defrecord LahetaLomake [lomake])
+(defrecord LisaaToteuma [lomake])
+(defrecord PaivitaLomake [lomake])
+(defrecord TyhjennaLomake [lomake])
 
 (def tyyppi->tyyppi
   {"kokonaishintainen"     "maaramitattava"
@@ -54,7 +59,175 @@
    "vahinkojen-korjaukset" "vahinkojen-korjaukset"
    "akillinen-hoitotyo"    "akillinen-hoitotyo"})
 
+(def oletuslomake {})
+
+(def uusi-toteuma {})
+
+(defn- hae-tehtavat-tyypille
+  ([toimenpide]
+   (hae-tehtavat-tyypille toimenpide :maaramitattava))
+  ([toimenpide tyyppi]
+   (loki/log "haen tehtavat tyypille" toimenpide tyyppi)
+   (let [tehtavaryhma (when toimenpide
+                        (:otsikko toimenpide))
+         rajapinta (case tyyppi
+                     :akillinen-hoitotyo :akillisten-hoitotoiden-toimenpiteiden-tehtavat
+                     :lisatyo :lisatoiden-toimenpiteiden-tehtavat
+                     :maarien-toteutumien-toimenpiteiden-tehtavat)
+         toimenpide-re-string (when toimenpide
+                                (cond
+                                  (re-find #"TALVIHOITO" tehtavaryhma) "alvihoito"
+                                  (re-find #"LIIKENNEYMPÄRISTÖN HOITO" tehtavaryhma) "Liikenneympäristön hoito|l.ymp.hoito"
+                                  (re-find #"SORATEIDEN HOITO" tehtavaryhma) "Soratiet|sorateiden"
+                                  :else ""))
+         parametrit {:polku    :tehtavat
+                     :filtteri (case tyyppi
+                                 :akillinen-hoitotyo
+                                 #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
+
+                                 :lisatyo
+                                 #(re-find (re-pattern (str "(" toimenpide-re-string ")")) (:tehtava %))
+
+                                 (constantly true))}]
+     (tuck-apurit/post! rajapinta
+                        {:tehtavaryhma tehtavaryhma
+                         :urakka-id    (-> @tila/yleiset :urakka :id)}
+                        {:onnistui            ->TehtavatHakuOnnistui
+                         :onnistui-parametrit [parametrit]
+                         :epaonnistui         ->TehtavatHakuEpaonnistui
+                         :paasta-virhe-lapi?  true}))))
+
+(def filtteri->tyyppi {:maaramitattavat "kokonaishintainen"
+                       :lisatyot        "lisatyo"
+                       :rahavaraukset   "akillinen-hoitotyo"})
+(defn- tehtavien-filtteri-fn
+  [filtterit]
+  (fn [tehtava]
+    (cond
+      (contains?
+        (into #{}
+              (map filtteri->tyyppi
+                   (keys
+                     (into {} (filter (fn [[_ arvo]]
+                                        (true? arvo))
+                                      filtterit)))))
+        (:tyyppi tehtava))
+      true
+
+      :else
+      false)))
+
+(defn ryhmittele-tehtavat [ryhmiteltavat filtterit]
+  (let [ryhmiteltavat-filtteroitu (filter (tehtavien-filtteri-fn filtterit)
+                                          ryhmiteltavat)
+        ryhmitelty-tr (group-by :tehtavaryhma ryhmiteltavat-filtteroitu)]
+    (into {}
+          (map
+            (fn [[tehtavaryhma tehtavat]]
+              [tehtavaryhma (group-by :tehtava tehtavat)])
+            ryhmitelty-tr))))
+
 (extend-protocol tuck/Event
+  AsetaFiltteri
+  (process-event [{polku :polku arvo :arvo} app]
+    (as-> app app
+          (assoc-in app [:hakufiltteri polku] arvo)
+          (assoc-in app [:toteutuneet-maarat-grouped] (ryhmittele-tehtavat (:toteutuneet-maarat app)
+                                                                           (:hakufiltteri app)))))
+  HaeTehtavat
+  (process-event [{{:keys [toimenpide]} :parametrit} app]
+    (hae-tehtavat-tyypille toimenpide)
+    app)
+  LahetaLomake
+  (process-event [{lomake :lomake} app]
+    (let [{loppupvm   ::t/pvm
+           tyyppi     ::t/tyyppi
+           toimenpide ::t/toimenpide
+           toteumat   ::t/toteumat} lomake
+          urakka-id (-> @tila/yleiset :urakka :id)]
+      (loki/log toteumat)
+      (tuck-apurit/post! :tallenna-toteuma
+                         {:urakka-id  urakka-id
+                          :toimenpide toimenpide
+                          :tyyppi     tyyppi
+                          :loppupvm   loppupvm
+                          :toteumat   (mapv #(into {}       ; siivotaan namespacet lähetettävästä
+                                                   (map
+                                                     (fn [[k v]]
+                                                       [(-> k name keyword) v])
+                                                     %))
+                                            toteumat)}
+                         {:onnistui    ->TallennaToteumaOnnistui
+                          :epaonnistui ->TallennaToteumaEpaonnistui}))
+    app)
+  LisaaToteuma
+  (process-event [{lomake :lomake} app]
+    (let [lomake (update lomake ::t/toteumat conj uusi-toteuma)]
+      (assoc app :lomake lomake)))
+  PaivitaLomake
+  (process-event [{{useampi?          ::t/useampi-toteuma
+                    tyyppi            ::t/tyyppi
+                    toimenpide        ::t/toimenpide
+                    viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
+                    :as               lomake} :lomake} app]
+    ; sivuvaikutusten triggeröintiin
+    (case viimeksi-muokattu
+      ::t/toimenpide (hae-tehtavat-tyypille toimenpide tyyppi)
+      ::t/tyyppi (hae-tehtavat-tyypille toimenpide tyyppi)
+      :default)
+    ; :TODO: tää pitää korjata sijaintien osalta jos on yksi toteuma
+    (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
+          tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
+          paivitettava-toteumat-vektoriin #{::t/lisatieto ::t/maara ::t/tehtava ::t/sijainti}
+          app (assoc app :lomake lomake)
+          maara-pois (fn [ts] (mapv #(dissoc % ::t/maara) ts))
+          uusi-app (update app :lomake (fn [l]
+                                         (let [l (cond-> l
+                                                         ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
+                                                         (and (true? useampi?)
+                                                              (= tyyppi :maaramitattava)
+                                                              (not= useampi? useampi-aiempi?))
+                                                         (update ::t/toteumat conj uusi-toteuma)
+
+                                                         ; tai resetoidaan
+                                                         (and (not (true? useampi?))
+                                                              (= tyyppi :maaramitattava)
+                                                              (not= useampi? useampi-aiempi?))
+                                                         (update ::t/toteumat #(conj [] (first %)))
+
+                                                         ; tätä ei tarvinne enää, koska fiksailtu?
+                                                         (and (not (true? useampi?))
+                                                              (some #(= viimeksi-muokattu %)
+                                                                    paivitettava-toteumat-vektoriin))
+                                                         (assoc-in [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake)))]
+                                           ; siivotaan tyyppiä vaihdettaessa turhat kentät
+                                           (if (not= tyyppi tyyppi-aiempi)
+                                             (case tyyppi
+                                               :akillinen-hoitotyo (update l ::t/toteumat maara-pois)
+                                               :lisatyo (update l ::t/toteumat maara-pois)
+                                               l)
+                                             l))))]
+      #_(-> app
+            (update :lomake (if (and
+                                  (= tyyppi :maaramitattava)
+                                  (not= useampi? useampi-aiempi?))
+                              (fn [lomake]
+                                (if (true? useampi?)
+                                  (update lomake ::t/toteumat conj uusi-toteuma)
+                                  (update lomake ::t/toteumat #(conj [] (first %)))))
+                              identity)))
+      (loki/log "ual" uusi-app lomake)
+      uusi-app))
+  TyhjennaLomake
+  (process-event [_ app]
+    (assoc app :syottomoodi false
+               :lomake (-> tila/toteumat-default-arvot
+                           :maarien-toteumat
+                           :lomake)))
+
+
+
+
 
   ValitseToimenpide
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
@@ -78,29 +251,29 @@
           (assoc-in [:toteuma :tehtava] tehtava)
           (validoi-lomake))))
 
-  AsetaMaara
-  (process-event [{maara :maara} app]
-    (do
-      (js/console.log "AsetaMaara" (pr-str maara))
-      (-> app
-          (assoc-in [:toteuma :maara] maara)
-          (validoi-lomake))))
+  ;AsetaMaara
+  #_(process-event [{maara :maara} app]
+                   (do
+                     (js/console.log "AsetaMaara" (pr-str maara))
+                     (-> app
+                         (assoc-in [:toteuma :maara] maara)
+                         (validoi-lomake))))
 
-  AsetaLisatieto
-  (process-event [{arvo :arvo} app]
-    (do
-      (js/console.log "AsetaLisatieto" (pr-str arvo))
-      (-> app
-          (assoc-in [:toteuma :lisatieto] arvo)
-          (validoi-lomake))))
+  ;AsetaLisatieto
+  #_(process-event [{arvo :arvo} app]
+                   (do
+                     (js/console.log "AsetaLisatieto" (pr-str arvo))
+                     (-> app
+                         (assoc-in [:toteuma :lisatieto] arvo)
+                         (validoi-lomake))))
 
-  AsetaLoppuPvm
-  (process-event [{arvo :arvo} app]
-    (do
-      (js/console.log "AsetaLoppuPvm" (pr-str arvo) (pr-str (pvm/pvm arvo)))
-      (-> app
-          (assoc-in [:toteuma :loppupvm] arvo)
-          (validoi-lomake))))
+  ;AsetaLoppuPvm
+  #_(process-event [{arvo :arvo} app]
+                   (do
+                     (js/console.log "AsetaLoppuPvm" (pr-str arvo) (pr-str (pvm/pvm arvo)))
+                     (-> app
+                         (assoc-in [:toteuma :loppupvm] arvo)
+                         (validoi-lomake))))
 
   ;; Vain yksi rivi voi olla avattuna kerralla, joten tallennetaan avain app-stateen tai poistetaan se, jos se oli jo valittuna
   AvaaRivi
@@ -122,7 +295,7 @@
 
   ToteumaHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (js/console.log "ToteumaHakuOnnistui :: vastaus" (pr-str vastaus))
+    (let [_ (js/console.log "ToteumaHakuOnnistui :: vastaus " (pr-str vastaus))
           valittu-tehtava {:id (:tehtava_id vastaus) :tehtava (:tehtava vastaus) :yksikko (:yksikko vastaus)}
           valittu-toimenpide {:id (:toimenpide_id vastaus) :otsikko (:toimenpide_otsikko vastaus)}
           sijainti {:numero        (:sijainti_numero vastaus)
@@ -209,10 +382,12 @@
     app)
 
   ToteutuneetMaaratHakuOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (-> app
-        (assoc-in [:toteutuneet-maarat] vastaus)
-        (assoc-in [:toteutuneet-maarat-grouped] (group-by :tehtava vastaus))))
+  (process-event [{vastaus :vastaus} {hakufiltterit :hakufiltteri :as app}]
+    (let [ryhmitelty-tehtava (ryhmittele-tehtavat vastaus hakufiltterit)]
+      (loki/log "ryhmitelty " (pr-str ryhmitelty-tehtava) (pr-str hakufiltterit))
+      (-> app
+          (assoc-in [:toteutuneet-maarat] vastaus)
+          (assoc-in [:toteutuneet-maarat-grouped] ryhmitelty-tehtava))))
 
   ToteutuneetMaaratHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -221,9 +396,11 @@
     app)
 
   TehtavatHakuOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{vastaus :vastaus {:keys [filtteri]} :parametrit} app]
     (-> app
-        (assoc-in [:tehtavat] vastaus)
+        (assoc-in [:tehtavat] (if filtteri
+                                (filter filtteri vastaus)
+                                vastaus))
         (validoi-lomake)))
 
   TehtavatHakuEpaonnistui
@@ -246,10 +423,10 @@
             true (assoc-in [:toteuma :maara] nil)
             true (assoc-in [:toteuma :loppupvm] (pvm/nyt))))
 
-  PoistaToteuma
-  (process-event [{id :id} app]
-    (js/console.log "Poista Toteuma - tää ei tekis vielä mittään!!" (pr-str id))
-    app)
+  ;PoistaToteuma
+  #_(process-event [{id :id} app]
+                   (js/console.log "Poista Toteuma - tää ei tekis vielä mittään!!" (pr-str id))
+                   app)
 
   TallennaToteuma
   (process-event [_ app]
