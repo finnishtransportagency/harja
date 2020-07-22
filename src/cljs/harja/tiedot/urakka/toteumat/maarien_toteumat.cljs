@@ -123,11 +123,13 @@
   (let [ryhmiteltavat-filtteroitu (filter (tehtavien-filtteri-fn filtterit)
                                           ryhmiteltavat)
         ryhmitelty-tr (group-by :tehtavaryhma ryhmiteltavat-filtteroitu)]
-    (into {}
-          (map
-            (fn [[tehtavaryhma tehtavat]]
-              [tehtavaryhma (group-by :tehtava tehtavat)])
-            ryhmitelty-tr))))
+    (sort-by first
+             (into {}
+                   (map
+                     (fn [[tehtavaryhma tehtavat]]
+                       [tehtavaryhma (sort-by first
+                                              (group-by :tehtava tehtavat))])
+                     ryhmitelty-tr)))))
 
 (defn- aseta-akillisen-tyyppi
   [toteumat t]

@@ -89,7 +89,7 @@
                   :pakollinen?           (not ei-sijaintia)
                   :disabled?             ei-sijaintia
                   :tyyppi                :tierekisteriosoite
-                  :sijainti (r/wrap sijainti (constantly true))}
+                  :sijainti              (r/wrap sijainti (constantly true))}
                  (r/wrap sijainti
                          (r/partial paivita! ::t/sijainti indeksi))]]
                [:div.row.lomakerivi
@@ -205,20 +205,22 @@
         :otsikko          ""
         :vaihtoehdot      [:maaramitattava :akillinen-hoitotyo :lisatyo]
         :pakollinen?      true
+        :nayta-rivina?    true
+        :palstoja         2
         :vaihtoehto-nayta {:maaramitattava     "Määrämitattava tehtävä"
                            :akillinen-hoitotyo "Äkillinen hoitotyö, vahingon korjaus, rahavaraus"
                            :lisatyo            "Lisätyö"}}
-       {:tyyppi  :checkbox
-        :nimi    ::t/useampi-toteuma
+       {:tyyppi    :checkbox
+        :nimi      ::t/useampi-toteuma
         :disabled? (not= tyyppi :maaramitattava)
-        :otsikko "Haluan syöttää useamman toteuman tälle toimenpiteelle"}
+        :teksti    "Haluan syöttää useamman toteuman tälle toimenpiteelle"}
        (ui-lomake/palstat
          {}
          {:otsikko "Tehtävän tiedot"}
          (case tyyppi
            :maaramitattava maaramitattava
            :lisatyo lisatyo
-           :akillinen-hoitotyo akilliset-ja-korjaukset
+           (:vahinkojen-korjaukset :tilaajan-varaukset :akillinen-hoitotyo) akilliset-ja-korjaukset
            [])
          (when (= (count toteumat) 1)
            {:otsikko "Sijainti *"})

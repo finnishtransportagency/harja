@@ -212,8 +212,8 @@
 
 (def filtterit-keyword->string
   {:maaramitattavat "Määrämitattavat"
-   :rahavaraukset "Rahavaraukset"
-   :lisatyot "Lisätyöt"})
+   :rahavaraukset   "Rahavaraukset"
+   :lisatyot        "Lisätyöt"})
 
 (defn maarien-toteumalistaus
   "Määrien toteumat listattuna taulukkoon"
@@ -282,6 +282,7 @@
      [:div.flex-row
       [kentat/tee-kentta {:tyyppi           :checkbox-group
                           :nayta-rivina?    true
+                          :vayla-tyyli?     true
                           :vaihtoehto-nayta filtterit-keyword->string
                           :vaihtoehdot      [:maaramitattavat :rahavaraukset :lisatyot]
                           :valitse-fn       (fn [tila polku arvo]
