@@ -97,18 +97,19 @@
                          :epaonnistui         ->TehtavatHakuEpaonnistui
                          :paasta-virhe-lapi?  true}))))
 
-(def filtteri->tyyppi {:maaramitattavat "kokonaishintainen"
-                       :lisatyot        "lisatyo"
-                       :rahavaraukset   "akillinen-hoitotyo"})
+(def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
+                       :lisatyot        #{"lisatyo"}
+                       :rahavaraukset   #{"akillinen-hoitotyo" "muut-rahavaraukset" "vahinkojen-korjaukset"}})
 (defn- tehtavien-filtteri-fn
   [filtterit]
   (fn [tehtava]
     (cond
       (contains?
         (into #{}
-              (map filtteri->tyyppi
-                   (keys
-                     (into {} (filter (fn [[_ arvo]]
+              (mapcat filtteri->tyyppi
+                      (keys
+                        (into {}
+                              (filter (fn [[_ arvo]]
                                         (true? arvo))
                                       filtterit)))))
         (:tyyppi tehtava))
@@ -117,7 +118,8 @@
       :else
       false)))
 
-(defn ryhmittele-tehtavat [ryhmiteltavat filtterit]
+(defn ryhmittele-tehtavat
+  [ryhmiteltavat filtterit]
   (let [ryhmiteltavat-filtteroitu (filter (tehtavien-filtteri-fn filtterit)
                                           ryhmiteltavat)
         ryhmitelty-tr (group-by :tehtavaryhma ryhmiteltavat-filtteroitu)]
@@ -126,6 +128,16 @@
             (fn [[tehtavaryhma tehtavat]]
               [tehtavaryhma (group-by :tehtava tehtavat)])
             ryhmitelty-tr))))
+
+(defn- aseta-akillisen-tyyppi
+  [toteumat t]
+  (if (= t :akillinen-hoitotyo)
+    (let [{{:keys [tehtava]} ::t/tehtava} (first toteumat)]
+      (cond
+        (re-find #"ahavarau" tehtava) :tilaajan-varaukset
+        (re-find #"korjaukset" tehtava) :vahinkojen-korjaukset
+        :else t))
+    t))
 
 (extend-protocol tuck/Event
   AsetaFiltteri
@@ -144,12 +156,13 @@
            tyyppi     ::t/tyyppi
            toimenpide ::t/toimenpide
            toteumat   ::t/toteumat} lomake
-          urakka-id (-> @tila/yleiset :urakka :id)]
-      (loki/log toteumat)
+          urakka-id (-> @tila/yleiset :urakka :id)
+          aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
+                                            toteumat)]
       (tuck-apurit/post! :tallenna-toteuma
                          {:urakka-id  urakka-id
                           :toimenpide toimenpide
-                          :tyyppi     tyyppi
+                          :tyyppi     (aseta-akillisen-tyyppi tyyppi)
                           :loppupvm   loppupvm
                           :toteumat   (mapv #(into {}       ; siivotaan namespacet lähetettävästä
                                                    (map
@@ -180,7 +193,8 @@
           tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
           paivitettava-toteumat-vektoriin #{::t/lisatieto ::t/maara ::t/tehtava ::t/sijainti}
           app (assoc app :lomake lomake)
-          maara-pois (fn [ts] (mapv #(dissoc % ::t/maara) ts))
+          maara-pois (fn [ts]
+                       (mapv #(dissoc % ::t/maara) ts))
           uusi-app (update app :lomake (fn [l]
                                          (let [l (cond-> l
                                                          ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu

@@ -492,7 +492,12 @@
                                                                {::toteuma/toteuma-id        (::toteuma/id t)
                                                                 ::toteuma/muokattu          (pvm/nyt)
                                                                 ::toteuma/toimenpidekoodi   (:id tehtava)
-                                                                ::toteuma/maara             (when maara (bigdec maara))
+                                                                ::toteuma/maara             (case tyyppi
+                                                                                              "kokonaishintainen"
+                                                                                              (when maara (bigdec maara))
+
+                                                                                              ("akillinen-hoitotyo" "lisatyo" "muut-rahavaraukset" "vahinkojen-korjaukset")
+                                                                                              (bigdec 1))
                                                                 ::toteuma/tehtava-lisatieto lisatieto}))]
 
                                         (::toteuma/id t))))))))

@@ -388,7 +388,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
                                     varoitukset muokatut virheet huomautukset rivi-opts]}]
-  (loki/log "palsta" palsta)
   [:div {:class (str "lomakepalsta")}
    (when (-> palsta :optiot :otsikko)
      [:h2 (-> palsta :optiot :otsikko)])

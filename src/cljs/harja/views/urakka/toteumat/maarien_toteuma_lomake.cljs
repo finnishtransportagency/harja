@@ -21,7 +21,6 @@
 
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat]} {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
-  (loki/log "data" kaikki)
   (let [paivita! (fn [polku indeksi arvo]
                    (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))]
     [:div
@@ -163,11 +162,9 @@
                                   :nimi                  ::t/lisatieto
                                   :pakollinen?           false
                                   :tyyppi                :string}]]
-    (loki/log "tyyppi" tyyppi)
     [:div#vayla
      [debug/debug app]
      [debug/debug lomake]
-     [:div (pr-str ei-sijaintia)]
      [ui-lomake/lomake
       {:muokkaa!     (fn [data]
                        (loki/log "dataa " data)
@@ -213,6 +210,7 @@
                            :lisatyo            "Lisätyö"}}
        {:tyyppi  :checkbox
         :nimi    ::t/useampi-toteuma
+        :disabled? (not= tyyppi :maaramitattava)
         :otsikko "Haluan syöttää useamman toteuman tälle toimenpiteelle"}
        (ui-lomake/palstat
          {}

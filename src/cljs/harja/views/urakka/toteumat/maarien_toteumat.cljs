@@ -121,7 +121,6 @@
                                                       nil)
                                         toteutunut-maara (or (apply + (map :toteutunut (second rivi))) 0)
                                         suunniteltu-maara (:suunniteltu_maara (first (second rivi)))]
-                                    (loki/log "rivi" rivi)
                                     (concat
                                       [^{:key (hash rivi)}
                                       [:tr (merge
@@ -159,8 +158,17 @@
                                               [^{:key (hash lapsi)}
                                               [:tr {:class (str (if (odd? @row-index-atom) "pariton" "parillinen"))}
                                                [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika lapsi) (:toteuma_id lapsi)]]
-                                               [:td {:style {:width (:caret leveydet)}} (str "" @row-index-atom)]
-                                               [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut lapsi) " " (:yksikko lapsi))]
+                                               [:td {:style {:width (:caret leveydet)}} ""]
+                                               [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut lapsi) " " (cond
+                                                                                                                         (= (:tyyppi lapsi) "kokonaishintainen")
+                                                                                                                         (:yksikko lapsi)
+
+                                                                                                                         (or (= (:tyyppi lapsi) "lisatyo")
+                                                                                                                             (= (:tyyppi lapsi) "akillinen-hoitotyo"))
+                                                                                                                         "kpl"
+
+                                                                                                                         :else
+                                                                                                                         ""))]
                                                [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                                [:td {:style {:width (:prosentti leveydet)}} "---"]]]))
                                           lapsi-rivit)
@@ -186,7 +194,6 @@
                         [:td ""]]]
                       muodostetut)))
           r)]
-    (loki/log (pr-str ll))
     [:div.taulukko
      [:div.livi-grid
       [:table.grid {:style {:border "0px"}}

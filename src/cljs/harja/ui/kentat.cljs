@@ -1501,7 +1501,6 @@
 (defn vayla-lomakekentta
   "Väylä-tyylinen tekstikenttä"
   [otsikko & params]
-  (loki/log "pa" params)
   (let [avaimet->proppi {:arvo :value}
         id (gensym "kulukentta-")
         propit (into {:type :text
