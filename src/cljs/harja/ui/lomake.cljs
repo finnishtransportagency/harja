@@ -484,6 +484,10 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   ja tekee sille jotain (oletettavasti swap! tai reset! atomille,
                   joka sisältää lomakkeen tiedot)
 
+  :header         Komponentti, joka asetetaan lomakkeen header sijaintiin, ennen otsikkoa
+
+  :header-fn      Sama kuin footer-fn, mutta headerille
+
   :footer         Komponentti, joka asetetaan lomakkeen footer sijaintiin, yleensä
                   submit nappi tms.
 
@@ -509,7 +513,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                            (atom (validoi-avaimet skeema)))]
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
-    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
+    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
                  voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
@@ -547,6 +551,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                             luokka)}
                (when data-cy
                  {:data-cy data-cy}))
+             (when-let [header (if header-fn
+                                 (header-fn (assoc validoitu-data
+                                              ::skeema skeema))
+                                 header)]
+               [:div.flex-row header])
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall

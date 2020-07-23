@@ -122,13 +122,15 @@
   [ryhmiteltavat filtterit]
   (let [ryhmiteltavat-filtteroitu (filter (tehtavien-filtteri-fn filtterit)
                                           ryhmiteltavat)
-        ryhmitelty-tr (group-by :tehtavaryhma ryhmiteltavat-filtteroitu)]
+        ryhmitelty-tr (group-by :tehtavaryhma
+                                ryhmiteltavat-filtteroitu)]
     (sort-by first
              (into {}
                    (map
                      (fn [[tehtavaryhma tehtavat]]
                        [tehtavaryhma (sort-by first
-                                              (group-by :tehtava tehtavat))])
+                                              (group-by :tehtava
+                                                        tehtavat))])
                      ryhmitelty-tr)))))
 
 (defn- aseta-akillisen-tyyppi
@@ -215,7 +217,9 @@
                                                          (and (not (true? useampi?))
                                                               (some #(= viimeksi-muokattu %)
                                                                     paivitettava-toteumat-vektoriin))
-                                                         (assoc-in [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake)))]
+                                                         (fn [app]
+                                                           (loki/log "kutsutaanko tätä")
+                                                           (assoc-in app [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake))))]
                                            ; siivotaan tyyppiä vaihdettaessa turhat kentät
                                            (if (not= tyyppi tyyppi-aiempi)
                                              (case tyyppi

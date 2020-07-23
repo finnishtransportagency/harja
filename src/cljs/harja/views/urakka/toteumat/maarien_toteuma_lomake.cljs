@@ -171,6 +171,9 @@
                        (e! (tiedot/->PaivitaLomake data)))
        :voi-muokata? true
        :palstoja     2
+       :header-fn    (fn [data]
+                       [:div.flex-row
+                        [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]])
        :footer-fn    (fn [data]
                        [:div.flex-row
                         [napit/tallenna
