@@ -126,7 +126,7 @@
                                       [:tr (merge
                                              (when avattava?
                                                {:on-click #(e! (maarien-toteumat/->AvaaRivi (first rivi)))})
-                                             {:class (str (if (odd? @row-index-atom) "parillinen" "pariton") " " (when avattava? "klikattava"))})
+                                             {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when avattava? "klikattava"))})
                                        [:td {:style {:width (:tehtava leveydet)}} (first rivi)]
                                        [:td {:style {:width (:caret leveydet)}} (if
                                                                                   (= (get-in app [:valittu-rivi]) (first rivi))
@@ -143,7 +143,7 @@
                                       ;; "+ Lisää toteuma" rivi - jos rivi on auki
                                       (when (= (get-in app [:valittu-rivi]) (first rivi))
                                         [^{:key (str "lisää-toteuma-" (hash rivi))}
-                                        [:tr {:class (str (if (odd? @row-index-atom) "pariton"))}
+                                        [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                          [:td {:style {:width (:tehtava leveydet)}} [lisaa-toteuma-linkki e! app (first rivi) (:tehtavaryhma (first (second rivi)))]]
                                          [:td {:style {:width (:caret leveydet)}} ""]
                                          [:td {:style {:width (:toteuma leveydet)}} ""]
@@ -156,7 +156,7 @@
                                           (fn [lapsi]
                                             (let [_ (reset! row-index-atom (inc @row-index-atom))]
                                               [^{:key (hash lapsi)}
-                                              [:tr {:class (str (if (odd? @row-index-atom) "pariton" "parillinen"))}
+                                              [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                                [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika lapsi) (:toteuma_id lapsi)]]
                                                [:td {:style {:width (:caret leveydet)}} ""]
                                                [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut lapsi) " " (cond
@@ -179,14 +179,14 @@
                                           [^{:key (str "toteuma-" (hash rivi))}
                                           (do
                                             (reset! row-index-atom (inc @row-index-atom))
-                                            [:tr {:class (str (if (odd? @row-index-atom) "pariton" "parillinen"))}
+                                            [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                              [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika (first (second rivi))) (:toteuma_id (first (second rivi)))]]
                                              [:td {:style {:width (:caret leveydet)}} ""]
                                              [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut (first (second rivi))) " " (:yksikko (first (second rivi))))]
                                              [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                              [:td {:style {:width (:prosentti leveydet)}} "---"]])])))))
                                 rivit)]
-              (concat [[:tr {:style {:background-color "#ffff00"}}
+              (concat [[:tr.header
                         [:td tehtavaryhma]
                         [:td ""]
                         [:td ""]
@@ -194,21 +194,20 @@
                         [:td ""]]]
                       muodostetut)))
           r)]
-    [:div.taulukko
-     [:div.livi-grid
-      [:table.grid {:style {:border "0px"}}
-       [:thead
-        [:tr
-         [:th {:style {:width (:tehtava leveydet)}} "Tehtävä"]
-         [:th {:style {:width (:caret leveydet)}} ""]
-         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
-         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
-         [:th {:style {:width (:prosentti leveydet)}} "Totetuma-%"]]]
-       [:tbody
-        (doall
-          (for [l ll]
-            ^{:key (hash l)}
-            l))]]]]))
+    [:div.table-default
+     [:table
+      [:thead.table-default-header
+       [:tr
+        [:th {:style {:width (:tehtava leveydet)}} "Tehtävä"]
+        [:th {:style {:width (:caret leveydet)}} ""]
+        [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
+        [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
+        [:th {:style {:width (:prosentti leveydet)}} "%"]]]
+      [:tbody
+       (doall
+         (for [l ll]
+           ^{:key (hash l)}
+           l))]]]))
 
 (def filtterit-keyword->string
   {:maaramitattavat "Määrämitattavat"
@@ -238,7 +237,7 @@
         ;g (maarien-toteumat/uusi-gridi dom-id)
         ;_ (new-grid/aseta-gridin-polut g)
         filtterit (:hakufiltteri app)]
-    [:div#kustannussuunnitelma.maarien-toteumat
+    [:div.maarien-toteumat
      [debug/debug app]
      [:div "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan."]
      [:div

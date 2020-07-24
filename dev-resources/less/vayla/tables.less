@@ -10,6 +10,23 @@
 .table- {
   &default {
     .table-perusarvot();
+    table {
+      width:100%;
+    }
+    tr {
+      height:40px;
+
+      td, th {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+      &.header {
+        height:30px;
+        background-color: @gray220;
+        font-size: .75rem;
+        color: black;
+      }
+    }
     &-strong {
       font-weight: bold;
     }
