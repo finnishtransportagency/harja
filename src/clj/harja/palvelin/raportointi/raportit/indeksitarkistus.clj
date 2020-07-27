@@ -72,7 +72,7 @@
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (let [urakat (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
                                                   :hallintayksikko hallintayksikko-id
-                                                  :urakkatyyppi "hoito"
+                                                  :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                   :alku alkupvm :loppu loppupvm})
         haettu-urakka (when urakka-id (first (urakat-q/hae-urakka db urakka-id)))
         urakka-idt (mapv :urakka-id urakat)
