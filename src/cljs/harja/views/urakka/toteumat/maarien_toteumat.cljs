@@ -127,7 +127,7 @@
                                              (when avattava?
                                                {:on-click #(e! (maarien-toteumat/->AvaaRivi (first rivi)))})
                                              {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when avattava? "klikattava"))})
-                                       [:td {:style {:width (:tehtava leveydet)}} (first rivi)]
+                                       [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi)]
                                        [:td {:style {:width (:caret leveydet)}} (if
                                                                                   (= (get-in app [:valittu-rivi]) (first rivi))
                                                                                   [ikonit/livicon-chevron-up]
