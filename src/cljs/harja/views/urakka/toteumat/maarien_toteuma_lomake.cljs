@@ -175,7 +175,7 @@
                        [:div.flex-row
                         [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]])
        :footer-fn    (fn [data]
-                       [:div.flex-row
+                       [:div.flex-row.alkuun
                         [napit/tallenna
                          "Tallenna"
                          #(laheta-lomake! data)
