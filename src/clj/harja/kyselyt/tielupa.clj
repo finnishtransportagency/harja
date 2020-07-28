@@ -36,9 +36,10 @@
 
 (defn tr-piste-aiemmin-tai-sama? [osa-a et-a osa-b et-b]
   (boolean
-    (or (< osa-a osa-b)
-        (and (= osa-a osa-b)
-             (<= et-a et-b)))))
+    (when (and osa-a et-a osa-b et-b)
+      (or (< osa-a osa-b)
+          (and (= osa-a osa-b)
+               (<= et-a et-b))))))
 
 
 (defn valilla? [[aosa aet :as alku] [losa loet :as loppu] sijainti]
@@ -96,6 +97,8 @@
 
 ;; TODO: entä tiesoitteettomat luvat?
 (defn suodata-tieosoitteella [tieluvat sijainnit]
+  (log/debug "JARNO suodata-tieosoitteella tieluvat" (pr-str (count tieluvat)))
+  (log/debug "JARNO suodata-tieosoitteella sijainnit" (pr-str (count sijainnit)))
   (let [tie (::tielupa/tie sijainnit)
         aosa (::tielupa/aosa sijainnit)
         aet (::tielupa/aet sijainnit)
@@ -142,6 +145,7 @@
         (group-by :tielupa liitteet) (group-by ::tielupa/id tieluvat)))))
 
 (defn hae-tieluvat-hakunakymaan [db hakuehdot]
+  (log/debug "Jarno hae-tieluvat-hakunakymaan, hakuehdot " (pr-str hakuehdot))
   (->
     (fetch db
           ::tielupa/tielupa
