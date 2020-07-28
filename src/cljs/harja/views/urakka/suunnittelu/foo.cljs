@@ -714,21 +714,26 @@
                         (let [syote-tayta-alas-predef (taulukko/predef :syote-tayta-alas nil)
                               input-predef (taulukko/predef :input nil)
                               numero-predef (taulukko/predef :numero nil)
-                              laajenna-predef (taulukko/predef :laajenna nil)
+                              laajenna-predef (taulukko/predef :laajenna
+                                                               {:aukeamispolku [:.. :.. 1]
+                                                                :sulkemispolku [#_:.. :.. :.. 1]})
                               yhteenvetorivi (fn [f]
                                                (vec
-                                                 (concat [(solu/laajenna (merge laajenna-predef
-                                                                                {:parametrit {:class #{"table-default" "lihavoitu"}}}))]
+                                                 (concat [{:solu solu/laajenna
+                                                           :parametrit [(merge laajenna-predef
+                                                                               {:parametrit {:class #{"table-default" "lihavoitu"}}})]}]
                                                          (map (fn [sarake]
-                                                                {:solu (solu/teksti {:parametrit {:class #{"table-default"}}
-                                                                                     :fmt (get numero-predef :fmt)})
+                                                                {:solu solu/teksti
+                                                                 :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                               :fmt (get numero-predef :fmt)}]
                                                                  :riippuu-toisesta {:riippuvuudet [[:/ ::data ::data-sisalto ^:sarake sarake]]
                                                                                     :kasittely-fn (fn [sarakkeen-arvot]
                                                                                                     (reduce + 0 sarakkeen-arvot))}})
                                                               [:a :b :c])
-                                                         [(solu/ikoni {:nimi "poista"
-                                                                       :toiminnot {:on-click (fn [_]
-                                                                                               (e! (->PoistaRivi (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))))}})])))
+                                                         [{:solu solu/ikoni
+                                                           :parametrit [{:nimi "poista"
+                                                                         :toiminnot {:on-click (fn [_]
+                                                                                                 (e! (->PoistaRivi (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan))))}}]}])))
                               taulukkomaaritelma {:conf {:ratom tila-atom
                                                          :dom-id dom-id
                                                          :grid-polku grid-polku
@@ -766,13 +771,14 @@
                                                                              :luokat #{"salli-ylipiirtaminen"}
                                                                              :jarjestys [[:rivi :a :b :c :poista]]}
                                                                       :osat (conj (mapv (fn [nimi]
-                                                                                          (solu/otsikko {:jarjesta-fn! jarjesta-fn!
+                                                                                          {:solu solu/otsikko
+                                                                                           :parametrit [{:jarjesta-fn! jarjesta-fn!
                                                                                                          :parametrit {:class #{"table-default" "table-default-header"}}
-                                                                                                         :nimi nimi}))
+                                                                                                         :nimi nimi}]})
                                                                                         [:rivi :a :b :c])
-                                                                                  (solu/tyhja #{"table-default" "table-default-header"}))}
-                                                             (comment
-                                                               (swap! harja.views.urakka.suunnittelu.foo/tila (fn [tila]
+                                                                                  {:solu solu/tyhja
+                                                                                   :parametrit [#{"table-default" "table-default-header"}]})}
+                                                             #_(swap! harja.views.urakka.suunnittelu.foo/tila (fn [tila]
                                                                                                                 (assoc-in tila
                                                                                                                           [:dynaaminen-taulukko-ylempi-api :data :harja.views.urakka.suunnittelu.foo/data]
                                                                                                                           [{
@@ -784,7 +790,7 @@
                                                                                                                             :rivin-nimi :bar
                                                                                                                             :harja.views.urakka.suunnittelu.foo/dataa-sisalto {:datarivi-1 {:a 1 :b 2 :c 3}
                                                                                                                                                                                :datarivi-2 {:a 1 :b 2 :c 3}
-                                                                                                                                                                               :datarivi-3 {:a 1 :b 2 :c 3}}}]))))
+                                                                                                                                                                               :datarivi-3 {:a 1 :b 2 :c 3}}}])))
                                                              :body [{:conf {:nimi ::data
                                                                             :yksiloivakentta :rivin-nimi}
                                                                      :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]}
@@ -798,37 +804,44 @@
                                                                                                :body (mapv (fn [index]
                                                                                                              {:conf {:nimi (keyword (str "datarivi-" index))
                                                                                                                      :jarjestys [[:rivi :a :b :c :poista]]}
-                                                                                                              :osat [(solu/tyhja)
-                                                                                                                     (grid/aseta-nimi (g-pohjat/syote-tayta-alas false
-                                                                                                                                                                 (get syote-tayta-alas-predef :nappia-painettu!)
-                                                                                                                                                                 (merge (select-keys syote-tayta-alas-predef #{:on-focus})
-                                                                                                                                                                        (get input-predef :toiminnot))
-                                                                                                                                                                 (get numero-predef :kayttaytymiset)
-                                                                                                                                                                 (get input-predef :parametrit)
-                                                                                                                                                                 (get numero-predef :fmt)
-                                                                                                                                                                 (get numero-predef :fmt-aktiivinen))
-                                                                                                                                      :a-solu)
-                                                                                                                     {:solu (solu/teksti {:parametrit {:class #{"table-default"}}
-                                                                                                                                          :fmt (get numero-predef :fmt)})
+                                                                                                              :osat [{:solu solu/tyhja}
+                                                                                                                     {:solu (fn [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
+                                                                                                                              (grid/aseta-nimi (g-pohjat/syote-tayta-alas nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
+                                                                                                                                               :a-solu))
+                                                                                                                      :parametrit [false
+                                                                                                                                   (get syote-tayta-alas-predef :nappia-painettu!)
+                                                                                                                                   (merge (select-keys syote-tayta-alas-predef #{:on-focus})
+                                                                                                                                          (get input-predef :toiminnot))
+                                                                                                                                   (get numero-predef :kayttaytymiset)
+                                                                                                                                   (get input-predef :parametrit)
+                                                                                                                                   (get numero-predef :fmt)
+                                                                                                                                   (get numero-predef :fmt-aktiivinen)]}
+                                                                                                                     {:solu solu/teksti
+                                                                                                                      :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                                                    :fmt (get numero-predef :fmt)}]
                                                                                                                       :riippuu-toisesta {:riippuvuudet [[:a-kentta]]
                                                                                                                                          :kasittely-fn (fn [a-arvo]
                                                                                                                                                          (* 10 a-arvo))}}
-                                                                                                                     (solu/teksti {:parametrit {:class #{"table-default"}}
-                                                                                                                                   :fmt (get numero-predef :fmt)})
-                                                                                                                     (solu/tyhja)]})
+                                                                                                                     {:solu solu/teksti
+                                                                                                                      :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                                                    :fmt (get numero-predef :fmt)}]}
+                                                                                                                     {:solu solu/tyhja}]})
                                                                                                            (range 3))}]}}]
                                                              :footer {:conf {:nimi ::yhteenveto
                                                                              :jarjestys [[:rivi :a :b :c :poista]]}
                                                                       :osat (vec
-                                                                              (concat [(solu/tyhja #{"table-default" "table-default-sum"})]
+                                                                              (concat [{:solu solu/tyhja
+                                                                                        :parametrit [#{"table-default" "table-default-sum"}]}]
                                                                                       (map (fn [sarake]
-                                                                                             {:solu (solu/teksti {:parametrit {:class #{"table-default"}}
-                                                                                                                  :fmt (get numero-predef :fmt)})
+                                                                                             {:solu solu/teksti
+                                                                                              :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                            :fmt (get numero-predef :fmt)}]
                                                                                               :riippuu-toisesta {:riippuvuudet [[:/ ::data ^:sarake sarake]]
                                                                                                                  :kasittely-fn (fn [sarakkeen-arvot]
                                                                                                                                  (reduce + 0 sarakkeen-arvot))}})
                                                                                            [:a :b :c])
-                                                                                      [(solu/tyhja #{"table-default" "table-default-sum"})]))}}}]
+                                                                                      [{:solu solu/tyhja
+                                                                                        :parametrit [#{"table-default" "table-default-sum"}]}]))}}}]
                           (taulukko/tee-taulukko! taulukkomaaritelma)))]
     (komp/luo
       (komp/piirretty (fn [_]
