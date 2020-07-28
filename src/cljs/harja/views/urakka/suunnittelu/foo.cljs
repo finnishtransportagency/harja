@@ -708,36 +708,6 @@
               ;; Uuden rivin voi lisätä painamalla nappia
               (e! (->LisaaRivi)))]])))))
 
-(comment
-  {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
-   :body [{:foo {::data-yhteenveto {}
-                 :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}
-           :bar [{}]}]
-   ::yhteenveto {}}
-
-  {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
-   :body [[{::data-yhteenveto {}
-            ::yksiloiva-tieto :foo
-            :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}
-           {::data-yhteenveto {}
-            ::yksiloiva-tieto :bar
-            :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}]]
-   ::yhteenveto {}}
-
-  ;; Staattisella (:rivit) taulukolla
-  [{:nimi "" :a "A" :b "B" :c "C"}
-   {:foo {::data-yhteenveto {}
-          :body [[{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]]}
-    :bar [{}]}
-   {}]
-
-  {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
-   :body [[{::data-yhteenveto {}
-            :body [[{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]]}
-           {::data-yhteenveto {}
-            :body [[{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]]}]]
-   ::yhteenveto {}})
-
 (defn dynaaminen-taulukko-ylempi-api []
   (let [tilacursor (r/cursor tila [:dynaaminen-taulukko-ylempi-api])
         testitaulukko (fn [tila-atom dom-id grid-polku data-polku]
@@ -763,17 +733,20 @@
                                                          :dom-id dom-id
                                                          :grid-polku grid-polku
                                                          :data-polku data-polku}
-                                                  :vaihto-osat {:yhteenveto-checkboxilla {:body [{:conf {:jarjestys [:rivi :a :b :c :poista]}
-                                                                                                  :osat (yhteenvetorivi (fn [this _]
-                                                                                                                          (taulukko/vaihda-osa-takaisin! this (grid/osa-polusta this [:.. :..]))))}
-                                                                                                 {:conf {:jarjestys [:rivi :a :b :c :poista]}
-                                                                                                  :osat (vec
-                                                                                                          (cons (vayla-checkbox (fn [this event]
-                                                                                                                                  (.preventDefault event)
-                                                                                                                                  (let [disable-rivit? (not (grid/solun-arvo this))]
-                                                                                                                                    (e! (tuck-apurit/->MuutaTila [:data-disable] disable-rivit?))))
-                                                                                                                                "Disabloi rivit")
-                                                                                                                (repeatedly 4 (fn [] (solu/tyhja)))))}]}}
+                                                  #_#_:vaihto-osat {:yhteenveto-checkboxilla {:conf {:nimi ::vaihto-yhteenveto-checkboxilla}
+                                                                                              :body [{:conf {:jarjestys [:rivi :a :b :c :poista]
+                                                                                                             :nimi ::data-yhteenveto-vaihto}
+                                                                                                      :osat (yhteenvetorivi (fn [this _]
+                                                                                                                              (taulukko/vaihda-osa-takaisin! this (grid/osa-polusta this [:.. :..]))))}
+                                                                                                     {:conf {:jarjestys [:rivi :a :b :c :poista]
+                                                                                                             :nimi ::disable-valinta}
+                                                                                                      :osat (vec
+                                                                                                              (cons (vayla-checkbox (fn [this event]
+                                                                                                                                      (.preventDefault event)
+                                                                                                                                      (let [disable-rivit? (not (grid/solun-arvo this))]
+                                                                                                                                        (e! (tuck-apurit/->MuutaTila [:data-disable] disable-rivit?))))
+                                                                                                                                    "Disabloi rivit")
+                                                                                                                    (repeatedly 4 (fn [] (solu/tyhja)))))}]}}
                                                   :datavaikutukset-taulukkoon {:rahavaraukset-disablerivit {:polut [[:data-disable]]
                                                                                                             :toiminto! (fn [g _ data-disable]
                                                                                                                          (doseq [rivikontti (-> g (grid/get-in-grid [::data]) (grid/hae-grid :lapset))
@@ -798,26 +771,33 @@
                                                                                                          :nimi nimi}))
                                                                                         [:rivi :a :b :c])
                                                                                   (solu/tyhja #{"table-default" "table-default-header"}))}
-                                                             #_(comment {::otsikko {:nimi "" :a "A" :b "B" :c "C"}
-                                                                         :body [[{::data-yhteenveto {}
-                                                                                  ::yksiloiva-tieto :foo
-                                                                                  :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}
-                                                                                 {::data-yhteenveto {}
-                                                                                  ::yksiloiva-tieto :bar
-                                                                                  :body [{::data-sisalto [{:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3} {:a 1 :b 2 :c 3}]}]}]]
-                                                                         ::yhteenveto {}})
+                                                             (comment
+                                                               (swap! harja.views.urakka.suunnittelu.foo/tila (fn [tila]
+                                                                                                                (assoc-in tila
+                                                                                                                          [:dynaaminen-taulukko-ylempi-api :data :harja.views.urakka.suunnittelu.foo/data]
+                                                                                                                          [{
+                                                                                                                            :rivin-nimi :foo
+                                                                                                                            :harja.views.urakka.suunnittelu.foo/dataa-sisalto {:datarivi-1 {:a 1 :b 2 :c 3}
+                                                                                                                                                                               :datarivi-2 {:a 1 :b 2 :c 3}
+                                                                                                                                                                               :datarivi-3 {:a 1 :b 2 :c 3}}}
+                                                                                                                           {
+                                                                                                                            :rivin-nimi :bar
+                                                                                                                            :harja.views.urakka.suunnittelu.foo/dataa-sisalto {:datarivi-1 {:a 1 :b 2 :c 3}
+                                                                                                                                                                               :datarivi-2 {:a 1 :b 2 :c 3}
+                                                                                                                                                                               :datarivi-3 {:a 1 :b 2 :c 3}}}]))))
                                                              :body [{:conf {:nimi ::data
                                                                             :yksiloivakentta :rivin-nimi}
                                                                      :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]}
                                                                                        :header {:conf {:nimi ::data-yhteenveto
-                                                                                                       :vaihdettava-osa :yhteenveto-checkboxilla
+                                                                                                       #_#_:vaihdettava-osa :yhteenveto-checkboxilla
                                                                                                        :jarjestys [[:rivi :a :b :c :poista]]}
                                                                                                 :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                         (taulukko/vaihda-osa! this (grid/osien-yhteinen-asia (grid/vanhempi this) :nimi-polku))))}
                                                                                        :body [{:conf {:nimi ::data-sisalto
                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
                                                                                                :body (mapv (fn [index]
-                                                                                                             {:conf {:jarjestys [[:rivi :a :b :c :poista]]}
+                                                                                                             {:conf {:nimi (keyword (str "datarivi-" index))
+                                                                                                                     :jarjestys [[:rivi :a :b :c :poista]]}
                                                                                                               :osat [(solu/tyhja)
                                                                                                                      (grid/aseta-nimi (g-pohjat/syote-tayta-alas false
                                                                                                                                                                  (get syote-tayta-alas-predef :nappia-painettu!)

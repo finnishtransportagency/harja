@@ -411,29 +411,35 @@
                (koko-conf->koko koko-conf))]
     (p/aseta-koko! grid koko)))
 
-(defn muuta-id! [kopio]
-  (let [id (gensym "muuta-id")
-        osa (assoc kopio :id id)
-        grid? (satisfies? p/IGrid kopio)
-        root-grid? (gop/id? kopio (::root-id kopio))
-        paivita-grid (fn [gridi]
-                       (swap! ((get-in @taulukko-konteksti [(::root-id gridi) :koko-fn])) (fn [koot]
-                                                                                            (assoc koot id (get koot (gop/id kopio)))))
-                       (if root-grid?
-                         (paivita-kaikki-lapset! (assoc gridi ::root-id id)
-                                                 (constantly true)
-                                                 (fn [lapsi]
-                                                   (assoc lapsi ::root-id id)))
-                         gridi))]
-    (when root-grid?
-      (swap! taulukko-konteksti
-             (fn [konteksti]
-               (-> konteksti
-                   (assoc id (get konteksti (::root-id kopio)))
-                   (dissoc (::root-id kopio))))))
-    (if grid?
-      (paivita-grid osa)
-      osa)))
+(defn muuta-id!
+  ([kopio] (muuta-id! kopio true))
+  ([kopio poista-vanha-id-taulukko-kontekstista?]
+   (let [id (gensym "muuta-id")
+         osa (assoc kopio :id id)
+         grid? (satisfies? p/IGrid kopio)
+         root-grid? (gop/id? kopio (::root-id kopio))
+         paivita-grid (fn [gridi]
+                        (if root-grid?
+                          (paivita-kaikki-lapset! (assoc gridi ::root-id id)
+                                                  (constantly true)
+                                                  (fn [lapsi]
+                                                    (assoc lapsi ::root-id id)))
+                          gridi))]
+     (when root-grid?
+       (swap! taulukko-konteksti
+              (fn [konteksti]
+                (-> konteksti
+                    (assoc id (get konteksti (::root-id kopio)))
+                    (dissoc (::root-id kopio))))))
+     (if grid?
+       (let [gridi (paivita-grid osa)]
+         (comment (println "(::root-id gridi) " (::root-id gridi))
+                  (println "(keys @taulukko-konteksti) " (keys @taulukko-konteksti)))
+         (when poista-vanha-id-taulukko-kontekstista?
+           (swap! ((get-in @taulukko-konteksti [(::root-id gridi) :koko-fn])) (fn [koot]
+                                                                                (assoc koot id (get koot (gop/id kopio))))))
+         gridi)
+       osa))))
 
 (defn aseta-koot! [root-grid]
   (let [kokojen-seuranta (gridin-osat-vektoriin root-grid
@@ -592,6 +598,9 @@
       (do
         (swap! ((get-in @taulukko-konteksti [(::root-id tiedot-osa) :koko-fn]))
                (fn [koot]
+                 (comment (println "---> OSA " osa)
+                          (println "TYPE: " (type osa))
+                          (println (p/koot osa)))
                  (merge koot (p/koot osa))))
         (swap! taulukko-konteksti dissoc (:id osa))
         (paivita-kaikki-lapset! (assoc osa :koko nil ::root-id (::root-id tiedot-osa))
@@ -746,7 +755,7 @@
                                                                                 solun-polun-pituus-oikein?)
                                                                            (and (:derefable (meta grid-polku))
                                                                                 grid-polku-sopii-osaan?))]
-                                    (when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
+                                    #_(when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
                                                (= grid-polku [1]))
                                       (println "---------------")
                                       (println "rajapintakasittelija " rajapintakasittelija)
@@ -762,7 +771,7 @@
                                       (println "osan-polku-dataan " osan-polku-dataan))
                                     (when yhdista-derefable-tahan-osaan?
                                       (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
-                                        (when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
+                                        #_(when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
                                                    (= grid-polku [1]))
                                           (println "osan-derefable " osan-derefable))
                                         (when g-debug/GRID_DEBUG
@@ -793,6 +802,13 @@
 (defn hoida-osien-maara! [grid toistettavan-osan-data osatunnisteet vanhat-tunnisteet]
   (p/paivita-lapset! grid
                      (fn [entiset-osat]
+                       (println "------- hoida-osien-maara! ------")
+                       (cljs.pprint/pprint entiset-osat)
+                       (cljs.pprint/pprint ((:toistettava-osa grid) toistettavan-osan-data))
+                       (cljs.pprint/pprint toistettavan-osan-data)
+                       (cljs.pprint/pprint osatunnisteet)
+                       (cljs.pprint/pprint (osatunnisteet toistettavan-osan-data))
+                       (println "(root grid) " (root grid))
                        (vec
                          (map (fn [osa osan-tunniste]
                                 (if-let [entisen-osan-index (get vanhat-tunnisteet osan-tunniste)]
@@ -929,12 +945,10 @@
                                         (constantly nil))
         entinen-toistettavan-osan-data (atom nil)]
     (fn [grid]
-      (println "(::osan-derefable grid)")
-      (println (::osan-derefable grid))
-      (println @(::osan-derefable grid))
-      (println "rajapintakasittelijan-tiedot " rajapintakasittelijan-tiedot)
-      (println "(::nimi-polku grid) " (::nimi-polku grid))
-      (println (::grid-rajapintakasittelijat (root grid)))
+      (comment
+        (println "rajapintakasittelijan-tiedot " rajapintakasittelijan-tiedot)
+        (println "(::nimi-polku grid) " (::nimi-polku grid))
+        (println (::grid-rajapintakasittelijat (root grid))))
       (let [gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
                                gridin-derefable
                                (do
@@ -942,6 +956,7 @@
                                  (r/atom nil)))
             _ (println "1")
             gridin-data @gridin-derefable
+            _ (println "DATA: " gridin-data)
             _ (println "2")
             rajapinnat-muuttunut? (if (and (contains? (meta grid-kasittelijoiden-luonti) :rajapinta-riippuu-datan-arvosta?)
                                            (-> grid-kasittelijoiden-luonti meta :rajapinta-riippuu-datan-arvosta? not))
@@ -952,6 +967,7 @@
             data-jarjestetty? @(get rajapintakasittelijan-tiedot ::jarjestetty?)
             _ (println "4")
             uudet-grid-kasittelijat (grid-kasittelijoiden-luonti gridin-data grid)]
+        #_(println "uudet-grid-kasittelijat " uudet-grid-kasittelijat)
         (println "5")
         (if rajapinnat-muuttunut?
           (let [rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
@@ -1049,6 +1065,8 @@
   (get @((get-in @taulukko-konteksti [(::root-id grid) :koko-fn])) (gop/id grid)))
 
 (defn grid-koot [grid]
+  (comment (println "(::root-id grid) " (::root-id grid))
+           (println "GRID TAULUKKO KONTEKSTI " (get-in @taulukko-konteksti [(::root-id grid)])))
   @((get-in @taulukko-konteksti [(::root-id grid) :koko-fn])))
 
 (defn lisaa-rivi!
