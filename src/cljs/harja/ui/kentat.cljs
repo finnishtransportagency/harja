@@ -186,7 +186,7 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled?]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled? vihje]
                                 :as   kentta} data]
   [:input {:class       (cond-> nil
                                 (and lomake?

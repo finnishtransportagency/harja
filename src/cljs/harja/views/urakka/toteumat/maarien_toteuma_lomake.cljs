@@ -8,7 +8,8 @@
             [harja.loki :as loki]
             [harja.ui.napit :as napit]
             [reagent.core :as r]
-            [harja.ui.kentat :as kentat]))
+            [harja.ui.kentat :as kentat]
+            [harja.ui.modal :as modal]))
 
 
 (defn- laheta! [e! data]
@@ -19,10 +20,42 @@
   (loki/log "tyhjään")
   (e! (tiedot/->TyhjennaLomake data)))
 
+(defn- toteuman-poiston-varmistus-modaali
+  [{:keys [varmistus-fn]}]
+  [:div
+   "Oletko varma?"
+
+   [:div
+    [napit/yleinen-toissijainen
+     "Peruuta"
+     (fn []
+       (modal/piilota!))
+     {:vayla-tyyli? true
+      :luokka       "suuri"}]
+    [napit/poista
+     "Poista tiedot"
+     varmistus-fn
+     {:vayla-tyyli? true
+      :luokka       "suuri"}]]])
+
+(defn- poista-fn [{:keys [toteuma-id indeksi e! lomake paivita!]}]
+  (let [indeksi (or indeksi
+                    0)]
+    (if toteuma-id
+      (r/partial paivita! ::t/poistettu indeksi)
+      (fn [_]
+        (e! (tiedot/->PaivitaLomake (update lomake
+                                            ::t/toteumat
+                                            (fn [ts]
+                                              (vec (concat (subvec ts 0 indeksi)
+                                                           (subvec ts (inc indeksi))))))))))))
+
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat]} {{toteumat ::t/toteumat :as lomake} :data :as kaikki}]
   (let [paivita! (fn [polku indeksi arvo]
-                   (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))]
+                   (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))
+        useampi? (> (count toteumat) 1)
+        yksittainen? (= (count toteumat) 1)]
     [:div
      (doall
        (map-indexed
@@ -34,73 +67,95 @@
                        toteuma-id   ::t/toteuma-id
                        poistettu    ::t/poistettu
                        :as          _toteuma}]
-           [(if (= 1 (count toteumat))
-              :<>
-              :div.row.lomakerivi.lomakepalstat)
-            [(if (= 1 (count toteumat))
-               :<>
-               :div.lomakepalsta)
-             (when (and toteuma-id
-                        (not= (count toteumat) 1))
-               [:div.lomakepalsta
-                [:div.row.lomakerivi
-                 [:label "Poista toteuma"]
-                 [kentat/tee-kentta {::ui-lomake/col-luokka ""
-                                     :teksti                "Pooista toteuma"
-                                     :tyyppi                :checkbox}
-                  (r/wrap poistettu
-                          (r/partial paivita! ::t/poistettu indeksi))]]])
-             [:div.row.lomakerivi
-              [:label "Tehtävä"]
-              [kentat/tee-kentta
-               {:pakollinen?           true
-                ::ui-lomake/col-luokka ""
-                :vayla-tyyli?          true
-                :tyyppi                :valinta
-                :valinnat              tehtavat
-                :valinta-nayta         :tehtava}
-               (r/wrap tehtava
-                       (r/partial paivita! ::t/tehtava indeksi))]]
-             [:div.row.lomakerivi
-              [:label "Toteutunut määrä"]
-              [kentat/tee-kentta
-               {::ui-lomake/col-luokka ""
-                :vayla-tyyli?          true
-                :pakollinen?           true
-                :tyyppi                :numero}
-               (r/wrap maara
-                       (r/partial paivita! ::t/maara indeksi))]]
-             [:div.row.lomakerivi
-              [:label "Lisätieto"]
-              [kentat/tee-kentta
-               {::ui-lomake/col-luokka ""
-                :vayla-tyyli?          true
-                :pakollinen?           true
-                :tyyppi                :string}
-               (r/wrap lisatieto
-                       (r/partial paivita! ::t/lisatieto indeksi))]]]
-            (when (not= (count toteumat) 1)
-              [:div.lomakepalsta
-               [:div.row.lomakerivi
-                [:label "Sijainti"]
-                [kentat/tee-kentta
-                 {::ui-lomake/col-luokka ""
-                  :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-                  :pakollinen?           (not ei-sijaintia)
-                  :disabled?             ei-sijaintia
-                  :tyyppi                :tierekisteriosoite
-                  :sijainti              (r/wrap sijainti (constantly true))}
-                 (r/wrap sijainti
-                         (r/partial paivita! ::t/sijainti indeksi))]]
-               [:div.row.lomakerivi
-                [kentat/tee-kentta
-                 {::ui-lomake/col-luokka ""
-                  :teksti                "Kyseiseen tehtävään ei ole sijaintia"
-                  :tyyppi                :checkbox}
-                 (r/wrap ei-sijaintia
-                         (r/partial paivita! ::t/ei-sijaintia indeksi))]]])])
+           (let [palstat-tagi (if yksittainen?
+                                :<>
+                                :div.row.lomakepalstat)
+                 palsta-tagi (if yksittainen?
+                               :<>
+                               :div.lomakepalsta)
+                 otsikko-tagi (if useampi?
+                                :div.useampi-tehtava-osio
+                                :<>)
+                 poista! (poista-fn {:toteuma-id toteuma-id
+                                     :indeksi    indeksi
+                                     :e!         e!
+                                     :lomake     lomake
+                                     :paivita!   paivita!})]
+             [otsikko-tagi
+              (when useampi?
+                [:div.flex-row
+                 [:div.row
+                  (str "Tehtävä " indeksi)]
+                 [:div.row
+                  [napit/poista
+                   "Poista toteuma"
+                   #(modal/nayta! {:otsikko "Haluatko varmasti poistaa toteuman?"}
+                                  [toteuman-poiston-varmistus-modaali
+                                   {:varmistus-fn (fn []
+                                                    (modal/piilota!)
+                                                    (poista! true))}])
+                   {:vayla-tyyli? true :teksti-nappi? true}]
+                  [kentat/tee-kentta {::ui-lomake/col-luokka ""
+                                      :vayla-tyyli?          true
+                                      :teksti                "Poista toteuma"
+                                      :tyyppi                :checkbox}
+                   (r/wrap poistettu
+                           poista!)]]])
+              [palstat-tagi
+               [palsta-tagi
+                [:div.row
+                 [:label "Tehtävä"]
+                 [kentat/tee-kentta
+                  {:pakollinen?           true
+                   ::ui-lomake/col-luokka ""
+                   :vayla-tyyli?          true
+                   :tyyppi                :valinta
+                   :valinnat              tehtavat
+                   :valinta-nayta         :tehtava}
+                  (r/wrap tehtava
+                          (r/partial paivita! ::t/tehtava indeksi))]]
+                [:div.row
+                 [:label "Toteutunut määrä"]
+                 [kentat/tee-kentta
+                  {::ui-lomake/col-luokka ""
+                   :vayla-tyyli?          true
+                   :pakollinen?           true
+                   :tyyppi                :numero}
+                  (r/wrap maara
+                          (r/partial paivita! ::t/maara indeksi))]]
+                [:div.row
+                 [:label "Lisätieto"]
+                 [kentat/tee-kentta
+                  {::ui-lomake/col-luokka ""
+                   :vayla-tyyli?          true
+                   :pakollinen?           true
+                   :tyyppi                :string}
+                  (r/wrap lisatieto
+                          (r/partial paivita! ::t/lisatieto indeksi))]]]
+               (when useampi?
+                 [:div.lomakepalsta
+                  [:div.row
+                   [:label "Sijainti"]
+                   [kentat/tee-kentta
+                    {::ui-lomake/col-luokka ""
+                     :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                     :pakollinen?           (not ei-sijaintia)
+                     :disabled?             ei-sijaintia
+                     :vayla-tyyli?          true
+                     :tyyppi                :tierekisteriosoite
+                     :sijainti              (r/wrap sijainti (constantly true))}
+                    (r/wrap sijainti
+                            (r/partial paivita! ::t/sijainti indeksi))]]
+                  [:div.row
+                   [kentat/tee-kentta
+                    {::ui-lomake/col-luokka ""
+                     :vayla-tyyli?          true
+                     :teksti                "Kyseiseen tehtävään ei ole sijaintia"
+                     :tyyppi                :checkbox}
+                    (r/wrap ei-sijaintia
+                            (r/partial paivita! ::t/ei-sijaintia indeksi))]]])]]))
          toteumat))
-     (when (> (count toteumat) 1)
+     (when useampi?
        [napit/tallenna
         "Lisää tehtävä"
         #(e! (tiedot/->LisaaToteuma lomake))
@@ -144,7 +199,8 @@
                   ::ui-lomake/col-luokka ""
                   :nimi                  ::t/lisatieto
                   :pakollinen?           false
-                  :tyyppi                :string}]
+                  :tyyppi                :string
+                  :vihje                 "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
         akilliset-ja-korjaukset [{:otsikko               "Pvm"
                                   :nimi                  ::t/pvm
                                   ::ui-lomake/col-luokka ""
@@ -161,19 +217,41 @@
                                   ::ui-lomake/col-luokka ""
                                   :nimi                  ::t/lisatieto
                                   :pakollinen?           false
-                                  :tyyppi                :string}]]
+                                  :tyyppi                :string
+                                  :vihje                 "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
+        poista! (poista-fn {:toteuma-id toteuma-id
+                            :e!         e!
+                            :lomake     lomake
+                            :paivita!   (fn [polku indeksi arvo]
+                                          (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))})]
     [:div#vayla
      [debug/debug app]
      [debug/debug lomake]
      [ui-lomake/lomake
       {:muokkaa!     (fn [data]
-                       (loki/log "dataa " data)
                        (e! (tiedot/->PaivitaLomake data)))
        :voi-muokata? true
        :palstoja     2
        :header-fn    (fn [data]
-                       [:div.flex-row
-                        [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]])
+                       [:<>
+                        [:div.flex-row {:style {:padding-left  "15px"
+                                                :padding-right "15px"}}
+                         [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]
+                        [:div.flex-row {:style {:padding-left  "15px"
+                                                :padding-right "15px"}}
+                         [:h2 (if toteuma-id
+                                "Muokkaa toteumaa"
+                                "Uusi toteuma")]
+                         (when (and toteuma-id
+                                    (= (count toteumat) 1))
+                           [napit/poista
+                            "Poista toteuma"
+                            #(modal/nayta! {:otsikko "Haluatko varmasti poistaa toteuman?"}
+                                           [toteuman-poiston-varmistus-modaali
+                                            {:varmistus-fn (fn []
+                                                             (modal/piilota!)
+                                                             (poista! true))}])
+                            {:vayla-tyyli? true :teksti-nappi? true}])]])
        :footer-fn    (fn [data]
                        [:div.flex-row.alkuun
                         [napit/tallenna
@@ -189,12 +267,13 @@
        :vayla-tyyli? true}
       [(when (and toteuma-id
                   (= (count toteumat) 1))
-         {:tyyppi  :checkbox
-          :nimi    [::t/toteumat 0 ::t/poistettu]
-          :otsikko "Poista toteuma"})
+         {:tyyppi :checkbox
+          :nimi   [::t/toteumat 0 ::t/poistettu]
+          :teksti "Poista toteuma"})
        (ui-lomake/palstat
          {}
-         {:otsikko "Mihin toimenpiteeseen työ liittyy?"}
+         {:otsikko  "Mihin toimenpiteeseen työ liittyy?"
+          :puolikas true}
          [{:otsikko               "Toimenpide"
            :nimi                  ::t/toimenpide
            ::ui-lomake/col-luokka ""

@@ -265,16 +265,19 @@ fieldset.lomake-osa {
   }
   &:only-child {
     margin:0px;
+    &.puolikas {
+      max-width: ~"calc(50% - 20px)";
+    }
   }
   display:flex;
   flex-direction:  column;
   padding: 15px;
   flex-grow:1;
+  flex-basis:0;
 }
 
 .lomakepalstat {
   display:flex;
   flex-direction: row;
   justify-content: flex-start;
-  max-width:1024px;
 }

@@ -25,6 +25,12 @@
                                                                   :noudetaan       0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
 
+(defn silloin-kun [pred v-fn]
+  (fn [arvo]
+    (if (pred)
+      (v-fn arvo)
+      arvo)))
+
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
     (if-not (str/blank? arvo)
@@ -65,35 +71,40 @@
                   :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
                   :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
                   :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]})
+(defn validoi!
+  [{:keys [validius validi?] :as lomake-meta} lomake]
+  (loki/log "valids" validius)
+  (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
+            (as-> kaikki kaikki
+                  (update kaikki :validius
+                          (fn [vs]
+                            (update vs polku
+                                    (fn [kentta]
+                                      (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
+                                      (assoc kentta
+                                        :tarkistettu? true
+                                        :validointi validointi
+                                        :validi? (validointi
+                                                   (get-in lomake polku)))))))
+                  (update kaikki :validi?
+                          (fn [v?]
+                            (not
+                              (some (fn [[avain {validi? :validi?}]]
+                                      (false? validi?)) (:validius kaikki)))))))
+          lomake-meta
+          validius))
 
 (defn validoi-fn
   "Kutsuu vain lomakkeen kaikki validointifunktiot ja päivittää koko lomakkeen validiuden"
-  [lomake]
+  ([skeema lomake]
+    (validoi! skeema lomake))
+  ([lomake]
   (if (nil? (meta lomake))
     lomake
     (vary-meta
       lomake
-      (fn [{:keys [validius validi?] :as lomake-meta} lomake]
-        (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
-                  (as-> kaikki kaikki
-                        (update kaikki :validius
-                                (fn [vs]
-                                  (update vs polku
-                                          (fn [kentta]
-                                            (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
-                                            (assoc kentta
-                                              :tarkistettu? true
-                                              :validointi validointi
-                                              :validi? (validointi
-                                                         (get-in lomake polku)))))))
-                        (update kaikki :validi?
-                                (fn [v?]
-                                  (not
-                                    (some (fn [[avain {validi? :validi?}]]
-                                            (false? validi?)) (:validius kaikki)))))))
-                lomake-meta
-                validius))
-      lomake)))
+      validoi!
+      lomake))))
 
 (defonce urakan-vaihto-triggerit (cljs.core/atom []))
 
@@ -112,7 +123,7 @@
         (nil?
           (validointi-fn arvo))))))
 
-(defn luo-validius-meta
+(defn luo-validius-tarkistukset
   "Ajatus, että lomake tietää itse, miten se validoidaan"
   [& kentat-ja-validaatiot]
   (assoc {} :validius
@@ -131,8 +142,11 @@
    [:erapaiva] (:kulut/erapaiva validoinnit)
    [:laskun-numero] (:kulut/laskun-numero validoinnit)])
 
-(defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
-  (apply luo-validius-meta
+(defn kulun-validointi-meta
+  ([kulu]
+    (kulun-validointi-meta kulu {}))
+  ([{:keys [kohdistukset] :as _kulu} opts]
+  (apply luo-validius-tarkistukset
          (concat kulun-oletus-validoinnit
                  (mapcat (fn [i]
                            (if (= "lisatyo"
@@ -143,7 +157,7 @@
                               [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                               [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
-                         (range (count kohdistukset))))))
+                         (range (count kohdistukset)))))))
 
 (def kulut-kohdistus-default {:tehtavaryhma        nil
                               :toimenpideinstanssi nil

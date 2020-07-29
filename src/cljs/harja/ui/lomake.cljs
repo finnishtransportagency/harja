@@ -36,8 +36,9 @@
 
 (defn palstat
   "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
-  [{:keys [lukumaara]} & palstan-optiot-ja-skeemat]
-  (->Palstat {:lukumaara lukumaara} (remove nil? palstan-optiot-ja-skeemat)))
+  [{:keys [lukumaara puolikas]} & palstan-optiot-ja-skeemat]
+  (->Palstat {:lukumaara lukumaara
+              :puolikas puolikas} (remove nil? palstan-optiot-ja-skeemat)))
 
 (defn palstoja? [x]
   (instance? Palstat x))
@@ -135,7 +136,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn- palstoita
   "Ottaa sisään ryhmiä ja muodostaa jokaisesta ryhmästä palstan vertikaalisesti"
-  [rivit opts skeemat]
+  [rivit {:keys [puolikas]} skeemat]
   (let [lukumaara (/ (count skeemat) 2)
         partitioidut-skeemat (partition 2 (remove nil? skeemat))]
     (conj rivit (with-meta
@@ -388,7 +389,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
                                     varoitukset muokatut virheet huomautukset rivi-opts]}]
-  [:div {:class (str "lomakepalsta")}
+  [:div {:class (str "lomakepalsta " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
    (when (-> palsta :optiot :otsikko)
      [:h2 (-> palsta :optiot :otsikko)])
    (for [{:keys [nimi muokattava?] :as p} (remove nil? (:skeemat palsta))]
@@ -415,7 +416,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
     [(if palstoitettu?
-       :div.row.lomakerivi.lomakepalstat
+       :div.row.lomakepalstat
        :div.row.lomakerivi)
      (doall
        (for [{:keys [nimi muokattava?] :as s} skeemat
@@ -555,7 +556,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                  (header-fn (assoc validoitu-data
                                               ::skeema skeema))
                                  header)]
-               [:div.flex-row header])
+               [:div.row header])
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall

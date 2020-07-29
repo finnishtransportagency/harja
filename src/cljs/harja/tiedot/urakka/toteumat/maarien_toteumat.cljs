@@ -45,6 +45,7 @@
 (defrecord TallennaToteumaEpaonnistui [vastaus])
 (defrecord TehtavatHakuOnnistui [vastaus parametrit])
 (defrecord TehtavatHakuEpaonnistui [vastaus])
+(defrecord ValidoiKokoLomake [lomake validointi-skeema])
 
 (defrecord HaeTehtavat [parametrit])
 (defrecord LahetaLomake [lomake])
@@ -62,6 +63,27 @@
 (def oletuslomake {})
 
 (def uusi-toteuma {})
+
+(def validoinnit {::t/maara      [tila/ei-nil tila/ei-tyhja tila/numero]
+                  ::t/lisatieto  [tila/ei-nil tila/ei-tyhja]
+                  ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
+                  ::t/tehtava    [tila/ei-nil tila/ei-tyhja]
+                  ::t/sijainti   []
+                  ::t/tyyppi     [tila/ei-nil]
+                  ::t/pvm        [tila/ei-nil tila/ei-tyhja tila/paivamaara]})
+
+(def toteuma-lomakkeen-oletus-validoinnit
+  [[::t/toimenpide] (::t/toimenpide validoinnit)
+   [::t/pvm] (::t/pvm validoinnit)
+   [::t/tyyppi] (::t/tyyppi validoinnit)])
+
+(defn toteuma-lomakkeen-validoinnit [toteumat]
+  (apply tila/luo-validius-tarkistukset
+         (concat toteuma-lomakkeen-oletus-validoinnit
+                 (mapcat (fn [i]
+                           [[::t/toteumat i ::t/maara] (::t/maara validoinnit)
+                            [::t/toteumat i ::t/tehtava] (::t/tehtava validoinnit)])
+                         (range (count toteumat))))))
 
 (defn- hae-tehtavat-tyypille
   ([toimenpide]
@@ -162,7 +184,11 @@
            toteumat   ::t/toteumat} lomake
           urakka-id (-> @tila/yleiset :urakka :id)
           aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
-                                            toteumat)]
+                                            toteumat)
+          validius (toteuma-lomakkeen-validoinnit toteumat)
+          validoi (:validoi validius)]
+      (loki/log "validoinnit" validius)
+      (loki/log "ajetaan" (validoi validius lomake))
       (tuck-apurit/post! :tallenna-toteuma
                          {:urakka-id  urakka-id
                           :toimenpide toimenpide
@@ -181,6 +207,11 @@
   (process-event [{lomake :lomake} app]
     (let [lomake (update lomake ::t/toteumat conj uusi-toteuma)]
       (assoc app :lomake lomake)))
+  ValidoiKokoLomake
+  (process-event [{lomake            :lomake
+                   validointi-skeema :validointi-skeema} app]
+    (loki/log (toteuma-lomakkeen-validoinnit (::t/toteumat lomake)))
+    app)
   PaivitaLomake
   (process-event [{{useampi?          ::t/useampi-toteuma
                     tyyppi            ::t/tyyppi
@@ -192,10 +223,9 @@
       ::t/toimenpide (hae-tehtavat-tyypille toimenpide tyyppi)
       ::t/tyyppi (hae-tehtavat-tyypille toimenpide tyyppi)
       :default)
-    ; :TODO: tää pitää korjata sijaintien osalta jos on yksi toteuma
+    ; :TODO: tässä tai jossain pitää validoida lomake erikseen, koska se harja.ui.lomake-lomakkeen oma vaikutti liian tunkkaiselta tähän, parempi tehä ite
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
           tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
-          paivitettava-toteumat-vektoriin #{::t/lisatieto ::t/maara ::t/tehtava ::t/sijainti}
           app (assoc app :lomake lomake)
           maara-pois (fn [ts]
                        (mapv #(dissoc % ::t/maara) ts))
@@ -213,13 +243,11 @@
                                                               (not= useampi? useampi-aiempi?))
                                                          (update ::t/toteumat #(conj [] (first %)))
 
-                                                         ; tätä ei tarvinne enää, koska fiksailtu?
-                                                         (and (not (true? useampi?))
-                                                              (some #(= viimeksi-muokattu %)
-                                                                    paivitettava-toteumat-vektoriin))
-                                                         (fn [app]
-                                                           (loki/log "kutsutaanko tätä")
-                                                           (assoc-in app [::t/toteumat 0 viimeksi-muokattu] (viimeksi-muokattu lomake))))]
+                                                         ; onko toteumia poistettu, jos niin asetetaan useampi-toteuma oikein
+                                                         (and (true? useampi?)
+                                                              (true? useampi-aiempi?)
+                                                              (= (count (::t/toteumat l)) 1))
+                                                         (assoc ::t/useampi-toteuma false))]
                                            ; siivotaan tyyppiä vaihdettaessa turhat kentät
                                            (if (not= tyyppi tyyppi-aiempi)
                                              (case tyyppi
@@ -236,7 +264,6 @@
                                   (update lomake ::t/toteumat conj uusi-toteuma)
                                   (update lomake ::t/toteumat #(conj [] (first %)))))
                               identity)))
-      (loki/log "ual" uusi-app lomake)
       uusi-app))
   TyhjennaLomake
   (process-event [_ app]

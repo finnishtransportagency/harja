@@ -120,7 +120,8 @@
                                                       (second rivi)
                                                       nil)
                                         toteutunut-maara (or (apply + (map :toteutunut (second rivi))) 0)
-                                        suunniteltu-maara (:suunniteltu_maara (first (second rivi)))]
+                                        suunniteltu-maara (:suunniteltu_maara (first (second rivi)))
+                                        {:keys [tyyppi]} (first (second rivi))]
                                     (concat
                                       [^{:key (hash rivi)}
                                       [:tr (merge
@@ -134,10 +135,14 @@
                                                                                   [ikonit/livicon-chevron-down])]
                                        [:td {:style {:width (:toteuma leveydet)}} (str toteutunut-maara " " (:yksikko (first (second rivi))))]
                                        [:td {:style {:width (:suunniteltu leveydet)}} (if (= -1 suunniteltu-maara)
-                                                                                        "---"
+                                                                                        (case tyyppi
+                                                                                          "kokonaishintainen" [:span.tila-virhe "---"]
+                                                                                          "---")
                                                                                         (str (or suunniteltu-maara 0) " " (:yksikko (first (second rivi)))))]
                                        [:td {:style {:width (:prosentti leveydet)}} (if (= -1 suunniteltu-maara)
-                                                                                      "---"
+                                                                                      (case tyyppi
+                                                                                        "kokonaishintainen" [:span.tila-virhe (ikonit/exclamation-sign)]
+                                                                                        "---")
                                                                                       (str (laske-prosentti (:suunniteltu_maara (first (second rivi))) toteutunut-maara) " %"))]]]
 
                                       ;; "+ Lisää toteuma" rivi - jos rivi on auki
