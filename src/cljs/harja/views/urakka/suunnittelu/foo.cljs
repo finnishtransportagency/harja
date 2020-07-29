@@ -714,13 +714,13 @@
                         (let [syote-tayta-alas-predef (taulukko/predef :syote-tayta-alas nil)
                               input-predef (taulukko/predef :input nil)
                               numero-predef (taulukko/predef :numero nil)
-                              laajenna-predef (taulukko/predef :laajenna
-                                                               {:aukeamispolku [:.. :.. 1]
-                                                                :sulkemispolku [#_:.. :.. :.. 1]})
                               yhteenvetorivi (fn [f]
                                                (vec
                                                  (concat [{:solu solu/laajenna
-                                                           :parametrit [(merge laajenna-predef
+                                                           :parametrit [(merge (taulukko/predef :laajenna
+                                                                                                {:aukeamispolku [:.. :.. 1]
+                                                                                                 :sulkemispolku [#_:.. :.. :.. 1]
+                                                                                                 #_#_:aukaise-fn f})
                                                                                {:parametrit {:class #{"table-default" "lihavoitu"}}})]}]
                                                          (map (fn [sarake]
                                                                 {:solu solu/teksti
@@ -739,19 +739,20 @@
                                                          :grid-polku grid-polku
                                                          :data-polku data-polku}
                                                   #_#_:vaihto-osat {:yhteenveto-checkboxilla {:conf {:nimi ::vaihto-yhteenveto-checkboxilla}
-                                                                                              :body [{:conf {:jarjestys [:rivi :a :b :c :poista]
-                                                                                                             :nimi ::data-yhteenveto-vaihto}
-                                                                                                      :osat (yhteenvetorivi (fn [this _]
-                                                                                                                              (taulukko/vaihda-osa-takaisin! this (grid/osa-polusta this [:.. :..]))))}
-                                                                                                     {:conf {:jarjestys [:rivi :a :b :c :poista]
-                                                                                                             :nimi ::disable-valinta}
-                                                                                                      :osat (vec
-                                                                                                              (cons (vayla-checkbox (fn [this event]
-                                                                                                                                      (.preventDefault event)
-                                                                                                                                      (let [disable-rivit? (not (grid/solun-arvo this))]
-                                                                                                                                        (e! (tuck-apurit/->MuutaTila [:data-disable] disable-rivit?))))
-                                                                                                                                    "Disabloi rivit")
-                                                                                                                    (repeatedly 4 (fn [] (solu/tyhja)))))}]}}
+                                                                                          :body [{:conf {:jarjestys [:rivi :a :b :c :poista]
+                                                                                                         :nimi ::data-yhteenveto-vaihto}
+                                                                                                  :osat (yhteenvetorivi (fn [this _]
+                                                                                                                          (taulukko/vaihda-osa-takaisin! this (grid/osa-polusta this [:.. :..]))))}
+                                                                                                 {:conf {:jarjestys [:rivi :a :b :c :poista]
+                                                                                                         :nimi ::disable-valinta}
+                                                                                                  :osat (vec
+                                                                                                          (cons {:solu vayla-checkbox
+                                                                                                                 :parametrit [(fn [this event]
+                                                                                                                                (.preventDefault event)
+                                                                                                                                (let [disable-rivit? (not (grid/solun-arvo this))]
+                                                                                                                                  (e! (tuck-apurit/->MuutaTila [:data-disable] disable-rivit?))))
+                                                                                                                              "Disabloi rivit"]}
+                                                                                                                (repeatedly 4 (fn [] {:solu solu/tyhja}))))}]}}
                                                   :datavaikutukset-taulukkoon {:rahavaraukset-disablerivit {:polut [[:data-disable]]
                                                                                                             :toiminto! (fn [g _ data-disable]
                                                                                                                          (doseq [rivikontti (-> g (grid/get-in-grid [::data]) (grid/hae-grid :lapset))

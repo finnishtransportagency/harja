@@ -144,11 +144,18 @@
           (paivita-raidat! g vaihdetun-osan-nimet)))))
 
 (defmethod predef :laajenna
-  [_ {:keys [aukeamispolku sulkemispolku]}]
+  [_ {:keys [aukeamispolku sulkemispolku aukaise-fn]}]
   {:aukaise-fn (with-meta (fn []
-                            (let [vaihdetun-osan-nimet (->> *vaihto-osien-mappaus* deref :vaihto-osat keys (into #{}))]
-                              (fn [this auki?]
-                                (laajenna-solua-klikattu this vaihdetun-osan-nimet aukeamispolku sulkemispolku auki?))))
+                            (let [vaihdetun-osan-nimet (->> *vaihto-osien-mappaus* deref :vaihto-osat keys (into #{}))
+                                  solu-klikattu-fn (fn [this auki?]
+                                                     (laajenna-solua-klikattu this vaihdetun-osan-nimet aukeamispolku sulkemispolku auki?))]
+                              (if aukaise-fn
+                                (comp solu-klikattu-fn
+                                      aukaise-fn)
+                                solu-klikattu-fn)
+                              #_(comp (fn [this auki?]
+                                      (laajenna-solua-klikattu this vaihdetun-osan-nimet aukeamispolku sulkemispolku auki?))
+                                    (or aukaise-fn identity))))
                           {:aja-taulukon-luontivaiheessa? true})
    :auki-alussa? false})
 
@@ -212,6 +219,8 @@
       vaihdettava-osa
       (constantly vanha-osa))))
 
+(declare muodosta-grid-osa!)
+
 (defn vaihda-osa! [osa vaihdettavan-osan-polku]
   (when g-debug/GRID_DEBUG
     (when (and (nil? osa)
@@ -226,7 +235,8 @@
         vaihdettavan-osan-id (grid/hae-osa vaihdettava-osa :id)
         vaihto-osien-mappaus (get root-grid ::vaihto-osien-mappaus)
         vaihto-osan-tunniste (get-in @vaihto-osien-mappaus [:mappaus vaihdettavan-osan-id])
-        uusi-osa (grid/samanlainen-osa (get-in @vaihto-osien-mappaus [:vaihto-osat vaihto-osan-tunniste]))]
+        #_#_uusi-osa (grid/samanlainen-osa (get-in @vaihto-osien-mappaus [:vaihto-osat vaihto-osan-tunniste]))
+        uusi-osa (muodosta-grid-osa! (get-in @vaihto-osien-mappaus [:vaihto-osien-maaritelmat vaihto-osan-tunniste]))]
     (swap! vaihto-osien-mappaus update-in [:vaihdettu (grid/hae-osa uusi-osa :id)] vaihdettava-osa)
     (grid/vaihda-osa!
       vaihdettava-osa
@@ -460,10 +470,7 @@
   ([osamaaritelma yksiloivakentta haettavan-datan-polku osan-tyypit data gridpolku]
    (vec
      (map-indexed (fn [index datapoint]
-                    (let [haettavan-datan-polku (conj (vec (if (= ::vektori (last haettavan-datan-polku))
-                                                             (butlast haettavan-datan-polku)
-                                                             haettavan-datan-polku))
-                                                      index)]
+                    (let [rajapinnan-nimi-fn (muodosta-rajapinnan-nimi-polusta haettavan-datan-polku true)]
                       (foo-bar (or (get osamaaritelma :toistettava-osa)
                                    (get osamaaritelma :body)
                                    (get osamaaritelma :osat))
@@ -472,7 +479,7 @@
                                (rest osan-tyypit)
                                datapoint
                                gridpolku
-                               {(str ((muodosta-rajapinnan-nimi-polusta gridpolku true) index)) [haettavan-datan-polku]})))
+                               {(rajapinnan-nimi-fn index) #_(str ((muodosta-rajapinnan-nimi-polusta datapolku true) index)) [haettavan-datan-polku]})))
                   data)))
   ([osamaaritelma yksiloivakentta haettavan-datan-polku [osan-tyyppi & loput] data gridpolku hakupolut]
    hakupolut
@@ -521,8 +528,7 @@
                         haettavan-datan-polku
                         osapolku
                         data
-                        gridpolku)
-               )
+                        gridpolku))
      :haku identity}))
 
 (defmethod muodosta-datakasittelija-ratom-maaritelma :default
