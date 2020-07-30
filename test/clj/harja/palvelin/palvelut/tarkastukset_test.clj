@@ -235,3 +235,23 @@
       (is (= {:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]} reitin-eka-viiva))
       (is (contains? (:selite vastaus) :teksti))
       (is (contains? (:selite vastaus) :vari)))))
+
+(deftest hae-urakan-tarkastukset-mhu
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-tarkastukset +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :alkupvm (pvm/luo-pvm 2022 9 1)
+                                 :loppupvm (pvm/luo-pvm 2023 8 30)
+                                 :tienumero nil
+                                 :tyyppi nil
+                                 :vain-laadunalitukset? false})]
+    (is (not (empty? vastaus)))
+    (is (>= (count vastaus) 1))
+    (let [tarkastus (first vastaus)]
+      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus
+               :vakiohavainnot :aika :soratiemittaus
+               :tr :tekija :id :tyyppi :tarkastaja
+               :talvihoitomittaus :yllapitokohde
+               :nayta-urakoitsijalle :liitteet}
+             (into #{} (keys tarkastus)))))))

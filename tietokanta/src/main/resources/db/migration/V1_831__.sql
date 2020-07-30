@@ -156,7 +156,8 @@ BEGIN
         INSERT INTO tarkastus_2020_q2 VALUES (NEW.*);
     ELSIF aika >= '2020-07-01'::date AND aika < '2020-10-01'::date THEN
         INSERT INTO tarkastus_2020_q3 VALUES (NEW.*);
-
+    ELSIF aika >= '2020-10-01'::date AND aika < '2021-01-01'::date THEN
+        INSERT INTO tarkastus_2020_q4 VALUES (NEW.*);
     ELSIF aika >= '2021-01-01'::date AND aika < '2021-04-01'::date THEN
         INSERT INTO tarkastus_2021_q1 VALUES (NEW.*);
     ELSIF aika >= '2021-04-01'::date AND aika < '2021-07-01'::date THEN
@@ -204,7 +205,7 @@ BEGIN
     ELSIF aika >= '2026-07-01'::date AND aika < '2026-10-01'::date THEN
         INSERT INTO tarkastus_2026_q3 VALUES (NEW.*);
     ELSIF aika >= '2026-10-01'::date AND aika < '2027-01-01'::date THEN
-        INSERT INTO tarkastus_2026_q4 VALUES (NEW.*);  ELSE
+        INSERT INTO tarkastus_2026_q4 VALUES (NEW.*); ELSE
         RAISE EXCEPTION 'Taululle tarkastus ei löydy insert ehtoa, korjaa tarkastus_insert() sproc!';
     END IF;
     RETURN NULL;
