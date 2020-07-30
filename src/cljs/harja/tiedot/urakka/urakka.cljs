@@ -29,7 +29,7 @@
   (fn [arvo]
     (if (pred)
       (v-fn arvo)
-      arvo)))
+      true)))
 
 (defn ei-pakollinen [v-fn]
   (fn [arvo]

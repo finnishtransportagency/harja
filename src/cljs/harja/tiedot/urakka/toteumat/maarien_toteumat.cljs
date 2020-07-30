@@ -64,25 +64,37 @@
 
 (def uusi-toteuma {})
 
-(def validoinnit {::t/maara      [tila/ei-nil tila/ei-tyhja tila/numero]
-                  ::t/lisatieto  [tila/ei-nil tila/ei-tyhja]
-                  ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
-                  ::t/tehtava    [tila/ei-nil tila/ei-tyhja]
-                  ::t/sijainti   []
-                  ::t/tyyppi     [tila/ei-nil]
-                  ::t/pvm        [tila/ei-nil tila/ei-tyhja tila/paivamaara]})
+(defn validoinnit
+  ([avain lomake]
+   (let []
+     (avain {::t/maara      [tila/ei-nil tila/ei-tyhja tila/numero]
+             ::t/lisatieto  [(tila/silloin-kun #(do
+                                                  (loki/log "predikaattityyppi" (::t/tyyppi lomake))
+                                                  (= :lisatyo (::t/tyyppi lomake)))
+                                               tila/ei-nil)
+                             (tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
+                                               tila/ei-tyhja)]
+             ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
+             ::t/tehtava    [tila/ei-nil tila/ei-tyhja]
+             ::t/sijainti   []
+             ::t/tyyppi     [tila/ei-nil]
+             ::t/pvm        [tila/ei-nil tila/ei-tyhja tila/paivamaara]})))
+  ([avain]
+   (validoinnit avain {})))
 
 (def toteuma-lomakkeen-oletus-validoinnit
-  [[::t/toimenpide] (::t/toimenpide validoinnit)
-   [::t/pvm] (::t/pvm validoinnit)
-   [::t/tyyppi] (::t/tyyppi validoinnit)])
+  [[::t/toimenpide] (validoinnit ::t/toimenpide)
+   [::t/pvm] (validoinnit ::t/pvm)
+   [::t/tyyppi] (validoinnit ::t/tyyppi)])
 
-(defn toteuma-lomakkeen-validoinnit [toteumat]
+(defn toteuma-lomakkeen-validoinnit [{toteumat ::t/toteumat :as lomake}]
   (apply tila/luo-validius-tarkistukset
          (concat toteuma-lomakkeen-oletus-validoinnit
                  (mapcat (fn [i]
-                           [[::t/toteumat i ::t/maara] (::t/maara validoinnit)
-                            [::t/toteumat i ::t/tehtava] (::t/tehtava validoinnit)])
+                           [[::t/toteumat i ::t/maara] (validoinnit ::t/maara)
+                            [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava)
+                            [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti)
+                            [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
                          (range (count toteumat))))))
 
 (defn- hae-tehtavat-tyypille
@@ -185,24 +197,27 @@
           urakka-id (-> @tila/yleiset :urakka :id)
           aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
                                             toteumat)
-          validius (toteuma-lomakkeen-validoinnit toteumat)
-          validoi (:validoi validius)]
-      (loki/log "validoinnit" validius)
-      (loki/log "ajetaan" (validoi validius lomake))
-      (tuck-apurit/post! :tallenna-toteuma
-                         {:urakka-id  urakka-id
-                          :toimenpide toimenpide
-                          :tyyppi     (aseta-akillisen-tyyppi tyyppi)
-                          :loppupvm   loppupvm
-                          :toteumat   (mapv #(into {}       ; siivotaan namespacet lähetettävästä
-                                                   (map
-                                                     (fn [[k v]]
-                                                       [(-> k name keyword) v])
-                                                     %))
-                                            toteumat)}
-                         {:onnistui    ->TallennaToteumaOnnistui
-                          :epaonnistui ->TallennaToteumaEpaonnistui}))
-    app)
+          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
+          {:keys [validi? validius] :as validoidut} (validoi validoinnit lomake)]
+      (loki/log "validoinnit" validoinnit)
+      (loki/log "ajetaan" validoidut)
+      (when (true? validi?)
+        (tuck-apurit/post! :tallenna-toteuma
+                           {:urakka-id  urakka-id
+                            :toimenpide toimenpide
+                            :tyyppi     (aseta-akillisen-tyyppi tyyppi)
+                            :loppupvm   loppupvm
+                            :toteumat   (mapv #(into {}     ; siivotaan namespacet lähetettävästä
+                                                     (map
+                                                       (fn [[k v]]
+                                                         [(-> k name keyword) v])
+                                                       %))
+                                              toteumat)}
+                           {:onnistui    ->TallennaToteumaOnnistui
+                            :epaonnistui ->TallennaToteumaEpaonnistui}))
+      (-> app
+          (assoc-in [:lomake ::tila/validius] validius)
+          (assoc-in [:lomake ::tila/validi?] validi?))))
   LisaaToteuma
   (process-event [{lomake :lomake} app]
     (let [lomake (update lomake ::t/toteumat conj uusi-toteuma)]
@@ -210,7 +225,7 @@
   ValidoiKokoLomake
   (process-event [{lomake            :lomake
                    validointi-skeema :validointi-skeema} app]
-    (loki/log (toteuma-lomakkeen-validoinnit (::t/toteumat lomake)))
+    (loki/log (toteuma-lomakkeen-validoinnit lomake))
     app)
   PaivitaLomake
   (process-event [{{useampi?          ::t/useampi-toteuma

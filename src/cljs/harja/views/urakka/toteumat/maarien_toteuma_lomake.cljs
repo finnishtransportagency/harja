@@ -166,10 +166,15 @@
 (defn- maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
   (let [{tyyppi   ::t/tyyppi
-         toteumat ::t/toteumat} lomake
+         toteumat ::t/toteumat
+         validius ::tila/validius} lomake
         {ei-sijaintia ::t/ei-sijaintia
          toteuma-id   ::t/toteuma-id
          sijainti     ::t/sijainti} (-> toteumat first)
+        validi? (fn [polku]
+                  (if validius
+                    (not (get-in validius [polku :validi?]))
+                    false))
         laheta-lomake! (r/partial laheta! e!)
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava [{:otsikko               "Työ valmis"
@@ -186,37 +191,37 @@
         lisatyo [{:otsikko               "Pvm"
                   :nimi                  ::t/pvm
                   ::ui-lomake/col-luokka ""
-                  :pakollinen?           true
+                  :virhe?                (validi? [::t/pvm])
                   :tyyppi                :pvm}
                  {:otsikko               "Tehtävä"
-                  :nimi                  ::t/tehtava
-                  :pakollinen?           true
+                  :nimi                  [::t/toteumat 0 ::t/tehtava]
                   ::ui-lomake/col-luokka ""
+                  :virhe?                (validi? [::t/toteumat 0 ::t/tehtava])
                   :tyyppi                :valinta
                   :valinta-nayta         :tehtava
                   :valinnat              tehtavat}
                  {:otsikko               "Kuvaus"
                   ::ui-lomake/col-luokka ""
-                  :nimi                  ::t/lisatieto
-                  :pakollinen?           false
+                  :nimi                  [::t/toteumat 0 ::t/lisatieto]
+                  :virhe?                (validi? [::t/toteumat 0 ::t/lisatieto])
                   :tyyppi                :string
                   :vihje                 "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
         akilliset-ja-korjaukset [{:otsikko               "Pvm"
                                   :nimi                  ::t/pvm
                                   ::ui-lomake/col-luokka ""
-                                  :pakollinen?           true
+                                  :virhe?                (validi? [::t/pvm])
                                   :tyyppi                :pvm}
                                  {:otsikko               "Tehtävä"
-                                  :nimi                  ::t/tehtava
-                                  :pakollinen?           true
+                                  :nimi                  [::t/toteumat 0 ::t/tehtava]
                                   ::ui-lomake/col-luokka ""
                                   :tyyppi                :valinta
+                                  :virhe?                (validi? [::t/toteumat 0 ::t/tehtava])
                                   :valinnat              tehtavat
                                   :valinta-nayta         :tehtava}
                                  {:otsikko               "Kuvaus"
                                   ::ui-lomake/col-luokka ""
-                                  :nimi                  ::t/lisatieto
-                                  :pakollinen?           false
+                                  :nimi                  [::t/toteumat 0 ::t/lisatieto]
+                                  :virhe?                (validi? [::t/toteumat 0 ::t/lisatieto])
                                   :tyyppi                :string
                                   :vihje                 "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
         poista! (poista-fn {:toteuma-id toteuma-id
@@ -277,7 +282,7 @@
          [{:otsikko               "Toimenpide"
            :nimi                  ::t/toimenpide
            ::ui-lomake/col-luokka ""
-           :pakollinen?           true
+           :virhe?                (validi? [::t/toimenpide])
            :valinnat              toimenpiteet
            :valinta-nayta         :otsikko
            :tyyppi                :valinta}])
