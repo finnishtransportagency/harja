@@ -247,11 +247,12 @@
                                  :tyyppi nil
                                  :vain-laadunalitukset? false})]
     (is (not (empty? vastaus)))
+    (is (= (:havainnot (first vastaus)) "Tiessä oli pieni kuoppa 4"))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
       (is (= #{:ok? :jarjestelma :havainnot :laadunalitus
-               :vakiohavainnot :aika :soratiemittaus
+               :vakiohavainnot :aika
                :tr :tekija :id :tyyppi :tarkastaja
-               :talvihoitomittaus :yllapitokohde
+               :yllapitokohde
                :nayta-urakoitsijalle :liitteet}
              (into #{} (keys tarkastus)))))))
