@@ -714,14 +714,15 @@
                         (let [syote-tayta-alas-predef (taulukko/predef :syote-tayta-alas nil)
                               input-predef (taulukko/predef :input nil)
                               numero-predef (taulukko/predef :numero nil)
-                              yhteenvetorivi (fn [f]
+                              yhteenvetorivi (fn [f auki-alussa?]
                                                (vec
                                                  (concat [{:solu solu/laajenna
                                                            :parametrit [(merge (taulukko/predef :laajenna
                                                                                                 {:aukeamispolku [:.. :.. 1]
-                                                                                                 :sulkemispolku [#_:.. :.. :.. 1]
-                                                                                                 #_#_:aukaise-fn f})
-                                                                               {:parametrit {:class #{"table-default" "lihavoitu"}}})]}]
+                                                                                                 :sulkemispolku [:.. :.. :.. 1]
+                                                                                                 :aukaise-fn f})
+                                                                               {:parametrit {:class #{"table-default" "lihavoitu"}}
+                                                                                :auki-alussa? auki-alussa?})]}]
                                                          (map (fn [sarake]
                                                                 {:solu solu/teksti
                                                                  :parametrit [{:parametrit {:class #{"table-default"}}
@@ -738,13 +739,15 @@
                                                          :dom-id dom-id
                                                          :grid-polku grid-polku
                                                          :data-polku data-polku}
-                                                  #_#_:vaihto-osat {:yhteenveto-checkboxilla {:conf {:nimi ::vaihto-yhteenveto-checkboxilla}
+                                                  :vaihto-osat {:yhteenveto-checkboxilla {:conf {:nimi ::vaihto-yhteenveto-checkboxilla}
                                                                                           :body [{:conf {:jarjestys [:rivi :a :b :c :poista]
                                                                                                          :nimi ::data-yhteenveto-vaihto}
                                                                                                   :osat (yhteenvetorivi (fn [this _]
-                                                                                                                          (taulukko/vaihda-osa-takaisin! this (grid/osa-polusta this [:.. :..]))))}
+                                                                                                                          (taulukko/vaihda-osa-takaisin! this (grid/osien-yhteinen-asia (grid/osa-polusta this [:.. :..]) :index-polku)))
+                                                                                                                        true)}
                                                                                                  {:conf {:jarjestys [:rivi :a :b :c :poista]
-                                                                                                         :nimi ::disable-valinta}
+                                                                                                         :nimi ::disable-valinta
+                                                                                                         :samaraita-edelliseen? true}
                                                                                                   :osat (vec
                                                                                                           (cons {:solu vayla-checkbox
                                                                                                                  :parametrit [(fn [this event]
@@ -794,12 +797,14 @@
                                                                                                                                                                                :datarivi-3 {:a 1 :b 2 :c 3}}}])))
                                                              :body [{:conf {:nimi ::data
                                                                             :yksiloivakentta :rivin-nimi}
-                                                                     :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]}
+                                                                     :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]
+                                                                                              :koko konf/auto}
                                                                                        :header {:conf {:nimi ::data-yhteenveto
-                                                                                                       #_#_:vaihdettava-osa :yhteenveto-checkboxilla
+                                                                                                       :vaihdettava-osa :yhteenveto-checkboxilla
                                                                                                        :jarjestys [[:rivi :a :b :c :poista]]}
                                                                                                 :osat (yhteenvetorivi (fn [this auki?]
-                                                                                                                        (taulukko/vaihda-osa! this (grid/osien-yhteinen-asia (grid/vanhempi this) :nimi-polku))))}
+                                                                                                                        (taulukko/vaihda-osa! this (grid/osien-yhteinen-asia (grid/vanhempi this) :index-polku)))
+                                                                                                                      false)}
                                                                                        :body [{:conf {:nimi ::data-sisalto
                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
                                                                                                :body (mapv (fn [index]
