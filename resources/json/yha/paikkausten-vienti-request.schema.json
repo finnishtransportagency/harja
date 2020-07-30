@@ -183,7 +183,15 @@
           "enum": [
             "asfalttibetoni",
             "kivimastiks",
-            "pehmeät ab / bitumi"
+            "pehmeät ab / bitumi",
+            "AB, Asfalttibetoni",
+            "SMA, Kivimastiksiasfaltti",
+            "PAB-B, Pehmeät asfalttibetonit",
+            "PAB-V, Pehmeät asfalttibetonit",
+            "PAB-O, Pehmeät asfalttibetonit",
+            "VA, valuasfaltti",
+            "SIP, Sirotepintaus",
+            "SOP, Soratien pintaus"
           ]
         },
         "leveys": {

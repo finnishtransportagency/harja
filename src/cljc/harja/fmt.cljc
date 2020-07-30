@@ -249,6 +249,10 @@
            (re-find #"Lappi " nimi)
            (s/replace nimi #"Lappi " "")
 
+           ;; Firmojen nimiin lyhennyksiä
+           (re-find #"NCC Industry Oy" nimi)
+           (s/replace nimi #"NCC Industry Oy" "NCC")
+
            ;; Kunnossapidon
            (re-find #"kunnossapidon" nimi)
            (s/replace nimi #"kunnossapidon" "kp.")

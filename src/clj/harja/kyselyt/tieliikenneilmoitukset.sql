@@ -331,8 +331,14 @@ WHERE urakka = :urakka AND
 
 
 -- name: hae-id-ilmoitus-idlla
--- Hakee id:n ilmoituksen id:llä
+-- Hakee id:n ilmoitus-id:llä
 SELECT id
+FROM ilmoitus
+WHERE ilmoitusid = :ilmoitusid;
+
+-- name: hae-id-ja-urakka-ilmoitus-idlla
+-- Hakee ilmoituksen id:n ja urakan ilmoitus-id:llä
+SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
 
@@ -353,7 +359,8 @@ INSERT INTO ilmoitus
  tunniste,
  viestiid,
  vastaanotettu,
- "vastaanotettu-alunperin")
+ "vastaanotettu-alunperin",
+ "valitetty-urakkaan")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -369,26 +376,27 @@ VALUES
    :tunniste,
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
-   :vastaanotettu-alunperin :: TIMESTAMPTZ);
+   :vastaanotettu-alunperin :: TIMESTAMPTZ,
+   :valitetty-urakkaan :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
 UPDATE ilmoitus
-SET
-  urakka             = :urakka,
-  ilmoitusid         = :ilmoitusid,
-  ilmoitettu         = :ilmoitettu,
-  valitetty          = :valitetty,
-  vastaanotettu      = :vastaanotettu,
-  yhteydenottopyynto = :yhteydenottopyynto,
-  otsikko            = :otsikko,
-  paikankuvaus       = :paikankuvaus,
-  lisatieto          = :lisatieto,
-  ilmoitustyyppi     = :ilmoitustyyppi :: ILMOITUSTYYPPI,
-  selitteet          = :selitteet :: TEXT [],
-  tunniste           = :tunniste,
-  muokattu           = NOW(),
-  viestiid           = :viestiid
+SET urakka               = :urakka,
+    ilmoitusid           = :ilmoitusid,
+    ilmoitettu           = :ilmoitettu,
+    valitetty            = :valitetty,
+    "valitetty-urakkaan" = :valitetty-urakkaan,
+    vastaanotettu = :vastaanotettu,
+    yhteydenottopyynto = :yhteydenottopyynto,
+    otsikko = :otsikko,
+    paikankuvaus = :paikankuvaus,
+    lisatieto = :lisatieto,
+    ilmoitustyyppi = :ilmoitustyyppi :: ILMOITUSTYYPPI,
+    selitteet = :selitteet :: TEXT [],
+    tunniste = :tunniste,
+    muokattu = NOW(),
+    viestiid = :viestiid
 WHERE id = :id;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!
