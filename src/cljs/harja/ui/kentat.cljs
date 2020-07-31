@@ -284,7 +284,7 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli? virhe?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -296,7 +296,7 @@
           [:input {:class       (cond-> nil
                                         (and lomake?
                                              (not vayla-tyyli?)) (str "form-control ")
-                                        vayla-tyyli? (str "input-default komponentin-input ")
+                                        vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
                                         disabled? (str "disabled"))
                    :type        "text"
                    :disabled    disabled?
@@ -827,7 +827,7 @@
             {:on-click #(do (reset! auki true) nil)
              :style    {:display "inline-block"}}
             [:input.pvm {:class       (cond
-                                        vayla-tyyli? "input-" (if virhe? "error-" "") "default komponentin-input"
+                                        vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input")
                                         lomake? "form-control")
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value       nykyinen-teksti

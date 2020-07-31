@@ -65,22 +65,23 @@
 (def uusi-toteuma {})
 
 (defn validoinnit
-  ([avain lomake]
+  ([avain lomake indeksi]
    (let []
      (avain {::t/maara      [tila/ei-nil tila/ei-tyhja tila/numero]
-             ::t/lisatieto  [(tila/silloin-kun #(do
-                                                  (loki/log "predikaattityyppi" (::t/tyyppi lomake))
-                                                  (= :lisatyo (::t/tyyppi lomake)))
+             ::t/lisatieto  [(tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
                                                tila/ei-nil)
                              (tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
                                                tila/ei-tyhja)]
              ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
              ::t/tehtava    [tila/ei-nil tila/ei-tyhja]
-             ::t/sijainti   []
+             ::t/sijainti   [(tila/silloin-kun #(nil? (get-in lomake [::t/toteumat indeksi ::t/ei-sijaintia]))
+                                               tila/ei-nil)]
              ::t/tyyppi     [tila/ei-nil]
              ::t/pvm        [tila/ei-nil tila/ei-tyhja tila/paivamaara]})))
+  ([avain lomake]
+   (validoinnit avain lomake 0))
   ([avain]
-   (validoinnit avain {})))
+   (validoinnit avain {} 0)))
 
 (def toteuma-lomakkeen-oletus-validoinnit
   [[::t/toimenpide] (validoinnit ::t/toimenpide)
@@ -93,7 +94,7 @@
                  (mapcat (fn [i]
                            [[::t/toteumat i ::t/maara] (validoinnit ::t/maara)
                             [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava)
-                            [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti)
+                            [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti lomake i)
                             [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
                          (range (count toteumat))))))
 
@@ -198,10 +199,8 @@
           aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
                                             toteumat)
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
-          {:keys [validi? validius] :as validoidut} (validoi validoinnit lomake)]
-      (loki/log "validoinnit" validoinnit)
-      (loki/log "ajetaan" validoidut)
-      (when (true? validi?)
+          {:keys [validi? validius]} (validoi validoinnit lomake)]
+      (if (true? validi?)
         (tuck-apurit/post! :tallenna-toteuma
                            {:urakka-id  urakka-id
                             :toimenpide toimenpide
@@ -214,7 +213,8 @@
                                                        %))
                                               toteumat)}
                            {:onnistui    ->TallennaToteumaOnnistui
-                            :epaonnistui ->TallennaToteumaEpaonnistui}))
+                            :epaonnistui ->TallennaToteumaEpaonnistui})
+        (viesti/nayta! "Puuttuvia tai virheellisiä kenttiä, tarkista kentät!" :danger))
       (-> app
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
