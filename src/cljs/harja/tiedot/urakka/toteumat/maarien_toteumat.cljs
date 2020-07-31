@@ -242,6 +242,8 @@
     (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
           tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
           app (assoc app :lomake lomake)
+          vain-eka (fn [ts]
+                     [(first ts)])
           maara-pois (fn [ts]
                        (mapv #(dissoc % ::t/maara) ts))
           uusi-app (update app :lomake (fn [l]
@@ -266,8 +268,8 @@
                                            ; siivotaan tyyppiä vaihdettaessa turhat kentät
                                            (if (not= tyyppi tyyppi-aiempi)
                                              (case tyyppi
-                                               :akillinen-hoitotyo (update l ::t/toteumat maara-pois)
-                                               :lisatyo (update l ::t/toteumat maara-pois)
+                                               :akillinen-hoitotyo (update l ::t/toteumat (comp vain-eka maara-pois))
+                                               :lisatyo (update l ::t/toteumat (comp vain-eka maara-pois))
                                                l)
                                              l))))]
       #_(-> app

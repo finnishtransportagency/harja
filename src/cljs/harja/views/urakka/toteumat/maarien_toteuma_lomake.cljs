@@ -234,7 +234,7 @@
      [debug/debug app]
      [debug/debug lomake]
      [debug/debug validius]
-     [:div (str "Validi? " koko-validi?)]
+     #_[:div (str "Validi? " koko-validi?)]
      [ui-lomake/lomake
       {:muokkaa!     (fn [data]
                        (e! (tiedot/->PaivitaLomake data)))
@@ -294,7 +294,6 @@
         :oletusarvo       :maaramitattava
         :otsikko          ""
         :vaihtoehdot      [:maaramitattava :akillinen-hoitotyo :lisatyo]
-        :pakollinen?      true
         :nayta-rivina?    true
         :palstoja         2
         :vaihtoehto-nayta {:maaramitattava     "Määrämitattava tehtävä"
@@ -322,7 +321,7 @@
              :disabled?             ei-sijaintia
              :tyyppi                :tierekisteriosoite
              :sijainti              (r/wrap sijainti
-                                            (constantly true)) ; lomake päivittyy eri funkkarilla, niin never mind this, mutta annetaan sijainti silti
+                                            (constantly true)) ; lomake päivittyy eri funkkarilla, niin annetaan vaan sijainti mutta callbackilla ei ole väliä
              }
             {:nimi                  [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""
