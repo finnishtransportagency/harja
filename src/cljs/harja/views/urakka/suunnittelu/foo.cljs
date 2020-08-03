@@ -743,7 +743,11 @@
                                                                                           :body [{:conf {:jarjestys [:rivi :a :b :c :poista]
                                                                                                          :nimi ::data-yhteenveto-vaihto}
                                                                                                   :osat (yhteenvetorivi (fn [this _]
-                                                                                                                          (taulukko/vaihda-osa-takaisin! this (grid/osien-yhteinen-asia (grid/osa-polusta this [:.. :..]) :index-polku)))
+                                                                                                                          (taulukko/vaihda-osa-takaisin! this
+                                                                                                                                                         (grid/osan-yksiloivadata this)
+                                                                                                                                                         (grid/osien-yhteinen-asia (grid/osa-polusta this [:.. :..]) :index-polku)
+                                                                                                                                                         tila-atom
+                                                                                                                                                         data-polku))
                                                                                                                         true)}
                                                                                                  {:conf {:jarjestys [:rivi :a :b :c :poista]
                                                                                                          :nimi ::disable-valinta
@@ -798,12 +802,16 @@
                                                              :body [{:conf {:nimi ::data
                                                                             :yksiloivakentta :rivin-nimi}
                                                                      :toistettava-osa {:conf {:sarakkeiden-nimet [:rivin-nimi :a :b :c :poista]
-                                                                                              :koko konf/auto}
+                                                                                              :koko (with-meta konf/auto {:yksittainen true})}
                                                                                        :header {:conf {:nimi ::data-yhteenveto
                                                                                                        :vaihdettava-osa :yhteenveto-checkboxilla
                                                                                                        :jarjestys [[:rivi :a :b :c :poista]]}
                                                                                                 :osat (yhteenvetorivi (fn [this auki?]
-                                                                                                                        (taulukko/vaihda-osa! this (grid/osien-yhteinen-asia (grid/vanhempi this) :index-polku)))
+                                                                                                                        (taulukko/vaihda-osa! this
+                                                                                                                                              (grid/osan-yksiloivadata this)
+                                                                                                                                              (grid/osien-yhteinen-asia (grid/vanhempi this) :index-polku)
+                                                                                                                                              tila-atom
+                                                                                                                                              data-polku))
                                                                                                                       false)}
                                                                                        :body [{:conf {:nimi ::data-sisalto
                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}

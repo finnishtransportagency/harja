@@ -191,7 +191,7 @@
      :body-index (:body osioiden-index)
      :footer-index (:footer osioiden-index)}))
 
-(defn vaihda-osa-takaisin! [osa vaihdettavan-osan-polku]
+(defn vaihda-osa-takaisin! [osa yksiloivadata vaihdettavan-osan-polku tila-atom root-datapolku]
   (when g-debug/GRID_DEBUG
     (when (and (nil? osa)
                (nil? solu/*this*))
@@ -204,26 +204,24 @@
         vaihdettava-osa (grid/get-in-grid root-grid vaihdettavan-osan-polku)
         vaihdettavan-osan-id (grid/hae-osa vaihdettava-osa :id)
         vaihto-osien-mappaus (get root-grid ::vaihto-osien-mappaus)
-        vanha-osa (get-in @vaihto-osien-mappaus [:vaihdettu vaihdettavan-osan-id])]
+        vanha-osa (get-in @vaihto-osien-mappaus [:vaihdettu vaihdettavan-osan-id :vanha-osa])
+        vaihto-osan-tunniste (get-in @vaihto-osien-mappaus [:vaihdettu vaihdettavan-osan-id :vaihto-osan-tunniste])]
     (swap! vaihto-osien-mappaus update :vaihdettu dissoc vaihdettavan-osan-id)
-    (println "vaihdettavan-osan-polku " vaihdettavan-osan-polku)
-    (println "vaihdettava-osa " vaihdettava-osa)
-    (println "vaihdettavan-osan-id " vaihdettavan-osan-id)
-    (println "(:vaihdettu vaihto-osien-mappaus) " (keys (:vaihdettu @vaihto-osien-mappaus)))
-    (println "Vanha-osa: " vanha-osa)
     (grid/vaihda-osa!
       vaihdettava-osa
-      (constantly vanha-osa))))
+      (constantly vanha-osa))
+    (swap! tila-atom update-in (conj root-datapolku ::vaihdetut-osat vaihto-osan-tunniste yksiloivadata) not)))
 
 (declare muodosta-grid-osa!)
 
-(defn vaihda-osa! [osa vaihdettavan-osan-polku]
+(defn vaihda-osa! [osa yksiloivadata vaihdettavan-osan-polku tila-atom root-datapolku]
   (when g-debug/GRID_DEBUG
     (when (and (nil? osa)
                (nil? solu/*this*))
       (error (str "Yritettiin vaihtaa osaa, mutta annettu solu on nil ja harja.ui.taulukko.impl.solu/*this* on myös nil!\n\n"
                   "Korjaa virhe antamalla vaihda-osa! funktiolle osa, josta root voidaan hakea tai toteuta tämän funktion triggeröimä"
                   " solu siten, että harja.ui.taulukko.impl.solu/*this* sisältää tämän solun."))))
+  (println "yksiloivadata " yksiloivadata)
   (let [root-grid (if (nil? osa)
                     (grid/root solu/*this*)
                     (grid/root osa))
@@ -236,11 +234,16 @@
                    (muodosta-grid-osa! (get-in @vaihto-osien-mappaus [:vaihto-osien-maaritelmat vaihto-osan-tunniste])))]
     (grid/vaihda-osa!
       vaihdettava-osa
-      (constantly uusi-osa)
-      #_(fn [vanha-osa]
-        (binding [*vaihto-osien-mappaus* vaihto-osien-mappaus]
-          (muodosta-grid-osa! (get-in @vaihto-osien-mappaus [:vaihto-osien-maaritelmat vaihto-osan-tunniste])))))
-    (swap! vaihto-osien-mappaus assoc-in [:vaihdettu (grid/hae-osa (grid/get-in-grid root-grid vaihdettavan-osan-polku) :id)] vaihdettava-osa)))
+      (constantly uusi-osa))
+    (swap! vaihto-osien-mappaus
+           (fn [mappaukset]
+             (update-in mappaukset
+                        [:vaihdettu (grid/hae-osa (grid/get-in-grid root-grid vaihdettavan-osan-polku) :id)]
+                        (fn [m]
+                          (assoc m
+                                 :vanha-osa vaihdettava-osa
+                                 :vaihto-osan-tunniste vaihto-osan-tunniste)))))
+    (swap! tila-atom update-in (conj root-datapolku ::vaihdetut-osat vaihto-osan-tunniste yksiloivadata) not)))
 
 (declare muodosta-grid-rivi muodosta-grid-staattinen-taulukko muodosta-grid-dynaaminen-taulukko)
 
@@ -328,7 +331,8 @@
                                                               (every-pred grid/rivi?
                                                                           #(boolean (grid/hae-osa % :nimi))
                                                                           #(nil? (get (grid/hae-grid % :koko) :seurattava)))))]
-     (binding [*otsikon-nimi* (if headerosa-koko-maarityksella
+     (binding [*otsikon-nimi* (if (and headerosa-koko-maarityksella
+                                       (-> taulukkomaaritelma (get-in [:conf :koko]) meta :yksittainen not))
                                 (grid/hae-osa headerosa-koko-maarityksella :nimi)
                                 *otsikon-nimi*)]
        (grid/grid (merge {:nimi nimi
@@ -451,16 +455,38 @@
    :haku identity})
 
 (defmethod muodosta-datakasittelija-ratom-maaritelma :dynaaminen-taulukko
-  [taulukkomaaritelma _]
+  [taulukkomaaritelma {:keys [root-datapolku]}]
   (let [{:keys [yksiloivakentta]
          generoi-yksiloivakentta? ::generoi-yksiloivakentta?} taulukkomaaritelma
-        haettavan-datan-polku (get-in *osamaaritelmien-polut* [(get-in taulukkomaaritelma [:conf ::id]) :datapolku])]
-    {:polut [haettavan-datan-polku]
-     :luonti-init (fn [tila _]
+        haettavan-datan-polku (get-in *osamaaritelmien-polut* [(get-in taulukkomaaritelma [:conf ::id]) :datapolku])
+        taulukon-vaihdettavat-osat (atom [])
+        _ (walk/postwalk (fn [x]
+                           (when-let [vaihdettava-osa (and (map? x)
+                                                         (get-in x [:conf :vaihdettava-osa]))]
+                             (swap! taulukon-vaihdettavat-osat
+                                    conj
+                                    [vaihdettava-osa
+                                     (muodosta-rajapinnan-nimi-polusta (get-in *osamaaritelmien-polut* [(get-in x [:conf ::id]) :datapolku])
+                                                                       true)]))
+                           x)
+                         taulukkomaaritelma)
+        vaihdettavien-osien-polut (mapv (fn [[vaihdettava-osa _]]
+                                          (conj root-datapolku ::vaihdetut-osat vaihdettava-osa))
+                                        @taulukon-vaihdettavat-osat)
+        taulukon-vaihdettavat-osat-arvot @taulukon-vaihdettavat-osat]
+    {:polut (vec (cons haettavan-datan-polku vaihdettavien-osien-polut))
+     :luonti-init (fn [tila & _]
                     (if generoi-yksiloivakentta?
                       (update-in tila haettavan-datan-polku yksiloivan-datan-generointi yksiloivakentta)
                       tila))
-     :haku identity
+     :haku (fn [data & vaihdettavat-osat]
+             (let [vaihdettavat-osat (into {}
+                                           (map (fn [kaytossa-osat [vaihdettava-osa rajapinnan-nimi-fn]]
+                                                  [vaihdettava-osa {:kaytossa-osat kaytossa-osat :rajapinnan-nimi-fn rajapinnan-nimi-fn}])
+                                                vaihdettavat-osat
+                                                taulukon-vaihdettavat-osat-arvot))]
+               {:harja.ui.taulukko.impl.grid/jarjestettava-data data
+                :harja.ui.taulukko.impl.grid/muu-data vaihdettavat-osat}))
      :identiteetti {1 #(get % yksiloivakentta)}}))
 
 (defmethod muodosta-datakasittelija-ratom-maaritelma :rivi
@@ -560,8 +586,8 @@
         datakasittely-ratom))
 
 (defn muodosta-datakasittelija-ratom
-  ([osamaaritelma] (muodosta-datakasittelija-ratom osamaaritelma {} {}))
-  ([osamaaritelma datakasittely {:keys [yksiloivakentta]}]
+  ([osamaaritelma root-datapolku] (muodosta-datakasittelija-ratom osamaaritelma root-datapolku {} {}))
+  ([osamaaritelma root-datapolku datakasittely {:keys [yksiloivakentta]}]
    (let [staattinen-taulukko? (staattinen-taulukko? osamaaritelma)
          dynaaminen-taulukko? (dynaaminen-taulukko? osamaaritelma)
          rivi? (rivi? osamaaritelma)]
@@ -570,6 +596,7 @@
        (let [staattisen-gridin-uusi-datakasittelija (fn [datakasittely osan-maarittelman-nimi]
                                                       (merge datakasittely
                                                              (muodosta-datakasittelija-ratom (get osamaaritelma osan-maarittelman-nimi)
+                                                                                             root-datapolku
                                                                                              datakasittely
                                                                                              {})))
              stattisen-gridin-datakasittelija (fn [datakasittely]
@@ -577,20 +604,22 @@
                                                                   [(inc index)
                                                                    (merge datakasittely
                                                                           (muodosta-datakasittelija-ratom seuraava-osamaaritelma
+                                                                                                          root-datapolku
                                                                                                           datakasittely
                                                                                                           {}))])
                                                                 [0 datakasittely]
                                                                 (:body osamaaritelma))))
              uusi-datakasittely (assoc datakasittely
                                        ((muodosta-rajapinnan-nimi-polusta (get-in *osamaaritelmien-polut* [(get-in osamaaritelma [:conf ::id]) :datapolku])) nil)
-                                       (muodosta-datakasittelija-ratom-maaritelma osamaaritelma {:yksiloivakentta yksiloivakentta}))]
+                                       (muodosta-datakasittelija-ratom-maaritelma osamaaritelma {:yksiloivakentta yksiloivakentta
+                                                                                                 :root-datapolku root-datapolku}))]
          (cond
            staattinen-taulukko? (cond-> uusi-datakasittely
                                         (:header osamaaritelma) (staattisen-gridin-uusi-datakasittelija :header)
                                         (:body osamaaritelma) stattisen-gridin-datakasittelija
                                         (:footer osamaaritelma) (staattisen-gridin-uusi-datakasittelija :footer))
-           dynaaminen-taulukko? (muodosta-datakasittelija-ratom (get osamaaritelma :toistettava-osa) uusi-datakasittely {:yksiloivakentta (get-in osamaaritelma [:conf :yksiloivakentta])})
-           rivi? (muodosta-datakasittelija-ratom (get osamaaritelma :osat) uusi-datakasittely {})))))))
+           dynaaminen-taulukko? (muodosta-datakasittelija-ratom (get osamaaritelma :toistettava-osa) root-datapolku uusi-datakasittely {:yksiloivakentta (get-in osamaaritelma [:conf :yksiloivakentta])})
+           rivi? (muodosta-datakasittelija-ratom (get osamaaritelma :osat) root-datapolku uusi-datakasittely {})))))))
 
 (defn tayta-taulukkomaaritelma [taulukkomaaritelma]
   (letfn [(lisaa-nimi
@@ -692,20 +721,59 @@
 
 (defmethod muodosta-rajapintakasittelija-taulukko-maaritelma :dynaaminen-taulukko
   [taulukkomaaritelma rajapinnan-nimi]
-  (let [jarjestys (get-in taulukkomaaritelma [:conf :jarjestys])]
+  (let [jarjestys (get-in taulukkomaaritelma [:conf :jarjestys])
+        yksiloivakentta (get-in taulukkomaaritelma [:conf :yksiloivakentta])]
     {:rajapinta rajapinnan-nimi
      :solun-polun-pituus 0
      :jarjestys jarjestys
      :datan-kasittely identity
      :luonti (let [dynaamisen-sisus (muodosta-rajapintakasittelija-dynaaminen-osa (:toistettava-osa taulukkomaaritelma))]
-               (fn [data g]
-                 (map-indexed (fn [index datapoint]
-                                (let [{:keys [yksiloivakentta]
-                                       generoi-yksiloivakentta? ::generoi-yksiloivakentta?} taulukkomaaritelma
-                                      {yk yksiloivakentta} datapoint
-                                      ]
-                                  (dynaamisen-sisus g index)))
-                              data)))}))
+               (fn [[data vaihdettavien-osien-data] g]
+                 (when data
+                   (let [vaihto-osien-maaritelmat (-> g grid/root ::vaihto-osien-mappaus deref (get :vaihto-osien-maaritelmat))]
+                     (println "------------ vaihdettavien-osien-data -----")
+                     (println vaihdettavien-osien-data)
+                     (println "------------ vaihto-osien-maaritelmat -----")
+                     (println vaihto-osien-maaritelmat)
+                     (println "------------ dynaaminen taulukko -------")
+                     (cljs.pprint/pprint (map-indexed (fn [index datapoint]
+                                                        (let [datan-rajapinnat (dynaamisen-sisus g index)]
+                                                          (reduce-kv (fn [m polku maaritelma]
+                                                                       (let [maaritelma-kaytossa? (first (keep (fn [[vaihto-osan-nimi {:keys [kaytossa-osat rajapinnan-nimi-fn]}]]
+                                                                                                                 (println "----> Datapoint " datapoint)
+                                                                                                                 (println "---> kaytossa-osat " kaytossa-osat)
+                                                                                                                 (let [kaytossa? (get kaytossa-osat (get datapoint yksiloivakentta))]
+                                                                                                                   (cond
+                                                                                                                     (= (rajapinnan-nimi-fn index) (:rajapinta maaritelma)) (not (true? kaytossa?))
+                                                                                                                     (try (re-find (re-pattern (str index "-" (name (get-in vaihto-osien-maaritelmat [vaihto-osan-nimi :conf :nimi]))))
+                                                                                                                                   (:rajapinta maaritelma))
+                                                                                                                          (catch :default _ false)) (true? kaytossa?)
+                                                                                                                     :else true)))
+                                                                                                               vaihdettavien-osien-data))]
+                                                                         (if maaritelma-kaytossa?
+                                                                           (assoc m polku maaritelma)
+                                                                           m)))
+                                                                     {}
+                                                                     datan-rajapinnat)))
+                                                      data))
+                     (map-indexed (fn [index datapoint]
+                                    (let [datan-rajapinnat (dynaamisen-sisus g index)]
+                                      (reduce-kv (fn [m polku maaritelma]
+                                                   (let [maaritelma-kaytossa? (first (keep (fn [[vaihto-osan-nimi {:keys [kaytossa-osat rajapinnan-nimi-fn]}]]
+                                                                                             (let [kaytossa? (get kaytossa-osat (get datapoint yksiloivakentta))]
+                                                                                               (cond
+                                                                                                 (= (rajapinnan-nimi-fn index) (:rajapinta maaritelma)) (not (true? kaytossa?))
+                                                                                                 (try (re-find (re-pattern (str index "-" (name (get-in vaihto-osien-maaritelmat [vaihto-osan-nimi :conf :nimi]))))
+                                                                                                               (:rajapinta maaritelma))
+                                                                                                      (catch :default _ false)) (true? kaytossa?)
+                                                                                                 :else true)))
+                                                                                           vaihdettavien-osien-data))]
+                                                     (if maaritelma-kaytossa?
+                                                       (assoc m polku maaritelma)
+                                                       m)))
+                                                 {}
+                                                 datan-rajapinnat)))
+                                  data)))))}))
 
 (defmethod muodosta-rajapintakasittelija-taulukko-maaritelma :rivi
   [osamaaritelma rajapinnan-nimi]
@@ -881,9 +949,9 @@
                       (muodosta-grid conf taytetty-taulukkomaaritelma))
                     ::vaihto-osien-mappaus vaihto-osien-mappaus)
         datakasittely-ratom (binding [*osamaaritelmien-polut* osamaaritelmien-polut]
-                              (merge (muodosta-datakasittelija-ratom taytetty-taulukkomaaritelma)
+                              (merge (muodosta-datakasittelija-ratom taytetty-taulukkomaaritelma (:data-polku conf))
                                      (reduce-kv (fn [m _ v]
-                                                  (merge m (muodosta-datakasittelija-ratom v)))
+                                                  (merge m (muodosta-datakasittelija-ratom v (:data-polku conf))))
                                                 {}
                                                 taytetty-vaihto-osamaaritelma)))
         datakasittely-ratom-muokkaus {}

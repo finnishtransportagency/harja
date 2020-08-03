@@ -199,6 +199,21 @@
        arvo
        (:data arvo)))))
 
+(defn osan-yksiloivadata
+  "Tarkoitus on käyttää dynaamisen taulukon sisällä olevan osan kanssa"
+  [osa]
+  (let [osan-polku (osien-yhteinen-asia osa :index-polku)
+        dynaaminen-osa (g/dynaaminen-vanhempi osa)
+        dynaamisen-osan-polku (osien-yhteinen-asia dynaaminen-osa :index-polku)
+        dynaamisen-arvo @(::g/osan-derefable dynaaminen-osa)
+        dynaamisen-data (if (and (map? dynaamisen-arvo)
+                                 (contains? dynaamisen-arvo ::g/jarjestettava-data))
+                          (get dynaamisen-arvo ::g/jarjestettava-data)
+                          dynaamisen-arvo)
+        osan-index (->> osan-polku (drop (count dynaamisen-osan-polku)) first)
+        yksiloivadata (-> dynaamisen-data ((:osatunnisteet dynaaminen-osa)) vec (get osan-index))]
+    yksiloivadata))
+
 ;; MUTAATIOT
 
 ; - Grid mutatiot

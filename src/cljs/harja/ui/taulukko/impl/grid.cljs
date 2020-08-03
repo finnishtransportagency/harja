@@ -433,8 +433,6 @@
                     (dissoc (::root-id kopio))))))
      (if grid?
        (let [gridi (paivita-grid osa)]
-         (comment (println "(::root-id gridi) " (::root-id gridi))
-                  (println "(keys @taulukko-konteksti) " (keys @taulukko-konteksti)))
          (when poista-vanha-id-taulukko-kontekstista?
            (swap! ((get-in @taulukko-konteksti [(::root-id gridi) :koko-fn])) (fn [koot]
                                                                                 (assoc koot id (get koot (gop/id kopio))))))
@@ -450,6 +448,10 @@
                                                         seurattava-grid (if seurattavan-gridin-nimi
                                                                           (etsi-osa ((get-in @taulukko-konteksti [(::root-id grid) :root-fn])) seurattavan-gridin-nimi)
                                                                           grid)]
+                                                    (when g-debug/GRID_DEBUG
+                                                      (when (and seurattavan-gridin-nimi (nil? seurattava-grid))
+                                                        (warn (str "GRIDILLE " (gop/nimi grid) " on määritetty seurattava grid: " seurattavan-gridin-nimi " mutta, kyseistä giridiä ei ole olemassa."
+                                                                   " Ehkä se on vaihdettu muuhun osaan tai typo?"))))
                                                     [grid [(gop/id grid) (gop/id seurattava-grid)]])))
         gridit-jarjestetty (loop [jarjestetyt-gridit (filterv (fn [[grid [id seurattavan-id]]]
                                                                 (= id seurattavan-id))
@@ -598,9 +600,6 @@
       (do
         (swap! ((get-in @taulukko-konteksti [(::root-id tiedot-osa) :koko-fn]))
                (fn [koot]
-                 (comment (println "---> OSA " osa)
-                          (println "TYPE: " (type osa))
-                          (println (p/koot osa)))
                  (merge koot (p/koot osa))))
         (swap! taulukko-konteksti dissoc (:id osa))
         (paivita-kaikki-lapset! (assoc osa :koko nil ::root-id (::root-id tiedot-osa))
@@ -699,15 +698,19 @@
           jarjestetty? (atom false)
           jarjestetty-rajapinta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta identiteetti :identiteetti} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
                                                                                                                            @kuuntelija)
+                                                jarjestettava-data (if (and (map? rajapinnan-data)
+                                                                            (contains? rajapinnan-data ::jarjestettava-data))
+                                                                     (::jarjestettava-data rajapinnan-data)
+                                                                     rajapinnan-data)
                                                 jarjestys-fns @jarjestys-fns
                                                 jarjestetaan? (boolean (and *jarjesta-data* (or jarjestys (not (empty? jarjestys-fns)))))
                                                 jarjestykset (if (= *jarjesta-data* :deep)
                                                                true
                                                                *jarjesta-data*)
                                                 rajapinnan-dataf (cond
-                                                                   jarjestetaan? (jarjesta-data rajapinnan-data jarjestys jarjestykset jarjestys-fns)
-                                                                   (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan rajapinnan-data @jarjestyksen-cache identiteetti)
-                                                                   :else rajapinnan-data)]
+                                                                   jarjestetaan? (jarjesta-data jarjestettava-data jarjestys jarjestykset jarjestys-fns)
+                                                                   (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan jarjestettava-data @jarjestyksen-cache identiteetti)
+                                                                   :else jarjestettava-data)]
                                             (when (= :deep *jarjesta-data*)
                                               (loop [polku (vec (butlast grid-kasittelijan-polku))]
                                                 (when-not (empty? polku)
@@ -727,12 +730,17 @@
                                                                     (let [taman-tila (or taman-tila
                                                                                          (vec (repeat 2 nil)))]
                                                                       (assoc taman-tila
-                                                                             0 rajapinnan-data
+                                                                             0 jarjestettava-data
                                                                              1 rajapinnan-dataf)))))))
-                                            (if (and rajapinnan-meta (satisfies? IWithMeta rajapinnan-dataf))
-                                              (with-meta rajapinnan-dataf
-                                                         rajapinnan-meta)
-                                              rajapinnan-dataf)))
+                                            (let [jarjestetty-data (if (and rajapinnan-meta (satisfies? IWithMeta rajapinnan-dataf))
+                                                                     (with-meta rajapinnan-dataf
+                                                                                rajapinnan-meta)
+                                                                     rajapinnan-dataf)]
+                                              (if (and (map? rajapinnan-data)
+                                                       (contains? rajapinnan-data ::muu-data))
+                                                {::jarjestettava-data jarjestetty-data
+                                                 ::muu-data (::muu-data rajapinnan-data)}
+                                                jarjestetty-data))))
           rajapintakasittelija (seuranta (reaction (datan-kasittely @jarjestetty-rajapinta)))
           tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
       (assoc kasittelija
@@ -755,7 +763,7 @@
                                                                                 solun-polun-pituus-oikein?)
                                                                            (and (:derefable (meta grid-polku))
                                                                                 grid-polku-sopii-osaan?))]
-                                    #_(when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
+                                    #_(when (= (first (::nimi-polku osa)) :harja.views.urakka.suunnittelu.foo/data) #_(and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
                                                (= grid-polku [1]))
                                       (println "---------------")
                                       (println "rajapintakasittelija " rajapintakasittelija)
@@ -771,9 +779,6 @@
                                       (println "osan-polku-dataan " osan-polku-dataan))
                                     (when yhdista-derefable-tahan-osaan?
                                       (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
-                                        #_(when (and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
-                                                   (= grid-polku [1]))
-                                          (println "osan-derefable " osan-derefable))
                                         (when g-debug/GRID_DEBUG
                                           (swap! g-debug/debug
                                                  (fn [tila]
@@ -802,13 +807,6 @@
 (defn hoida-osien-maara! [grid toistettavan-osan-data osatunnisteet vanhat-tunnisteet]
   (p/paivita-lapset! grid
                      (fn [entiset-osat]
-                       (println "------- hoida-osien-maara! ------")
-                       (cljs.pprint/pprint entiset-osat)
-                       (cljs.pprint/pprint ((:toistettava-osa grid) toistettavan-osan-data))
-                       (cljs.pprint/pprint toistettavan-osan-data)
-                       (cljs.pprint/pprint osatunnisteet)
-                       (cljs.pprint/pprint (osatunnisteet toistettavan-osan-data))
-                       (println "(root grid) " (root grid))
                        (vec
                          (map (fn [osa osan-tunniste]
                                 (if-let [entisen-osan-index (get vanhat-tunnisteet osan-tunniste)]
@@ -945,30 +943,26 @@
                                         (constantly nil))
         entinen-toistettavan-osan-data (atom nil)]
     (fn [grid]
-      (comment
-        (println "rajapintakasittelijan-tiedot " rajapintakasittelijan-tiedot)
-        (println "(::nimi-polku grid) " (::nimi-polku grid))
-        (println (::grid-rajapintakasittelijat (root grid))))
       (let [gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
                                gridin-derefable
                                (do
                                  (warn (str "Dynaamiselle gridille  ") (pr-str (type grid)) (str " (" (:id grid) ") ei ole annettu osan-derefablea!"))
                                  (r/atom nil)))
-            _ (println "1")
             gridin-data @gridin-derefable
-            _ (println "DATA: " gridin-data)
-            _ (println "2")
+            jarjestetty-data-erikseen? (boolean (and (map? gridin-data)
+                                                     (contains? gridin-data ::jarjestettava-data)))
             rajapinnat-muuttunut? (if (and (contains? (meta grid-kasittelijoiden-luonti) :rajapinta-riippuu-datan-arvosta?)
                                            (-> grid-kasittelijoiden-luonti meta :rajapinta-riippuu-datan-arvosta? not))
                                     (not= (count @entinen-toistettavan-osan-data)
-                                          (count gridin-data))
+                                          (count (if jarjestetty-data-erikseen?
+                                                   (::jarjestettava-data gridin-data)
+                                                   gridin-data)))
                                     true)
-            _ (println "3")
             data-jarjestetty? @(get rajapintakasittelijan-tiedot ::jarjestetty?)
-            _ (println "4")
-            uudet-grid-kasittelijat (grid-kasittelijoiden-luonti gridin-data grid)]
-        #_(println "uudet-grid-kasittelijat " uudet-grid-kasittelijat)
-        (println "5")
+            uudet-grid-kasittelijat (grid-kasittelijoiden-luonti (if jarjestetty-data-erikseen?
+                                                                   (vec (vals gridin-data))
+                                                                   gridin-data)
+                                                                 grid)]
         (if rajapinnat-muuttunut?
           (let [rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
                                                                                   conj
@@ -980,7 +974,9 @@
                                                                                   (vals (::grid-rajapintakasittelijat (root grid))))))
                 osatunnisteet (:osatunnisteet grid)
                 toistettavan-osan-data (:toistettavan-osan-data grid)
-                toistettavan-osan-data (toistettavan-osan-data gridin-data)
+                toistettavan-osan-data (toistettavan-osan-data (if jarjestetty-data-erikseen?
+                                                                 (::jarjestettava-data gridin-data)
+                                                                 gridin-data))
                 toistettava-data-muuttunut? (not= toistettavan-osan-data @entinen-toistettavan-osan-data)
                 toistettavan-datan-maara-muuttunut? (not= (count @entinen-toistettavan-osan-data)
                                                           (count toistettavan-osan-data))
@@ -1065,8 +1061,6 @@
   (get @((get-in @taulukko-konteksti [(::root-id grid) :koko-fn])) (gop/id grid)))
 
 (defn grid-koot [grid]
-  (comment (println "(::root-id grid) " (::root-id grid))
-           (println "GRID TAULUKKO KONTEKSTI " (get-in @taulukko-konteksti [(::root-id grid)])))
   @((get-in @taulukko-konteksti [(::root-id grid) :koko-fn])))
 
 (defn lisaa-rivi!
@@ -1528,13 +1522,14 @@
        dynaaminen?))))
 
 (defn dynaaminen-vanhempi
-  ([osa] (dynaaminen-vanhempi osa false))
+  ([osa] (dynaaminen-vanhempi osa (instance? DynaaminenGrid osa)))
   ([osa dynaaminen?]
+   (println "OSA " (gop/nimi osa) " dynaaminen? " dynaaminen?)
    (let [vanhempi (vanhempi osa)]
      (cond
+       dynaaminen? osa
        (nil? vanhempi) nil
-       (false? dynaaminen?) (recur vanhempi (instance? DynaaminenGrid vanhempi))
-       :else osa))))
+       :else (recur vanhempi (instance? DynaaminenGrid vanhempi))))))
 
 (defn piirra-grid [grid]
   (r/create-class
