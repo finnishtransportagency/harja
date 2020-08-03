@@ -740,7 +740,7 @@
                                                          :grid-polku grid-polku
                                                          :data-polku data-polku}
                                                   :vaihto-osat {:yhteenveto-checkboxilla {:conf {:nimi ::vaihto-yhteenveto-checkboxilla}
-                                                                                          :body [{:conf {:jarjestys [:rivi :a :b :c :poista]
+                                                                                          :body [{:conf {:jarjestys [[:rivi :a :b :c :poista]]
                                                                                                          :nimi ::data-yhteenveto-vaihto}
                                                                                                   :osat (yhteenvetorivi (fn [this _]
                                                                                                                           (taulukko/vaihda-osa-takaisin! this
@@ -749,7 +749,7 @@
                                                                                                                                                          tila-atom
                                                                                                                                                          data-polku))
                                                                                                                         true)}
-                                                                                                 {:conf {:jarjestys [:rivi :a :b :c :poista]
+                                                                                                 {:conf {:jarjestys [[:rivi :a :b :c :poista]]
                                                                                                          :nimi ::disable-valinta
                                                                                                          :samaraita-edelliseen? true}
                                                                                                   :osat (vec

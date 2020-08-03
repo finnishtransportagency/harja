@@ -66,8 +66,8 @@
                                         :fmt fmt
                                         :fmt-aktiivinen fmt-aktiivinen})
                  klikattu-fn! (fn [_]
-                                  (let [{osan-paikka :osan-paikka} (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)
-                                        rivin-paikka (first osan-paikka)
+                                  (let [#_#_{osan-paikka :osan-paikka} (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)
+                                        rivin-paikka (first (take-last 2 (grid/osien-yhteinen-asia solu/*this* :index-polku))) #_(first osan-paikka)
                                         rivit-alla (grid/gridin-rivit (grid/osa-polusta solu/*this* [:.. :..])
                                                                       (fn [osa]
                                                                         (and (instance? alue/Rivi osa)

@@ -60,9 +60,9 @@
                  index
                  (inc index)))))))
 
-(defn paivita-solun-arvo! [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
-                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}]
-  (jarjesta-data ajettavat-jarejestykset
+(defn paivita-solun-arvo! [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
+                            :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}]
+  (jarjesta-data ajettavat-jarjestykset
     (triggeroi-seurannat triggeroi-seuranta?
       (grid/aseta-rajapinnan-data!
         (grid/osien-yhteinen-asia solu :datan-kasittelija)
@@ -72,13 +72,18 @@
 
 (defn tayta-alla-olevat-rivit! [asettajan-nimi rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
-    (doseq [rivi rivit-alla
-            :let [a-sarakkeen-solu (grid/get-in-grid rivi [1])]]
-      (paivita-solun-arvo! {:paivitettava-asia asettajan-nimi
-                            :arvo arvo
-                            :solu a-sarakkeen-solu
-                            :ajettavat-jarejestykset false
-                            :triggeroi-seuranta? false}))))
+    (let [sarake-index (first (keep-indexed (fn [index osa]
+                                          (when (= (grid/hae-osa osa :id) (grid/hae-osa solu/*this* :id))
+                                            index))
+                                        (grid/hae-grid (grid/vanhempi solu/*this*) :lapset)))]
+      (println "sarake-index: " sarake-index)
+      (doseq [rivi rivit-alla
+              :let [sarakkeen-solu (grid/get-in-grid rivi [sarake-index])]]
+        (paivita-solun-arvo! {:paivitettava-asia asettajan-nimi
+                              :arvo arvo
+                              :solu sarakkeen-solu
+                              :ajettavat-jarjestykset true
+                              :triggeroi-seuranta? false})))))
 
 (defmulti predef
           (fn [optio _]
@@ -104,13 +109,14 @@
                             (when arvo
                               (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                     :arvo arvo
-                                                    :solu solu/*this*})))
+                                                    :solu solu/*this*
+                                                    :ajettavat-jarjestykset true})))
                :on-blur (fn [arvo]
                           (when arvo
                             (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                   :arvo arvo
                                                   :solu solu/*this*
-                                                  :ajettavat-jarejestykset :deep
+                                                  :ajettavat-jarjestykset :deep
                                                   :triggeroi-seuranta? true})))
                :on-key-down (fn [event]
                               (when (= "Enter" (.. event -key))
@@ -121,14 +127,18 @@
 (defmethod predef :syote-tayta-alas
   [_ conf]
   {:nappia-painettu! (fn [rivit-alla arvo]
-                                (let [grid (grid/root (first rivit-alla))]
-                                  (tayta-alla-olevat-rivit! :aseta-arvo! rivit-alla arvo)
-                                  (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
-                                                        :arvo arvo
-                                                        :solu solu/*this*
-                                                        :ajettavat-jarejestykset :deep
-                                                        :triggeroi-seuranta? true})
-                                  (grid/jarjesta-grid-data! grid)))
+                       (let [grid (grid/root solu/*this*)]
+                         (println "rivit-alla " rivit-alla)
+                         (tayta-alla-olevat-rivit! :aseta-arvo! rivit-alla arvo)
+                         (println "TÄYTETTY")
+                         (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
+                                               :arvo arvo
+                                               :solu solu/*this*
+                                               :ajettavat-jarjestykset :deep
+                                               :triggeroi-seuranta? true})
+                         (println "FOO")
+                         (grid/jarjesta-grid-data! grid)
+                         (println "JÄRJESTETTY")))
    :on-focus (fn [_]
                (grid/paivita-osa! solu/*this*
                                   (fn [solu]
@@ -492,7 +502,8 @@
 (defmethod muodosta-datakasittelija-ratom-maaritelma :rivi
   [osamaaritelma _]
   {:polut [(get-in *osamaaritelmien-polut* [(get-in osamaaritelma [:conf ::id]) :datapolku])]
-   :haku identity})
+   :haku identity
+   #_#_:identiteetti {1 key}})
 
 (defn foo-bar
   ([osamaaritelma yksiloivakentta haettavan-datan-polku osan-tyypit data gridpolku]
@@ -717,6 +728,7 @@
 
 (defn tunnisteen-kasittely [datapolku]
   (fn [_ data]
+    (println "DATA: " data)
     (mapv (fn [[k _]]
             (println "--> k " k)
             (conj datapolku k))
@@ -785,6 +797,8 @@
                                  (tunnisteen-kasittely datapolku)))
                              (tunnisteen-kasittely datapolku))
      :datan-kasittely (fn [rivin-data]
+                        (println "rivin-data " rivin-data)
+                        (println "jarjestys: " jarjestys)
                         (vec (vals rivin-data)))}))
 
 (defmethod muodosta-rajapintakasittelija-taulukko-maaritelma :default
@@ -959,12 +973,7 @@
                                                 taytetty-vaihto-osamaaritelma)))
         datakasittely-ratom-muokkaus {:aseta-arvo! (fn [tila arvo datapolku]
                                                      (println "datapolku " datapolku)
-                                                     (let [numeerinen-arvo (try (js/Number (clj-str/replace (or arvo "") "," "."))
-                                                                                (catch :default _
-                                                                                  arvo))]
-                                                       (-> tila
-                                                           (assoc-in datapolku numeerinen-arvo)
-                                                           (assoc-in (vec (cons ::kirjoitettu-data datapolku)) arvo))))}
+                                                     (assoc-in tila datapolku arvo))}
         datakasittely-ratom-trigger {}
         rajapinta (merge (into {} (map (fn [k] [k any?]) (keys datakasittely-ratom)))
                          {:aseta-arvo! any?})
