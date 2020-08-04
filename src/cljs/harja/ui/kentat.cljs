@@ -186,12 +186,12 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled? vihje]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje]
                                 :as   kentta} data]
   [:input {:class       (cond-> nil
                                 (and lomake?
                                      (not vayla-tyyli?)) (str "form-control ")
-                                vayla-tyyli? (str "input-default komponentin-input ")
+                                vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
                                 disabled? (str "disabled"))
            :placeholder (placeholder kentta data)
            :on-change   #(let [v (-> % .-target .-value)]
@@ -284,7 +284,7 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli? virhe?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -296,7 +296,7 @@
           [:input {:class       (cond-> nil
                                         (and lomake?
                                              (not vayla-tyyli?)) (str "form-control ")
-                                        vayla-tyyli? (str "input-default komponentin-input ")
+                                        vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
                                         disabled? (str "disabled"))
                    :type        "text"
                    :disabled    disabled?
@@ -622,7 +622,7 @@
 (defmethod tee-kentta :valinta
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
-            jos-tyhja-fn disabled? fokus-klikin-jalkeen?
+            jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli?]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
@@ -641,6 +641,7 @@
                             :nayta-ryhmat          nayta-ryhmat
                             :ryhmittely            ryhmittely
                             :ryhman-otsikko        ryhman-otsikko
+                            :virhe?                virhe?
                             :on-focus              on-focus
                             :on-blur               on-blur
                             :format-fn             (if (empty? valinnat)
@@ -654,7 +655,7 @@
     (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]
       (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                    valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
-                   jos-tyhja-fn disabled? fokus-klikin-jalkeen?
+                   jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
                    nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli?]} data data-muokkaus-fn]
         (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
         (assert (fn? data-muokkaus-fn) "Data-muokkaus-fn pitäisi olla funktio, joka muuttaa näytettävää dataa jotenkin")
@@ -671,6 +672,7 @@
                                 :ryhman-otsikko        ryhman-otsikko
                                 :on-focus              on-focus
                                 :on-blur               on-blur
+                                :virhe?                virhe?
                                 :format-fn             (if (empty? valinnat)
                                                          (or jos-tyhja-fn jos-tyhja-default-fn)
                                                          (or valinta-nayta str))
@@ -806,7 +808,7 @@
                             (pvm/pvm p)
                             ""))))
        :reagent-render
-       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select]} data]
+       (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select virhe?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -825,7 +827,7 @@
             {:on-click #(do (reset! auki true) nil)
              :style    {:display "inline-block"}}
             [:input.pvm {:class       (cond
-                                        vayla-tyyli? "input-default komponentin-input"
+                                        vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input")
                                         lomake? "form-control")
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value       nykyinen-teksti
