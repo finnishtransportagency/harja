@@ -439,6 +439,7 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                       WHERE tk.id = tt.toimenpidekoodi
                         AND t.id = tt.toteuma
                         AND t.poistettu IS NOT TRUE
+                        AND tt.poistettu IS NOT TRUE
                         AND t.urakka = :urakka
                         AND tr1.id = tk.tehtavaryhma
                         AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
@@ -505,6 +506,7 @@ SELECT tk.id                      AS id,
                                    ut.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
       AND t.id = tt.toteuma
       AND t.poistettu IS NOT TRUE
+      AND tt.poistettu IS NOT TRUE
       AND t.urakka = :urakka
       AND tr1.id = tk.tehtavaryhma
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
