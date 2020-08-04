@@ -400,7 +400,10 @@
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
     (do
       (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
-      (toteumat-q/poista-toteuma! db (:id user) toteuma-id))
+      (toteumat-q/poista-toteuma! db (:id user) toteuma-id)
+      (toteumat-q/poista-toteuma-tehtava! db {:kayttaja (:id user)
+                                              :toteuma-id toteuma-id}))
+
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 ;(def ___malli
@@ -754,7 +757,6 @@
 
 (defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero tietolajit] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
                        (varustetoteuma-xf tierekisteri)
                        (toteumat-q/hae-urakan-varustetoteumat
@@ -772,7 +774,6 @@
                    {:reittipiste    :reittipisteet
                     :toteumatehtava :toteumatehtavat}
                    :id)]
-    (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
     toteumat))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
