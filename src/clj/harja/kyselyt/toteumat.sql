@@ -351,6 +351,11 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
+-- name: poista-toteuma-tehtava!
+UPDATE toteuma_tehtava
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+    WHERE toteuma = :toteuma-id AND poistettu IS NOT TRUE;
+
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
