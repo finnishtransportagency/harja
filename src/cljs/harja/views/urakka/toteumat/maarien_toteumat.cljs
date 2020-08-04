@@ -191,7 +191,9 @@
                                              [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                              [:td {:style {:width (:prosentti leveydet)}} "---"]])])))))
                                 rivit)]
-              (concat [[:tr.header
+              (concat [
+                       ^{:key (hash tehtavaryhma)}
+                       [:tr.header
                         [:td tehtavaryhma]
                         [:td ""]
                         [:td ""]

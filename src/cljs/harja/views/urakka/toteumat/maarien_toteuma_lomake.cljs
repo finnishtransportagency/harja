@@ -163,7 +163,7 @@
          :vayla-tyyli?  true
          :teksti-nappi? true}])]))
 
-(defn- maarien-toteuman-syottolomake*
+(defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
   (let [{tyyppi   ::t/tyyppi
          toteumat ::t/toteumat} lomake
