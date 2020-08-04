@@ -75,7 +75,7 @@
                      (e! (maarien-toteumat/->MuokkaaToteumaa toteuma-id))))}
    (if db-aika
      (pvm/pvm db-aika)
-     "Ei aikaa")])
+       "Ei aikaa")])
 
 (defn- lisaa-toteuma-linkki [e! app tehtavan-nimi tehtavaryhma-otsikko]
   (let [;; Hae tehtävä tehtävälistasta nimen perusteella
@@ -262,7 +262,7 @@
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn  #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
-      [:div.label-ja-alasveto
+      #_ [:div.label-ja-alasveto
        [kentat/aikavali
         {:kaari-luokkaan           "sininen"
          :valinta-fn               #(e! (maarien-toteumat/->ValitseAikavali %1 %2))
@@ -279,8 +279,8 @@
                                              nil
                                              alkupvm loppupvm))))}]]
       [:div.label-ja-alasveto
-       [napit/yleinen-ensisijainen
-        " + Lisaa toteuma"
+       [napit/uusi
+        "Lisaa toteuma"
         #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil nil))
         {:vayla-tyyli? true
          :luokka       "suuri"}]]
@@ -289,6 +289,7 @@
       [kentat/tee-kentta {:tyyppi           :checkbox-group
                           :nayta-rivina?    true
                           :vayla-tyyli?     true
+                          :rivi-solun-tyyli {:padding-right "3rem"}
                           :vaihtoehto-nayta filtterit-keyword->string
                           :vaihtoehdot      [:maaramitattavat :rahavaraukset :lisatyot]
                           :valitse-fn       (fn [tila polku arvo]

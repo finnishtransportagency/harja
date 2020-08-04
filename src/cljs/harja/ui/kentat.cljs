@@ -449,7 +449,7 @@
 (defmethod tee-kentta :checkbox-group
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
-           muu-vaihtoehto muu-kentta palstoja
+           muu-vaihtoehto muu-kentta palstoja rivi-solun-tyyli
            valitse-fn valittu-fn vayla-tyyli?]} data]
   (assert data)
   (let [palstoja (or palstoja 1)
@@ -516,7 +516,9 @@
            [:tr
             (map-indexed (fn [i cb]
                            ^{:key i}
-                           [:td cb])
+                           [:td (when rivi-solun-tyyli
+                                     {:style rivi-solun-tyyli})
+                            cb])
                          checkboxit)
             (when muu
               ^{:key "muu"}
