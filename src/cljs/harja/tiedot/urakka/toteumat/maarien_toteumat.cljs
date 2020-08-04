@@ -126,6 +126,9 @@
   [filtterit]
   (fn [tehtava]
     (cond
+      (nil? filtterit)
+      true
+      
       (contains?
         (into #{}
               (mapcat filtteri->tyyppi
@@ -429,9 +432,8 @@
     app)
 
   ToteutuneetMaaratHakuOnnistui
-  (process-event [{vastaus :vastaus} {hakufiltterit :hakufiltteri :as app}]
+  (process-event [{vastaus :vastaus hakufiltterit :hakufiltteri} app]
     (let [ryhmitelty-tehtava (ryhmittele-tehtavat vastaus hakufiltterit)]
-      (loki/log "ryhmitelty " (pr-str ryhmitelty-tehtava) (pr-str hakufiltterit))
       (-> app
           (assoc-in [:toteutuneet-maarat] vastaus)
           (assoc-in [:toteutuneet-maarat-grouped] ryhmitelty-tehtava))))
