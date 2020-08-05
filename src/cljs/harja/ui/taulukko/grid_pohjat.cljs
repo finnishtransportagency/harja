@@ -23,7 +23,8 @@
          [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
          {:pre [(boolean? nappi-nakyvilla?)]}
          (fn hankintasuunnitelmien-syotto [this]
-           (let [on-blur (fn [event]
+           (let [rivit-alla (atom nil)
+                 on-blur (fn [event]
                            (let [klikattu-elementti (.-relatedTarget event)
                                  klikattu-nappia? (and (not (nil? klikattu-elementti))
                                                        (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
@@ -37,6 +38,15 @@
                                                                    (and (instance? alue/Rivi osa)
                                                                         (> (last (grid/osien-yhteinen-asia osa :index-polku))
                                                                            rivin-paikka)))))]
+                             (when klikattu-nappia?
+                               ;; rivin paikka tallennettava tässä, koska homma hajoaa, jos sortataan blur efektissä
+                               (let [rivin-paikka (first (take-last 2 (grid/osien-yhteinen-asia (::tama-komponentti solu/*this*) :index-polku)))]
+                                 ;(println "<<<< ----> RIVIN PAIKKA: " rivin-paikka)
+                                 (reset! rivit-alla (grid/gridin-rivit (grid/osa-polusta (::tama-komponentti solu/*this*) [:.. :..])
+                                                                       (fn [osa]
+                                                                         (and (instance? alue/Rivi osa)
+                                                                              (> (last (grid/osien-yhteinen-asia osa :index-polku))
+                                                                                 rivin-paikka)))))))
                              (when-not klikattu-nappia?
                                (grid/paivita-osa! (::tama-komponentti solu/*this*)
                                                   (fn [solu]
@@ -67,12 +77,14 @@
                                         :fmt-aktiivinen fmt-aktiivinen})
                  klikattu-fn! (fn [_]
                                   (let [#_#_{osan-paikka :osan-paikka} (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)
-                                        rivin-paikka (first (take-last 2 (grid/osien-yhteinen-asia solu/*this* :index-polku))) #_(first osan-paikka)
-                                        rivit-alla (grid/gridin-rivit (grid/osa-polusta solu/*this* [:.. :..])
+                                        ;rivin-paikka @rivin-paikka ;(first (take-last 2 (grid/osien-yhteinen-asia solu/*this* :index-polku))) #_(first osan-paikka)
+                                        rivit-alla @rivit-alla #_(grid/gridin-rivit (grid/osa-polusta solu/*this* [:.. :..])
                                                                       (fn [osa]
                                                                         (and (instance? alue/Rivi osa)
                                                                              (> (last (grid/osien-yhteinen-asia osa :index-polku))
                                                                                 rivin-paikka))))]
+                                    ;(println "RIVIT ALLA: " rivit-alla)
+                                    ;(println "*THIS*: " solu/*this*)
                                     (when rivit-alla
                                       (nappia-painettu! rivit-alla on-blur-arvo_)
                                       (set! on-blur-arvo_ nil))

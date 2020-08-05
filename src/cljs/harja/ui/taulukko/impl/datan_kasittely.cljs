@@ -40,15 +40,18 @@
 
 (defmethod jarjesta-data :sort-by
   [f data]
+  (println ":sort-by")
   (vec (sort-by f data)))
 
 (defmethod jarjesta-data :sort-by-with-comp
   [{:keys [keyfn comp]} data]
+  (println ":sort-by-with-comp")
   (let [jarjestetty (sort-by keyfn comp data)]
     (vec jarjestetty)))
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
+  (println ":mapit-avainten-mukaan")
   (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
          data))
 
@@ -92,7 +95,14 @@
   IKuuntelija
   (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku identiteetti luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
     (let [kursorit (mapv (fn [polku]
-                           (r/cursor data-atom polku))
+                           (let [cursor? (instance? ratom/RCursor data-atom)
+                                 polku (if cursor?
+                                         (vec (concat (.-path data-atom) polku))
+                                         polku)
+                                 data-atom (if cursor?
+                                             (.-ratom data-atom)
+                                             data-atom)]
+                             (r/cursor data-atom polku)))
                          polut)]
       (when luonti-init
         (if dynaaminen?
@@ -253,13 +263,16 @@
                        (warn (str "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. ")
                              (s/conform (get rajapinta rajapinnan-nimi) args)))
                      (warn (str "Asettajalle " rajapinnan-nimi " ei ole määritetty spekkiä rajapinnassa.")))
+                   (println "--- SWAPATAAN - args: " args)
                    (swap! data-atom (fn [tila]
                                       (try (apply f tila args)
                                            (catch :default e
                                              (error (str "RAJAPINNAN ASTTAJA " rajapinnan-nimi " KAATUI VIRHEESEEN " (.-name e) "\n"
                                                          "ANNETUT ARGUMENTIT:\n" (pr-str args)))
                                              (error e)
-                                             tila))))))))
+                                             tila))))
+                   ; Jos data-atom on cursor, niin tämä korjaa laziness ongelmia
+                   @data-atom))))
 
   IReset
   (-reset! [this uusi]
@@ -269,6 +282,7 @@
       ;; seurannat (watch). Näin halutaan käyvän siltä varalta, että taulukon käyttäjä ei triggeröi vahingossa uusia
       ;; seurantoja dereffatessaan cursoria jossain seuranta funktiossa esim.
       @data-atom
+      (println "---<-<-<-<-<-<-<-<-< fofofofofofofo <-<-<-<-<-")
       (let [uusi-hash (hash uusi)
             data-atom-hash (str (hash data-atom))
             valitilan-hash (get-in @seurannan-valitila [data-atom-hash ::kaytavan-datan-hash])

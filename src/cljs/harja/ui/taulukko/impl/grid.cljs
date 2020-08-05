@@ -566,6 +566,7 @@
   (loop [[jarjestys & loput-jarjestykset] jarjestys
          syvyys 0
          tulos data]
+    (println "jarjestys: " jarjestys)
     (if (nil? jarjestys)
       tulos
       (let [perusjarjestys? (or (true? jarjestykset)
@@ -703,14 +704,36 @@
                                                                      (::jarjestettava-data rajapinnan-data)
                                                                      rajapinnan-data)
                                                 jarjestys-fns @jarjestys-fns
-                                                jarjestetaan? (boolean (and *jarjesta-data* (or jarjestys (not (empty? jarjestys-fns)))))
                                                 jarjestykset (if (= *jarjesta-data* :deep)
                                                                true
                                                                *jarjesta-data*)
+                                                jarjestykset (if-let [rajapinta-jolle-jarjestykset (-> jarjestykset meta :rajapinta)]
+                                                               (cond
+                                                                 (and (string? rajapinta-jolle-jarjestykset)
+                                                                      (= rajapinta-jolle-jarjestykset rajapinta)) jarjestykset
+                                                                 (and (keyword rajapinta-jolle-jarjestykset)
+                                                                      (= rajapinta-jolle-jarjestykset rajapinta)) jarjestykset
+                                                                 (and (instance? js/RegExp rajapinta-jolle-jarjestykset)
+                                                                      (re-find rajapinta-jolle-jarjestykset
+                                                                               (if (keyword? rajapinta)
+                                                                                 (name rajapinta)
+                                                                                 rajapinta))) jarjestykset
+                                                                 :else false)
+                                                               jarjestykset)
+                                                jarjestetaan? (boolean (and jarjestykset (or jarjestys (not (empty? jarjestys-fns)))))
                                                 rajapinnan-dataf (cond
                                                                    jarjestetaan? (jarjesta-data jarjestettava-data jarjestys jarjestykset jarjestys-fns)
                                                                    (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan jarjestettava-data @jarjestyksen-cache identiteetti)
                                                                    :else jarjestettava-data)]
+                                            (println "---- rajapinta " rajapinta)
+                                            (println "rajapinnan-data " rajapinnan-data)
+                                            (println "*jarjesta-data* " *jarjesta-data*)
+                                            (println (cond
+                                                       jarjestetaan? "jarjestetaan?"
+                                                       (not (nil? @jarjestyksen-cache)) "(not (nil? @jarjestyksen-cache))"
+                                                       :else ":else"))
+                                            (println "@jarjestyksen-cache " @jarjestyksen-cache)
+                                            (println "rajapinnan-dataf " rajapinnan-dataf)
                                             (when (= :deep *jarjesta-data*)
                                               (loop [polku (vec (butlast grid-kasittelijan-polku))]
                                                 (when-not (empty? polku)
@@ -789,7 +812,12 @@
                                                                        :derefable osan-derefable
                                                                        :rajapinta rajapinta))))))
                                         (assoc osa ::osan-derefable osan-derefable
-                                               ::tunniste-rajapinnan-dataan (fn [] (get-in @osien-tunnisteet osan-polku-dataan))
+                                               ::tunniste-rajapinnan-dataan (fn []
+                                                                              (println "::tunniste-rajapinnan-dataan")
+                                                                              (println "osan-polku-dataan " osan-polku-dataan)
+                                                                              (println "@osien-tunnisteet " @osien-tunnisteet)
+                                                                              (println "(get-in @osien-tunnisteet osan-polku-dataan) " (get-in @osien-tunnisteet osan-polku-dataan))
+                                                                              (get-in @osien-tunnisteet osan-polku-dataan))
                                                ::triggeroi-seuranta! (when seuranta
                                                                        (fn [] (dk/triggeroi-seuranta! datan-kasittelija seuranta))))))))
                                 grid-rajapintakasittelijat)]
