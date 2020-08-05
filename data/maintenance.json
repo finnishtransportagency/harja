@@ -1,10 +1,17 @@
 [
    {
+    "date": "2020-8-5",
+    "title": "Tietyöilmoitus taas kunnossa",
+    "body": 
+    "<p>Harjan tietyöilmoitukseen on tehty kaksi tärkeää korjausta. Lomake ei enää hukkaa tietoja, eli ns. välitallennukset eivät ole enää tarpeen. Lisäksi nyt lomake osaa päätellä oikein, onko ilmoitusta aiemmin lähetetty Tieliikennekeskukseen vai ei: Aiemmin merkittiin joskus virheellisesti ruksi kohtaan 'Muutos aiempaan tietoon', vaikka lomaketta ei oltu aiemmin lähetetty.</p>"
+  },
+  {
     "date": "2020-5-13",
     "title": "Paikkausten rajapinta ja käyttöliittymä toiminnassa",
     "body": 
     "<p>Paikkausurakoihin liittyen voi nyt tuoda tietoa Harjaan rajapintamäärityksen mukaisesti. Paikkaukset kirjataan aina rajapinnan kautta, kustannukset voidaan kirjata joko käsin tai rajapinnan kautta. Käyttöliittymässä paikkauksille on olemassa oma välilehtensä, mistä löytyy sekä tekniset toteumatiedot että mahdollisuus kirjata kustannukset.<br><br>Toteumatietojen puolella tilaajalla on mahdollisuus raportoida urakoitsijalle päin mahdollisista virheistä, jolloin Harja lähettää asiasta sähköpostin urakoitsijan vastuuhenkilölle, samalla voi halutessan ottaa itselleen kopion viestistä. Hieman myöhemmin on tilaajalle tulossa vielä mahdollisuus lähettää valmistuneet paikkaustiedot tarkistuksen jälkeen YHA:an. Relevantit rajapinnat ovat: <ul><li>https://extranet.vayla.fi/harja/apidoc/api.html#urakat__id__paikkaus_post<li>https://extranet.vayla.fi/harja/apidoc/api.html#urakat__id__paikkaus_kustannus_post</ul></p>"
-  },{
+  },
+  {
     "date": "2020-3-3",
     "title": "MHU-urakoiden sanktiolajit lisätty",
     "body": 
