@@ -389,14 +389,15 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
                                     varoitukset muokatut virheet huomautukset rivi-opts]}]
-  [:div {:class (str "lomakepalsta " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
+  [:div {:key (str "div-nayta-palsta" (first (:skeemat palsta)))
+         :class (str "lomakepalsta " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
    (when (-> palsta :optiot :otsikko)
      [:h2 (-> palsta :optiot :otsikko)])
    (for [{:keys [nimi muokattava?] :as p} (remove nil? (:skeemat palsta))]
      (let [muokattava? (and voi-muokata?
                             (or (nil? muokattava?)
                                 (muokattava? data)))]
-       ^{:key nimi}
+       ^{:key (str "palsta-kentta-" nimi)}
        [kentta (assoc p
                  :focus (= nimi nykyinen-fokus)
                  :on-focus (r/partial aseta-fokus! nimi))
@@ -435,7 +436,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                             :virheet            virheet
                             :huomautukset       huomautukset
                             :rivi-opts          rivi-opts})
-           ^{:key nimi}
+           ^{:key (str "rivi-kentta-" nimi)}
            [kentta (cond-> s
                            true (assoc
                                   :col-luokka col-luokka
@@ -581,11 +582,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                   {:vayla-tyyli? vayla-tyyli?
                                    :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
                      (if otsikko
-                       ^{:key i}
+                       ^{:key (str otsikko "-" i)}
                        [:span
                         [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
                         rivi-ui]
-                       (with-meta rivi-ui {:key i}))))
+                       ^{:key (str "rivi-ui-with-meta-" i)}
+                       (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
