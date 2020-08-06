@@ -67,17 +67,19 @@
 (defn validoinnit
   ([avain lomake indeksi]
    (let []
-     (avain {::t/maara      [tila/ei-nil tila/ei-tyhja tila/numero]
-             ::t/lisatieto  [(tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
-                                               tila/ei-nil)
-                             (tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
-                                               tila/ei-tyhja)]
+     (avain {::t/maara [(tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-nil)
+                        (tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-tyhja )
+                        (tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/numero)]
+             ::t/lisatieto [(tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
+                                              tila/ei-nil)
+                            (tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
+                                              tila/ei-tyhja)]
              ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
-             ::t/tehtava    [tila/ei-nil tila/ei-tyhja]
-             ::t/sijainti   [(tila/silloin-kun #(nil? (get-in lomake [::t/toteumat indeksi ::t/ei-sijaintia]))
-                                               tila/ei-nil)]
-             ::t/tyyppi     [tila/ei-nil]
-             ::t/pvm        [tila/ei-nil tila/ei-tyhja tila/paivamaara]})))
+             ::t/tehtava [tila/ei-nil tila/ei-tyhja]
+             ::t/sijainti [(tila/silloin-kun #(nil? (get-in lomake [::t/toteumat indeksi ::t/ei-sijaintia]))
+                                             tila/ei-nil)]
+             ::t/tyyppi [tila/ei-nil]
+             ::t/pvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]})))
   ([avain lomake]
    (validoinnit avain lomake 0))
   ([avain]
@@ -192,6 +194,7 @@
   (process-event [{{:keys [toimenpide]} :parametrit} app]
     (hae-tehtavat-tyypille toimenpide)
     app)
+
   LahetaLomake
   (process-event [{lomake :lomake} app]
     (let [{loppupvm   ::t/pvm
@@ -221,15 +224,18 @@
       (-> app
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
+
   LisaaToteuma
   (process-event [{lomake :lomake} app]
     (let [lomake (update lomake ::t/toteumat conj uusi-toteuma)]
       (assoc app :lomake lomake)))
+
   ValidoiKokoLomake
   (process-event [{lomake            :lomake
                    validointi-skeema :validointi-skeema} app]
     (loki/log (toteuma-lomakkeen-validoinnit lomake))
     app)
+
   PaivitaLomake
   (process-event [{{useampi?          ::t/useampi-toteuma
                     tyyppi            ::t/tyyppi
@@ -285,16 +291,13 @@
                                   (update lomake ::t/toteumat #(conj [] (first %)))))
                               identity)))
       uusi-app))
+
   TyhjennaLomake
   (process-event [_ app]
     (assoc app :syottomoodi false
                :lomake (-> tila/toteumat-default-arvot
                            :maarien-toteumat
                            :lomake)))
-
-
-
-
 
   ValitseToimenpide
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
@@ -501,28 +504,6 @@
   #_(process-event [{id :id} app]
                    (js/console.log "Poista Toteuma - tää ei tekis vielä mittään!!" (pr-str id))
                    app)
-
-  TallennaToteuma
-  (process-event [_ app]
-    (let [urakka-id (:id @nav/valittu-urakka)
-          toimenpide (get-in app [:toteuma :toimenpide])
-          tehtava (get-in app [:toteuma :tehtava])
-          maara (get-in app [:toteuma :maara])
-          loppupvm (get-in app [:toteuma :loppupvm])
-          lisatieto (get-in app [:toteuma :lisatieto])]
-      (tuck-apurit/post! :tallenna-toteuma
-                         {:toteuma-id         (get-in app [:toteuma :toteuma-id])
-                          :toteuma-tehtava-id (get-in app [:toteuma :toteuma-id])
-                          :urakka-id          urakka-id
-                          :tehtavaryhma       (:otsikko toimenpide)
-                          :maara              maara
-                          :tehtava            tehtava
-                          :loppupvm           (pvm/pvm loppupvm)
-                          :lisatieto          lisatieto}
-                         {:onnistui           ->TallennaToteumaOnnistui
-                          :epaonnistui        ->TallennaToteumaEpaonnistui
-                          :paasta-virhe-lapi? true}))
-    app)
 
   TallennaToteumaOnnistui
   (process-event [{vastaus :vastaus} app]
