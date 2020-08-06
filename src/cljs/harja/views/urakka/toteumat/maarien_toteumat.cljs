@@ -94,6 +94,19 @@
                        (e! (maarien-toteumat/->ToteumanSyotto true tehtava toimenpide))))}
      (str "+ Lisää toteuma")]))
 
+(defn maarita-yksikko [rivi]
+  (cond
+    (= (:tyyppi rivi) "kokonaishintainen")
+    (:yksikko rivi)
+
+    (or (= (:tyyppi rivi) "lisatyo")
+        (= (:tyyppi rivi) "akillinen-hoitotyo")
+        (= (:tyyppi rivi) "muut-rahavaraukset"))
+    "kpl"
+
+    :else
+    ""))
+
 ; spekseistä laskettu
 (def leveydet {:tehtava     "55%"
                :caret       "4%"
@@ -133,7 +146,7 @@
                                                                                   (= (get-in app [:valittu-rivi]) (first rivi))
                                                                                   [ikonit/livicon-chevron-up]
                                                                                   [ikonit/livicon-chevron-down])]
-                                       [:td {:style {:width (:toteuma leveydet)}} (str toteutunut-maara " " (:yksikko (first (second rivi))))]
+                                       [:td {:style {:width (:toteuma leveydet)}} (str toteutunut-maara " " (maarita-yksikko (first (second rivi))))]
                                        [:td {:style {:width (:suunniteltu leveydet)}} (if (= -1 suunniteltu-maara)
                                                                                         (case tyyppi
                                                                                           "kokonaishintainen" [:span.tila-virhe "---"]
@@ -166,35 +179,26 @@
                                               [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                                [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika lapsi) (:toteuma_id lapsi)]]
                                                [:td {:style {:width (:caret leveydet)}} ""]
-                                               [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut lapsi) " " (cond
-                                                                                                                         (= (:tyyppi lapsi) "kokonaishintainen")
-                                                                                                                         (:yksikko lapsi)
-
-                                                                                                                         (or (= (:tyyppi lapsi) "lisatyo")
-                                                                                                                             (= (:tyyppi lapsi) "akillinen-hoitotyo"))
-                                                                                                                         "kpl"
-
-                                                                                                                         :else
-                                                                                                                         ""))]
+                                               [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut lapsi) " " (maarita-yksikko lapsi))]
                                                [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                                [:td {:style {:width (:prosentti leveydet)}} "---"]]]))
                                           lapsi-rivit)
                                         ;; Jos lapsi-rivejä ei ole, mutta toteuma löytyy, niin lisätään se
                                         (when (and
                                                 (= (get-in app [:valittu-rivi]) (first rivi))
-                                                #_(> toteutunut-maara 0))
+                                                (> toteutunut-maara 0))
                                           [^{:key (str "toteuma-" (hash rivi))}
                                           (do
                                             (reset! row-index-atom (inc @row-index-atom))
                                             [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                              [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika (first (second rivi))) (:toteuma_id (first (second rivi)))]]
                                              [:td {:style {:width (:caret leveydet)}} ""]
-                                             [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut (first (second rivi))) " " (:yksikko (first (second rivi))))]
+                                             [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut (first (second rivi))) " " (maarita-yksikko (first (second rivi))))]
                                              [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                              [:td {:style {:width (:prosentti leveydet)}} "---"]])])))))
                                 rivit)]
               (concat [
-                       ^{:key (hash tehtavaryhma)}
+                       ^{:key (str "otsikko-" (hash tehtavaryhma))}
                        [:tr.header
                         [:td tehtavaryhma]
                         [:td ""]
@@ -229,35 +233,33 @@
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)  ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
-        toteutuneet-maarat (get-in app [:toteutuneet-maarat])
         ryhmitellyt-maarat (get-in app [:toteutuneet-maarat-grouped])
         toimenpiteet (get-in app [:toimenpiteet])
-        tehtavat (get-in app [:tehtavat])
-        valittu-toimenpide (if (nil? (get-in app [:toteuma :toimenpide]))
+        valittu-toimenpide (if (nil? (:valittu-toimenpide app))
                              {:otsikko "Kaikki" :id 0}
-                             (get-in app [:toteuma :toimenpide]))
+                             (:valittu-toimenpide app))
         valittu-hoitokausi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
                              2019
                              (get-in app [:hoitokauden-alkuvuosi]))
-        aikavali-alkupvm (get-in app [:aikavali-alkupvm])
-        aikavali-loppupvm (get-in app [:aikavali-loppupvm])
+        ;aikavali-alkupvm (get-in app [:aikavali-alkupvm])
+        ;aikavali-loppupvm (get-in app [:aikavali-loppupvm])
         syottomoodi (get-in app [:syottomoodi])
-        dom-id "maarien-toteumat-taulukko"
+        ;dom-id "maarien-toteumat-taulukko"
         ;g (maarien-toteumat/uusi-gridi dom-id)
         ;_ (new-grid/aseta-gridin-polut g)
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
-     [debug/debug app]
+     #_ [debug/debug app]
      [:div "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan."]
      [:div
-      [:div.label-ja-alasveto.iso-alasveto
+      [:div.label-ja-alasveto.iso-alasveto {:style {:width "50%"}}
        [:span.alasvedon-otsikko "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta    valittu-toimenpide
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn  #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
 
-      [:div.label-ja-alasveto.iso-alasveto
+      [:div.label-ja-alasveto.iso-alasveto {:style {:width "25%"}}
        [:span.alasvedon-otsikko "Hoitokausi"]
        [yleiset/livi-pudotusvalikko {:class      "livi-alasveto-korkea"
                                      :valinta    valittu-hoitokausi
@@ -280,12 +282,12 @@
                                              (get-in app [:toteuma :toimenpide])
                                              nil
                                              alkupvm loppupvm))))}]]
-      [:div.label-ja-alasveto
+      [:div.label-ja-alasveto {:style {:width "15%"}}
        [napit/uusi
         "Lisaa toteuma"
-        #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil nil))
+        #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app)))
         {:vayla-tyyli? true
-         :luokka       "suuri"}]]
+         :luokka "suuri"}]]
       ]
      [:div.flex-row
       [kentat/tee-kentta {:tyyppi           :checkbox-group
@@ -307,137 +309,6 @@
      ;[new-grid/piirra g]
      ]))
 
-(defn- toteuman-poiston-varmistus-modaali
-  [{:keys [varmistus-fn]}]
-  [:div
-   "Oletko varma?"
-
-   [:div
-    [napit/yleinen-toissijainen
-     "Peruuta"
-     (fn []
-       (modal/piilota!))
-     {:vayla-tyyli? true
-      :luokka       "suuri"}]
-    [napit/poista
-     "Poista tiedot"
-     varmistus-fn
-     {:vayla-tyyli? true
-      :luokka       "suuri"}]]])
-
-(defonce maara-atom (r/atom 0))
-(defonce toteuma-valmis-atom (r/atom (pvm/nyt)))
-#_(defn toteuman-syotto [e! app]
-    (let [syottomoodi (get-in app [:syottomoodi])
-          toimenpiteet (get-in app [:toimenpiteet])
-          valittu-toimenpide (get-in app [:toteuma :toimenpide])
-          valittu-toimenpide (if (= 0 (:id valittu-toimenpide))
-                               {:id 0 :otsikko " - valitse - "}
-                               valittu-toimenpide)
-          tehtavat (get-in app [:tehtavat])
-          valittu-tehtava (cond
-                            (empty? tehtavat)
-                            {:tehtava "- ei käsin lisättäviä tehtäviä - " :id 0}
-                            (and (not (empty? tehtavat))
-                                 (nil? (get-in app [:toteuma :tehtava])))
-                            {:tehtava "- valitse - " :id 0}
-                            :default
-                            (get-in app [:toteuma :tehtava]))
-          maara (get-in app [:toteuma :maara])
-          _ (reset! toteuma-valmis-atom (get-in app [:toteuma :loppupvm]))
-          lisatieto (get-in app [:toteuma :lisatieto])
-          lomake-validoitu? (get-in app [:lomake-validoitu?])]
-
-      [:div.ajax-peitto-kontti.lomake
-       [:div.palstat
-        [:div.palsta
-         [napit/takaisin
-          "Takaisin"
-          #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil nil))
-          {:vayla-tyyli?  true
-           :teksti-nappi? true
-           :style         {:font-size "14px"}}]
-
-         [:h2 (str (if-not (nil? (:id lomake))
-                     "Muokkaa toteumaa"
-                     "Uusi toteuma"))]]
-        [:div.palsta.flex
-         (when-not (nil? (:id lomake))
-           [napit/poista "Poista toteuma"
-            #(modal/nayta! {:otsikko "Haluatko varmasti poistaa toteuman?"}
-                           [toteuman-poiston-varmistus-modaali
-                            {:varmistus-fn (fn []
-                                             (modal/piilota!)
-                                             (e! (maarien-toteumat/->PoistaToteuma (:id lomake))))}])
-            {:vayla-tyyli?  true
-             :teksti-nappi? true
-             :style         {:font-size   "14px"
-                             :margin-left "auto"}}])]]
-       [:div.palstat
-        [:div.palsta
-         [:h3 "Mihin toimenpiteeseen toteuma liittyy?"]
-
-         [:div.label-ja-alasveto.iso-alasveto
-          [:label "Toimenpide *"]
-          [yleiset/livi-pudotusvalikko {:valinta    valittu-toimenpide
-                                        :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
-                                        :format-fn  #(:otsikko %)}
-           toimenpiteet]]]]
-       [:div.palstat
-        [:div.palsta
-         [:h3 "Tehtävän tiedot"]
-         [:div.label-ja-alasveto.iso-alasveto.iso-input
-          [:label.required "Työ valmis pvm *"]
-          [kentat/tee-kentta {:otsikko              "Toteuma valmis"
-                              :nimi                 :toteuma-valmis
-                              :tyyppi               :pvm
-                              :fmt                  pvm/pvm-aika-opt
-                              :muokattava?          true
-                              :leveys               5
-                              :on-datepicker-select #(e! (maarien-toteumat/->AsetaLoppuPvm %))}
-           toteuma-valmis-atom]]
-         [:div.label-ja-alasveto.iso-alasveto
-          [:label.required "Tehtavä *"]
-          [yleiset/livi-pudotusvalikko {:valinta    valittu-tehtava
-                                        :valitse-fn #(e! (maarien-toteumat/->ValitseTehtava %))
-                                        :format-fn  #(:tehtava %)}
-           tehtavat]]]]
-
-       [:div.palstat
-        [:div.palsta
-         [:div.kulukentta
-          [:label.required "Toteutunut määrä *"]
-          [:div
-           [:input.input-default.sisainen-kentta
-            {:value     maara
-             :on-change (fn [e]
-                          (let [arvo (-> e .-target .-value)]
-                            (e! (maarien-toteumat/->AsetaMaara arvo))))}]
-           [:span.sisainen-label {:style {:margin-left (str "-" (+ 13 (* 5 (count (:yksikko valittu-tehtava)))) "px")}}
-            (str (:yksikko valittu-tehtava))]]
-          ]
-         [kentat/vayla-lomakekentta
-          "Lisätiedot"
-          :on-change (fn [e]
-                       (let [arvo (-> e .-target .-value)]
-                         (e! (maarien-toteumat/->AsetaLisatieto arvo))))
-          :arvo lisatieto]]]
-       [:div.palstat
-        [:div.palsta
-         [:div {:style {:padding-top "40px"}}
-          [napit/tallenna
-           "Tallenna"
-           #(e! (maarien-toteumat/->TallennaToteuma))
-           {;:tallennus-kaynnissa? (:tallennus-kaynnissa? kuittaus)
-            :ikoni       (ikonit/tallenna)
-            :virheviesti "Toteuman tallennuksessa tapahtui virhe."
-            :luokka      (str "nappi-ensisijainen button-primary-default" (when-not lomake-validoitu? " disabled"))}]
-          [napit/peruuta
-           "Peruuta"
-           #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil nil))
-           {:luokka "button-primary-default"
-            :style  {:margin-left "40px"}}]]]]]))
-
 (defn- debug-state [app]
   [:span
    (when @debug-visible?
@@ -453,7 +324,7 @@
                         (e! (maarien-toteumat/->HaeToimenpiteet))
                         (e! (maarien-toteumat/->HaeToteutuneetMaarat
                               (:id @nav/valittu-urakka)
-                              (get-in app [:toteuma :toimenpide])
+                              (:valittu-toimenpide app)
                               (get-in app [:hoitokauden-alkuvuosi]) nil nil)))))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
