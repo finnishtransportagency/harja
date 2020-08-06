@@ -577,7 +577,7 @@
    [:label {:for id} teksti]])
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?
-                                            oletusarvo vayla-tyyli?]} data]
+                                            oletusarvo vayla-tyyli? disabloitu?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
@@ -597,6 +597,7 @@
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
                                                            (if valittu?
                                                              (reset! data vaihtoehto)))
+                                             :disabloitu? disabloitu?
                                              :valittu?  (or (and (nil? valittu) (= vaihtoehto oletusarvo))
                                                             (= valittu vaihtoehto))
                                              :ryhma     group-id
