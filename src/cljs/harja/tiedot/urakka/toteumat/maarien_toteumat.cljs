@@ -301,13 +301,14 @@
     (do
       (js/console.log "ValitseToimenpide" (pr-str toimenpide))
       (hae-toteutuneet-maarat urakka toimenpide
-                              (get-in app [:toteuma :vuosi])
-                              (get-in app [:toteuma :aikavali-alkupvm])
-                              (get-in app [:toteuma :aikavali-loppupvm]))
+                              (:hoitokauden-alkuvuosi app)
+                              (:aikavali-alkupvm app)
+                              (:aikavali-loppupvm app))
       (hae-tehtavat toimenpide)
       (-> app
-          (assoc-in [:toteuma :toimenpide] toimenpide)
-          (assoc-in [:toteuma :tehtava] nil)
+          (assoc :valittu-toimenpide toimenpide)
+          (assoc-in [:lomake ::t/toimenpide] toimenpide)
+          (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] nil)
           (validoi-lomake))))
 
   ValitseTehtava
@@ -405,7 +406,7 @@
   (process-event [{urakka :urakka vuosi :vuosi} app]
     (do
       (js/console.log "ValitseHoitokausi" (pr-str vuosi))
-      (hae-toteutuneet-maarat urakka (get-in app [:toteuma :toimenpide]) vuosi nil nil)
+      (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi nil nil)
       (-> app
           (assoc-in [:hoitokauden-alkuvuosi] vuosi)
           (assoc-in [:toteuma :aikavali-alkupvm] nil)
@@ -477,17 +478,24 @@
 
   ToteumanSyotto
   (process-event [{auki :auki tehtava :tehtava toimenpide :toimenpide} app]
-    (js/console.log "ToteumanSyotto " (pr-str auki) (pr-str tehtava) (pr-str toimenpide))
+    (js/console.log "ToteumanSyotto "
+                    (pr-str auki)
+                    (pr-str tehtava) (pr-str toimenpide) "kuukausi " (pr-str (pvm/kuukausi (pvm/nyt))) (:hoitokauden-alkuvuosi app))
+
     (cond-> app
-            (not (nil? tehtava)) (assoc-in [:toteuma :tehtava] tehtava)
-            (not (nil? toimenpide)) (assoc-in [:toteuma :toimenpide] toimenpide)
+            (not (nil? tehtava)) (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
+            (and
+              (not (nil? toimenpide))
+              (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
+            (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
             true (assoc-in [:syottomoodi] auki)
-            true (assoc-in [:toteuma :vuosi] nil)
-            true (assoc-in [:toteuma :toteuma-id] nil)
-            true (assoc-in [:toteuma :toteuma-tehtava-id] nil)
-            true (assoc-in [:toteuma :lisatieto] nil)
-            true (assoc-in [:toteuma :maara] nil)
-            true (assoc-in [:toteuma :loppupvm] (pvm/nyt))))
+            true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
+            true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
+            true (assoc-in [:lomake ::t/pvm] (pvm/luo-pvm (if (> (pvm/kuukausi (pvm/nyt)) 10)
+                                                            (:hoitokauden-alkuvuosi app)
+                                                            (+ 1 (:hoitokauden-alkuvuosi app)))
+                                                          (- (pvm/kuukausi (pvm/nyt)) 1)
+                                                          1))))
 
   ;PoistaToteuma
   #_(process-event [{id :id} app]
@@ -521,11 +529,11 @@
     (viesti/nayta! "Toteuma tallennettu!")
     ;; Päivitä määrät välittömästi lisäyksen jälkeen
     (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
-                            (get-in app [:toteuma :toimenpide])
+                            (:valittu-toimenpide app)
                             (get-in app [:hoitokauden-alkuvuosi])
                             (get-in app [:aikavali-alkupvm])
                             (get-in app [:aikavali-loppupvm]))
-    app)
+    (assoc app :syottomoodi false))
 
   TallennaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -566,7 +574,7 @@
                            (not (nil? (get-in app [:toteuma :tehtava])))
                            true)
         valid? (if (and
-                     (not (nil? (get-in app [:toteuma :toimenpide])))
+                     (not (nil? (:valittu-toimenpide app)))
                      tehtava-valittu?
                      (not (nil? (get-in app [:toteuma :maara])))
                      (not (nil? (get-in app [:toteuma :loppupvm]))))

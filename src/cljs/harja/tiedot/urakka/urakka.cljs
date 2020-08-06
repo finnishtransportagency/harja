@@ -177,25 +177,27 @@
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
 
-(def toteumat-default-arvot {:maarien-toteumat {:syottomoodi           false
-                                                :toimenpiteet          nil
-                                                :toteutuneet-maarat    nil
-                                                :hakufiltteri          {:maaramitattavat true
-                                                                        :rahavaraukset   true
-                                                                        :lisatyot        true}
+(def toteumat-default-arvot {:maarien-toteumat {:syottomoodi false
+                                                :toimenpiteet nil
+                                                :toteutuneet-maarat nil
+                                                :valittu-toimenpide {:otsikko "Kaikki" :id 0}
+                                                :hakufiltteri {:maaramitattavat true
+                                                               :rahavaraukset true
+                                                               :lisatyot true}
                                                 :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                          (pvm/vuosi (pvm/nyt))
                                                                          (dec (pvm/vuosi (pvm/nyt))))
-                                                :aikavali-alkupvm      nil
-                                                :aikavali-loppupvm     nil
-                                                :lomake                {::t/toimenpide nil
-                                                                        ::t/tyyppi     nil
-                                                                        ::t/loppupvm   (pvm/nyt)
-                                                                        ::t/toteumat   [{::t/tehtava            nil
-                                                                                         ::t/toteuma-id         nil
-                                                                                         ::t/toteuma-tehtava-id nil
-                                                                                         ::t/lisatieto          nil
-                                                                                         ::t/maara              nil}]}}})
+                                                :aikavali-alkupvm nil
+                                                :aikavali-loppupvm nil
+                                                :lomake {::t/toimenpide nil
+                                                         ::t/tyyppi nil
+                                                         ::t/pvm (pvm/nyt)
+                                                         ::t/toteumat [{::t/tehtava nil
+                                                                        ::t/toteuma-id nil
+                                                                        ::t/ei-sijaintia true
+                                                                        ::t/toteuma-tehtava-id nil
+                                                                        ::t/lisatieto nil
+                                                                        ::t/maara nil}]}}})
 
 (def kulut-default {:parametrit  {:haetaan 0}
                     :taulukko    nil
