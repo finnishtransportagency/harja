@@ -145,8 +145,10 @@
                                                                                         "---")
                                                                                       (str (laske-prosentti (:suunniteltu_maara (first (second rivi))) toteutunut-maara) " %"))]]]
 
-                                      ;; "+ Lisää toteuma" rivi - jos rivi on auki
-                                      (when (= (get-in app [:valittu-rivi]) (first rivi))
+                                      ;; "+ Lisää toteuma" rivi - jos rivi on auki ja jos tehtävämäärän/toimenpiteen tehtävälle on tietokantaan sallittu käsin lisäys
+                                      (when (and
+                                              (= (get-in app [:valittu-rivi]) (first rivi))
+                                              (= true (:kasin-lisattava? (first (second rivi)))))
                                         [^{:key (str "lisää-toteuma-" (hash rivi))}
                                         [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                          [:td {:style {:width (:tehtava leveydet)}} [lisaa-toteuma-linkki e! app (first rivi) (:tehtavaryhma (first (second rivi)))]]

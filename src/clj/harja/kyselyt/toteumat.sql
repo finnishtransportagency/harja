@@ -457,7 +457,8 @@ SELECT ut.id                      AS id,
        t.maara                    AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        t.tyyppi                   AS tyyppi,
-       tk.yksikko                 AS yksikko
+       tk.yksikko                 AS yksikko,
+       tk.kasin_lisattava_maara   AS "kasin-lisattava?"
     FROM urakka_tehtavamaara ut
              LEFT JOIN toteumat t
                        ON t.toimenpidekoodi_id = ut.tehtava AND t."hoitokauden-alkuvuosi" = ut."hoitokauden-alkuvuosi",
@@ -491,7 +492,8 @@ SELECT tk.id                      AS id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        t.tyyppi                   AS tyyppi,
-       tk.yksikko                 AS yksikko
+       tk.yksikko                 AS yksikko,
+       tk.kasin_lisattava_maara   AS "kasin-lisattava?"
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
          toteuma t,
@@ -590,7 +592,7 @@ SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
          tehtavaryhma tr1
              JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
              JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-    WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND kasin_lisattava_maara = true
+    WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND tk.kasin_lisattava_maara = true
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
 
 -- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat

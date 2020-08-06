@@ -388,7 +388,7 @@
     (toteumat-q/listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat db)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-; lisätöillä ei ole oikeasti omia tehtäviä, mutta niile on olemassa dummytehtävät
+; lisätöillä ei ole oikeasti omia tehtäviä, mutta niille on olemassa dummytehtävät
 (defn hae-lisatoiden-toimenpiteiden-tehtavat [db user {:keys [urakka-id]}]
   ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
