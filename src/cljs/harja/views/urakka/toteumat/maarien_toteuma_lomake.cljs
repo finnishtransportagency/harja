@@ -20,23 +20,40 @@
   (loki/log "tyhjään")
   (e! (tiedot/->TyhjennaLomake data)))
 
-(defn- toteuman-poiston-varmistus-modaali
-  [{:keys [varmistus-fn]}]
-  [:div
-   "Oletko varma?"
+(defn- toteuman-poiston-varmistus-modaali [{:keys [varmistus-fn pvm tehtava maara tyyppi] :as mod}]
+  (let [_ (js/console.log "mod" (pr-str mod))]
+    [:div.row
+     [:div.col-md-12 {:style {:padding-bottom "1rem"}} (pvm/pvm pvm)]
+     [:div.col-md-12 {:style {:padding-bottom "1rem"}} (:tehtava tehtava)]
+     [:div.col-md-12 {:style {:padding-bottom "1rem"}} (str maara " " (cond
+                                                                        (or
+                                                                          (= tyyppi :kokonaishintainen)
+                                                                          (= tyyppi :maaramitattava
+                                                                             ))
+                                                                        (:yksikko tehtava)
 
-   [:div
-    [napit/yleinen-toissijainen
-     "Peruuta"
-     (fn []
-       (modal/piilota!))
-     {:vayla-tyyli? true
-      :luokka       "suuri"}]
-    [napit/poista
-     "Poista tiedot"
-     varmistus-fn
-     {:vayla-tyyli? true
-      :luokka       "suuri"}]]])
+                                                                        (or (= tyyppi :lisatyo)
+                                                                            (= tyyppi :akillinen-hoitotyo)
+                                                                            (= tyyppi :muut-rahavaraukset))
+                                                                        "kpl"
+
+                                                                        :else
+                                                                        ""))]
+
+     [:div {:style {:padding-bottom "1rem"}}
+      [:span {:style {:padding-right "1rem"}}
+       [napit/yleinen-toissijainen
+        "Peruuta"
+        (fn []
+          (modal/piilota!))
+        {:vayla-tyyli? true
+         :luokka "suuri"}]]
+      [:span
+       [napit/poista
+        "Poista tiedot"
+        varmistus-fn
+        {:vayla-tyyli? true
+         :luokka "suuri"}]]]]))
 
 (defn- poista-fn [{:keys [toteuma-id indeksi e! lomake paivita!]}]
   (let [indeksi (or indeksi
@@ -99,7 +116,11 @@
                                   [toteuman-poiston-varmistus-modaali
                                    {:varmistus-fn (fn []
                                                     (modal/piilota!)
-                                                    (poista! true))}])
+                                                    (poista! true))
+                                    :pvm (get-in lomake [::t/pvm])
+                                    :tehtava (get-in lomake [::t/tehtava])
+                                    :maara (get-in lomake [::t/toteumat indeksi ::t/maara])
+                                    :tyyppi (::t/tyyppi lomake)}])
                    {:vayla-tyyli? true :teksti-nappi? true}]]])
               [palstat-tagi
                [palsta-tagi
