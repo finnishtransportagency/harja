@@ -40,18 +40,15 @@
 
 (defmethod jarjesta-data :sort-by
   [f data]
-  (println ":sort-by")
   (vec (sort-by f data)))
 
 (defmethod jarjesta-data :sort-by-with-comp
   [{:keys [keyfn comp]} data]
-  (println ":sort-by-with-comp")
   (let [jarjestetty (sort-by keyfn comp data)]
     (vec jarjestetty)))
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
-  (println ":mapit-avainten-mukaan")
   (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
          data))
 
@@ -219,7 +216,8 @@
                    (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
                          uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
-                         polut-muuttunut? (not= vanhat-polut uudet-polut)]
+                         polut-muuttunut? (not= vanhat-polut uudet-polut)
+                         taman-seurannan-nimi seurannan-nimi]
                      (assert (or (nil? uudet-polut)
                                  (empty? uudet-polut)
                                  (every? map? uudet-polut))
@@ -231,8 +229,9 @@
                          (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (if polut-muuttunut?
-                       (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen?]}]
+                       (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen? vanhempi-seuranta]}]
                                                                  (let [seuranta-poistettava? (and dynaaminen?
+                                                                                                  (= vanhempi-seuranta taman-seurannan-nimi)
                                                                                                   (nil? (some #(= (ffirst %) seurannan-nimi)
                                                                                                               uudet-polut)))]
                                                                    (if seuranta-poistettava?
@@ -246,7 +245,7 @@
                                                                           seurannat)
                                                  lisa-argumentit (:args (meta polut))]
                                              (if-not seuranta-luotu-jo?
-                                               (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :siivoa-tila siivoa-tila}])
+                                               (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhempi-seuranta taman-seurannan-nimi :siivoa-tila siivoa-tila}])
                                                    [uusi ((get-in seurannat [seurannan-nimi :seuranta-fn]) true vanha uusi)])
                                                [vanha uusi])))
                                          [vanha poiston-jalkeinen-tila]
@@ -263,7 +262,6 @@
                        (warn (str "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. ")
                              (s/conform (get rajapinta rajapinnan-nimi) args)))
                      (warn (str "Asettajalle " rajapinnan-nimi " ei ole määritetty spekkiä rajapinnassa.")))
-                   (println "--- SWAPATAAN - args: " args)
                    (swap! data-atom (fn [tila]
                                       (try (apply f tila args)
                                            (catch :default e
@@ -282,7 +280,6 @@
       ;; seurannat (watch). Näin halutaan käyvän siltä varalta, että taulukon käyttäjä ei triggeröi vahingossa uusia
       ;; seurantoja dereffatessaan cursoria jossain seuranta funktiossa esim.
       @data-atom
-      (println "---<-<-<-<-<-<-<-<-< fofofofofofofo <-<-<-<-<-")
       (let [uusi-hash (hash uusi)
             data-atom-hash (str (hash data-atom))
             valitilan-hash (get-in @seurannan-valitila [data-atom-hash ::kaytavan-datan-hash])

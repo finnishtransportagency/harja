@@ -81,7 +81,6 @@
                                           (when (= (grid/hae-osa osa :id) (grid/hae-osa solu/*this* :id))
                                             index))
                                         (grid/hae-grid (grid/vanhempi solu/*this*) :lapset)))]
-      (println "sarake-index: " sarake-index)
       (doseq [rivi rivit-alla
               :let [sarakkeen-solu (grid/get-in-grid rivi [sarake-index])]]
         (paivita-solun-arvo! {:paivitettava-asia asettajan-nimi
@@ -118,7 +117,6 @@
                                                     :ajettavat-jarjestykset true})))
                :on-blur (fn [arvo]
                           (when arvo
-                            (println "BLURRRRRR")
                             (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                   :arvo arvo
                                                   :solu solu/*this*
@@ -134,17 +132,13 @@
   [_ conf]
   {:nappia-painettu! (fn [rivit-alla arvo]
                        (let [grid (grid/root solu/*this*)]
-                         (println "rivit-alla " rivit-alla)
                          (tayta-alla-olevat-rivit! :aseta-arvo! rivit-alla arvo)
-                         (println "TÄYTETTY")
                          (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                :arvo arvo
                                                :solu solu/*this*
                                                :ajettavat-jarjestykset :deep
                                                :triggeroi-seuranta? true})
-                         (println "FOO")
-                         (grid/jarjesta-grid-data! grid)
-                         (println "JÄRJESTETTY")))
+                         (grid/jarjesta-grid-data! grid)))
    :on-focus (fn [_]
                (grid/paivita-osa! solu/*this*
                                   (fn [solu]
@@ -237,7 +231,6 @@
       (error (str "Yritettiin vaihtaa osaa, mutta annettu solu on nil ja harja.ui.taulukko.impl.solu/*this* on myös nil!\n\n"
                   "Korjaa virhe antamalla vaihda-osa! funktiolle osa, josta root voidaan hakea tai toteuta tämän funktion triggeröimä"
                   " solu siten, että harja.ui.taulukko.impl.solu/*this* sisältää tämän solun."))))
-  (println "yksiloivadata " yksiloivadata)
   (let [root-grid (if (nil? osa)
                     (grid/root solu/*this*)
                     (grid/root osa))
@@ -734,9 +727,7 @@
 
 (defn tunnisteen-kasittely [datapolku]
   (fn [_ data]
-    (println "DATA: " data)
     (mapv (fn [[k _]]
-            (println "--> k " k)
             (conj datapolku k))
           data)))
 
@@ -803,8 +794,6 @@
                                  (tunnisteen-kasittely datapolku)))
                              (tunnisteen-kasittely datapolku))
      :datan-kasittely (fn [rivin-data]
-                        (println "rivin-data " rivin-data)
-                        (println "jarjestys: " jarjestys)
                         (vec (vals rivin-data)))}))
 
 (defmethod muodosta-rajapintakasittelija-taulukko-maaritelma :default
@@ -871,12 +860,10 @@
   (let [datapolku (get-in *osamaaritelmien-polut* [(get-in entinen-osamaaritelma [:conf ::id]) :datapolku])
         osan-datapolku (conj datapolku nimi)
         dynaamisen-sisalla? (some #(= ::vektori %) datapolku)
-        _ (println "DATAPOLKU: " datapolku)
         trigger-nimi (str ((muodosta-rajapinnan-nimi-polusta osan-datapolku
                                                              dynaamisen-sisalla?)
                            0)
                           "-seuranta")
-        _ (println "TRIGGER NIMI " trigger-nimi)
         riippuu-datapolut (mapv (fn [polku]
                                   (reduce (fn [muodostettu-polku polun-osa]
                                             (case polun-osa
@@ -887,8 +874,6 @@
                                             :.. (vec (butlast osan-datapolku)))
                                           (rest polku)))
                                 riippuu-polut)
-        _ (println "riippuu-polut: " riippuu-polut)
-        _ (println "riippuu-datapolut: " riippuu-datapolut)
         luonti-polut (mapv (fn [polku]
                              (fn [index]
                                (mapv #(polku-indeksista % index)
@@ -900,14 +885,6 @@
     (if dynaamisen-sisalla?
       {trigger-nimi {:polut polut
                      :luonti (fn [data]
-                               (comment
-                                 (println "_-------- luonti -------")
-                                 (println "TRIGGER-nimi " trigger-nimi)
-                                 (cljs.pprint/pprint (vec
-                                                       (map-indexed (fn [index _]
-                                                                      {(keyword (str trigger-nimi "-" index)) (with-meta (mapv #(% index) luonti-polut)
-                                                                                                                         {:args [index]})})
-                                                                    data))))
                                (vec
                                  (map-indexed (fn [index _]
                                                 {(keyword (str trigger-nimi "-" index)) (with-meta (mapv #(% index) luonti-polut)
@@ -966,9 +943,8 @@
                                            triggerit))
                      triggerit
                      (:osat osamaaritelma))
-       (and solu? (get osamaaritelma :riippuu-toisesta)) (do (println "---> MUODOSTETAAN TRIGGERIÄ: " (muodosta-trigger osamaaritelma entinen-osamaaritelma root-datapolku))
-                                                             (merge triggerit
-                                                                    (muodosta-trigger osamaaritelma entinen-osamaaritelma root-datapolku)))
+       (and solu? (get osamaaritelma :riippuu-toisesta)) (merge triggerit
+                                                                (muodosta-trigger osamaaritelma entinen-osamaaritelma root-datapolku))
        solu? triggerit))))
 
 (defn muodosta-osamaaritelmien-polut
@@ -1085,7 +1061,6 @@
                                                 {}
                                                 taytetty-vaihto-osamaaritelma)))
         datakasittely-ratom-muokkaus {:aseta-arvo! (fn [tila arvo datapolku]
-                                                     (println "datapolku " datapolku)
                                                      (assoc-in tila datapolku arvo))}
         datakasittely-ratom-trigger (binding [*vaihto-osien-mappaus* vaihto-osien-mappaus
                                               *osamaaritelmien-polut* osamaaritelmien-polut]
@@ -1108,7 +1083,6 @@
                                                 *osamaaritelmien-polut* osamaaritelmien-polut]
                                         (muodosta-rajapintakasittelija-taulukko taytetty-taulukkomaaritelma))
         #_#_gridin-tapahtumat (muodosta-grid-tapahtumat)]
-    (println "datakasittely-ratom-trigger " datakasittely-ratom-trigger)
     (swap! (:ratom conf) assoc-in (:grid-polku conf) g)
     (grid/rajapinta-grid-yhdistaminen! g
                                        rajapinta

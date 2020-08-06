@@ -304,20 +304,15 @@
         (grid/osien-yhteinen-asia solu :datan-kasittelija)
         paivitettava-asia
         arvo
-        (grid/solun-asia solu :tunniste-rajapinnan-dataan))
-      (println "RAJAPINNAN DATA MUUTETTU!"))))
+        (grid/solun-asia solu :tunniste-rajapinnan-dataan)))))
 
 (defn tayta-alla-olevat-rivit! [asettajan-nimi rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
     (doseq [rivi rivit-alla
             :let [a-sarakkeen-solu (grid/get-in-grid rivi [1])]]
-      (println "a-sarakkeen-solu: " a-sarakkeen-solu)
       (paivita-solun-arvo! {:paivitettava-asia asettajan-nimi
                             :arvo arvo
-                            :solu a-sarakkeen-solu
-                            #_#_:ajettavat-jarejestykset false
-                            #_#_:triggeroi-seuranta? true})
-      (println "-------- a sarake päivittetty ---------"))))
+                            :solu a-sarakkeen-solu}))))
 
 (defn solujen-disable! [rivit disable?]
   (doseq [rivi rivit
@@ -439,21 +434,17 @@
                                                                                                                                                                    (g-pohjat/->SyoteTaytaAlas (gensym "a")
                                                                                                                                                                                               false
                                                                                                                                                                                               (fn [rivit-alla arvo]
-                                                                                                                                                                                                (println "_--------- CLICK FN ---------")
                                                                                                                                                                                                 (when-not (empty? rivit-alla)
                                                                                                                                                                                                   (let [grid (grid/root (first rivit-alla))]
                                                                                                                                                                                                     (tayta-alla-olevat-rivit! :aseta-arvo! rivit-alla arvo)
-                                                                                                                                                                                                    ;(println "------ solu/*this* " solu/*this*)
                                                                                                                                                                                                     (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                           :arvo arvo
                                                                                                                                                                                                                           :solu solu/*this*
                                                                                                                                                                                                                           :ajettavat-jarejestykset :deep
                                                                                                                                                                                                                           :triggeroi-seuranta? true})
-                                                                                                                                                                                                    (println "------- PÄIVITETTY PAINETTU ARVO -----")
                                                                                                                                                                                                     (grid/jarjesta-grid-data! grid
                                                                                                                                                                                                                               (keyword (str "data-" rivi))))))
                                                                                                                                                                                               {:on-change (fn [arvo]
-                                                                                                                                                                                                            ;(println "on-change")
                                                                                                                                                                                                             (when arvo
                                                                                                                                                                                                               (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                     :arvo arvo
@@ -464,7 +455,6 @@
                                                                                                                                                                                                                               (fn [solu]
                                                                                                                                                                                                                                 (assoc solu :nappi-nakyvilla? true))))
                                                                                                                                                                                                :on-blur (fn [arvo]
-                                                                                                                                                                                                          (println "on-blur")
                                                                                                                                                                                                           (when arvo
                                                                                                                                                                                                             (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
                                                                                                                                                                                                                                   :arvo arvo
@@ -562,7 +552,6 @@
                                                                                                                            {(keyword (str "data-yhteenveto-" rivin-otsikko)) ^{:args [rivin-otsikko]} [[:data-yhteensa rivin-otsikko]]})
                                                                                                                          data-yhteensa)))
                                                                                                         :haku (fn [yhteenvetorivin-data yhteenvetorivin-nimi]
-                                                                                                                (println "DATA YHTEENVETO: [yhteenvetorivin-data yhteenvetorivin-nimi] " [yhteenvetorivin-data yhteenvetorivin-nimi])
                                                                                                                 (assoc yhteenvetorivin-data :rivin-otsikko yhteenvetorivin-nimi
                                                                                                                        :poista {:ikoni ikonit/livicon-trash}))}
                                                                                       :data-disable {:polut [[:data]]
@@ -612,7 +601,6 @@
                                                                                                            (assoc-in [:kirjoitettu-data rivitunnistin arvon-avain] arvo))))}
                                                                                      {:yhteenveto-seuranta {:polut [[:data]]
                                                                                                             :init (fn [tila]
-                                                                                                                    (println ":yhteenveto-seuranta ")
                                                                                                                     (assoc tila :data-yhteensa (yhteensa-data-paivitetty (:data tila))))
                                                                                                             :aseta (fn [tila data]
                                                                                                                      (assoc tila :data-yhteensa (yhteensa-data-paivitetty data)))}
@@ -623,7 +611,6 @@
                                                                                                                                         {(keyword (str "b-sarakkeen-arvo-" index)) ^{:args [index]} [[:data index :a]]})
                                                                                                                                       data)))
                                                                                                              :aseta (fn [tila a index]
-                                                                                                                      (println ":b-sarakkeen-seuranta")
                                                                                                                       (assoc-in tila [:data index :b] (* 10 a)))}})
                                                              {[::otsikko] {:rajapinta :otsikot
                                                                            :solun-polun-pituus 1
@@ -642,7 +629,6 @@
                                                                                              (compare a b))}]
                                                                         :datan-kasittely identity
                                                                         :luonti (fn [data-ryhmiteltyna-nimen-perusteella g]
-                                                                                  (println "---> ...")
                                                                                   (let [data-avaimet #{:rivi :a :b :c}]
                                                                                     (map-indexed (fn [index [rivin-otsikko _]]
                                                                                                    (merge
@@ -657,8 +643,6 @@
                                                                                                                                  :solun-polun-pituus 2
                                                                                                                                  :jarjestys [{:keyfn :a
                                                                                                                                               :comp (fn [a1 a2]
-                                                                                                                                                      (println "COMP a1 a2 " a1 " " a2)
-                                                                                                                                                      (println (type a1))
                                                                                                                                                       (let [muuta-numeroksi (fn [x]
                                                                                                                                                                               (try (js/Number (clj-str/replace (or x "") "," "."))
                                                                                                                                                                                    (catch :default _
@@ -752,15 +736,6 @@
                                                                                :fmt (get numero-predef :fmt)}]
                                                                  :riippuu-toisesta {:polut [(conj polku-staattiseen-taulukkoon ::data-sisalto)]
                                                                                     :kasittely-fn (fn [data-sisalto]
-                                                                                                    (println "----> YHTEENVETO " data-sisalto)
-                                                                                                    (println (reduce-kv (fn [summa _ rivin-arvo]
-                                                                                                                          (let [arvo (get rivin-arvo sarake)]
-                                                                                                                            (+ summa
-                                                                                                                               (if (number? arvo)
-                                                                                                                                 arvo
-                                                                                                                                 (str->number arvo)))))
-                                                                                                                        0
-                                                                                                                        data-sisalto))
                                                                                                     (reduce-kv (fn [summa _ rivin-arvo]
                                                                                                                  (let [arvo (get rivin-arvo sarake)]
                                                                                                                    (+ summa
@@ -863,7 +838,6 @@
                                                                                                                                     :fmt (get numero-predef :fmt)}]
                                                                                                                       :riippuu-toisesta {:polut [[:.. :a]]
                                                                                                                                          :kasittely-fn (fn [a-arvo]
-                                                                                                                                                         (println "A ARVO: " a-arvo)
                                                                                                                                                          (* 10 (if (number? a-arvo)
                                                                                                                                                                  a-arvo
                                                                                                                                                                  (str->number a-arvo))))}
@@ -880,16 +854,21 @@
                                                                                         :parametrit [#{"table-default" "table-default-sum"}]}]
                                                                                       (map (fn [sarake]
                                                                                              {:solu solu/teksti
-                                                                                              :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                              :parametrit [{:parametrit {:class #{"table-default" "table-default-sum"}}
                                                                                                             :fmt (get numero-predef :fmt)}]
                                                                                               :riippuu-toisesta {:polut [[:/ ::data]]
-                                                                                                                 :kasittely-fn (fn [sarakkeen-arvot]
-                                                                                                                                 (println "----> footer: " sarakkeen-arvot)
-                                                                                                                                 (reduce (fn [summa sarakkeen-arvo]
+                                                                                                                 :kasittely-fn (fn [rivien-arvot]
+                                                                                                                                 (println "----> footer: " rivien-arvot)
+                                                                                                                                 (reduce (fn [summa {sisa-rivien-arvot ::data-sisalto}]
                                                                                                                                            (+ summa
-                                                                                                                                              (str->number (get-in sarakkeen-arvo [::data-yhteenveto sarake]))))
+                                                                                                                                              (reduce-kv (fn [summa _ {sarakkeen-arvo sarake}]
+                                                                                                                                                           (+ summa (if (string? sarakkeen-arvo)
+                                                                                                                                                                      (str->number sarakkeen-arvo)
+                                                                                                                                                                      sarakkeen-arvo)))
+                                                                                                                                                         0
+                                                                                                                                                         sisa-rivien-arvot)))
                                                                                                                                          0
-                                                                                                                                         sarakkeen-arvot))}
+                                                                                                                                         rivien-arvot))}
                                                                                               :conf {:nimi sarake}})
                                                                                            [:a :b :c])
                                                                                       [{:solu solu/tyhja

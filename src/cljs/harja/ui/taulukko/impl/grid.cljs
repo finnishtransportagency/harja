@@ -566,7 +566,6 @@
   (loop [[jarjestys & loput-jarjestykset] jarjestys
          syvyys 0
          tulos data]
-    (println "jarjestys: " jarjestys)
     (if (nil? jarjestys)
       tulos
       (let [perusjarjestys? (or (true? jarjestykset)
@@ -725,15 +724,6 @@
                                                                    jarjestetaan? (jarjesta-data jarjestettava-data jarjestys jarjestykset jarjestys-fns)
                                                                    (not (nil? @jarjestyksen-cache)) (jarjesta-cachen-mukaan jarjestettava-data @jarjestyksen-cache identiteetti)
                                                                    :else jarjestettava-data)]
-                                            (println "---- rajapinta " rajapinta)
-                                            (println "rajapinnan-data " rajapinnan-data)
-                                            (println "*jarjesta-data* " *jarjesta-data*)
-                                            (println (cond
-                                                       jarjestetaan? "jarjestetaan?"
-                                                       (not (nil? @jarjestyksen-cache)) "(not (nil? @jarjestyksen-cache))"
-                                                       :else ":else"))
-                                            (println "@jarjestyksen-cache " @jarjestyksen-cache)
-                                            (println "rajapinnan-dataf " rajapinnan-dataf)
                                             (when (= :deep *jarjesta-data*)
                                               (loop [polku (vec (butlast grid-kasittelijan-polku))]
                                                 (when-not (empty? polku)
@@ -786,20 +776,6 @@
                                                                                 solun-polun-pituus-oikein?)
                                                                            (and (:derefable (meta grid-polku))
                                                                                 grid-polku-sopii-osaan?))]
-                                    #_(when (= (first (::nimi-polku osa)) :harja.views.urakka.suunnittelu.foo/data) #_(and (= [:harja.views.urakka.suunnittelu.foo/data] (::nimi-polku osa))
-                                               (= grid-polku [1]))
-                                      (println "---------------")
-                                      (println "rajapintakasittelija " rajapintakasittelija)
-                                      (println "osien-tunnisteet " osien-tunnisteet)
-                                      (println "solun-polun-pituus " solun-polun-pituus)
-                                      (println "rajapinta " rajapinta)
-                                      (println "yhdista-derefable-tahan-osaan? " yhdista-derefable-tahan-osaan?)
-                                      (println "grid-polku-sopii-osaan? " grid-polku-sopii-osaan?)
-                                      (println "grid-polku " grid-polku)
-                                      (println "nimi-polku " (::nimi-polku osa))
-                                      (println "index-polku " (::index-polku osa))
-                                      (println "solun-polun-pituus-oikein? " solun-polun-pituus-oikein?)
-                                      (println "osan-polku-dataan " osan-polku-dataan))
                                     (when yhdista-derefable-tahan-osaan?
                                       (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
                                         (when g-debug/GRID_DEBUG
@@ -813,10 +789,6 @@
                                                                        :rajapinta rajapinta))))))
                                         (assoc osa ::osan-derefable osan-derefable
                                                ::tunniste-rajapinnan-dataan (fn []
-                                                                              (println "::tunniste-rajapinnan-dataan")
-                                                                              (println "osan-polku-dataan " osan-polku-dataan)
-                                                                              (println "@osien-tunnisteet " @osien-tunnisteet)
-                                                                              (println "(get-in @osien-tunnisteet osan-polku-dataan) " (get-in @osien-tunnisteet osan-polku-dataan))
                                                                               (get-in @osien-tunnisteet osan-polku-dataan))
                                                ::triggeroi-seuranta! (when seuranta
                                                                        (fn [] (dk/triggeroi-seuranta! datan-kasittelija seuranta))))))))
@@ -1552,7 +1524,6 @@
 (defn dynaaminen-vanhempi
   ([osa] (dynaaminen-vanhempi osa (instance? DynaaminenGrid osa)))
   ([osa dynaaminen?]
-   (println "OSA " (gop/nimi osa) " dynaaminen? " dynaaminen?)
    (let [vanhempi (vanhempi osa)]
      (cond
        dynaaminen? osa
