@@ -84,7 +84,8 @@ END $$;
 -- Aktiivinen oulu
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
-  ('Aktiivinen Oulu Testi pääsopimus',NOW(),NOW() + INTERVAL '2 year','1111-TES', (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'));
+  ('Aktiivinen Oulu Testi pääsopimus',NOW(),NOW() + INTERVAL '2 year','1111-TES', (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi')),
+  ('Aktiivinen Kajaani Testi pääsopimus',NOW(),NOW() + INTERVAL '4 year','1114-TES', (SELECT id FROM urakka WHERE nimi='Aktiivinen Kajaani Testi'));
 -- MHU oulu
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
