@@ -430,7 +430,7 @@ $$
         lisatieto_str TEXT;
 
     BEGIN
-
+        RAISE NOTICE 'Aloitetaan toteumien generointi partitioita varten...';
         for counter in 1..10000 loop
                 urakkaid := urakat[1+random()*(array_length(urakat, 1)-1)];
                 aikaleima := (SELECT NOW() - '1 months'::INTERVAL * RANDOM() * 20 * RANDOM() * 2);
@@ -458,5 +458,6 @@ $$
                                ROW(aikaleima + '9 seconds'::interval,st_makepoint(499520, 7249685) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata
                                ]::reittipistedata[]);
             END LOOP;
+        RAISE NOTICE 'Toteumien generointi partitioita varten valmis.';
     END
 $$ LANGUAGE plpgsql;
