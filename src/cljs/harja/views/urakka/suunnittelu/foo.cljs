@@ -788,23 +788,17 @@
                                                                                                                 (repeatedly 4 (fn [] {:solu solu/tyhja}))))}]}}
                                                   :datavaikutukset-taulukkoon {:rahavaraukset-disablerivit {:polut [(conj data-polku :data-disable)]
                                                                                                             :toiminto! (fn [g _ data-disable]
-                                                                                                                         (println "---> data-disable " data-disable)
                                                                                                                          (doseq [rivikontti (-> g (grid/get-in-grid [::data]) (grid/hae-grid :lapset))
-                                                                                                                                 :let [_ (println "rivikontti: " rivikontti)
-                                                                                                                                       yhteenvedon-ensimmainen-osa (or (-> rivikontti (grid/get-in-grid [::data-yhteenveto 0]))
+                                                                                                                                 :let [yhteenvedon-ensimmainen-osa (or (-> rivikontti (grid/get-in-grid [::data-yhteenveto 0]))
                                                                                                                                                                        (-> rivikontti (grid/get-in-grid [::vaihto-yhteenveto-checkboxilla 0])))
-                                                                                                                                       _ (println "yhteenvedon-ensimmainen-osa " yhteenvedon-ensimmainen-osa)
                                                                                                                                        laajenna-osa (if (grid/rivi? yhteenvedon-ensimmainen-osa)
                                                                                                                                                       (grid/get-in-grid yhteenvedon-ensimmainen-osa [0])
                                                                                                                                                       yhteenvedon-ensimmainen-osa)
-                                                                                                                                       _ (println "laajenna-osa " laajenna-osa)
                                                                                                                                        rivikontin-sisaltaman-datan-nimi (grid/solun-arvo laajenna-osa)
                                                                                                                                        rivikontin-data-disable (find data-disable (keyword rivikontin-sisaltaman-datan-nimi))
                                                                                                                                        disable-rivit? (if rivikontin-data-disable
                                                                                                                                                         (val rivikontin-data-disable)
                                                                                                                                                         false)]]
-                                                                                                                           (println "---> rivikontin-sisaltaman-datan-nimi " rivikontin-sisaltaman-datan-nimi)
-                                                                                                                           (println "---> disable-rivit? " disable-rivit?)
                                                                                                                            (solujen-disable! (-> rivikontti (grid/get-in-grid [::data-sisalto]) (grid/hae-grid :lapset))
                                                                                                                                              disable-rivit?)))}}
                                                   :taulukko {:header {:conf {:nimi ::otsikko
