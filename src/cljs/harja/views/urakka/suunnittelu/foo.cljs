@@ -771,19 +771,40 @@
                                                                                                           (cons {:solu vayla-checkbox
                                                                                                                  :parametrit [(fn [this event]
                                                                                                                                 (.preventDefault event)
-                                                                                                                                (let [disable-rivit? (not (grid/solun-arvo this))]
-                                                                                                                                  (e! (tuck-apurit/->MuutaTila [:data-disable] disable-rivit?))))
+                                                                                                                                (let [disable-rivit? (not (grid/solun-arvo this))
+                                                                                                                                      yksiloiva-data (grid/osan-yksiloivadata this)]
+                                                                                                                                  (swap! tila-atom
+                                                                                                                                         (fn [tila]
+                                                                                                                                           (-> tila
+                                                                                                                                               (assoc-in (conj data-polku :data-disable (grid/osan-yksiloivadata this)) disable-rivit?)
+                                                                                                                                               (update-in (conj data-polku ::data)
+                                                                                                                                                          (fn [data]
+                                                                                                                                                            (mapv (fn [data-point]
+                                                                                                                                                                    (if (= yksiloiva-data (:rivin-nimi data-point))
+                                                                                                                                                                      (assoc-in data-point [::vaihto-yhteenveto-checkboxilla ::disable-valinta :rivi] disable-rivit?)
+                                                                                                                                                                      data-point))
+                                                                                                                                                                  data))))))))
                                                                                                                               "Disabloi rivit"]}
                                                                                                                 (repeatedly 4 (fn [] {:solu solu/tyhja}))))}]}}
-                                                  :datavaikutukset-taulukkoon {:rahavaraukset-disablerivit {:polut [[:data-disable]]
+                                                  :datavaikutukset-taulukkoon {:rahavaraukset-disablerivit {:polut [(conj data-polku :data-disable)]
                                                                                                             :toiminto! (fn [g _ data-disable]
+                                                                                                                         (println "---> data-disable " data-disable)
                                                                                                                          (doseq [rivikontti (-> g (grid/get-in-grid [::data]) (grid/hae-grid :lapset))
-                                                                                                                                 :let [yhteenvedon-ensimmainen-osa (-> rivikontti (grid/get-in-grid [::data-yhteenveto 0]))
+                                                                                                                                 :let [_ (println "rivikontti: " rivikontti)
+                                                                                                                                       yhteenvedon-ensimmainen-osa (or (-> rivikontti (grid/get-in-grid [::data-yhteenveto 0]))
+                                                                                                                                                                       (-> rivikontti (grid/get-in-grid [::vaihto-yhteenveto-checkboxilla 0])))
+                                                                                                                                       _ (println "yhteenvedon-ensimmainen-osa " yhteenvedon-ensimmainen-osa)
                                                                                                                                        laajenna-osa (if (grid/rivi? yhteenvedon-ensimmainen-osa)
                                                                                                                                                       (grid/get-in-grid yhteenvedon-ensimmainen-osa [0])
                                                                                                                                                       yhteenvedon-ensimmainen-osa)
+                                                                                                                                       _ (println "laajenna-osa " laajenna-osa)
                                                                                                                                        rivikontin-sisaltaman-datan-nimi (grid/solun-arvo laajenna-osa)
-                                                                                                                                       disable-rivit? (get data-disable rivikontin-sisaltaman-datan-nimi)]]
+                                                                                                                                       rivikontin-data-disable (find data-disable (keyword rivikontin-sisaltaman-datan-nimi))
+                                                                                                                                       disable-rivit? (if rivikontin-data-disable
+                                                                                                                                                        (val rivikontin-data-disable)
+                                                                                                                                                        false)]]
+                                                                                                                           (println "---> rivikontin-sisaltaman-datan-nimi " rivikontin-sisaltaman-datan-nimi)
+                                                                                                                           (println "---> disable-rivit? " disable-rivit?)
                                                                                                                            (solujen-disable! (-> rivikontti (grid/get-in-grid [::data-sisalto]) (grid/hae-grid :lapset))
                                                                                                                                              disable-rivit?)))}}
                                                   :taulukko {:header {:conf {:nimi ::otsikko
@@ -858,7 +879,6 @@
                                                                                                             :fmt (get numero-predef :fmt)}]
                                                                                               :riippuu-toisesta {:polut [[:/ ::data]]
                                                                                                                  :kasittely-fn (fn [rivien-arvot]
-                                                                                                                                 (println "----> footer: " rivien-arvot)
                                                                                                                                  (reduce (fn [summa {sisa-rivien-arvot ::data-sisalto}]
                                                                                                                                            (+ summa
                                                                                                                                               (reduce-kv (fn [summa _ {sarakkeen-arvo sarake}]

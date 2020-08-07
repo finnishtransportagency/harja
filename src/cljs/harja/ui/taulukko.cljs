@@ -894,12 +894,12 @@
                               (let [index (last args)
                                     data-args (butlast args)
                                     osan-datapolku (mapv #(polku-indeksista % index) osan-datapolku)]
-                                (println "----- - aseta -----")
-                                (println "args: " args)
-                                (println "TRIGGER NIMI: " trigger-nimi)
-                                (println "osan-datapolku " osan-datapolku)
-                                (println "data-args " data-args)
-                                (println "index " index)
+                                (comment (println "----- - aseta -----")
+                                         (println "args: " args)
+                                         (println "TRIGGER NIMI: " trigger-nimi)
+                                         (println "osan-datapolku " osan-datapolku)
+                                         (println "data-args " data-args)
+                                         (println "index " index))
                                 (assoc-in tila osan-datapolku (apply kasittely-fn data-args))))}}
       {trigger-nimi {:polut polut
                      :aseta (fn [tila & data-args]
@@ -1052,8 +1052,8 @@
             (muodosta-vaihto-osat! vaihto-osien-mappaus taytetty-vaihto-osamaaritelma))
         osamaaritelmien-polut (muodosta-osamaaritelmien-polut taytetty-taulukkomaaritelma taytetty-vaihto-osamaaritelma (:data-polku conf))
         g (assoc (binding [*vaihto-osien-mappaus* vaihto-osien-mappaus]
-                      (muodosta-grid conf taytetty-taulukkomaaritelma))
-                    ::vaihto-osien-mappaus vaihto-osien-mappaus)
+                   (muodosta-grid conf taytetty-taulukkomaaritelma))
+                 ::vaihto-osien-mappaus vaihto-osien-mappaus)
         datakasittely-ratom (binding [*osamaaritelmien-polut* osamaaritelmien-polut]
                               (merge (muodosta-datakasittelija-ratom taytetty-taulukkomaaritelma (:data-polku conf))
                                      (reduce-kv (fn [m _ v]
@@ -1069,29 +1069,20 @@
                                                           (merge m (muodosta-triggerit v (:data-polku conf))))
                                                         {}
                                                         taytetty-vaihto-osamaaritelma)))
-        #_#_datakasittely-ratom-trigger (into {}
-                                          (map (fn [[polut maaritelmat]]
-                                                 (let [luonti-maaritelmat (filter #(contains? (val %) :luonti) maaritelmat)
-                                                       ei-luonti-maaritelmat (remove #(contains? (val %) :luonti) maaritelmat)]
-                                                   ))
-                                               (group-by (fn [[_ maaritelma]]
-                                                           (:polut maaritelma))
-                                                         datakasittely-ratom-trigger)))
         rajapinta (merge (into {} (map (fn [k] [k any?]) (keys datakasittely-ratom)))
                          {:aseta-arvo! any?})
         rajapintakasittelija-taulukko (binding [*vaihto-osien-mappaus* vaihto-osien-mappaus
                                                 *osamaaritelmien-polut* osamaaritelmien-polut]
                                         (muodosta-rajapintakasittelija-taulukko taytetty-taulukkomaaritelma))
-        #_#_gridin-tapahtumat (muodosta-grid-tapahtumat)]
-    (swap! (:ratom conf) assoc-in (:grid-polku conf) g)
-    (grid/rajapinta-grid-yhdistaminen! g
-                                       rajapinta
-                                       (grid/datan-kasittelija (:ratom conf)
-                                                               rajapinta
-                                                               datakasittely-ratom
-                                                               datakasittely-ratom-muokkaus
-                                                               datakasittely-ratom-trigger)
-                                       rajapintakasittelija-taulukko)
-    #_(grid/grid-tapahtumat grid
-                            ratom
-                            gridin-tapahtumat)))
+        _ (swap! (:ratom conf) assoc-in (:grid-polku conf) g)
+        g (grid/rajapinta-grid-yhdistaminen! g
+                                             rajapinta
+                                             (grid/datan-kasittelija (:ratom conf)
+                                                                     rajapinta
+                                                                     datakasittely-ratom
+                                                                     datakasittely-ratom-muokkaus
+                                                                     datakasittely-ratom-trigger)
+                                             rajapintakasittelija-taulukko)]
+    (grid/grid-tapahtumat g
+                          (:ratom conf)
+                          datavaikutukset-taulukkoon)))
