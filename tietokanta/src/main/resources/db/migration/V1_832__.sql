@@ -74,6 +74,7 @@ ALTER TABLE toteuma
     ADD CONSTRAINT uniikki_ulkoinen_id_luoja_urakka UNIQUE (ulkoinen_id, luoja, urakka, alkanut);
 
 ALTER TABLE toteuma rename to toteuma_vanha;
+
 CREATE TABLE toteuma (LIKE toteuma_vanha INCLUDING ALL)
 PARTITION BY RANGE (alkanut);
 
@@ -98,3 +99,55 @@ SELECT * FROM luo_hoitokauden_partitiot('toteuma', '2019-10-01'::DATE);
 SELECT * FROM luo_hoitokauden_partitiot('toteuma', '2020-10-01'::DATE);
 SELECT * FROM luo_hoitokauden_partitiot('toteuma', '2021-10-01'::DATE);
 
+
+--INSERT INTO toteuma SELECT * FROM toteuma_vanha;
+-- INSERTOIDAAN DATA uuteen partitioituun tauluun palasina, attach partition avulla, vältämme downtimen ja pahat lukot
+-- tauluissa joille kutsutaan attach partition, on oltava sillä hetkellä check constraint, joka on sama kuin
+-- partitiointiavaimet, eli tietty date väli. Tämä poistaa parent tauluun tulevan ACCESS EXCLUSIVE lukon tarpeen
+-- ja nopeuttaa merkittävästi migraation tekemistä, koska taulua ei tarvitse skannata kokonaan
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '0001-01-01' AND ('2016-10-01') returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2016-10-01' AND '2017-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2017-10-01' AND '2018-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2018-10-01' AND '2019-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2019-10-01' AND '2020-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2019-10-01' AND '2020-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2020-10-01' AND '2021-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2021-10-01' AND '2022-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
+
+  WITH x AS (
+      DELETE FROM toteuma_vanha WHERE alkanut >= '2022-10-01' returning *
+  )
+INSERT INTO toteuma SELECT * FROM x;
