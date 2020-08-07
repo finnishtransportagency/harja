@@ -1,4 +1,8 @@
 [{
+    "date": "2020-08-07",
+    "title": "MH-urakoiden ELY-tason ja Valtakunnan tason raportit toiminnassa",
+    "body": "HARJAn MH-urakoiden raporteissa on nyt tuki ELY-tason ja koko valtakunnan tason raporteille. Tuki puuttuu vielä Laskutusyhteenvedosta ja Indeksitarkistusraportista, jotka vaativat tarkempaa suunnittelua." 
+  },
     "date": "2020-7-03",
     "title": "Siltatarkastusraportti toimii taas nopeasti",
     "body": "Harjan Siltatarkastusraportin tekeminen oli hidastunut vuosien myötä lähes käyttökelvottomaksi. Syyksi paljastui tehoton tietokantakysely, joka lisääntyneen tietomäärän myötä lopulta hidastui. Tietokantakysely on nyt korjattu ja raportti toimii taas erittäin nopeasti. Korjauksesta tarkempia teknisiä tietoja voi lukea tästä <a href='https://dev.solita.fi/2020/06/30/interpret-postgresql-query-plans.html'>blogikirjoituksesta</a>." 
