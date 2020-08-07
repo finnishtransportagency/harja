@@ -741,15 +741,16 @@
                      (map-indexed (fn [index datapoint]
                                     (let [datan-rajapinnat (dynaamisen-sisus g index)]
                                       (reduce-kv (fn [m polku maaritelma]
-                                                   (let [maaritelma-kaytossa? (first (keep (fn [[vaihto-osan-nimi {:keys [kaytossa-osat rajapinnan-nimi-fn]}]]
-                                                                                             (let [kaytossa? (get kaytossa-osat (get datapoint yksiloivakentta))]
-                                                                                               (cond
-                                                                                                 (= (rajapinnan-nimi-fn index) (:rajapinta maaritelma)) (not (true? kaytossa?))
-                                                                                                 (try (re-find (re-pattern (str index "-" (name (get-in vaihto-osien-maaritelmat [vaihto-osan-nimi :conf :nimi]))))
-                                                                                                               (:rajapinta maaritelma))
-                                                                                                      (catch :default _ false)) (true? kaytossa?)
-                                                                                                 :else true)))
-                                                                                           vaihdettavien-osien-data))]
+                                                   (let [maaritelma-kaytossa? (or (empty? vaihto-osien-maaritelmat)
+                                                                                  (first (keep (fn [[vaihto-osan-nimi {:keys [kaytossa-osat rajapinnan-nimi-fn]}]]
+                                                                                                 (let [kaytossa? (get kaytossa-osat (get datapoint yksiloivakentta))]
+                                                                                                   (cond
+                                                                                                     (= (rajapinnan-nimi-fn index) (:rajapinta maaritelma)) (not (true? kaytossa?))
+                                                                                                     (try (re-find (re-pattern (str index "-" (name (get-in vaihto-osien-maaritelmat [vaihto-osan-nimi :conf :nimi]))))
+                                                                                                                   (:rajapinta maaritelma))
+                                                                                                          (catch :default _ false)) (true? kaytossa?)
+                                                                                                     :else true)))
+                                                                                               vaihdettavien-osien-data)))]
                                                      (if maaritelma-kaytossa?
                                                        (assoc m polku maaritelma)
                                                        m)))

@@ -960,7 +960,8 @@
                                     true)
             data-jarjestetty? @(get rajapintakasittelijan-tiedot ::jarjestetty?)
             uudet-grid-kasittelijat (grid-kasittelijoiden-luonti (if jarjestetty-data-erikseen?
-                                                                   (vec (vals gridin-data))
+                                                                   [(::jarjestettava-data gridin-data)
+                                                                    (::muu-data gridin-data)]
                                                                    gridin-data)
                                                                  grid)]
         (if rajapinnat-muuttunut?
