@@ -755,7 +755,8 @@
                                                          :data-polku data-polku}
                                                   :vaihto-osat {:yhteenveto-checkboxilla {:conf {:nimi ::vaihto-yhteenveto-checkboxilla}
                                                                                           :body [{:conf {:jarjestys [[:rivi :a :b :c :poista]]
-                                                                                                         :nimi ::data-yhteenveto-vaihto}
+                                                                                                         :nimi ::data-yhteenveto-vaihto
+                                                                                                         :datapolku-maaritelmasta ::data-yhteenveto}
                                                                                                   :osat (yhteenvetorivi (fn [this _]
                                                                                                                           (taulukko/vaihda-osa-takaisin! this
                                                                                                                                                          (grid/osan-yksiloivadata this)
