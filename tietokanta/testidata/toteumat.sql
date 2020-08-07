@@ -418,3 +418,45 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
     ROW(NOW() - interval '56 minute',st_makepoint(430969, 7198125) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
         ARRAY[ROW(3, 3)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata
   ]::reittipistedata[]);
+
+
+-- partitioiden testausta varten luodaan toteumia
+DO
+$$
+    DECLARE
+        urakat INT[] := (SELECT array_agg(id) FROM urakka where tyyppi IN ('hoito', 'teiden-hoito'));
+        urakkaid INT;
+        aikaleima DATE;
+        lisatieto_str TEXT;
+
+    BEGIN
+
+        for counter in 1..10000 loop
+                urakkaid := urakat[1+random()*(array_length(urakat, 1)-1)];
+                aikaleima := (SELECT NOW() - '1 months'::INTERVAL * RANDOM() * 20 * RANDOM() * 2);
+                lisatieto_str := 'rdm' || counter;
+
+                -- reitillinen random toteuma
+                INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakkaid, (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null), NOW(), aikaleima, aikaleima + '1 minute'::interval, 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', lisatieto_str, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+                -- reitillisen random toteuman toteuma_tehtava
+                INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = lisatieto_str AND urakka = urakkaid), NOW(), 1369, 8);
+
+                -- reitillisen random toteuman toteuman_reittipisteet
+
+                INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet)
+                VALUES (
+                           (SELECT id FROM toteuma WHERE lisatieto = lisatieto_str),
+                           ARRAY[
+                               ROW(aikaleima + '2 seconds'::interval, st_makepoint(498919, 7247099) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '3 seconds'::interval,st_makepoint(499271, 7248395) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '4 seconds'::interval,st_makepoint(499399, 7249019) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '5 seconds'::interval,st_makepoint(499820, 7249885) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '6 seconds'::interval,st_makepoint(498519, 7247299) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '7 seconds'::interval,st_makepoint(499371, 7248595) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '8 seconds'::interval,st_makepoint(499499, 7249319) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '9 seconds'::interval,st_makepoint(499520, 7249685) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata
+                               ]::reittipistedata[]);
+            END LOOP;
+    END
+$$ LANGUAGE plpgsql;
