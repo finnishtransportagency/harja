@@ -21,39 +21,38 @@
   (e! (tiedot/->TyhjennaLomake data)))
 
 (defn- toteuman-poiston-varmistus-modaali [{:keys [varmistus-fn pvm tehtava maara tyyppi] :as mod}]
-  (let [_ (js/console.log "mod" (pr-str mod))]
-    [:div.row
-     [:div.col-md-12 {:style {:padding-bottom "1rem"}} (pvm/pvm pvm)]
-     [:div.col-md-12 {:style {:padding-bottom "1rem"}} (:tehtava tehtava)]
-     [:div.col-md-12 {:style {:padding-bottom "1rem"}} (str maara " " (cond
-                                                                        (or
-                                                                          (= tyyppi :kokonaishintainen)
-                                                                          (= tyyppi :maaramitattava
-                                                                             ))
-                                                                        (:yksikko tehtava)
+  [:div.row
+   [:div.col-md-12 {:style {:padding-bottom "1rem"}} (pvm/pvm pvm)]
+   [:div.col-md-12 {:style {:padding-bottom "1rem"}} (:tehtava tehtava)]
+   [:div.col-md-12 {:style {:padding-bottom "1rem"}} (str maara " " (cond
+                                                                      (or
+                                                                        (= tyyppi :kokonaishintainen)
+                                                                        (= tyyppi :maaramitattava
+                                                                           ))
+                                                                      (:yksikko tehtava)
 
-                                                                        (or (= tyyppi :lisatyo)
-                                                                            (= tyyppi :akillinen-hoitotyo)
-                                                                            (= tyyppi :muut-rahavaraukset))
-                                                                        "kpl"
+                                                                      (or (= tyyppi :lisatyo)
+                                                                          (= tyyppi :akillinen-hoitotyo)
+                                                                          (= tyyppi :muut-rahavaraukset))
+                                                                      "kpl"
 
-                                                                        :else
-                                                                        ""))]
+                                                                      :else
+                                                                      ""))]
 
-     [:div {:style {:padding-bottom "1rem"}}
-      [:span {:style {:padding-right "1rem"}}
-       [napit/yleinen-toissijainen
-        "Peruuta"
-        (fn []
-          (modal/piilota!))
-        {:vayla-tyyli? true
-         :luokka "suuri"}]]
-      [:span
-       [napit/poista
-        "Poista tiedot"
-        varmistus-fn
-        {:vayla-tyyli? true
-         :luokka "suuri"}]]]]))
+   [:div {:style {:padding-bottom "1rem"}}
+    [:span {:style {:padding-right "1rem"}}
+     [napit/yleinen-toissijainen
+      "Peruuta"
+      (fn []
+        (modal/piilota!))
+      {:vayla-tyyli? true
+       :luokka "suuri"}]]
+    [:span
+     [napit/poista
+      "Poista tiedot"
+      varmistus-fn
+      {:vayla-tyyli? true
+       :luokka "suuri"}]]]])
 
 (defn- poista-fn [{:keys [toteuma-id indeksi e! lomake paivita!]}]
   (let [indeksi (or indeksi
@@ -63,16 +62,18 @@
       (fn [_]
         (e! (tiedot/->PaivitaLomake (update lomake
                                             ::t/toteumat
-                                            (fn [ts]
-                                              (vec (concat (subvec ts 0 indeksi)
-                                                           (subvec ts (inc indeksi))))))))))))
+                                            (fn [toteumat]
+                                              (let [toteumat (vec toteumat)]
+                                                (vec (concat (subvec toteumat 0 indeksi)
+                                                             (subvec toteumat (inc indeksi)))))))
+                                    ::t/poistettu))))))
 
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat]} {{toteumat ::t/toteumat
                            validius ::tila/validius
                            :as lomake} :data}]
   (let [paivita! (fn [polku indeksi arvo]
-                   (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))
+                   (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku)))
         useampi? (> (count toteumat) 1)
         yksittainen? (= (count toteumat) 1)
         validi? (fn [polku]
@@ -104,11 +105,11 @@
                                      :e! e!
                                      :lomake lomake
                                      :paivita! paivita!})]
-             [otsikko-tagi
+             [otsikko-tagi {:key (str "toteuma-" indeksi)}
               (when useampi?
                 [:div.flex-row
                  [:div.row
-                  (str "Tehtävä " indeksi)]
+                  (str "TEHTÄVÄ " indeksi)]
                  [:div.row
                   [napit/poista
                    "Poista toteuma"
@@ -118,7 +119,7 @@
                                                     (modal/piilota!)
                                                     (poista! true))
                                     :pvm (get-in lomake [::t/pvm])
-                                    :tehtava (get-in lomake [::t/tehtava])
+                                    :tehtava (get-in lomake [::t/toteumat indeksi ::t/tehtava])
                                     :maara (get-in lomake [::t/toteumat indeksi ::t/maara])
                                     :tyyppi (::t/tyyppi lomake)}])
                    {:vayla-tyyli? true :teksti-nappi? true}]]])
@@ -126,15 +127,19 @@
                [palsta-tagi
                 [:div.row
                  [:label "Tehtävä"]
+                 ;if (> (count tehtavat) 0)
                  [kentat/tee-kentta
                   {:virhe? (validi? [::t/toteumat indeksi ::t/tehtava])
                    ::ui-lomake/col-luokka ""
                    :vayla-tyyli? true
                    :tyyppi :valinta
                    :valinnat tehtavat
+                   :valinta-arvo identity
                    :valinta-nayta :tehtava}
                   (r/wrap tehtava
-                          (r/partial paivita! ::t/tehtava indeksi))]]
+                          (r/partial paivita! ::t/tehtava indeksi))]
+                 ;[:div "Toimenpiteellä ei ole tehtäviä. Vaihda toimenpidettä tai lisättävän toteuman tyyppiä."]
+                 ]
                 [:div.row
                  [:label "Toteutunut määrä"]
                  [kentat/tee-kentta
@@ -186,7 +191,8 @@
 
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
-  (let [{tyyppi ::t/tyyppi
+  (let [_ (js/console.log "maarien-toteuman-syottolomake* ")
+        {tyyppi ::t/tyyppi
          toteumat ::t/toteumat
          validius ::tila/validius
          koko-validi? ::tila/validi?} lomake
@@ -221,6 +227,7 @@
                   :virhe? (validi? [::t/toteumat 0 ::t/tehtava])
                   :tyyppi :valinta
                   :valinta-nayta :tehtava
+                  :valinta-arvo identity
                   :valinnat tehtavat}
                  {:otsikko "Kuvaus"
                   ::ui-lomake/col-luokka ""
@@ -239,7 +246,9 @@
                                   :tyyppi :valinta
                                   :virhe? (validi? [::t/toteumat 0 ::t/tehtava])
                                   :valinnat tehtavat
-                                  :valinta-nayta :tehtava}
+                                  :valinta-arvo identity
+                                  :valinta-nayta (fn [arvo]
+                                                   (:tehtava arvo))}
                                  {:otsikko "Kuvaus"
                                   ::ui-lomake/col-luokka ""
                                   :nimi [::t/toteumat 0 ::t/lisatieto]
@@ -250,15 +259,15 @@
                             :e! e!
                             :lomake lomake
                             :paivita! (fn [polku indeksi arvo]
-                                        (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo))))})]
+                                        (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku)))})]
     [:div#vayla
      #_[debug/debug app]
      #_[debug/debug lomake]
-     #_[debug/debug validius]
-     #_[:div (str "Validi? " koko-validi?)]
+     [debug/debug validius]
+     [:div (str "Validi? " koko-validi?)]
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
-                   (e! (tiedot/->PaivitaLomake data)))
+                   (e! (tiedot/->PaivitaLomake data nil)))
        :voi-muokata? true
        :palstoja 2
        :header-fn (fn [data]
@@ -281,7 +290,7 @@
                                                           (modal/piilota!)
                                                           (poista! true))
                                           :pvm (get-in lomake [::t/pvm])
-                                          :tehtava (get-in lomake [::t/toteumat 0 ::t/tehtava])
+                                          :tehtava (get-in lomake [::t/toteumat 0 ::t/tehtava]) ;; Voi käyttää kova koodattua indeksiä, koska tämä ei ole käytössä, jos toteumia on useampi
                                           :maara (get-in lomake [::t/toteumat 0 ::t/maara])
                                           :tyyppi (::t/tyyppi lomake)}])
                          {:vayla-tyyli? true :teksti-nappi? true}])]])
@@ -291,7 +300,8 @@
                       "Tallenna"
                       #(laheta-lomake! data)
                       {:vayla-tyyli? true
-                       :luokka "suuri"}]
+                       :luokka "suuri"
+                       :disabled (not koko-validi?)}]
                      [napit/peruuta
                       "Peruuta"
                       #(tyhjenna-lomake! data)

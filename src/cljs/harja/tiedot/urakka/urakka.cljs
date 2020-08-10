@@ -73,14 +73,14 @@
                   :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]})
 (defn validoi!
   [{:keys [validius validi?] :as lomake-meta} lomake]
-  (loki/log "valids" validius)
+  ;(loki/log "valids" validius)
   (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
             (as-> kaikki kaikki
                   (update kaikki :validius
                           (fn [vs]
                             (update vs polku
                                     (fn [kentta]
-                                      (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
+                                      ; (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
                                       (assoc kentta
                                         :tarkistettu? true
                                         :validointi validointi

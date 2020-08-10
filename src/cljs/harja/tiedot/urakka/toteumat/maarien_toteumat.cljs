@@ -50,7 +50,7 @@
 (defrecord HaeTehtavat [parametrit])
 (defrecord LahetaLomake [lomake])
 (defrecord LisaaToteuma [lomake])
-(defrecord PaivitaLomake [lomake])
+(defrecord PaivitaLomake [lomake polku])
 (defrecord TyhjennaLomake [lomake])
 
 (def tyyppi->tyyppi
@@ -94,17 +94,17 @@
   (apply tila/luo-validius-tarkistukset
          (concat toteuma-lomakkeen-oletus-validoinnit
                  (mapcat (fn [i]
-                           [[::t/toteumat i ::t/maara] (validoinnit ::t/maara)
-                            [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava)
+                           [[::t/toteumat i ::t/maara] (validoinnit ::t/maara lomake i)
+                            [::t/toteumat i ::t/tehtava] (validoinnit ::t/tehtava lomake i)
                             [::t/toteumat i ::t/sijainti] (validoinnit ::t/sijainti lomake i)
                             [::t/toteumat i ::t/lisatieto] (validoinnit ::t/lisatieto lomake)])
                          (range (count toteumat))))))
 
 (defn- hae-tehtavat-tyypille
-  ([toimenpide]
-   (hae-tehtavat-tyypille toimenpide :maaramitattava))
-  ([toimenpide tyyppi]
-   (loki/log "haen tehtavat tyypille" toimenpide tyyppi)
+  ([app toimenpide]
+   (hae-tehtavat-tyypille app toimenpide :maaramitattava))
+  ([app toimenpide tyyppi]
+   (loki/log "haen tehtavat tyypille" (pr-str toimenpide) (pr-str tyyppi))
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
          rajapinta (case tyyppi
@@ -192,7 +192,7 @@
                                                                            (:hakufiltteri app)))))
   HaeTehtavat
   (process-event [{{:keys [toimenpide]} :parametrit} app]
-    (hae-tehtavat-tyypille toimenpide)
+    (hae-tehtavat-tyypille app toimenpide)
     app)
 
   LahetaLomake
@@ -241,20 +241,45 @@
                     tyyppi            ::t/tyyppi
                     toimenpide        ::t/toimenpide
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
-                    :as               lomake} :lomake} app]
-    ; sivuvaikutusten triggeröintiin
-    (case viimeksi-muokattu
-      ::t/toimenpide (hae-tehtavat-tyypille toimenpide tyyppi)
-      ::t/tyyppi (hae-tehtavat-tyypille toimenpide tyyppi)
-      :default)
+                    :as lomake} :lomake
+                   polku :polku} app]
+
     ; :TODO: tässä tai jossain pitää validoida lomake erikseen, koska se harja.ui.lomake-lomakkeen oma vaikutti liian tunkkaiselta tähän, parempi tehä ite
-    (let [useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
+    (let [_ (js/console.log "PaivitaLomake :: Nyt muokataan polku " (pr-str polku) "viimeksi-muokattu" (pr-str viimeksi-muokattu) "tyyppi" (pr-str tyyppi) "toimenpide" (pr-str toimenpide))
+          ;; Toimenpidettä vaihdettaessa polkua ei tallenneta, mutta viimeksi-muokattu tallennetaan
+          polku (if (and (nil? polku) viimeksi-muokattu)
+                  viimeksi-muokattu
+                  polku)
+          _ (js/console.log "Onko polku muuttunut. Polku: " (pr-str polku))
+          ;; Siivotaan viimeksi muokattu pois
+          app (assoc app ::ui-lomake/viimeksi-muokattu-kentta nil)
+          useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
           tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
           app (assoc app :lomake lomake)
           vain-eka (fn [ts]
                      [(first ts)])
           maara-pois (fn [ts]
                        (mapv #(dissoc % ::t/maara) ts))
+          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)
+          app (cond
+                ;; Jos toimenpide tai tyyppi muuttuu
+                (or
+                  (= polku ::t/toimenpide)
+                  (= viimeksi-muokattu ::t/toimenpide)
+                  (= viimeksi-muokattu ::t/tyyppi))
+                (hae-tehtavat-tyypille app toimenpide tyyppi)
+
+                ;; Jos poistetaan
+                (and (= polku ::t/poistettu)
+                     (not (nil? (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]))))
+                (poista-toteuma (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]) app)
+
+                ;; Default
+                :else app)
+          app (-> app
+                  (assoc-in [:lomake ::tila/validius] validius)
+                  (assoc-in [:lomake ::tila/validi?] validi?))
           uusi-app (update app :lomake (fn [l]
                                          (let [l (cond-> l
                                                          ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
@@ -280,16 +305,17 @@
                                                :akillinen-hoitotyo (update l ::t/toteumat (comp vain-eka maara-pois))
                                                :lisatyo (update l ::t/toteumat (comp vain-eka maara-pois))
                                                l)
-                                             l))))]
-      #_(-> app
-            (update :lomake (if (and
-                                  (= tyyppi :maaramitattava)
-                                  (not= useampi? useampi-aiempi?))
-                              (fn [lomake]
-                                (if (true? useampi?)
-                                  (update lomake ::t/toteumat conj uusi-toteuma)
-                                  (update lomake ::t/toteumat #(conj [] (first %)))))
-                              identity)))
+                                             l))))
+          ;; Toimenpiteen vaihtuessa tyhjennetään valittu tehtävä
+          uusi-app (if (or
+                         (= ::t/toimenpide polku)
+                         (= ::t/tyyppi polku))
+                     (-> uusi-app
+                         (assoc :tehtavat [])
+                         (update-in [:lomake ::t/toteumat]
+                                    (fn [tehtavat]
+                                      (mapv #(assoc % ::t/tehtava nil) tehtavat))))
+                     uusi-app)]
       uusi-app))
 
   TyhjennaLomake
@@ -321,30 +347,6 @@
       (-> app
           (assoc-in [:toteuma :tehtava] tehtava)
           (validoi-lomake))))
-
-  ;AsetaMaara
-  #_(process-event [{maara :maara} app]
-                   (do
-                     (js/console.log "AsetaMaara" (pr-str maara))
-                     (-> app
-                         (assoc-in [:toteuma :maara] maara)
-                         (validoi-lomake))))
-
-  ;AsetaLisatieto
-  #_(process-event [{arvo :arvo} app]
-                   (do
-                     (js/console.log "AsetaLisatieto" (pr-str arvo))
-                     (-> app
-                         (assoc-in [:toteuma :lisatieto] arvo)
-                         (validoi-lomake))))
-
-  ;AsetaLoppuPvm
-  #_(process-event [{arvo :arvo} app]
-                   (do
-                     (js/console.log "AsetaLoppuPvm" (pr-str arvo) (pr-str (pvm/pvm arvo)))
-                     (-> app
-                         (assoc-in [:toteuma :loppupvm] arvo)
-                         (validoi-lomake))))
 
   ;; Vain yksi rivi voi olla avattuna kerralla, joten tallennetaan avain app-stateen tai poistetaan se, jos se oli jo valittuna
   AvaaRivi
@@ -467,11 +469,10 @@
 
   TehtavatHakuOnnistui
   (process-event [{vastaus :vastaus {:keys [filtteri]} :parametrit} app]
-    (-> app
-        (assoc-in [:tehtavat] (if filtteri
-                                (filter filtteri vastaus)
-                                vastaus))
-        (validoi-lomake)))
+    (let [haetut-tehtavat (if filtteri
+                            (filter filtteri vastaus)
+                            vastaus)]
+      (assoc app :tehtavat haetut-tehtavat)))
 
   TehtavatHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -481,29 +482,43 @@
 
   ToteumanSyotto
   (process-event [{auki :auki tehtava :tehtava toimenpide :toimenpide} app]
-    (js/console.log "ToteumanSyotto "
-                    (pr-str auki)
-                    (pr-str tehtava) (pr-str toimenpide) "kuukausi " (pr-str (pvm/kuukausi (pvm/nyt))) (:hoitokauden-alkuvuosi app))
+    (let [app
+          (cond-> app
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
+                  (and
+                    (not (nil? toimenpide))
+                    (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
+                  (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
+                  true (assoc-in [:syottomoodi] auki)
+                  true (assoc-in [:lomake ::t/tyyppi] :maaramitattava)
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
+                  true (assoc-in [:lomake ::t/pvm] (pvm/luo-pvm (if (> (pvm/kuukausi (pvm/nyt)) 10)
+                                                                  (:hoitokauden-alkuvuosi app)
+                                                                  (+ 1 (:hoitokauden-alkuvuosi app)))
+                                                                (- (pvm/kuukausi (pvm/nyt)) 1)
+                                                                1)))]
+      app))
 
-    (cond-> app
-            (not (nil? tehtava)) (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
-            (and
-              (not (nil? toimenpide))
-              (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
-            (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
-            true (assoc-in [:syottomoodi] auki)
-            true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
-            true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
-            true (assoc-in [:lomake ::t/pvm] (pvm/luo-pvm (if (> (pvm/kuukausi (pvm/nyt)) 10)
-                                                            (:hoitokauden-alkuvuosi app)
-                                                            (+ 1 (:hoitokauden-alkuvuosi app)))
-                                                          (- (pvm/kuukausi (pvm/nyt)) 1)
-                                                          1))))
+  PoistaToteumaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "PoistaToteumaOnnistui - vastaus" (pr-str vastaus))
+    (viesti/nayta! "Toteuma poistettu!")
 
-  ;PoistaToteuma
-  #_(process-event [{id :id} app]
-                   (js/console.log "Poista Toteuma - tää ei tekis vielä mittään!!" (pr-str id))
-                   app)
+    ;; Päivitä määrät välittömästi poiston jälkeen
+    (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
+                            (:valittu-toimenpide app)
+                            (get-in app [:hoitokauden-alkuvuosi])
+                            (get-in app [:aikavali-alkupvm])
+                            (get-in app [:aikavali-loppupvm]))
+
+    (assoc app :syottomoodi false))
+
+  PoistaToteumaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "PoistaToteumaEpäonnistui - vastaus" (pr-str vastaus))
+    (viesti/nayta! "Toteuman poistaminen epäonnistui" :danger)
+    app)
 
   TallennaToteumaOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -525,11 +540,11 @@
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
   (let [alkupvm (when hoitokauden-alkuvuosi
                   (str hoitokauden-alkuvuosi "-10-01"))
-        alkupvm (if aikavali-alkupvm
+        #_alkupvm #_ (if aikavali-alkupvm
                   aikavali-alkupvm alkupvm)
         loppupvm (when hoitokauden-alkuvuosi
                    (str (inc hoitokauden-alkuvuosi) "-09-30"))
-        loppupvm (if aikavali-loppupvm
+        #_ loppupvm #_ (if aikavali-loppupvm
                    aikavali-loppupvm loppupvm)]
     (tuck-apurit/post! :urakan-maarien-toteumat
                        {:urakka-id    urakka-id
@@ -550,7 +565,7 @@
                         :paasta-virhe-lapi? true})))
 
 (defn- validoi-lomake [app]
-  (let [toimenpiteella-tehtavia? (> (count (get-in app [:tehtavat])) 0)
+  (let [toimenpiteella-tehtavia? (> (count (:tehtavat app)) 0)
         tehtava-valittu? (if toimenpiteella-tehtavia?
                            (not (nil? (get-in app [:toteuma :tehtava])))
                            true)
@@ -562,137 +577,3 @@
                  true
                  false)]
     (assoc-in app [:lomake-validoitu?] valid?)))
-
-(defn paivita-raidat! [g]
-  (let [paivita-luokat (fn [luokat odd?]
-                         (if odd?
-                           (-> luokat
-                               (conj "table-default-odd")
-                               (disj "table-default-even"))
-                           (-> luokat
-                               (conj "table-default-even")
-                               (disj "table-default-odd"))))]
-    (loop [[rivi & loput-rivit] (new-grid/nakyvat-rivit g)
-           index 0]
-      (if rivi
-        (let [rivin-nimi (new-grid/hae-osa rivi :nimi)]
-          (new-grid/paivita-grid! rivi
-                                  :parametrit
-                                  (fn [parametrit]
-                                    (update parametrit :class (fn [luokat]
-                                                                (if (= ::valinta rivin-nimi)
-                                                                  (paivita-luokat luokat (not (odd? index)))
-                                                                  (paivita-luokat luokat (odd? index)))))))
-          (recur loput-rivit
-                 (if (= ::valinta rivin-nimi)
-                   index
-                   (inc index))))))))
-
-(defn uusi-gridi [dom-id]
-  (new-grid/grid {:nimi          ::root
-                  :dom-id        dom-id
-                  :root-fn       (fn [] (get-in @tila/toteumat-maarien-toteumat [:gridit :maarien-toteumat :grid]))
-                  :paivita-root! (fn [f]
-                                   (swap! tila/toteumat-maarien-toteumat
-                                          (fn [tila]
-                                            (update-in tila [:gridit :maarien-toteumat :grid] f))))
-                  :alueet        [{:sarakkeet [0 1] :rivit [0 2]}]
-                  :koko          (-> konf/auto
-                                     (assoc-in [:rivi :nimet]
-                                               {::otsikko 0
-                                                ::data    1})
-                                     (assoc-in [:rivi :korkeudet] {0 "40px"}))
-                  :osat          [(new-grid/rivi {:nimi ::otsikko
-                                                  :koko (-> konf/livi-oletuskoko
-                                                            (assoc-in [:sarake :leveydet] {0 "3fr"
-                                                                                           3 "1fr"})
-                                                            (assoc-in [:sarake :oletus-leveys] "2fr"))
-                                                  :osat (vec (repeatedly 4 #(solu/teksti {:parametrit {:class #{"table-default" "table-default-header"}}})))}
-                                                 [{:sarakkeet [0 4] :rivit [0 1]}])
-                                  (new-grid/dynamic-grid {:nimi                   ::data
-                                                          :alueet                 [{:sarakkeet [0 1] :rivit [0 1]}]
-                                                          :koko                   konf/auto
-                                                          :osien-maara-muuttui!   (fn [g _] (paivita-raidat! (new-grid/osa-polusta (new-grid/root g) [::data])))
-                                                          :toistettavan-osan-data (constantly [{:hoitokauden-alkuvuosi 2019
-                                                                                                :id                    6
-                                                                                                :suunniteltu_maara     40
-                                                                                                :tehtava               "Pysäkkikatoksen uusiminen"
-                                                                                                :toteuma_aika          nil
-                                                                                                :toteutunut            nil
-                                                                                                :urakka                35
-                                                                                                :yksikko               "kpl"}])
-                                                          #_(fn [{:keys [arvot valittu-toimenpide hoitokauden-numero]}]
-                                                              {:valittu-toimenpide valittu-toimenpide
-                                                               :hoitokauden-numero hoitokauden-numero
-                                                               :tyypit             (mapv key arvot)})
-                                                          :toistettava-osa        (fn [vectori]
-                                                                                    (mapv (fn [rivi]
-                                                                                            (with-meta
-                                                                                              (new-grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
-                                                                                                              :nimi   ::datarivi
-                                                                                                              :koko   (-> konf/auto
-                                                                                                                          (assoc-in [:rivi :nimet]
-                                                                                                                                    {::data-yhteenveto 0
-                                                                                                                                     ::data-sisalto    1}))
-                                                                                                              :osat   [(with-meta
-                                                                                                                         (new-grid/rivi {:nimi ::data-yhteenveto
-                                                                                                                                         :koko {:seuraa {:seurattava ::otsikko
-                                                                                                                                                         :sarakkeet  :sama
-                                                                                                                                                         :rivit      :sama}}
-                                                                                                                                         :osat [(solu/laajenna {:auki-alussa? false
-                                                                                                                                                                :parametrit   {:class #{"table-default" "lihavoitu"}}})
-                                                                                                                                                (solu/teksti {:parametrit {:class #{"table-default" "table-default-header"}}})
-                                                                                                                                                (solu/teksti {:parametrit {:class #{"table-default"}}})
-                                                                                                                                                (solu/teksti {:parametrit {:class #{"table-default"}}})]}
-                                                                                                                                        [{:sarakkeet [0 4] :rivit [0 1]}])
-                                                                                                                         {:key (str rivi "-yhteenveto")})
-                                                                                                                       (with-meta
-                                                                                                                         (new-grid/dynamic-grid {:nimi                   ::data-sisalto
-                                                                                                                                                 :alueet                 [{:sarakkeet [0 1] :rivit [0 12]}]
-                                                                                                                                                 :koko                   konf/auto
-                                                                                                                                                 :luokat                 #{"piillotettu" "salli-ylipiirtaminen"}
-                                                                                                                                                 :toistettavan-osan-data (constantly [{:hoitokauden-alkuvuosi 2019
-                                                                                                                                                                                       :id                    8762
-                                                                                                                                                                                       :suunniteltu_maara     40
-                                                                                                                                                                                       :tehtava               "Pysäkkikatoksen uusiminen"
-                                                                                                                                                                                       :toteuma_aika          nil
-                                                                                                                                                                                       :toteutunut            5
-                                                                                                                                                                                       :urakka                35
-                                                                                                                                                                                       :yksikko               "kpl"}])
-                                                                                                                                                 :toistettava-osa        (fn [vektori]
-                                                                                                                                                                           (mapv
-                                                                                                                                                                             (fn [{:keys [id hoitokauden-alkuvuosi suunniteltu_maara tehtava toteutunut yksikko]}]
-                                                                                                                                                                               (with-meta
-                                                                                                                                                                                 (new-grid/rivi {:koko {:seuraa {:seurattava ::otsikko
-                                                                                                                                                                                                                 :sarakkeet  :sama
-                                                                                                                                                                                                                 :rivit      :sama}}
-                                                                                                                                                                                                 :osat [(with-meta
-                                                                                                                                                                                                          #_(solu/linkki {:parametrit {:class #{"table-default"}}
-                                                                                                                                                                                                                          :fmt        aika-tekstilla-fmt})
-                                                                                                                                                                                                          (solu/teksti)
-                                                                                                                                                                                                          {:key (str rivi "-" id "-otsikko")})
-                                                                                                                                                                                                        (with-meta
-                                                                                                                                                                                                          (solu/teksti)
-                                                                                                                                                                                                          {:key (str rivi "-" id "-maara")})
-                                                                                                                                                                                                        (with-meta
-                                                                                                                                                                                                          (solu/tyhja)
-                                                                                                                                                                                                          {:key (str rivi "-" id "-toteuma")})
-                                                                                                                                                                                                        (with-meta
-                                                                                                                                                                                                          (solu/tyhja)
-                                                                                                                                                                                                          {:key (str rivi "-" id "-prosentti")})]}
-                                                                                                                                                                                                [{:sarakkeet [0 4] :rivit [0 1]}])
-                                                                                                                                                                                 {:key (str rivi "-" id)}))
-                                                                                                                                                                             vektori))})
-                                                                                                                         {:key (str rivi "-data-sisalto")}
-                                                                                                                         )
-                                                                                                                       ]
-                                                                                                              }
-                                                                                                             )
-                                                                                              {:key rivi}
-                                                                                              )
-                                                                                            )
-                                                                                          vectori
-                                                                                          ))
-                                                          }
-                                                         )
-                                  ]}))

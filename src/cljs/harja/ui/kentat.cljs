@@ -1273,7 +1273,7 @@
                             loppuosa-avain      loppuosa
                             loppuetaisyys-avain loppuetaisyys})
               luokat (if vayla-tyyli? "input-default" "")]
-          (loki/log "sijainti >" @sijainti avaimet numero alkuosa numero-avain alkuosa-avain)
+          ;(loki/log "sijainti >" @sijainti avaimet numero alkuosa numero-avain alkuosa-avain)
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
