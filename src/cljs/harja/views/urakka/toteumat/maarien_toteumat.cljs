@@ -64,7 +64,7 @@
   (if (or (= 0 toteuma)
           (nil? toteuma))
     0
-    (* 100 (/ suunniteltu toteuma)))
+    (fmt/desimaaliluku-opt (* 100 (/ suunniteltu toteuma)) 2))
   )
 
 (defn- muokkaa-toteumaa-linkki [e! db-aika toteuma-id]
@@ -285,8 +285,7 @@
         "Lisaa toteuma"
         #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app)))
         {:vayla-tyyli? true
-         :luokka "suuri"}]]
-      ]
+         :luokka "suuri"}]]]
      [:div.flex-row
       [kentat/tee-kentta {:tyyppi           :checkbox-group
                           :nayta-rivina?    true
