@@ -445,7 +445,7 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                         AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
                         AND (:alkupvm::DATE IS NULL OR
                              t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
--- Haetaan ne tehtävät, joilla on määrätoteuma
+-- Haetaan ne tehtävät, joilla on suunniteltu määrätoteuma olemassa
 SELECT ut.id                      AS id,
        t.toteuma_id               AS toteuma_id,
        t.toteuma_tehtava_id       AS toteuma_tehtava_id,
@@ -480,7 +480,7 @@ SELECT ut.id                      AS id,
                                       (t.alkanut IS NULL OR t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)))
 UNION
 -- ei union all, koska ei haluta duplikaatteja
--- Haetaan ne tehtävät, joilla ei ole määrää lisättynä
+-- Haetaan ne tehtävät, joilla ei ole suunniteltua määrää olemassa
 SELECT tk.id                      AS id,
        t.id                       AS toteuma_id,
        tt.id                      AS toteuma_tehtava_id,
