@@ -43,6 +43,9 @@
 (defrecord TallennaToteuma [])
 (defrecord TallennaToteumaOnnistui [vastaus])
 (defrecord TallennaToteumaEpaonnistui [vastaus])
+(defrecord PoistaToteuma [id])
+(defrecord PoistaToteumaOnnistui [vastaus])
+(defrecord PoistaToteumaEpaonnistui [vastaus])
 (defrecord TehtavatHakuOnnistui [vastaus parametrit])
 (defrecord TehtavatHakuEpaonnistui [vastaus])
 (defrecord ValidoiKokoLomake [lomake validointi-skeema])
@@ -131,8 +134,18 @@
                          :urakka-id    (-> @tila/yleiset :urakka :id)}
                         {:onnistui            ->TehtavatHakuOnnistui
                          :onnistui-parametrit [parametrit]
-                         :epaonnistui         ->TehtavatHakuEpaonnistui
-                         :paasta-virhe-lapi?  true}))))
+                         :epaonnistui ->TehtavatHakuEpaonnistui
+                         :paasta-virhe-lapi? true})
+     app)))
+
+(defn- poista-toteuma [id app]
+  (tuck-apurit/post! :poista-toteuma
+                     {:toteuma-id id
+                      :urakka-id (-> @tila/yleiset :urakka :id)}
+                     {:onnistui ->PoistaToteumaOnnistui
+                      :epaonnistui ->PoistaToteumaEpaonnistui
+                      :paasta-virhe-lapi? true})
+  app)
 
 (def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
                        :lisatyot        #{"lisatyo"}

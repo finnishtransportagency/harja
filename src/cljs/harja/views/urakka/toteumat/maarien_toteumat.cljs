@@ -244,25 +244,23 @@
         ;aikavali-alkupvm (get-in app [:aikavali-alkupvm])
         ;aikavali-loppupvm (get-in app [:aikavali-loppupvm])
         syottomoodi (get-in app [:syottomoodi])
-        ;dom-id "maarien-toteumat-taulukko"
-        ;g (maarien-toteumat/uusi-gridi dom-id)
-        ;_ (new-grid/aseta-gridin-polut g)
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
      #_ [debug/debug app]
      [:div "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan."]
-     [:div
-      [:div.label-ja-alasveto.iso-alasveto {:style {:width "50%"}}
+     [:div.flex-row {:style {:flex-wrap "wrap"}}
+      [:div {:style {:flex-grow 2 :padding-right "1rem" :min-width "250px"}}
        [:span.alasvedon-otsikko "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta    valittu-toimenpide
+                                     :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn  #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
 
-      [:div.label-ja-alasveto.iso-alasveto {:style {:width "25%"}}
+      [:div {:style {:flex 1 :padding-right "1rem" :min-width "250px"}}
        [:span.alasvedon-otsikko "Hoitokausi"]
-       [yleiset/livi-pudotusvalikko {:class      "livi-alasveto-korkea"
-                                     :valinta    valittu-hoitokausi
+       [yleiset/livi-pudotusvalikko {:valinta    valittu-hoitokausi
+                                     :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn  #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
@@ -282,7 +280,7 @@
                                              (get-in app [:toteuma :toimenpide])
                                              nil
                                              alkupvm loppupvm))))}]]
-      [:div.label-ja-alasveto {:style {:width "15%"}}
+      [:div {:style {:flex 1 :padding-top "19px"}}
        [napit/uusi
         "Lisaa toteuma"
         #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app)))
