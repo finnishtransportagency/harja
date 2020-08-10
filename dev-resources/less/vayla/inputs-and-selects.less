@@ -25,7 +25,8 @@
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
-  height: 40px;
+  height: 30px;
+  line-height: 1rem;
 }
 .font-yhteiset-arvot() {
   font-family: "Open Sans", sans-serif;
@@ -126,6 +127,7 @@ label {
     }
     > ul {
       .select-ul-yhteiset-arvot();
+      border: solid 1px black;
       > .harja-alasvetolista-ryhma {
          .harja-alasvetolista-ryhman-otsikko {
           color: @gray125;
@@ -138,8 +140,10 @@ label {
           align-self: center;
           padding-left: 10px;
           flex: 1;
-          line-height: 40px;
+          height: 30px;
+          line-height: 1rem;
         }
+
         a {
           color: inherit;
           &:hover {
@@ -164,7 +168,7 @@ label {
           align-self: center;
           padding-left: 10px;
           flex: 1;
-          height: 40px;
+          height: 30px;
         }
         a {
           color: inherit;
@@ -209,7 +213,7 @@ label {
       }
       > ul {
         .select-ul-yhteiset-arvot();
-
+        border: solid 1px black;
         > li {
           .select-li-yhteiset-arvot();
           display: flex;
@@ -217,7 +221,8 @@ label {
             align-self: center;
             padding-left: 10px;
             flex: 1;
-            line-height: 40px;
+            height: 30px;
+            line-height: 1rem;
           }
           a {
             color: inherit;
