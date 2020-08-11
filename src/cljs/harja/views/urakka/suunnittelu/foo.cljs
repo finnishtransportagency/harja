@@ -995,29 +995,38 @@
                                                                                                                              false
                                                                                                                              [:.. :..])}
                                                                                               :body [{:conf {:nimi ::kuukausi-sisalto
+                                                                                                             :yksiloivakentta :milloin
                                                                                                              :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
-                                                                                                      :osat [{:solu solu/teksti
-                                                                                                              :parametrit [{:fmt aika-fmt-kuukausi}]}
-                                                                                                             {:solu (fn [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
-                                                                                                                      (grid/aseta-nimi (g-pohjat/syote-tayta-alas nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
-                                                                                                                                       :a-solu))
-                                                                                                              :parametrit [false
-                                                                                                                           (get syote-tayta-alas-predef :nappia-painettu!)
-                                                                                                                           (merge (select-keys syote-tayta-alas-predef #{:on-focus})
-                                                                                                                                  (get input-predef :toiminnot))
-                                                                                                                           (get numero-predef :kayttaytymiset)
-                                                                                                                           (get input-predef :parametrit)
-                                                                                                                           identity
-                                                                                                                           identity]
-                                                                                                              :conf {:nimi :mita}}
-                                                                                                             {:solu solu/teksti
-                                                                                                              :parametrit [{:parametrit {:class #{"table-default"}}
-                                                                                                                            :fmt (get numero-predef :fmt)}]
-                                                                                                              :conf {:nimi :kauanko}}
-                                                                                                             {:solu solu/teksti
-                                                                                                              :parametrit [{:parametrit {:class #{"table-default"}}
-                                                                                                                            :fmt (get numero-predef :fmt)}]
-                                                                                                              :conf {:nimi :miksi}}]}]}}]}}]
+                                                                                                      :toistettava-osa {:header {:conf {:nimi ::viikko-yhteenveto
+                                                                                                                                        :jarjestys [[:milloin :mita :kauanko :miksi]]}
+                                                                                                                                 :osat (yhteenvetorivi (fn [this auki?]
+                                                                                                                                                         )
+                                                                                                                                                       false
+                                                                                                                                                       [:.. :..])}
+                                                                                                                        :body [{:conf {:nimi ::viikko-sisalto
+                                                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
+                                                                                                                                :osat [{:solu solu/teksti
+                                                                                                                                        :parametrit [{:fmt aika-fmt-kuukausi}]}
+                                                                                                                                       {:solu (fn [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
+                                                                                                                                                (grid/aseta-nimi (g-pohjat/syote-tayta-alas nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
+                                                                                                                                                                 :a-solu))
+                                                                                                                                        :parametrit [false
+                                                                                                                                                     (get syote-tayta-alas-predef :nappia-painettu!)
+                                                                                                                                                     (merge (select-keys syote-tayta-alas-predef #{:on-focus})
+                                                                                                                                                            (get input-predef :toiminnot))
+                                                                                                                                                     (get numero-predef :kayttaytymiset)
+                                                                                                                                                     (get input-predef :parametrit)
+                                                                                                                                                     identity
+                                                                                                                                                     identity]
+                                                                                                                                        :conf {:nimi :mita}}
+                                                                                                                                       {:solu solu/teksti
+                                                                                                                                        :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                                                                      :fmt (get numero-predef :fmt)}]
+                                                                                                                                        :conf {:nimi :kauanko}}
+                                                                                                                                       {:solu solu/teksti
+                                                                                                                                        :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                                                                      :fmt (get numero-predef :fmt)}]
+                                                                                                                                        :conf {:nimi :miksi}}]}]}}]}}]}}]
                                  (taulukko/tee-taulukko! taulukkomaaritelma)))]
     (komp/luo
       (komp/piirretty (fn [_]
@@ -1151,9 +1160,9 @@
   ;; Asetetaan tämän nimiavaruuden e! arvoksi e*!, jotta tuota tuckin muutosfunktiota ei tarvitse passata jokaiselle komponentille
   (set! e! e*!)
   [:div
-   [padding pelilauta (:pelilauta app)]
-   [padding dynaaminen-taulukko-alempi-api]
-   [padding dynaaminen-taulukko-ylempi-api]
+   #_[padding pelilauta (:pelilauta app)]
+   #_[padding dynaaminen-taulukko-alempi-api]
+   #_[padding dynaaminen-taulukko-ylempi-api]
    [padding tuntikirjaus]])
 
 (defn foo []
