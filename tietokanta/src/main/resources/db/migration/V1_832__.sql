@@ -66,28 +66,6 @@ ALTER TABLE paikkaustoteuma DROP CONSTRAINT "paikkaustoteuma_toteuma-id_fkey";
 
 CREATE TABLE toteuma (LIKE toteuma_vanha INCLUDING ALL);
 
--- Lisätään uuteen toteumatauluun osoittavat FK:t ennen datan siirtoa
-ALTER TABLE toteuma_tehtava
-    ADD CONSTRAINT toteuma_tehtava_toteuma_fkey FOREIGN KEY (toteuma) REFERENCES toteuma(id) DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE toteuma_materiaali
-    ADD CONSTRAINT toteuma_materiaali_toteuma_fkey FOREIGN KEY (toteuma) REFERENCES toteuma(id) DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE varustetoteuma
-    ADD CONSTRAINT varustetoteuma_toteuma_fkey FOREIGN KEY (toteuma) REFERENCES toteuma(id) DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE toteuman_reittipisteet
-    ADD CONSTRAINT toteuman_reittipisteet_toteuma_fkey FOREIGN KEY (toteuma) REFERENCES toteuma(id) DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE toteuma_liite
-    ADD CONSTRAINT toteuma_liite_toteuma_fkey FOREIGN KEY (toteuma) REFERENCES toteuma(id) DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE paikkaustoteuma
-    ADD CONSTRAINT "paikkaustoteuma_toteuma-id_fkey" FOREIGN KEY ("toteuma-id") REFERENCES toteuma(id) DEFERRABLE INITIALLY IMMEDIATE;
-
---SET CONSTRAINTS toteuma_tehtava_toteuma_fkey,
---    toteuma_materiaali_toteuma_fkey,
- --   varustetoteuma_toteuma_fkey,
-  --  toteuman_reittipisteet_toteuma_fkey,
-   -- toteuma_liite_toteuma_fkey,
-    --"paikkaustoteuma_toteuma-id_fkey" DEFERRED;
-
-
 -- ikivanhat, typotetut jne toteumat tänne
 SELECT * FROM luo_toteumataulun_partitio( '0001-01-01'::DATE, '2015-10-01'::DATE);
 SELECT * FROM luo_toteumataulun_partitio( '2015-10-01'::DATE, '2016-10-01'::DATE);
@@ -104,21 +82,6 @@ SELECT * FROM luo_toteumataulun_partitio( '2025-10-01'::DATE, '2026-10-01'::DATE
 SELECT * FROM luo_toteumataulun_partitio( '2026-10-01'::DATE, '2027-10-01'::DATE);
 -- tulevaisuuteen typotetut jne toteumat tänne
 SELECT * FROM luo_toteumataulun_partitio( '2027-10-01'::DATE, '9999-12-31'::DATE);
-
-
-
-
-  --WITH x AS (
-  --    DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '0001-01-01' AND ('2015-10-01') returning *
-  --)
---INSERT INTO toteuma SELECT * FROM x;
-
-  --WITH x AS (
-  --    DELETE FROM toteuma_vanha WHERE alkanut BETWEEN '2016-10-01' AND '2017-10-01' returning *
- -- )
---INSERT INTO toteuma SELECT * FROM x;
-
-
 
 -- Luo insert trigger
 CREATE OR REPLACE FUNCTION toteuma_insert() RETURNS trigger AS $$
@@ -168,3 +131,59 @@ CREATE TRIGGER tg_toteuma_insert
     BEFORE INSERT ON toteuma
     FOR EACH ROW EXECUTE PROCEDURE toteuma_insert();
 
+
+CREATE OR REPLACE FUNCTION siirra_aikavalin_toteumat(alkupvm DATE, loppupvm DATE)
+    RETURNS VOID AS
+$$
+BEGIN
+    RAISE NOTICE 'Siirretään toteumat aikaväliltä % - %', alkupvm, loppupvm;
+      WITH x AS (
+          DELETE FROM toteuma_vanha WHERE alkanut BETWEEN alkupvm AND loppupvm returning *
+      )
+    INSERT INTO toteuma SELECT * FROM x;
+END
+$$
+    LANGUAGE plpgsql;
+
+-- Huom! Ei ehkä kannata ajaa tuotantoon näitä kaikkia kerralla migraatiossa, vaan
+-- esim käynnissäoleva hoitokausi migraatiossa, ja loput päivän aikana hoitokausi kerrallaan
+-- hallitusti, ei tule jäätävän pitkään down timeä
+SELECT * FROM siirra_aikavalin_toteumat( '0001-01-01'::DATE, '2015-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2015-10-01'::DATE, '2016-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2016-10-01'::DATE, '2017-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2017-10-01'::DATE, '2018-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2018-10-01'::DATE, '2019-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2019-10-01'::DATE, '2020-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2020-10-01'::DATE, '2021-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2021-10-01'::DATE, '2022-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2022-10-01'::DATE, '2023-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2023-10-01'::DATE, '2024-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2024-10-01'::DATE, '2025-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2025-10-01'::DATE, '2026-10-01'::DATE);
+SELECT * FROM siirra_aikavalin_toteumat( '2026-10-01'::DATE, '2027-10-01'::DATE);
+-- tulevaisuuteen typotetut jne toteumat tänne
+SELECT * FROM siirra_aikavalin_toteumat( '2027-10-01'::DATE, '9999-12-31'::DATE);
+
+-- ei voida tehdä FK-viittauksia partitioituun tauluun
+
+CREATE TRIGGER tg_muodosta_toteuman_envelope
+    BEFORE INSERT OR UPDATE
+    ON toteuma
+    FOR EACH ROW
+EXECUTE PROCEDURE muodosta_toteuman_envelope();
+
+CREATE TRIGGER tg_poista_muistetut_laskutusyht_tot
+    AFTER INSERT OR UPDATE
+    ON toteuma
+    FOR EACH ROW
+    WHEN (NEW.tyyppi != 'kokonaishintainen'::toteumatyyppi)
+EXECUTE PROCEDURE poista_muistetut_laskutusyht_tot();
+
+-- Toteuman luontitransaktion lopuksi päivitetään materiaalin käyttö
+CREATE CONSTRAINT TRIGGER tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain
+    AFTER UPDATE
+    ON toteuma
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW
+    WHEN (NEW.lahde = 'harja-api')
+EXECUTE PROCEDURE vahenna_urakan_materiaalin_kayttoa_hoitoluokittain();
