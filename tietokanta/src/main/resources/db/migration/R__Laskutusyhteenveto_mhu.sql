@@ -332,6 +332,7 @@ DROP TYPE IF EXISTS LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI;
 CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
 (
     nimi                            VARCHAR,
+    maksuera_numero                 NUMERIC,
     tuotekoodi                      VARCHAR,
     tpi                             INTEGER,
     perusluku                       NUMERIC,
@@ -462,11 +463,12 @@ BEGIN
     -- Aina syyskuu MHU urakoissa. Indeksi otetaan siis aina edellisen vuoden syyskuusta.
 
     -- Loopataan urakan toimenpideinstanssien läpi
-    FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id
+    FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id, m.numero AS maksuera_numero
                  FROM toimenpideinstanssi tpi
                           JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                          JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
-                 WHERE tpi.urakka = ur
+                          JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                      maksuera m
+                 WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
         LOOP
             RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 
@@ -868,7 +870,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE '********************************** Käsitelly loppui toimenpiteelle: %  *************************************
     ', t.nimi;
 
-            rivi := (t.nimi, t.tuotekoodi, t.tpi, perusluku,
+            rivi := (t.nimi, t.maksuera_numero, t.tuotekoodi, t.tpi, perusluku,
                      kaikki_laskutettu, kaikki_laskutetaan,
                      tavoitehintaiset_laskutettu, tavoitehintaiset_laskutetaan,
                      lisatyot_laskutettu, lisatyot_laskutetaan,
