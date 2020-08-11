@@ -23,7 +23,6 @@
             [harja.tiedot.urakka.aikataulu-test]
             [harja.views.kartta-test]
             [harja.tiedot.tilannekuva.tilannekuva-test]
-            [harja.views.ilmoitukset.tietyoilmoitushakulomake-test]
             [harja.views.ilmoitukset.tietyoilmoituslomake-test]
             [harja.views.kartta.tasot-test]
             [harja.tiedot.urakka.yllapitokohteet-test]
@@ -42,7 +41,6 @@
             [harja.ui.validointi-test]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test]
             [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test]
-            [harja.views.vesivaylat.urakka.materiaalit-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu-test]
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti-test]
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-test]
@@ -76,7 +74,6 @@
            'harja.tiedot.urakka.aikataulu-test
            'harja.views.kartta-test
            'harja.tiedot.tilannekuva.tilannekuva-test
-           'harja.views.ilmoitukset.tietyoilmoitushakulomake-test
            'harja.views.ilmoitukset.tietyoilmoituslomake-test
            'harja.views.kartta.tasot-test
            'harja.tiedot.urakka.yllapitokohteet-test
@@ -95,7 +92,6 @@
            'harja.ui.validointi-test
            'harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test
            'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
-           'harja.views.vesivaylat.urakka.materiaalit-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu-test
            'harja.tiedot.kanavat.hallinta.kohteiden-luonti-test
            'harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-test
