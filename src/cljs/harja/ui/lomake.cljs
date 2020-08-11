@@ -392,7 +392,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [:div {:key (str "div-nayta-palsta" (first (:skeemat palsta)))
          :class (str "lomakepalsta " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
    (when (-> palsta :optiot :otsikko)
-     [:h2 (-> palsta :optiot :otsikko)])
+     [:h3 (-> palsta :optiot :otsikko)])
    (for [{:keys [nimi muokattava?] :as p} (remove nil? (:skeemat palsta))]
      (let [muokattava? (and voi-muokata?
                             (or (nil? muokattava?)

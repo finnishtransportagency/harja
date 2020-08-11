@@ -111,8 +111,8 @@
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
          rajapinta (case tyyppi
-                     :akillinen-hoitotyo :akillisten-hoitotoiden-toimenpiteiden-tehtavat
-                     :lisatyo :lisatoiden-toimenpiteiden-tehtavat
+                     :akillinen-hoitotyo :maarien-toteutumien-toimenpiteiden-tehtavat
+                     :lisatyo :maarien-toteutumien-toimenpiteiden-tehtavat
                      :maarien-toteutumien-toimenpiteiden-tehtavat)
          toimenpide-re-string (when toimenpide
                                 (cond
@@ -196,6 +196,25 @@
         :else t))
     t))
 
+(defn- vaihda-toimenpide-tyypin-mukaan [app tyyppi]
+  (let [toimenpide
+        (cond
+          (= tyyppi :akillinen-hoitotyo)
+          (some (fn [toimenpide]
+                  (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
+                    toimenpide))
+                (get-in app [:toimenpiteet]))
+          (= tyyppi :lisatyo)
+          (some (fn [toimenpide]
+                  (when (= "7.0 LISÄTYÖT" (:otsikko toimenpide))
+                    toimenpide))
+                (get-in app [:toimenpiteet]))
+          :else {:otsikko "Kaikki" :id 0})
+        _ (js/console.log "vaihda-toimenpide-tyypin-mukaan tyyppi" (pr-str tyyppi))
+        _ (js/console.log "vaihda-toimenpide-tyypin-mukaan toimenpide" (pr-str toimenpide))
+        ]
+    toimenpide))
+
 (extend-protocol tuck/Event
   AsetaFiltteri
   (process-event [{polku :polku arvo :arvo} app]
@@ -256,8 +275,6 @@
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
                     :as lomake} :lomake
                    polku :polku} app]
-
-    ; :TODO: tässä tai jossain pitää validoida lomake erikseen, koska se harja.ui.lomake-lomakkeen oma vaikutti liian tunkkaiselta tähän, parempi tehä ite
     (let [_ (js/console.log "PaivitaLomake :: Nyt muokataan polku " (pr-str polku) "viimeksi-muokattu" (pr-str viimeksi-muokattu) "tyyppi" (pr-str tyyppi) "toimenpide" (pr-str toimenpide))
           ;; Toimenpidettä vaihdettaessa polkua ei tallenneta, mutta viimeksi-muokattu tallennetaan
           polku (if (and (nil? polku) viimeksi-muokattu)
@@ -275,50 +292,59 @@
                        (mapv #(dissoc % ::t/maara) ts))
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
-          app (cond
-                ;; Jos toimenpide tai tyyppi muuttuu
-                (or
-                  (= polku ::t/toimenpide)
-                  (= viimeksi-muokattu ::t/toimenpide)
-                  (= viimeksi-muokattu ::t/tyyppi))
-                (hae-tehtavat-tyypille app toimenpide tyyppi)
+          ;; Vaihdettaessa tyyppi lisätyöksi tai äkilliseksi hoitotyöksi muutetaan toimenpide sen mukaan
+          toimenpide (if (and (= polku ::t/tyyppi) (not= tyyppi :maaramitattava))
+                       ;; Vaihda toimenpide tyypin mukaan
+                       (vaihda-toimenpide-tyypin-mukaan app tyyppi)
+                       toimenpide)
+          app (if toimenpide
+                (assoc-in app [:lomake ::t/toimenpide] toimenpide)
+                app)
+          ;app
+          #_(cond
+              ;; Jos toimenpide tai tyyppi muuttuu
+              (or
+                (= polku ::t/toimenpide)
+                (= viimeksi-muokattu ::t/toimenpide)
+                (= viimeksi-muokattu ::t/tyyppi))
+              (hae-tehtavat-tyypille app toimenpide tyyppi)
 
-                ;; Jos poistetaan
-                (and (= polku ::t/poistettu)
-                     (not (nil? (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]))))
-                (poista-toteuma (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]) app)
+              ;; Jos poistetaan
+              (and (= polku ::t/poistettu)
+                   (not (nil? (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]))))
+              (poista-toteuma (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]) app)
 
-                ;; Default
-                :else app)
+              ;; Default
+              :else app)
           app (-> app
                   (assoc-in [:lomake ::tila/validius] validius)
                   (assoc-in [:lomake ::tila/validi?] validi?))
-          uusi-app (update app :lomake (fn [l]
-                                         (let [l (cond-> l
-                                                         ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
-                                                         (and (true? useampi?)
-                                                              (= tyyppi :maaramitattava)
-                                                              (not= useampi? useampi-aiempi?))
-                                                         (update ::t/toteumat conj uusi-toteuma)
+          uusi-app (update app :lomake (fn [lomake]
+                                         (let [lomake (cond-> lomake
+                                                              ; lisätään uusi toteumamappi, jos useampi toteuma- checkboxia klikattu
+                                                              (and (true? useampi?)
+                                                                   (= tyyppi :maaramitattava)
+                                                                   (not= useampi? useampi-aiempi?))
+                                                              (update ::t/toteumat conj uusi-toteuma)
 
-                                                         ; tai resetoidaan
-                                                         (and (not (true? useampi?))
-                                                              (= tyyppi :maaramitattava)
-                                                              (not= useampi? useampi-aiempi?))
-                                                         (update ::t/toteumat #(conj [] (first %)))
+                                                              ; tai resetoidaan
+                                                              (and (not (true? useampi?))
+                                                                   (= tyyppi :maaramitattava)
+                                                                   (not= useampi? useampi-aiempi?))
+                                                              (update ::t/toteumat #(conj [] (first %)))
 
-                                                         ; onko toteumia poistettu, jos niin asetetaan useampi-toteuma oikein
-                                                         (and (true? useampi?)
-                                                              (true? useampi-aiempi?)
-                                                              (= (count (::t/toteumat l)) 1))
-                                                         (assoc ::t/useampi-toteuma false))]
+                                                              ; onko toteumia poistettu, jos niin asetetaan useampi-toteuma oikein
+                                                              (and (true? useampi?)
+                                                                   (true? useampi-aiempi?)
+                                                                   (= (count (::t/toteumat lomake)) 1))
+                                                              (assoc ::t/useampi-toteuma false))]
                                            ; siivotaan tyyppiä vaihdettaessa turhat kentät
                                            (if (not= tyyppi tyyppi-aiempi)
                                              (case tyyppi
-                                               :akillinen-hoitotyo (update l ::t/toteumat (comp vain-eka maara-pois))
-                                               :lisatyo (update l ::t/toteumat (comp vain-eka maara-pois))
-                                               l)
-                                             l))))
+                                               :akillinen-hoitotyo (update lomake ::t/toteumat (comp vain-eka maara-pois))
+                                               :lisatyo (update lomake ::t/toteumat (comp vain-eka maara-pois))
+                                               lomake)
+                                             lomake))))
           ;; Toimenpiteen vaihtuessa tyhjennetään valittu tehtävä
           uusi-app (if (or
                          (= ::t/toimenpide polku)

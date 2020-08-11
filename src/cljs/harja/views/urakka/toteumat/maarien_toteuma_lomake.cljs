@@ -170,8 +170,9 @@
                      :vayla-tyyli? true
                      :tyyppi :tierekisteriosoite
                      :sijainti (r/wrap sijainti (constantly true))}
-                    (r/wrap sijainti
+                    #_ (r/wrap sijainti
                             (r/partial paivita! ::t/sijainti indeksi))]]
+
                   [:div.row
                    [kentat/tee-kentta
                     {::ui-lomake/col-luokka ""
@@ -191,7 +192,7 @@
 
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
-  (let [_ (js/console.log "maarien-toteuman-syottolomake* ")
+  (let [_ (js/console.log "maarien-toteuman-syottolomake* " (clj->js lomake))
         {tyyppi ::t/tyyppi
          toteumat ::t/toteumat
          validius ::tila/validius
@@ -262,8 +263,8 @@
                                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku)))})]
     [:div#vayla
      #_[debug/debug app]
-     #_[debug/debug lomake]
-     [debug/debug validius]
+     [debug/debug lomake]
+     #_ [debug/debug validius]
      [:div (str "Validi? " koko-validi?)]
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
@@ -313,7 +314,7 @@
            {:tyyppi :checkbox
             :nimi [::t/toteumat 0 ::t/poistettu]
             :teksti "Poista toteuma"})
-       (ui-lomake/palstat
+       #_ (ui-lomake/palstat
          {}
          {:otsikko "Mihin toimenpiteeseen työ liittyy?"
           :puolikas true}
@@ -323,7 +324,17 @@
            :virhe? (validi? [::t/toimenpide])
            :valinnat toimenpiteet
            :valinta-nayta :otsikko
+           :valinta-arvo identity
            :tyyppi :valinta}])
+       {:otsikko "Toimenpide"
+        :nimi ::t/toimenpide
+        ::ui-lomake/col-luokka ""
+        :virhe? (validi? [::t/toimenpide])
+        :valinnat toimenpiteet
+        :valinta-nayta :otsikko
+        :valinta-arvo identity
+        :tyyppi :valinta
+        :vayla-tyyli? true}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi
         :oletusarvo :maaramitattava

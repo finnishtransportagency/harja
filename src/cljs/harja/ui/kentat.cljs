@@ -615,11 +615,12 @@
                                  (vaihtoehto-nayta vaihtoehto)]])))]
        (if nayta-rivina?
          [:table.boolean-group
-          [:tr
-           (map-indexed (fn [i cb]
-                          ^{:key i}
-                          [:td cb])
-                        radiobuttonit)]]
+          [:tbody
+           [:tr
+            (map-indexed (fn [i cb]
+                           ^{:key i}
+                           [:td cb])
+                         radiobuttonit)]]]
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta

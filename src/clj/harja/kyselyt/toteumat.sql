@@ -592,7 +592,7 @@ SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
          tehtavaryhma tr1
              JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
              JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-    WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND tk.kasin_lisattava_maara = true
+    WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND (tk.kasin_lisattava_maara = true OR tr1.otsikko = '7.0 LISÄTYÖT' OR tr1.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA')
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
 
 -- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat

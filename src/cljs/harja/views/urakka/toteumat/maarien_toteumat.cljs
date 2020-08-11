@@ -42,7 +42,8 @@
             [datafrisk.core :as df]
             [harja.ui.debug :as debug]
             [harja.views.urakka.toteumat.maarien-toteuma-lomake :as toteuma-lomake]
-            [harja.loki :as loki])
+            [harja.loki :as loki]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -327,8 +328,12 @@
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
          (if syottomoodi
-           [toteuma-lomake/maarien-toteuman-syottolomake* e! app]
-           [maarien-toteumalistaus e! app])
+           [:div
+            [kartta/kartan-paikka]
+            [toteuma-lomake/maarien-toteuman-syottolomake* e! app]]
+           [:div
+            [kartta/kartan-paikka]
+            [maarien-toteumalistaus e! app]])
          [debug-state app]]))))
 
 (defn maarien-toteumat []
