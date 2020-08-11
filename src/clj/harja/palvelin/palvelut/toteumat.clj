@@ -195,7 +195,10 @@
       (do
         (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
           (toteumat-q/luo-tehtava<! c id toimenpidekoodi maara (:id user) nil)
-          (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
+          (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c
+                                                             toteumatyyppi
+                                                             toimenpidekoodi
+                                                             (:urakka toteuman-parametrit)))
         id))))
 
 (defn- hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
@@ -437,7 +440,9 @@
     (log/debug (str "Luodaan uudelle toteumalle id " id " tehtävä" toteumatehtavan-parametrit))
     (apply toteumat-q/luo-tehtava<! toteumatehtavan-parametrit)
     (log/debug "Merkitään maksuera likaiseksi maksuerätyypin: " maksueratyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
-    (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c maksueratyyppi toimenpidekoodi)
+    (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c maksueratyyppi
+                                                       toimenpidekoodi
+                                                       (:urakka toteuman-parametrit))
     id))
 
 (defn tallenna-muiden-toiden-toteuma
