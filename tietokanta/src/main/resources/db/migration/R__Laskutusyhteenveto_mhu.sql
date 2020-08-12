@@ -2,6 +2,7 @@
 -- MHU-urakoiden laskutusyhteeneveto
 
 -- MHU hoidonjohdon erillishankinnat
+DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
     hj_erillishankinnat_laskutettu  NUMERIC,
