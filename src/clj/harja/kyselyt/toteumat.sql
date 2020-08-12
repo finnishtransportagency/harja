@@ -664,7 +664,7 @@ WHERE
                           FROM toimenpideinstanssi tpi
                             JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
                             JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
-                          WHERE tpk.id = :toimenpidekoodi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
+                          WHERE tpk.id = :toimenpidekoodi AND tpi.urakka = :urakka AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: merkitse-toteumatehtavien-maksuerat-likaisiksi!
 -- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
