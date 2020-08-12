@@ -2,6 +2,13 @@
 -- MHU-urakoiden laskutusyhteeneveto
 
 -- MHU hoidonjohdon erillishankinnat
+DROP FUNCTION IF EXISTS mhu_laskutusyhteenveto_teiden_hoito (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+    toimenpide_koodi TEXT,
+    t_instanssi INTEGER,
+    urakka_id INTEGER,
+    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+    indeksinimi VARCHAR,
+    perusluku NUMERIC);
 DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
