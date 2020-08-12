@@ -2,7 +2,7 @@
 -- MHU-urakoiden laskutusyhteeneveto
 
 -- MHU hoidonjohdon erillishankinnat
-DROP FUNCTION IF EXISTS mhu_laskutusyhteenveto_teiden_hoito (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
     toimenpide_koodi TEXT,
     t_instanssi INTEGER,
     urakka_id INTEGER,
