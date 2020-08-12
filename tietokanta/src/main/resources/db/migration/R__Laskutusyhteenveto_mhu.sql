@@ -221,6 +221,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- MHU hoidon johto on niin iso ja monimutkainen laskenta, että se on eriytetty tähän
+DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                                   toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                                   sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                                   indeksinimi VARCHAR,
+                                                   perusluku NUMERIC);
+DROP TYPE IF EXISTS HOIDONJOHTO_RIVI;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
     johto_ja_hallinto_laskutettu  NUMERIC,
