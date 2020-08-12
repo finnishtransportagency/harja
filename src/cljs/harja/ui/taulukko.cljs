@@ -53,17 +53,21 @@
     (loop [[rivi & loput-rivit] (grid/nakyvat-rivit g)
            index 0]
       (when rivi
-        (grid/paivita-grid! rivi
-                            :parametrit
-                            (fn [parametrit]
-                              (update parametrit :class (fn [luokat]
-                                                          (if (::samaraita-edelliseen? rivi)
-                                                            (paivita-luokat luokat (not (odd? index)))
-                                                            (paivita-luokat luokat (odd? index)))))))
-        (recur loput-rivit
-               (if (::samaraita-edelliseen? rivi)
-                 index
-                 (inc index)))))))
+        (if (::otsikkorivi? rivi)
+          (recur loput-rivit
+                 0)
+          (do
+            (grid/paivita-grid! rivi
+                                :parametrit
+                                (fn [parametrit]
+                                  (update parametrit :class (fn [luokat]
+                                                              (if (::samaraita-edelliseen? rivi)
+                                                                (paivita-luokat luokat (not (odd? index)))
+                                                                (paivita-luokat luokat (odd? index)))))))
+            (recur loput-rivit
+                   (if (::samaraita-edelliseen? rivi)
+                     index
+                     (inc index)))))))))
 
 (defn paivita-solun-arvo! [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
                             :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}]
@@ -332,9 +336,9 @@
                           (dynaaminen-taulukko? osan-maaritelma) (muodosta-grid-dynaaminen-taulukko osan-maaritelma)
                           (rivi? osan-maaritelma) (muodosta-grid-rivi osan-maaritelma)
                           (solu-conf? osan-maaritelma) (apply (:solu osan-maaritelma) (or (:parametrit osan-maaritelma) [])))
-        muodostettu-osa (if (get-in osan-maaritelma [:conf :samaraita-edelliseen?])
-                          (assoc muodostettu-osa ::samaraita-edelliseen? true)
-                          muodostettu-osa)
+        muodostettu-osa (cond-> muodostettu-osa
+                                (get-in osan-maaritelma [:conf :raidat :samaraita-edelliseen?]) (assoc ::samaraita-edelliseen? true)
+                                (get-in osan-maaritelma [:conf :raidat :otsikkorivi?]) (assoc ::otsikkorivi? true))
         muodostettu-osa (assoc muodostettu-osa ::seurattavan-otsikon-nimi *otsikon-nimi*)
         muodostettu-osa (walk/prewalk (fn [x]
                                         (if (and (map-entry? x)
@@ -411,16 +415,6 @@
                                           footer-index (concat [(muodosta-grid-osa! (:footer taulukkomaaritelma))])))}
                          root-conf))))))
 
-(defn muodosta-vaihto-osat! [vaihto-osien-mappaus vaihto-osat]
-  (swap! vaihto-osien-mappaus
-         (fn [mappaukset]
-           (assoc mappaukset
-                  :vaihto-osat
-                  (reduce-kv (fn [m osan-tunniste osan-maaritelma]
-                               (assoc m osan-tunniste (muodosta-grid-osa! osan-maaritelma)))
-                             {}
-                             vaihto-osat)))))
-
 (defn- muodosta-grid [{:keys [ratom dom-id grid-polku]} taulukkomaaritelma]
   (let [root-conf {:dom-id dom-id
                    :root-fn (fn [] (get-in @ratom grid-polku))
@@ -434,10 +428,10 @@
 (declare muodosta-datakasittelija-ratom-rivi muodosta-datakasittelija-ratom-staattinen-taulukko muodosta-datakasittelija-ratom-dynaaminen-taulukko)
 
 (defn uusi-datapolku
-  [entinen-polku root-osa? taman-osan-index taman-osan-nimi nimi-generoitu? dynaaminen-taulukko?]
+  [entinen-polku root-osa? taman-osan-index taman-osan-nimi nimi-generoitu? entinen-osa-dynaaminen?]
   (cond
     root-osa? entinen-polku
-    (and nimi-generoitu? dynaaminen-taulukko?) (conj entinen-polku ::vektori)
+    entinen-osa-dynaaminen? (conj entinen-polku ::vektori)
     taman-osan-nimi (conj entinen-polku taman-osan-nimi)))
 
 (defn uusi-gridpolku [entinen-polku root-osa? taman-osan-index taman-osan-nimi]
@@ -452,7 +446,7 @@
     (apply str (interpose "-"
                           (reduce (fn [polku indeksi]
                                     (let [polku (mapv (fn [polun-osa]
-                                                        (if (and (keyword polun-osa)
+                                                        (if (and (keyword? polun-osa)
                                                                  (not= polun-osa ::vektori))
                                                           (name polun-osa)
                                                           polun-osa))
@@ -777,7 +771,7 @@
                                                                           (tunnisteen-kasittely-fn indeksit))))
                            dynaaminen-taulukko? (boolean (:luonti maaritelma))
                            maaritelma (if dynaaminen-taulukko?
-                                        (update maaritelma :luonti (fn [f] (partial f index)))
+                                        (update maaritelma :luonti (fn [f] (partial f indeksit)))
                                         maaritelma)]
                        (assoc m polku maaritelma)))
                    {}
@@ -821,7 +815,7 @@
                              (tunnisteen-kasittely datapolku))
      :luonti (let [dynaamisen-sisus (muodosta-rajapintakasittelija-dynaaminen-osa (:toistettava-osa taulukkomaaritelma))]
                (fn [& args]
-                 (let [aikaisemmat-indeksit (-> args butlast butlast vec)
+                 (let [aikaisemmat-indeksit (-> args butlast butlast first vec)
                        [data vaihdettavien-osien-data] (-> args butlast last)
                        g (last args)]
                    (when data
@@ -1117,8 +1111,6 @@
         vaihto-osien-mappaus (atom {:vaihto-osat {}
                                     :vaihto-osien-maaritelmat taytetty-vaihto-osamaaritelma
                                     :mappaus {}})
-        #_#__ (binding [*vaihto-osien-mappaus* vaihto-osien-mappaus]
-            (muodosta-vaihto-osat! vaihto-osien-mappaus taytetty-vaihto-osamaaritelma))
         osamaaritelmien-polut (muodosta-osamaaritelmien-polut taytetty-taulukkomaaritelma taytetty-vaihto-osamaaritelma (:data-polku conf))
         g (assoc (binding [*vaihto-osien-mappaus* vaihto-osien-mappaus]
                    (muodosta-grid conf taytetty-taulukkomaaritelma))
@@ -1152,7 +1144,6 @@
                                                                      datakasittely-ratom-muokkaus
                                                                      datakasittely-ratom-trigger)
                                              rajapintakasittelija-taulukko)]
-    (println "datakasittely-ratom-trigger " datakasittely-ratom-trigger)
     (grid/grid-tapahtumat g
                           (:ratom conf)
                           datavaikutukset-taulukkoon)))

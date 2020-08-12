@@ -528,6 +528,11 @@
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
 
+(defn viikko
+  "Palauttaa annetun DateTime viikon"
+  [pvm]
+  (t/week-number-of-year pvm))
+
 (defn koko-kuukausi-ja-vuosi
   "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
   [pvm]

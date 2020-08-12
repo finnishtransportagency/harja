@@ -111,6 +111,10 @@
   (when paivamaara
     (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))
 
+(defn aika-fmt-viikko [paivamaara]
+  (when paivamaara
+    (-> paivamaara pvm/viikko (str "/" (pvm/vuosi paivamaara)))))
+
 (defn luo-css-luokat! [luokat]
   (let [tyyli-elementti (.createElement js/document "style")
         tyylit (apply str (interpose " " (map (fn [[luokan-nimi css-maaritelma]]
@@ -526,7 +530,7 @@
                                                                                      {:otsikot {:polut [[:gridin-otsikot]]
                                                                                                 :haku identity}
                                                                                       #_#_:yhteensarivit {:polut [[:data-yhteensa]]
-                                                                                                      :haku identity}
+                                                                                                          :haku identity}
                                                                                       :datarivit {:polut [[:data]]
                                                                                                   :luonti-init (fn [tila data]
                                                                                                                  (update tila
@@ -722,21 +726,21 @@
 
 ;;; REPL
 #_(try (swap! harja.views.urakka.suunnittelu.foo/tila (fn [tila]
-                                                      (-> tila
-                                                          (assoc-in
-                                                            [:dynaaminen-taulukko-ylempi-api :data :harja.views.urakka.suunnittelu.foo/data]
-                                                            [{:rivin-nimi :foo
-                                                              :harja.views.urakka.suunnittelu.foo/data-sisalto {:datarivi-0 {:a 18 :c 3}
-                                                                                                                :datarivi-1 {:a 1 :c 3}
-                                                                                                                :datarivi-2 {:a 1 :c 3}}
-                                                              :harja.views.urakka.suunnittelu.foo/data-yhteenveto {:rivi "foo"}}
-                                                             {:rivin-nimi :bar
-                                                              :harja.views.urakka.suunnittelu.foo/data-sisalto {:datarivi-0 {:a 1 :c 3}
-                                                                                                                :datarivi-1 {:a 1 :c 3}
-                                                                                                                :datarivi-2 {:a 1 :c 3}}
-                                                              :harja.views.urakka.suunnittelu.foo/data-yhteenveto {:rivi "bar"}}]))))
-     "done"
-     (catch :default _ "ERROR"))
+                                                        (-> tila
+                                                            (assoc-in
+                                                              [:dynaaminen-taulukko-ylempi-api :data :harja.views.urakka.suunnittelu.foo/data]
+                                                              [{:rivin-nimi :foo
+                                                                :harja.views.urakka.suunnittelu.foo/data-sisalto {:datarivi-0 {:a 18 :c 3}
+                                                                                                                  :datarivi-1 {:a 1 :c 3}
+                                                                                                                  :datarivi-2 {:a 1 :c 3}}
+                                                                :harja.views.urakka.suunnittelu.foo/data-yhteenveto {:rivi "foo"}}
+                                                               {:rivin-nimi :bar
+                                                                :harja.views.urakka.suunnittelu.foo/data-sisalto {:datarivi-0 {:a 1 :c 3}
+                                                                                                                  :datarivi-1 {:a 1 :c 3}
+                                                                                                                  :datarivi-2 {:a 1 :c 3}}
+                                                                :harja.views.urakka.suunnittelu.foo/data-yhteenveto {:rivi "bar"}}]))))
+       "done"
+       (catch :default _ "ERROR"))
 (defn dynaaminen-taulukko-ylempi-api []
   (let [tilacursor (r/cursor tila [:dynaaminen-taulukko-ylempi-api])
         testitaulukko (fn [tila-atom dom-id grid-polku data-polku]
@@ -799,7 +803,7 @@
                                                                                                                         [:.. :.. :..])}
                                                                                                  {:conf {:jarjestys [[:rivi :a :b :c :poista]]
                                                                                                          :nimi ::disable-valinta
-                                                                                                         :samaraita-edelliseen? true}
+                                                                                                         :raidat {:samaraita-edelliseen? true}}
                                                                                                   :osat (vec
                                                                                                           (cons {:solu vayla-checkbox
                                                                                                                  :parametrit [(fn [this event]
@@ -924,9 +928,9 @@
     (komp/luo
       (komp/piirretty (fn [_]
                         (testitaulukko tila
-                                   "dynaaminen-taulukko-ylempi-api"
-                                   [:dynaaminen-taulukko-ylempi-api :grid]
-                                   [:dynaaminen-taulukko-ylempi-api :data])))
+                                       "dynaaminen-taulukko-ylempi-api"
+                                       [:dynaaminen-taulukko-ylempi-api :grid]
+                                       [:dynaaminen-taulukko-ylempi-api :data])))
       (fn []
         (let [{:keys [grid]} @tilacursor]
           (if grid
@@ -935,17 +939,31 @@
 
 ;;; REPL
 #_(try (swap! harja.views.urakka.suunnittelu.foo/tila (fn [tila]
-                                                        (-> tila
-                                                            (assoc-in
-                                                              [:tuntikirjaus :data :harja.views.urakka.suunnittelu.foo/tuntikirjaukset]
-                                                              [{:milloin (harja.pvm/luo-pvm 2020 1 1)
-                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto {:milloin (harja.pvm/luo-pvm 2020 1 1) :mita :lohoyily :kaunako 24 :miksi "..."}
-                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}}
-                                                               {:milloin (harja.pvm/luo-pvm 2020 2 1)
-                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto {:milloin (harja.pvm/luo-pvm 2020 2 1) :mita :toita :kaunako 7.5 :miksi "bills"}
-                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 2 1)}}]))))
-       "done"
-       (catch :default _ "ERROR"))
+                                                      (-> tila
+                                                          (assoc-in
+                                                            [:tuntikirjaus :data :harja.views.urakka.suunnittelu.foo/tuntikirjaukset]
+                                                            [{:milloin (harja.pvm/luo-pvm 2020 0 1)
+                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
+                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 1) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 2) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 3) :mita :lohoyily :kaunako 24 :miksi "..."}]}
+                                                                                                                    {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 6)}
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 6) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 7) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 8) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 9) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 10) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 11) :mita :lohoyily :kaunako 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 12) :mita :lohoyily :kaunako 24 :miksi "..."}]}
+                                                                                                                    {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 13)}
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 13) :mita :lohoyily :kaunako 24 :miksi "..."}]}]}
+                                                             {:milloin (harja.pvm/luo-pvm 2020 1 1)
+                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
+                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 1 1) :mita :toita :kaunako 7.5 :miksi "bills"}]}]}]))))
+     "done"
+     (catch :default _ "ERROR"))
 
 (defn tuntikirjaus []
   (let [tilacursor (r/cursor tila [:tuntikirjaus])
@@ -954,22 +972,27 @@
                                (let [syote-tayta-alas-predef (taulukko/predef :syote-tayta-alas nil)
                                      input-predef (taulukko/predef :input nil)
                                      numero-predef (taulukko/predef :numero nil)
-                                     yhteenvetorivi (fn [f auki-alussa? polku-staattiseen-taulukkoon]
-                                                      (vec
-                                                        (concat [{:solu solu/laajenna
-                                                                  :parametrit [(merge (taulukko/predef :laajenna
-                                                                                                       {:aukeamispolku (conj polku-staattiseen-taulukkoon 1)
-                                                                                                        :sulkemispolku (conj polku-staattiseen-taulukkoon 1)
-                                                                                                        :aukaise-fn f})
-                                                                                      {:parametrit {:class #{"table-default" "lihavoitu"}}
-                                                                                       :auki-alussa? auki-alussa?
-                                                                                       :fmt aika-fmt-kuukausi})]}]
-                                                                (map (fn [sarake]
-                                                                       {:solu solu/tyhja
-                                                                        :conf {:nimi sarake}
-                                                                        :parametrit [{:parametrit {:class #{"table-default"}}
-                                                                                      :fmt (get numero-predef :fmt)}]})
-                                                                     [:mita :kauanko :miksi]))))
+                                     yhteenvetorivi (fn [f fmt-fn auki-alussa? paarivi? polku-staattiseen-taulukkoon]
+                                                      (let [laajenna-luokat (if paarivi?
+                                                                              #{"table-default" "table-default-header" "harmaa-teksti"}
+                                                                              #{"table-default" "lihavoitu"})
+                                                            tyhja-luokat (if paarivi?
+                                                                           #{"table-default" "table-default-header"}
+                                                                           #{"table-default"})]
+                                                        (vec
+                                                          (concat [{:solu solu/laajenna
+                                                                    :parametrit [(merge (taulukko/predef :laajenna
+                                                                                                         {:aukeamispolku (conj polku-staattiseen-taulukkoon 1)
+                                                                                                          :sulkemispolku (conj polku-staattiseen-taulukkoon 1)
+                                                                                                          :aukaise-fn f})
+                                                                                        {:parametrit {:class laajenna-luokat}
+                                                                                         :auki-alussa? auki-alussa?
+                                                                                         :fmt fmt-fn})]}]
+                                                                  (map (fn [sarake]
+                                                                         {:solu solu/tyhja
+                                                                          :conf {:nimi sarake}
+                                                                          :parametrit [tyhja-luokat]})
+                                                                       [:mita :kauanko :miksi])))))
                                      taulukkomaaritelma {:conf {:ratom tila-atom
                                                                 :dom-id dom-id
                                                                 :grid-polku grid-polku
@@ -989,44 +1012,51 @@
                                                                     :body [{:conf {:nimi ::tuntikirjaukset
                                                                                    :yksiloivakentta :milloin}
                                                                             :toistettava-osa {:header {:conf {:nimi ::kuukausi-yhteenveto
-                                                                                                              :jarjestys [[:milloin :mita :kauanko :miksi]]}
+                                                                                                              :jarjestys [[:milloin :mita :kauanko :miksi]]
+                                                                                                              :raidat {:otsikkorivi? true}}
                                                                                                        :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                                )
+                                                                                                                             aika-fmt-kuukausi
                                                                                                                              false
+                                                                                                                             true
                                                                                                                              [:.. :..])}
                                                                                               :body [{:conf {:nimi ::kuukausi-sisalto
                                                                                                              :yksiloivakentta :milloin
-                                                                                                             :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
+                                                                                                             :luokat #{"piillotettu" #_"salli-ylipiirtaminen"}}
                                                                                                       :toistettava-osa {:header {:conf {:nimi ::viikko-yhteenveto
                                                                                                                                         :jarjestys [[:milloin :mita :kauanko :miksi]]}
                                                                                                                                  :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                                                          )
+                                                                                                                                                       aika-fmt-viikko
+                                                                                                                                                       false
                                                                                                                                                        false
                                                                                                                                                        [:.. :..])}
                                                                                                                         :body [{:conf {:nimi ::viikko-sisalto
-                                                                                                                                       :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
-                                                                                                                                :osat [{:solu solu/teksti
-                                                                                                                                        :parametrit [{:fmt aika-fmt-kuukausi}]}
-                                                                                                                                       {:solu (fn [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
-                                                                                                                                                (grid/aseta-nimi (g-pohjat/syote-tayta-alas nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
-                                                                                                                                                                 :a-solu))
-                                                                                                                                        :parametrit [false
-                                                                                                                                                     (get syote-tayta-alas-predef :nappia-painettu!)
-                                                                                                                                                     (merge (select-keys syote-tayta-alas-predef #{:on-focus})
-                                                                                                                                                            (get input-predef :toiminnot))
-                                                                                                                                                     (get numero-predef :kayttaytymiset)
-                                                                                                                                                     (get input-predef :parametrit)
-                                                                                                                                                     identity
-                                                                                                                                                     identity]
-                                                                                                                                        :conf {:nimi :mita}}
-                                                                                                                                       {:solu solu/teksti
-                                                                                                                                        :parametrit [{:parametrit {:class #{"table-default"}}
-                                                                                                                                                      :fmt (get numero-predef :fmt)}]
-                                                                                                                                        :conf {:nimi :kauanko}}
-                                                                                                                                       {:solu solu/teksti
-                                                                                                                                        :parametrit [{:parametrit {:class #{"table-default"}}
-                                                                                                                                                      :fmt (get numero-predef :fmt)}]
-                                                                                                                                        :conf {:nimi :miksi}}]}]}}]}}]}}]
+                                                                                                                                       :yksiloivakentta :milloin
+                                                                                                                                       :luokat #{"piillotettu"}}
+                                                                                                                                :toistettava-osa {:conf {:nimi ::paivarivi}
+                                                                                                                                                  :osat [{:solu solu/teksti
+                                                                                                                                                          :parametrit [{:fmt aika-fmt-kuukausi}]}
+                                                                                                                                                         {:solu (fn [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
+                                                                                                                                                                  (grid/aseta-nimi (g-pohjat/syote-tayta-alas nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
+                                                                                                                                                                                   :a-solu))
+                                                                                                                                                          :parametrit [false
+                                                                                                                                                                       (get syote-tayta-alas-predef :nappia-painettu!)
+                                                                                                                                                                       (merge (select-keys syote-tayta-alas-predef #{:on-focus})
+                                                                                                                                                                              (get input-predef :toiminnot))
+                                                                                                                                                                       (get numero-predef :kayttaytymiset)
+                                                                                                                                                                       (get input-predef :parametrit)
+                                                                                                                                                                       identity
+                                                                                                                                                                       identity]
+                                                                                                                                                          :conf {:nimi :mita}}
+                                                                                                                                                         {:solu solu/teksti
+                                                                                                                                                          :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                                                                                        :fmt (get numero-predef :fmt)}]
+                                                                                                                                                          :conf {:nimi :kauanko}}
+                                                                                                                                                         {:solu solu/teksti
+                                                                                                                                                          :parametrit [{:parametrit {:class #{"table-default"}}
+                                                                                                                                                                        :fmt (get numero-predef :fmt)}]
+                                                                                                                                                          :conf {:nimi :miksi}}]}}]}}]}}]}}]
                                  (taulukko/tee-taulukko! taulukkomaaritelma)))]
     (komp/luo
       (komp/piirretty (fn [_]

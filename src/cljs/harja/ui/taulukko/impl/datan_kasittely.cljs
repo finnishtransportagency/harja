@@ -4,7 +4,6 @@
             [reagent.ratom :as ratom]
             [harja.ui.grid-debug :as g-debug]
             [clojure.set :as clj-set]
-            [clojure.data]
             [cljs.spec.alpha :as s]
             [cljs.pprint :as pp])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -345,7 +344,6 @@
                                                (conj kaydyt-tilat (hash paivitetty-tila))
                                                (not= (hash uusi) (hash paivitetty-tila))))
                                       uusi)))]
-            (println "PÄIVITETTY TILA: " paivitetty-tila)
             (set! muuttuvien-seurantojen-polut [])
             (let [triggerit-kayty-lapi? (not= paivitetty-tila uusi)]
               (swap! seurannan-valitila assoc-in [data-atom-hash ::tila] paivitetty-tila)
@@ -426,9 +424,6 @@
     (add-watch data-atom
                nimi
                (fn [_ _ vanha uusi]
-                 (when-not (= uusi vanha)
-                   (println "---- DIFF ----")
-                   (cljs.pprint/pprint (vec (take 2 (clojure.data/diff vanha uusi)))))
                  (reset! dk uusi)))
     dk))
 

@@ -789,17 +789,6 @@
                                                                 (assoc taman-tila
                                                                        :derefable osan-derefable
                                                                        :rajapinta rajapinta))))))
-                                        #_(when (= rajapinta "tuntikirjaus-data-tuntikirjaukset-0-kuukausi-sisalto")
-                                          (println "------ \"tuntikirjaus-data-tuntikirjaukset-0-kuukausi-sisalto\" ----")
-                                          (println "--> nimi-polku " (::nimi-polku osa))
-                                          (println "--> index-polku " (::index-polku osa))
-                                          (println "--> grid-polku " grid-polku)
-                                          (println "--> solun-polun-pituus " solun-polun-pituus)
-                                          (println "--> yhdista-derefable-tahan-osaan? " yhdista-derefable-tahan-osaan?)
-                                          (println "---> grid-polku-sopii-osaan? " grid-polku-sopii-osaan?)
-                                          (println "---> solun-polun-pituus-oikein? " solun-polun-pituus-oikein?))
-                                        #_(when (= rajapinta "tuntikirjaus-data-tuntikirjaukset-0-kuukausi-sisalto")
-                                          (println "--> osan-derefable " osan-derefable))
                                         (assoc osa ::osan-derefable osan-derefable
                                                ::tunniste-rajapinnan-dataan (fn []
                                                                               (get-in @osien-tunnisteet osan-polku-dataan))
@@ -958,22 +947,14 @@
                                         (constantly nil))
         entinen-toistettavan-osan-data (atom nil)]
     (fn [grid]
-      (comment (println "DYNAAMINEN GRID nimi-polku " (::nimi-polku grid))
-               (println "(::grid-rajapintakasittelijat (root grid)) " (::grid-rajapintakasittelijat (root grid)))
-               (println "(::nimi-polku grid) " (::nimi-polku grid))
-               (println "rajapintakasittelijan-tiedot " rajapintakasittelijan-tiedot))
       (let [gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
                                gridin-derefable
                                (do
                                  (warn (str "Dynaamiselle gridille  ") (pr-str (type grid)) (str " (" (:id grid) ") ei ole annettu osan-derefablea!"))
                                  (r/atom nil)))
-            #_#__ (println "gridin-derefable " gridin-derefable)
-            #_#__ (println 1)
             gridin-data @gridin-derefable
-            #_#__ (println 2)
             jarjestetty-data-erikseen? (boolean (and (map? gridin-data)
                                                      (contains? gridin-data ::jarjestettava-data)))
-            #_#__ (println 3)
             rajapinnat-muuttunut? (if (and (contains? (meta grid-kasittelijoiden-luonti) :rajapinta-riippuu-datan-arvosta?)
                                            (-> grid-kasittelijoiden-luonti meta :rajapinta-riippuu-datan-arvosta? not))
                                     (not= (count @entinen-toistettavan-osan-data)
@@ -981,9 +962,7 @@
                                                    (::jarjestettava-data gridin-data)
                                                    gridin-data)))
                                     true)
-            #_#__ (println 4)
             data-jarjestetty? @(get rajapintakasittelijan-tiedot ::jarjestetty?)
-            #_#__ (println 5)
             uudet-grid-kasittelijat (grid-kasittelijoiden-luonti (if jarjestetty-data-erikseen?
                                                                    [(::jarjestettava-data gridin-data)
                                                                     (::muu-data gridin-data)]
@@ -995,8 +974,6 @@
                                                       {}
                                                       m))
                                          uudet-grid-kasittelijat)]
-        #_(println 6)
-        #_(println "uudet-grid-kasittelijat " uudet-grid-kasittelijat)
         (if rajapinnat-muuttunut?
           (let [rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
                                                                                   conj
@@ -1022,10 +999,8 @@
                 uille-muutoksia? (or (and rajapintakasittelijat-muuttunut? toistettava-data-muuttunut?)
                                      toistettavan-datan-maara-muuttunut?
                                      data-jarjestetty?)]
-            ;(println 7)
             (when uille-muutoksia?
               (hoida-osien-maara! grid toistettavan-osan-data osatunnisteet vanhat-tunnisteet))
-            ;(println 8)
             (dynaamisen-gridin-rajapintakasittelijat grid uudet-grid-kasittelijat)
             (when uille-muutoksia?
               (aseta-koot! (root grid))
