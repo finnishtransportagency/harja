@@ -107,7 +107,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                      toimenpide_koodi TEXT,
+                                      t_instanssi INTEGER, urakka_id INTEGER,
+                                      sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                      indeksinimi VARCHAR,
+                                      perusluku NUMERIC);
+
 -- MHU hoidonjohdon palkkio pilkotaan tähän
+DROP TYPE IF EXISTS HJPALKKIO_RIVI;
 CREATE TYPE HJPALKKIO_RIVI AS
 (
     hj_palkkio_laskutettu  NUMERIC,
