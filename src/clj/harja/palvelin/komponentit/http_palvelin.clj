@@ -416,7 +416,7 @@
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
-   (println "ei-todennettava? " ei-todennettava?)
+   #_ (println "ei-todennettava? " ei-todennettava?)
    (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true
                       :tarkista-polku? false
