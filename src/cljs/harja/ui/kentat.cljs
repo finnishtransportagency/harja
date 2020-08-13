@@ -1527,6 +1527,9 @@
      (or toggle! #(swap! data not))
      {:luokka "btn-xs"}]))
 
+(defmethod tee-kentta :valiotsikko [{:keys [teksti]} data]
+  [:div [:h3 teksti]])
+
 (defn vayla-lomakekentta
   "Väylä-tyylinen tekstikenttä"
   [otsikko & params]

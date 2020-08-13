@@ -270,6 +270,7 @@
       {:muokkaa! (fn [data]
                    (e! (tiedot/->PaivitaLomake data nil)))
        :voi-muokata? true
+       :tarkkaile-ulkopuolisia-muutoksia? true
        :palstoja 2
        :header-fn (fn [data]
                     [:<>
@@ -314,7 +315,7 @@
            {:tyyppi :checkbox
             :nimi [::t/toteumat 0 ::t/poistettu]
             :teksti "Poista toteuma"})
-       #_ (ui-lomake/palstat
+        #_ (ui-lomake/palstat
          {}
          {:otsikko "Mihin toimenpiteeseen työ liittyy?"
           :puolikas true}
@@ -325,16 +326,27 @@
            :valinnat toimenpiteet
            :valinta-nayta :otsikko
            :valinta-arvo identity
-           :tyyppi :valinta}])
-       {:otsikko "Toimenpide"
+           :aseta-vaikka-sama? true
+           :tyyppi :valinta
+           :vayla-tyyli? true
+           :palstoja 1
+           ;;:disabled? (not (= :maaramitattava (::t/tyyppi lomake)))
+           }])
+       {:teksti "Mihin toimenpiteeseen työ liittyy?"
+        :tyyppi :valiotsikko
+        ::ui-lomake/col-luokka "col-xs-12"}
+        {:otsikko "Toimenpide"
         :nimi ::t/toimenpide
-        ::ui-lomake/col-luokka ""
+        ::ui-lomake/col-luokka "col-xs-12 col-sm-12 col-md-5"
         :virhe? (validi? [::t/toimenpide])
         :valinnat toimenpiteet
         :valinta-nayta :otsikko
         :valinta-arvo identity
+        :aseta-vaikka-sama? true
         :tyyppi :valinta
-        :vayla-tyyli? true}
+        :vayla-tyyli? true
+        :palstoja 1
+        :disabled? (not (= :maaramitattava (::t/tyyppi lomake)))}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi
         :oletusarvo :maaramitattava

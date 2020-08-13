@@ -300,8 +300,7 @@
           app (if toimenpide
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
                 app)
-          ;app
-          #_(cond
+          app (cond
               ;; Jos toimenpide tai tyyppi muuttuu
               (or
                 (= polku ::t/toimenpide)
