@@ -637,18 +637,31 @@
   (-piirra [this]
     (let [vanhat-stylet (atom nil)
           iso-z-numero 521
+          dom-nodes (fn [this]
+                      (let [rivit (rivin-haku this)
+                            rivit (if (set? rivit)
+                                    rivit
+                                    #{rivit})]
+                        (mapv (fn [osa]
+                                [(gop/id osa) ((.-domNode osa))])
+                              rivit)))
           nosta-z-index! (fn [this]
-                           (let [stylearvot (.-style ((.-domNode (rivin-haku this))))]
-                             (swap! vanhat-stylet
-                                    (fn [arvot]
-                                      (assoc arvot "zIndex" (aget stylearvot "zIndex")
-                                             "overflow" (aget stylearvot "overflow"))))
-                             (doto (.-style ((.-domNode (rivin-haku this))))
-                               (aset "zIndex" iso-z-numero)
-                               (aset "overflow" "visible"))))
+                           (doseq [[osan-id node] (dom-nodes this)]
+                             (let [stylearvot (.-style node)]
+                               (swap! vanhat-stylet
+                                      (fn [arvot]
+                                        (update arvot
+                                                osan-id
+                                                (fn [osan-arvot]
+                                                  (assoc osan-arvot "zIndex" (aget stylearvot "zIndex")
+                                                         "overflow" (aget stylearvot "overflow"))))))
+                               (doto (.-style node)
+                                 (aset "zIndex" iso-z-numero)
+                                 (aset "overflow" "visible")))))
           palauta-z-index! (fn [this]
-                             (doseq [[tyyli arvo] @vanhat-stylet]
-                               (aset (.-style ((.-domNode (rivin-haku this)))) tyyli arvo)))
+                             (doseq [[osan-id node] (dom-nodes this)]
+                               (doseq [[tyyli arvo] (get @vanhat-stylet osan-id)]
+                                 (aset (.-style node) tyyli arvo))))
           auki-fn! (if (contains? livi-pudotusvalikko-asetukset :auki-fn!)
                      #(do (nosta-z-index! %)
                           (binding [*this* %]

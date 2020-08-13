@@ -123,6 +123,16 @@
                       :on-blur [kaytos
                                 {:eventin-arvo {:f poista-tyhjat}}]}}))
 
+(defmethod predef :pudotusvalikko
+  [_ _]
+  {:valitse-fn (fn [valinta]
+                 (when valinta
+                   (paivita-solun-arvo! {:paivitettava-asia :aseta-arvo!
+                                         :arvo valinta
+                                         :solu solu/*this*
+                                         :ajettavat-jarjestykset :deep
+                                         :triggeroi-seuranta? true})))})
+
 (defmethod predef :input
   [_ _]
   {:toiminnot {:on-change (fn [arvo]
@@ -803,14 +813,16 @@
                                (let [datapolku (loop [[polun-osa & loput-polusta] datapolku
                                                       luotu-polku []
                                                       indeksit indeksit]
-                                                 (if polun-osa
+                                                 (if-not polun-osa
                                                    luotu-polku
                                                    (recur loput-polusta
                                                           (conj luotu-polku
                                                                 (if (= ::vektori polun-osa)
                                                                   (first indeksit)
                                                                   polun-osa))
-                                                          (rest indeksit))))]
+                                                          (if (= ::vektori polun-osa)
+                                                            (rest indeksit)
+                                                            indeksit))))]
                                  (tunnisteen-kasittely datapolku)))
                              (tunnisteen-kasittely datapolku))
      :luonti (let [dynaamisen-sisus (muodosta-rajapintakasittelija-dynaaminen-osa (:toistettava-osa taulukkomaaritelma))]
@@ -847,12 +859,20 @@
      :solun-polun-pituus 1
      :jarjestys jarjestys
      :tunnisteen-kasittely (if dynaamisen-sisalla?
-                             (fn [index]
-                               (let [datapolku (mapv (fn [polun-osa]
-                                                       (if (= ::vektori polun-osa)
-                                                         index
-                                                         polun-osa))
-                                                     datapolku)]
+                             (fn [indeksit]
+                               (let [datapolku (loop [[polun-osa & loput-polusta] datapolku
+                                                      luotu-polku []
+                                                      indeksit indeksit]
+                                                 (if-not polun-osa
+                                                   luotu-polku
+                                                   (recur loput-polusta
+                                                          (conj luotu-polku
+                                                                (if (= ::vektori polun-osa)
+                                                                  (first indeksit)
+                                                                  polun-osa))
+                                                          (if (= ::vektori polun-osa)
+                                                            (rest indeksit)
+                                                            indeksit))))]
                                  (tunnisteen-kasittely datapolku)))
                              (tunnisteen-kasittely datapolku))
      :datan-kasittely (fn [rivin-data]
