@@ -170,8 +170,8 @@
                      :vayla-tyyli? true
                      :tyyppi :tierekisteriosoite
                      :sijainti (r/wrap sijainti (constantly true))}
-                    #_ (r/wrap sijainti
-                            (r/partial paivita! ::t/sijainti indeksi))]]
+                    #_(r/wrap sijainti
+                              (r/partial paivita! ::t/sijainti indeksi))]]
 
                   [:div.row
                    [kentat/tee-kentta
@@ -264,7 +264,7 @@
     [:div#vayla
      #_[debug/debug app]
      [debug/debug lomake]
-     #_ [debug/debug validius]
+     #_[debug/debug validius]
      [:div (str "Validi? " koko-validi?)]
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
@@ -310,32 +310,10 @@
                       {:vayla-tyyli? true
                        :luokka "suuri"}]])
        :vayla-tyyli? true}
-      [#_(when (and toteuma-id
-                    (= (count toteumat) 1))
-           {:tyyppi :checkbox
-            :nimi [::t/toteumat 0 ::t/poistettu]
-            :teksti "Poista toteuma"})
-        #_ (ui-lomake/palstat
-         {}
-         {:otsikko "Mihin toimenpiteeseen työ liittyy?"
-          :puolikas true}
-         [{:otsikko "Toimenpide"
-           :nimi ::t/toimenpide
-           ::ui-lomake/col-luokka ""
-           :virhe? (validi? [::t/toimenpide])
-           :valinnat toimenpiteet
-           :valinta-nayta :otsikko
-           :valinta-arvo identity
-           :aseta-vaikka-sama? true
-           :tyyppi :valinta
-           :vayla-tyyli? true
-           :palstoja 1
-           ;;:disabled? (not (= :maaramitattava (::t/tyyppi lomake)))
-           }])
-       {:teksti "Mihin toimenpiteeseen työ liittyy?"
+      [{:teksti "Mihin toimenpiteeseen työ liittyy?"
         :tyyppi :valiotsikko
         ::ui-lomake/col-luokka "col-xs-12"}
-        {:otsikko "Toimenpide"
+       {:otsikko "Toimenpide"
         :nimi ::t/toimenpide
         ::ui-lomake/col-luokka "col-xs-12 col-sm-12 col-md-5"
         :virhe? (validi? [::t/toimenpide])
