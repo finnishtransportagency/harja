@@ -115,6 +115,12 @@
   (when paivamaara
     (-> paivamaara pvm/viikko (str "/" (pvm/vuosi paivamaara)))))
 
+(defn aika-fmt-paiva [paivamaara]
+  (when paivamaara
+    (let [pvm (pvm/paiva paivamaara)
+          viikonpaiva (pvm/paivan-nimi (pvm/viikonpaiva paivamaara))]
+      (str (clj-str/capitalize viikonpaiva) " (" pvm ".)"))))
+
 (defn luo-css-luokat! [luokat]
   (let [tyyli-elementti (.createElement js/document "style")
         tyylit (apply str (interpose " " (map (fn [[luokan-nimi css-maaritelma]]
@@ -966,6 +972,16 @@
      "done"
      (catch :default _ "ERROR"))
 
+(defsolu Tyoyhteenveto
+  []
+  (fn suunnittele-kuukausitasolla-filter [this]
+    (let [taman-data (solu/taman-derefable this)
+          {:keys [toita lohoilya]} (or @taman-data false)
+          osan-id (str (grid/hae-osa this :id))]
+      [:div {:id osan-id}
+       [:span (str "Töitä: " toita)]
+       [:span (str "Löhöilyä: " lohoilya)]])))
+
 (defn tuntikirjaus []
   (let [tilacursor (r/cursor tila [:tuntikirjaus])
         kuukausitaulukko (fn [])
@@ -999,6 +1015,37 @@
                                                                 :dom-id dom-id
                                                                 :grid-polku grid-polku
                                                                 :data-polku data-polku}
+                                                         :vaihto-osat {:tuntien-yhteenveto {:conf {:nimi ::tuntien-yhteenveto}
+                                                                                            :body [{:conf {:jarjestys [[:milloin :mita :kauanko :miksi]]
+                                                                                                           :nimi ::viikko-yhteenveto-vaihto
+                                                                                                           #_#_:datapolku-maaritelmasta ::data-yhteenveto}
+                                                                                                    :osat (yhteenvetorivi (fn [this auki?]
+                                                                                                                            (taulukko/vaihda-osa-takaisin! this
+                                                                                                                                                           (grid/osan-yksiloivadata this)
+                                                                                                                                                           (grid/osien-yhteinen-asia (grid/osa-polusta this [:.. :..]) :index-polku)
+                                                                                                                                                           tila-atom
+                                                                                                                                                           data-polku))
+                                                                                                                          aika-fmt-viikko
+                                                                                                                          true
+                                                                                                                          false
+                                                                                                                          [:.. :.. :..])}
+                                                                                                   {:conf {:jarjestys [[:milloin :mita :kauanko :miksi]]
+                                                                                                           :nimi ::tuntien-yhteenvetorivi
+                                                                                                           :raidat {:samaraita-edelliseen? true}}
+                                                                                                    :osat (vec
+                                                                                                            (cons {:solu tyoyhteenveto
+                                                                                                                   :riippuu-toisesta {:polut [[:.. :.. :.. ::viikko-sisalto]]
+                                                                                                                                      :kasittely-fn (fn [viikko-sisalto]
+                                                                                                                                                      (println "viikko-sisalto: " viikko-sisalto)
+                                                                                                                                                      (reduce (fn [m {:keys [mita kauanko]}]
+                                                                                                                                                                (let [kauanko (if (string? kauanko)
+                                                                                                                                                                                (str->number kauanko)
+                                                                                                                                                                                kauanko)]
+                                                                                                                                                                  (update m mita + kauanko)))
+                                                                                                                                                              {:toita 0
+                                                                                                                                                               :lohoily 0}
+                                                                                                                                                              viikko-sisalto))}}
+                                                                                                                  (repeatedly 3 (fn [] {:solu solu/tyhja}))))}]}}
                                                          :taulukko {:header {:conf {:nimi ::otsikko
                                                                                     :luokat #{"salli-ylipiirtaminen"}}
                                                                              :osat [{:solu solu/otsikko
@@ -1023,9 +1070,14 @@
                                                                                                              :yksiloivakentta :milloin
                                                                                                              :luokat #{"piillotettu" #_"salli-ylipiirtaminen"}}
                                                                                                       :toistettava-osa {:header {:conf {:nimi ::viikko-yhteenveto
+                                                                                                                                        #_#_:vaihdettava-osa :tuntien-yhteenveto
                                                                                                                                         :jarjestys [[:milloin :mita :kauanko :miksi]]}
                                                                                                                                  :osat (yhteenvetorivi (fn [this auki?]
-                                                                                                                                                         )
+                                                                                                                                                         (taulukko/vaihda-osa! this
+                                                                                                                                                                               (grid/osan-yksiloivadata this)
+                                                                                                                                                                               (grid/osien-yhteinen-asia (grid/vanhempi this) :index-polku)
+                                                                                                                                                                               tila-atom
+                                                                                                                                                                               data-polku))
                                                                                                                                                        aika-fmt-viikko
                                                                                                                                                        false
                                                                                                                                                        false
@@ -1035,7 +1087,7 @@
                                                                                                                                        :luokat #{"piillotettu"}}
                                                                                                                                 :toistettava-osa {:conf {:nimi ::paivarivi}
                                                                                                                                                   :osat [{:solu solu/teksti
-                                                                                                                                                          :parametrit [{:fmt aika-fmt-kuukausi}]}
+                                                                                                                                                          :parametrit [{:fmt aika-fmt-paiva}]}
                                                                                                                                                          {:solu solu/pudotusvalikko
                                                                                                                                                           :parametrit [{:format-fn name
                                                                                                                                                                         :valitse-fn (:valitse-fn pudotusvalikko-predef)
@@ -1198,8 +1250,8 @@
   [:div
    #_[padding pelilauta (:pelilauta app)]
    #_[padding dynaaminen-taulukko-alempi-api]
-   #_[padding dynaaminen-taulukko-ylempi-api]
-   [padding tuntikirjaus]])
+   [padding dynaaminen-taulukko-ylempi-api]
+   #_[padding tuntikirjaus]])
 
 (defn foo []
   [:div

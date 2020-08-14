@@ -474,6 +474,16 @@
     12 "joulu"
     "tuntematon"))
 
+(defn paivan-nimi [paiva]
+  (case paiva
+    1 "maanantai"
+    2 "tiistai"
+    3 "keskiviikko"
+    4 "torstai"
+    5 "perjantai"
+    6 "lauantai"
+    7 "sunnuntai"))
+
 ;; hoidon alueurakoiden päivämääräapurit
 (defn vuoden-eka-pvm
   "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"
@@ -542,6 +552,11 @@
   "Palauttaa annetun DateTime päivän."
   [pvm]
   (t/day (d pvm)))
+
+(defn viikonpaiva
+  "Palauttaa annetun DateTime viikonpäivän."
+  [pvm]
+  (t/day-of-week pvm))
 
 (defn tunti
   "Palauttaa annetun DateTime kuukauden"
