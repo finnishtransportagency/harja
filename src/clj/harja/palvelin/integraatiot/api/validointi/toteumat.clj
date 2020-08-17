@@ -30,7 +30,7 @@
       (when (or (not hinnoittelut) (empty? hinnoittelut))
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi :virheellinen-tehtava
-           :viesti (format "Tuntematon tehtävä (apitunnus: %s)." tehtava-apitunnus)}))
+           :viesti (format "Tuntematon tehtävä (id: %s)." tehtava-apitunnus)}))
 
       (when (not-any? #(= % hinnoittelu) hinnoittelut)
         (virheet/heita-viallinen-apikutsu-poikkeus
