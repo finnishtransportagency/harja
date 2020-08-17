@@ -78,7 +78,8 @@ SELECT exists(SELECT id
 
 -- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
 SELECT
-  tpk.id,
+  tpk.id as "harja-id",
+  tpk.api_tunnus as "id",
   tpk.nimi,
   tpk.yksikko
 FROM toimenpidekoodi tpk
@@ -90,7 +91,8 @@ WHERE
 
 -- name: hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat
 SELECT
-  tpk.id,
+  tpk.id as "harja-id",
+  tpk.api_tunnus as "id",
   tpk.nimi,
   tpk.yksikko
 FROM toimenpidekoodi tpk
