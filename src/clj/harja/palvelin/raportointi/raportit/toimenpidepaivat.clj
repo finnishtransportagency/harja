@@ -56,7 +56,9 @@
                     :alku            alkupvm
                     :loppu           loppupvm
                     :hoitoluokat     hoitoluokat
-                    :urakkatyyppi    (name urakkatyyppi)}
+                    :urakkatyyppi    (if (= urakkatyyppi :hoito)
+                                       #{"hoito" "teiden-hoito"}
+                                       #{(name urakkatyyppi)})}
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)

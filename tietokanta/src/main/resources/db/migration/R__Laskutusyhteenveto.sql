@@ -709,7 +709,7 @@ BEGIN
     alku := make_date(vuosi-1, 10, 1);
     loppu := make_date(vuosi, 9, 30);
   END IF;
-  RAISE NOTICE 'Poistetaan urakan % muistetut laskutusyhteenvedot % - %', ur, alku, loppu;
+
   DELETE FROM laskutusyhteenveto_cache
   WHERE urakka = ur AND alkupvm >= alku AND loppupvm <= loppu;
 

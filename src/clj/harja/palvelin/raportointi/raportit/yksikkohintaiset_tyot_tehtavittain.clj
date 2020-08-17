@@ -24,14 +24,14 @@
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
                                                                                        {:hallintayksikko hallintayksikko-id
-                                                                                        :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                                        :urakkatyyppi urakkatyyppi
                                                                                         :alkupvm alkupvm
                                                                                         :loppupvm loppupvm
                                                                                         :rajaa_tpi (not (nil? toimenpide-id))
                                                                                         :tpi toimenpide-id})
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
                                                                            {:hallintayksikko hallintayksikko-id
-                                                                            :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                            :urakkatyyppi urakkatyyppi
                                                                             :alkupvm alkupvm
                                                                             :loppupvm loppupvm
                                                                             :rajaa_tpi (not (nil? toimenpide-id))
@@ -40,13 +40,13 @@
 (defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
-                                                                                 {:urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                                 {:urakkatyyppi urakkatyyppi
                                                                                   :alkupvm alkupvm
                                                                                   :loppupvm loppupvm
                                                                                   :rajaa_tpi (not (nil? toimenpide-id))
                                                                                   :tpi toimenpide-id})
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
-                                                                     {:urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                     {:urakkatyyppi urakkatyyppi
                                                                       :alkupvm alkupvm
                                                                       :loppupvm loppupvm
                                                                       :rajaa_tpi (not (nil? toimenpide-id))
@@ -56,6 +56,10 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        urakkatyyppi (when urakkatyyppi
+                        (case urakkatyyppi
+                          :hoito ["hoito" "teiden-hoito"]
+                          [(name urakkatyyppi)]))
         suunnittelutiedot (when (= :urakka konteksti)
                             (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         naytettavat-rivit (case konteksti

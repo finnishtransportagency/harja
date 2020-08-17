@@ -36,9 +36,10 @@
 
 (defn tr-piste-aiemmin-tai-sama? [osa-a et-a osa-b et-b]
   (boolean
-    (or (< osa-a osa-b)
-        (and (= osa-a osa-b)
-             (<= et-a et-b)))))
+    (when (and osa-a et-a osa-b et-b)
+      (or (< osa-a osa-b)
+          (and (= osa-a osa-b)
+               (<= et-a et-b))))))
 
 
 (defn valilla? [[aosa aet :as alku] [losa loet :as loppu] sijainti]

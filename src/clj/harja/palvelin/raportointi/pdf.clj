@@ -77,8 +77,10 @@
    [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari
                            (raportti-domain/virhetyylit tyyli)
                            "black")}
-
-    (if fmt (fmt arvo) arvo)]])
+    ;; Try to fix VHAR-2391 replacing - with its unicode representation
+    (str/replace
+      (if fmt (fmt arvo) arvo)
+      "-" "\u002D")]])
 
 
 (def alareuna
