@@ -116,7 +116,7 @@ LIMIT 1;
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
 SELECT hinnoittelu
 FROM toimenpidekoodi
-WHERE id = :id and piilota IS NOT TRUE
+WHERE api_tunnus = :apitunnus and piilota IS NOT TRUE
 -- Tehtävä on piilotettu, jos sitä ei käytetä mistään urakasta.
 -- Hoidon päällystyksen paikkauksen vanhat koodit TUOTANNOSSA.
                                     and id not in

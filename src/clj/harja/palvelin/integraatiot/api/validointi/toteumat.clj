@@ -24,16 +24,16 @@
 
 (defn tarkista-tehtavat [db tehtavat hinnoittelu]
   (doseq [tehtava tehtavat]
-    (let [tehtava-id (get-in tehtava [:tehtava :id])
-          hinnoittelut (:hinnoittelu (konv/array->vec (first (q-toimenpidekoodi/hae-hinnoittelu db tehtava-id)) :hinnoittelu))]
+    (let [tehtava-api-id (get-in tehtava [:tehtava :id])
+          hinnoittelut (:hinnoittelu (konv/array->vec (first (q-toimenpidekoodi/hae-hinnoittelu db tehtava-api-id)) :hinnoittelu))]
 
       (when (or (not hinnoittelut) (empty? hinnoittelut))
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi :virheellinen-tehtava
-           :viesti (format "Tuntematon tehtävä (id: %s)." tehtava-id)}))
+           :viesti (format "Tuntematon tehtävä (apitunnus: %s)." tehtava-api-id)}))
 
       (when (not-any? #(= % hinnoittelu) hinnoittelut)
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi :virheellinen-tehtava
            :viesti (format "Toteumalla on väärä hinnoittelu. Toteumalle annettiin hinnoittelu: %s, mutta toteumalle kirjatun tehtävän %s hinnoittelut ovat: %s. "
-                           hinnoittelu tehtava-id hinnoittelut)})))))
+                           hinnoittelu tehtava-api-id hinnoittelut)})))))
