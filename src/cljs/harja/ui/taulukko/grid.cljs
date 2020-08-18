@@ -2,12 +2,11 @@
   (:require [harja.ui.taulukko.impl.grid :as g]
             [harja.ui.taulukko.impl.alue :as alue]
             [harja.ui.taulukko.impl.solu :as solu]
-            [harja.ui.taulukko.impl.datan-kasittely :as dk]
             [harja.ui.taulukko.protokollat.grid :as gp]
             [harja.ui.taulukko.protokollat.solu :as sp]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
-            [reagent.core :as r]
-            [reagent.ratom]))
+            [harja.ui.taulukko.impl.datan-kasittely :as dk]
+            [reagent.core :as r]))
 
 (declare aseta-root-fn!)
 
@@ -48,8 +47,7 @@
   (g/grid-c alue/->Taulukko (assoc asetukset :osat osat)))
 
 ; - Datan käsittelijä
-(defn datan-kasittelija
-  [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus]
+(defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus]
   (let [datan-kasittelija (dk/datan-kasittelija data-atom)]
     ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
     (doseq [[_ {:keys [init]}] seurannat-kuvaus]
