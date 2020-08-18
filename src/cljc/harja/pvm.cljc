@@ -474,16 +474,6 @@
     12 "joulu"
     "tuntematon"))
 
-(defn paivan-nimi [paiva]
-  (case paiva
-    1 "maanantai"
-    2 "tiistai"
-    3 "keskiviikko"
-    4 "torstai"
-    5 "perjantai"
-    6 "lauantai"
-    7 "sunnuntai"))
-
 ;; hoidon alueurakoiden päivämääräapurit
 (defn vuoden-eka-pvm
   "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"
@@ -538,11 +528,6 @@
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
 
-(defn viikko
-  "Palauttaa annetun DateTime viikon"
-  [pvm]
-  (t/week-number-of-year pvm))
-
 (defn koko-kuukausi-ja-vuosi
   "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
   [pvm]
@@ -552,11 +537,6 @@
   "Palauttaa annetun DateTime päivän."
   [pvm]
   (t/day (d pvm)))
-
-(defn viikonpaiva
-  "Palauttaa annetun DateTime viikonpäivän."
-  [pvm]
-  (t/day-of-week pvm))
 
 (defn tunti
   "Palauttaa annetun DateTime kuukauden"

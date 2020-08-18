@@ -23,8 +23,7 @@
          [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
          {:pre [(boolean? nappi-nakyvilla?)]}
          (fn hankintasuunnitelmien-syotto [this]
-           (let [rivit-alla (atom nil)
-                 on-blur (fn [event]
+           (let [on-blur (fn [event]
                            (let [klikattu-elementti (.-relatedTarget event)
                                  klikattu-nappia? (and (not (nil? klikattu-elementti))
                                                        (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
@@ -38,15 +37,6 @@
                                                                    (and (instance? alue/Rivi osa)
                                                                         (> (last (grid/osien-yhteinen-asia osa :index-polku))
                                                                            rivin-paikka)))))]
-                             (when klikattu-nappia?
-                               ;; rivin paikka tallennettava tässä, koska homma hajoaa, jos sortataan blur efektissä
-                               (let [rivin-paikka (first (take-last 2 (grid/osien-yhteinen-asia (::tama-komponentti solu/*this*) :index-polku)))]
-                                 ;(println "<<<< ----> RIVIN PAIKKA: " rivin-paikka)
-                                 (reset! rivit-alla (grid/gridin-rivit (grid/osa-polusta (::tama-komponentti solu/*this*) [:.. :..])
-                                                                       (fn [osa]
-                                                                         (and (instance? alue/Rivi osa)
-                                                                              (> (last (grid/osien-yhteinen-asia osa :index-polku))
-                                                                                 rivin-paikka)))))))
                              (when-not klikattu-nappia?
                                (grid/paivita-osa! (::tama-komponentti solu/*this*)
                                                   (fn [solu]
@@ -76,15 +66,13 @@
                                         :fmt fmt
                                         :fmt-aktiivinen fmt-aktiivinen})
                  klikattu-fn! (fn [_]
-                                  (let [#_#_{osan-paikka :osan-paikka} (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)
-                                        ;rivin-paikka @rivin-paikka ;(first (take-last 2 (grid/osien-yhteinen-asia solu/*this* :index-polku))) #_(first osan-paikka)
-                                        rivit-alla @rivit-alla #_(grid/gridin-rivit (grid/osa-polusta solu/*this* [:.. :..])
+                                  (let [{osan-paikka :osan-paikka} (grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)
+                                        rivin-paikka (first osan-paikka)
+                                        rivit-alla (grid/gridin-rivit (grid/osa-polusta solu/*this* [:.. :..])
                                                                       (fn [osa]
                                                                         (and (instance? alue/Rivi osa)
                                                                              (> (last (grid/osien-yhteinen-asia osa :index-polku))
                                                                                 rivin-paikka))))]
-                                    ;(println "RIVIT ALLA: " rivit-alla)
-                                    ;(println "*THIS*: " solu/*this*)
                                     (when rivit-alla
                                       (nappia-painettu! rivit-alla on-blur-arvo_)
                                       (set! on-blur-arvo_ nil))
@@ -124,7 +112,7 @@
     :linkki (solu/linkki {:parametrit (merge {:id id :class luokat} parametrit) :linkki linkki :fmt fmt :nimi nimi})
     :nappi (solu/nappi {:toiminnot toiminnot :kayttaytymiset kayttaytymiset :parametrit (merge {:id id :class luokat} parametrit)
                         :sisalto sisalto :fmt fmt :nimi nimi})
-    :ikoni (solu/ikoni {:toiminnot toiminnot :kayttaytymiset kayttaytymiset :parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
+    :ikoni (solu/ikoni {:parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
     :pudotusvalikko (solu/pudotusvalikko (select-keys asetukset #{:valinta :format-fn :valitse-fn :class :disabled? :itemit-komponentteja? :naytettava-arvo
                                                                   :on-focus :title :li-luokka-fn :ryhmittely :nayta-ryhmat :ryhman-otsikko :data-cy :vayla-tyyli?})
                                          vaihtoehdot

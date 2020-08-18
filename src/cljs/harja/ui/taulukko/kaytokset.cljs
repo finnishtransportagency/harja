@@ -32,24 +32,26 @@
               (when positiivinen-arvo?
                 arvo))))))
 
-(defmethod lisaa-kaytos :numero
-  [{{:keys [kokonaisosan-maara desimaalien-maara]} :numero} toiminto]
-  (comp toiminto
-        (fn [arvo]
-          (if (= "" arvo)
-            arvo
-            (when-let [arvo? (and arvo (re-matches (re-pattern (re/numero-re {:kokonaisosan-maara kokonaisosan-maara
-                                                                              :desimaalien-maara desimaalien-maara}))
-                                                   arvo))]
-              (when arvo?
-                arvo))))))
-
 (defmethod lisaa-kaytos :numero-pisteella
   [_ toiminto]
   (comp toiminto
         (fn [arvo]
           (when (string? arvo)
             (clj-str/replace arvo #"," ".")))))
+
+(defmethod lisaa-kaytos :str->int
+  [_ toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (when (and arvo (re-matches (re-pattern (re/numero-re)) arvo))
+            (js/parseInt arvo)))))
+
+(defmethod lisaa-kaytos :str->number
+  [_ toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (when (and arvo (re-matches (re-pattern (re/numero-re)) arvo))
+            (js/Number arvo)))))
 
 (defmethod lisaa-kaytos :oma
   [{{f :f} :oma} toiminto]

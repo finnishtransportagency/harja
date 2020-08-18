@@ -620,9 +620,9 @@
                                          {}
                                          (range 1 6)))
                           {:aseta-suunnittellut-hankinnat! (partial aseta-maara!
-                                                                    (fn [{:keys [osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
+                                                                    (fn [{:keys [aika osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
                                                                       [:gridit :suunnittellut-hankinnat :hankinnat (dec hoitokauden-numero) (first osan-paikka) osa])
-                                                                    (fn [{:keys [osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
+                                                                    (fn [{:keys [aika osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
                                                                       [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka) osa]))
                            :aseta-yhteenveto! (fn [tila arvo tunniste hoitokauden-numero]
                                                 (let [arvo (if (re-matches #"\d*,\d+" arvo)
@@ -734,9 +734,9 @@
                                          {}
                                          (range 1 6)))
                           {:aseta-laskutukseen-perustuvat-hankinnat! (partial aseta-maara!
-                                                                              (fn [{:keys [osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
+                                                                              (fn [{:keys [aika osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
                                                                                 [:gridit :laskutukseen-perustuvat-hankinnat :hankinnat (dec hoitokauden-numero) (first osan-paikka) osa])
-                                                                              (fn [{:keys [osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
+                                                                              (fn [{:keys [aika osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
                                                                                 [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka) osa]))
                            :aseta-yhteenveto! (fn [tila arvo tunniste hoitokauden-numero]
                                                 (let [arvo (if (re-matches #"\d*,\d+" arvo)
@@ -801,8 +801,7 @@
                               :rahavaraukset-kuukausitasolla? any?
                               :kuukausitasolla? any?
 
-                              :aseta-rahavaraukset! any?
-                              :aseta-rahavaraukset-yhteenveto! any?})
+                              :aseta-rahavaraukset! any?})
 
 (defn rahavarausten-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma

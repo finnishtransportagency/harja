@@ -4,18 +4,17 @@
             [reagent.ratom :as ratom]
             [harja.ui.grid-debug :as g-debug]
             [clojure.set :as clj-set]
-            [clojure.data]
             [cljs.spec.alpha :as s]
             [cljs.pprint :as pp])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
-(s/def ::keyfn ifn?)
-(s/def ::comp ifn?)
+(s/def ::keyfn fn?)
+(s/def ::comp fn?)
 
-(s/def ::jarjestys (s/or :sort-by-with-comp (s/keys :req-un [::keyfn ::comp])
-                         :mapit-avainten-mukaan (s/coll-of any? :kind vector?)
-                         :sort-by ifn?))
+(s/def ::jarjestys (s/or :sort-by fn?
+                         :sort-by-with-comp (s/keys :req-un [::keyfn ::comp])
+                         :mapit-avainten-mukaan (s/coll-of any? :kind vector?)))
 
 (def ^:dynamic *muutetaan-seurattava-arvo?* true)
 
@@ -50,8 +49,8 @@
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
-  (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
-         data))
+  (seq (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
+              data)))
 
 (defmethod jarjesta-data :default
   [_ data]
@@ -84,39 +83,16 @@
   (lisaa-asettaja! [this rajapinta asettaja]))
 
 
-(defn- kuuntelijaa-ei-enaa-maaritetty? [kuuntelun-nimi uudet-polut polut lisa-argumentit]
-  false
-  (nil? (some (fn [m]
-                (let [[luodun-kuuntelun-nimi luodun-kuuntelijan-polut] (first m)]
-                  (and (= luodun-kuuntelun-nimi kuuntelun-nimi)
-                       (= luodun-kuuntelijan-polut polut)
-                       (= (:args (meta luodun-kuuntelijan-polut)) lisa-argumentit))))
-              uudet-polut)))
-(defn- kuuntelijan-polut-muuttunut? [kuuntelun-nimi uudet-polut polut lisa-argumentit]
-  (some (fn [m]
-          (let [[luodun-kuuntelun-nimi luodun-kuuntelijan-polut] (first m)]
-            (and (= luodun-kuuntelun-nimi kuuntelun-nimi)
-                 #_(or (not= luodun-kuuntelijan-polut polut)
-                     (not= (:args (meta luodun-kuuntelijan-polut)) lisa-argumentit)))))
-        uudet-polut))
-
 ;; TODO kuuntelijoiden tilan init samantapaiseksi kuin seurannan siivoa-tila. Eli muokataan annettua tilaa, eikä swapata valitilaa.
 ;; Pitäisikö laittaa siivoamis ja init funktiot molempiin (seurannat ja kuuntelijat)?
 (deftype DatanKasittelija
   ;; Jos muutat argumentteja, tarkista -lookup metodi
   [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
-   ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat asetukset]
+   ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
   IKuuntelija
-  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku identiteetti luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
+  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
     (let [kursorit (mapv (fn [polku]
-                           (let [cursor? (instance? ratom/RCursor data-atom)
-                                 polku (if cursor?
-                                         (vec (concat (.-path data-atom) polku))
-                                         polku)
-                                 data-atom (if cursor?
-                                             (.-ratom data-atom)
-                                             data-atom)]
-                             (r/cursor data-atom polku)))
+                           (r/cursor data-atom polku))
                          polut)]
       (when luonti-init
         (if dynaaminen?
@@ -144,12 +120,8 @@
                                              (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data)))))
                                    (if (satisfies? IWithMeta rajapinnan-data)
                                      {:data rajapinnan-data
-                                      :identiteetti identiteetti
                                       :meta (meta rajapinnan-data)}
-                                     {:data rajapinnan-data
-                                      :identiteetti identiteetti})))
-                    :polut polut
-                    :lisa-argumentit lisa-argumentit
+                                     {:data rajapinnan-data})))
                     :dynaaminen? dynaaminen?
                     :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi}))))
   (poista-kuuntelija! [_ kuuntelijan-nimi]
@@ -157,7 +129,7 @@
       (r/dispose! r)
       (set! kuuntelijat
             (dissoc kuuntelijat kuuntelijan-nimi))))
-  (kuuntelijat-lisaaja! [this rajapinta [kuuntelija-lisaajan-nimi {:keys [luonti luonti-init haku identiteetti] kuuntelija-lisaajan-polut :polut}]]
+  (kuuntelijat-lisaaja! [this rajapinta [kuuntelija-lisaajan-nimi {:keys [luonti luonti-init haku] kuuntelija-lisaajan-polut :polut}]]
     (set! kuuntelija-lisaaja
           (assoc kuuntelija-lisaaja
                  kuuntelija-lisaajan-nimi
@@ -177,11 +149,11 @@
                          (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (when polut-muuttunut?
-                       (doseq [[kuuntelun-nimi {:keys [dynaaminen? polut lisa-argumentit] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
+                       (doseq [[kuuntelun-nimi {:keys [dynaaminen?] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
-                                                                (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi)
-                                                                (or (kuuntelijaa-ei-enaa-maaritetty? kuuntelun-nimi uudet-polut polut lisa-argumentit)
-                                                                    (kuuntelijan-polut-muuttunut? kuuntelun-nimi uudet-polut polut lisa-argumentit)))]]
+                                                                (nil? (some #(= (ffirst %) kuuntelun-nimi)
+                                                                            uudet-polut))
+                                                                (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi))]]
                          (when kuuntelu-poistettava?
                            (poista-kuuntelija! this kuuntelun-nimi)))
                        (doseq [m uudet-polut
@@ -190,7 +162,7 @@
                                                               kuuntelijat)
                                      lisa-argumentit (:args (meta polut))]]
                          (when-not kuuntelu-luotu-jo?
-                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :identiteetti identiteetti :lisa-argumentit lisa-argumentit :luonti-init luonti-init :dynaaminen? true :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-polut kuuntelija-lisaajan-polut}])))))))))
+                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :luonti-init luonti-init :dynaaminen? true :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-polut kuuntelija-lisaajan-polut}])))))))))
   ISeuranta
   (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen? siivoa-tila] :as seuranta}]]
     (set! seurannat
@@ -229,8 +201,7 @@
                    (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
                          uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
-                         polut-muuttunut? (not= vanhat-polut uudet-polut)
-                         taman-seurannan-nimi seurannan-nimi]
+                         polut-muuttunut? (not= vanhat-polut uudet-polut)]
                      (assert (or (nil? uudet-polut)
                                  (empty? uudet-polut)
                                  (every? map? uudet-polut))
@@ -242,9 +213,8 @@
                          (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (if polut-muuttunut?
-                       (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen? vanhempi-seuranta]}]
+                       (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen?]}]
                                                                  (let [seuranta-poistettava? (and dynaaminen?
-                                                                                                  (= vanhempi-seuranta taman-seurannan-nimi)
                                                                                                   (nil? (some #(= (ffirst %) seurannan-nimi)
                                                                                                               uudet-polut)))]
                                                                    (if seuranta-poistettava?
@@ -258,7 +228,7 @@
                                                                           seurannat)
                                                  lisa-argumentit (:args (meta polut))]
                                              (if-not seuranta-luotu-jo?
-                                               (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhempi-seuranta taman-seurannan-nimi :siivoa-tila siivoa-tila}])
+                                               (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :siivoa-tila siivoa-tila}])
                                                    [uusi ((get-in seurannat [seurannan-nimi :seuranta-fn]) true vanha uusi)])
                                                [vanha uusi])))
                                          [vanha poiston-jalkeinen-tila]
@@ -281,9 +251,7 @@
                                              (error (str "RAJAPINNAN ASTTAJA " rajapinnan-nimi " KAATUI VIRHEESEEN " (.-name e) "\n"
                                                          "ANNETUT ARGUMENTIT:\n" (pr-str args)))
                                              (error e)
-                                             tila))))
-                   ; Jos data-atom on cursor, niin tämä korjaa laziness ongelmia
-                   @data-atom))))
+                                             tila))))))))
 
   IReset
   (-reset! [this uusi]
@@ -372,7 +340,6 @@
                                    (swap! seurannan-vanha-cache dissoc data-atom-hash)
                                    (swap! data-atom (fn [entinen-tila]
                                                       seurannan-tila))
-                                   @data-atom
                                    (when (and (= 1 (count ajetaan-seurannat))
                                               ajettavat-fns)
                                      (let [fs ajettavat-fns]
@@ -430,19 +397,14 @@
   (add-on-dispose! [this f]
     (set! on-dispose (conj on-dispose f))))
 
-(defn datan-kasittelija [data-atom datapolku]
+(defn datan-kasittelija [data-atom]
   {:pre [(satisfies? ratom/IReactiveAtom data-atom)]
    :post [(instance? DatanKasittelija %)]}
   (let [nimi (gensym "datan-kasittelija")
-        dk (->DatanKasittelija data-atom nimi [] [] {} {} {} {} {} {:datapolku datapolku})]
+        dk (->DatanKasittelija data-atom nimi [] [] {} {} {} {} {})]
     (add-watch data-atom
                nimi
-               (fn [_ _ vanha uusi]
-                 #_(if datapolku
-                   (when-not (= (get-in vanha datapolku)
-                                (get-in uusi datapolku))
-                     (reset! dk uusi))
-                   (reset! dk uusi))
+               (fn [_ _ _ uusi]
                  (reset! dk uusi)))
     dk))
 

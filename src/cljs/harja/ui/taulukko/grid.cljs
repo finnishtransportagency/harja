@@ -49,24 +49,23 @@
 
 ; - Datan käsittelijä
 (defn datan-kasittelija
-  ([data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus] (datan-kasittelija data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus nil))
-  ([data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus {:keys [datapolku]}]
-   (let [datan-kasittelija (dk/datan-kasittelija data-atom datapolku)]
-     ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
-     (doseq [[_ {:keys [init]}] seurannat-kuvaus]
-       (when (fn? init)
-         (swap! data-atom init)))
-     (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
-       (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
-     (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
-       (dk/lisaa-seuranta! datan-kasittelija seuranta))
-     (doseq [kuuntelija-luonti (filter #(contains? (val %) :luonti) haku-kuvaus)]
-       (dk/kuuntelijat-lisaaja! datan-kasittelija rajapinta kuuntelija-luonti))
-     (doseq [kuuntelija (remove #(contains? (val %) :luonti) haku-kuvaus)]
-       (dk/lisaa-kuuntelija! datan-kasittelija rajapinta kuuntelija))
-     (doseq [asettaja asetus-kuvaus]
-       (dk/lisaa-asettaja! datan-kasittelija rajapinta asettaja))
-     datan-kasittelija)))
+  [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus]
+  (let [datan-kasittelija (dk/datan-kasittelija data-atom)]
+    ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
+    (doseq [[_ {:keys [init]}] seurannat-kuvaus]
+      (when (fn? init)
+        (swap! data-atom init)))
+    (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
+      (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
+    (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
+      (dk/lisaa-seuranta! datan-kasittelija seuranta))
+    (doseq [kuuntelija-luonti (filter #(contains? (val %) :luonti) haku-kuvaus)]
+      (dk/kuuntelijat-lisaaja! datan-kasittelija rajapinta kuuntelija-luonti))
+    (doseq [kuuntelija (remove #(contains? (val %) :luonti) haku-kuvaus)]
+      (dk/lisaa-kuuntelija! datan-kasittelija rajapinta kuuntelija))
+    (doseq [asettaja asetus-kuvaus]
+      (dk/lisaa-asettaja! datan-kasittelija rajapinta asettaja))
+    datan-kasittelija))
 
 ;; KOPIOINNIT
 
@@ -115,9 +114,6 @@
    (g/etsi-osa osa etsittavan-osan-tunniste))
   ([osa etsittavan-osan-tunniste lapset]
    (g/etsi-osa osa etsittavan-osan-tunniste lapset)))
-
-(defn hae-kaikki-osat [osa predikaatti]
-  (g/hae-kaikki-osat osa predikaatti))
 
 (defn gridin-rivit [grid pred]
   {:pre [(satisfies? gp/IGrid grid)
@@ -184,7 +180,7 @@
 ; - Soluun liittyvät haut
 (defn solun-asia [solu haettava-asia]
   (case haettava-asia
-    :tunniste-rajapinnan-dataan ((::g/tunniste-rajapinnan-dataan solu))
+    :tunniste-rajapinnan-dataan (::g/tunniste-rajapinnan-dataan solu)
     :osan-derefable (::g/osan-derefable solu)))
 
 (defn solun-arvo [solu]
@@ -200,21 +196,6 @@
      (if meta?
        arvo
        (:data arvo)))))
-
-(defn osan-yksiloivadata
-  "Tarkoitus on käyttää dynaamisen taulukon sisällä olevan osan kanssa"
-  [osa]
-  (let [osan-polku (osien-yhteinen-asia osa :index-polku)
-        dynaaminen-osa (g/dynaaminen-vanhempi osa)
-        dynaamisen-osan-polku (osien-yhteinen-asia dynaaminen-osa :index-polku)
-        dynaamisen-arvo @(::g/osan-derefable dynaaminen-osa)
-        dynaamisen-data (if (and (map? dynaamisen-arvo)
-                                 (contains? dynaamisen-arvo ::g/jarjestettava-data))
-                          (get dynaamisen-arvo ::g/jarjestettava-data)
-                          dynaamisen-arvo)
-        osan-index (->> osan-polku (drop (count dynaamisen-osan-polku)) first)
-        yksiloivadata (-> dynaamisen-data ((:osatunnisteet dynaaminen-osa)) vec (get osan-index))]
-    yksiloivadata))
 
 ;; MUTAATIOT
 
@@ -326,47 +307,13 @@
                            "Saatiin: " tapahtuman-nimi "\n"
                            "Hyväksytyt avaimet: " (apply str (interpose ", " (keys (root-asia (root osa) :tapahtumat)))))))))
 
-(defn jarjesta-grid-data!
-  ([grid]
-   (binding [g/*jarjesta-data* :deep]
-     (g/jarjesta! grid)))
-  ([grid rajapinta]
-   (let [nimipolku (some (fn [[nimipolku rajapintakasittelija]]
-                           (when (= (:rajapinta rajapintakasittelija) rajapinta)
-                             nimipolku))
-                         (::g/grid-rajapintakasittelijat grid))]
-     (binding [g/*jarjesta-data* :deep]
-       (g/jarjesta! grid nimipolku)))))
-
-(defn lisaa-jarjestys-fn-gridiin! [grid rajapinta syvyys jarjestys-fn]
-  (let [jarjestykset-fns (some (fn [[_ rajapintakasittelija]]
-                                 (when (= (:rajapinta rajapintakasittelija) rajapinta)
-                                   (::g/jarjestys-fns rajapintakasittelija)))
-                               (::g/grid-rajapintakasittelijat grid))
-        lisattavan-jarjestys-fn-nimi (get (meta jarjestys-fn) :nimi)
-        olemassaolevan-jarjestys-fn-nimi (when-let [jarjestys-fn (get @jarjestykset-fns syvyys)]
-                                           (get (meta jarjestys-fn) :nimi))
-        lisataan-jarjestys? (or (not= lisattavan-jarjestys-fn-nimi olemassaolevan-jarjestys-fn-nimi)
-                                (nil? lisattavan-jarjestys-fn-nimi))]
-    (when lisataan-jarjestys?
-      (swap! jarjestykset-fns assoc syvyys jarjestys-fn))))
-
 ;; PREDIKAATIT
 
 (defn rivi? [osa]
   (instance? alue/Rivi osa))
 
-(defn staattinen-taulukko? [osa]
-  (instance? g/Grid osa))
-
-(defn solu? [osa]
-  (implements? sp/ISolu osa))
-
 (defn pudotusvalikko? [osa]
   (instance? solu/Pudotusvalikko osa))
-
-(defn osan-tyyppi? [osa tyyppi]
-  (= (type osa) tyyppi))
 
 ;; PIIRRA
 
@@ -374,9 +321,6 @@
   (gop/piirra osa))
 
 ;; MISC
-
-(defn osan-entinen-tyyppi [osa]
-  (get-in osa [::g/osa-vaihdettu :vanha-tyyppi]))
 
 (defn siivoa-grid! [grid]
   (doseq [[_ {:keys [seurannan-lopetus!]}] (::g/grid-tapahtumat grid)]
