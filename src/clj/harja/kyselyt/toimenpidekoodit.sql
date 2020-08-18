@@ -112,6 +112,12 @@ WHERE tk4.nimi=:nimi AND
                                     (select toimenpide from toimenpideinstanssi where urakka = :urakkaid))
 LIMIT 1;
 
+-- name: hae-tehtava-apitunnisteella
+-- single?: true
+SELECT id
+FROM toimenpidekoodi
+WHERE api_tunnus = :apitunnus;
+
 -- name: hae-hinnoittelu
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
 SELECT hinnoittelu

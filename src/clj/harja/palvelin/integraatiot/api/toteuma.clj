@@ -6,6 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
+            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]
             [harja.kyselyt.sopimukset :as sopimukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -133,21 +134,21 @@
                      (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti)))]}))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
-  (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
-  (q-toteumat/poista-toteuma_tehtava-toteuma-idlla!
-    db
-    toteuma-id)
-  (log/debug "Luodaan toteumalle uudet tehtävät")
-  (doseq [tehtava (:tehtavat toteuma)]
-    (log/debug "Luodaan tehtävä.")
-    (q-toteumat/luo-toteuma_tehtava<!
-      db
-      toteuma-id
-      (get-in tehtava [:tehtava :id])
-      (get-in tehtava [:tehtava :maara :maara])
-      (:id kirjaaja)
-      nil
-      nil)))
+      (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
+      (q-toteumat/poista-toteuma_tehtava-toteuma-idlla! db toteuma-id)
+      (log/debug "Luodaan toteumalle uudet tehtävät")
+      (doseq [tehtava (:tehtavat toteuma)]
+             (log/debug "Luodaan tehtävä.")
+             (let [tehtava-id (q-toimenpidekoodi/hae-tehtava-apitunnisteella db
+                                (get-in tehtava [:tehtava :id]))]
+                  (q-toteumat/luo-toteuma_tehtava<!
+                    db
+                    toteuma-id
+                    tehtava-id
+                    (get-in tehtava [:tehtava :maara :maara])
+                    (:id kirjaaja)
+                    nil
+                    nil))))
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit. Toteuma id: " toteuma-id)
