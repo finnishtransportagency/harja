@@ -565,9 +565,20 @@
                         :epaonnistui-parametrit [{:ei-async-laskuria true}]
                         :paasta-virhe-lapi?     true})
     app)
+
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
-    (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot))
+    (let [
+          app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
+          lomake (:lomake app)
+          {validoi-fn :validoi} (meta lomake)
+          validoitu-lomake (validoi-fn lomake)
+          {validi? :validi?} (meta validoitu-lomake)
+          app (-> app
+                  (assoc-in [:lomake :validi?] validi?)
+                  (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
+      app))
+
   LuoUusiAliurakoitsija
   (process-event [{aliurakoitsija :aliurakoitsija {:keys [sivuvaikutus-tuloksella-fn]} :optiot} app]
     (tuck-apurit/post! :tallenna-aliurakoitsija
