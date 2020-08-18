@@ -996,13 +996,11 @@
                                                              gridin-data))
             #_#_osa-vaihdettu? (hae-kaikki-osat grid #(contains? % ::osa-vaihdettu))
             #_#_toistettava-data-muuttunut? (not= toistettavan-osan-data @entinen-toistettavan-osan-data)]
-        (println "DYNAAMINEN GRID RENDER")
         (if #_(or rajapinnat-muuttunut? (and toistettava-data-muuttunut?
                                            osa-vaihdettu?))
           #_(or rajapinnat-muuttunut? sisaltaa-dynaamisen-osan?)
           rajapinnat-muuttunut?
-          (let [_ (println "--> IF LAUSE TOSI")
-                rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
+          (let [rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
                                                                                   conj
                                                                                   #{}
                                                                                   uudet-grid-kasittelijat)

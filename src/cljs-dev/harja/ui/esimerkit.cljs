@@ -1,4 +1,4 @@
-(ns harja.views.urakka.suunnittelu.foo
+(ns harja.ui.esimerkit
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
@@ -945,36 +945,36 @@
 
 ;;; REPL
 #_(try (swap! harja.views.urakka.suunnittelu.foo/tila (fn [tila]
-                                                      (-> tila
-                                                          (assoc-in [:tuntikirjaus :data :harja.views.urakka.suunnittelu.foo/otsikko :otsikko] "Tuntikirjaukset")
-                                                          (assoc-in
-                                                            [:tuntikirjaus :data :harja.views.urakka.suunnittelu.foo/tuntikirjaukset]
-                                                            [{:milloin (harja.pvm/luo-pvm 2020 0 1)
-                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
-                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
-                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 0 1)
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 1) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 2) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 3) :mita :lohoily :kauanko 24 :miksi "..."}]}
-                                                                                                                    {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 6)}
-                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 0 6)
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 6) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 7) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 8) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 9) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 10) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 11) :mita :lohoily :kauanko 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 12) :mita :lohoily :kauanko 24 :miksi "..."}]}
-                                                                                                                    {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 13)}
-                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 0 13)
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 13) :mita :lohoily :kauanko 24 :miksi "..."}]}]}
-                                                             {:milloin (harja.pvm/luo-pvm 2020 1 1)
-                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
-                                                              :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
-                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 1 1)
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 1 1) :mita :toita :kauanko 7.5 :miksi "bills"}]}]}]))))
-     "done"
-     (catch :default _ "ERROR"))
+                                                        (-> tila
+                                                            (assoc-in [:tuntikirjaus :data :harja.views.urakka.suunnittelu.foo/otsikko :otsikko] "Tuntikirjaukset")
+                                                            (assoc-in
+                                                              [:tuntikirjaus :data :harja.views.urakka.suunnittelu.foo/tuntikirjaukset]
+                                                              [{:milloin (harja.pvm/luo-pvm 2020 0 1)
+                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
+                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
+                                                                                                                       :milloin (harja.pvm/luo-pvm 2020 0 1)
+                                                                                                                       :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 1) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 2) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 3) :mita :lohoily :kauanko 24 :miksi "..."}]}
+                                                                                                                      {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 6)}
+                                                                                                                       :milloin (harja.pvm/luo-pvm 2020 0 6)
+                                                                                                                       :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 6) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 7) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 8) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 9) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 10) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 11) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                           {:milloin (harja.pvm/luo-pvm 2020 0 12) :mita :lohoily :kauanko 24 :miksi "..."}]}
+                                                                                                                      {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 13)}
+                                                                                                                       :milloin (harja.pvm/luo-pvm 2020 0 13)
+                                                                                                                       :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 13) :mita :lohoily :kauanko 24 :miksi "..."}]}]}
+                                                               {:milloin (harja.pvm/luo-pvm 2020 1 1)
+                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
+                                                                :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
+                                                                                                                       :milloin (harja.pvm/luo-pvm 2020 1 1)
+                                                                                                                       :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 1 1) :mita :toita :kauanko 7.5 :miksi "bills"}]}]}]))))
+       "done"
+       (catch :default _ "ERROR"))
 
 (defsolu Tyoyhteenveto
   []
@@ -1147,7 +1147,7 @@
         g (grid/grid {:nimi ::lauta
                       ;; Dom id, jota voidaan käyttää apuna, jos on tarvetta käpistellä itse DOM:ia
                       :dom-id "pelilauta"
-                      ;; root-fn kutsutaan kun halutaan löytää määrritelty gridi RAtomista. 
+                      ;; root-fn kutsutaan kun halutaan löytää määrritelty gridi RAtomista.
                       :root-fn (fn [] (get-in @tila [:pelilauta :grid]))
                       ;; paivita-root! kutsutaan kun halutaan päivittää määriteltyä gridiä RAtomissa
                       :paivita-root! (fn [f]
@@ -1259,6 +1259,6 @@
    [padding dynaaminen-taulukko-ylempi-api]
    [padding tuntikirjaus]])
 
-(defn foo []
+(defn esimerkit []
   [:div
    [tuck/tuck tila esimerkit*]])

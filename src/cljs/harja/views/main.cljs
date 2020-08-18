@@ -9,6 +9,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
             [harja.ui.viesti :refer [viesti-container]]
+            [harja.ui.debug :as debug]
+            [harja.ui.esimerkit :as esimerkit]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
             [harja.tiedot.hairioilmoitukset :as hairiotiedot]
@@ -115,7 +117,12 @@
                (oikeudet/laadunseuranta))
       [:li {:role "presentation"}
        [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu"
-        (str k/+polku+ "laadunseuranta")]])]
+        (str k/+polku+ "laadunseuranta")]])
+
+    (when debug/ESIMERKIT
+      [:li {:role "presentation" :class (when (= s :esimerkit) "active")}
+       [linkki "Esimerkit" #(nav/vaihda-sivu! :esimerkit)]])
+    ]
 
    :right
    [harja-info]
@@ -202,6 +209,7 @@
    [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
     [:div.row.row-sisalto
      [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+      (println "SIVU " sivu)
       (case sivu
         :urakat [urakat/urakat]
         :raportit [raportit/raportit]
@@ -211,6 +219,7 @@
         :tilannekuva [tilannekuva/tilannekuva]
         :about [about/about]
         :tr [tierekisteri/tierekisteri]
+        :esimerkit [esimerkit/esimerkit]
 
         ;; jos käyttäjä kirjoittaa selaimeen invalidin urlin, estetään räsähdys
         [urakat/urakat])]]]

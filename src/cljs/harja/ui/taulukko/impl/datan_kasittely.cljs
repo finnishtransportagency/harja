@@ -311,10 +311,6 @@
                    (= uusi-hash valitilan-hash) (get-in @seurannan-valitila [data-atom-hash ::tila]))
             vanha-tila (get @seurannan-vanha-cache data-atom-hash)]
         (when-not (= vanha-tila uusi)
-          (println "[[DATAN KÄSITTELY]] DATA MUUTTUNUT")
-          (println "vanha-tila " vanha-tila)
-          (println "uusi " uusi)
-          (println "DIFF " (clojure.data/diff vanha-tila uusi))
           (let [paivitetty-tila (loop [vanha vanha-tila
                                        vanhat-seurannat seurannat
                                        uusi (reduce (fn [uusi [_ f]]

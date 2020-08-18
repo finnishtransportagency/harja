@@ -6,6 +6,8 @@
 
 (defonce kehitys? true)
 
+(goog-define ^boolean ESIMERKIT true)
+
 (defn voi-avata? [item]
   (some #(% item) [map? coll?]))
 

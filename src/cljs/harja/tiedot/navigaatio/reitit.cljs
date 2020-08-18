@@ -21,7 +21,8 @@
          :kohdeluettelo-paikkaus :paikkauskohteet
          :raportit nil
          :tilannekuva :nykytilanne
-         :ilmoitukset :tieliikenne}))
+         :ilmoitukset :tieliikenne
+         :esimerkit :esimerkit}))
 
 (defn aseta-valittu-valilehti!
   [osio valilehti]
