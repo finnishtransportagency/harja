@@ -952,23 +952,27 @@
                                                             [{:milloin (harja.pvm/luo-pvm 2020 0 1)
                                                               :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
                                                               :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 1)}
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 1) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 2) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 3) :mita :lohoily :kaunako 24 :miksi "..."}]}
+                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 0 1)
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 1) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 2) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 3) :mita :lohoily :kauanko 24 :miksi "..."}]}
                                                                                                                     {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 6)}
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 6) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 7) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 8) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 9) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 10) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 11) :mita :lohoily :kaunako 24 :miksi "..."}
-                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 12) :mita :lohoily :kaunako 24 :miksi "..."}]}
+                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 0 6)
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 6) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 7) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 8) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 9) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 10) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 11) :mita :lohoily :kauanko 24 :miksi "..."}
+                                                                                                                                                                         {:milloin (harja.pvm/luo-pvm 2020 0 12) :mita :lohoily :kauanko 24 :miksi "..."}]}
                                                                                                                     {:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 0 13)}
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 13) :mita :lohoily :kaunako 24 :miksi "..."}]}]}
+                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 0 13)
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 0 13) :mita :lohoily :kauanko 24 :miksi "..."}]}]}
                                                              {:milloin (harja.pvm/luo-pvm 2020 1 1)
                                                               :harja.views.urakka.suunnittelu.foo/kuukausi-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
                                                               :harja.views.urakka.suunnittelu.foo/kuukausi-sisalto [{:harja.views.urakka.suunnittelu.foo/viikko-yhteenveto {:milloin (harja.pvm/luo-pvm 2020 1 1)}
-                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 1 1) :mita :toita :kaunako 7.5 :miksi "bills"}]}]}]))))
+                                                                                                                     :milloin (harja.pvm/luo-pvm 2020 1 1)
+                                                                                                                     :harja.views.urakka.suunnittelu.foo/viikko-sisalto [{:milloin (harja.pvm/luo-pvm 2020 1 1) :mita :toita :kauanko 7.5 :miksi "bills"}]}]}]))))
      "done"
      (catch :default _ "ERROR"))
 
@@ -976,15 +980,16 @@
   []
   (fn suunnittele-kuukausitasolla-filter [this]
     (let [taman-data (solu/taman-derefable this)
-          {:keys [toita lohoilya]} (or @taman-data false)
+          {:keys [toita lohoily]} (or @taman-data {:toita nil :lohoily nil})
           osan-id (str (grid/hae-osa this :id))]
-      [:div {:id osan-id}
+      [:div {:id osan-id
+             :style {:display "flex"
+                     :flex-direction "column"}}
        [:span (str "Töitä: " toita)]
-       [:span (str "Löhöilyä: " lohoilya)]])))
+       [:span (str "Löhöily: " lohoily)]])))
 
 (defn tuntikirjaus []
   (let [tilacursor (r/cursor tila [:tuntikirjaus])
-        kuukausitaulukko (fn [])
         tuntikirjaustaulukko (fn [tila-atom dom-id grid-polku data-polku]
                                (let [syote-tayta-alas-predef (taulukko/predef :syote-tayta-alas nil)
                                      input-predef (taulukko/predef :input nil)
@@ -1018,7 +1023,7 @@
                                                          :vaihto-osat {:tuntien-yhteenveto {:conf {:nimi ::tuntien-yhteenveto}
                                                                                             :body [{:conf {:jarjestys [[:milloin :mita :kauanko :miksi]]
                                                                                                            :nimi ::viikko-yhteenveto-vaihto
-                                                                                                           #_#_:datapolku-maaritelmasta ::data-yhteenveto}
+                                                                                                           :datapolku-maaritelmasta ::viikko-yhteenveto}
                                                                                                     :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                             (taulukko/vaihda-osa-takaisin! this
                                                                                                                                                            (grid/osan-yksiloivadata this)
@@ -1029,14 +1034,14 @@
                                                                                                                           true
                                                                                                                           false
                                                                                                                           [:.. :.. :..])}
-                                                                                                   {:conf {:jarjestys [[:milloin :mita :kauanko :miksi]]
+                                                                                                   {:conf {:jarjestys [[::tyoyhteenveto]]
                                                                                                            :nimi ::tuntien-yhteenvetorivi
                                                                                                            :raidat {:samaraita-edelliseen? true}}
                                                                                                     :osat (vec
                                                                                                             (cons {:solu tyoyhteenveto
+                                                                                                                   :conf {:nimi ::tyoyhteenveto}
                                                                                                                    :riippuu-toisesta {:polut [[:.. :.. :.. ::viikko-sisalto]]
                                                                                                                                       :kasittely-fn (fn [viikko-sisalto]
-                                                                                                                                                      (println "viikko-sisalto: " viikko-sisalto)
                                                                                                                                                       (reduce (fn [m {:keys [mita kauanko]}]
                                                                                                                                                                 (let [kauanko (if (string? kauanko)
                                                                                                                                                                                 (str->number kauanko)
@@ -1068,9 +1073,10 @@
                                                                                                                              [:.. :..])}
                                                                                               :body [{:conf {:nimi ::kuukausi-sisalto
                                                                                                              :yksiloivakentta :milloin
-                                                                                                             :luokat #{"piillotettu" #_"salli-ylipiirtaminen"}}
-                                                                                                      :toistettava-osa {:header {:conf {:nimi ::viikko-yhteenveto
-                                                                                                                                        #_#_:vaihdettava-osa :tuntien-yhteenveto
+                                                                                                             :luokat #{"piillotettu"}}
+                                                                                                      :toistettava-osa {:conf {:koko (with-meta konf/auto {:yksittainen true})}
+                                                                                                                        :header {:conf {:nimi ::viikko-yhteenveto
+                                                                                                                                        :vaihdettava-osa :tuntien-yhteenveto
                                                                                                                                         :jarjestys [[:milloin :mita :kauanko :miksi]]}
                                                                                                                                  :osat (yhteenvetorivi (fn [this auki?]
                                                                                                                                                          (taulukko/vaihda-osa! this
@@ -1118,10 +1124,10 @@
                                  (taulukko/tee-taulukko! taulukkomaaritelma)))]
     (komp/luo
       (komp/piirretty (fn [_]
-                        (tuntikirjaustaulukko tila
+                        (tuntikirjaustaulukko tilacursor
                                               "tuntikirjaustaulukko"
-                                              [:tuntikirjaus :grid]
-                                              [:tuntikirjaus :data])))
+                                              [:grid]
+                                              [:data])))
       (fn []
         (let [{:keys [grid]} @tilacursor]
           (if grid
@@ -1250,8 +1256,8 @@
   [:div
    #_[padding pelilauta (:pelilauta app)]
    #_[padding dynaaminen-taulukko-alempi-api]
-   [padding dynaaminen-taulukko-ylempi-api]
-   #_[padding tuntikirjaus]])
+   #_[padding dynaaminen-taulukko-ylempi-api]
+   [padding tuntikirjaus]])
 
 (defn foo []
   [:div

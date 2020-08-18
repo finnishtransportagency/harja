@@ -4,6 +4,7 @@
             [reagent.ratom :as ratom]
             [harja.ui.grid-debug :as g-debug]
             [clojure.set :as clj-set]
+            [clojure.data]
             [cljs.spec.alpha :as s]
             [cljs.pprint :as pp])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -83,12 +84,28 @@
   (lisaa-asettaja! [this rajapinta asettaja]))
 
 
+(defn- kuuntelijaa-ei-enaa-maaritetty? [kuuntelun-nimi uudet-polut polut lisa-argumentit]
+  false
+  (nil? (some (fn [m]
+                (let [[luodun-kuuntelun-nimi luodun-kuuntelijan-polut] (first m)]
+                  (and (= luodun-kuuntelun-nimi kuuntelun-nimi)
+                       (= luodun-kuuntelijan-polut polut)
+                       (= (:args (meta luodun-kuuntelijan-polut)) lisa-argumentit))))
+              uudet-polut)))
+(defn- kuuntelijan-polut-muuttunut? [kuuntelun-nimi uudet-polut polut lisa-argumentit]
+  (some (fn [m]
+          (let [[luodun-kuuntelun-nimi luodun-kuuntelijan-polut] (first m)]
+            (and (= luodun-kuuntelun-nimi kuuntelun-nimi)
+                 #_(or (not= luodun-kuuntelijan-polut polut)
+                     (not= (:args (meta luodun-kuuntelijan-polut)) lisa-argumentit)))))
+        uudet-polut))
+
 ;; TODO kuuntelijoiden tilan init samantapaiseksi kuin seurannan siivoa-tila. Eli muokataan annettua tilaa, eikä swapata valitilaa.
 ;; Pitäisikö laittaa siivoamis ja init funktiot molempiin (seurannat ja kuuntelijat)?
 (deftype DatanKasittelija
   ;; Jos muutat argumentteja, tarkista -lookup metodi
   [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
-   ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
+   ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat asetukset]
   IKuuntelija
   (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku identiteetti luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
     (let [kursorit (mapv (fn [polku]
@@ -162,13 +179,9 @@
                      (when polut-muuttunut?
                        (doseq [[kuuntelun-nimi {:keys [dynaaminen? polut lisa-argumentit] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
-                                                                (nil? (some (fn [m]
-                                                                              (let [[luodun-kuuntelun-nimi luodun-kuuntelijan-polut] (first m)]
-                                                                                (and (= luodun-kuuntelun-nimi kuuntelun-nimi)
-                                                                                     (= luodun-kuuntelijan-polut polut)
-                                                                                     (= (:args (meta luodun-kuuntelijan-polut)) lisa-argumentit))))
-                                                                            uudet-polut))
-                                                                (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi))]]
+                                                                (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi)
+                                                                (or (kuuntelijaa-ei-enaa-maaritetty? kuuntelun-nimi uudet-polut polut lisa-argumentit)
+                                                                    (kuuntelijan-polut-muuttunut? kuuntelun-nimi uudet-polut polut lisa-argumentit)))]]
                          (when kuuntelu-poistettava?
                            (poista-kuuntelija! this kuuntelun-nimi)))
                        (doseq [m uudet-polut
@@ -298,6 +311,10 @@
                    (= uusi-hash valitilan-hash) (get-in @seurannan-valitila [data-atom-hash ::tila]))
             vanha-tila (get @seurannan-vanha-cache data-atom-hash)]
         (when-not (= vanha-tila uusi)
+          (println "[[DATAN KÄSITTELY]] DATA MUUTTUNUT")
+          (println "vanha-tila " vanha-tila)
+          (println "uusi " uusi)
+          (println "DIFF " (clojure.data/diff vanha-tila uusi))
           (let [paivitetty-tila (loop [vanha vanha-tila
                                        vanhat-seurannat seurannat
                                        uusi (reduce (fn [uusi [_ f]]
@@ -359,6 +376,7 @@
                                    (swap! seurannan-vanha-cache dissoc data-atom-hash)
                                    (swap! data-atom (fn [entinen-tila]
                                                       seurannan-tila))
+                                   @data-atom
                                    (when (and (= 1 (count ajetaan-seurannat))
                                               ajettavat-fns)
                                      (let [fs ajettavat-fns]
@@ -416,14 +434,19 @@
   (add-on-dispose! [this f]
     (set! on-dispose (conj on-dispose f))))
 
-(defn datan-kasittelija [data-atom]
+(defn datan-kasittelija [data-atom datapolku]
   {:pre [(satisfies? ratom/IReactiveAtom data-atom)]
    :post [(instance? DatanKasittelija %)]}
   (let [nimi (gensym "datan-kasittelija")
-        dk (->DatanKasittelija data-atom nimi [] [] {} {} {} {} {})]
+        dk (->DatanKasittelija data-atom nimi [] [] {} {} {} {} {} {:datapolku datapolku})]
     (add-watch data-atom
                nimi
                (fn [_ _ vanha uusi]
+                 #_(if datapolku
+                   (when-not (= (get-in vanha datapolku)
+                                (get-in uusi datapolku))
+                     (reset! dk uusi))
+                   (reset! dk uusi))
                  (reset! dk uusi)))
     dk))
 

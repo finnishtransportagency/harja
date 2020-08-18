@@ -48,23 +48,25 @@
   (g/grid-c alue/->Taulukko (assoc asetukset :osat osat)))
 
 ; - Datan käsittelijä
-(defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus]
-  (let [datan-kasittelija (dk/datan-kasittelija data-atom)]
-    ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
-    (doseq [[_ {:keys [init]}] seurannat-kuvaus]
-      (when (fn? init)
-        (swap! data-atom init)))
-    (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
-      (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
-    (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
-      (dk/lisaa-seuranta! datan-kasittelija seuranta))
-    (doseq [kuuntelija-luonti (filter #(contains? (val %) :luonti) haku-kuvaus)]
-      (dk/kuuntelijat-lisaaja! datan-kasittelija rajapinta kuuntelija-luonti))
-    (doseq [kuuntelija (remove #(contains? (val %) :luonti) haku-kuvaus)]
-      (dk/lisaa-kuuntelija! datan-kasittelija rajapinta kuuntelija))
-    (doseq [asettaja asetus-kuvaus]
-      (dk/lisaa-asettaja! datan-kasittelija rajapinta asettaja))
-    datan-kasittelija))
+(defn datan-kasittelija
+  ([data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus] (datan-kasittelija data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus nil))
+  ([data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus {:keys [datapolku]}]
+   (let [datan-kasittelija (dk/datan-kasittelija data-atom datapolku)]
+     ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
+     (doseq [[_ {:keys [init]}] seurannat-kuvaus]
+       (when (fn? init)
+         (swap! data-atom init)))
+     (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
+       (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
+     (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
+       (dk/lisaa-seuranta! datan-kasittelija seuranta))
+     (doseq [kuuntelija-luonti (filter #(contains? (val %) :luonti) haku-kuvaus)]
+       (dk/kuuntelijat-lisaaja! datan-kasittelija rajapinta kuuntelija-luonti))
+     (doseq [kuuntelija (remove #(contains? (val %) :luonti) haku-kuvaus)]
+       (dk/lisaa-kuuntelija! datan-kasittelija rajapinta kuuntelija))
+     (doseq [asettaja asetus-kuvaus]
+       (dk/lisaa-asettaja! datan-kasittelija rajapinta asettaja))
+     datan-kasittelija)))
 
 ;; KOPIOINNIT
 

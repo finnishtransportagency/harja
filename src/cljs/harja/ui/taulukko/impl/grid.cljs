@@ -146,6 +146,8 @@
       (gop/id? osa etsittava-osa)
       (= (gop/nimi osa) etsittava-osa))))
 
+(declare piirra-grid dynaamisen-jalkelainen? sisaltaa-dynaamisen-osan?)
+
 (defn etsi-osa
   ([osa etsittavan-osan-tunniste]
    (if (oikea-osa? osa etsittavan-osan-tunniste)
@@ -814,7 +816,17 @@
                                 (if-let [entisen-osan-index (get vanhat-tunnisteet osan-tunniste)]
                                   (get entiset-osat entisen-osan-index)
                                   (with-meta (muuta-osan-root osa (root grid))
-                                             (meta osa))))
+                                             (meta osa)))
+                                #_(if (sisaltaa-dynaamisen-osan? osa)
+                                  (do (println "--> UUSI OSA")
+                                      (with-meta (muuta-osan-root osa (root grid))
+                                                 (meta osa)))
+                                  (if-let [entisen-osan-index (get vanhat-tunnisteet osan-tunniste)]
+                                    (do (println "--> ENTINEN OSA " (get entiset-osat entisen-osan-index))
+                                        (get entiset-osat entisen-osan-index))
+                                    (do (println "--> UUSI OSA")
+                                        (with-meta (muuta-osan-root osa (root grid))
+                                                   (meta osa))))))
                               ((:toistettava-osa grid) toistettavan-osan-data)
                               (osatunnisteet toistettavan-osan-data)))))
   (paivita-root! grid (fn [vanha-grid]
@@ -885,7 +897,7 @@
                        (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
                                                                          (apply dissoc rk (map first poistettavat-kasittelijat)))))))))
 
-(defn dynaamisen-gridin-rajapintakasittelijat [grid uudet-grid-kasittelijat]
+(defn dynaamisen-gridin-rajapintakasittelijat [grid uudet-grid-kasittelijat dynaamisen-osan-data-muuttunut?]
   (let [polun-alku (::nimi-polku grid)
         rajapintakasittelijat (::grid-rajapintakasittelijat (root grid))
         luodut-grid-kasittelijat (reduce-kv (fn [m polku kasittelija]
@@ -903,20 +915,22 @@
                                                 kuuluu-talle-gridille? (gop/id? grid (get kasittelija ::host-grid-id))]
                                             (when (and dynaamisesti-luotu-kasittelija?
                                                        kuuluu-talle-gridille?
-                                                       (not (some (fn [[luotu-polku luotu-conf]]
-                                                                    (and (= luotu-polku polku)
-                                                                         (= (:rajapinta luotu-conf)
-                                                                            (:rajapinta kasittelija))))
-                                                                  luodut-grid-kasittelijat)))
+                                                       (or dynaamisen-osan-data-muuttunut?
+                                                           (not (some (fn [[luotu-polku luotu-conf]]
+                                                                        (and (= luotu-polku polku)
+                                                                             (= (:rajapinta luotu-conf)
+                                                                                (:rajapinta kasittelija))))
+                                                                      luodut-grid-kasittelijat))))
                                               [polku kasittelija])))
                                         rajapintakasittelijat)
         lisattavat-kasittelijat (into {}
                                       (keep (fn [[polku kasittelija]]
-                                              (when-not (some (fn [[olemassa-oleva-polku olemassa-oleva-kasittelija]]
-                                                                (and (= olemassa-oleva-polku polku)
-                                                                     (= (:rajapinta olemassa-oleva-kasittelija)
-                                                                        (:rajapinta kasittelija))))
-                                                              rajapintakasittelijat)
+                                              (when (or dynaamisen-osan-data-muuttunut?
+                                                        (not (some (fn [[olemassa-oleva-polku olemassa-oleva-kasittelija]]
+                                                                     (and (= olemassa-oleva-polku polku)
+                                                                          (= (:rajapinta olemassa-oleva-kasittelija)
+                                                                             (:rajapinta kasittelija))))
+                                                                   rajapintakasittelijat)))
                                                 [polku kasittelija]))
                                             luodut-grid-kasittelijat))
         uudet-rajapintakasittelijat (when-not (empty? lisattavat-kasittelijat)
@@ -941,17 +955,18 @@
                                 (osan-data-yhdistaminen uudet-rajapintakasittelijat osa))))))
 
 (defn- dynaaminen-grid [grid]
-  (let [rajapintakasittelijan-tiedot (get (::grid-rajapintakasittelijat (root grid))
-                                          (::nimi-polku grid))
-        grid-kasittelijoiden-luonti (or (:luonti rajapintakasittelijan-tiedot)
-                                        (constantly nil))
-        entinen-toistettavan-osan-data (atom nil)]
+  (let [entinen-toistettavan-osan-data (atom nil)]
     (fn [grid]
-      (let [gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
+      (let [rajapintakasittelijan-tiedot (get (::grid-rajapintakasittelijat (root grid))
+                                              (::nimi-polku grid))
+            grid-kasittelijoiden-luonti (or (:luonti rajapintakasittelijan-tiedot)
+                                            (constantly nil))
+            gridin-derefable (if-let [gridin-derefable (::osan-derefable grid)]
                                gridin-derefable
                                (do
                                  (warn (str "Dynaamiselle gridille  ") (pr-str (type grid)) (str " (" (:id grid) ") ei ole annettu osan-derefablea!"))
                                  (r/atom nil)))
+            sisaltaa-dynaamisen-osan? (sisaltaa-dynaamisen-osan? grid)
             gridin-data @gridin-derefable
             jarjestetty-data-erikseen? (boolean (and (map? gridin-data)
                                                      (contains? gridin-data ::jarjestettava-data)))
@@ -973,9 +988,21 @@
                                                         (assoc m polku (assoc maaritelma ::host-grid-id (gop/id grid))))
                                                       {}
                                                       m))
-                                         uudet-grid-kasittelijat)]
-        (if rajapinnat-muuttunut?
-          (let [rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
+                                         uudet-grid-kasittelijat)
+
+            #_#_toistettavan-osan-data (:toistettavan-osan-data grid)
+            #_#_toistettavan-osan-data (toistettavan-osan-data (if jarjestetty-data-erikseen?
+                                                             (::jarjestettava-data gridin-data)
+                                                             gridin-data))
+            #_#_osa-vaihdettu? (hae-kaikki-osat grid #(contains? % ::osa-vaihdettu))
+            #_#_toistettava-data-muuttunut? (not= toistettavan-osan-data @entinen-toistettavan-osan-data)]
+        (println "DYNAAMINEN GRID RENDER")
+        (if #_(or rajapinnat-muuttunut? (and toistettava-data-muuttunut?
+                                           osa-vaihdettu?))
+          #_(or rajapinnat-muuttunut? sisaltaa-dynaamisen-osan?)
+          rajapinnat-muuttunut?
+          (let [_ (println "--> IF LAUSE TOSI")
+                rajapintakasittelijat-muuttunut? (not (clj-set/subset? (transduce (map #(-> % vals first :rajapinta))
                                                                                   conj
                                                                                   #{}
                                                                                   uudet-grid-kasittelijat)
@@ -1001,7 +1028,7 @@
                                      data-jarjestetty?)]
             (when uille-muutoksia?
               (hoida-osien-maara! grid toistettavan-osan-data osatunnisteet vanhat-tunnisteet))
-            (dynaamisen-gridin-rajapintakasittelijat grid uudet-grid-kasittelijat)
+            (dynaamisen-gridin-rajapintakasittelijat grid uudet-grid-kasittelijat false #_(and sisaltaa-dynaamisen-osan? toistettava-data-muuttunut?))
             (when uille-muutoksia?
               (aseta-koot! (root grid))
               (when-let [f (and (js/Math.max 0 (- osien-maara datan-maara)) (get-in grid [:osien-maara-muuttui :osien-maara-muuttui!]))]
@@ -1299,8 +1326,6 @@
     (merge grid
            (dissoc kopioitava-grid :id :alueet :koko :osat :parametrit))))
 
-(declare piirra-grid dynaamisen-jalkelainen?)
-
 (declare ->Grid)
 
 (defn grid-olemassa? [grid]
@@ -1533,6 +1558,17 @@
        (recur vanhempi (instance? DynaaminenGrid vanhempi))
        dynaaminen?))))
 
+(defn sisaltaa-dynaamisen-osan?
+  ([osa] (sisaltaa-dynaamisen-osan? osa (instance? DynaaminenGrid osa)))
+  ([osa dynaaminen?]
+   (cond
+     dynaaminen? true
+     (satisfies? p/IGrid osa) (some (fn [osa]
+                                      (when (sisaltaa-dynaamisen-osan? osa)
+                                        true))
+                                    (p/lapset osa))
+     :else false)))
+
 (defn dynaaminen-vanhempi
   ([osa] (dynaaminen-vanhempi osa (instance? DynaaminenGrid osa)))
   ([osa dynaaminen?]
@@ -1684,7 +1720,7 @@
                                                                                                                 ::tunniste-rajapinnan-dataan
                                                                                                                 ::triggeroi-seuranta!})))
                                                                         ::nimi uuden-osan-nimi
-                                                                        #_#_::osa-vaihdettu {:vanha-tyyppi (type vaihdettava-osa)
+                                                                        ::osa-vaihdettu {:vanha-tyyppi (type vaihdettava-osa)
                                                                                          :vanhan-id (gop/id vaihdettava-osa)})]
                                               (when-let [poistuvat-osat (and vaihdettava-osa-grid?
                                                                              (gridin-osat-vektoriin vaihdettava-osa #(satisfies? p/IGrid %) gop/id))]
