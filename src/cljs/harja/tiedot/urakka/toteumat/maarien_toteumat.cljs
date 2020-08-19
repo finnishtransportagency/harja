@@ -420,8 +420,10 @@
           (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
           (assoc-in [:lomake ::t/pvm] (:toteuma_aika vastaus))
           (assoc-in [:lomake ::t/toteumat 0 ::t/maara] (:toteutunut vastaus))
+          (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] (:lisatieto vastaus))
           (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] valittu-tehtava)
           (assoc-in [:lomake ::t/toteumat 0 ::t/sijainti] sijainti)
+          (assoc-in [:lomake 0 :tierekisteriosoite] sijainti)
           (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] (some #(nil? (second %)) sijainti))
           (assoc-in [:lomake ::t/tyyppi] (-> vastaus :tyyppi tyyppi->tyyppi keyword))
           (assoc-in [:lomake ::t/toimenpide] valittu-toimenpide)
@@ -522,6 +524,11 @@
     (let [app
           (cond-> app
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
+                  true (update-in [:lomake ::t/toteumat 0] dissoc 0)
+                  true (dissoc :sijainti)
+                  ;true (update-in [:lomake ::t/toteumat 0 0] dissoc :tierekisteriosoite)
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] nil)
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] nil)
                   (and
                     (not (nil? toimenpide))
                     (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
