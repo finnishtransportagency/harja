@@ -1,28 +1,15 @@
 (ns harja.views.urakka.toteumat.maarien-toteumat
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.grid :as grid]
-            [harja.ui.taulukko.grid :as new-grid]
-            [harja.ui.taulukko.impl.solu :as solu]
-            [harja.ui.taulukko.grid-oletusarvoja :as konf]
-            [harja.ui.taulukko.protokollat :as p]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
-            [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.hallinta.indeksit :as i]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.toteumat.maarien-toteumat :as maarien-toteumat]
-            [harja.views.urakka.valinnat :as valinnat]
-            [harja.ui.valinnat :as ui-valinnat]
             [harja.ui.kentat :as kentat]
-
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
@@ -31,11 +18,8 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.urakka :as urakka-domain]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
-            [harja.asiakas.kommunikaatio :as k]
+
             [harja.tiedot.urakka.urakka :as tila]
             [tuck.core :as tuck]
             [harja.ui.modal :as modal]
@@ -65,8 +49,7 @@
   (if (or (= 0 toteuma)
           (nil? toteuma))
     0
-    (fmt/desimaaliluku-opt (* 100 (/ suunniteltu toteuma)) 2))
-  )
+    (fmt/desimaaliluku-opt (* 100 (/ suunniteltu toteuma)) 2)))
 
 (defn- muokkaa-toteumaa-linkki [e! db-aika toteuma-id]
   [:a {:href     "#"
@@ -128,6 +111,9 @@
                                                                (> (count (second rivi)) 1)
                                                                (:toteuma_aika (first (second rivi))))
                                                            true false)
+                                        nayta-nuoli? (or
+                                                       (:toteuma_aika (first (second rivi)))
+                                                       (:kasin-lisattava? (first (second rivi))))
                                         lapsi-rivit (if (and
                                                           (= (get-in app [:valittu-rivi]) (first rivi))
                                                           (not (nil? (:toteutunut (first (second rivi))))))
@@ -145,8 +131,10 @@
                                        [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi)]
                                        [:td {:style {:width (:caret leveydet)}} (if
                                                                                   (= (get-in app [:valittu-rivi]) (first rivi))
-                                                                                  [ikonit/livicon-chevron-up]
-                                                                                  [ikonit/livicon-chevron-down])]
+                                                                                  (when nayta-nuoli?
+                                                                                             [ikonit/livicon-chevron-up])
+                                                                                  (when nayta-nuoli?
+                                                                                    [ikonit/livicon-chevron-down]))]
                                        [:td {:style {:width (:toteuma leveydet)}} (str toteutunut-maara " " (maarita-yksikko (first (second rivi))))]
                                        [:td {:style {:width (:suunniteltu leveydet)}} (if (= -1 suunniteltu-maara)
                                                                                         (case tyyppi
