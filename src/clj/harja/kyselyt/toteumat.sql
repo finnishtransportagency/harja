@@ -505,7 +505,7 @@ SELECT tk.id                      AS id,
                             FROM urakka_tehtavamaara ut
                             WHERE ut.urakka = :urakka
                               AND (:alkupvm::DATE IS NULL OR
-                                   ut.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+                                   ut."hoitokauden-alkuvuosi" BETWEEN EXTRACT(YEAR FROM :alkupvm::DATE) AND EXTRACT(YEAR FROM :loppupvm::DATE)))
       AND t.id = tt.toteuma
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
@@ -513,7 +513,8 @@ SELECT tk.id                      AS id,
       AND tr1.id = tk.tehtavaryhma
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
       AND (:alkupvm::DATE IS NULL OR
-           t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE);
+           t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+ORDER BY tehtavaryhma ASC, toteuma_aika ASC;
 
 -- name: hae-maarien-toteuma
 -- Hae yksittäinen toteuma muokkaukseen
@@ -524,8 +525,8 @@ SELECT t.id        AS toteuma_id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        tk.yksikko                 AS yksikko,
-       tr1.otsikko                AS toimenpide_otsikko,
-       tr1.id                     AS toimenpide_id,
+       tr3.otsikko                AS toimenpide_otsikko,
+       tr3.id                     AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
        tt.lisatieto               AS lisatieto,
        t.tyyppi                   AS tyyppi,
@@ -985,7 +986,7 @@ SELECT rp.aika     AS aika,
   FROM toteuma t
        JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
        JOIN LATERAL unnest(reittipisteet) WITH ORDINALITY rp ON TRUE
- WHERE t.id = :toteuma_id
+ WHERE t.id = :toteuma_id;
 
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
