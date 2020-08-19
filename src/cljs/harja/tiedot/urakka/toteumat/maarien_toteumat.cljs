@@ -5,20 +5,17 @@
             [harja.loki :refer [log tarkkaile!]]
             [tuck.core :refer [process-event] :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.domain.toteuma :as t]
             [harja.pvm :as pvm]
             [harja.ui.lomake :as ui-lomake]
             [harja.ui.viesti :as viesti]
-            [harja.ui.taulukko.grid :as new-grid]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.ui.taulukko.grid-oletusarvoja :as konf]
-            [harja.ui.taulukko.impl.solu :as solu]
             [harja.tiedot.navigaatio :as nav]
-            [harja.loki :as loki])
+            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
+
 
 (declare validoi-lomake)
 (declare hae-toteutuneet-maarat)
@@ -107,7 +104,7 @@
   ([app toimenpide]
    (hae-tehtavat-tyypille app toimenpide :maaramitattava))
   ([app toimenpide tyyppi]
-   (loki/log "haen tehtavat tyypille" (pr-str toimenpide) (pr-str tyyppi))
+   (log "haen tehtavat tyypille" (pr-str toimenpide) (pr-str tyyppi))
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
          rajapinta (case tyyppi
@@ -209,11 +206,13 @@
                   (when (= "7.0 LISÄTYÖT" (:otsikko toimenpide))
                     toimenpide))
                 (get-in app [:toimenpiteet]))
-          :else {:otsikko "Kaikki" :id 0})
-        _ (js/console.log "vaihda-toimenpide-tyypin-mukaan tyyppi" (pr-str tyyppi))
-        _ (js/console.log "vaihda-toimenpide-tyypin-mukaan toimenpide" (pr-str toimenpide))
-        ]
+          :else {:otsikko "Kaikki" :id 0})]
     toimenpide))
+
+(defn- paivita-sijainti-toteumiin [toteumat app]
+  (map-indexed (fn [indeksi toteuma]
+                 (assoc toteuma ::t/sijainti (get-in app [:sijainti indeksi])))
+               toteumat))
 
 (extend-protocol tuck/Event
   AsetaFiltteri
@@ -275,12 +274,12 @@
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
                     :as lomake} :lomake
                    polku :polku} app]
-    (let [_ (js/console.log "PaivitaLomake :: Nyt muokataan polku " (pr-str polku) "viimeksi-muokattu" (pr-str viimeksi-muokattu) "tyyppi" (pr-str tyyppi) "toimenpide" (pr-str toimenpide))
+    (let [_ (log "PaivitaLomake :: Nyt muokataan polku " (pr-str polku) "viimeksi-muokattu" (pr-str viimeksi-muokattu) "tyyppi" (pr-str tyyppi) "toimenpide" (pr-str toimenpide))
           ;; Toimenpidettä vaihdettaessa polkua ei tallenneta, mutta viimeksi-muokattu tallennetaan
           polku (if (and (nil? polku) viimeksi-muokattu)
                   viimeksi-muokattu
                   polku)
-          _ (js/console.log "Onko polku muuttunut. Polku: " (pr-str polku))
+          _ (log "Onko polku muuttunut. Polku: " (pr-str polku))
           ;; Siivotaan viimeksi muokattu pois
           app (assoc app ::ui-lomake/viimeksi-muokattu-kentta nil)
           useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
@@ -366,7 +365,7 @@
   ValitseToimenpide
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
     (do
-      (js/console.log "ValitseToimenpide" (pr-str toimenpide))
+      (log "ValitseToimenpide" (pr-str toimenpide))
       (hae-toteutuneet-maarat urakka toimenpide
                               (:hoitokauden-alkuvuosi app)
                               (:aikavali-alkupvm app)
@@ -381,7 +380,7 @@
   ValitseTehtava
   (process-event [{tehtava :tehtava} app]
     (do
-      (js/console.log "ValitseTehtava" (pr-str tehtava))
+      (log "ValitseTehtava" (pr-str tehtava))
       (-> app
           (assoc-in [:toteuma :tehtava] tehtava)
           (validoi-lomake))))
@@ -390,14 +389,14 @@
   AvaaRivi
   (process-event [{avain :avain} app]
     (do
-      (js/console.log "AvaaRivi" (pr-str avain))
+      (log "AvaaRivi" (pr-str avain))
       (if (= avain (get-in app [:valittu-rivi]))
         (assoc-in app [:valittu-rivi] nil)
         (assoc-in app [:valittu-rivi] avain))))
 
   MuokkaaToteumaa
   (process-event [{toteuma-id :toteuma-id} app]
-    (js/console.log "MuokkaaToteumaa" (pr-str toteuma-id))
+    (log "MuokkaaToteumaa" (pr-str toteuma-id))
     (tuck-apurit/post! :hae-maarien-toteuma {:id toteuma-id :urakka-id (:id @nav/valittu-urakka)}
                        {:onnistui           ->ToteumaHakuOnnistui
                         :epaonnistui        ->ToteumaHakuEpaonnistui
@@ -406,7 +405,7 @@
 
   ToteumaHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (js/console.log "ToteumaHakuOnnistui :: vastaus " (pr-str vastaus))
+    (let [_ (log "ToteumaHakuOnnistui :: vastaus " (pr-str vastaus))
           valittu-tehtava {:id (:tehtava_id vastaus) :tehtava (:tehtava vastaus) :yksikko (:yksikko vastaus)}
           valittu-toimenpide {:id (:toimenpide_id vastaus) :otsikko (:toimenpide_otsikko vastaus)}
           sijainti {:numero        (:sijainti_numero vastaus)
@@ -432,7 +431,7 @@
   ToteumaHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Toteuman haku epäonnistui!" :danger)
-    (js/console.log "ToteumaHakuEpaonnistui :: vastaus" (pr-str vastaus))
+    (log "ToteumaHakuEpaonnistui :: vastaus" (pr-str vastaus))
     app)
 
   ToimenpiteetHakuOnnistui
@@ -442,13 +441,13 @@
   ToimenpiteetHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-    (js/console.log "ToimenpiteetHakuEpaonnistui :: vastaus" (pr-str vastaus))
+    (log "ToimenpiteetHakuEpaonnistui :: vastaus" (pr-str vastaus))
     app)
 
   ValitseHoitokausi
   (process-event [{urakka :urakka vuosi :vuosi} app]
     (do
-      (js/console.log "ValitseHoitokausi" (pr-str vuosi))
+      (log "ValitseHoitokausi" (pr-str vuosi))
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi nil nil)
       (-> app
           (assoc-in [:hoitokauden-alkuvuosi] vuosi)
@@ -458,7 +457,7 @@
   ValitseAikavali
   (process-event
     [{:keys [polku arvo]} app]
-    (let [_ (js/console.log "ValitseAikavali :: polku arvo" (pr-str polku) (pr-str arvo))
+    (let [_ (log "ValitseAikavali :: polku arvo" (pr-str polku) (pr-str arvo))
           arvo (if (nil? arvo)
                  (get-in app [polku])
                  arvo)]
@@ -475,7 +474,7 @@
                     (pvm/iso8601 aikavali-alkupvm))
           loppupvm (when aikavali-loppupvm
                      (pvm/iso8601 aikavali-loppupvm))
-          _ (js/console.log "HaeToteutuneetMaarat :: aikavalit" (pr-str alkupvm) "-" (pr-str alkupvm) (pr-str loppupvm))]
+          _ (log "HaeToteutuneetMaarat :: aikavalit" (pr-str alkupvm) "-" (pr-str alkupvm) (pr-str loppupvm))]
       (hae-toteutuneet-maarat urakka-id toimenpide hoitokauden-alkuvuosi alkupvm loppupvm))
     app)
 
@@ -502,7 +501,7 @@
   ToteutuneetMaaratHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    (js/console.log "ToteutuneetMaaratHakuEpaonnistui :: vastaus" (pr-str vastaus))
+    (log "ToteutuneetMaaratHakuEpaonnistui :: vastaus" (pr-str vastaus))
     app)
 
   TehtavatHakuOnnistui
@@ -515,7 +514,7 @@
   TehtavatHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    (js/console.log "TehtavatHakuEpaonnistui :: vastaus" (pr-str vastaus))
+    (log "TehtavatHakuEpaonnistui :: vastaus" (pr-str vastaus))
     app)
 
   ToteumanSyotto
@@ -540,7 +539,7 @@
 
   PoistaToteumaOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "PoistaToteumaOnnistui - vastaus" (pr-str vastaus))
+    (log "PoistaToteumaOnnistui - vastaus" (pr-str vastaus))
     (viesti/nayta! "Toteuma poistettu!")
 
     ;; Päivitä määrät välittömästi poiston jälkeen
@@ -554,7 +553,7 @@
 
   PoistaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "PoistaToteumaEpäonnistui - vastaus" (pr-str vastaus))
+    (log "PoistaToteumaEpäonnistui - vastaus" (pr-str vastaus))
     (viesti/nayta! "Toteuman poistaminen epäonnistui" :danger)
     app)
 
