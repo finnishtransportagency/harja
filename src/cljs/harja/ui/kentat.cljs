@@ -1231,7 +1231,7 @@
                                                    (keskita-kartta! @sijainti-atom))))
 
       (komp/ulos #(do
-                    (log "Lopetetaan TR sijaintipäivitys")
+                    (loki/log "Lopetetaan TR sijaintipäivitys")
                     (async/close! tr-osoite-ch)
                     (when voi-valita-kartalta?
                       (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)

@@ -10,7 +10,8 @@
             [reagent.core :as r]
             [harja.ui.kentat :as kentat]
             [harja.ui.modal :as modal]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.views.kartta.tasot :as tasot]))
 
 
 (defn- laheta! [e! data]
@@ -69,11 +70,16 @@
                                     ::t/poistettu))))))
 
 (defn- maaramitattavat-toteumat
-  [{:keys [e! tehtavat]} {{toteumat ::t/toteumat
+  [{:keys [e! tehtavat app]} {{toteumat ::t/toteumat
                            validius ::tila/validius
-                           :as lomake} :data}]
+                           :as lomake} :data} ]
   (let [paivita! (fn [polku indeksi arvo]
-                   (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku)))
+                   (let [_ (js/console.log "monen tehtävän päivitys lomakkeelta " (pr-str polku) (pr-str indeksi) (pr-str arvo))]
+                     (if-not
+                       (= polku :tierekisteriosoite)
+                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku))
+                       (e! (tiedot/->PaivitaSijaintiMonelle arvo indeksi))))
+                   )
         useampi? (> (count toteumat) 1)
         yksittainen? (= (count toteumat) 1)
         validi? (fn [polku]
@@ -86,12 +92,13 @@
          (fn [indeksi {tehtava ::t/tehtava
                        maara ::t/maara
                        lisatieto ::t/lisatieto
-                       sijainti ::t/sijainti
+                       ;sijainti ::t/sijainti
                        ei-sijaintia ::t/ei-sijaintia
                        toteuma-id ::t/toteuma-id
                        poistettu ::t/poistettu
                        :as _toteuma}]
-           (let [palstat-tagi (if yksittainen?
+           (let [sijainti (get-in app [:sijainti indeksi])
+                 palstat-tagi (if yksittainen?
                                 :<>
                                 :div.row.lomakepalstat)
                  palsta-tagi (if yksittainen?
@@ -127,19 +134,17 @@
                [palsta-tagi
                 [:div.row
                  [:label "Tehtävä"]
-                 ;if (> (count tehtavat) 0)
                  [kentat/tee-kentta
-                  {:virhe? (validi? [::t/toteumat indeksi ::t/tehtava])
+                  {:otsikko "Tehtävä"
+                   :nimi [::t/toteumat indeksi ::t/tehtava]
                    ::ui-lomake/col-luokka ""
-                   :vayla-tyyli? true
+                   :virhe? (validi? [::t/toteumat indeksi ::t/tehtava])
                    :tyyppi :valinta
-                   :valinnat tehtavat
+                   :valinta-nayta :tehtava
                    :valinta-arvo identity
-                   :valinta-nayta :tehtava}
+                   :valinnat tehtavat}
                   (r/wrap tehtava
-                          (r/partial paivita! ::t/tehtava indeksi))]
-                 ;[:div "Toimenpiteellä ei ole tehtäviä. Vaihda toimenpidettä tai lisättävän toteuman tyyppiä."]
-                 ]
+                          (r/partial paivita! ::t/tehtava indeksi))]]
                 [:div.row
                  [:label "Toteutunut määrä"]
                  [kentat/tee-kentta
@@ -163,16 +168,16 @@
                   [:div.row
                    [:label "Sijainti"]
                    [kentat/tee-kentta
-                    {::ui-lomake/col-luokka ""
+                    {:nimi [indeksi :tierekisteriosoite] #_[::t/toteumat indeksi ::t/sijainti]
+                     ::ui-lomake/col-luokka ""
                      :teksti "Kyseiseen tehtävään ei ole sijaintia"
-                     :virhe? (validi? [::t/toteumat indeksi ::t/sijainti])
+                     :pakollinen? (not ei-sijaintia)
                      :disabled? ei-sijaintia
-                     :vayla-tyyli? true
                      :tyyppi :tierekisteriosoite
-                     :sijainti (r/wrap sijainti (constantly true))}
-                    #_(r/wrap sijainti
-                              (r/partial paivita! ::t/sijainti indeksi))]]
-
+                     :sijainti (r/wrap sijainti (constantly true))
+                     }
+                    (r/wrap sijainti
+                            (r/partial paivita! :tierekisteriosoite indeksi))]]
                   [:div.row
                    [kentat/tee-kentta
                     {::ui-lomake/col-luokka ""
@@ -196,10 +201,15 @@
         {tyyppi ::t/tyyppi
          toteumat ::t/toteumat
          validius ::tila/validius
-         koko-validi? ::tila/validi?} lomake
+         koko-validi? ::tila/validi?
+         reitti :reitti} lomake
+        ;_
+        #_ (tasot/nayta-geometria! :tarkasteltava-reitti
+                                {:alue reitti})
         {ei-sijaintia ::t/ei-sijaintia
          toteuma-id ::t/toteuma-id
          sijainti ::t/sijainti} (-> toteumat first)
+        _ (js/console.log "maarien-toteuman-syottolomake* :: sijainti" (pr-str sijainti))
         validi? (fn [polku]
                   (if validius
                     (not (get-in validius [polku :validi?]))
@@ -216,7 +226,8 @@
                          :tyyppi :komponentti
                          :komponentti (r/partial maaramitattavat-toteumat {:e! e!
                                                                            :toimenpiteet toimenpiteet
-                                                                           :tehtavat tehtavat})}]
+                                                                           :tehtavat tehtavat
+                                                                           :app app})}]
         lisatyo [{:otsikko "Pvm"
                   :nimi ::t/pvm
                   ::ui-lomake/col-luokka ""
@@ -263,12 +274,18 @@
                                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku)))})]
     [:div#vayla
      #_[debug/debug app]
-     [debug/debug lomake]
+     #_ [debug/debug lomake]
      #_[debug/debug validius]
      [:div (str "Validi? " koko-validi?)]
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
-                   (e! (tiedot/->PaivitaLomake data nil)))
+                   (do
+                     (js/console.log "lomakkeelta päivitys :: viimeksi-muokattu-kentta " (pr-str (::ui-lomake/viimeksi-muokattu-kentta data)) "data: " (clj->js data))
+                     (if (and (not (keyword? (::ui-lomake/viimeksi-muokattu-kentta data)))
+                                  (> (count (::ui-lomake/viimeksi-muokattu-kentta data)) 1)
+                                  (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
+                       (e! (tiedot/->PaivitaSijainti data 0))
+                       (e! (tiedot/->PaivitaLomake data nil)))))
        :voi-muokata? true
        :tarkkaile-ulkopuolisia-muutoksia? true
        :palstoja 2
@@ -327,7 +344,7 @@
         :disabled? (not (= :maaramitattava (::t/tyyppi lomake)))}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi
-        :oletusarvo :maaramitattava
+        ;:oletusarvo :maaramitattava
         :otsikko ""
         :vaihtoehdot [:maaramitattava :akillinen-hoitotyo :lisatyo]
         :nayta-rivina? true
@@ -355,14 +372,13 @@
          (when (= (count toteumat) 1)
            {:otsikko "Sijainti *"})
          (when (= (count toteumat) 1)
-           [{:nimi [::t/toteumat 0 ::t/sijainti]
+           [{:nimi [0 :tierekisteriosoite] #_[::t/toteumat 0 ::t/sijainti]
              ::ui-lomake/col-luokka ""
              :teksti "Kyseiseen tehtävään ei ole sijaintia"
              :pakollinen? (not ei-sijaintia)
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
-             :sijainti (r/wrap sijainti
-                               (constantly true))           ; lomake päivittyy eri funkkarilla, niin annetaan vaan sijainti mutta callbackilla ei ole väliä
+             :sijainti (r/wrap sijainti (constantly true) #_ (e! (tiedot/->PaivitaSijainti %)))
              }
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""
@@ -372,4 +388,4 @@
 
 (defn akilliset-hoitotyot
   []
-  [tuck/tuck tila/toteumat-maarat maarien-toteuman-syottolomake*])
+  [tuck/tuck tila/toteumanakyma maarien-toteuman-syottolomake*])

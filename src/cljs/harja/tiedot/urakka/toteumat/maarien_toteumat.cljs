@@ -52,6 +52,9 @@
 (defrecord LisaaToteuma [lomake])
 (defrecord PaivitaLomake [lomake polku])
 (defrecord TyhjennaLomake [lomake])
+(defrecord PaivitaSijainti [lomake indeksi])
+(defrecord PaivitaSijaintiMonelle [sijainti indeksi])
+
 
 (def tyyppi->tyyppi
   {"kokonaishintainen"     "maaramitattava"
@@ -232,6 +235,7 @@
            tyyppi     ::t/tyyppi
            toimenpide ::t/toimenpide
            toteumat   ::t/toteumat} lomake
+          toteumat (paivita-sijainti-toteumiin toteumat app)
           urakka-id (-> @tila/yleiset :urakka :id)
           aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
                                             toteumat)
@@ -264,8 +268,36 @@
   ValidoiKokoLomake
   (process-event [{lomake            :lomake
                    validointi-skeema :validointi-skeema} app]
-    (loki/log (toteuma-lomakkeen-validoinnit lomake))
+    (log (toteuma-lomakkeen-validoinnit lomake))
     app)
+
+  PaivitaSijaintiMonelle
+  (process-event [{sijainti :sijainti indeksi :indeksi} app]
+    (log "PaivitaSijaintiMonelle :: sijainti" (clj->js sijainti))
+    (log "onko annettu" (pr-str (not (nil? (:loppuetaisyys sijainti)))))
+    (if (not (nil? (:loppuetaisyys sijainti)))
+      (-> app
+          ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+          ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+          (assoc-in [:sijainti indeksi] sijainti))
+      app))
+
+  PaivitaSijainti
+  (process-event [{lomake :lomake indeksi :indeksi} app]
+    (let [osoite (get-in lomake [indeksi :tierekisteriosoite])]
+      (log "PaivitaSijainti :: lomake" (clj->js lomake) (pr-str osoite) (not (empty? osoite)))
+      (log "onko annettu" (pr-str (and
+                                               (not (empty? osoite))
+                                               (not (nil? (get osoite :loppuetaisyys))))))
+       (if (and
+            (not (empty? osoite))
+            (not (nil? (get osoite :loppuetaisyys))))
+        (-> app
+            ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+            ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+            #_ (assoc-in [:lomake 0 :tierekisteriosoite] (get-in sijainti [0 :tierekisteriosoite]))
+          (assoc-in [:sijainti indeksi] osoite))
+        app)))
 
   PaivitaLomake
   (process-event [{{useampi?          ::t/useampi-toteuma
@@ -296,24 +328,34 @@
                        ;; Vaihda toimenpide tyypin mukaan
                        (vaihda-toimenpide-tyypin-mukaan app tyyppi)
                        toimenpide)
+          ensimmainen-sijainti (get-in app [:sijainti 0])
+          _ (log "ensimmainen-sijainti" (pr-str ensimmainen-sijainti) "useampi päälle: " (pr-str (true? useampi?)))
+          app (if (true? useampi?)
+                (assoc-in app [:lomake ::t/toteumat 0 ::t/sijainti] ensimmainen-sijainti)
+                app)
           app (if toimenpide
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
                 app)
+          ;; Jos yksittäisen toteuman sijainti muuttuu
+          ;app
+          #_ (if (= [0 :tierekisteriosoite] polku)
+            (assoc-in app [:lomake ::t/toteumat 0 ::t/sijainti] (get-in app [:lomake 0 :tierekisteriosoite]))
+            app)
           app (cond
-              ;; Jos toimenpide tai tyyppi muuttuu
-              (or
-                (= polku ::t/toimenpide)
-                (= viimeksi-muokattu ::t/toimenpide)
-                (= viimeksi-muokattu ::t/tyyppi))
-              (hae-tehtavat-tyypille app toimenpide tyyppi)
+                ;; Jos toimenpide tai tyyppi muuttuu
+                (or
+                  (= polku ::t/toimenpide)
+                  (= viimeksi-muokattu ::t/toimenpide)
+                  (= viimeksi-muokattu ::t/tyyppi))
+                (hae-tehtavat-tyypille app toimenpide tyyppi)
 
-              ;; Jos poistetaan
-              (and (= polku ::t/poistettu)
-                   (not (nil? (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]))))
-              (poista-toteuma (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]) app)
+                ;; Jos poistetaan
+                (and (= polku ::t/poistettu)
+                     (not (nil? (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]))))
+                (poista-toteuma (get-in app [:lomake ::t/toteumat 0 ::t/toteuma-id]) app)
 
-              ;; Default
-              :else app)
+                ;; Default
+                :else app)
           app (-> app
                   (assoc-in [:lomake ::tila/validius] validius)
                   (assoc-in [:lomake ::tila/validi?] validi?))
@@ -414,6 +456,7 @@
                     :loppuosa      (:sijainti_loppu vastaus)
                     :loppuetaisyys (:sijainti_loppuetaisyys vastaus)}]
       (hae-tehtavat valittu-toimenpide)
+      (reset! maarien-toteumat-kartalla/karttataso-toteumat (:reitti vastaus))
       (-> app
           (assoc-in [:syottomoodi] true)
           (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] (:toteuma_id vastaus))

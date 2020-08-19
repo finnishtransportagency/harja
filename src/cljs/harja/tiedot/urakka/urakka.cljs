@@ -199,6 +199,9 @@
                                                                         ::t/lisatieto nil
                                                                         ::t/maara nil}]}}})
 
+(defonce toteumanakyma (atom toteumat-default-arvot))
+
+
 (def kulut-default {:parametrit  {:haetaan 0}
                     :taulukko    nil
                     :lomake      kulut-lomake-default

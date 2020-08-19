@@ -521,6 +521,25 @@
   ;:TODO: aseta oikeat käyttöoikeudet - urakat-toteumat-maarien-toteumat
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
     (let [toteuma (first (toteumat-q/hae-maarien-toteuma db {:id id}))
+          reitti-viiva (tr-q/hae-tr-viiva db
+                                          {:numero (:sijainti_numero toteuma)
+                                           :alkuosa (:sijainti_alku toteuma)
+                                           :alkuetaisyys (:sijainti_alkuetaisyys toteuma)
+                                           :loppuosa (:sijainti_loppu toteuma)
+                                           :loppuetaisyys (:sijainti_loppuetaisyys toteuma)})
+          _ (println "reitti-viiva : " (pr-str reitti-viiva))
+          reitti (when (and
+                         (not (nil? reitti-viiva))
+                         (nil? (:virhe reitti-viiva) ))
+                   (geo/geometry (geo/clj->pg reitti-viiva)))
+          _ (println "1 reitti : " (pr-str reitti))
+          ;reitti
+          #_ (comp (geo/muunna-pg-tulokset :reitti)
+                reitti)
+          _ (println "2 reitti : " (pr-str reitti))
+          toteuma (if (:sijainti_loppuetaisyys toteuma)
+                    (assoc toteuma :reitti reitti)
+                    toteuma)
           _ (log/debug "Haettu toteuma id:lle: " id " toteuma: " (pr-str toteuma))]
       toteuma)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
