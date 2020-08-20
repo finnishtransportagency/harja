@@ -27,7 +27,8 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.toteumat.maarien-toteuma-lomake :as toteuma-lomake]
             [harja.loki :as loki]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -43,13 +44,13 @@
                    (swap! debug-visible? not))))
              true))
 
-(defonce valittu-kustannus (atom nil))
-
-(defn- laske-prosentti [toteuma suunniteltu]
-  (if (or (= 0 toteuma)
+(defn- laske-prosentti
+  "Olettaa saavansa molemmat parametrit big arvoina."
+  [toteuma suunniteltu]
+  (if (or (= (big/->big 0) toteuma)
           (nil? toteuma))
     0
-    (fmt/desimaaliluku-opt (* 100 (/ suunniteltu toteuma)) 2)))
+    (big/fmt (big/mul (big/->big 100) (big/div suunniteltu toteuma)) 2)))
 
 (defn- muokkaa-toteumaa-linkki [e! db-aika toteuma-id]
   [:a {:href     "#"
@@ -107,10 +108,7 @@
                   muodostetut (mapcat
                                 (fn [rivi]
                                   (let [_ (reset! row-index-atom (inc @row-index-atom))
-                                        avattava? true #_(if (or
-                                                               (> (count (second rivi)) 1)
-                                                               (:toteuma_aika (first (second rivi))))
-                                                           true false)
+                                        avattava? true
                                         nayta-nuoli? (or
                                                        (:toteuma_aika (first (second rivi)))
                                                        (:kasin-lisattava? (first (second rivi))))
@@ -119,8 +117,9 @@
                                                           (not (nil? (:toteutunut (first (second rivi))))))
                                                       (second rivi)
                                                       nil)
-                                        toteutunut-maara (or (apply + (map :toteutunut (second rivi))) 0)
-                                        suunniteltu-maara (:suunniteltu_maara (first (second rivi)))
+                                        toteutunut-maara (reduce big/plus (big/->big 0)
+                                                (keep #(big/->big (:toteutunut %)) (second rivi)))
+                                        suunniteltu-maara (big/->big (:suunniteltu_maara (first (second rivi))))
                                         {:keys [tyyppi]} (first (second rivi))]
                                     (concat
                                       [^{:key (hash rivi)}
@@ -135,17 +134,21 @@
                                                                                              [ikonit/livicon-chevron-up])
                                                                                   (when nayta-nuoli?
                                                                                     [ikonit/livicon-chevron-down]))]
-                                       [:td {:style {:width (:toteuma leveydet)}} (str toteutunut-maara " " (maarita-yksikko (first (second rivi))))]
-                                       [:td {:style {:width (:suunniteltu leveydet)}} (if (= -1 suunniteltu-maara)
+                                       [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
+                                       [:td {:style {:width (:suunniteltu leveydet)}} (if (big/eq (big/->big -1) suunniteltu-maara)
                                                                                         (case tyyppi
                                                                                           "kokonaishintainen" [:span.tila-virhe "---"]
                                                                                           "---")
-                                                                                        (str (or suunniteltu-maara 0) " " (:yksikko (first (second rivi)))))]
-                                       [:td {:style {:width (:prosentti leveydet)}} (if (= -1 suunniteltu-maara)
+                                                                                        (str (if (big/gt suunniteltu-maara (big/->big -1))
+                                                                                               (big/fmt suunniteltu-maara 1)
+                                                                                               0) " " (:yksikko (first (second rivi)))))]
+                                       [:td {:style {:width (:prosentti leveydet)}} (if (big/eq (big/->big -1) suunniteltu-maara)
                                                                                       (case tyyppi
                                                                                         "kokonaishintainen" [:span.tila-virhe (ikonit/exclamation-sign)]
                                                                                         "---")
-                                                                                      (str (laske-prosentti (:suunniteltu_maara (first (second rivi))) toteutunut-maara) " %"))]]]
+                                                                                      (str (laske-prosentti
+                                                                                             (big/->big (:suunniteltu_maara (first (second rivi))))
+                                                                                             toteutunut-maara) " %"))]]]
 
                                       ;; "+ Lisää toteuma" rivi - jos rivi on auki ja jos tehtävämäärän/toimenpiteen tehtävälle on tietokantaan sallittu käsin lisäys
                                       (when (and
@@ -168,30 +171,28 @@
                                               [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                                [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika lapsi) (:toteuma_id lapsi)]]
                                                [:td {:style {:width (:caret leveydet)}} ""]
-                                               [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut lapsi) " " (maarita-yksikko lapsi))]
+                                               [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (:toteutunut lapsi)) 2) " " (maarita-yksikko lapsi))]
                                                [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                                [:td {:style {:width (:prosentti leveydet)}} "---"]]]))
                                           lapsi-rivit)
                                         ;; Jos lapsi-rivejä ei ole, mutta toteuma löytyy, niin lisätään se
                                         (when (and
                                                 (= (get-in app [:valittu-rivi]) (first rivi))
-                                                (> toteutunut-maara 0))
+                                                (big/gt toteutunut-maara (big/->big 0)))
                                           [^{:key (str "toteuma-" (hash rivi))}
                                           (do
                                             (reset! row-index-atom (inc @row-index-atom))
                                             [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                              [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:toteuma_aika (first (second rivi))) (:toteuma_id (first (second rivi)))]]
                                              [:td {:style {:width (:caret leveydet)}} ""]
-                                             [:td {:style {:width (:toteuma leveydet)}} (str (:toteutunut (first (second rivi))) " " (maarita-yksikko (first (second rivi))))]
+                                             [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (:toteutunut (first (second rivi)))) 2) " " (maarita-yksikko (first (second rivi))))]
                                              [:td {:style {:width (:suunniteltu leveydet)}} "---"]
                                              [:td {:style {:width (:prosentti leveydet)}} "---"]])])))))
                                 rivit)]
               (concat [
                        ^{:key (str "otsikko-" (hash tehtavaryhma))}
                        [:tr.header
-                        [:td tehtavaryhma]
-                        [:td ""]
-                        [:td ""]
+                        [:td {:colspan "3"} tehtavaryhma]
                         [:td ""]
                         [:td ""]]]
                       muodostetut)))
@@ -236,7 +237,8 @@
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
      #_ [debug/debug app]
-     [:div "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan."]
+     [:div [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
+            "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
      [:div.flex-row {:style {:flex-wrap "wrap"}}
       [:div {:style {:flex-grow 2 :padding-right "1rem" :min-width "250px"}}
        [:span.alasvedon-otsikko "Toimenpide"]

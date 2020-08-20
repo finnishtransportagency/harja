@@ -12,12 +12,9 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
-
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-
-(declare validoi-lomake)
 (declare hae-toteutuneet-maarat)
 (declare hae-tehtavat)
 (defrecord HaeToimenpiteet [])
@@ -50,7 +47,7 @@
 (defrecord HaeTehtavat [parametrit])
 (defrecord LahetaLomake [lomake])
 (defrecord LisaaToteuma [lomake])
-(defrecord PaivitaLomake [lomake polku])
+(defrecord PaivitaLomake [lomake polku indeksi])
 (defrecord TyhjennaLomake [lomake])
 (defrecord PaivitaSijainti [lomake indeksi])
 (defrecord PaivitaSijaintiMonelle [sijainti indeksi])
@@ -65,7 +62,12 @@
 
 (def oletuslomake {})
 
-(def uusi-toteuma {})
+(def uusi-toteuma {::t/tehtava nil
+                   ::t/toteuma-id nil
+                   ::t/ei-sijaintia true
+                   ::t/toteuma-tehtava-id nil
+                   ::t/lisatieto nil
+                   ::t/maara nil})
 
 (defn validoinnit
   ([avain lomake indeksi]
@@ -107,7 +109,6 @@
   ([app toimenpide]
    (hae-tehtavat-tyypille app toimenpide :maaramitattava))
   ([app toimenpide tyyppi]
-   (log "haen tehtavat tyypille" (pr-str toimenpide) (pr-str tyyppi))
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
          rajapinta (case tyyppi
@@ -150,13 +151,14 @@
 (def filtteri->tyyppi {:maaramitattavat #{"kokonaishintainen"}
                        :lisatyot        #{"lisatyo"}
                        :rahavaraukset   #{"akillinen-hoitotyo" "muut-rahavaraukset" "vahinkojen-korjaukset"}})
+
 (defn- tehtavien-filtteri-fn
   [filtterit]
   (fn [tehtava]
     (cond
       (nil? filtterit)
       true
-      
+
       (contains?
         (into #{}
               (mapcat filtteri->tyyppi
@@ -217,6 +219,15 @@
                  (assoc toteuma ::t/sijainti (get-in app [:sijainti indeksi])))
                toteumat))
 
+(defn- uusi-pvm-lomakkeelle [app]
+  (let [vuosi (if (> (pvm/kuukausi (pvm/nyt)) 10)
+                (:hoitokauden-alkuvuosi app)
+                (+ 1 (:hoitokauden-alkuvuosi app)))
+        kuukausi (- (pvm/kuukausi (pvm/nyt)) 1)
+        paiva 1
+        uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)]
+    uusi-pvm))
+
 (extend-protocol tuck/Event
   AsetaFiltteri
   (process-event [{polku :polku arvo :arvo} app]
@@ -260,6 +271,7 @@
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
 
+  ;; Käytetään, kun halutaan lisätä useampi toteuma kerralla toteumalomakkeeella
   LisaaToteuma
   (process-event [{lomake :lomake} app]
     (let [lomake (update lomake ::t/toteumat conj uusi-toteuma)]
@@ -284,7 +296,9 @@
 
   PaivitaSijainti
   (process-event [{lomake :lomake indeksi :indeksi} app]
-    (let [osoite (get-in lomake [indeksi :tierekisteriosoite])]
+    (let [osoite (get-in lomake [indeksi :tierekisteriosoite])
+          ; Kun sijaintia muokataan, pitää vanha sijainti poistaa kartalta
+          _ (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)]
       (log "PaivitaSijainti :: lomake" (clj->js lomake) (pr-str osoite) (not (empty? osoite)))
       (log "onko annettu" (pr-str (and
                                                (not (empty? osoite))
@@ -305,13 +319,13 @@
                     toimenpide        ::t/toimenpide
                     viimeksi-muokattu ::ui-lomake/viimeksi-muokattu-kentta
                     :as lomake} :lomake
-                   polku :polku} app]
+                   polku :polku
+                   indeksi :indeksi} app]
     (let [_ (log "PaivitaLomake :: Nyt muokataan polku " (pr-str polku) "viimeksi-muokattu" (pr-str viimeksi-muokattu) "tyyppi" (pr-str tyyppi) "toimenpide" (pr-str toimenpide))
           ;; Toimenpidettä vaihdettaessa polkua ei tallenneta, mutta viimeksi-muokattu tallennetaan
           polku (if (and (nil? polku) viimeksi-muokattu)
                   viimeksi-muokattu
                   polku)
-          _ (log "Onko polku muuttunut. Polku: " (pr-str polku))
           ;; Siivotaan viimeksi muokattu pois
           app (assoc app ::ui-lomake/viimeksi-muokattu-kentta nil)
           useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
@@ -321,26 +335,24 @@
                      [(first ts)])
           maara-pois (fn [ts]
                        (mapv #(dissoc % ::t/maara) ts))
-          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
-          {:keys [validi? validius]} (validoi validoinnit lomake)
           ;; Vaihdettaessa tyyppi lisätyöksi tai äkilliseksi hoitotyöksi muutetaan toimenpide sen mukaan
           toimenpide (if (and (= polku ::t/tyyppi) (not= tyyppi :maaramitattava))
                        ;; Vaihda toimenpide tyypin mukaan
                        (vaihda-toimenpide-tyypin-mukaan app tyyppi)
                        toimenpide)
           ensimmainen-sijainti (get-in app [:sijainti 0])
-          _ (log "ensimmainen-sijainti" (pr-str ensimmainen-sijainti) "useampi päälle: " (pr-str (true? useampi?)))
           app (if (true? useampi?)
                 (assoc-in app [:lomake ::t/toteumat 0 ::t/sijainti] ensimmainen-sijainti)
                 app)
           app (if toimenpide
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
                 app)
-          ;; Jos yksittäisen toteuman sijainti muuttuu
-          ;app
-          #_ (if (= [0 :tierekisteriosoite] polku)
-            (assoc-in app [:lomake ::t/toteumat 0 ::t/sijainti] (get-in app [:lomake 0 :tierekisteriosoite]))
-            app)
+          ;; Jos yksittäisen toteuman sijainti muutetaan ei sijainnittomaksi
+          app (if (= polku [:harja.domain.toteuma/toteumat indeksi :harja.domain.toteuma/ei-sijaintia])
+                (do
+                  (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)
+                  (assoc-in app [:lomake indeksi :tierekisteriosoite] nil))
+                app)
           app (cond
                 ;; Jos toimenpide tai tyyppi muuttuu
                 (or
@@ -356,6 +368,9 @@
 
                 ;; Default
                 :else app)
+          ;Valitoidaan lomake
+          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)
           app (-> app
                   (assoc-in [:lomake ::tila/validius] validius)
                   (assoc-in [:lomake ::tila/validi?] validi?))
@@ -404,6 +419,11 @@
                            :maarien-toteumat
                            :lomake)))
 
+  PoistaToteuma
+  (process-event [{id :id} app]
+    (poista-toteuma id app)
+    app)
+
   ValitseToimenpide
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
     (do
@@ -416,16 +436,14 @@
       (-> app
           (assoc :valittu-toimenpide toimenpide)
           (assoc-in [:lomake ::t/toimenpide] toimenpide)
-          (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] nil)
-          (validoi-lomake))))
+          (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] nil))))
 
   ValitseTehtava
   (process-event [{tehtava :tehtava} app]
     (do
       (log "ValitseTehtava" (pr-str tehtava))
       (-> app
-          (assoc-in [:toteuma :tehtava] tehtava)
-          (validoi-lomake))))
+          (assoc-in [:toteuma :tehtava] tehtava))))
 
   ;; Vain yksi rivi voi olla avattuna kerralla, joten tallennetaan avain app-stateen tai poistetaan se, jos se oli jo valittuna
   AvaaRivi
@@ -450,28 +468,36 @@
     (let [_ (log "ToteumaHakuOnnistui :: vastaus " (pr-str vastaus))
           valittu-tehtava {:id (:tehtava_id vastaus) :tehtava (:tehtava vastaus) :yksikko (:yksikko vastaus)}
           valittu-toimenpide {:id (:toimenpide_id vastaus) :otsikko (:toimenpide_otsikko vastaus)}
-          sijainti {:numero        (:sijainti_numero vastaus)
-                    :alkuosa       (:sijainti_alku vastaus)
-                    :alkuetaisyys  (:sijainti_alkuetaisyys vastaus)
-                    :loppuosa      (:sijainti_loppu vastaus)
-                    :loppuetaisyys (:sijainti_loppuetaisyys vastaus)}]
-      (hae-tehtavat valittu-toimenpide)
-      (reset! maarien-toteumat-kartalla/karttataso-toteumat (:reitti vastaus))
-      (-> app
-          (assoc-in [:syottomoodi] true)
-          (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] (:toteuma_id vastaus))
-          (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
-          (assoc-in [:lomake ::t/pvm] (:toteuma_aika vastaus))
-          (assoc-in [:lomake ::t/toteumat 0 ::t/maara] (:toteutunut vastaus))
-          (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] (:lisatieto vastaus))
-          (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] valittu-tehtava)
-          (assoc-in [:lomake ::t/toteumat 0 ::t/sijainti] sijainti)
-          (assoc-in [:lomake 0 :tierekisteriosoite] sijainti)
-          (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] (some #(nil? (second %)) sijainti))
-          (assoc-in [:lomake ::t/tyyppi] (-> vastaus :tyyppi tyyppi->tyyppi keyword))
-          (assoc-in [:lomake ::t/toimenpide] valittu-toimenpide)
-          (assoc-in [:lomake :vuosi] (:hoitokauden-alkuvuosi vastaus))
-          (validoi-lomake))))
+          sijainti {:numero (:sijainti_numero vastaus)
+                    :alkuosa (:sijainti_alku vastaus)
+                    :alkuetaisyys (:sijainti_alkuetaisyys vastaus)
+                    :loppuosa (:sijainti_loppu vastaus)
+                    :loppuetaisyys (:sijainti_loppuetaisyys vastaus)}
+          _ (hae-tehtavat valittu-toimenpide)
+          _ (reset! maarien-toteumat-kartalla/karttataso-toteumat (:reitti vastaus))
+          app
+          (-> app
+              (assoc-in [:syottomoodi] true)
+              (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] (:toteuma_id vastaus))
+              (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] (:toteuma_tehtava_id vastaus))
+              (assoc-in [:lomake ::t/pvm] (:toteuma_aika vastaus))
+              (assoc-in [:lomake ::t/toteumat 0 ::t/maara] (:toteutunut vastaus))
+              (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] (:lisatieto vastaus))
+              (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] valittu-tehtava)
+              (assoc-in [:lomake ::t/toteumat 0 ::t/sijainti] sijainti)
+              (assoc-in [:lomake 0 :tierekisteriosoite] sijainti)
+              (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] (some #(nil? (second %)) sijainti))
+              (assoc-in [:lomake ::t/tyyppi] (-> vastaus :tyyppi tyyppi->tyyppi keyword))
+              (assoc-in [:lomake ::t/toimenpide] valittu-toimenpide)
+              (assoc-in [:lomake :vuosi] (:hoitokauden-alkuvuosi vastaus)))
+          ;Valitoidaan lomake
+          lomake (:lomake app)
+          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)
+          app (-> app
+                  (assoc-in [:lomake ::tila/validius] validius)
+                  (assoc-in [:lomake ::tila/validi?] validi?))]
+      app))
 
   ToteumaHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -580,11 +606,15 @@
                   true (assoc-in [:lomake ::t/tyyppi] :maaramitattava)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
-                  true (assoc-in [:lomake ::t/pvm] (pvm/luo-pvm (if (> (pvm/kuukausi (pvm/nyt)) 10)
-                                                                  (:hoitokauden-alkuvuosi app)
-                                                                  (+ 1 (:hoitokauden-alkuvuosi app)))
-                                                                (- (pvm/kuukausi (pvm/nyt)) 1)
-                                                                1)))]
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] true)
+                  true (assoc-in [:lomake ::t/pvm] (uusi-pvm-lomakkeelle app)))
+          lomake (get app :lomake)
+          ;Valitoidaan lomake
+          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)
+          app (-> app
+                  (assoc-in [:lomake ::tila/validius] validius)
+                  (assoc-in [:lomake ::tila/validi?] validi?))]
       app))
 
   PoistaToteumaOnnistui
@@ -650,17 +680,3 @@
                        {:onnistui           ->TehtavatHakuOnnistui
                         :epaonnistui        ->TehtavatHakuEpaonnistui
                         :paasta-virhe-lapi? true})))
-
-(defn- validoi-lomake [app]
-  (let [toimenpiteella-tehtavia? (> (count (:tehtavat app)) 0)
-        tehtava-valittu? (if toimenpiteella-tehtavia?
-                           (not (nil? (get-in app [:toteuma :tehtava])))
-                           true)
-        valid? (if (and
-                     (not (nil? (:valittu-toimenpide app)))
-                     tehtava-valittu?
-                     (not (nil? (get-in app [:toteuma :maara])))
-                     (not (nil? (get-in app [:toteuma :loppupvm]))))
-                 true
-                 false)]
-    (assoc-in app [:lomake-validoitu?] valid?)))

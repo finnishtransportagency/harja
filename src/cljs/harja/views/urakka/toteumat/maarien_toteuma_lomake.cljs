@@ -67,7 +67,8 @@
                                               (let [toteumat (vec toteumat)]
                                                 (vec (concat (subvec toteumat 0 indeksi)
                                                              (subvec toteumat (inc indeksi)))))))
-                                    ::t/poistettu))))))
+                                    ::t/poistettu
+                                    indeksi))))))
 
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat app]} {{toteumat ::t/toteumat
@@ -77,7 +78,7 @@
                    (let [_ (js/console.log "monen tehtävän päivitys lomakkeelta " (pr-str polku) (pr-str indeksi) (pr-str arvo))]
                      (if-not
                        (= polku :tierekisteriosoite)
-                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku))
+                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi))
                        (e! (tiedot/->PaivitaSijaintiMonelle arvo indeksi))))
                    )
         useampi? (> (count toteumat) 1)
@@ -141,6 +142,7 @@
                    :virhe? (validi? [::t/toteumat indeksi ::t/tehtava])
                    :tyyppi :valinta
                    :valinta-nayta :tehtava
+                   :vayla-tyyli? true
                    :valinta-arvo identity
                    :valinnat tehtavat}
                   (r/wrap tehtava
@@ -218,7 +220,9 @@
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava [{:otsikko "Työ valmis"
                          :nimi ::t/pvm
-                         ::ui-lomake/col-luokka ""
+                         ::ui-lomake/col-luokka (if (> (count toteumat) 1)
+                                                  "col-xs-12 col-sm-12 col-md-5"
+                                                  "")
                          :pakollinen? true
                          :tyyppi :pvm}
                         {:nimi ::t/toteumat
@@ -271,21 +275,21 @@
                             :e! e!
                             :lomake lomake
                             :paivita! (fn [polku indeksi arvo]
-                                        (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku)))})]
+                                        (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})]
     [:div#vayla
      #_[debug/debug app]
      #_ [debug/debug lomake]
      #_[debug/debug validius]
-     [:div (str "Validi? " koko-validi?)]
+     #_ [:div (str "Validi? " koko-validi?)]
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
                    (do
                      (js/console.log "lomakkeelta päivitys :: viimeksi-muokattu-kentta " (pr-str (::ui-lomake/viimeksi-muokattu-kentta data)) "data: " (clj->js data))
                      (if (and (not (keyword? (::ui-lomake/viimeksi-muokattu-kentta data)))
-                                  (> (count (::ui-lomake/viimeksi-muokattu-kentta data)) 1)
-                                  (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
+                              (> (count (::ui-lomake/viimeksi-muokattu-kentta data)) 1)
+                              (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
                        (e! (tiedot/->PaivitaSijainti data 0))
-                       (e! (tiedot/->PaivitaLomake data nil)))))
+                       (e! (tiedot/->PaivitaLomake data nil 0)))))
        :voi-muokata? true
        :tarkkaile-ulkopuolisia-muutoksia? true
        :palstoja 2
@@ -307,7 +311,9 @@
                                         [toteuman-poiston-varmistus-modaali
                                          {:varmistus-fn (fn []
                                                           (modal/piilota!)
-                                                          (poista! true))
+                                                          (if (> (count toteumat) 1)
+                                                            (poista! true)
+                                                            (e! (tiedot/->PoistaToteuma toteuma-id))))
                                           :pvm (get-in lomake [::t/pvm])
                                           :tehtava (get-in lomake [::t/toteumat 0 ::t/tehtava]) ;; Voi käyttää kova koodattua indeksiä, koska tämä ei ole käytössä, jos toteumia on useampi
                                           :maara (get-in lomake [::t/toteumat 0 ::t/maara])
