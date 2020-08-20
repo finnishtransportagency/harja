@@ -1483,3 +1483,8 @@ BEGIN
                urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 END $$;
+
+-- Toimenpidekoodi-taulun apitunnus-kentän testaamista varten
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES
+('Apitunnus-testitehtävä', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	999, TRUE, 987654,
+(select id from toimenpidekoodi where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE);
