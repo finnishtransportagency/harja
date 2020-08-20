@@ -145,14 +145,16 @@
   (if (nykyinen-sijainti-riittavan-tarkka? (-> sijainti :nykyinen :accuracy)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (let [aikaleima-nyt (lt/local-now)
-          kirjaustulos (kirjaa-kertakirjaus idxdb
-                                            {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
-                                             :aikaleima (tc/to-long aikaleima-nyt)
-                                             :tarkastusajo tarkastusajo-id
-                                             :havainnot (into #{} (remove nil? (conj jatkuvat-havainnot
-                                                                                     havainto-avain)))
-                                             :mittaukset {}})]
-      (when havainto-kirjattu-fn
+          {lat :lat lon :lon :as nykyinen-sijainti} (:nykyinen sijainti)
+          kirjaustulos (when (and lat lon)
+                         (kirjaa-kertakirjaus idxdb
+                                              {:sijainti (select-keys nykyinen-sijainti [:lat :lon :accuracy])
+                                               :aikaleima (tc/to-long aikaleima-nyt)
+                                               :tarkastusajo tarkastusajo-id
+                                               :havainnot (into #{} (remove nil? (conj jatkuvat-havainnot
+                                                                                       havainto-avain)))
+                                               :mittaukset {}}))]
+      (when (and havainto-kirjattu-fn kirjaustulos)
         (lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi {:kirjaustulos kirjaustulos
                                                            :havainto-kirjattu-fn havainto-kirjattu-fn
                                                            :aikaleima aikaleima-nyt

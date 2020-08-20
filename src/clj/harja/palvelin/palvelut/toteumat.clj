@@ -172,6 +172,7 @@
        (let [toteumatyyppi (name (:tyyppi toteuma))
              maksueratyyppi (case toteumatyyppi
                                   "muutostyo" "muu"
+                                  "vahinkojen-korjaukset" "muu"
                                   toteumatyyppi)]
             (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c
                                                                maksueratyyppi
@@ -588,36 +589,41 @@
         :id)))
 
 (defn- paivita-muun-tyon-toteuma
-  [c user toteuma]
-  (log/debug "Päivitä toteuma" toteuma)
-  (if (:poistettu toteuma)
-    (let [params [c (:id user) (get-in toteuma [:toteuma :id])]]
-      (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
-      (apply toteumat-q/poista-toteuman-tehtavat! params)
-      (apply toteumat-q/poista-toteuma! params)
-         (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c
-                                                            "muu"
-                                                            (:toimenpidekoodi (:tehtava toteuma))
-                                                            (:urakka-id toteuma)))
-    (let [paivitetty (toteumat-q/paivita-toteuma<! c {:alkanut (konv/sql-date (:alkanut toteuma))
-                                                      :paattynyt (konv/sql-date (:paattynyt toteuma))
-                                                      :tyyppi (name (:tyyppi toteuma))
-                                                      :kayttaja (:id user)
-                                                      :suorittaja (:suorittajan-nimi toteuma)
-                                                      :ytunnus (:suorittajan-ytunnus toteuma)
-                                                      :lisatieto (:lisatieto toteuma)
-                                                      :numero (get-in toteuma [:tr :numero])
-                                                      :alkuosa (get-in toteuma [:tr :alkuosa])
-                                                      :alkuetaisyys (get-in toteuma [:tr :alkuetaisyys])
-                                                      :loppuosa (get-in toteuma [:tr :loppuosa])
-                                                      :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
-                                                      :id (get-in toteuma [:toteuma :id])
-                                                      :urakka (:urakka-id toteuma)})
-          id (:id paivitetty)]
-      (paivita-toteuman-reitti c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
-      (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
-                                                 :tehtava-id (get-in toteuma [:tehtava :id])))
-      id)))
+       [c user toteuma]
+       (log/debug "Päivitä toteuma" toteuma)
+       (if (:poistettu toteuma)
+         (let [params [c (:id user) (get-in toteuma [:toteuma :id])]
+               toteumatyyppi (name (:tyyppi toteuma))
+               maksueratyyppi (case toteumatyyppi
+                                    "akillinen-hoitotyo" "akillinen-hoitotyo"
+                                    "lisatyo" "lisatyo"
+                                    "muu")]
+              (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
+              (apply toteumat-q/poista-toteuman-tehtavat! params)
+              (apply toteumat-q/poista-toteuma! params)
+              (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c
+                                                                 maksueratyyppi
+                                                                 (:toimenpidekoodi (:tehtava toteuma))
+                                                                 (:urakka-id toteuma)))
+         (let [paivitetty (toteumat-q/paivita-toteuma<! c {:alkanut       (konv/sql-date (:alkanut toteuma))
+                                                           :paattynyt     (konv/sql-date (:paattynyt toteuma))
+                                                           :tyyppi        (name (:tyyppi toteuma))
+                                                           :kayttaja      (:id user)
+                                                           :suorittaja    (:suorittajan-nimi toteuma)
+                                                           :ytunnus       (:suorittajan-ytunnus toteuma)
+                                                           :lisatieto     (:lisatieto toteuma)
+                                                           :numero        (get-in toteuma [:tr :numero])
+                                                           :alkuosa       (get-in toteuma [:tr :alkuosa])
+                                                           :alkuetaisyys  (get-in toteuma [:tr :alkuetaisyys])
+                                                           :loppuosa      (get-in toteuma [:tr :loppuosa])
+                                                           :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
+                                                           :id            (get-in toteuma [:toteuma :id])
+                                                           :urakka        (:urakka-id toteuma)})
+               id (:id paivitetty)]
+              (paivita-toteuman-reitti c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
+              (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
+                                                              :tehtava-id (get-in toteuma [:tehtava :id])))
+              id)))
 
 (defn- luo-muun-tyon-toteuma
   [c user toteuma]

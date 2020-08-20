@@ -226,6 +226,7 @@
   :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
             "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
+            "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
