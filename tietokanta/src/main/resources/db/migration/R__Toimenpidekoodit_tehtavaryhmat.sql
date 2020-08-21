@@ -958,10 +958,7 @@ UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'd373c08b-32eb-4ac2-b817-04106b8
 
 -- Päivitetään api-tunnus tehtävähierarkian tehtäville, joilla sitä ei entuudestaan ole. Sama tunnus kaikkiin ympäristöihin (prod, stg, test, local). Huom. osa tehtävistä puuttuu kehitysympäristöstä.
 -- Api-tunnuksen olemassa olo ei tarkoita sitä, että tehtävälle kirjataan apin kautta toteumia. Api-käyttöä määrittää seurataan-apin-kautta-sarake.
-UPDATE toimenpidekoodi
-set api_tunnus = (115 * jarjestys)
-where tehtavaryhma is not null and api_tunnus is null;
--- TODO: Poista tämä ennen kuin api_tunnus otetaan käyttöön
+UPDATE toimenpidekoodi set api_tunnus = id where api_tunnus is null and api_seuranta is true;
 
 -- Poistetut tehtävät
 DELETE FROM toimenpidekoodi where nimi = 'Muut päällysteiden paikkaukseen liittyvät työt';
