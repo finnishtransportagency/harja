@@ -20,10 +20,7 @@ $$
 DECLARE
     partitio text;
 BEGIN
-    IF (alkupvm = '0001-01-01') THEN  partitio := 'toteuma_ennen_20151001';
-    ELSIF (loppupvm = '9999-12-31') THEN partitio :=  'toteuma_uudet';
-    ELSE partitio :=  'toteuma_hk_' || TO_CHAR(alkupvm, 'YY') || '_' || TO_CHAR(loppupvm, 'YY');
-    END IF;
+    partitio :=  'toteuma_' || TO_CHAR(alkupvm, 'YYMMDD') || '_' || TO_CHAR(loppupvm, 'YYMMDD');
 
     PERFORM validoi_hoitokauden_alkupvm(alkupvm);
 
@@ -52,11 +49,15 @@ $$
     LANGUAGE plpgsql;
 
 
--- Partitioi toteumataulu
+-- luodaan vanhoista toteumista yksi iso partitio, vältetään iso ja hidas datan siirto
+ALTER TABLE toteuma rename to toteuma_010101_200701;
+-- pudotellaan triggerit, koska tästä taulutsa tulee yksi partitio, emo taulu saa triggerit migraation lopuksi
+DROP TRIGGER IF EXISTS tg_muodosta_toteuman_envelope ON toteuma_010101_200701;
+DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_tot ON toteuma_010101_200701;
+DROP TRIGGER IF EXISTS tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain ON toteuma_010101_200701;
 
-ALTER TABLE toteuma rename to toteuma_vanha;
 
--- poistetaan FK rajoitteet osoittamasta toteuma_vanha tauluun, jotta voidaan tehdä datan siirto
+-- poistetaan FK rajoitteet osoittamasta toteuma_010101_200701 tauluun, jotta voidaan tehdä datan siirto
 ALTER TABLE toteuma_tehtava DROP CONSTRAINT toteuma_tehtava_toteuma_fkey;
 ALTER TABLE toteuma_materiaali DROP CONSTRAINT toteuma_materiaali_toteuma_fkey;
 ALTER TABLE varustetoteuma DROP CONSTRAINT varustetoteuma_toteuma_fkey;
@@ -64,24 +65,37 @@ ALTER TABLE toteuman_reittipisteet DROP CONSTRAINT toteuman_reittipisteet_toteum
 ALTER TABLE toteuma_liite DROP CONSTRAINT toteuma_liite_toteuma_fkey;
 ALTER TABLE paikkaustoteuma DROP CONSTRAINT "paikkaustoteuma_toteuma-id_fkey";
 
-CREATE TABLE toteuma (LIKE toteuma_vanha INCLUDING ALL);
+
+-- Koska toteumien ID:n palauttaminen muuttuu partitioinnin myötä, lisätään turvaa lisäämällä
+-- tärkeimpiin viitteisiin NOT NULL rajoitteet. Sitä ennen poistettava kura kannasta.
+DELETE FROM toteuma_tehtava WHERE toteuma IS NULL;
+ALTER TABLE toteuma_tehtava ALTER COLUMN toteuma SET NOT NULL;
+DELETE FROM toteuma_materiaali WHERE toteuma IS NULL;
+ALTER TABLE toteuma_materiaali ALTER COLUMN toteuma SET NOT NULL;
+
+CREATE TABLE toteuma (LIKE toteuma_010101_200701 INCLUDING ALL);
+
+-- Tehdään vanhaa dataa kantavasta taulusta uudenkarhean toteumataulun partitio
+ALTER TABLE toteuma_010101_200701
+    INHERIT toteuma,
+    ADD CONSTRAINT toteuma_010101_200701_alkanut_check
+    CHECK (alkanut >= '0001-01-01' AND alkanut < '2020-07-01');;
+-- Siirretään sellainen data pois joka rikkoisi tulevaa CHECK-rajoitetta
+
+
 
 -- ikivanhat, typotetut jne toteumat tänne
-SELECT * FROM luo_toteumataulun_partitio( '0001-01-01'::DATE, '2015-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2015-10-01'::DATE, '2016-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2016-10-01'::DATE, '2017-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2017-10-01'::DATE, '2018-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2018-10-01'::DATE, '2019-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2019-10-01'::DATE, '2020-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2020-10-01'::DATE, '2021-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2021-10-01'::DATE, '2022-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2022-10-01'::DATE, '2023-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2023-10-01'::DATE, '2024-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2024-10-01'::DATE, '2025-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2025-10-01'::DATE, '2026-10-01'::DATE);
-SELECT * FROM luo_toteumataulun_partitio( '2026-10-01'::DATE, '2027-10-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2020-07-01'::DATE, '2021-01-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2021-01-01'::DATE, '2021-07-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2021-07-01'::DATE, '2022-01-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2022-01-01'::DATE, '2022-07-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2022-07-01'::DATE, '2023-01-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2023-01-01'::DATE, '2023-07-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2023-07-01'::DATE, '2024-01-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2024-01-01'::DATE, '2024-07-01'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2024-07-01'::DATE, '2025-01-01'::DATE);
 -- tulevaisuuteen typotetut jne toteumat tänne
-SELECT * FROM luo_toteumataulun_partitio( '2027-10-01'::DATE, '9999-12-31'::DATE);
+SELECT * FROM luo_toteumataulun_partitio( '2025-01-01'::DATE, '9999-12-31'::DATE);
 
 -- Luo insert trigger
 CREATE OR REPLACE FUNCTION toteuma_insert() RETURNS trigger AS $$
@@ -89,38 +103,32 @@ DECLARE
     alkanut date;
 BEGIN
     alkanut := NEW.alkanut;
-    IF alkanut < '2015-10-01'::date THEN
-        INSERT INTO toteuma_ennen_20151001 VALUES (NEW.*);
+    IF alkanut < '2020-07-01'::date THEN
+        INSERT INTO toteuma_010101_200701 VALUES (NEW.*);
 
-    ELSIF alkanut >= '2015-10-01'::date AND alkanut < '2016-10-01'::date THEN
-        INSERT INTO toteuma_hk_15_16 VALUES (NEW.*);
-    ELSIF alkanut >= '2016-10-01'::date AND alkanut < '2017-10-01'::date THEN
-        INSERT INTO toteuma_hk_16_17 VALUES (NEW.*);
-    ELSIF alkanut >= '2017-10-01'::date AND alkanut < '2018-10-01'::date THEN
-        INSERT INTO toteuma_hk_17_18 VALUES (NEW.*);
-    ELSIF alkanut >= '2018-10-01'::date AND alkanut < '2019-10-01'::date THEN
-        INSERT INTO toteuma_hk_18_19 VALUES (NEW.*);
-    ELSIF alkanut >= '2019-10-01'::date AND alkanut < '2020-10-01'::date THEN
-        INSERT INTO toteuma_hk_19_20 VALUES (NEW.*);
-    ELSIF alkanut >= '2020-10-01'::date AND alkanut < '2021-10-01'::date THEN
-        INSERT INTO toteuma_hk_20_21 VALUES (NEW.*);
-    ELSIF alkanut >= '2021-10-01'::date AND alkanut < '2022-10-01'::date THEN
-        INSERT INTO toteuma_hk_21_22 VALUES (NEW.*);
-    ELSIF alkanut >= '2022-10-01'::date AND alkanut < '2023-10-01'::date THEN
-        INSERT INTO toteuma_hk_22_23 VALUES (NEW.*);
-    ELSIF alkanut >= '2023-10-01'::date AND alkanut < '2024-10-01'::date THEN
-        INSERT INTO toteuma_hk_23_24 VALUES (NEW.*);
-    ELSIF alkanut >= '2024-10-01'::date AND alkanut < '2025-10-01'::date THEN
-        INSERT INTO toteuma_hk_24_25 VALUES (NEW.*);
-    ELSIF alkanut >= '2025-10-01'::date AND alkanut < '2026-10-01'::date THEN
-        INSERT INTO toteuma_hk_25_26 VALUES (NEW.*);
-    ELSIF alkanut >= '2026-10-01'::date AND alkanut < '2027-10-01'::date THEN
-        INSERT INTO toteuma_hk_26_27 VALUES (NEW.*);
+    ELSIF alkanut >= '2020-07-01'::date AND alkanut < '2021-01-01'::date THEN
+        INSERT INTO toteuma_200701_210101 VALUES (NEW.*);
+    ELSIF alkanut >= '2021-01-01'::date AND alkanut < '2021-07-01'::date THEN
+        INSERT INTO toteuma_210101_210701 VALUES (NEW.*);
+    ELSIF alkanut >= '2021-07-01'::date AND alkanut < '2022-01-01'::date THEN
+        INSERT INTO toteuma_210701_220101 VALUES (NEW.*);
+    ELSIF alkanut >= '2022-01-01'::date AND alkanut < '2022-07-01'::date THEN
+        INSERT INTO toteuma_220101_220701 VALUES (NEW.*);
+    ELSIF alkanut >= '2022-07-01'::date AND alkanut < '2023-01-01'::date THEN
+        INSERT INTO toteuma_220701_230101 VALUES (NEW.*);
+    ELSIF alkanut >= '2023-01-01'::date AND alkanut < '2023-07-01'::date THEN
+        INSERT INTO toteuma_230101_230701 VALUES (NEW.*);
+    ELSIF alkanut >= '2023-07-01'::date AND alkanut < '2024-01-01'::date THEN
+        INSERT INTO toteuma_230701_240101 VALUES (NEW.*);
+    ELSIF alkanut >= '2024-01-01'::date AND alkanut < '2024-07-01'::date THEN
+        INSERT INTO toteuma_240101_240701 VALUES (NEW.*);
+    ELSIF alkanut >= '2024-07-01'::date AND alkanut < '2025-01-01'::date THEN
+        INSERT INTO toteuma_240701_250101 VALUES (NEW.*);
 
     -- kaatissäkki kaikelle liian uudelle, typotetulle jne. Jos Harja elää 2027 pitempään, muuta
     -- tätä funktiota ja luo tarvittava määrä hoitokausipartitioita lisää
-    ELSIF alkanut >= '2027-10-01'::date THEN
-        INSERT INTO toteuma_uudet VALUES (NEW.*);  ELSE
+    ELSIF alkanut >= '2025-01-01'::date THEN
+        INSERT INTO toteuma_250101_991231 VALUES (NEW.*);  ELSE
         RAISE EXCEPTION 'Taululle toteuma ei löydy insert ehtoa, korjaa toteuma_insert() sproc!';
     END IF;
     RETURN NULL;
@@ -138,31 +146,15 @@ $$
 BEGIN
     RAISE NOTICE 'Siirretään toteumat aikaväliltä % - %', alkupvm, loppupvm;
       WITH x AS (
-          DELETE FROM toteuma_vanha WHERE alkanut BETWEEN alkupvm AND loppupvm returning *
+          DELETE FROM toteuma_010101_200701 WHERE alkanut BETWEEN alkupvm AND loppupvm returning *
       )
     INSERT INTO toteuma SELECT * FROM x;
 END
 $$
     LANGUAGE plpgsql;
 
--- Huom! Ei ehkä kannata ajaa tuotantoon näitä kaikkia kerralla migraatiossa, vaan
--- esim käynnissäoleva hoitokausi migraatiossa, ja loput päivän aikana hoitokausi kerrallaan
--- hallitusti, ei tule jäätävän pitkään down timeä
-SELECT * FROM siirra_aikavalin_toteumat( '0001-01-01'::DATE, '2015-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2015-10-01'::DATE, '2016-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2016-10-01'::DATE, '2017-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2017-10-01'::DATE, '2018-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2018-10-01'::DATE, '2019-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2019-10-01'::DATE, '2020-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2020-10-01'::DATE, '2021-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2021-10-01'::DATE, '2022-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2022-10-01'::DATE, '2023-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2023-10-01'::DATE, '2024-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2024-10-01'::DATE, '2025-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2025-10-01'::DATE, '2026-10-01'::DATE);
-SELECT * FROM siirra_aikavalin_toteumat( '2026-10-01'::DATE, '2027-10-01'::DATE);
--- tulevaisuuteen typotetut jne toteumat tänne
-SELECT * FROM siirra_aikavalin_toteumat( '2027-10-01'::DATE, '9999-12-31'::DATE);
+-- Siirretään kerralla kaikki toteumat 1.7.2020 eteenpäin. Joitakin typoja on, joten loppuajankohdaksi date max
+SELECT * FROM siirra_aikavalin_toteumat( '2020-07-01'::DATE, '9999-12-31'::DATE);
 
 -- ei voida tehdä FK-viittauksia partitioituun tauluun
 
