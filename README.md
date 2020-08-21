@@ -241,9 +241,7 @@ upstream sms-kasittelija {
 
 Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
 
-Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja:
-
-    lein figwheel laadunseuranta-dev
+Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja: ks. sh kaynnista_harja_front_dev.sh
 
 Avaa selain http://localhost:3000/laadunseuranta/
 

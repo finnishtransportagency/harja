@@ -656,8 +656,8 @@
                                        FROM urakka_tavoite
                                        WHERE urakka = " urakka-id ";"))]
         (is (every? :luotu data-kannassa) "Luotu aikaa ei kannassa budjettitavoitteelle")
-        (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta)) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
-        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta))) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta) 0.001) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
     (testing "Päivitys onnistuu"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                   :tavoitteet (transduce
@@ -680,10 +680,10 @@
                                         (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
                                       data-kannassa)]
         (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
-        (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta)) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista paivitetty-tavoitehinta)) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: " (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta)) ))))))
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta) 0.001) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta)) 0.001) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista paivitetty-tavoitehinta) 0.001) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta)) 0.001) uusidata-kannassa) (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: " (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]

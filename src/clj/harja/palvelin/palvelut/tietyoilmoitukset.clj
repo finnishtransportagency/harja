@@ -176,10 +176,16 @@
       :sahkopostilahetys-epaonnistui)))
 
 (defn tietyoilmoitus-pdf [db user params]
-  (pdf/tietyoilmoitus-pdf
-    (first (fetch db ::t/ilmoitus+pituus
-                  q-tietyoilmoitukset/ilmoitus-pdf-kentat
-                  {::t/id (:id params)}))))
+  (let [{ilmoituksen-emailit ::t/email-lahetykset}
+        (first (q-tietyoilmoitukset/hae-sahkopostitiedot db {::t/id (:id params)}))]
+    (pdf/tietyoilmoitus-pdf
+      (assoc
+        (first (fetch db ::t/ilmoitus+pituus
+                      q-tietyoilmoitukset/ilmoitus-pdf-kentat
+                      {::t/id (:id params)}))
+        ;; Vasta kun Tieliikennekeskuksesta on tullut kuittaus, että ilmoitus on kertaalleen tullut perille,
+        ;; voidaan jatkossa PDF:ssä käyttää ilmoituksessa termiä Muutos aiempaan VHAR-2465
+        :lahetetty? (boolean (some :harja.domain.tietyoilmoituksen-email/kuitattu ilmoituksen-emailit))))))
 
 (defn tallenna-tietyoilmoitus [tloik db email pdf user ilmoitus sahkopostitiedot]
   (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus " sahkopostitiedot " sahkopostitiedot " email " email)
