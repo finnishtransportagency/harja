@@ -76,6 +76,8 @@ ALTER TABLE toteuma_materiaali ALTER COLUMN toteuma SET NOT NULL;
 CREATE TABLE toteuma (LIKE toteuma_010101_200701 INCLUDING ALL);
 
 -- Tehdään vanhaa dataa kantavasta taulusta uudenkarhean toteumataulun partitio
+-- FIXME: Tässä kohti check constraintinb luominen ei tule tuotannossa onnistumaan, koska dataa on joka ei tottele tätä
+-- siirrettävä sen jälkeen, kun on siirretty ensin tätä rikkova data eri partitioon
 ALTER TABLE toteuma_010101_200701
     INHERIT toteuma,
     ADD CONSTRAINT toteuma_010101_200701_alkanut_check
