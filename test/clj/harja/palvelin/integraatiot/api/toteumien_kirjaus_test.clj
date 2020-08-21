@@ -113,7 +113,7 @@
                                                             WHERE toteuma = " toteuma-id)))]
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
           (is (= (count reittipisteet) 3))
-          (is (= (count toteuma-tehtava-idt) 2))
+          (is (= (count toteuma-tehtava-idt) 3))
           (is (= (count toteuma-materiaali-idt) 1))
           (is (= toteuman-materiaali "Talvisuolaliuos NaCl"))
 
@@ -121,7 +121,7 @@
             (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
                   reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
                   reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
-              (is (= (count reitti-tehtava-idt) 2))
+              (is (= (count reitti-tehtava-idt) 3))
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7))))               ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
