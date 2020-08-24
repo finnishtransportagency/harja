@@ -617,13 +617,12 @@
                                                           (reset! data vaihtoehto)))}]
                                  (vaihtoehto-nayta vaihtoehto)]])))]
        (if nayta-rivina?
-         [:table.boolean-group
-          [:tbody
-           [:tr
-            (map-indexed (fn [i cb]
-                           ^{:key i}
-                           [:td cb])
-                         radiobuttonit)]]]
+         [:div {:style {:display "flex" :flex-direction "row" :flex-wrap "wrap"
+                        :justify-content "flex-start"}}
+          (map-indexed (fn [i cb]
+                         ^{:key (str "radio-button-" i)}
+                         [:div {:style {:flex-grow 1}} cb])
+                       radiobuttonit)]
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta
@@ -1050,18 +1049,18 @@
       (reset! virheet nil))))
 
 (defn tr-kentan-elementti
-  ([lomake? muuta! blur placeholder value key disabled?] (tr-kentan-elementti lomake? muuta! blur placeholder value key disabled? (str "tr-" (name key))))
-  ([lomake? muuta! blur placeholder value key disabled? luokat]
-   [:input.tierekisteri {:class       (str
-                                        luokat " "
-                                        (when lomake? "form-control ")
-                                        (when disabled? "disabled "))
-                         :size        5 :max-length 10
+  ([lomake? muuta! blur placeholder value key disabled? vayla-tyyli?] (tr-kentan-elementti lomake? muuta! blur placeholder value key disabled? vayla-tyyli? (str "tr-" (name key))))
+  ([lomake? muuta! blur placeholder value key disabled? vayla-tyyli? luokat]
+   [:input.tierekisteri {:class (str
+                                  luokat " "
+                                  (when (and lomake? (not vayla-tyyli?)) "form-control ")
+                                  (when disabled? "disabled "))
+                         :size 5 :max-length 10
                          :placeholder placeholder
-                         :value       value
-                         :disabled    disabled?
-                         :on-change   (muuta! key)
-                         :on-blur     blur}]))
+                         :value value
+                         :disabled disabled?
+                         :on-change (muuta! key)
+                         :on-blur blur}]))
 
 (defn piste-tai-eka [arvo]
   (if (vector? (:geometria arvo))
@@ -1116,6 +1115,50 @@
      (when virhe
        [:td virhe])]]])
 
+(defn- tierekisterikentat-flex [{:keys [pakollinen? disabled?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
+                                piste? vaadi-vali?]
+  [:div {:style {:max-width "340px"}}
+   [:div {:style {:display "flex"}}
+    [:div
+     [:label.control-label
+      [:span
+       [:span.kentan-label "Tie"]
+       (when pakollinen? [:span.required-tahti " *"])]]
+     tie [:span]]
+    [:div
+     [:label.control-label
+      [:span
+       [:span.kentan-label "aosa"]
+       (when pakollinen? [:span.required-tahti " *"])]]
+     aosa [:span]]
+    [:div
+     [:label.control-label
+      [:span
+       [:span.kentan-label "aet"]
+       (when pakollinen? [:span.required-tahti " *"])]]
+     aet [:span]]
+    (when (not piste?)
+      [:div
+       [:label.control-label
+        [:span
+         [:span.kentan-label "losa"]
+         (when pakollinen? [:span.required-tahti " *"])]]
+       losa [:span]])
+    (when (not piste?)
+      [:div
+       [:label.control-label
+        [:span
+         [:span.kentan-label "let"]
+         (when pakollinen? [:span.required-tahti " *"])]]
+       loppuet [:span]])
+
+    (when virhe
+      [:div virhe])]
+   [:div {:style {:display "flex" :flex-direction "column"}}
+    [:div.karttavalinta
+     karttavalinta]]])
+
+
 (defn- tierekisterikentat-rivitetty
   "Erilainen tyyli TR valitsimelle, jos lomake on hyvin kapea.
   Rivittää tierekisterivalinnan usealle riville."
@@ -1155,7 +1198,7 @@
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
                                                    sijainti pakollinen? tyhjennys-sallittu? piste? vaadi-vali?
-                                                   avaimet voi-valita-kartalta?]} data]
+                                                   avaimet voi-valita-kartalta? vayla-tyyli?]} data]
   (let [osoite-alussa @data
         voi-valita-kartalta? (if (some? voi-valita-kartalta?)
                                voi-valita-kartalta?
@@ -1252,9 +1295,10 @@
               [numero-avain alkuosa-avain alkuetaisyys-avain loppuosa-avain loppuetaisyys-avain]
               avaimet
 
-              tierekisterikentat (if (= tyyli :rivitetty)
-                                   tierekisterikentat-rivitetty
-                                   tierekisterikentat-table)
+              tierekisterikentat (cond
+                                   (and (not vayla-tyyli?) (= tyyli :rivitetty)) tierekisterikentat-rivitetty
+                                   vayla-tyyli? tierekisterikentat-flex
+                                   :default tierekisterikentat-table)
 
               osoite @data
 
@@ -1278,7 +1322,9 @@
                             loppuetaisyys-avain loppuetaisyys})
               luokat (if vayla-tyyli? "input-default" "")]
           ;(loki/log "sijainti >" @sijainti avaimet numero alkuosa numero-avain alkuosa-avain)
-          [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
+          [:span {:class (str "tierekisteriosoite-kentta "
+                              (when @virheet " sisaltaa-virheen")
+                              (when vayla-tyyli? " vayla"))}
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
               [:div {:class "virhe"}
@@ -1289,19 +1335,19 @@
               optiot
               [tr-kentan-elementti lomake? muuta! blur
                "Tie" numero numero-avain (or disabled?
-                                             @karttavalinta-kaynnissa?) luokat]
+                                             @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "aosa" alkuosa alkuosa-avain (or disabled?
-                                                @karttavalinta-kaynnissa?) luokat]
+                                                @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "aet" alkuetaisyys alkuetaisyys-avain (or disabled?
-                                                         @karttavalinta-kaynnissa?) luokat]
+                                                         @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "losa" loppuosa loppuosa-avain (or disabled?
-                                                  @karttavalinta-kaynnissa?) luokat]
+                                                  @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "let" loppuetaisyys loppuetaisyys-avain (or disabled?
-                                                           @karttavalinta-kaynnissa?) luokat]
+                                                           @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               tr-otsikot?
               (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
                 [napit/poista nil
@@ -1309,7 +1355,7 @@
                       (reset! data {})
                       (reset! @sijainti-atom nil)
                       (reset! virheet nil))
-                 {:luokka   "nappi-tyhjenna"
+                 {:luokka "nappi-tyhjenna"
                   :disabled (empty? @data)}])
 
               (when voi-valita-kartalta?
@@ -1322,7 +1368,7 @@
                         (reset! sijainti-ennen-karttavalintaa @sijainti))
                       (reset! data {})
                       (reset! karttavalinta-kaynnissa? true))
-                   {:ikoni    (ikonit/map-marker)
+                   {:ikoni (ikonit/map-marker)
                     :disabled disabled?}]
                   [tr/karttavalitsin
                    {:kun-peruttu #(do
@@ -1330,12 +1376,12 @@
                                     (when-let [sijainti @sijainti-atom]
                                       (reset! sijainti @sijainti-ennen-karttavalintaa))
                                     (reset! karttavalinta-kaynnissa? false))
-                    :paivita     #(swap! data merge (normalisoi %))
-                    :kun-valmis  #(do
-                                    (reset! data (normalisoi %))
-                                    (reset! karttavalinta-kaynnissa? false)
-                                    (log "Saatiin tr-osoite! " (pr-str %))
-                                    (go (>! tr-osoite-ch %)))}]))
+                    :paivita #(swap! data merge (normalisoi %))
+                    :kun-valmis #(do
+                                   (reset! data (normalisoi %))
+                                   (reset! karttavalinta-kaynnissa? false)
+                                   (log "Saatiin tr-osoite! " (pr-str %))
+                                   (go (>! tr-osoite-ch %)))}]))
 
               (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
                 (when (vkm/virhe? sijainti)
