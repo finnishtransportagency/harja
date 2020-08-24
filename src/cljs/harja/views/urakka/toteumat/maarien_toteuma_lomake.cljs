@@ -98,7 +98,8 @@
                        toteuma-id ::t/toteuma-id
                        poistettu ::t/poistettu
                        :as _toteuma}]
-           (let [sijainti (get-in app [:sijainti indeksi])
+           (let [yksikko (:yksikko tehtava)
+                 sijainti (get-in app [:sijainti indeksi])
                  palstat-tagi (if yksittainen?
                                 :<>
                                 :div.row.lomakepalstat)
@@ -153,7 +154,8 @@
                   {::ui-lomake/col-luokka ""
                    :vayla-tyyli? true
                    :virhe? (validi? [::t/toteumat indeksi ::t/maara])
-                   :tyyppi :numero}
+                   :tyyppi :numero
+                   :yksikko yksikko}
                   (r/wrap maara
                           (r/partial paivita! ::t/maara indeksi))]]
                 [:div.row
@@ -281,6 +283,9 @@
      #_ [debug/debug lomake]
      #_[debug/debug validius]
      #_ [:div (str "Validi? " koko-validi?)]
+     [:div.flex-row {:style {:padding-left "15px"
+                             :padding-right "15px"}}
+      [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
                    (do
@@ -295,9 +300,6 @@
        :palstoja 2
        :header-fn (fn [data]
                     [:<>
-                     [:div.flex-row {:style {:padding-left "15px"
-                                             :padding-right "15px"}}
-                      [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]
                      [:div.flex-row {:style {:padding-left "15px"
                                              :padding-right "15px"}}
                       [:h2 (if toteuma-id
@@ -384,6 +386,7 @@
              :pakollinen? (not ei-sijaintia)
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
+             :vayla-tyyli? true
              :sijainti (r/wrap sijainti (constantly true) #_ (e! (tiedot/->PaivitaSijainti %)))
              }
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
