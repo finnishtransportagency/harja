@@ -124,6 +124,12 @@ label {
     .input-yhteiset-arvot();
     > button {
       .select-button-yhteiset-arvot();
+      > .livicon-chevron-down {
+        color: @sininen5;
+      }
+      > .livicon-chevron-up {
+        color: @sininen5;
+      }
     }
     > ul {
       .select-ul-yhteiset-arvot();
@@ -210,9 +216,18 @@ label {
       .input-yhteiset-arvot();
       > button {
         .select-button-yhteiset-arvot();
+        > .livicon-chevron-down {
+          color: @sininen5;
+        }
+        > .livicon-chevron-up {
+          color: @sininen5;
+        }
       }
       > ul {
         .select-ul-yhteiset-arvot();
+        z-index: 201;
+        margin-left: -1px;
+        margin-right: -1px;
         border: solid 1px black;
         > li {
           .select-li-yhteiset-arvot();
@@ -241,7 +256,6 @@ label {
         }
       }
       position: relative;
-      z-index: 100;
       .outlinet-ja-borderit(@red, 1px, -1px);
       &:hover {
         outline-width: 2px;

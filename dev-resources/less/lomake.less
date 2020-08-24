@@ -254,12 +254,8 @@ fieldset.lomake-osa {
   &:first-child {
     margin-right:20px;
   }
-  &:last-child {
-    margin-left:20px;
-  }
   &:not(:first-child) {
     &:not(:last-child) {
-      margin-left:20px;
       margin-right:20px;
     }
   }
@@ -269,15 +265,30 @@ fieldset.lomake-osa {
       max-width: ~"calc(50% - 20px)";
     }
   }
-  display:flex;
-  flex-direction:  column;
-  padding: 15px;
   flex-grow:1;
-  flex-basis:0;
+
+  /* Keskikokoinen näyttö */
+  @media all and (max-width: 800px) {
+    /* Laitetaan elementit alekain ja hieman tyhjää kaikkien ympärille */
+    justify-content: space-around;
+    flex-direction: column;
+  }
+
+  /* Pienet näytöt */
+  @media all and (max-width: 500px) {
+    /* Pakota elementit alekain */
+    flex-direction: column;
+
+  }
 }
 
 .lomakepalstat {
   display:flex;
   flex-direction: row;
+  flex-wrap: wrap;
   justify-content: flex-start;
+  /* Isot näytöt */
+  @media all and (min-width: 800px) {
+    padding-left: 15px;
+  }
 }
