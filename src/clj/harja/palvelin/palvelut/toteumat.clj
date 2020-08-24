@@ -445,8 +445,8 @@
   (let [toteuman-parametrit (-> (toteuman-parametrit toteuma user) (assoc :reitti (geometriaksi (:reitti toteuma))
                                                                           :tyokonetyyppi nil :tyokonetunniste nil
                                                                           :tyokoneen-lisatieto nil))
-        uusi (toteumat-q/luo-toteuma<! c toteuman-parametrit)
-        id (:id uusi)
+        _ (toteumat-q/luo-toteuma<! c toteuman-parametrit)
+        id (toteumat-q/luodun-toteuman-id c)
         toteumatyyppi (name (:tyyppi toteuma))
         maksueratyyppi (case toteumatyyppi
                          "muutostyo" "muu"
