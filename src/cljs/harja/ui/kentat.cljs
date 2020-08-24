@@ -284,7 +284,7 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli? virhe?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli? virhe? yksikko] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -293,39 +293,42 @@
               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
                                                         (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                         "})?"))]
-          [:input {:class       (cond-> nil
-                                        (and lomake?
-                                             (not vayla-tyyli?)) (str "form-control ")
-                                        vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
-                                        disabled? (str "disabled"))
-                   :type        "text"
-                   :disabled    disabled?
-                   :placeholder (placeholder kentta data)
-                   :on-focus    #(when on-focus (on-focus))
-                   :on-blur     #(do (when on-blur
-                                       (on-blur %))
-                                     (reset! teksti nil))
-                   :value       nykyinen-teksti
-                   :on-change   #(let [v (normalisoi-numero (-> % .-target .-value))
-                                       v (if vaadi-ei-negatiivinen?
-                                           (str/replace v #"-" "")
-                                           v)]
-                                   (when (or (= v "")
-                                             (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                             ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
-                                             ;; mutta tätä välivaihetta ei tallenneta dataan
-                                             (re-matches #"[0-9,.-]+" v))
-                                     (reset! teksti v)
+          [:span.numero
+           [:input {:class (cond-> nil
+                                   (and lomake?
+                                        (not vayla-tyyli?)) (str "form-control ")
+                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
+                                   disabled? (str "disabled"))
+                    :type "text"
+                    :disabled disabled?
+                    :placeholder (placeholder kentta data)
+                    :on-focus #(when on-focus (on-focus))
+                    :on-blur #(do (when on-blur
+                                    (on-blur %))
+                                  (reset! teksti nil))
+                    :value nykyinen-teksti
+                    :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
+                                      v (if vaadi-ei-negatiivinen?
+                                          (str/replace v #"-" "")
+                                          v)]
+                                  (when (or (= v "")
+                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                            ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
+                                            ;; mutta tätä välivaihetta ei tallenneta dataan
+                                            (re-matches #"[0-9,.-]+" v))
+                                    (reset! teksti v)
 
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (if (not (js/isNaN numero))
-                                         (reset! data numero)
-                                         (reset! data nil))
-                                       (when toiminta-f
-                                         (toiminta-f (when-not (js/isNaN numero)
-                                                       numero))))))}])))))
+                                    (let [numero (if kokonaisluku?
+                                                   (js/parseInt v)
+                                                   (js/parseFloat (str/replace v #"," ".")))]
+                                      (if (not (js/isNaN numero))
+                                        (reset! data numero)
+                                        (reset! data nil))
+                                      (when toiminta-f
+                                        (toiminta-f (when-not (js/isNaN numero)
+                                                      numero))))))}]
+           (when yksikko
+             [:span.sisainen-label {:style {:margin-left (* -1 (+ 20 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
