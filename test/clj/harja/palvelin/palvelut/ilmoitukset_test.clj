@@ -36,7 +36,7 @@
 (deftest hae-ilmoitukset-sarakkeet
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :urakkanimi :ilmoitusid :ilmoitettu :valitetty :otsikko :ilmoitustyyppi :selitteet :sijainti
+          [:id :urakka :urakkanimi :ilmoitusid :ilmoitettu :valitetty :valitetty-urakkaan :otsikko :ilmoitustyyppi :selitteet :sijainti
            :uusinkuittaus :tila :urakkatyyppi :tila
 
            [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]
@@ -210,19 +210,22 @@
 
 
 (deftest ilmoitus-myohassa-ilman-kuittauksia
-  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
-        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
-        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-myohassa
   (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 73)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 73)))
                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
         myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 11)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 11)))
                                       :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
         myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
+                               :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 2)))
                                :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
@@ -230,10 +233,13 @@
 
 (deftest ilmoitus-myohassa-kun-kuittaus-vaaraa-tyyppia
   (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 75)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 75)))
                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
         myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 15)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 15)))
                                       :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}
         myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
+                               :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 2)))
                                :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}]
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
@@ -241,27 +247,52 @@
 
 (deftest ilmoitus-ei-myohassa
   (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 71)))
                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
         myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
                                       :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
         myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+                               :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
                                :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+
+
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
+(deftest ilmoitus-ei-myohassa-valitetty-urakkaan-myohemmin
+         (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+                                   :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+                                   :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
+               myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+                                             :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+                                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+               myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+                                      :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
+              (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+              (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+
+
+              (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+
 (deftest aloituskuittausta-ei-annettu-alle-tunnissa
-  (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
+  (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now))
+                   :valitetty-urakkaan (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
                                                                       :kuittaustyyppi :aloitus}]}
-        ilmoitus2 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 55)))
+        ilmoitus2 {:ilmoitettu (c/to-sql-time (t/now))
+                   :valitetty-urakkaan (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 55)))
                                                                       :kuittaustyyppi :vastaanotto}]}
-        ilmoitus3 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset []}]
+        ilmoitus3 {:ilmoitettu (c/to-sql-time (t/now))
+                   :valitetty-urakkaan (c/to-sql-time (t/now)):kuittaukset []}]
     (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus1 (t/hours 1))))
     (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus2 (t/hours 1))))
     (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus3 (t/hours 1))))))
 
 (deftest aloituskuittaus-annettu-alle-tunnissa
-  (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
+  (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now))
+                  :valitetty-urakkaan (c/to-sql-time (t/now)):kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
                                                                      :kuittaustyyppi :aloitus}]}]
     (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
 
@@ -284,7 +315,6 @@
 ;    (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
 ;    (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
 ;    (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
-
 
 (deftest hae-ilmoitus-oikeudet
   (let [hae-ilmoitus-kayttajana #(kutsu-palvelua (:http-palvelin jarjestelma)
