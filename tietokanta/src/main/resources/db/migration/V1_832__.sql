@@ -68,10 +68,17 @@ ALTER TABLE paikkaustoteuma DROP CONSTRAINT "paikkaustoteuma_toteuma-id_fkey";
 
 -- Koska toteumien ID:n palauttaminen muuttuu partitioinnin myötä, lisätään turvaa lisäämällä
 -- tärkeimpiin viitteisiin NOT NULL rajoitteet. Sitä ennen poistettava kura kannasta.
-DELETE FROM toteuma_tehtava WHERE toteuma IS NULL;
+-- Nämä deletet ajetaan käsin eri ympäristöihin ennen migraatiota
+--DELETE FROM toteuma_tehtava WHERE toteuma IS NULL;
+--DELETE FROM toteuma_materiaali WHERE toteuma IS NULL;
+--DELETE FROM varustetoteuma WHERE toteuma IS NULL;
+
 ALTER TABLE toteuma_tehtava ALTER COLUMN toteuma SET NOT NULL;
-DELETE FROM toteuma_materiaali WHERE toteuma IS NULL;
 ALTER TABLE toteuma_materiaali ALTER COLUMN toteuma SET NOT NULL;
+ALTER TABLE varustetoteuma ALTER COLUMN toteuma SET NOT NULL;
+-- toteuman_reittipisteet toteuma on jo NOT NULL
+-- toteuma_liite toteuma on jo NOT NULL
+
 
 CREATE TABLE toteuma (LIKE toteuma_010101_200701 INCLUDING ALL);
 
