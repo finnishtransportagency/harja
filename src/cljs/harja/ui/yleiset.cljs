@@ -212,16 +212,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                   (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
                                                     (reset! avautumissuunta (:suunta maaritys))
                                                     (reset! max-korkeus (:max-korkeus maaritys))))
-        lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot]
+        lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo]
                      (let [disabled? (and disabled-vaihtoehdot
                                           (contains? disabled-vaihtoehdot vaihtoehto))]
                        [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                        (cond
-                          itemit-komponentteja? vaihtoehto
-                          disabled? [:span.disabled (format-fn vaihtoehto)]
-                          :else [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                    (reset! auki? false)
-                                                                    nil)])]))
+                        [:span (cond
+                                 itemit-komponentteja? vaihtoehto
+                                 disabled? [:span.disabled (format-fn vaihtoehto)]
+                                 :else [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                                           (reset! auki? false)
+                                                                           nil)])
+                         (when (= valittu-arvo vaihtoehto) [:span.listan-arvo-valittu (ikonit/ok)])
+                                                            ]]))
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
@@ -278,7 +280,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                    (reset! auki? false)))) nil)))
         alasvetolista (fn [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
                                    li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-                                   vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava?]}]
+                                   vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo]}]
                         [:ul (if vayla-tyyli?
                                {:style (merge {:display (if auki?
                                                           "block"
@@ -297,10 +299,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                                 (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                                   ^{:key (gensym (hash vaihtoehto))}
-                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
+                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo])])
                              (for [vaihtoehto vaihtoehdot]
                                ^{:key (gensym (hash vaihtoehto))}
-                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
+                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo])))])]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(when @auki?
                                      (reset! auki? false)
@@ -328,18 +330,18 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                (when @auki? " open"))}
                   (when data-cy
                     {:data-cy data-cy}))
-           [:button.nappi-alasveto
-            {:class       (when disabled "disabled")
-             :type        "button"
-             :disabled    (if disabled "disabled" "")
-             :title       title
-             :on-click    (partial on-click-fn vaihtoehdot)
-             :on-focus    on-focus
+           [:button
+            {:class (str (when disabled "disabled ") (when-not vayla-tyyli? "nappi-alasveto "))
+             :type "button"
+             :disabled (if disabled "disabled" "")
+             :title title
+             :on-click (partial on-click-fn vaihtoehdot)
+             :on-focus on-focus
              :on-key-down (partial on-key-down-fn
                                    {:vaihtoehdot vaihtoehdot
-                                    :valinta     valinta
-                                    :valitse-fn  valitse-fn
-                                    :format-fn   format-fn})}
+                                    :valinta valinta
+                                    :valitse-fn valitse-fn
+                                    :format-fn format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if (and @auki? vayla-tyyli?)
               ^{:key :auki}
@@ -350,6 +352,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
+                                  :valittu-arvo valinta
                                   :auki?     @auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]

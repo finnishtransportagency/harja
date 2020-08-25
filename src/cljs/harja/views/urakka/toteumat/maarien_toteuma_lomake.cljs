@@ -340,7 +340,7 @@
         ::ui-lomake/col-luokka "col-xs-12"}
        {:otsikko "Toimenpide"
         :nimi ::t/toimenpide
-        ::ui-lomake/col-luokka "col-xs-12 col-sm-12 col-md-5"
+        ::ui-lomake/col-luokka "col-xs-12 col-sm-12 col-md-8"
         :virhe? (validi? [::t/toimenpide])
         :valinnat toimenpiteet
         :valinta-nayta :otsikko

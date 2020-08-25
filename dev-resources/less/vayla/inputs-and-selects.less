@@ -16,6 +16,8 @@
   align-items: center;
   height: 100%;
   border: none;
+  width: 100%;
+  background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
   list-style: none;
@@ -25,7 +27,7 @@
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
-  height: 30px;
+  height: 40px;
   line-height: 1rem;
 }
 .font-yhteiset-arvot() {
@@ -124,11 +126,21 @@ label {
     .input-yhteiset-arvot();
     > button {
       .select-button-yhteiset-arvot();
+      height: 40px;
       > .livicon-chevron-down {
         color: @sininen5;
       }
       > .livicon-chevron-up {
         color: @sininen5;
+      }
+      > .valittu {
+        display: inline-block;
+        overflow-x: hidden;
+        padding-right: 15px;
+        text-align: left;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: 100%;
       }
     }
     > ul {
@@ -139,19 +151,32 @@ label {
           color: @gray125;
           padding: 10px;
         }
+
+
         > li {
-        .select-li-yhteiset-arvot();
-        display: flex;
+          .select-li-yhteiset-arvot();
+          display: flex;
+          justify-content: space-between;
+          span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-right:10px;
+          }
         > * {
           align-self: center;
           padding-left: 10px;
           flex: 1;
+          display: flex;
           height: 30px;
           line-height: 1rem;
+          border-bottom: 1px solid @gray230;
+          justify-content: space-between;
         }
 
         a {
           color: inherit;
+          display: flex;
+          align-items: center;
           &:hover {
             color:inherit;
             text-decoration: none;
@@ -170,14 +195,24 @@ label {
       > li {
         .select-li-yhteiset-arvot();
         display: flex;
+        border-bottom: 1px solid @gray230;
+        span.listan-arvo-valittu {
+          display: flex;
+          align-items: center;
+          padding-right:10px;
+        }
         > * {
           align-self: center;
           padding-left: 10px;
           flex: 1;
+          display: flex;
           height: 30px;
+          justify-content: space-between;
         }
         a {
           color: inherit;
+          display: flex;
+          align-items: center;
           &:hover {
             color:inherit;
             text-decoration: none;
@@ -222,6 +257,15 @@ label {
         > .livicon-chevron-up {
           color: @sininen5;
         }
+        > .valittu {
+          display: inline-block;
+          overflow-x: hidden;
+          padding-right: 15px;
+          text-align: left;
+          vertical-align: middle;
+          white-space: nowrap;
+          width: 100%;
+        }
       }
       > ul {
         .select-ul-yhteiset-arvot();
@@ -232,15 +276,24 @@ label {
         > li {
           .select-li-yhteiset-arvot();
           display: flex;
+          border-bottom: 1px solid @gray230;
+          span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-right:10px;
+          }
           > * {
             align-self: center;
             padding-left: 10px;
             flex: 1;
             height: 30px;
             line-height: 1rem;
+            justify-content: space-between;
           }
           a {
             color: inherit;
+            display: flex;
+            align-items: center;
             &:hover {
               color:inherit;
               text-decoration: none;
