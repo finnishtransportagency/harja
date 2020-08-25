@@ -699,7 +699,8 @@
                                                            :loppuetaisyys nil
                                                            :id toteuma-id
                                                            :urakka urakka-id}))
-                       (:id (toteumat-q/luo-toteuma<! db
+                       (do
+                         (toteumat-q/luo-toteuma<! db
                               {:urakka urakka-id
                                :sopimus sopimus-id
                                :alkanut nyt
@@ -719,7 +720,8 @@
                                :lahde "harja-ui"
                                :tyokonetyyppi nil
                                :tyokonetunniste nil
-                               :tyokoneen-lisatieto nil})))
+                               :tyokoneen-lisatieto nil})
+                         (toteumat-q/luodun-toteuman-id db)))
           varustetoteuma {:id id
                           :tunniste tunniste
                           :toteuma toteuma-id
