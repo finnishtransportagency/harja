@@ -294,7 +294,6 @@ SELECT
   tunniste,
   tila,
   ilmoitettu,
-  valitetty,
   valitetty as "valitetty-harjaan",
   "valitetty-urakkaan",
   "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
