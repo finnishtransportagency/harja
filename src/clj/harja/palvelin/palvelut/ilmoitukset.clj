@@ -49,8 +49,8 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(defn ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset ilmoitettu]}]
-  (let [ilmoitusaika (c/from-sql-time ilmoitettu)
+(defn ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset valitetty-urakkaan]}]
+  (let [ilmoitusaika (c/from-sql-time valitetty-urakkaan)
         vaadittu-kuittaustyyppi (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
         vaadittu-kuittausaika (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
         vaadittu-aika-kulunut? (t/after? (t/now) (t/plus ilmoitusaika vaadittu-kuittausaika))
@@ -91,8 +91,8 @@
 
 (defn- sisaltaa-aloituskuittauksen-aikavalilla?
   [ilmoitus kulunut-aika]
-  (let [{:keys [ilmoitettu kuittaukset]} ilmoitus
-        ilmoitusaika (c/from-sql-time ilmoitettu)
+  (let [{:keys [valitetty-urakkaan kuittaukset]} ilmoitus
+        ilmoitusaika (c/from-sql-time valitetty-urakkaan)
         aloituskuittaukset (filter
                              #(= (:kuittaustyyppi %) :aloitus)
                              kuittaukset)
