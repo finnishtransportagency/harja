@@ -66,7 +66,6 @@
       :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
       :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
       :raha #(raportti-domain/yrita fmt/euro-opt %)
-      :raha2 #(raportti-domain/yrita fmt/euro-opt %)
       :pvm #(raportti-domain/yrita fmt/pvm-opt %)
       str)))
 
