@@ -82,7 +82,7 @@
         palautetyypit]
 
        [palauteohje @valinta-atom]
-
+       [:p (str "Palautteen voit lähettää sähköpostitse osoitteeseen " tiedot/sahkoposti-kehitystiimi)]
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
                                  [modal/modal-linkki

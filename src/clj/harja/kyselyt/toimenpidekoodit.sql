@@ -87,7 +87,8 @@ SELECT exists(SELECT id
 
 -- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
 SELECT
-  tpk.id,
+  tpk.id as "harja-id",
+  tpk.api_tunnus as "apitunnus",
   tpk.nimi,
   tpk.yksikko
 FROM toimenpidekoodi tpk
@@ -99,7 +100,8 @@ WHERE
 
 -- name: hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat
 SELECT
-  tpk.id,
+  tpk.id as "harja-id",
+  tpk.api_tunnus as "apitunnus",
   tpk.nimi,
   tpk.yksikko
 FROM toimenpidekoodi tpk
@@ -119,11 +121,17 @@ WHERE tk4.nimi=:nimi AND
                                     (select toimenpide from toimenpideinstanssi where urakka = :urakkaid))
 LIMIT 1;
 
+-- name: hae-tehtava-apitunnisteella
+-- single?: true
+SELECT id
+FROM toimenpidekoodi
+WHERE api_tunnus = :apitunnus;
+
 -- name: hae-hinnoittelu
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
 SELECT hinnoittelu
 FROM toimenpidekoodi
-WHERE id = :id and piilota IS NOT TRUE
+WHERE api_tunnus = :apitunnus and piilota IS NOT TRUE
 -- Tehtävä on piilotettu, jos sitä ei käytetä mistään urakasta.
 -- Hoidon päällystyksen paikkauksen vanhat koodit TUOTANNOSSA.
                                     and id not in

@@ -2,6 +2,14 @@
 -- MHU-urakoiden laskutusyhteeneveto
 
 -- MHU hoidonjohdon erillishankinnat
+DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+    toimenpide_koodi TEXT,
+    t_instanssi INTEGER,
+    urakka_id INTEGER,
+    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+    indeksinimi VARCHAR,
+    perusluku NUMERIC);
+DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
     hj_erillishankinnat_laskutettu  NUMERIC,
@@ -99,7 +107,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                      toimenpide_koodi TEXT,
+                                      t_instanssi INTEGER, urakka_id INTEGER,
+                                      sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                      indeksinimi VARCHAR,
+                                      perusluku NUMERIC);
+
 -- MHU hoidonjohdon palkkio pilkotaan tähän
+DROP TYPE IF EXISTS HJPALKKIO_RIVI;
 CREATE TYPE HJPALKKIO_RIVI AS
 (
     hj_palkkio_laskutettu  NUMERIC,
@@ -204,6 +221,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- MHU hoidon johto on niin iso ja monimutkainen laskenta, että se on eriytetty tähän
+DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                                   toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                                   sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                                   indeksinimi VARCHAR,
+                                                   perusluku NUMERIC);
+DROP TYPE IF EXISTS HOIDONJOHTO_RIVI;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
     johto_ja_hallinto_laskutettu  NUMERIC,

@@ -18,7 +18,7 @@
 (defn hae-tehtavat [db]
   (let [yksikkohintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat db)
         kokonaishintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat db)
-        tee-tehtavat #(mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data) :yksikko (:yksikko data)}}) %)]
+        tee-tehtavat #(mapv (fn [data] {:tehtava {:id (:apitunnus data) :selite (:nimi data) :yksikko (:yksikko data)}}) %)]
     (merge
       {:yksikkohintaiset (tee-tehtavat yksikkohintaiset-tehtavat)}
       {:kokonaishintaiset (tee-tehtavat kokonaishintaiset-tehtavat)})))
