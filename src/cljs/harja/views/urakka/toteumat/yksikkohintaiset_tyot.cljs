@@ -30,6 +30,8 @@
             [reagent.core :as r]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.valinnat :as ui-valinnat]
+            [harja.ui.kentat :refer [tee-kentta]]
             [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -351,26 +353,60 @@
         (when-let [toteutuneet-tehtavat @toteutuneet-tehtavat]
           (sort-by :alkanut t/after? toteutuneet-tehtavat))]])))
 
+(defn- aikavali-joka-vaihtuu-hoitokaudesta
+  ([valittu-aikavali-atom] (aikavali-joka-vaihtuu-hoitokaudesta valittu-aikavali-atom nil))
+  ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
+                                  aloitusaika-pakota-suunta paattymisaika-pakota-suunta
+                                  lomake?]}]
+   [:span {:class (if lomake?
+                    "label-ja-aikavali-lomake"
+                    "label-ja-aikavali")}
+    (when (and (not lomake?)
+               (or (nil? nayta-otsikko?)
+                   (true? nayta-otsikko?)))
+      [:span.alasvedon-otsikko "Aikaväli"])
+    [:div.aikavali-valinnat
+     [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
+      (r/wrap (first @valittu-aikavali-atom)
+              (fn [uusi-arvo]
+                (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
+                  (if-not aikavalin-rajoitus
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] :alku))
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
+                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
+     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
+     [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
+      (r/wrap (second @valittu-aikavali-atom)
+              (fn [uusi-arvo]
+                (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
+                  (if-not aikavalin-rajoitus
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] :loppu))
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
+                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
+
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"
   []
   (komp/luo
     (fn []
       [:div
-       [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki @nav/valittu-urakka]
+       [valinnat/urakan-sopimus @nav/valittu-urakka]
+       [valinnat/urakan-hoitokausi @nav/valittu-urakka]
+       [valinnat/urakan-toimenpide+kaikki @nav/valittu-urakka]
+       [aikavali-joka-vaihtuu-hoitokaudesta u/yksikkohintaiset-aikavali]
        [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
        (let [oikeus? (oikeudet/voi-kirjoittaa?
-                      oikeudet/urakat-toteumat-yksikkohintaisettyot
-                      (:id @nav/valittu-urakka))]
+                       oikeudet/urakat-toteumat-yksikkohintaisettyot
+                       (:id @nav/valittu-urakka))]
          (yleiset/wrap-if
-          (not oikeus?)
-          [yleiset/tooltip {} :%
-           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                           oikeudet/urakat-toteumat-yksikkohintaisettyot)]
-          [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-yksikkohintainen-toteuma
-                                               (tiedot/uusi-yksikkohintainen-toteuma))
-           {:disabled (not oikeus?)}]))
+           (not oikeus?)
+           [yleiset/tooltip {} :%
+            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                            oikeudet/urakat-toteumat-yksikkohintaisettyot)]
+           [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-yksikkohintainen-toteuma
+                                                (tiedot/uusi-yksikkohintainen-toteuma))
+            {:disabled (not oikeus?)}]))
 
        [grid/grid
         {:otsikko (str "Yksikköhintaisten töiden toteumat")

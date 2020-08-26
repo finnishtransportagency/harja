@@ -206,6 +206,7 @@
   (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
 (defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
+(defonce yksikkohintaiset-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn valitse-aikavali! [alku loppu]
   (reset! valittu-aikavali [alku loppu]))
@@ -213,7 +214,8 @@
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
   (reset! valittu-hoitokausi hk)
-  (reset! valittu-aikavali [(first hk) (second hk)]))
+  (reset! valittu-aikavali [(first hk) (second hk)])
+  (reset! yksikkohintaiset-aikavali [(first hk) (second hk)]))
 
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
