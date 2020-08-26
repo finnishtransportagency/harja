@@ -111,6 +111,7 @@
     (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
           (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
                                                  :urakka-id kohteen-urakka-id}))
+          vastaus (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
           nykyinen-valilehti-taso1 @nav/valittu-sivu
           nykyinen-valilehti-taso2 (nav/valittu-valilehti :urakat)
           nykyinen-valilehti-taso3 (nav/valittu-valilehti :kohdeluettelo-paallystys)]
