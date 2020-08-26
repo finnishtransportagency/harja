@@ -123,7 +123,6 @@ SELECT
   tunniste,
   tila,
   ilmoitettu,
-  valitetty,
   "valitetty-urakkaan",
   valitetty as "valitetty-harjaan",
   "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
