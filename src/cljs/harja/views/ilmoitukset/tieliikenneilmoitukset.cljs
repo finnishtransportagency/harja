@@ -123,9 +123,9 @@
    [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
                                tiedot/aikavalit
                                valinnat-nyt
-                               {:vakioaikavali :tiedotettu-vakioaikavali
-                                :alkuaika      :tiedotettu-alkuaika
-                                :loppuaika     :tiedotettu-loppuaika})
+                               {:vakioaikavali :valitetty-urakkaan-vakioaikavali
+                                :alkuaika      :valitetty-urakkaan-alkuaika
+                                :loppuaika     :valitetty-urakkaan-loppuaika})
     (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
                                tiedot/toimenpiteiden-aikavalit
                                valinnat-nyt
