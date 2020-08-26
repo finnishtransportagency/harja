@@ -335,3 +335,12 @@
     (is (boolean (some #(= (:tid %) 22) testidatasta)))
     (is (= 2 (count testidatasta)))))
 
+
+(def suolatoteumat [{:rivinumero -1, :alkanut #inst "2020-08-26T05:25:22.000-00:00", :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl", :yksikko "t", :kohdistettava false, :materiaalityyppi "talvisuola", :urakkatyyppi "hoito"}, :pvm #inst "2020-08-25T21:00:00.000-00:00", :maara 666, :lisatieto "555", :paattynyt #inst "2020-08-26T05:25:22.000-00:00"}])
+
+(deftest tallenna-suolatoteumat-testi
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-suolatoteumat +kayttaja-jvh+ {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                                                                        :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+                                                                        :toteumat suolatoteumat})]
+    (is (true? vastaus) "Suolatoteuman tallennus")))
