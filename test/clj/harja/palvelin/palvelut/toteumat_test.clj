@@ -310,7 +310,8 @@
                            ((set [[#inst "2005-09-30T21:00:00.000-00:00" 1 7M]
                                   [#inst "2005-09-30T21:00:00.000-00:00" 4 9M]
                                   [#inst "2005-09-30T21:00:00.000-00:00" 2 4M]
-                                  [#inst "2005-09-30T21:00:00.000-00:00" 3 3M]]) %))
+                                  [#inst "2005-09-30T21:00:00.000-00:00" 3 3M]
+                                  [#inst "2004-10-19T21:00:00.000-00:00" 5 25M]]) %))
                         sopimuksen-kaytetty-materiaali-ennen)))
     (is (= 0 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=192837 AND poistettu IS NOT TRUE"))))
     (is (= 0 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
@@ -329,6 +330,7 @@
                                     [#inst "2005-09-30T21:00:00.000-00:00" 4 9M]
                                     [#inst "2005-09-30T21:00:00.000-00:00" 2 4M]
                                     [#inst "2005-09-30T21:00:00.000-00:00" 3 3M]
+                                    [#inst "2004-10-19T21:00:00.000-00:00" 5 25M]
                                     [#inst "2005-12-23T22:00:00.000-00:00" 1 385674M]]) %))
                           sopimuksen-kaytetty-materiaali-jalkeen)))
 

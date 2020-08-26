@@ -245,10 +245,12 @@
                                                                             :threshold 50
                                                                             :alkupvm #inst "2000-02-17T00:00:00.000-00:00"
                                                                             :loppupvm #inst "2018-02-17T00:00:00.000-00:00"})]
-    (is (= 2 (count tulos)))
-    (let [rivi (first tulos)]
+    (is (> (count tulos) 2))
+    (let [rivi (first (filter #(= 1 (:rivinumero %))
+                              tulos))]
       (is (= 1 (:rivinumero rivi)))
       (is (= 2 (:lukumaara rivi)))
+      (is (= 10M (:maara rivi)))
       (is (= {:id 1 :nimi "Talvisuolaliuos NaCl"} (:materiaali rivi))))))
 
 (deftest hae-suolatoteumien-haku

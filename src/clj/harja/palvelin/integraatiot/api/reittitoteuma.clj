@@ -149,8 +149,7 @@ maksimi-linnuntien-etaisyys 200)
         toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
     (jdbc/with-db-transaction [db db]
       (let [ ;; Toteumat menevät insert triggerille eri tauluihin, eikä id palaudu normaalin taulun tapaan, update palauttaa
-            toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
-            toteuma-id (or toteuma-id (toteumat/luodun-toteuman-id db))]
+            toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)]
         (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
         (log/debug "Aloitetaan toteuman tehtävien tallennus")
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
