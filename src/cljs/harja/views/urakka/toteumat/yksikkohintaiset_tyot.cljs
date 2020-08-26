@@ -422,9 +422,9 @@
          {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
          {:otsikko "Yksikkö\u00ADhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10 :tasaa :oikea :fmt fmt/euro-opt}
          {:otsikko "Suunni\u00ADteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-          :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea}
+          :fmt #(fmt/pyorista-ehka-kolmeen %) :tasaa :oikea}
          {:otsikko "Toteutu\u00ADnut määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-          :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea}
+          :fmt #(fmt/pyorista-ehka-kolmeen %) :tasaa :oikea}
          {:otsikko "Suunni\u00ADtellut kustan\u00ADnukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
           :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
          {:otsikko "Toteutu\u00ADneet kustan\u00ADnukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt

@@ -524,6 +524,19 @@
      ""
      (desimaaliluku luku tarkkuus ryhmitelty?))))
 
+(defn pyorista-ehka-kolmeen [arvo]
+  (let [desimaalit-seq (s/split (str arvo) #"\.")
+        desimaalit (if (> (count desimaalit-seq) 1)
+                     (count (second desimaalit-seq))
+                     0)
+        arvo (try
+               (if (> desimaalit 2)
+                 (desimaaliluku-opt arvo 3 true)
+                 (desimaaliluku-opt arvo 2 true))
+               #?(:cljs (catch js/Object _ arvo))
+               #?(:clj (catch Exception _ arvo)))]
+    arvo))
+
 (defn prosentti
   ([luku] (prosentti luku 1))
   ([luku tarkkuus]
