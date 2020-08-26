@@ -56,7 +56,7 @@
                             :toimenpide {:id 9
                                          :otsikko "6 MUUTA"}
                             :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "24.06.2020")
-                            :tyyppi "kokonaishintainen"
+                            :tyyppi :maaramitattava
                             :toteumat [{:tehtava {:id 3050 :otsikko "Pysäkkikatoksen uusiminen" :yksikko "kpl"}
                                         :ei-sijaintia true
                                         :sijainti {:numero nil
@@ -74,7 +74,7 @@
                                  :toimenpide {:id 79
                                               :otsikko "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
                                  :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
-                                 :tyyppi "akillinen-hoitotyo"
+                                 :tyyppi :akillinen-hoitotyo
                                  :toteumat [{:tehtava {:id 3070 :otsikko "Äkillinen hoitotyö (talvihoito)" :yksikko nil}
                                              :ei-sijaintia true
                                              :sijainti {:numero nil
@@ -89,9 +89,9 @@
 
 (def default-lisatyo {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                       :toimenpide {:id 171
-                                   :otsikko "1.0 TALVIHOITO"}
+                                   :otsikko "7.0 LISÄTYÖT"}
                       :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "26.06.2020")
-                      :tyyppi "lisatyo"
+                      :tyyppi :lisatyo
                       :toteumat [{:tehtava {:id 3164 :otsikko "Lisätyö (talvihoito)" :yksikko nil}
                                   :ei-sijaintia true
                                   :sijainti {:numero nil
@@ -104,6 +104,11 @@
                                   :toteuma-tehtava-id nil
                                   :maara 1M}]})
 
+(defn- tyyppi-str->keyword [tyyppi]
+  (get {"kokonaishintainen" :maaramitattava
+        "akillinen-hoitotyo" :akillinen-hoitotyo
+        "lisatyo" :lisatyo} tyyppi))
+
 (defn- muokkaa-toteuman-arvot-palvelua-varten
   "Muokataan toteumat tiedot palvelulle lähetettävään muotoon ja samalla hieman muutetaan arvoja, jotta
   voidaan varmistua siitä, että toteuman muokkaus toimii."
@@ -112,7 +117,7 @@
    :toimenpide {:id (:toimenpide_id t)
                 :otsikko (:toimpenide_otsikko t)}
    :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") (pvm/pvm (:toteuma_aika t)))
-   :tyyppi (:tyyppi t)
+   :tyyppi (tyyppi-str->keyword (:tyyppi t))
    :toteumat [{:tehtava {:id (:tehtava_id t)
                          :otsikko (:tehtava t)
                          :yksikko (:yksikko t)}
@@ -162,11 +167,11 @@
 
 (deftest muokkaa-maarien-toteuma-test
   (let [tallennettu-toteuma (lisaa-toteuma default-toteuma-maara)
+        _ (println "muokkaa-maarien-toteuma-test :: tallennettu-toteuma" (pr-str tallennettu-toteuma))
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :hae-maarien-toteuma +kayttaja-jvh+
                                        {:id (first tallennettu-toteuma)})
-
         ;; Muokataan tietoja
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-toteuma (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
 
@@ -186,7 +191,7 @@
     (is (= (:toimenpide_otsikko haettu-toteuma) (get-in default-toteuma-maara [:toimenpide :otsikko])) "Toteuman tehtäväryhmä/toimenpide täsmää tallennuksen jälkeen")
     (is (= (:toteutunut haettu-toteuma) (bigdec (:maara (first (:toteumat default-toteuma-maara))))) "Toteuman määrä täsmää tallennuksen jälkeen")
     (is (= (:yksikko haettu-toteuma) (get-in (first (:toteumat default-toteuma-maara)) [:tehtava :yksikko])) "Toteuman yksikkö täsmää tallennuksen jälkeen")
-    (is (= (:tyyppi haettu-toteuma) (:tyyppi default-toteuma-maara)) "Toteuman tyyppi täsmää tallennuksen jälkeen")
+    (is (= (tyyppi-str->keyword (:tyyppi haettu-toteuma)) (:tyyppi default-toteuma-maara)) "Toteuman tyyppi täsmää tallennuksen jälkeen")
 
     ;; Muokattu toteuma
     (is (not (nil? haettu-muokattu-toteuma)))
@@ -238,7 +243,7 @@
     (is (= (:toimenpide_otsikko haettu-hoitotyo) (get-in default-akillinen-hoitotyo [:toimenpide :otsikko])) "Toteuman tehtäväryhmä/toimenpide täsmää tallennuksen jälkeen")
     (is (= (:toteutunut haettu-hoitotyo) (:maara (first (:toteumat default-akillinen-hoitotyo)))) "Toteuman määrä täsmää tallennuksen jälkeen")
     (is (= (:yksikko haettu-hoitotyo) (get-in default-akillinen-hoitotyo [:tehtava :yksikko])) "Toteuman yksikkö täsmää tallennuksen jälkeen")
-    (is (= (:tyyppi haettu-hoitotyo) (:tyyppi default-akillinen-hoitotyo)) "Toteuman tyyppi täsmää tallennuksen jälkeen")
+    (is (= (tyyppi-str->keyword (:tyyppi haettu-hoitotyo)) (:tyyppi default-akillinen-hoitotyo)) "Toteuman tyyppi täsmää tallennuksen jälkeen")
 
     ;; Muokattu toteuma
     (is (not (nil? haettu-muokattu-hoitotyo)))
@@ -289,7 +294,7 @@
     (is (= (:toimenpide_otsikko haettu-lisatyo) (get-in default-lisatyo [:toimenpide :otsikko])) "Toteuman tehtäväryhmä/toimenpide täsmää tallennuksen jälkeen")
     (is (= (:toteutunut haettu-lisatyo) (:maara (first (:toteumat default-lisatyo)))) "Toteuman määrä täsmää tallennuksen jälkeen")
     (is (= (:yksikko haettu-lisatyo) (get-in default-lisatyo [:tehtava :yksikko])) "Toteuman yksikkö täsmää tallennuksen jälkeen")
-    (is (= (:tyyppi haettu-lisatyo) (:tyyppi default-lisatyo)) "Toteuman tyyppi täsmää tallennuksen jälkeen")
+    (is (= (tyyppi-str->keyword (:tyyppi haettu-lisatyo)) (:tyyppi default-lisatyo)) "Toteuman tyyppi täsmää tallennuksen jälkeen")
 
     ;; Muokattu toteuma
     (is (not (nil? haettu-muokattu-lisatyo)))
