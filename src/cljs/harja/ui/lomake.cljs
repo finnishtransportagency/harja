@@ -390,7 +390,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     muokkaa muokkaa-kenttaa-fn
                                     varoitukset muokatut virheet huomautukset rivi-opts]}]
   [:div {:key (str "div-nayta-palsta" (first (:skeemat palsta)))
-         :class (str "lomakepalsta " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
+         :class (str "lomakepalsta col-xs-12 col-md-5 " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
    (when (-> palsta :optiot :otsikko)
      [:h3 (-> palsta :optiot :otsikko)])
    (for [{:keys [nimi muokattava?] :as p} (remove nil? (:skeemat palsta))]

@@ -192,9 +192,7 @@
               (concat [
                        ^{:key (str "otsikko-" (hash tehtavaryhma))}
                        [:tr.header
-                        [:td {:colspan "3"} tehtavaryhma]
-                        [:td ""]
-                        [:td ""]]]
+                        [:td {:colSpan "5"} tehtavaryhma]]]
                       muodostetut)))
           r)]
     [:div.table-default
@@ -236,66 +234,67 @@
         syottomoodi (get-in app [:syottomoodi])
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
-     #_ [debug/debug app]
+     #_[debug/debug app]
      [:div [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
             "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
-     [:div.flex-row {:style {:flex-wrap "wrap"}}
-      [:div {:style {:flex-grow 2 :padding-right "1rem" :min-width "250px"}}
+     ; [:div.flex-row {:style {:flex-wrap "wrap"}}
+     [:div.row
+      ; [:div {:style {:flex-grow 2 :padding-right "1rem" :min-width "250px"}}
+      [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
        [:span.alasvedon-otsikko "Toimenpide"]
-       [yleiset/livi-pudotusvalikko {:valinta    valittu-toimenpide
+       [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
-                                     :format-fn  #(:otsikko %)}
+                                     :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
 
-      [:div {:style {:flex 1 :padding-right "1rem" :min-width "250px"}}
+      ;[:div {:style {:flex 1 :padding-right "1rem" :min-width "250px"}}
+      [:div.col-xs-6.col-md-3
        [:span.alasvedon-otsikko "Hoitokausi"]
-       [yleiset/livi-pudotusvalikko {:valinta    valittu-hoitokausi
+       [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                     :format-fn  #(str "1.10." % "-30.9." (inc %))}
+                                     :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
-      #_ [:div.label-ja-alasveto
-       [kentat/aikavali
-        {:kaari-luokkaan           "sininen"
-         :valinta-fn               #(e! (maarien-toteumat/->ValitseAikavali %1 %2))
-         :pvm-alku                 aikavali-alkupvm
-         :rajauksen-alkupvm        (-> @tila/yleiset :urakka :alkupvm)
-         :rajauksen-loppupvm       (-> @tila/yleiset :urakka :loppupvm)
-         :pvm-loppu                aikavali-loppupvm
-         :ikoni                    ikonit/calendar
-         :sumeutus-kun-molemmat-fn (fn [alkupvm loppupvm]
-                                     (let [_ (js/console.log ":sumeutus-kun-molemmat-fn :: alkupvm-loppupvm" (pr-str alkupvm) (pr-str loppupvm))]
-                                       (e! (maarien-toteumat/->HaeToteutuneetMaarat
-                                             (:id @nav/valittu-urakka)
-                                             (get-in app [:toteuma :toimenpide])
-                                             nil
-                                             alkupvm loppupvm))))}]]
-      [:div {:style {:flex 1 :padding-top "19px"}}
-       [napit/uusi
+      #_[:div.label-ja-alasveto
+         [kentat/aikavali
+          {:kaari-luokkaan "sininen"
+           :valinta-fn #(e! (maarien-toteumat/->ValitseAikavali %1 %2))
+           :pvm-alku aikavali-alkupvm
+           :rajauksen-alkupvm (-> @tila/yleiset :urakka :alkupvm)
+           :rajauksen-loppupvm (-> @tila/yleiset :urakka :loppupvm)
+           :pvm-loppu aikavali-loppupvm
+           :ikoni ikonit/calendar
+           :sumeutus-kun-molemmat-fn (fn [alkupvm loppupvm]
+                                       (let [_ (js/console.log ":sumeutus-kun-molemmat-fn :: alkupvm-loppupvm" (pr-str alkupvm) (pr-str loppupvm))]
+                                         (e! (maarien-toteumat/->HaeToteutuneetMaarat
+                                               (:id @nav/valittu-urakka)
+                                               (get-in app [:toteuma :toimenpide])
+                                               nil
+                                               alkupvm loppupvm))))}]]
+      ; [:div {:style {:flex 1 :padding-top "19px"}}
+      [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
+      [napit/uusi
         "Lisaa toteuma"
         #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app)))
         {:vayla-tyyli? true
          :luokka "suuri"}]]]
-     [:div.flex-row
-      [kentat/tee-kentta {:tyyppi           :checkbox-group
-                          :nayta-rivina?    true
-                          :vayla-tyyli?     true
-                          :rivi-solun-tyyli {:padding-right "3rem"}
-                          :vaihtoehto-nayta filtterit-keyword->string
-                          :vaihtoehdot      [:maaramitattavat :rahavaraukset :lisatyot]
-                          :valitse-fn       (fn [tila polku arvo]
-                                              (loki/log "valitse " tila polku arvo filtterit)
-                                              (e! (maarien-toteumat/->AsetaFiltteri polku arvo)))
-                          :valittu-fn       (fn [tila polku]
-                                              (when polku
-                                                (polku tila)))}
-       (r/wrap filtterit
-               (constantly true))]]
-
-     [ryhmitellyt-taulukko e! app ryhmitellyt-maarat]
-     ;[new-grid/piirra g]
-     ]))
+      [:div.flex-row
+       [kentat/tee-kentta {:tyyppi :checkbox-group
+                           :nayta-rivina? true
+                           :vayla-tyyli? true
+                           :rivi-solun-tyyli {:padding-right "3rem"}
+                           :vaihtoehto-nayta filtterit-keyword->string
+                           :vaihtoehdot [:maaramitattavat :rahavaraukset :lisatyot]
+                           :valitse-fn (fn [tila polku arvo]
+                                         (loki/log "valitse " tila polku arvo filtterit)
+                                         (e! (maarien-toteumat/->AsetaFiltteri polku arvo)))
+                           :valittu-fn (fn [tila polku]
+                                         (when polku
+                                           (polku tila)))}
+        (r/wrap filtterit
+                (constantly true))]]
+      [ryhmitellyt-taulukko e! app ryhmitellyt-maarat]]))
 
 (defn- debug-state [app]
   [:span
@@ -322,7 +321,6 @@
             [kartta/kartan-paikka]
             [toteuma-lomake/maarien-toteuman-syottolomake* e! app]]
            [:div
-            [kartta/kartan-paikka]
             [maarien-toteumalistaus e! app]])
          [debug-state app]]))))
 

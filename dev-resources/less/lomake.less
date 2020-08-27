@@ -265,30 +265,30 @@ fieldset.lomake-osa {
       max-width: ~"calc(50% - 20px)";
     }
   }
-  flex-grow:1;
+  /*flex-grow: 1;*/
 
   /* Keskikokoinen näyttö */
   @media all and (max-width: 800px) {
-    /* Laitetaan elementit alekain ja hieman tyhjää kaikkien ympärille */
+    /* Laitetaan elementit alekain ja hieman tyhjää kaikkien ympärille
     justify-content: space-around;
-    flex-direction: column;
+    flex-direction: column;*/
   }
 
   /* Pienet näytöt */
   @media all and (max-width: 500px) {
-    /* Pakota elementit alekain */
-    flex-direction: column;
+    /* Pakota elementit alekain
+    flex-direction: column;*/
 
   }
 }
 
 .lomakepalstat {
+  /* Flex muutos mahdollinen. Koodit jätetty tarkoituksella
+   Flexin kanssa lähinnä ongelmana alasvetovalikkojen laajeneminen liian suuriksi.
+
   display:flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: flex-start;
-  /* Isot näytöt */
-  @media all and (min-width: 800px) {
-    padding-left: 15px;
-  }
+  justify-content: flex-start;*/
+
 }

@@ -204,7 +204,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn!]} _]
+  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn! vayla-tyyli?]} _]
   (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
@@ -222,7 +222,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                  :else [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                                            (reset! auki? false)
                                                                            nil)])
-                         (when (= valittu-arvo vaihtoehto) [:span.listan-arvo-valittu (ikonit/ok)])
+                         (when (and vayla-tyyli?
+                                    (= valittu-arvo vaihtoehto))
+                           [:span.listan-arvo-valittu (ikonit/ok)])
                                                             ]]))
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]

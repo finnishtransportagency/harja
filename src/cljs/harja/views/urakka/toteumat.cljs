@@ -52,8 +52,14 @@
                     (not mhu-urakka?))
            [yks-hint-tyot/yksikkohintaisten-toteumat])
 
+         "Tehtävät" :maarien-toteumat
+         (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
+                    (#{:teiden-hoito} (:tyyppi ur)))
+           [maarien-toteumat-nakyma/maarien-toteumat])
+
          "Muutos- ja lisätyöt" :muut-tyot
-         (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
+         (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
+                    (#{:hoito} (:tyyppi ur)))
            [muut-tyot/muut-tyot-toteumat ur])
 
          "Suola" :suola
@@ -78,11 +84,4 @@
          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [varusteet/varusteet])
-
-         "Määrien toteumat" :maarien-toteumat
-         ;; TODO: Oikeat tarkistukset tänne miten?
-         (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
-                    (oikeudet/urakat-toteumat-varusteet id)
-                    (#{:teiden-hoito} (:tyyppi ur)))
-           [maarien-toteumat-nakyma/maarien-toteumat])]))))
+           [varusteet/varusteet])]))))

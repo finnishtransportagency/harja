@@ -51,6 +51,9 @@
                       urakkatieto-fixture))
 
 ;; Hae kaikki määrien toteumat ilman rajoituksia
+;; Rajoituksettomuus on tässä kohdassa vähän ristiriitaista, koska suunniteltua määrää ei voi laittaa kuin joillekin
+;; tietyille tehtäville. Niinpä teoriassa on mahdollista, että urakka_tehtavamaara taulussa on "suunniteltuja" tehtäviä, joita tämä haku
+;; ei löydä. Kannattaa varmistaa todellinen suunniteltu tehtäväilanne sivulta Suunnittelu > Tehtävät ja määrät.
 (deftest maarien-toteumat-listaus-ilman-rajoituksia-test
   (let [maarien-toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :urakan-maarien-toteumat +kayttaja-jvh+
@@ -58,8 +61,11 @@
         _ (log/debug "maarien-toteumat-listaus-ilman-rajoituksia :: maarien-toteumat" (pr-str maarien-toteumat))
         oulun-mhu-urakan-maarien-toteuma-lkm (ffirst (q
                                                        (str "SELECT count(*)
-                                                             FROM urakka_tehtavamaara
-                                                             WHERE urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))]
+                                                             FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                             WHERE ut.tehtava = tk.id
+                                                             AND tk.taso = 4
+                                                             AND tk.tehtavaryhma is not null
+                                                             AND ut.urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))]
     (is (= (count maarien-toteumat) oulun-mhu-urakan-maarien-toteuma-lkm) "Määrien toteumien määrä")))
 
 ;; Hae kaikki määrien toteumat hoitovuoden mukaan
@@ -82,16 +88,28 @@
 
         oulun-mhu-urakan-maarien-toteuma-2019 (ffirst (q
                                                         (str "SELECT count(*)
-                                                              FROM urakka_tehtavamaara
-                                                              WHERE \"hoitokauden-alkuvuosi\" = '2019'::INT AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))
+                                                              FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                              WHERE ut.tehtava = tk.id
+                                                              AND tk.taso = 4
+                                                              AND tk.tehtavaryhma is not null
+                                                              AND \"hoitokauden-alkuvuosi\" = '2019'::INT
+                                                              AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))
         oulun-mhu-urakan-maarien-toteuma-2020 (ffirst (q
                                                         (str "SELECT count(*)
-                                                              FROM urakka_tehtavamaara
-                                                              WHERE \"hoitokauden-alkuvuosi\" = '2020'::INT AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))
+                                                              FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                              WHERE ut.tehtava = tk.id
+                                                              AND tk.taso = 4
+                                                              AND tk.tehtavaryhma is not null
+                                                              AND \"hoitokauden-alkuvuosi\" = '2020'::INT
+                                                              AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))
         oulun-mhu-urakan-maarien-toteuma-2021 (ffirst (q
                                                         (str "SELECT count(*)
-                                                              FROM urakka_tehtavamaara
-                                                              WHERE \"hoitokauden-alkuvuosi\" = '2021'::INT AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))]
+                                                              FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                              WHERE ut.tehtava = tk.id
+                                                              AND tk.taso = 4
+                                                              AND tk.tehtavaryhma is not null
+                                                              AND \"hoitokauden-alkuvuosi\" = '2021'::INT
+                                                              AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))]
     (is (= (count maarien-toteumat-2019) oulun-mhu-urakan-maarien-toteuma-2019) "Määrien toteumien määrä hoitovuodelle 2019")
     (is (= (count maarien-toteumat-2020) oulun-mhu-urakan-maarien-toteuma-2020) "Määrien toteumien määrä hoitovuodelle 2020")
     (is (= (count maarien-toteumat-2021) oulun-mhu-urakan-maarien-toteuma-2021) "Määrien toteumien määrä hoitovuodelle 2021")))
