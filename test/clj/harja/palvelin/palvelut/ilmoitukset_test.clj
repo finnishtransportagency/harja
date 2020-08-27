@@ -296,25 +296,28 @@
                                                                      :kuittaustyyppi :aloitus}]}]
     (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
 
-;; TODO: VHAR-1754 Väliaikaisesti näin. Palauta tämä käyttöön, kun VHAR-1156 toteutetaan
-;(defn tarkista-aikavalihaut
-;  (let [alkuaika (clj-time.core/date-time 2005 10 10 2)
-;        loppuaika (clj-time.core/date-time 2005 10 10 4)
-;        parametrit {:hallintayksikko nil
-;                    :urakka nil
-;                    :hoitokausi nil
-;                    :ilmoitettu-alkuaika(c/to-date alkuaika)
-;                    :ilmoitettu-loppuaika (c/to-date loppuaika)
-;                    :tyypit +ilmoitustyypit+
-;                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
-;                    :aloituskuittauksen-ajankohta :kaikki
-;                    :hakuehto ""}
-;        ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
-;                                               :hae-ilmoitukset +kayttaja-jvh+ parametrit)
-;        ilmoitus (first ilmoitukset-palvelusta)]
-;    (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
-;    (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
-;    (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
+(deftest tarkista-ajat-ja-aikavalihaut
+         (let [alkuaika (clj-time.core/date-time 2005 10 11 2)
+               loppuaika (clj-time.core/date-time 2005 10 11 4)
+               ilmoittettu (clj-time.core/date-time 2005 10 10 3 5 32)
+               valitetty (clj-time.core/date-time 2005 10 11 3 6 37)
+               parametrit {:hallintayksikko              nil
+                           :urakka                       nil
+                           :hoitokausi                   nil
+                           :valitetty-urakkaan-alkuaika  (c/to-date alkuaika)
+                           :valitetty-urakkaan-loppuaika (c/to-date loppuaika)
+                           :tyypit                       +ilmoitustyypit+
+                           :tilat                        [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                           :aloituskuittauksen-ajankohta :kaikki
+                           :hakuehto                     ""}
+               ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :hae-ilmoitukset +kayttaja-jvh+ parametrit)
+               ilmoitus (first ilmoitukset-palvelusta)]
+              (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
+              (is (t/after? (c/from-sql-time (:valitetty-urakkaan ilmoitus)) alkuaika) "Välitetty urakkaan alkuajan jälkeen.")
+              (is (t/before? (c/from-sql-time (:valitetty-urakkaan ilmoitus)) loppuaika) "Välitetty urakkaan loppuaikaa ennen.")
+              (is (t/equal? (c/from-sql-time (:ilmoitettu ilmoitus)) ilmoittettu) "Ilmoitettu-aika on oikein.")
+              (is (t/equal? (c/from-sql-time (:valitetty ilmoitus)) valitetty) "Valitetty-aika on oikein.")))
 
 (deftest hae-ilmoitus-oikeudet
   (let [hae-ilmoitus-kayttajana #(kutsu-palvelua (:http-palvelin jarjestelma)
