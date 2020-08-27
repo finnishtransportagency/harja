@@ -287,7 +287,6 @@
                            :vaihtoehto-nayta filtterit-keyword->string
                            :vaihtoehdot [:maaramitattavat :rahavaraukset :lisatyot]
                            :valitse-fn (fn [tila polku arvo]
-                                         (loki/log "valitse " tila polku arvo filtterit)
                                          (e! (maarien-toteumat/->AsetaFiltteri polku arvo)))
                            :valittu-fn (fn [tila polku]
                                          (when polku

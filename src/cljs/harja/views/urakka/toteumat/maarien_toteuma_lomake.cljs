@@ -18,7 +18,6 @@
   (e! (tiedot/->LahetaLomake data)))
 
 (defn- tyhjenna! [e! data]
-  (loki/log "tyhjään")
   (e! (tiedot/->TyhjennaLomake data)))
 
 (defn- toteuman-poiston-varmistus-modaali [{:keys [varmistus-fn pvm tehtava maara tyyppi] :as mod}]
@@ -75,12 +74,10 @@
                            validius ::tila/validius
                            :as lomake} :data} ]
   (let [paivita! (fn [polku indeksi arvo]
-                   (let [_ (js/console.log "monen tehtävän päivitys lomakkeelta " (pr-str polku) (pr-str indeksi) (pr-str arvo))]
-                     (if-not
-                       (= polku :tierekisteriosoite)
-                       (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi))
-                       (e! (tiedot/->PaivitaSijaintiMonelle arvo indeksi))))
-                   )
+                   (if-not
+                     (= polku :tierekisteriosoite)
+                     (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi))
+                     (e! (tiedot/->PaivitaSijaintiMonelle arvo indeksi))))
         useampi? (> (count toteumat) 1)
         yksittainen? (= (count toteumat) 1)
         validi? (fn [polku]
@@ -201,19 +198,13 @@
 
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
-  (let [_ (js/console.log "maarien-toteuman-syottolomake* " (clj->js lomake))
-        {tyyppi ::t/tyyppi
+  (let [{tyyppi ::t/tyyppi
          toteumat ::t/toteumat
          validius ::tila/validius
-         koko-validi? ::tila/validi?
-         reitti :reitti} lomake
-        ;_
-        #_ (tasot/nayta-geometria! :tarkasteltava-reitti
-                                {:alue reitti})
+         koko-validi? ::tila/validi?} lomake
         {ei-sijaintia ::t/ei-sijaintia
          toteuma-id ::t/toteuma-id
          sijainti ::t/sijainti} (-> toteumat first)
-        _ (js/console.log "maarien-toteuman-syottolomake* :: sijainti" (pr-str sijainti))
         validi? (fn [polku]
                   (if validius
                     (not (get-in validius [polku :validi?]))
@@ -289,7 +280,6 @@
      [ui-lomake/lomake
       {:muokkaa! (fn [data]
                    (do
-                     (js/console.log "lomakkeelta päivitys :: viimeksi-muokattu-kentta " (pr-str (::ui-lomake/viimeksi-muokattu-kentta data)) "data: " (clj->js data))
                      (if (and (not (keyword? (::ui-lomake/viimeksi-muokattu-kentta data)))
                               (> (count (::ui-lomake/viimeksi-muokattu-kentta data)) 1)
                               (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))

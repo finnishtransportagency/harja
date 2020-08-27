@@ -436,10 +436,12 @@
 ;                   }]
 ;     })
 
-(defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat] :as kamat}]
+(defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat]}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [loppupvm (konv/sql-date loppupvm) #_(.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") loppupvm)
+    (let [loppupvm (konv/sql-date loppupvm)
           sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
+          _ (println "Tallennetaan toteumat " (pr-str toteumat))
+          _ (println "sopimus" (pr-str sopimus))
           ;; Tyyppivaihtoehtoja on kolme. "kokonaishintainen" on määrien toteumille, "lisatyo" on lisätöille
           ;; ja "akillinen-hoitotyo" Äkillisille hoitotöille
           tyyppi (if (nil? tyyppi)
