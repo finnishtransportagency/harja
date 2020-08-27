@@ -73,10 +73,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                          :aloituskuittauksen-ajankohta         :kaikki
                                          :ilmoittaja-nimi                      ""
                                          :ilmoittaja-puhelin                   ""
-                                         :tiedotettu-vakioaikavali             (second aikavalit)
+                                         :valitetty-urakkaan-vakioaikavali             (second aikavalit)
                                          :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
-                                         :tiedotettu-alkuaika                  (pvm/tuntia-sitten 12)
-                                         :tiedotettu-loppuaika                 (pvm/nyt)}
+                                         :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
+                                         :valitetty-urakkaan-loppuaika                 (pvm/nyt)}
          :kuittaa-monta                 nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
