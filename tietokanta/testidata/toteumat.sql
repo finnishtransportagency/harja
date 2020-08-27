@@ -374,22 +374,6 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
   ]::reittipistedata[]);
 
 
--- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
--- Oikeissa toteumissa nämä tulevat projisoituna tieverkolle, mutta nyt vain tehdään viivat.
-
-UPDATE toteuma t
-   SET reitti = (SELECT ST_MakeLine(p.sij)
-                   FROM (SELECT rp.sijainti::geometry as sij
-		           FROM toteuman_reittipisteet tr
-			   LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
-			   WHERE tr.toteuma = t.id
-			   ORDER BY rp.aika) p)
- WHERE reitti IS NULL;
-
--- Varmistetaan, että kaikilla toteumilla on käyttäjä
-UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
-UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
-
 -- Suolatoteumia aktiiviselle Oulun urakalle
 
 INSERT INTO toteuma
@@ -461,3 +445,19 @@ $$
         RAISE NOTICE 'Toteumien generointi partitioita varten valmis.';
     END
 $$ LANGUAGE plpgsql;
+
+-- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
+-- Oikeissa toteumissa nämä tulevat projisoituna tieverkolle, mutta nyt vain tehdään viivat.
+
+UPDATE toteuma t
+   SET reitti = (SELECT ST_MakeLine(p.sij)
+                   FROM (SELECT rp.sijainti::geometry as sij
+                           FROM toteuman_reittipisteet tr
+                                    LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
+                          WHERE tr.toteuma = t.id
+                          ORDER BY rp.aika) p)
+ WHERE reitti IS NULL;
+
+-- Varmistetaan, että kaikilla toteumilla on käyttäjä
+UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
+UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;

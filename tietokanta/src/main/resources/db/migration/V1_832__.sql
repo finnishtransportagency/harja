@@ -44,6 +44,30 @@ BEGIN
     EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio || '_urakka_fkey FOREIGN KEY (urakka) REFERENCES urakka (id);';
     EXECUTE 'ALTER TABLE ' || partitio || ' ADD CONSTRAINT ' || partitio || '_sopimus_fkey FOREIGN KEY (sopimus) REFERENCES sopimus (id);';
 
+    -- Toteuman envelopen luonti
+    EXECUTE 'CREATE TRIGGER tg_muodosta_toteuman_envelope
+        BEFORE INSERT OR UPDATE
+        ON ' || partitio ||'
+        FOR EACH ROW
+    EXECUTE PROCEDURE muodosta_toteuman_envelope();';
+
+
+    -- On luotava triggerit lapsitauluihin, koska UPDATE triggerit eivät mene ajoon emotaulusta (updatea ei sinne tapahdu koska data ei ole siellä)
+    EXECUTE 'CREATE TRIGGER tg_poista_muistetut_laskutusyht_tot
+       AFTER INSERT OR UPDATE
+       ON ' || partitio || '
+       FOR EACH ROW
+       WHEN (NEW.tyyppi != ''kokonaishintainen''::toteumatyyppi)
+    EXECUTE PROCEDURE poista_muistetut_laskutusyht_tot();';
+
+    -- Toteuman luontitransaktion lopuksi päivitetään materiaalin käyttö
+    EXECUTE 'CREATE CONSTRAINT TRIGGER tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain
+       AFTER UPDATE
+       ON '|| partitio ||'
+       DEFERRABLE INITIALLY DEFERRED
+       FOR EACH ROW
+       WHEN (NEW.lahde = ''harja-api'')
+    EXECUTE PROCEDURE vahenna_urakan_materiaalin_kayttoa_hoitoluokittain();';
 END
 $$
     LANGUAGE plpgsql;
@@ -51,11 +75,6 @@ $$
 
 -- luodaan vanhoista toteumista yksi iso partitio, vältetään iso ja hidas datan siirto
 ALTER TABLE toteuma rename to toteuma_010101_200701;
--- pudotellaan triggerit, koska tästä taulutsa tulee yksi partitio, emo taulu saa triggerit migraation lopuksi
-DROP TRIGGER IF EXISTS tg_muodosta_toteuman_envelope ON toteuma_010101_200701;
-DROP TRIGGER IF EXISTS tg_poista_muistetut_laskutusyht_tot ON toteuma_010101_200701;
-DROP TRIGGER IF EXISTS tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain ON toteuma_010101_200701;
-
 
 -- poistetaan FK rajoitteet osoittamasta toteuma_010101_200701 tauluun, jotta voidaan tehdä datan siirto
 ALTER TABLE toteuma_tehtava DROP CONSTRAINT toteuma_tehtava_toteuma_fkey;
@@ -164,27 +183,3 @@ $$
 
 -- Siirretään kerralla kaikki toteumat 1.7.2020 eteenpäin. Joitakin typoja on, joten loppuajankohdaksi date max
 SELECT * FROM siirra_aikavalin_toteumat( '2020-07-01'::DATE, '9999-12-31'::DATE);
-
--- ei voida tehdä FK-viittauksia partitioituun tauluun
-
-CREATE TRIGGER tg_muodosta_toteuman_envelope
-    BEFORE INSERT OR UPDATE
-    ON toteuma
-    FOR EACH ROW
-EXECUTE PROCEDURE muodosta_toteuman_envelope();
-
-CREATE TRIGGER tg_poista_muistetut_laskutusyht_tot
-    AFTER INSERT OR UPDATE
-    ON toteuma
-    FOR EACH ROW
-    WHEN (NEW.tyyppi != 'kokonaishintainen'::toteumatyyppi)
-EXECUTE PROCEDURE poista_muistetut_laskutusyht_tot();
-
--- Toteuman luontitransaktion lopuksi päivitetään materiaalin käyttö
-CREATE CONSTRAINT TRIGGER tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain
-    AFTER UPDATE
-    ON toteuma
-    DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW
-    WHEN (NEW.lahde = 'harja-api')
-EXECUTE PROCEDURE vahenna_urakan_materiaalin_kayttoa_hoitoluokittain();
