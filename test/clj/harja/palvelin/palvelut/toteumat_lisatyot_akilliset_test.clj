@@ -52,7 +52,7 @@
                       urakkatieto-fixture))
 
 ;; MH-urakoille määrien toteumat, äkilliset hoitotyöt ja lisätyöt
-(def default-toteuma-maara {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+(def default-toteuma-maara {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                             :toimenpide {:id 9
                                          :otsikko "6 MUUTA"}
                             :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "24.06.2020")
@@ -70,7 +70,7 @@
                                         :toteuma-tehtava-id nil
                                         }]})
 
-(def default-akillinen-hoitotyo {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+(def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                  :toimenpide {:id 79
                                               :otsikko "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
                                  :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
@@ -87,7 +87,7 @@
                                              :toteuma-tehtava-id nil
                                              :maara 1M}]})
 
-(def default-lisatyo {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+(def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                       :toimenpide {:id 171
                                    :otsikko "7.0 LISÄTYÖT"}
                       :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "26.06.2020")
@@ -140,7 +140,9 @@
 
 ;;
 (deftest lisaa-maarien-toteuma-test
-  (let [_ (lisaa-toteuma default-toteuma-maara)
+  (let [;; Varmista, että urakka on tallennettu
+        _ (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        _ (lisaa-toteuma default-toteuma-maara)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
