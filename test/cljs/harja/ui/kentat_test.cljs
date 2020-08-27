@@ -41,7 +41,7 @@
    (is (some? (u/sel1 :div.dropdown.open)))
 
    "Valitaan kissa kävelee"
-   (u/click ".harja-alasvetolistaitemi:nth-child(2) > a")
+   (u/click ".harja-alasvetolistaitemi:nth-child(2) > span > a")
    --
    (is (= "kissa kävelee" (u/text :.valittu)))
    (is (= @data "kissa kävelee"))
@@ -270,7 +270,7 @@
      [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]
 
      "Alkutilassa kaikki kentät ovat tyhjiä"
-     (is (every? str/blank? (map arvo tr-kentat)))
+     (is (every? str/blank? (map arvo tr-kentat)) (str "Mihin jäi arvo: " (pr-str (map arvo tr-kentat))))
      (aseta! :tr-numero "20")
      --
      (is (= "20" (arvo :tr-numero)))

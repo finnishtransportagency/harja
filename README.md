@@ -147,6 +147,8 @@ e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä
 ### Fronttitestit
 
 Fronttitestit ajetaan komennolla: lein doo phantom test
+Taikka näin:  lein with-profile +test doo phantom test once
+Asenna phantomjs esim komennolla (mac): brew cask install phantomjs 
 Laadunseurantatyökalun testit ajetaan komennolla: lein doo phantom laadunseuranta-test
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
