@@ -9,5 +9,3 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS tg_muodosta_toteuman_envelope ON toteuma;
