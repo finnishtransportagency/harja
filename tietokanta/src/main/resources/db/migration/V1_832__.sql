@@ -13,7 +13,6 @@ $$
     LANGUAGE plpgsql;
 
 
-
 CREATE OR REPLACE FUNCTION luo_toteumataulun_partitio(alkupvm DATE, loppupvm DATE)
     RETURNS VOID AS
 $$
@@ -84,35 +83,21 @@ ALTER TABLE toteuman_reittipisteet DROP CONSTRAINT toteuman_reittipisteet_toteum
 ALTER TABLE toteuma_liite DROP CONSTRAINT toteuma_liite_toteuma_fkey;
 ALTER TABLE paikkaustoteuma DROP CONSTRAINT "paikkaustoteuma_toteuma-id_fkey";
 
-
 -- Koska toteumien ID:n palauttaminen muuttuu partitioinnin myötä, lisätään turvaa lisäämällä
--- tärkeimpiin viitteisiin NOT NULL rajoitteet. Sitä ennen poistettava kura kannasta.
--- Nämä deletet ajetaan käsin eri ympäristöihin ennen migraatiota
---DELETE FROM toteuma_tehtava WHERE toteuma IS NULL;
---DELETE FROM toteuma_materiaali WHERE toteuma IS NULL;
---DELETE FROM varustetoteuma WHERE toteuma IS NULL;
-
+-- tärkeimpiin viitteisiin NOT NULL rajoitteet. Sitä ennen ajettiin käsin eri ympäristöihin tarvittavat deletet ennen migraatiota
 ALTER TABLE toteuma_tehtava ALTER COLUMN toteuma SET NOT NULL;
 ALTER TABLE toteuma_materiaali ALTER COLUMN toteuma SET NOT NULL;
 ALTER TABLE varustetoteuma ALTER COLUMN toteuma SET NOT NULL;
 -- toteuman_reittipisteet toteuma on jo NOT NULL
 -- toteuma_liite toteuma on jo NOT NULL
 
-
+-- Luodaan uusi toteumataulu pohjaksi partitioinnille (emotaulu, partitioned table)
+-- Toteumat ennen 1.7.2020 jäävät tauluun toteuma_010101_200701 yhtenä partitiona
+-- Partitioksi liittäminen (inherit) tehdään alempana, kun CHECK-rajoitetta rikkova
+-- data saadaan ensin siirrettyä pois
 CREATE TABLE toteuma (LIKE toteuma_010101_200701 INCLUDING ALL);
 
--- Tehdään vanhaa dataa kantavasta taulusta uudenkarhean toteumataulun partitio
--- FIXME: Tässä kohti check constraintinb luominen ei tule tuotannossa onnistumaan, koska dataa on joka ei tottele tätä
--- siirrettävä sen jälkeen, kun on siirretty ensin tätä rikkova data eri partitioon
-ALTER TABLE toteuma_010101_200701
-    INHERIT toteuma,
-    ADD CONSTRAINT toteuma_010101_200701_alkanut_check
-    CHECK (alkanut >= '0001-01-01' AND alkanut < '2020-07-01');;
--- Siirretään sellainen data pois joka rikkoisi tulevaa CHECK-rajoitetta
-
-
-
--- ikivanhat, typotetut jne toteumat tänne
+-- Luodaan 6kk mittaisia partitioita.
 SELECT * FROM luo_toteumataulun_partitio( '2020-07-01'::DATE, '2021-01-01'::DATE);
 SELECT * FROM luo_toteumataulun_partitio( '2021-01-01'::DATE, '2021-07-01'::DATE);
 SELECT * FROM luo_toteumataulun_partitio( '2021-07-01'::DATE, '2022-01-01'::DATE);
@@ -125,7 +110,7 @@ SELECT * FROM luo_toteumataulun_partitio( '2024-07-01'::DATE, '2025-01-01'::DATE
 -- tulevaisuuteen typotetut jne toteumat tänne
 SELECT * FROM luo_toteumataulun_partitio( '2025-01-01'::DATE, '9999-12-31'::DATE);
 
--- Luo insert trigger
+-- Luo insert trigger, joka ohjaa uudet rivit oikeaan partitioon
 CREATE OR REPLACE FUNCTION toteuma_insert() RETURNS trigger AS $$
 DECLARE
     alkanut date;
@@ -153,8 +138,9 @@ BEGIN
     ELSIF alkanut >= '2024-07-01'::date AND alkanut < '2025-01-01'::date THEN
         INSERT INTO toteuma_240701_250101 VALUES (NEW.*);
 
-    -- kaatissäkki kaikelle liian uudelle, typotetulle jne. Jos Harja elää 2027 pitempään, muuta
-    -- tätä funktiota ja luo tarvittava määrä hoitokausipartitioita lisää
+    -- kaatissäkki kaikelle liian uudelle, typotetulle jne. Jos ja kun Harja elää 1.1.2025 pitempään, muuta
+    -- tätä funktiota ja luo tarvittava määrä hoitokausipartitioita lisää jotta saadaan partitioinnin
+    -- hyödyt myös silloin käyttöön
     ELSIF alkanut >= '2025-01-01'::date THEN
         INSERT INTO toteuma_250101_991231 VALUES (NEW.*);  ELSE
         RAISE EXCEPTION 'Taululle toteuma ei löydy insert ehtoa, korjaa toteuma_insert() sproc!';
@@ -183,3 +169,10 @@ $$
 
 -- Siirretään kerralla kaikki toteumat 1.7.2020 eteenpäin. Joitakin typoja on, joten loppuajankohdaksi date max
 SELECT * FROM siirra_aikavalin_toteumat( '2020-07-01'::DATE, '9999-12-31'::DATE);
+
+-- Tehdään vanhaa dataa kantavasta taulusta uudenkarhean toteumataulun partitio
+-- Tätä ennen on pitänyt siirtää kaikki CHECK-constraintia rikkovat rivit eri paikkaan
+ALTER TABLE toteuma_010101_200701
+    INHERIT toteuma,
+    ADD CONSTRAINT toteuma_010101_200701_alkanut_check
+        CHECK (alkanut >= '0001-01-01' AND alkanut < '2020-07-01');
