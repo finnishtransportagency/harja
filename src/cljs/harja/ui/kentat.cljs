@@ -1052,7 +1052,7 @@
   ([lomake? muuta! blur placeholder value key disabled? vayla-tyyli?] (tr-kentan-elementti lomake? muuta! blur placeholder value key disabled? vayla-tyyli? (str "tr-" (name key))))
   ([lomake? muuta! blur placeholder value key disabled? vayla-tyyli? luokat]
    [:input.tierekisteri {:class (str
-                                  luokat " "
+                                  luokat " " "tr-" (name key) " "
                                   (when (and lomake? (not vayla-tyyli?)) "form-control ")
                                   (when disabled? "disabled "))
                          :size 5 :max-length 10
@@ -1303,9 +1303,7 @@
               osoite @data
 
               [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
-              (map #(when osoite
-                      (loki/log "osoite %" osoite %)
-                      (osoite %)) avaimet)
+              (map #(when osoite (osoite %)) avaimet)
 
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)

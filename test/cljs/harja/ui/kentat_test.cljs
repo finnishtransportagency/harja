@@ -264,13 +264,12 @@
         hae-tr-viivaksi (fake-palvelukutsu
                          :hae-tr-viivaksi
                          (fn [payload]
-                           (.log js/console ":hae-tr-viivaksi => " payload)
                            (get +tr-vastaukset+ payload)))]
     (komponenttitesti
      [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]
 
      "Alkutilassa kaikki kentät ovat tyhjiä"
-     (is (every? str/blank? (map arvo tr-kentat)) (str "Mihin jäi arvo: " (pr-str (map arvo tr-kentat))))
+     (is (every? str/blank? (map arvo tr-kentat)))
      (aseta! :tr-numero "20")
      --
      (is (= "20" (arvo :tr-numero)))
