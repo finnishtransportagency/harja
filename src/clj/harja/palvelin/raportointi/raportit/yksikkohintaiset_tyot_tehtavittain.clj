@@ -109,8 +109,8 @@
                                {:leveys 5 :otsikko "Yks."}
                                (when (= konteksti :urakka)
                                  [{:leveys 10 :otsikko "Yksikkö\u00adhinta €" :fmt :raha}
-                                  {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella" :fmt :numero}])
-                               {:leveys 10 :otsikko "Toteutunut määrä" :fmt :numero}
+                                  {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella" :fmt :numero-3desim}])
+                               {:leveys 10 :otsikko "Toteutunut määrä" :fmt :numero-3desim}
                                (when (= konteksti :urakka)
                                  [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella €" :fmt :raha}
                                   {:leveys 15 :otsikko "Toteutuneet kustannukset €" :fmt :raha}])]))

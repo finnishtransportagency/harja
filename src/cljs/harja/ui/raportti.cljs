@@ -62,8 +62,9 @@
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+    :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
-    :raha #(raportti-domain/yrita fmt/euro-opt % )
+    :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
