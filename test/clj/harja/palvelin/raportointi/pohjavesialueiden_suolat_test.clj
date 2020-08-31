@@ -8,7 +8,7 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.raportointi.testiapurit :as apurit]
             [harja.palvelin.palvelut.raportit :as raportit]
-            [[raportit :as raportit-q]]
+            [harja.kyselyt.raportit :as raportit-q]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
