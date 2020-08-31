@@ -81,7 +81,6 @@
                  [cljs-ajax "0.8.0"]
 
                  [reagent "0.9.1"]
-                 [cljs-react-test "0.1.4-SNAPSHOT"]
                  [data-frisk-reagent "0.4.5"]
 
 
