@@ -229,7 +229,7 @@
                                          (/ naytettava-arvo 100)
 
                                          ;; Jos excelissä on raha määrityksenä. Pyöristä kahteen desimaaliin
-                                         (and (= :raha (:fmt sarake)) (not (nil? naytettava-arvo)))
+                                         (and (= :raha (:fmt sarake)) (number? naytettava-arvo))
                                          (BigDecimal. (str/replace (fmt/desimaaliluku-opt naytettava-arvo 2 false) "," "."))
 
                                          :default
