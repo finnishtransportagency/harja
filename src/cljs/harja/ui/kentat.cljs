@@ -327,7 +327,7 @@
                                       (when toiminta-f
                                         (toiminta-f (when-not (js/isNaN numero)
                                                       numero))))))}]
-           (when yksikko
+           (when (and yksikko vayla-tyyli?)
              [:span.sisainen-label {:style {:margin-left (* -1 (+ 20 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]

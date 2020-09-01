@@ -575,6 +575,7 @@
                   (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
                   true (assoc-in [:syottomoodi] auki)
                   true (assoc-in [:lomake ::t/tyyppi] :maaramitattava)
+                  true (assoc-in [:lomake ::t/toteumat] [])
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] true)
