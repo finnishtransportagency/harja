@@ -106,7 +106,7 @@
                        :otsikko "Tehtävä"}
                        {:leveys  5
                         :otsikko "Yks."}
-                       {:fmt     :numero
+                       {:fmt     :numero-3desim
                         :leveys  10
                         :otsikko "Toteutunut määrä"})
                      '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
@@ -143,7 +143,7 @@
                        :otsikko "Tehtävä"}
                        {:leveys  5
                         :otsikko "Yks."}
-                       {:fmt     :numero
+                       {:fmt     :numero-3desim
                         :leveys  10
                         :otsikko "Toteutunut määrä"})
                      '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
