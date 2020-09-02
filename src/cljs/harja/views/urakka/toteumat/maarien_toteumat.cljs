@@ -235,7 +235,7 @@
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
      #_[debug/debug app]
-     [:div [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
+     [:div {:style {:padding-top "1rem"}} [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
             "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
      ; [:div.flex-row {:style {:flex-wrap "wrap"}}
      [:div.row

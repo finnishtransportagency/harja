@@ -24,20 +24,21 @@
   [:div.row
    [:div.col-md-12 {:style {:padding-bottom "1rem"}} (pvm/pvm pvm)]
    [:div.col-md-12 {:style {:padding-bottom "1rem"}} (:tehtava tehtava)]
-   [:div.col-md-12 {:style {:padding-bottom "1rem"}} (str maara " " (cond
-                                                                      (or
-                                                                        (= tyyppi :kokonaishintainen)
-                                                                        (= tyyppi :maaramitattava
-                                                                           ))
-                                                                      (:yksikko tehtava)
+   [:div.col-md-12 {:style {:padding-bottom "1rem"}}
+    (str maara " " (cond
+                     (or
+                       (= tyyppi :kokonaishintainen)
+                       (= tyyppi :maaramitattava
+                          ))
+                     (:yksikko tehtava)
 
-                                                                      (or (= tyyppi :lisatyo)
-                                                                          (= tyyppi :akillinen-hoitotyo)
-                                                                          (= tyyppi :muut-rahavaraukset))
-                                                                      "kpl"
+                     (or (= tyyppi :lisatyo)
+                         (= tyyppi :akillinen-hoitotyo)
+                         (= tyyppi :muut-rahavaraukset))
+                     "kpl"
 
-                                                                      :else
-                                                                      ""))]
+                     :else
+                     ""))]
 
    [:div {:style {:padding-bottom "1rem"}}
     [:span {:style {:padding-right "1rem"}}
@@ -71,8 +72,8 @@
 
 (defn- maaramitattavat-toteumat
   [{:keys [e! tehtavat app]} {{toteumat ::t/toteumat
-                           validius ::tila/validius
-                           :as lomake} :data} ]
+                               validius ::tila/validius
+                               :as lomake} :data}]
   (let [paivita! (fn [polku indeksi arvo]
                    (if-not
                      (= polku :tierekisteriosoite)
@@ -131,8 +132,8 @@
                    {:vayla-tyyli? true :teksti-nappi? true}]]])
               [palstat-tagi
                [palsta-tagi
-                [:div.row
-                 [:label "Tehtävä"]
+                [:div.row.form-group.required
+                 [:label.control-label [:span [:span.kentan-label "Tehtävä"]]]
                  [kentat/tee-kentta
                   {:otsikko "Tehtävä"
                    :nimi [::t/toteumat indeksi ::t/tehtava]
@@ -142,17 +143,19 @@
                    :valinta-nayta :tehtava
                    :vayla-tyyli? true
                    :valinta-arvo identity
-                   :valinnat tehtavat}
+                   :valinnat tehtavat
+                   :pakollinen? true}
                   (r/wrap tehtava
                           (r/partial paivita! ::t/tehtava indeksi))]]
-                [:div.row
-                 [:label "Toteutunut määrä"]
+                [:div.row.form-group.required
+                 [:label.control-label [:span [:span.kentan-label "Toteutunut määrä"]]]
                  [kentat/tee-kentta
                   {::ui-lomake/col-luokka ""
                    :vayla-tyyli? true
                    :virhe? (validi? [::t/toteumat indeksi ::t/maara])
                    :tyyppi :numero
-                   :yksikko yksikko}
+                   :yksikko yksikko
+                   :pakollinen? true}
                   (r/wrap maara
                           (r/partial paivita! ::t/maara indeksi))]]
                 [:div.row
@@ -229,7 +232,8 @@
                   :nimi ::t/pvm
                   ::ui-lomake/col-luokka ""
                   :virhe? (validi? [::t/pvm])
-                  :tyyppi :pvm}
+                  :tyyppi :pvm
+                  :pakollinen? true}
                  {:otsikko "Tehtävä"
                   :nimi [::t/toteumat 0 ::t/tehtava]
                   ::ui-lomake/col-luokka ""
@@ -237,18 +241,21 @@
                   :tyyppi :valinta
                   :valinta-nayta :tehtava
                   :valinta-arvo identity
-                  :valinnat tehtavat}
+                  :valinnat tehtavat
+                  :pakollinen? true}
                  {:otsikko "Kuvaus"
                   ::ui-lomake/col-luokka ""
                   :nimi [::t/toteumat 0 ::t/lisatieto]
                   :virhe? (validi? [::t/toteumat 0 ::t/lisatieto])
                   :tyyppi :string
-                  :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
+                  :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."
+                  :pakollinen? true}]
         akilliset-ja-korjaukset [{:otsikko "Pvm"
                                   :nimi ::t/pvm
                                   ::ui-lomake/col-luokka ""
                                   :virhe? (validi? [::t/pvm])
-                                  :tyyppi :pvm}
+                                  :tyyppi :pvm
+                                  :pakollinen? true}
                                  {:otsikko "Tehtävä"
                                   :nimi [::t/toteumat 0 ::t/tehtava]
                                   ::ui-lomake/col-luokka ""
@@ -257,7 +264,8 @@
                                   :valinnat tehtavat
                                   :valinta-arvo identity
                                   :valinta-nayta (fn [arvo]
-                                                   (:tehtava arvo))}
+                                                   (:tehtava arvo))
+                                  :pakollinen? true}
                                  {:otsikko "Kuvaus"
                                   ::ui-lomake/col-luokka ""
                                   :nimi [::t/toteumat 0 ::t/lisatieto]
@@ -271,9 +279,9 @@
                                         (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})]
     [:div#vayla
      #_[debug/debug app]
-     #_ [debug/debug lomake]
+     #_[debug/debug lomake]
      #_[debug/debug validius]
-     #_ [:div (str "Validi? " koko-validi?)]
+     #_[:div (str "Validi? " koko-validi?)]
      [:div.flex-row {:style {:padding-left "15px"
                              :padding-right "15px"}}
       [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]
@@ -339,7 +347,8 @@
         :tyyppi :valinta
         :vayla-tyyli? true
         :palstoja 1
-        :disabled? (not (= :maaramitattava (::t/tyyppi lomake)))}
+        :disabled? (not (= :maaramitattava (::t/tyyppi lomake)))
+        :pakollinen? true}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi
         ;:oletusarvo :maaramitattava
@@ -377,7 +386,7 @@
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
              :vayla-tyyli? true
-             :sijainti (r/wrap sijainti (constantly true) #_ (e! (tiedot/->PaivitaSijainti %)))
+             :sijainti (r/wrap sijainti (constantly true) #_(e! (tiedot/->PaivitaSijainti %)))
              }
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""

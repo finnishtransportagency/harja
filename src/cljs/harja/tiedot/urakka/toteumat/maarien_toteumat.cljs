@@ -591,12 +591,13 @@
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] true)
                   true (assoc-in [:lomake ::t/pvm] (uusi-pvm-lomakkeelle app)))
           lomake (get app :lomake)
-          ;Valitoidaan lomake
-          {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
-          {:keys [validi? validius]} (validoi validoinnit lomake)
-          app (-> app
-                  (assoc-in [:lomake ::tila/validius] validius)
-                  (assoc-in [:lomake ::tila/validi?] validi?))]
+          ;Valitoidaan lomake - ehkä on parmepi, ettei valitoida kun aletaan syöttämään tyhjää lomaketta?
+          ;{:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
+          ;{:keys [validi? validius]} (validoi validoinnit lomake)
+          ;app
+          #_ (-> app
+              (assoc-in [:lomake ::tila/validius] validius)
+              (assoc-in [:lomake ::tila/validi?] validi?))]
       app))
 
   PoistaToteumaOnnistui
