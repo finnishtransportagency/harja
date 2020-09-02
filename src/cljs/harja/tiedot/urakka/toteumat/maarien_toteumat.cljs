@@ -215,7 +215,11 @@
 
 (defn- paivita-sijainti-toteumiin [toteumat app]
   (map-indexed (fn [indeksi toteuma]
-                 (assoc toteuma ::t/sijainti (get-in app [:sijainti indeksi])))
+                 (if (get-in app [:lomake ::t/toteumat indeksi ::t/ei-sijaintia])
+                   ;; Poista sijainti
+                   (assoc toteuma ::t/sijainti nil)
+                   ;; Lisää sijainti
+                   (assoc toteuma ::t/sijainti (get-in app [:sijainti indeksi]))))
                toteumat))
 
 (defn- uusi-pvm-lomakkeelle [app]
@@ -250,19 +254,20 @@
           aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
                                             toteumat)
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
-          {:keys [validi? validius]} (validoi validoinnit lomake)]
+          {:keys [validi? validius]} (validoi validoinnit lomake)
+          toteumat (mapv #(into {}       ; siivotaan namespacet lähetettävästä
+                                 (map
+                                   (fn [[k v]]
+                                     [(-> k name keyword) v])
+                                   %))
+                          toteumat)]
       (if (true? validi?)
         (tuck-apurit/post! :tallenna-toteuma
                            {:urakka-id urakka-id
                             :toimenpide toimenpide
                             :tyyppi (aseta-akillisen-tyyppi tyyppi)
                             :loppupvm loppupvm
-                            :toteumat (mapv #(into {}       ; siivotaan namespacet lähetettävästä
-                                                   (map
-                                                     (fn [[k v]]
-                                                       [(-> k name keyword) v])
-                                                     %))
-                                            toteumat)}
+                            :toteumat toteumat}
                            {:onnistui ->TallennaToteumaOnnistui
                             :epaonnistui ->TallennaToteumaEpaonnistui})
         (viesti/nayta! "Puuttuvia tai virheellisiä kenttiä, tarkista kentät!" :danger))
@@ -336,7 +341,8 @@
           app (if (= polku [:harja.domain.toteuma/toteumat indeksi :harja.domain.toteuma/ei-sijaintia])
                 (do
                   (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)
-                  (assoc-in app [:lomake indeksi :tierekisteriosoite] nil))
+                  (-> app
+                      (assoc-in [:lomake indeksi :tierekisteriosoite] nil)))
                 app)
           app (cond
                 ;; Jos toimenpide tai tyyppi muuttuu
