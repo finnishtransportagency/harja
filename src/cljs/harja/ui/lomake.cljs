@@ -99,6 +99,7 @@ ja kaikki pakolliset kentät on täytetty"
           ::puuttuvat-pakolliset-kentat
           ::ensimmainen-muokkaus
           ::viimeisin-muokkaus
+          ::viimeksi-muokattu-kentta
           ::skeema))
 
 (defn lomake-lukittu-huomautus
