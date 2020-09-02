@@ -569,19 +569,23 @@
   (process-event [{auki :auki tehtava :tehtava toimenpide :toimenpide} app]
     (let [app
           (cond-> app
-                  true (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
-                  true (update-in [:lomake ::t/toteumat 0] dissoc 0)
+                  ;; Avaa syöttömoodi
+                  true (assoc-in [:syottomoodi] auki)
+                  ;; Siivoa vanhat pois
+                  true (assoc-in [:lomake ::t/toteumat] [])
                   true (dissoc :sijainti)
-                  ;true (update-in [:lomake ::t/toteumat 0 0] dissoc :tierekisteriosoite)
-                  true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] nil)
-                  true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] nil)
+                  ;; Määritä default tyyppi
+                  true (assoc-in [:lomake ::t/tyyppi] :maaramitattava)
+                  ;; Aseta valittu tehtävä
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
+                  ;; Aseta valittu toimenpide
                   (and
                     (not (nil? toimenpide))
                     (not= {:otsikko "Kaikki" :id 0} toimenpide)) (assoc-in [:lomake ::t/toimenpide] toimenpide)
                   (= {:otsikko "Kaikki" :id 0} toimenpide) (assoc-in [:lomake ::t/toimenpide] nil)
-                  true (assoc-in [:syottomoodi] auki)
-                  true (assoc-in [:lomake ::t/tyyppi] :maaramitattava)
-                  true (assoc-in [:lomake ::t/toteumat] [])
+                  ;; Laita default arvot lomakkeelle
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-id] nil)
+                  true (assoc-in [:lomake ::t/toteumat 0 ::t/toteuma-tehtava-id] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] true)
