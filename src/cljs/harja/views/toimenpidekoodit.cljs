@@ -7,8 +7,7 @@
              [koodit
               koodit-tasoittain
               tyokoneiden-reaaliaikaseuranna-tehtavat
-              tehtavaryhmat
-              tehtavaryhmat-jarjestyksessa]]
+              tehtavaryhmat]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
@@ -118,7 +117,7 @@
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
 
 (def vuosi-valinnat
-       (range 2020 2035 1))
+       (range 2020 2030 1))
 
 (defn hae-emo [kaikki-tehtavat tehtava]
   (second (first (filter #(= (:id (second %))
@@ -206,7 +205,7 @@
             taso2 @valittu-taso2
             taso3 @valittu-taso3
             valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))
-            ryhmat @tehtavaryhmat-jarjestyksessa]
+            tehtavaryhmat-jarjestyksessa (sort-by :jarjestys @tehtavaryhmat)]
 
         [:div.container-fluid.toimenpidekoodit
          [:h3 "Tehtävien hallinta"]
@@ -309,7 +308,7 @@
              {:otsikko "Tehtäväryhmä"
               :nimi :tehtavaryhma
               :tyyppi :valinta
-              :valinnat ryhmat
+              :valinnat tehtavaryhmat-jarjestyksessa
               :valinta-nayta :nimi
               :leveys 3}
              {:otsikko "Luoja"
