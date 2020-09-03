@@ -2,7 +2,6 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
@@ -21,8 +20,8 @@
                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
                       nakymassa? @yksikkohintaiset-tyot-nakymassa?
                       valittu-hoitokausi @u/valittu-hoitokausi
-                      valittu-aikavali @u/valittu-aikavali
-                      valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
+                      valittu-aikavali @u/yksikkohintaiset-aikavali
+                      valittu-toimenpide-id (:tpi_id @u/valittu-toimenpideinstanssi)
                       valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
                      {:nil-kun-haku-kaynnissa? true}
                      (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
@@ -104,9 +103,9 @@
 (defonce yksikkohintainen-toteuma-kartalla
   (reaction
    (let [urakka-id (:id @nav/valittu-urakka)
-         sopimus-id (first @urakka/valittu-sopimusnumero)
-         hoitokausi @urakka/valittu-hoitokausi
-         aikavali @u/valittu-aikavali
+         sopimus-id (first @u/valittu-sopimusnumero)
+         hoitokausi @u/valittu-hoitokausi
+         aikavali @u/yksikkohintaiset-aikavali
          toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
          tehtava (:id @u/valittu-yksikkohintainen-tehtava)
          taso-paalla? @karttataso-yksikkohintainen-toteuma
