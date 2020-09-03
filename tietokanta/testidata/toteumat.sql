@@ -415,7 +415,7 @@ $$
 
     BEGIN
         RAISE NOTICE 'Aloitetaan toteumien generointi partitioita varten...';
-        for counter in 1..10000 loop
+        for counter in 1..1000 loop
                 urakkaid := urakat[1+random()*(array_length(urakat, 1)-1)];
                 aikaleima := (SELECT NOW() - '1 months'::INTERVAL * RANDOM() * 20 * RANDOM() * 2);
                 lisatieto_str := 'rdm' || counter;
