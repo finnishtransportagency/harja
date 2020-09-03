@@ -117,7 +117,7 @@
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
 
 (def vuosi-valinnat
-       (range 2020 2030 1))
+       (range 2020 2034 1))
 
 (defn hae-emo [kaikki-tehtavat tehtava]
   (second (first (filter #(= (:id (second %))
