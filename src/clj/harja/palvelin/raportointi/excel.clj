@@ -24,6 +24,7 @@
   (:require [taoensso.timbre :as log]
             [dk.ative.docjure.spreadsheet :as excel]
             [clojure.string :as str]
+            [harja.fmt :as fmt]
             [harja.domain.raportointi :as raportti-domain])
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
            (org.apache.poi.ss.usermodel HorizontalAlignment)))
@@ -120,6 +121,7 @@
     :raha (.setDataFormat tyyli 8)
     :prosentti (.setDataFormat tyyli 10)
     :numero (.setDataFormat tyyli 2)
+    :numero-3desim (.setDataFormat tyyli 3)
     :pvm (.setDataFormat tyyli 14)
     :pvm-aika (.setDataFormat tyyli 22)
     nil))
@@ -217,14 +219,20 @@
 
                                       :default
                                       (constantly nil))
-
-                       naytettava-arvo (if (and (number? naytettava-arvo) (= :prosentti (:fmt sarake)))
+                       naytettava-arvo (cond
+                                         (and (number? naytettava-arvo) (= :prosentti (:fmt sarake)))
                                          ;; Jos excelissä formatoidaan luku prosentiksi,
                                          ;; excel olettaa, että kyseessä on sadasosia.
                                          ;; Eli kokonaisluku 25 -> 2500%
                                          ;; Muualla Harjassa prosenttilukuformatointi
                                          ;; lisää lähinnä % merkin kokonaisluvun loppuun.
                                          (/ naytettava-arvo 100)
+
+                                         ;; Jos excelissä on raha määrityksenä. Pyöristä kahteen desimaaliin
+                                         (and (= :raha (:fmt sarake)) (number? naytettava-arvo))
+                                         (BigDecimal. (str/replace (fmt/desimaaliluku-opt naytettava-arvo 2 false) "," "."))
+
+                                         :default
                                          naytettava-arvo)
                        tyyli (if-let [tyyli (get @luodut-tyylit solun-tyyli)]
                                tyyli

@@ -136,5 +136,4 @@
 
      "Muutetaan lisätietoja"
      (u/change "textarea" "Tämä on ilmoituksen testi!")
-     --
      (is (= (get-in @app [:valittu-ilmoitus ::t/lisatietoja]) "Tämä on ilmoituksen testi!")))))

@@ -1,27 +1,9 @@
-CREATE TABLE paallystysmassa
-(
-    id                SERIAL PRIMARY KEY,
-    urakka            INTEGER REFERENCES urakka (id),
+ALTER TABLE ilmoitus
+ADD column "valitetty-urakkaan" TIMESTAMP;
 
-    massatyyppitunnus TEXT,
-    raekoko           INTEGER,
-    nimi              TEXT,
-    rc                NUMERIC,
+COMMENT ON COLUMN ilmoitus.ilmoitettu IS E'Ajankohta jolloin ilmoitus on tehty Tieliikennekeskukseen tai Palautejärjestelmään.';
+COMMENT ON COLUMN ilmoitus.valitetty IS E'Ajankohta jolloin ilmoitus on välitetty T-LOIKista HARJAan. Aikaleima saadaan T-LOIKin lähettämästä sanomasta.';
+COMMENT ON COLUMN ilmoitus."vastaanotettu-alunperin" IS E'Ajankohta jolloin ilmoitus on ensimmäistä kertaa vastaanotettu Harjaan eli tallennettu Harjan tietokantaan.';
+COMMENT ON COLUMN ilmoitus."vastaanotettu" IS E'Ajankohta jolloin ilmoitus tai sen päivitys on viimeksi vastaanotettu Harjaan eli tallennettu Harjan tietokantaan.';
+COMMENT ON COLUMN ilmoitus."valitetty-urakkaan" IS E'Ajankohta jolloin ilmoitukseen linkitetty urakka on saanut tiedon ilmoituksen saapumisesta.';
 
---Kivi- ja sideaines
-    esiintyma         TEXT,
-    km_arvo           TEXT,
-    muotoarvo         TEXT,
-    sideainetyyppi    TEXT,
-    pitoisuus         NUMERIC,
-    lisaaineet        TEXT,
-
--- muokkausmetatiedot
-    poistettu         BOOLEAN   DEFAULT FALSE,
-    muokkaaja         INTEGER REFERENCES kayttaja (id),
-    muokattu          TIMESTAMP,
-    luoja             INTEGER REFERENCES kayttaja (id),
-    luotu             TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX paallystysmassa_urakka_idx ON paallystysmassa (urakka);

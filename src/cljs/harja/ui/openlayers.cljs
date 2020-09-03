@@ -520,4 +520,4 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
      :reagent-render               ol3-render
      :component-will-unmount       ol3-will-unmount
      :component-did-update         ol3-did-update
-     :component-will-receive-props ol3-will-receive-props}))
+     :UNSAFE_component-will-receive-props ol3-will-receive-props}))

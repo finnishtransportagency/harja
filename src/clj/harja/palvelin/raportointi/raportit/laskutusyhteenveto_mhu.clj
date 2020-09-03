@@ -1,10 +1,8 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu
   "Laskutusyhteenveto MHU-urakoissa"
-  (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
-            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
+  (:require [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
-            [harja.kyselyt.maksuerat :as maksuerat-q]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
 
             [taoensso.timbre :as log]
@@ -19,28 +17,6 @@
             [clojure.string :as str]
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
-(defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
-  (let [[hk-alkupvm hk-loppupvm] (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-                                         (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
-                                   ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
-                                   ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
-                                   (pvm/paivamaaran-hoitokausi alkupvm)
-                                   [alkupvm loppupvm])]
-    (let [tulos (vec
-                  (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
-                           (into []
-                                 (laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito db
-                                                                                         (konv/sql-date hk-alkupvm)
-                                                                                         (konv/sql-date hk-loppupvm)
-                                                                                         (konv/sql-date alkupvm)
-                                                                                         (konv/sql-date loppupvm)
-                                                                                         urakka-id))))]
-      tulos)))
-
-(defn- kuukausi [date]
-  (.format (java.text.SimpleDateFormat. "MMMM") date))
-
 (defn- laskettavat-kentat [rivi konteksti]
   (let [kustannusten-kentat (into []
                                   (apply concat [(lyv-yhteiset/kustannuslajin-kaikki-kentat "lisatyot")
@@ -52,7 +28,7 @@
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_palkkio")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "tavoitehintaiset")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "kaikki")
-                                                 (when (= :urakka konteksti) [:tpi])]))]
+                                                 (when (= :urakka konteksti) [:tpi :maksuera_numero])]))]
     (if (and (some? (:suolasakot_laskutettu rivi))
              (some? (:suolasakot_laskutetaan rivi)))
       (into []
@@ -261,7 +237,10 @@
                 :viimeinen-rivi-yhteenveto? true}
      ;; otsikot
      (rivi
-       {:otsikko (:nimi tp-rivi) :leveys 36}
+       {:otsikko (if (:maksuera_numero tp-rivi)
+                   (str (:nimi tp-rivi) " (HA" (:maksuera_numero tp-rivi) ") ")
+                   (:nimi tp-rivi))
+        :leveys 36}
        {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali?
          {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
@@ -300,6 +279,7 @@
                                                     :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                           (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
+        _ (println "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
 
         urakoiden-lahtotiedot (lyv-yhteiset/urakoiden-lahtotiedot laskutusyhteenvedot)
 

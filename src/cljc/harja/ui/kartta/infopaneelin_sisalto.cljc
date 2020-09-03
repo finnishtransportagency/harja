@@ -275,6 +275,10 @@
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-aloitus]}
                         #(get-in % [:yllapitokohde paikkaus-aloitus]))})
+              (when (:loppuaika yllapitokohdeosa)
+                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm :nimi :loppuaika})
+              (when (:tr-ajorata yllapitokohdeosa)
+                {:otsikko "Ajorata" :tyyppi :string :nimi :tr-ajorata})
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
                 {:otsikko paikkaus-valmis-teksti :tyyppi :pvm
                  :hae (hakufunktio

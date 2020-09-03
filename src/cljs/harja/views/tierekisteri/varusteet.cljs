@@ -75,7 +75,8 @@
          :otsikko "Tierekisteriosoite"
          :tyyppi :tierekisteriosoite
          :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
-         :pakollinen? (= :sijainnilla varusteiden-haun-tila)})
+         :pakollinen? (= :sijainnilla varusteiden-haun-tila)
+         :vaadi-vali? true})
       (when (= :tunnisteella varusteiden-haun-tila)
         {:nimi :tunniste
          :otsikko "Varusteen tunniste"

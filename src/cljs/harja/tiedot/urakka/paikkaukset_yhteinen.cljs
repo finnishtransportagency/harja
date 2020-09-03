@@ -31,7 +31,7 @@
    vaihtuu, tulee hakuehdot resetoida."
   [ur]
   (when (not= (:urakka @tila) ur)
-    (reset! tila {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 7)
+    (reset! tila {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 28)
                              :tyomenetelmat #{}}
                   :urakka ur})))
 

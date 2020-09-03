@@ -695,7 +695,8 @@
              tehtavaryhmat                 :tehtavaryhmat
              toimenpiteet                  :toimenpiteet
              {haetaan :haetaan}            :parametrit :as app}]
-      (let [{:keys [nayta]} lomake]
+      (let [{:keys [nayta]} lomake
+            validi? (:validi? (meta lomake))]
         [:div.ajax-peitto-kontti
          #_[debug/debug app]
          #_[debug/debug lomake]
@@ -753,7 +754,8 @@
            "Tallenna"
            #(e! (tiedot/->TallennaKulu))
            {:vayla-tyyli? true
-            :luokka       "suuri"}]
+            :luokka       "suuri"
+            :disabled (not validi?)}]
           [napit/peruuta
            "Peruuta"
            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))

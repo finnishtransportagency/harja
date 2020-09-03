@@ -625,13 +625,25 @@
             :validoi       (:tr-numero alustatoimien-validointi)
             :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko       "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero :leveys 10
+           {:otsikko       "Ajorata" :nimi :tr-ajorata :tyyppi :valinta :leveys 10
+            :valinnat      pot/+ajoradat-numerona+
+            :valinta-arvo  :koodi
+            :valinta-nayta (fn [rivi]
+                             (if rivi
+                                (:nimi rivi)
+                                "- Valitse Ajorata -"))
             :pituus-max    256
             :validoi       (:tr-ajorata alustatoimien-validointi)
             :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko       "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero :leveys 10
+           {:otsikko       "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys 10
             :pituus-max    256
+            :valinnat      pot/+kaistat+
+            :valinta-arvo  :koodi
+            :valinta-nayta (fn [rivi]
+                             (if rivi
+                              (:nimi rivi)
+                             "- Valitse kaista -"))
             :validoi       (:tr-kaista alustatoimien-validointi)
             :tasaa         :oikea
             :kokonaisluku? true}

@@ -51,7 +51,7 @@
                                                           ::tierekisteri/tie 20
                                                           ::tierekisteri/aosa 1
                                                           ::tierekisteri/losa 5}
-                           ::paikkaus/massatyyppi "asfalttibetoni"
+                           ::paikkaus/massatyyppi "AB, Asfalttibetoni"
                            ::paikkaus/kuulamylly "AN5"
                            ::paikkaus/massamenekki 12}
         odotettu-materiaali {::paikkaus/materiaalit [{::paikkaus/esiintyma "testi"

@@ -63,12 +63,12 @@
      ""
      (euro nayta-euromerkki summa))))
 
-
-(defn formatoi-arvo-raportille [arvo]
-  (as-> arvo arvo
-        (format "%.2f" arvo)
-        (clojure.string/replace arvo "," ".")
-        (clojure.core/bigdec arvo)))
+#?(:clj
+   (defn formatoi-arvo-raportille [arvo]
+     (as-> arvo arvo
+           (format "%.2f" arvo)
+           (clojure.string/replace arvo "," ".")
+           (clojure.core/bigdec arvo))))
 
 (defn yksikolla
   "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"
@@ -248,6 +248,10 @@
 
            (re-find #"Lappi " nimi)
            (s/replace nimi #"Lappi " "")
+
+           ;; Firmojen nimiin lyhennyksiä
+           (re-find #"NCC Industry Oy" nimi)
+           (s/replace nimi #"NCC Industry Oy" "NCC")
 
            ;; Kunnossapidon
            (re-find #"kunnossapidon" nimi)
@@ -519,6 +523,19 @@
    (if (or (nil? luku) (and (string? luku) (empty? luku)))
      ""
      (desimaaliluku luku tarkkuus ryhmitelty?))))
+
+(defn pyorista-ehka-kolmeen [arvo]
+  (let [desimaalit-seq (s/split (str arvo) #"\.")
+        desimaalit (if (> (count desimaalit-seq) 1)
+                     (count (second desimaalit-seq))
+                     0)
+        arvo (try
+               (if (> desimaalit 2)
+                 (desimaaliluku-opt arvo 3 true)
+                 (desimaaliluku-opt arvo 2 true))
+               #?(:cljs (catch js/Object _ arvo))
+               #?(:clj (catch Exception _ arvo)))]
+    arvo))
 
 (defn prosentti
   ([luku] (prosentti luku 1))

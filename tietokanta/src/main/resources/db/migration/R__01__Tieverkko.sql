@@ -80,7 +80,7 @@ BEGIN
     let := let_;
     losa := losa_;
   END IF;
-  RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
+  --RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
   tulos := NULL;
   FOR osa_ IN aosa..losa LOOP
     -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
@@ -104,7 +104,7 @@ BEGIN
       e1 := LEAST(e1, osan_pituus);
       e2 := osan_pituus;
     END IF;
-    RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
+   -- RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
     -- Lisätään jos geometria löytyi (osa on olemassa)
     IF e1 != e2 THEN
       osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));

@@ -82,6 +82,11 @@
 
                  [reagent "0.9.1"]
 
+
+                 [data-frisk-reagent "0.4.5"]
+
+
+
                  [alandipert/storage-atom "2.0.1"]
 
                  [clj-time "0.15.0"]
@@ -220,6 +225,7 @@
   :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
             "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
+            "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS

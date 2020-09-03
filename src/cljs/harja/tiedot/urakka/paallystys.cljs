@@ -184,6 +184,27 @@
           (interpose '(^{:key (str (gensym))} [:p "------------"])
                      (map virheviestit-komponentti virhe)))))))
 
+(defn- osoitteet-mapiksi [rivit]
+  (update-in rivit [:ilmoitustiedot :osoitteet]
+             (fn [osoitteet]
+               (let [osoitteet-jarjestyksessa (tr-domain/jarjesta-tiet osoitteet)]
+                 (into {}
+                       (map #(identity [%1 %2])
+                            (iterate inc 1) osoitteet-jarjestyksessa))))))
+
+(defn- alustatoimet-mapiksi [rivit]
+  (update-in rivit [:ilmoitustiedot :alustatoimet]
+             (fn [alustatoimet]
+               (let [alustatoimet-jarjestyksessa (tr-domain/jarjesta-tiet alustatoimet)]
+                 (into {}
+                       (map #(identity [%1 (assoc %2 :id %1)])
+                            (iterate inc 1) alustatoimet-jarjestyksessa))))))
+
+(defn muotoile-osoitteet-ja-alustatoimet [rivit]
+  (-> rivit
+      (osoitteet-mapiksi)
+      (alustatoimet-mapiksi)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -310,19 +331,7 @@
   HaePaallystysilmoitusPaallystyskohteellaOnnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
-          vastaus (-> vastaus
-                      (update-in [:ilmoitustiedot :osoitteet]
-                                 (fn [osoitteet]
-                                   (let [osoitteet-jarjestyksessa (tr-domain/jarjesta-tiet osoitteet)]
-                                     (into {}
-                                           (map #(identity [%1 %2])
-                                                (iterate inc 1) osoitteet-jarjestyksessa)))))
-                      (update-in [:ilmoitustiedot :alustatoimet]
-                                 (fn [alustatoimet]
-                                   (let [alustatoimet-jarjestyksessa (tr-domain/jarjesta-tiet alustatoimet)]
-                                     (into {}
-                                           (map #(identity [%1 (assoc %2 :id %1)])
-                                                (iterate inc 1) alustatoimet-jarjestyksessa))))))
+          vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
           perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
                                 :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa

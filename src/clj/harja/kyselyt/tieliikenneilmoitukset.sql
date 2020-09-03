@@ -106,7 +106,10 @@ WHERE i.id IN
          (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
-         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (:urakkatyyppi_annettu IS FALSE OR
+         CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
+          u2.tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+          ELSE u2.tyyppi = :urakkatyyppi::urakkatyyppi END) AND
          (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
@@ -328,8 +331,14 @@ WHERE urakka = :urakka AND
 
 
 -- name: hae-id-ilmoitus-idlla
--- Hakee id:n ilmoituksen id:llä
+-- Hakee id:n ilmoitus-id:llä
 SELECT id
+FROM ilmoitus
+WHERE ilmoitusid = :ilmoitusid;
+
+-- name: hae-id-ja-urakka-ilmoitus-idlla
+-- Hakee ilmoituksen id:n ja urakan ilmoitus-id:llä
+SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
 
@@ -350,7 +359,8 @@ INSERT INTO ilmoitus
  tunniste,
  viestiid,
  vastaanotettu,
- "vastaanotettu-alunperin")
+ "vastaanotettu-alunperin",
+ "valitetty-urakkaan")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -366,26 +376,27 @@ VALUES
    :tunniste,
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
-   :vastaanotettu-alunperin :: TIMESTAMPTZ);
+   :vastaanotettu-alunperin :: TIMESTAMPTZ,
+   :valitetty-urakkaan :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
 UPDATE ilmoitus
-SET
-  urakka             = :urakka,
-  ilmoitusid         = :ilmoitusid,
-  ilmoitettu         = :ilmoitettu,
-  valitetty          = :valitetty,
-  vastaanotettu      = :vastaanotettu,
-  yhteydenottopyynto = :yhteydenottopyynto,
-  otsikko            = :otsikko,
-  paikankuvaus       = :paikankuvaus,
-  lisatieto          = :lisatieto,
-  ilmoitustyyppi     = :ilmoitustyyppi :: ILMOITUSTYYPPI,
-  selitteet          = :selitteet :: TEXT [],
-  tunniste           = :tunniste,
-  muokattu           = NOW(),
-  viestiid           = :viestiid
+SET urakka               = :urakka,
+    ilmoitusid           = :ilmoitusid,
+    ilmoitettu           = :ilmoitettu,
+    valitetty            = :valitetty,
+    "valitetty-urakkaan" = :valitetty-urakkaan,
+    vastaanotettu = :vastaanotettu,
+    yhteydenottopyynto = :yhteydenottopyynto,
+    otsikko = :otsikko,
+    paikankuvaus = :paikankuvaus,
+    lisatieto = :lisatieto,
+    ilmoitustyyppi = :ilmoitustyyppi :: ILMOITUSTYYPPI,
+    selitteet = :selitteet :: TEXT [],
+    tunniste = :tunniste,
+    muokattu = NOW(),
+    viestiid = :viestiid
 WHERE id = :id;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!

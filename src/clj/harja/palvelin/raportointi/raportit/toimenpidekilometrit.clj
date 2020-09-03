@@ -54,12 +54,12 @@
         naytettavat-alueet (yleinen/naytettavat-alueet db konteksti
                                                        {:urakka urakka-id
                                                         :hallintayksikko hallintayksikko-id
-                                                        :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                        :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                         :alku alkupvm
                                                         :loppu loppupvm})
         toteumat (hae-kokonaishintaiset-toteumat db {:urakka urakka-id
                                                      :hallintayksikko hallintayksikko-id
-                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                     :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                      :alku alkupvm
                                                      :loppu loppupvm})
         raportin-nimi "Toimenpidekilometrit"
