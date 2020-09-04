@@ -19,7 +19,8 @@ SELECT t.urakka                             AS "urakka-id",
                           ORDER BY ST_Distance(pva_k.alue, ST_Point(rp.sijainti[0], rp.sijainti[1]))
                           LIMIT 1) AS pva_k ON TRUE
  WHERE rp.pohjavesialue IS NOT NULL
- GROUP BY t.urakka, paiva, pva_k.tie, pva_k.alkuosa, pva_k.alkuet, pva_k.loppuosa, pva_k.loppuet;
+ GROUP BY t.urakka, paiva, pva_k.tie, pva_k.alkuosa, pva_k.alkuet, pva_k.loppuosa, pva_k.loppuet
+WITH NO DATA;
 
 
 DROP MATERIALIZED VIEW raportti_toteutuneet_materiaalit;
@@ -35,4 +36,5 @@ SELECT
            LEFT JOIN materiaalikoodi mk ON mk.id = tm.materiaalikoodi
            JOIN urakka u ON u.id = t.urakka
  WHERE t.poistettu IS NOT TRUE
- GROUP BY "urakka-id", paiva, "materiaali-id";
+ GROUP BY "urakka-id", paiva, "materiaali-id"
+WITH NO DATA;
