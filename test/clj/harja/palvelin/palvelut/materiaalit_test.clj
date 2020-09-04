@@ -245,7 +245,7 @@
                                                                             :threshold 50
                                                                             :alkupvm #inst "2000-02-17T00:00:00.000-00:00"
                                                                             :loppupvm #inst "2018-02-17T00:00:00.000-00:00"})]
-    (is (> (count tulos) 2))
+    (is (>= (count tulos) 2))
     (let [rivi (first (filter #(= 1 (:rivinumero %))
                               tulos))]
       (is (= 1 (:rivinumero rivi)))
