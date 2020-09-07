@@ -49,7 +49,7 @@
        :testidata? true
        :ei-logiteta #{"http-palvelin"
                       "ajastettu-geometriapaivitys"
-                      "komponentti-event"
+                      ;;"komponentti-event"
                       "sillat"}
        }
 

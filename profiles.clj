@@ -12,7 +12,6 @@
                  [test2junit "1.4.2"]
                  [lein-eftest "0.5.0"]
                  [lein-with-env-vars "0.2.0"]]
-       :clean-targets ["dev-resources/tmp"]
        :env-vars {:HARJA_DEV_YMPARISTO true}
        ;; Käytetään tätä hookkia, jotta ei tarvitse erikseen kirjoitella leiningenille "with-env-vars", jotta nuo env-vars:it olisi käytössä
        :hooks [leiningen.with-env-vars/auto-inject]

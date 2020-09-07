@@ -190,9 +190,11 @@
                                      :provides ["epsg3067"]}]}}]}
 
 
-  :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
-                                     "resources/public/js/harja.js"
-                                     "resource/public/js/harja"]
+  :clean-targets ^{:protect false} ["dev-resources/js/out"
+                                    "dev-resources/tmp"
+                                    "target"
+                                    "resources/public/js/harja.js"
+                                    "resource/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less/application"

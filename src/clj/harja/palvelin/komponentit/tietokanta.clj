@@ -3,12 +3,15 @@
             [jeesql.autoreload :as autoreload]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :as async]
+            [clojure.spec.alpha :as s]
 
             [harja.palvelin.tyokalut.event-apurit :as event-apurit]
             [harja.kyselyt.status :as status-q]
             [harja.tyokalut.muunnos :as muunnos])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
+
+(s/def ::db-event boolean?)
 
 (defn- db-tunnistin->db-tila-event [tunnistin]
   (keyword (str (name tunnistin) "-tila")))
@@ -49,7 +52,8 @@
 
 (defn luo-db-eventit [{:keys [komponentti-event] :as this} db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
   (let [event (db-tunnistin->db-tila-event db-nimi)
-        event-julkaisija (event-apurit/event-julkaisija komponentti-event event)]
+        event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija komponentti-event event)
+                                                        ::db-event)]
     (event-apurit/lisaa-jono! komponentti-event event :viimeisin)
     (case db-nimi
       :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)

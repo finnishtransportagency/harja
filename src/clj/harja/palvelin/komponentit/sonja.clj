@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
+            [clojure.spec.alpha :as s]
             [cheshire.core :as cheshire]
             [clojure.core.async :refer [thread >!! <!! timeout chan] :as async]
             [taoensso.timbre :as log]
@@ -136,17 +137,25 @@
                                                                   (.toString (InetAddress/getLocalHost)))
                                 :osa-alue "sonja"}))
 
+(s/def ::virhe any?)
+(s/def ::yhteyden-tila any?)
+(s/def ::istunnot any?)
+(s/def ::olioiden-tilat (s/keys :req-un [::yhteyden-tila ::istunnot]))
+(s/def ::sonja-tila (s/or :virhe (s/keys :req-un [::virhe])
+                          :onnistunut (s/keys :req-un [::olioiden-tilat])))
+
 (defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava event-julkaisija db]
   (event-apurit/tarkkaile lopeta-tarkkailu-kanava
                           paivitystiheys-ms
                           (fn []
                             (try
-                              (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
+                              (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
+                                    jms-tila (:vastaus vastaus)]
                                 (tallenna-sonjan-tila-kantaan db jms-tila)
-                                (event-julkaisija jms-tila))
+                                (event-julkaisija (or jms-tila {:virhe vastaus})))
                               (catch Throwable t
                                 (event-julkaisija :tilan-lukemisvirhe)
-                                (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t))))))))
+                                (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -581,7 +590,8 @@
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
-          event-julkaisija (event-apurit/event-julkaisija komponentti-event :sonja-tila)
+          event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija komponentti-event :sonja-tila)
+                                                          ::sonja-tila)
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
