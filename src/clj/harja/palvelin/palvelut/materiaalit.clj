@@ -250,29 +250,29 @@
         (q/hae-suolamateriaalit db)))
 
 (defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
-  (let [t (toteumat-q/luo-toteuma<! db
-                                    {:urakka urakka-id
-                                     :sopimus sopimus-id
-                                     :alkanut (:pvm toteuma)
-                                     :paattynyt (:pvm toteuma)
-                                     :tyyppi "kokonaishintainen"
-                                     :kayttaja (:id user)
-                                     :suorittaja ""
-                                     :ytunnus ""
-                                     :lisatieto (:lisatieto toteuma)
-                                     :ulkoinen_id nil
-                                     :reitti nil
-                                     :numero nil
-                                     :alkuosa nil
-                                     :alkuetaisyys nil
-                                     :loppuosa nil
-                                     :loppuetaisyys nil
-                                     :lahde "harja-ui"
-                                     :tyokonetyyppi nil
-                                     :tyokonetunniste nil
-                                     :tyokoneen-lisatieto nil})]
+  (let [toteuman-id (toteumat-q/luo-uusi-toteuma db
+                                                 {:urakka urakka-id
+                                                  :sopimus sopimus-id
+                                                  :alkanut (:pvm toteuma)
+                                                  :paattynyt (:pvm toteuma)
+                                                  :tyyppi "kokonaishintainen"
+                                                  :kayttaja (:id user)
+                                                  :suorittaja ""
+                                                  :ytunnus ""
+                                                  :lisatieto (:lisatieto toteuma)
+                                                  :ulkoinen_id nil
+                                                  :reitti nil
+                                                  :numero nil
+                                                  :alkuosa nil
+                                                  :alkuetaisyys nil
+                                                  :loppuosa nil
+                                                  :loppuetaisyys nil
+                                                  :lahde "harja-ui"
+                                                  :tyokonetyyppi nil
+                                                  :tyokonetunniste nil
+                                                  :tyokoneen-lisatieto nil})]
     (toteumat-q/luo-toteuma-materiaali<!
-      db (:id t) (:id (:materiaali toteuma))
+      db toteuman-id (:id (:materiaali toteuma))
       (:maara toteuma) (:id user))))
 
 (defn tallenna-kasinsyotetty-toteuma [db user {:keys [urakka-id sopimus-id toteuma]}]
