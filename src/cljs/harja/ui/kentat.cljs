@@ -190,7 +190,7 @@
                                 :as   kentta} data]
   [:input {:class       (cond-> nil
                                 lomake? (str "form-control ")
-                                disabled? (str "disabled"))
+                                disabled? (str "disabled "))
            :placeholder (placeholder kentta data)
            :on-change   #(let [v (-> % .-target .-value)]
                            (when (or (not regex) (re-matches regex v))

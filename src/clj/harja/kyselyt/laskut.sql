@@ -12,6 +12,18 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-koko-maan-kulut-raporttiin-aikavalilla
+-- Annetulla aikavälillä haetaan kaikki kulut tehtäväryhmittäin ryhmiteltynä koko maasta
+select tr.nimi as "tehtavaryhma",
+       sum(lk.summa) as "summa"
+from lasku_kohdistus lk
+join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+where suoritus_alku <= :loppupvm ::date
+  and suoritus_loppu >= :alkupvm ::date
+group by tr.nimi;
+
+
+
 -- name: hae-liitteet
 -- Haetaan liitteet laskulle
 select liite.id               AS "liite-id",
