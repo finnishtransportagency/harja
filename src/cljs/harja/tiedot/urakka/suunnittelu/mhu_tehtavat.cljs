@@ -30,6 +30,10 @@
                     :mhu-korvausinvestointi})
 
 
+(defn- tarkista-desimaalimerkki
+  [arvo]
+  (clj-str/replace (str arvo) #"\." ","))
+
 (defn klikatun-rivin-lapsenlapsi?
   [janan-id klikatun-rivin-id taulukon-rivit]
   (let [klikatun-rivin-lapset (get (group-by #(-> % meta :vanhempi)
@@ -77,7 +81,11 @@
                               (osien-paivitys-fn
                                 identity
                                 (fn [o]
-                                  (p/aseta-arvo o :arvo (get-in tehtavat [tehtava-id :maarat kausi])))
+                                  (p/aseta-arvo o
+                                                :arvo
+                                                (tarkista-desimaalimerkki
+                                                  (get-in tehtavat
+                                                          [tehtava-id :maarat kausi]))))
                                 identity)))) rivit)))
 
 (defn filtteri-paivitys-fn [valitaso nayta-aina]
@@ -266,8 +274,8 @@
                                                             :loppupvm
                                                             pvm/vuosi)))]
                                (reduce (fn [acc avain] (assoc acc avain arvo)) m avaimet))))
-                (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] arvo))]
-      (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo :class tyylit) app)))
+                (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] (tarkista-desimaalimerkki arvo)))]
+      (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo (tarkista-desimaalimerkki arvo) :class tyylit) app)))
 
   SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]
