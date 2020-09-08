@@ -59,7 +59,7 @@
   (log/debug "Saatiin uusi uusi tietokantayhteys")
   (doseq [kanava (keys @kuuntelijat)]
     (log/debug "Aloitetaan kuuntelu kanavalle: " kanava)
-    (u @connection (str "LISTEN " kanava ";")))
+    (u @connection "LISTEN ?" (str kanava)))
   (reset! ajossa true))
 
 (defprotocol Kuuntele
@@ -106,7 +106,7 @@
   (stop [this]
 
     (reset! ajossa false)
-    (run! #(u @connection (str "UNLISTEN " % ";"))
+    (run! #(u @connection "UNLISTEN ?" (str %))
           (map first @kuuntelijat))
     (.close @connection)
     this)
@@ -114,7 +114,7 @@
   Kuuroudu
   (kuuroudu! [_ kanava]
     (swap! kuuntelijat #(dissoc % kanava))
-    (u @connection (str "UNLISTEN " kanava ";")))
+    (u @connection "UNLISTEN ?" (str kanava)))
 
   Kuuntele
   (kuuntele! [_ kanava callback]
@@ -122,7 +122,7 @@
       (when-not (get @kuuntelijat kanava)
         ;; LISTEN
         (log/debug "Aloitetaan kuuntelu kanavalle" kanava)
-        (u @connection (str "LISTEN " kanava ";")))
+        (u @connection "LISTEN ?" (str kanava)))
       (swap! kuuntelijat update-in [kanava] conj callback)))
 
   Julkaise
