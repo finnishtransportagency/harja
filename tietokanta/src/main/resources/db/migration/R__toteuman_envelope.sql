@@ -9,11 +9,3 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-DROP TRIGGER tg_muodosta_toteuman_envelope ON toteuma;
-
-CREATE TRIGGER tg_muodosta_toteuman_envelope
-BEFORE INSERT OR UPDATE
-  ON toteuma
-FOR EACH ROW
-EXECUTE PROCEDURE muodosta_toteuman_envelope();

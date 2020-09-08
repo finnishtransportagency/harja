@@ -34,7 +34,7 @@ INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 2, 4);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (2, '2005-10-01 00:00.00', 3, 3);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (3, '2005-10-01 00:00.00', 4, 9);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES ((SELECT id FROM toteuma WHERE luoja = 7), '2005-10-01 00:00.00', 5, 25);
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 5, 25);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012') LIMIT 1), '2005-11-01 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(442588 7227977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES (('HARJ000000000000000' || (SELECT nextval('livitunnisteet'))), (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'), 'lisatty', 'tl506', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(442588 7227977)'));
@@ -374,22 +374,6 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
   ]::reittipistedata[]);
 
 
--- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
--- Oikeissa toteumissa nämä tulevat projisoituna tieverkolle, mutta nyt vain tehdään viivat.
-
-UPDATE toteuma t
-   SET reitti = (SELECT ST_MakeLine(p.sij)
-                   FROM (SELECT rp.sijainti::geometry as sij
-		           FROM toteuman_reittipisteet tr
-			   LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
-			   WHERE tr.toteuma = t.id
-			   ORDER BY rp.aika) p)
- WHERE reitti IS NULL;
-
--- Varmistetaan, että kaikilla toteumilla on käyttäjä
-UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
-UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
-
 -- Suolatoteumia aktiiviselle Oulun urakalle
 
 INSERT INTO toteuma
@@ -418,3 +402,74 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
     ROW(NOW() - interval '56 minute',st_makepoint(430969, 7198125) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
         ARRAY[ROW(3, 3)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata
   ]::reittipistedata[]);
+
+
+-- partitioiden testausta varten luodaan toteumia
+DO
+$$
+    DECLARE
+        urakat INT[] := (SELECT array_agg(id) FROM urakka where tyyppi IN ('hoito', 'teiden-hoito'));
+        urakkaid INT;
+        aikaleima DATE;
+        lisatieto_str TEXT;
+
+    BEGIN
+        RAISE NOTICE 'Aloitetaan toteumien generointi partitioita varten...';
+        for counter in 1..1000 loop
+                urakkaid := urakat[1+random()*(array_length(urakat, 1)-1)];
+                aikaleima := (SELECT NOW() - '1 months'::INTERVAL * RANDOM() * 20 * RANDOM() * 2);
+                lisatieto_str := 'rdm' || counter;
+
+                -- reitillinen random toteuma
+                INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakkaid, (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null), NOW(), aikaleima, aikaleima + '1 minute'::interval, 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', lisatieto_str, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+                -- reitillisen random toteuman toteuma_tehtava
+                INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = lisatieto_str AND urakka = urakkaid), NOW(), 1369, 8);
+
+                -- reitillisen random toteuman toteuman_reittipisteet
+
+                INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet)
+                VALUES (
+                           (SELECT id FROM toteuma WHERE lisatieto = lisatieto_str),
+                           ARRAY[
+                               ROW(aikaleima + '2 seconds'::interval, st_makepoint(498919, 7247099) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '3 seconds'::interval,st_makepoint(499271, 7248395) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '4 seconds'::interval,st_makepoint(499399, 7249019) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '5 seconds'::interval,st_makepoint(499820, 7249885) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '6 seconds'::interval,st_makepoint(498519, 7247299) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '7 seconds'::interval,st_makepoint(499371, 7248595) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '8 seconds'::interval,st_makepoint(499499, 7249319) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
+                               ROW(aikaleima + '9 seconds'::interval,st_makepoint(499520, 7249685) ::POINT, 3, NULL, ARRAY[ROW(1369,1)::reittipiste_tehtava]::reittipiste_tehtava[], ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata
+                               ]::reittipistedata[]);
+            END LOOP;
+        RAISE NOTICE 'Toteumien generointi partitioita varten valmis.';
+    END
+$$ LANGUAGE plpgsql;
+
+-- Luodaan vielä tulevaisuuden partitioille testidataa jotta voidaan varmistaa trigger-funktion ohjaaminen
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2020-09-01 00:12:00+02', '2020-09-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2020h2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2021-03-01 00:12:00+02', '2021-03-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2021h1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2021-09-01 00:12:00+02', '2021-09-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2021h2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2022-03-01 00:12:00+02', '2022-03-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2022h1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2022-09-01 00:12:00+02', '2022-09-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2022h2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2023-03-01 00:12:00+02', '2023-03-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2023h1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2023-09-01 00:12:00+02', '2023-09-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2023h2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2024-03-01 00:12:00+02', '2024-03-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2024h1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2024-09-01 00:12:00+02', '2024-09-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2024h2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero')),
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi') AND paasopimus IS null), NOW(), '2025-03-01 00:12:00+02', '2025-03-01 00:15:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', '2025h1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+
+-- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
+-- Oikeissa toteumissa nämä tulevat projisoituna tieverkolle, mutta nyt vain tehdään viivat.
+UPDATE toteuma t
+   SET reitti = (SELECT ST_MakeLine(p.sij)
+                   FROM (SELECT rp.sijainti::geometry as sij
+                           FROM toteuman_reittipisteet tr
+                                    LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
+                          WHERE tr.toteuma = t.id
+                          ORDER BY rp.aika) p)
+ WHERE reitti IS NULL;
+
+-- Varmistetaan, että kaikilla toteumilla on käyttäjä
+UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
+UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;

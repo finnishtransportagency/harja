@@ -85,7 +85,8 @@
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
-    (:id (q-toteumat/luo-toteuma<!
+    (do
+      (q-toteumat/luo-toteuma<!
            db
            {:urakka urakka-id
             :sopimus sopimus-id
@@ -106,7 +107,8 @@
             :lahde "harja-api"
             :tyokonetyyppi (:tyokonetyyppi tyokone)
             :tyokonetunniste (:id tyokone)
-            :tyokoneen-lisatieto (:tunnus tyokone)}))))
+            :tyokoneen-lisatieto (:tunnus tyokone)})
+      (q-toteumat/luodun-toteuman-id db))))
 
 (defn paivita-tai-luo-uusi-toteuma
   ([db urakka-id kirjaaja toteuma] (paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma nil))
