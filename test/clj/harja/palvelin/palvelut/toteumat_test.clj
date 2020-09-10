@@ -290,6 +290,37 @@
           (str "DELETE FROM toteuma
                     WHERE id = " toteuma-id))))))
 
+(deftest tallenna-kokonaishintainen-toteuma-testi
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (pvm/luo-pvm 2016 9 1)        ; 1.10.2016
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2016 8 30)       ;30.9.2017
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tyo {:urakka-id urakka-id
+             :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+             :alkanut tyon-pvm :paattynyt tyon-pvm
+             :reitti {:type :multiline
+                      :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi :kokonaishintainen
+             :toteuma-id nil
+             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+        lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                                 +kayttaja-jvh+ {:toteuma tyo
+                                                 :hakuparametrit {:urakka-id urakka-id
+                                                                  :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+                                                                  :alkupvm tyon-pvm :loppupvm tyon-pvm
+                                                                  :toimenpide nil :tehtava nil}}))]
+    (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
+    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
+    (is (= (get-in lisatty [:jarjestelmanlisaama]) false) )
+    (is (= (get-in lisatty [:nimi]) "Pistehiekoitus") )
+    (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
+    (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:maara]) 333M) "Tallennetun työn tehtävän määrä")))
+
 (deftest hae-urakan-toteuma-kun-toteuma-ei-kuulu-urakkaan
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka != " @oulun-alueurakan-2014-2019-id
                               " AND tyyppi = 'yksikkohintainen' LIMIT 1;"))]
@@ -537,3 +568,8 @@
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
+
+(deftest toteuman-paivitys-siirtaa-eri-partitiolle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Muoniohommat'")))]
+    (println "toteuma-id " toteuma-id)))
