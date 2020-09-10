@@ -15,8 +15,8 @@ schemas:
  - turvallisuuspoikkeamien-kirjaus-request: !include schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json
  - tiestotarkastuksen-kirjaus-request: !include schemas/tiestotarkastuksen-kirjaus-request.schema.json
  - talvihoitotarkastuksen-kirjaus-request: !include schemas/talvihoitotarkastuksen-kirjaus-request.schema.json
- - soratietarkastuksen-kirjaus-request.schema: !include schemas/soratietarkastuksen-kirjaus-request.schema.json
- - siltatarkastuksen-kirjaus-request.schema: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
+ - soratietarkastuksen-kirjaus-request: !include schemas/soratietarkastuksen-kirjaus-request.schema.json
+ - siltatarkastuksen-kirjaus-request: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
  - laatupoikkeaman-kirjaus: !include schemas/laatupoikkeaman-kirjaus-request.schema.json
  - varusteiden-haku-response: !include schemas/varusteiden-haku-response.schema.json
  - varusteen-lisays-request: !include schemas/varusteen-lisays-request.schema.json
@@ -414,7 +414,7 @@ documentation:
           body:
             application/json:
               example: !include examples/soratietarkastuksen-kirjaus-request.json
-              schema: soratietarkastuksen-kirjaus-request.schema
+              schema: soratietarkastuksen-kirjaus-request
           responses:
            200:
             body:
@@ -460,7 +460,7 @@ documentation:
           body:
             application/json:
               example: !include examples/siltatarkastuksen-kirjaus-request.json
-              schema: siltatarkastuksen-kirjaus-request.schema
+              schema: siltatarkastuksen-kirjaus-request
           responses:
            200:
             body:
