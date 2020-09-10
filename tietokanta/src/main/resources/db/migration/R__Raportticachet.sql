@@ -38,3 +38,8 @@ SELECT
  WHERE t.poistettu IS NOT TRUE
  GROUP BY "urakka-id", paiva, "materiaali-id"
 WITH NO DATA;
+
+-- Koska concurrently vaatii uniikit indeksit, ne luodaan kertaalleen
+CREATE UNIQUE INDEX ON raportti_toteutuneet_materiaalit ("urakka-id", "materiaali-id", paiva);
+CREATE UNIQUE INDEX ON raportti_pohjavesialueiden_suolatoteumat
+    ("urakka-id", tie,alkuosa, alkuet, paiva, pituus, tunnus, kayttoraja);
