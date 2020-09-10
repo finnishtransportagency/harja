@@ -73,7 +73,11 @@ FROM tehtavaryhma tr1
                    ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                       tpk4.poistettu is not true AND tpk4.piilota is not true
          JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+         JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
+         JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
 WHERE tr1.emo is null
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-tehtavahierarkia-maarineen

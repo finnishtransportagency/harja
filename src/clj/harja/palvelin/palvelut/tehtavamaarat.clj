@@ -82,8 +82,8 @@
 
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
-  [db user]
-  (let [kannasta (into [] (q/hae-tehtavahierarkia db))
+  [db user {:keys [urakka-id]}]
+  (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
         {:keys [tehtavat valitasot toimenpiteet]} (muodosta-hierarkia kannasta)]
     (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct valitasot)))))
 
@@ -176,8 +176,8 @@
     (doto (:http-palvelin this)
       (julkaise-palvelu
         :tehtavat
-        (fn [user]
-          (hae-tehtavat (:db this) user)))
+        (fn [user tiedot]
+            (hae-tehtavat (:db this) user tiedot)))
       (julkaise-palvelu
         :tehtavahierarkia
         (fn [user]
