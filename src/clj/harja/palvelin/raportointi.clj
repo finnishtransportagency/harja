@@ -151,13 +151,14 @@
 ;; Esim. t.alkanut klo 22, saapuu API:in klo 5. Näin saadaan ajettua nekin vielä tuoreeltaan raporteille
 (defn paivita-raportti-cache-oisin! [db]
   (ajastettu-tehtava/ajasta-paivittain [1 0 0]
-                                       (lukot/aja-lukon-kanssa
-                                         db "paivita-raportti-cache-oisin!"
-                                         #(do
+                                       (fn [_]
+                                         (lukot/yrita-ajaa-lukon-kanssa
+                                           db "paivita-raportti-cache-oisin!"
+                                           #(do
                                               (log/info "paivita-raportti-cache-oisin! :: Alkaa " (pvm/nyt))
                                               (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
                                               (raportit-q/paivita_raportti_cachet db)
-                                              (log/info "paivita-raportti-cache-oisin! :: loppuu " (pvm/nyt))))))
+                                              (log/info "paivita-raportti-cache-oisin! :: loppuu " (pvm/nyt)))))))
 
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
