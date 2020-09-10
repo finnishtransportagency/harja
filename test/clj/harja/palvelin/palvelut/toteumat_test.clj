@@ -586,6 +586,7 @@
              :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
              :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
              :tyyppi :kokonaishintainen
+             :lisatieto "Tämä on käsin tekaistu juttu"
              :toteuma-id toteuma-id
              :tehtavat [{:toimenpidekoodi 1368 :maara 333 :tehtava-id toteuma-tehtava-id}]}
         lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -594,8 +595,10 @@
                                                        :hakuparametrit {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
-                                                                        :toimenpide nil :tehtava nil}}))]
+                                                                        :toimenpide nil :tehtava nil}}))
+        toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
 
+    (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-samassa-partitiossa) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
@@ -623,19 +626,21 @@
              :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
              :tyyppi :kokonaishintainen
              :toteuma-id toteuma-id
-             :tehtavat [{:toimenpidekoodi 1368 :maara 333 :tehtava-id toteuma-tehtava-id}]}
+             :tehtavat [{:toimenpidekoodi 1368 :maara 444 :tehtava-id toteuma-tehtava-id}]}
         lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
                                        +kayttaja-jvh+ {:toteuma tyo
                                                        :hakuparametrit {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
-                                                                        :toimenpide nil :tehtava nil}}))]
+                                                                        :toimenpide nil :tehtava nil}}))
+        toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
 
+    (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
     (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
     (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
-    (is (= (get-in lisatty [:maara]) 333M) "Tallennetun työn tehtävän määrä")))
+    (is (= (get-in lisatty [:maara]) 444M) "Tallennetun työn tehtävän määrä")))
