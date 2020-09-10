@@ -569,7 +569,73 @@
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
 
+(deftest toteuman-paivitys-sama-partitiolle
+  (let [urakka-id (hae-pudasjarven-alueurakan-id)
+        sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
+        toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id";")))
+        uusi-tyon-pvm-samassa-partitiossa (konv/sql-timestamp (pvm/luo-pvm 2009 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (pvm/luo-pvm 2008 9 1)        ; 1.10.2016
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2010 8 30)       ;30.9.2017
+        tyo {:urakka-id urakka-id
+             :sopimus-id sopimus-id
+             :alkanut uusi-tyon-pvm-samassa-partitiossa :paattynyt uusi-tyon-pvm-samassa-partitiossa
+             :reitti {:type :multiline
+                      :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi :kokonaishintainen
+             :toteuma-id toteuma-id
+             :tehtavat [{:toimenpidekoodi 1368 :maara 333 :tehtava-id toteuma-tehtava-id}]}
+        lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                                       +kayttaja-jvh+ {:toteuma tyo
+                                                       :hakuparametrit {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                        :toimenpide nil :tehtava nil}}))]
+
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-samassa-partitiossa) "Tallennetun työn alkanut pvm")
+    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
+    (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
+    (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
+    (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
+    (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:maara]) 333M) "Tallennetun työn tehtävän määrä")))
+
+
 (deftest toteuman-paivitys-siirtaa-eri-partitiolle
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Muoniohommat'")))]
-    (println "toteuma-id " toteuma-id)))
+  (let [urakka-id (hae-pudasjarven-alueurakan-id)
+        sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
+        toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id";")))
+        uusi-tyon-pvm-eri-partitiossa (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2020
+        hoitokausi-aloituspvm (pvm/luo-pvm 2008 9 1)        ; 1.10.2016
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2010 8 30)       ;30.9.2017
+        tyo {:urakka-id urakka-id
+             :sopimus-id sopimus-id
+             :alkanut uusi-tyon-pvm-eri-partitiossa :paattynyt uusi-tyon-pvm-eri-partitiossa
+             :reitti {:type :multiline
+                      :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi :kokonaishintainen
+             :toteuma-id toteuma-id
+             :tehtavat [{:toimenpidekoodi 1368 :maara 333 :tehtava-id toteuma-tehtava-id}]}
+        lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                                       +kayttaja-jvh+ {:toteuma tyo
+                                                       :hakuparametrit {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                        :toimenpide nil :tehtava nil}}))]
+
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
+    (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
+    (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
+    (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
+    (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
+    (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:maara]) 333M) "Tallennetun työn tehtävän määrä")))
