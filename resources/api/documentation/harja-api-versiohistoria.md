@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.48</b>
-<b>Julkaistu: 12.2.2019</b>
+<b>Nykyinen versio: 1.0.49</b>
+<b>Julkaistu: 11.9.2020</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.49 Julkaistu 11.9.2020
+    - Työkoneseurannan kirjaus viivageometrialla irrotettu kokonaan omaan skeematiedostoonsa koodigeneroinnin helpottamiseksi. Rajapinta ei muuttunut määrittelyltään.
 - Versionumero 1.0.48 Julkaistu 9.6.2020
     - Ilmoitusrajapinta palauttaa uusia arvoja. Ilmoituksen tila palautetaan aina. Ilmoituksesta palautetaan relevantit aikaleimat: ilmoitettu, valitetty-harjaan, vastaanotettu-harjaan ja mikäli kyseessä on päivitetty ilmoitus paivitetty-harjaaan. Aiheutti-toimenpiteita palautuu vain, jos ilmoitus aiheutti toimenpiteitä.
 - Versionumero 1.0.47 Julkaistu 1.4.2020
