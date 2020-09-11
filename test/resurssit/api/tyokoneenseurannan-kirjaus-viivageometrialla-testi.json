@@ -20,7 +20,7 @@
           "tunnus": "HUI333-X",
           "tyokonetyyppi": "aura-auto"
         },
-        "sijainti": {
+        "sijainti": {x
           "viivageometria": {
             "type": "LineString",
             "coordinates": [

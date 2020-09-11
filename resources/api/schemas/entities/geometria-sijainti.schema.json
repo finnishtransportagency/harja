@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "koordinaatit": {
+      "id": "urn:harja/koordinaattisijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "required": true
+    }
+  }
+}
+

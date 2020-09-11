@@ -50,7 +50,7 @@
   (is (nil? (validoi json-skeemat/paivystajatietojen-haku-vastaus json-esimerkit/+paivystajatietojen-haku-vastaus+)))
 
   (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus json-esimerkit/+tyokoneenseuranta-kirjaus+)))
-  (is (nil? (validoi json-skeemat/tyokoneenseuranta-viivakirjaus json-esimerkit/+tyokoneenseuranta-viivakirjaus+)))
+  (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus-viivageometrialla json-esimerkit/+tyokoneenseuranta-kirjaus-viivageometrialla+)))
 
   (is (nil? (validoi json-skeemat/paivystyksen-poisto json-esimerkit/+paivystyksen-poisto-kirjaus+)))
 

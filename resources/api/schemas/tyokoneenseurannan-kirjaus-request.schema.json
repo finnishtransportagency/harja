@@ -51,7 +51,7 @@
               },
               "sijainti": {
                 "id": "urn:harja/havainnot/0/sijainti",
-                "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+                "$ref": "file:resources/api/schemas/entities/geometria-sijainti.schema.json",
                 "required": true
               },
               "suunta": {

@@ -87,7 +87,7 @@
                      (POST +tyokone-reitti-url+ request
                        (kasittele-kutsu db nil
                                         :tallenna-tyokoneen-reitti
-                                        request json-skeemat/tyokoneenseuranta-viivakirjaus json-skeemat/kirjausvastaus
+                                        request json-skeemat/tyokoneenseuranta-kirjaus-viivageometrialla json-skeemat/kirjausvastaus
                                         tallenna-seurantakirjaus-viivageometriana)))
     this)
   (stop [{http :http-palvelin :as this}]
