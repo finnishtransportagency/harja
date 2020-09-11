@@ -704,9 +704,6 @@
 
       :status (component/using
                 (status/luo-status (:kehitysmoodi asetukset))
-                ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
-                ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
-                ;; ennen kuin sen statusta aletaan seuraamaan
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
 
       :vaylien-geometriahaku

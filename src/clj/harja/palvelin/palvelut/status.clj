@@ -89,8 +89,6 @@
   (async/go
     (let [timeout-ms 10000
           kaikki-ok? (async/<! (harjan-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
-      (println "---> harjan-tila " kaikki-ok?)
-      (println "--< " @(get komponenttien-tila :komponenttien-tila))
 
       {:ok? kaikki-ok?
        :komponentti :harja
@@ -139,7 +137,6 @@
                           (sonja-yhteyden-tila komponenttien-tila db kehitysmoodi?)
                           (harjan-tila komponenttien-tila)])
                 {:keys [status] :as lahetettava-viesti} (koko-status testit)]
-            (println "------> lahetettava-viesti: " lahetettava-viesti)
             {:status status
              :headers {"Content-Type" "application/json; charset=UTF-8"}
              :body (encode
