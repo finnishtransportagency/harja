@@ -94,25 +94,25 @@
 
           (poista-reittitoteuma toteuma-id ulkoinen-id))))))
 
-; Kommentoitu 27.3.2020 reittitoteumaongelman takia väliaikaisesti
-;(deftest tallenna-yksittainen-reittitoteuma-ilman-sopimusta-paivittaa-cachen
-;  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-;        sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " 2 " AND paasopimus IS NULL")))
-;        sopimuksen_kaytetty_materiaali-maara-ennen (ffirst (q (str "SELECT count(*) FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id)))
-;        kaytetty-talvisuolaliuos-odotettu 4.62M
-;        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-;                                                (-> "test/resurssit/api/reittitoteuma_yksittainen_ilman_sopimusta.json"
-;                                                    slurp
-;                                                    (.replace "__ID__" (str ulkoinen-id))
-;                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
-;    (is (= 200 (:status vastaus-lisays)))
-;    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-;          sopimuksen_kaytetty_materiaali-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-;       (println "sop käyt jälkeen " sopimuksen_kaytetty_materiaali-jalkeen)
-;      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
-;       (is (= 0 sopimuksen_kaytetty_materiaali-maara-ennen))
-;       (is (= 1 (count sopimuksen_kaytetty_materiaali-jalkeen)))
-;       (is (= kaytetty-talvisuolaliuos-odotettu (last (first sopimuksen_kaytetty_materiaali-jalkeen)))))))
+
+(deftest tallenna-yksittainen-reittitoteuma-ilman-sopimusta-paivittaa-cachen
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " 2 " AND paasopimus IS NULL")))
+        sopimuksen_kaytetty_materiaali-maara-ennen (ffirst (q (str "SELECT count(*) FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id)))
+        kaytetty-talvisuolaliuos-odotettu 4.62M
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen_ilman_sopimusta.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (is (= 200 (:status vastaus-lisays)))
+    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          sopimuksen_kaytetty_materiaali-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
+       (println "sop käyt jälkeen " sopimuksen_kaytetty_materiaali-jalkeen)
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
+       (is (= 0 sopimuksen_kaytetty_materiaali-maara-ennen))
+       (is (= 1 (count sopimuksen_kaytetty_materiaali-jalkeen)))
+       (is (= kaytetty-talvisuolaliuos-odotettu (last (first sopimuksen_kaytetty_materiaali-jalkeen)))))))
 
 
 (deftest tallenna-usea-reittitoteuma
