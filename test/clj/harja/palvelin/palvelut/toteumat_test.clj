@@ -6,6 +6,7 @@
              [pvm :as pvm]
              [testi :refer :all]]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
@@ -644,3 +645,39 @@
     (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
     (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
     (is (= (get-in lisatty [:maara]) 444M) "Tallennetun työn tehtävän määrä")))
+
+(defn luo-testitoteuma [urakka-id sopimus-id alkanut toteuma-id]
+  {:sopimus sopimus-id
+   :alkanut (konv/sql-date alkanut) :paattynyt (konv/sql-date alkanut)
+   :reitti {:type :multiline
+            :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+   :id toteuma-id
+   :alkuosa 1
+   :numero 4
+   :alkuetaisyys 1
+   :kayttaja 1
+   :ytunnus "123456-Y"
+   :urakka urakka-id
+   :suorittaja "Alihankkijapaja Ky"
+   :loppuetaisyys 2
+   :loppuosa 2
+   :tyyppi "kokonaishintainen"
+   :lisatieto "Tämä on käsin tekaistu juttu"})
+
+(deftest toteuman-paivitys-ei-muuta-lukumaaraa
+  (let [toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))
+        urakka-id (hae-pudasjarven-alueurakan-id)
+        sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
+
+    ;; Satunnaisia päivämääriä vuosina 2000-2030... (myös eri partitiolle)
+    (doseq [alkanut (map #(pvm/->pvm (str (rand-int 28) "."
+                                        (rand-int 170) "."
+                                        %))
+                       (range 2000 2030))]
+      (do
+        (toteumat-q/paivita-toteuma<! (:db jarjestelma)
+                                      (luo-testitoteuma urakka-id sopimus-id alkanut toteuma-id))
+        (is (= toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma id ei saa muuttua.")
+        (is (= alkanut (ffirst (q (str "SELECT alkanut FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma alkanut OK")
+        (is (= toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))) "Toteuma count ei saa muuttua.")))))
