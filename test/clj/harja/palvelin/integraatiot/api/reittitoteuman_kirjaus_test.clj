@@ -197,36 +197,35 @@
                      (.replace "__PVM__" (json-tyokalut/json-pvm (java.util.Date.)))))]
     (is (= 200 (:status vastaus)) "Toteuman poisto onnistuu")))
 
-; Kommentoitu 27.3.2020 reittitoteumaongelmien ajaksi
-;(deftest materiaalin-kaytto-paivittyy-oikein
-;  (let [poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain")
-;        hae-materiaalit #(q "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain")
-;        materiaalin-kaytto-ennen (hae-materiaalit)]
-;    (testing "Materiaalin käyttö on tyhjä aluksi"
-;      (is (empty? materiaalin-kaytto-ennen)))
-;
-;    (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
-;      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma)]
-;        (let [rivit1 (hae-materiaalit)
-;              maara1 (-> rivit1 first last)]
-;          (is (= 1 (count rivit1)))
-;          (is (=marginaalissa? maara1 4.62) "Suolaa 4.62")
-;
-;          (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
-;            ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
-;            (laheta-yksittainen-reittitoteuma)
-;            (let [rivit2 (hae-materiaalit)
-;                  maara2 (-> rivit2 first last)]
-;              (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
-;              (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
-;
-;          (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
-;            (poista-toteuma ulkoinen-id)
-;
-;            (let [rivit3 (hae-materiaalit)
-;                  maara3 (-> rivit3 first last)]
-;              (is (= 1 (count rivit3)) "Rivejä on sama määrä")
-;              (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
+(deftest materiaalin-kaytto-paivittyy-oikein
+  (let [poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain")
+        hae-materiaalit #(q "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain")
+        materiaalin-kaytto-ennen (hae-materiaalit)]
+    (testing "Materiaalin käyttö on tyhjä aluksi"
+      (is (empty? materiaalin-kaytto-ennen)))
+
+    (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
+      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma)]
+        (let [rivit1 (hae-materiaalit)
+              maara1 (-> rivit1 first last)]
+          (is (= 1 (count rivit1)))
+          (is (=marginaalissa? maara1 4.62) "Suolaa 4.62")
+
+          (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
+            ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
+            (laheta-yksittainen-reittitoteuma)
+            (let [rivit2 (hae-materiaalit)
+                  maara2 (-> rivit2 first last)]
+              (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
+              (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
+
+          (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
+            (poista-toteuma ulkoinen-id)
+
+            (let [rivit3 (hae-materiaalit)
+                  maara3 (-> rivit3 first last)]
+              (is (= 1 (count rivit3)) "Rivejä on sama määrä")
+              (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
 
 
 (deftest lahetys-tuntemattomalle-urakalle-ei-toimi []
