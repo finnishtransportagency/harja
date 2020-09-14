@@ -24,7 +24,7 @@ FROM toimenpidekoodi t4
          LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
-WHERE t4.taso = 4 AND t4.poistettu IS NOT TRUE
+WHERE t4.taso = 4
   AND (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
