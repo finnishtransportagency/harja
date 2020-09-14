@@ -12,12 +12,19 @@
                  [test2junit "1.4.2"]
                  [lein-eftest "0.5.0"]
                  [lein-with-env-vars "0.2.0"]]
-       :env-vars {:HARJA_DEV_YMPARISTO true}
+       :env-vars {:HARJA_DEV_YMPARISTO true
+                  :HARJA_TIETOKANTA_HOST "localhost"
+                  :HARJA_TIETOKANTA_HOST_KAANNOS "localhost"
+                  ;; Testeihin devatessa
+                  :HARJA_AJA_GATLING_RAPORTTI false
+                  :NOLOG false}
        ;; Käytetään tätä hookkia, jotta ei tarvitse erikseen kirjoitella leiningenille "with-env-vars", jotta nuo env-vars:it olisi käytössä
        :hooks [leiningen.with-env-vars/auto-inject]
        ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
        ;; :resource-paths ["opt/sonic/7.6.2/*"]
        }
+ :dev-compose {:env-vars {:HARJA_TIETOKANTA_HOST "harjadb"
+                          :HARJA_TIETOKANTA_HOST_KAANNOS "harjadb"}}
  :test {:dependencies [[clj-webdriver "0.7.2"]
                        [org.seleniumhq.selenium/selenium-java "3.8.1"]
                        [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]

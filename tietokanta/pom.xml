@@ -13,6 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <harja.tietokanta.host>localhost</harja.tietokanta.host>
     </properties>
 
     <dependencies></dependencies>
@@ -50,7 +51,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <databaseUrl>jdbc:postgresql://localhost/harja</databaseUrl>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}/harja</databaseUrl>
                 <databaseUser>harja</databaseUser>
             </properties>
         </profile>
@@ -58,7 +59,7 @@
         <profile>
             <id>harja_template</id>
             <properties>
-                <databaseUrl>jdbc:postgresql://localhost/harja_template</databaseUrl>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}/harja_template</databaseUrl>
                 <databaseUser>harja</databaseUser>
             </properties>
         </profile>
@@ -67,7 +68,7 @@
         <profile>
             <id>harjatest</id>
             <properties>
-                <databaseUrl>jdbc:postgresql://localhost/harjatest_template</databaseUrl>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}/harjatest_template</databaseUrl>
                 <databaseUser>harjatest</databaseUser>
             </properties>
         </profile>

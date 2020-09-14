@@ -1,4 +1,4 @@
--- name: tapahtuman-tunnistin
+-- name: tapahtuman-kanava
 -- single?: true
 SELECT kanava FROM tapahtuma WHERE nimi = :nimi;
 

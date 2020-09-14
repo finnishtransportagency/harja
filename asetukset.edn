@@ -17,13 +17,13 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
- :tietokanta {:palvelin "localhost"
+ :tietokanta {:palvelin #=(System/getenv "HARJA_TIETOKANTA_HOST")
               :tietokanta "harja"
               :portti 5432
               :yhteyspoolin-koko 16
               :kayttaja "harja"
               :salasana "harja"}
- :tietokanta-replica {:palvelin "localhost"
+ :tietokanta-replica {:palvelin #=(System/getenv "HARJA_TIETOKANTA_HOST")
                       :tietokanta "harja"
                       :portti 5432
                       :yhteyspoolin-koko 16
@@ -49,28 +49,28 @@
        :testidata? true
        :ei-logiteta #{"http-palvelin"
                       "ajastettu-geometriapaivitys"
-                      ;;"komponentti-event"
+                      "komponentti-event"
                       "sillat"}
        }
 
  :sonja
- {:url "tcp://localhost:61617"
+ {:url "tcp://localhost:61616"
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq}
 
 
- ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
- ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
- ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
- ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
- ;        :paivittainen-lahetysaika [16 44 0 ]}
- ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
- ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
- ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
- ;        :toimenpideAkuittausjono "Harja.HarjaToT-LOIK.Ack"
- ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
- ;        :uudelleenlahetysvali-minuuteissa 30}
+ :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
+         :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
+         :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
+         :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
+         :paivittainen-lahetysaika [16 44 0]}
+ :tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
+         :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
+         :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
+         :toimenpideAkuittausjono "Harja.HarjaToT-LOIK.Ack"
+         :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
+         :uudelleenlahetysvali-minuuteissa 30}
 
 
  :turi {:turvallisuuspoikkeamat-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/poikkeamaTuonti"

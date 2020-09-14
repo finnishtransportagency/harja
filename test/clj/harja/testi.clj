@@ -43,17 +43,13 @@
    {:println
     {:min-level
      (cond
-       (or (ollaanko-jenkinsissa?)
-           (circleci?)
-           (= "true" (System/getenv "NOLOG")))
+       (= "true" (System/getenv "NOLOG"))
        :fatal
 
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                  "172.17.238.100"
-                                  "localhost")
+(def testitietokanta {:palvelin (System/getenv "HARJA_TIETOKANTA_HOST")
                       :portti 5432
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
@@ -61,9 +57,7 @@
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                   "172.17.238.100"
-                                   "localhost")
+(def temppitietokanta {:palvelin (System/getenv "HARJA_TIETOKANTA_HOST")
                        :portti 5432
                        :tietokanta "temp"
                        :kayttaja "harjatest"
@@ -1246,6 +1240,7 @@
              :concurrency (count kutsut)
              :requests (count kutsut)}
             (when (and (false? aja-raportti?)
+                       (= "true" (System/getenv "HARJA_AJA_GATLING_RAPORTTI"))
                        (false? (ollaanko-jenkinsissa?)))
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
               ;; eli luodaan oma raportteri, joka ei tee mitään

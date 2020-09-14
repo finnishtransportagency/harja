@@ -11,7 +11,7 @@ BEGIN
     RETURN NULL;
   ELSE
     RETURN NEW;
-  END FI;
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 

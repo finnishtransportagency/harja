@@ -9,8 +9,8 @@
             [cheshire.core :as cheshire]
             [clojure.core.async :refer [thread] :as async]
             [clojure.string :as clj-str]
-            [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tapahtumat :as q-tapahtumat]
+            [harja.fmt :as fmt]
             [taoensso.timbre :as log])
   (:import [com.mchange.v2.c3p0 C3P0ProxyConnection]
            [org.postgresql PGNotification]

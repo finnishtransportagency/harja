@@ -16,20 +16,35 @@ RUN wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-
 
 ENV PATH="/usr/pgsql-${POSTGRESQL_VERSION}/bin:/apache-maven-3.6.3/bin/:${PATH}"
 ENV PGDATA="/var/lib/pgsql/${POSTGRESQL_VERSION}/data"
+
+WORKDIR /var/lib/pgsql
+
+RUN echo "FOO"
+
+ADD container_sh/hae-migraatiot-ja-testidata.sh ./hae-migraatiot-ja-testidata.sh
+ADD container_sh/odota-kaynnistymista.sh ./odota-kaynnistymista.sh
+ADD container_sh/aja-migraatiot.sh ./aja-migraatiot.sh
+ADD container_sh/aja-testidata.sh ./aja-testidata.sh
+
+RUN chmod +x hae-migraatiot-ja-testidata.sh
+RUN chmod +x odota-kaynnistymista.sh
+RUN chmod +x aja-migraatiot.sh
+RUN chmod +x aja-testidata.sh
+
 USER postgres
 
-RUN initdb /var/lib/pgsql/${POSTGRESQL_VERSION}/data/;
+RUN initdb ./${POSTGRESQL_VERSION}/data/;
 
 # Konffataan pg kuuntelemaan verkkoa
-RUN sed -i "s/#listen_addresses.*/listen_addresses = '*'/g" /var/lib/pgsql/${POSTGRESQL_VERSION}/data/postgresql.conf
-RUN sed -i "s/port = 5433/port = 5432/g" /var/lib/pgsql/${POSTGRESQL_VERSION}/data/postgresql.conf
-RUN echo "local all all trust" > /var/lib/pgsql/${POSTGRESQL_VERSION}/data/pg_hba.conf
-RUN echo "host    all             all             0.0.0.0/0            trust" >> /var/lib/pgsql/${POSTGRESQL_VERSION}/data/pg_hba.conf
+RUN sed -i "s/#listen_addresses.*/listen_addresses = '*'/g" ./${POSTGRESQL_VERSION}/data/postgresql.conf
+RUN sed -i "s/port = 5433/port = 5432/g" ./${POSTGRESQL_VERSION}/data/postgresql.conf
+RUN echo "local all all trust" > ./${POSTGRESQL_VERSION}/data/pg_hba.conf
+RUN echo "host    all             all             0.0.0.0/0            trust" >> ./${POSTGRESQL_VERSION}/data/pg_hba.conf
 
 # Konffataan fsync ja full page writes pois
-RUN sed -i "s/#fsync.*/fsync = off/g" /var/lib/pgsql/${POSTGRESQL_VERSION}/data/postgresql.conf
-RUN sed -i "s/#full_page_writes.*/full_page_writes = off/g" /var/lib/pgsql/${POSTGRESQL_VERSION}/data/postgresql.conf
-RUN sed -i "s/#shared_preload_libraries.*/shared_preload_libraries = 'pg_stat_statements'/g" /var/lib/pgsql/${POSTGRESQL_VERSION}/data/postgresql.conf
+RUN sed -i "s/#fsync.*/fsync = off/g" ./${POSTGRESQL_VERSION}/data/postgresql.conf
+RUN sed -i "s/#full_page_writes.*/full_page_writes = off/g" ./${POSTGRESQL_VERSION}/data/postgresql.conf
+RUN sed -i "s/#shared_preload_libraries.*/shared_preload_libraries = 'pg_stat_statements'/g" ./${POSTGRESQL_VERSION}/data/postgresql.conf
 
 ## Luodaan kanta
 RUN pg_ctl start; \

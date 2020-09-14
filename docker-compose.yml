@@ -1,49 +1,38 @@
 version: '3'
 services:
   activemq:
-    image: rmohr/activemq:5.10.0
+    image: solita/harja-activemq:5.15.9
+    environment:
+      - "TZ=Europe/Helsinki"
     container_name: activemq
+    ports:
+      - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
+      - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+  harja-app:
+    image: solita/harja-app:latest
+    depends_on:
+      - "harjadb"
+    stdin_open: true
+    ports:
+      - "3000-3001:3000" # web ports
+      - "4005-4006:4005" # REPL ports
+    tty: true
+    links:
+      - harjadb
     environment:
       - "TZ=Europe/Helsinki"
-    volumes:
-      - "./activemq/activemq.xml:/conf/activemq.xml"
-    ports:
-      - "61616:61616" # broker (admin:adminactivemq)(amq:amq)
-      - "8161:8161"   # web    http://boot2docker:8161/admin (admin:admin)
+    env_file:
+      - .docker_compose_env
+    command: bash /opt/odota-possu-ja-kaynnista-harja.sh
   harjadb:
-    image: solita/harjadb
-    container_name: harja-db
+    image: solita/harjadb:centos-12-compose
+    stdin_open: true
+    tty: true
     environment:
       - "TZ=Europe/Helsinki"
+    env_file:
+      - .docker_compose_env
     ports:
-      - 5432:5432
+      - "127.0.0.1:5432:5432"
     volumes:
-        - ./tietokanta:/tietokanta
-    command: |
-         /bin/bash -c "
-              echo Käynnistetään PostgreSQL
-              service postgresql start
-
-              cd tietokanta
-
-              echo Odotetaan että PostgreSQL on käynnissä
-
-              until mvn flyway:info &>/dev/null; do
-                  echo Odotetaan että Flyway saa yhteyden kantaan...
-                  sleep 0.5
-              done
-
-              echo Ajetaan migraatiot
-              mvn flyway:migrate
-
-              echo Ajetaan testidata harja-kantaan
-              psql -h \"$POSTGRES_PORT_5432_TCP_ADDR\" -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
-
-              echo Luodaan harjatest_template tietokanta
-              psql -h \"$POSTGRES_PORT_5432_TCP_ADDR\" -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U harja harja -c \"CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;\"
-
-              echo Luodaan harjatest tietokantakanta
-              psql -h \"$POSTGRES_PORT_5432_TCP_ADDR\" -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U harja harja -c \"CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;\"
-
-              echo Tietokanta valmis käyttöön
-              sleep 10000"
+        - ./tietokanta:/var/lib/pgsql/harja/tietokanta
