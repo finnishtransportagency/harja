@@ -87,30 +87,40 @@ SELECT exists(SELECT id
               WHERE id = :id AND piilota IS NOT TRUE);
 
 -- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
-SELECT
-  tpk.id as "harja-id",
-  tpk.api_tunnus as "apitunnus",
-  tpk.nimi,
-  tpk.yksikko
-FROM toimenpidekoodi tpk
-WHERE
-  tpk.poistettu IS NOT TRUE AND
-  tpk.piilota IS NOT TRUE AND
-  tpk.api_seuranta AND
-  tpk.hinnoittelu @> '{yksikkohintainen}';
+SELECT tpk4.id         as "harja-id",
+       tpk4.api_tunnus as "apitunnus",
+       tpk4.nimi,
+       tpk4.yksikko,
+       tpk4.voimassaolo_alkuvuosi,
+       tpk4.voimassaolo_loppuvuosi
+FROM toimenpidekoodi tpk4
+         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+         JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
+         JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
+WHERE tpk4.poistettu IS NOT TRUE
+  AND tpk4.piilota IS NOT TRUE
+  AND tpk4.api_seuranta
+  AND tpk4.hinnoittelu @> '{yksikkohintainen}'
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 -- name: hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat
-SELECT
-  tpk.id as "harja-id",
-  tpk.api_tunnus as "apitunnus",
-  tpk.nimi,
-  tpk.yksikko
-FROM toimenpidekoodi tpk
-WHERE
-  tpk.poistettu IS NOT TRUE AND
-  tpk.piilota IS NOT TRUE AND
-  tpk.api_seuranta AND
-  tpk.hinnoittelu @> '{kokonaishintainen}';
+SELECT tpk4.id         as "harja-id",
+       tpk4.api_tunnus as "apitunnus",
+       tpk4.nimi,
+       tpk4.yksikko,
+       tpk4.voimassaolo_alkuvuosi,
+       tpk4.voimassaolo_loppuvuosi
+FROM toimenpidekoodi tpk4
+         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+         JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
+         JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
+WHERE tpk4.poistettu IS NOT TRUE
+  AND tpk4.piilota IS NOT TRUE
+  AND tpk4.api_seuranta
+  AND tpk4.hinnoittelu @> '{kokonaishintainen}'
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
 -- name: hae-tehtavan-id
