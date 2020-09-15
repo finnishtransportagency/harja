@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 1.0.50
+version: 1.0.51
 baseUri: https://testioag.vayla.fi/harja/api (testi) & https://oag.vayla.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
@@ -15,14 +15,15 @@ schemas:
  - turvallisuuspoikkeamien-kirjaus-request: !include schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json
  - tiestotarkastuksen-kirjaus-request: !include schemas/tiestotarkastuksen-kirjaus-request.schema.json
  - talvihoitotarkastuksen-kirjaus-request: !include schemas/talvihoitotarkastuksen-kirjaus-request.schema.json
- - soratietarkastuksen-kirjaus-request.schema: !include schemas/soratietarkastuksen-kirjaus-request.schema.json
- - siltatarkastuksen-kirjaus-request.schema: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
+ - soratietarkastuksen-kirjaus-request: !include schemas/soratietarkastuksen-kirjaus-request.schema.json
+ - siltatarkastuksen-kirjaus-request: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
  - laatupoikkeaman-kirjaus: !include schemas/laatupoikkeaman-kirjaus-request.schema.json
  - varusteiden-haku-response: !include schemas/varusteiden-haku-response.schema.json
  - varusteen-lisays-request: !include schemas/varusteen-lisays-request.schema.json
  - varusteen-paivitys-request: !include schemas/varusteen-paivitys-request.schema.json
  - varusteen-poisto-request: !include schemas/varusteen-poisto-request.schema.json
  - tyokoneenseurannan-kirjaus-request: !include schemas/tyokoneenseurannan-kirjaus-request.schema.json
+ - tyokoneenseurannan-viivakirjaus-request: !include schemas/tyokoneenseurannan-kirjaus-viivageometrialla-request.schema.json
  - ilmoitusten-haku-response: !include schemas/ilmoitusten-haku-response.schema.json
  - ilmoitustoimenpiteen-kirjaaminen-request: !include schemas/ilmoitustoimenpiteen-kirjaaminen-request.schema.json
  - paivystajatietojen-kirjaus-request: !include schemas/paivystajatietojen-kirjaus-request.schema.json
@@ -414,7 +415,7 @@ documentation:
           body:
             application/json:
               example: !include examples/soratietarkastuksen-kirjaus-request.json
-              schema: soratietarkastuksen-kirjaus-request.schema
+              schema: soratietarkastuksen-kirjaus-request
           responses:
            200:
             body:
@@ -460,7 +461,7 @@ documentation:
           body:
             application/json:
               example: !include examples/siltatarkastuksen-kirjaus-request.json
-              schema: siltatarkastuksen-kirjaus-request.schema
+              schema: siltatarkastuksen-kirjaus-request
           responses:
            200:
             body:
@@ -1318,8 +1319,8 @@ documentation:
         description: Työkoneen seurantatiedon kirjaus viivageometrialla. Työkoneelle voidaan kirjata sijainti viivageometriana sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mukaan mieluusti 5-15 sekunnin intervalilla ja otoskoolla. Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite.
         body:
           application/json:
-            example: !include examples/tyokoneenseurannan-kirjaus-request.json
-            schema: tyokoneenseurannan-kirjaus-request
+            example: !include examples/tyokoneenseurannan-kirjaus-viivageometrialla-request.json
+            schema: tyokoneenseurannan-viivakirjaus-request
         responses:
           200:
             body:

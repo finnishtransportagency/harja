@@ -82,6 +82,8 @@
 
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")
 (def tyokoneenseuranta-kirjaus (tee-validaattori "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json"))
+(def +tyokoneenseuranta-kirjaus-viivageometrialla+ "api/schemas/tyokoneenseurannan-kirjaus-viivageometrialla-request.schema.json")
+(def tyokoneenseuranta-kirjaus-viivageometrialla (tee-validaattori "api/schemas/tyokoneenseurannan-kirjaus-viivageometrialla-request.schema.json"))
 
 (def +urakan-yllapitokohteiden-haku-vastaus+ "api/schemas/urakan-yllapitokohteet-response.schema.json")
 (def urakan-yllapitokohteiden-haku-vastaus (tee-validaattori +urakan-yllapitokohteiden-haku-vastaus+))

@@ -49,6 +49,7 @@
 (def +paivystyksen-poisto-kirjaus+ "api/examples/paivystyksen-poisto-request.json")
 
 (def +tyokoneenseuranta-kirjaus+ "api/examples/tyokoneenseurannan-kirjaus-request.json")
+(def +tyokoneenseuranta-kirjaus-viivageometrialla+ "api/examples/tyokoneenseurannan-kirjaus-viivageometrialla-request.json")
 
 (def +urakan-yllapitokohteiden-haku+ "api/examples/urakan-yllapitokohteiden-haku-response.json")
 (def +paallystysilmoituksen-kirjaus+ "api/examples/paallystysilmoituksen-kirjaus-request.json")
