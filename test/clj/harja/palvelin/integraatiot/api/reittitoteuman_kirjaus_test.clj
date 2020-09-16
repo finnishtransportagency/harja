@@ -340,7 +340,9 @@
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
-        toteuma-alkanut-muokattu (.replace toteuma  "2016-01-30T" "2015-01-01T")
+        toteuma-alkanut-muokattu (-> toteuma
+                                     (.replace  "2016-01-30T12:00:00Z" "2015-01-01T12:00:00Z")
+                                     (.replace  "2016-01-30T13:00:00Z" "2015-01-01T13:00:00Z"))
         reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja portti sopimus-id ulkoinen-id]
                                                   (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                 toteuma))
@@ -350,17 +352,15 @@
                                                                            toteuma-alkanut-muokattu))
         vastaus-lisays (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
         hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
-        sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
-        hoitoluokittaiset-toka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
-        sopimuksen-mat-kaytto-toka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
+        sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (reittototeumakutsu-jossa-alkanut-muokattu urakka kayttaja portti sopimus-id ulkoinen-id)
-            hoitoluokittaiset-kolmannen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
-            sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
+            hoitoluokittaiset-toisen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
+            sopimuksen-mat-kaytto-toisen-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               testattava-apitunnus 987654
@@ -389,9 +389,22 @@
               (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
           (poista-reittitoteuma toteuma-id ulkoinen-id))
-        (is (= hoitoluokittaiset-eka-kutsun-jalkeen
-               hoitoluokittaiset-toka-kutsun-jalkeen
-               hoitoluokittaiset-kolmannen-kutsun-jalkeen))
-        (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
-               sopimuksen-mat-kaytto-toka-kutsun-jalkeen
-               sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen))))))
+        ;; hoitoluokittaisten ja sopparin matskun käyttöjen cachen päivittyessä oikein, eivät 1. ja 2. kutsun jälkeiset tilat ole samat
+        (is (not= hoitoluokittaiset-eka-kutsun-jalkeen
+                  hoitoluokittaiset-toisen-kutsun-jalkeen))
+        (is (not= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
+               sopimuksen-mat-kaytto-toisen-kutsun-jalkeen))
+
+        (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 100 2 4.62M]]) "eka kutsun jälkeen")
+        ;; varmista että alkuperäiset on nollattu, ja uuteen pvm:ään puolestaan lisätty määrät
+        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 100 2 0.00M] [#inst "2014-12-31T22:00:00.000-00:00" 1 100 2 4.62M]]) "toisen kutsun jälkeen")
+        (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[5
+                                                          #inst "2016-01-29T22:00:00.000-00:00"
+                                                          1
+                                                          4.62M]])
+            "sopimuksen-mat-kaytto-eka-kutsun-jalkeen")
+        (is (= sopimuksen-mat-kaytto-toisen-kutsun-jalkeen [[5
+                                                             #inst "2014-12-31T22:00:00.000-00:00"
+                                                             1
+                                                             4.62M]])
+            "sopimuksen-mat-kaytto-toisen-kutsun-jalkeen")))))

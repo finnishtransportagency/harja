@@ -57,8 +57,7 @@
                       :tyokoneen-lisatieto (:tunnus tyokone)})
         toteuman-id (if paivitetty
                       (:id paivitetty)
-                      (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])})
-                      )]
+                      (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
     toteuman-id))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
