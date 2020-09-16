@@ -8,6 +8,7 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.raportointi.testiapurit :as apurit]
             [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.kyselyt.raportit :as raportit-q]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
@@ -27,7 +28,7 @@
                         :raportit (component/using
                                     (raportit/->Raportit)
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
-
+  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

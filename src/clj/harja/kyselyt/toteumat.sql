@@ -1263,3 +1263,9 @@ SELECT
   reitti as sijainti
 FROM toteuma
 WHERE urakka = :urakka-id AND id IN (:idt);
+
+-- name: luodun-toteuman-id
+-- single?: true
+-- Koska toteuman luonti ohjataan triggerillä eri tauluun, ei toteuman insert palauta oikein
+-- id kenttää. Tällä haetaan viimeksi luodun arvo.
+SELECT currval('toteuma_id_seq');
