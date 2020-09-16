@@ -292,9 +292,9 @@
                     WHERE id = " toteuma-id))))))
 
 (deftest tallenna-kokonaishintainen-toteuma-testi
-  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2005
-        hoitokausi-aloituspvm (pvm/luo-pvm 2016 9 1)        ; 1.10.2016
-        hoitokausi-lopetuspvm (pvm/luo-pvm 2016 8 30)       ;30.9.2017
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2020
+        hoitokausi-aloituspvm (pvm/luo-pvm 2020 9 1)        ; 1.10.2020
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2021 8 30)       ;30.9.2021
         urakka-id (hae-oulun-alueurakan-2014-2019-id)
         tyo {:urakka-id urakka-id
              :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
@@ -312,7 +312,7 @@
                                  +kayttaja-jvh+ {:toteuma tyo
                                                  :hakuparametrit {:urakka-id urakka-id
                                                                   :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-                                                                  :alkupvm tyon-pvm :loppupvm tyon-pvm
+                                                                  :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
                                                                   :toimenpide nil :tehtava nil}}))]
     (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
