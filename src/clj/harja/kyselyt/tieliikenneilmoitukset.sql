@@ -79,10 +79,11 @@ WHERE ulompi_i.id IN
 
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
-       sisempi_i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
+       sisempi_i.ilmoittaja_matkapuhelin
+           LIKE :ilmoittaja-puhelin)
        ORDER BY sisempi_i."valitetty-urakkaan" DESC
        LIMIT :max-maara::INTEGER)
-ORDER BY ulompi_i.valitetty DESC, it.kuitattu DESC;
+ORDER BY ulompi_i."valitetty-urakkaan" DESC, it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille
 SELECT

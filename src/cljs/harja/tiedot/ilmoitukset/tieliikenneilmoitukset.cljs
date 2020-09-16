@@ -81,7 +81,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (defn- jarjesta-ilmoitukset [tulos]
   (reverse (sort-by
-             :ilmoitettu
+             :valitetty-urakkaan
              pvm/ennen?
              (mapv
                (fn [ilmo]
