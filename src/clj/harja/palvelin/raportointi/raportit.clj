@@ -347,7 +347,8 @@
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :kulut-tehtavaryhmittain
-    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                   {:tyyppi "checkbox", :konteksti "koko maa", :pakollinen true, :nimi "Hallintayksiköittäin eroteltuna?"}]
     :konteksti    #{"hallintayksikko" "urakka" "koko maa"}
     :kuvaus       "Kulut tehtäväryhmittäin"
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita

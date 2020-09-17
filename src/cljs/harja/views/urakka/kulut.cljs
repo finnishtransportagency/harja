@@ -296,7 +296,7 @@
                                poistettu)
                       {:style {:color "#ff0000"}})
                     (str (if (and muokataan?
-                                  poistettu) "Poistetaan kohdistus " "Kohdistus ")
+                                  poistettu) "Poistetaan kohdistus " "Kohdistus! ")
                          (inc indeksi))
                     (let [input-id (gensym "kohdistus-lisatyo-")]
                       [:span

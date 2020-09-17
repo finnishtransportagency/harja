@@ -12,17 +12,58 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-kulut-raporttiin-aikavalilla
+-- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
+select tr.nimi as "tehtavaryhma",
+       sum(lk.summa) as "summa"
+from lasku_kohdistus lk
+join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+join lasku l on l.id = lk.lasku
+where l.erapaiva <= :loppupvm ::date
+  and l.erapaiva >= :alkupvm ::date
+  and l.urakka = :urakka
+  and lk.poistettu is not true
+group by tr.nimi;
+
+--name: hae-hallintayksikon-kulut-raporttiin-aikavalilla
+-- Annetulla aikavälillä haetaan hallintayksikon kaikki kulut tehtäväryhmittäin
+select tr.nimi as "tehtavaryhma",
+       sum(lk.summa) as "summa"
+from lasku_kohdistus lk
+       join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+  join lasku l on l.id = lk.lasku
+  join urakka u on u.id = l.urakka
+where l.erapaiva <= :loppupvm ::date
+  and l.erapaiva >= :alkupvm ::date
+  and u.hallintayksikko = :hallintayksikko
+  and lk.poistettu is not true
+group by tr.nimi;
+
+-- name: hae-koko-maan-kulut-raporttiin-aikavalilla-hallintayksikoittain
+-- Annetulla aikavälillä haetaan kaikki kulut tehtäväryhmittäin ryhmiteltynä koko maasta
+select tr.nimi as "tehtavaryhma",
+       o.id as "hallintayksikko",
+       sum(lk.summa) as "summa"
+from lasku_kohdistus lk
+       join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+  join lasku l on l.id = lk.lasku
+  join urakka u on u.id = l.urakka
+join organisaatio o on o.id = u.hallintayksikko
+where l.erapaiva <= :loppupvm ::date
+  and l.erapaiva >= :alkupvm ::date
+  and lk.poistettu is not true
+group by tr.nimi, o.id;
+
 -- name: hae-koko-maan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan kaikki kulut tehtäväryhmittäin ryhmiteltynä koko maasta
 select tr.nimi as "tehtavaryhma",
        sum(lk.summa) as "summa"
 from lasku_kohdistus lk
 join tehtavaryhma tr on lk.tehtavaryhma = tr.id
-where suoritus_alku <= :loppupvm ::date
-  and suoritus_loppu >= :alkupvm ::date
+where lk.erapaiva <= :loppupvm ::date
+  and lk.erapaiva >= :alkupvm ::date
+  and lk.poistettu is not true
 group by tr.nimi;
-
-
 
 -- name: hae-liitteet
 -- Haetaan liitteet laskulle
