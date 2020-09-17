@@ -439,76 +439,94 @@
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (let [loppupvm (konv/sql-date loppupvm)
           sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
-          _ (println "Tallennetaan toteumat " (pr-str toteumat))
-          _ (println "sopimus" (pr-str sopimus))
           ;; Tyyppivaihtoehtoja on kolme. "kokonaishintainen" on määrien toteumille, "lisatyo" on lisätöille
           ;; ja "akillinen-hoitotyo" Äkillisille hoitotöille
           tyyppi (if (nil? tyyppi)
                    "kokonaishintainen"
-                   (get {:maaramitattava        "kokonaishintainen"
-                         :akillinen-hoitotyo    "akillinen-hoitotyo"
-                         :tilaajan-varaukset    "muut-rahavaraukset"
+                   (get {:maaramitattava "kokonaishintainen"
+                         :akillinen-hoitotyo "akillinen-hoitotyo"
+                         :tilaajan-varaukset "muut-rahavaraukset"
                          :vahinkojen-korjaukset "vahinkojen-korjaukset"
-                         :lisatyo               "lisatyo"} tyyppi))]
+                         :lisatyo "lisatyo"} tyyppi))]
       ; vain määrämitattavilla on määrä... niinhän se nimikin sanoo, tosiaan :D
       (if (some #(and
                    (= "kokonaishintainen" tyyppi)
                    (> 0 (:maara %))) toteumat)
-        (throw+ {:type    "Error"
+        (throw+ {:type "Error"
                  :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
         (jdbc/with-db-transaction [db db]
                                   (doall
-                                    (for [{maara                                                        :maara
-                                           lisatieto                                                    :lisatieto
-                                           tehtava                                                      :tehtava
-                                           toteuma-id                                                   :toteuma-id
-                                           toteuma-tehtava-id                                           :toteuma-tehtava-id
-                                           poistettu                                                    :poistettu
+                                    (for [{maara :maara
+                                           lisatieto :lisatieto
+                                           tehtava :tehtava
+                                           toteuma-id :toteuma-id
+                                           toteuma-tehtava-id :toteuma-tehtava-id
+                                           poistettu :poistettu
                                            {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} :sijainti
-                                           :as                                                          _toteuma} toteumat]
+                                           :as _toteuma} toteumat]
                                       (if poistettu
                                         (poista-maarien-toteuma! db user {:urakka-id urakka-id
                                                                           :toteuma-id toteuma-id})
-                                        (let [t (upsert! db ::toteuma/toteuma
-                                                       (merge (if toteuma-id
-                                                                {::toteuma/id                  toteuma-id
-                                                                 ::muokkaustiedot/muokkaaja-id (:id user)
-                                                                 ::muokkaustiedot/muokattu     (pvm/nyt)}
-                                                                {::muokkaustiedot/luotu    (pvm/nyt)
-                                                                 ::muokkaustiedot/luoja-id (:id user)})
-                                                              {::toteuma/urakka-id        urakka-id
-                                                               ::toteuma/alkanut          loppupvm
-                                                               ::toteuma/paattynyt        loppupvm
-                                                               ::toteuma/tyyppi           tyyppi
-                                                               ::toteuma/lahde            "harja-ui"
-                                                               ::toteuma/tr-numero        numero
-                                                               ::toteuma/tr-alkuosa       alkuosa
-                                                               ::toteuma/tr-alkuetaisyys  alkuetaisyys
-                                                               ::toteuma/tr-loppuetaisyys loppuetaisyys
-                                                               ::toteuma/tr-loppuosa      loppuosa
-                                                               ::toteuma/sopimus-id       (::sopimus/id sopimus)}))
-                                              toteuma-id (toteumat-q/luodun-toteuman-id db)
-                                              _ (println "toteuma-tehtava-id " (pr-str toteuma-tehtava-id))
-                                              _ (println "toteuma-id " (pr-str toteuma-id))
-                                            tt (upsert! db ::toteuma/toteuma-tehtava
-                                                        (merge (if toteuma-tehtava-id
-                                                                 {::toteuma/id        toteuma-tehtava-id
-                                                                  ::toteuma/muokattu  (pvm/nyt)
-                                                                  ::toteuma/muokkaaja (:id user)}
-                                                                 {::toteuma/luotu (pvm/nyt)
-                                                                  ::toteuma/luoja (:id user)})
-                                                               {::toteuma/toteuma-id        toteuma-id
-                                                                ::toteuma/muokattu          (pvm/nyt)
-                                                                ::toteuma/toimenpidekoodi   (:id tehtava)
-                                                                ::toteuma/maara             (case tyyppi
-                                                                                              "kokonaishintainen"
-                                                                                              (when maara (bigdec maara))
+                                        (let [toteuma-id (if toteuma-id
+                                                           (do
+                                                             (update! db ::toteuma/toteuma
+                                                                      {::toteuma/id toteuma-id
+                                                                       ::muokkaustiedot/muokkaaja-id (:id user)
+                                                                       ::muokkaustiedot/muokattu (pvm/nyt)
+                                                                       ::toteuma/urakka-id urakka-id
+                                                                       ::toteuma/alkanut loppupvm
+                                                                       ::toteuma/paattynyt loppupvm
+                                                                       ::toteuma/tyyppi tyyppi
+                                                                       ::toteuma/lahde "harja-ui"
+                                                                       ::toteuma/tr-numero numero
+                                                                       ::toteuma/tr-alkuosa alkuosa
+                                                                       ::toteuma/tr-alkuetaisyys alkuetaisyys
+                                                                       ::toteuma/tr-loppuetaisyys loppuetaisyys
+                                                                       ::toteuma/tr-loppuosa loppuosa
+                                                                       ::toteuma/sopimus-id (::sopimus/id sopimus)}
+                                                                      {::toteuma/id toteuma-id})
+                                                             toteuma-id)
+                                                           (toteumat-q/luo-uusi-toteuma db
+                                                                                        {:urakka urakka-id
+                                                                                         :sopimus (::sopimus/id sopimus)
+                                                                                         :alkanut loppupvm
+                                                                                         :paattynyt loppupvm
+                                                                                         :tyyppi tyyppi
+                                                                                         :luotu (pvm/nyt)
+                                                                                         :kayttaja (:id user)
+                                                                                         :suorittaja nil
+                                                                                         :ytunnus nil
+                                                                                         :lisatieto nil
+                                                                                         :ulkoinen_id nil
+                                                                                         :reitti nil
+                                                                                         :numero numero
+                                                                                         :alkuosa alkuosa
+                                                                                         :alkuetaisyys alkuetaisyys
+                                                                                         :loppuosa loppuosa
+                                                                                         :loppuetaisyys loppuetaisyys
+                                                                                         :lahde "harja-ui",
+                                                                                         :tyokonetyyppi nil
+                                                                                         :tyokonetunniste nil
+                                                                                         :tyokoneen-lisatieto nil}))
+                                              tt (upsert! db ::toteuma/toteuma-tehtava
+                                                          (merge (if toteuma-tehtava-id
+                                                                   {::toteuma/id toteuma-tehtava-id
+                                                                    ::toteuma/muokattu (pvm/nyt)
+                                                                    ::toteuma/muokkaaja (:id user)}
+                                                                   {::toteuma/luotu (pvm/nyt)
+                                                                    ::toteuma/luoja (:id user)})
+                                                                 {::toteuma/toteuma-id toteuma-id
+                                                                  ::toteuma/muokattu (pvm/nyt)
+                                                                  ::toteuma/toimenpidekoodi (:id tehtava)
+                                                                  ::toteuma/maara (case tyyppi
+                                                                                    "kokonaishintainen"
+                                                                                    (when maara (bigdec maara))
 
-                                                                                              ("akillinen-hoitotyo" "lisatyo" "muut-rahavaraukset" "vahinkojen-korjaukset")
-                                                                                              (bigdec 1))
-                                                                ::toteuma/tehtava-lisatieto lisatieto}))]
+                                                                                    ("akillinen-hoitotyo" "lisatyo" "muut-rahavaraukset" "vahinkojen-korjaukset")
+                                                                                    (bigdec 1))
+                                                                  ::toteuma/tehtava-lisatieto lisatieto}))]
 
-                                        (::toteuma/id t))))))))
+                                          toteuma-id)))))))
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn hae-maarien-toteuma [db user {:keys [id urakka-id]}]
