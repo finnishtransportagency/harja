@@ -12,7 +12,7 @@
 
 (defrecord PaivitaMaara [solu arvo tyylit])
 (defrecord ValitseTaso [arvo taso])
-(defrecord HaeTehtavatJaMaarat [parametrit])
+(defrecord HaeTehtavat [parametrit])
 (defrecord TehtavaHakuOnnistui [tehtavat parametrit])
 (defrecord HakuEpaonnistui [])
 (defrecord MaaraHakuOnnistui [maarat prosessoi-tulokset])
@@ -29,6 +29,10 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
+
+(defn- tarkista-desimaalimerkki
+  [arvo]
+  (clj-str/replace (str arvo) #"\." ","))
 
 (defn klikatun-rivin-lapsenlapsi?
   [janan-id klikatun-rivin-id taulukon-rivit]
@@ -77,7 +81,11 @@
                               (osien-paivitys-fn
                                 identity
                                 (fn [o]
-                                  (p/aseta-arvo o :arvo (get-in tehtavat [tehtava-id :maarat kausi])))
+                                  (p/aseta-arvo o
+                                                :arvo
+                                                (tarkista-desimaalimerkki
+                                                  (get-in tehtavat
+                                                          [tehtava-id :maarat kausi]))))
                                 identity)))) rivit)))
 
 (defn filtteri-paivitys-fn [valitaso nayta-aina]
@@ -203,12 +211,13 @@
       (p/paivita-taulukko! filtteroity-taulukko (-> app
                                                     (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
                                                     (update :valinnat #(assoc % :noudetaan (dec (:noudetaan %))))))))
-  HaeTehtavatJaMaarat
+  HaeTehtavat
   (process-event
     [{parametrit :parametrit} app]
     (-> app
-        (tuck-apurit/get! :tehtavat
-                          {:onnistui            ->TehtavaHakuOnnistui
+        (tuck-apurit/post! :tehtavat
+                           {:urakka-id          (:id  (-> @tiedot/tila :yleiset :urakka))}
+                           {:onnistui            ->TehtavaHakuOnnistui
                            :epaonnistui         ->HakuEpaonnistui
                            :onnistui-parametrit [parametrit]
                            :paasta-virhe-lapi?  true})
@@ -266,8 +275,8 @@
                                                             :loppupvm
                                                             pvm/vuosi)))]
                                (reduce (fn [acc avain] (assoc acc avain arvo)) m avaimet))))
-                (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] arvo))]
-      (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo :class tyylit) app)))
+                (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] (tarkista-desimaalimerkki arvo)))]
+      (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo (tarkista-desimaalimerkki arvo) :class tyylit) app)))
 
   SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]

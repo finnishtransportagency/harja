@@ -152,16 +152,17 @@ WHERE urakka = :urakka
 
 -- name: hae-urakan-tehtavat
 -- Hakee tehtävät, joita annetulle urakalle voi kirjata.
-SELECT
-  id,
-  nimi,
-  yksikko
-FROM toimenpidekoodi
-WHERE taso = 4
-      AND poistettu IS NOT TRUE
-      AND emo IN (SELECT toimenpide
-                  FROM toimenpideinstanssi
-                  WHERE urakka = :urakka);
+SELECT t4.id,
+       t4.nimi,
+       t4.yksikko
+FROM toimenpidekoodi t4
+         LEFT JOIN toimenpideinstanssi tpi on t4.emo = tpi.toimenpide
+         LEFT JOIN urakka u on u.id = tpi.urakka
+WHERE t4.taso = 4
+  AND t4.poistettu IS NOT TRUE
+  AND t4.emo = tpi.toimenpide AND u.id = :urakka
+  AND (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 -- name: hae-urakan-ja-sopimuksen-toteutuneet-tehtavat
 -- Hakee urakan tietyntyyppiset toteutuneet tehtävät
