@@ -487,6 +487,9 @@
                                                                ::toteuma/tr-loppuetaisyys loppuetaisyys
                                                                ::toteuma/tr-loppuosa      loppuosa
                                                                ::toteuma/sopimus-id       (::sopimus/id sopimus)}))
+                                              toteuma-id (toteumat-q/luodun-toteuman-id db)
+                                              _ (println "toteuma-tehtava-id " (pr-str toteuma-tehtava-id))
+                                              _ (println "toteuma-id " (pr-str toteuma-id))
                                             tt (upsert! db ::toteuma/toteuma-tehtava
                                                         (merge (if toteuma-tehtava-id
                                                                  {::toteuma/id        toteuma-tehtava-id
@@ -494,7 +497,7 @@
                                                                   ::toteuma/muokkaaja (:id user)}
                                                                  {::toteuma/luotu (pvm/nyt)
                                                                   ::toteuma/luoja (:id user)})
-                                                               {::toteuma/toteuma-id        (::toteuma/id t)
+                                                               {::toteuma/toteuma-id        toteuma-id
                                                                 ::toteuma/muokattu          (pvm/nyt)
                                                                 ::toteuma/toimenpidekoodi   (:id tehtava)
                                                                 ::toteuma/maara             (case tyyppi
