@@ -654,7 +654,8 @@
                                                      (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
-                            :vayla-tyyli?          vayla-tyyli?}
+                            :vayla-tyyli?          vayla-tyyli?
+                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        valinnat]))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
     ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
@@ -684,7 +685,8 @@
                                                          (or valinta-nayta str))
                                 :disabled              disabled?
                                 :data-cy               data-cy
-                                :vayla-tyyli?          vayla-tyyli?}
+                                :vayla-tyyli?          vayla-tyyli?
+                                :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
            valinnat])))))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo

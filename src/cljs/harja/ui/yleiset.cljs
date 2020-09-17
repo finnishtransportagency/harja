@@ -333,7 +333,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   (when data-cy
                     {:data-cy data-cy}))
            [:button
-            {:class (str (when disabled "disabled ") (when-not vayla-tyyli? "nappi-alasveto "))
+            {:id (str "btn-" (hash vaihtoehdot))
+             :class (str (when disabled "disabled ") (when-not vayla-tyyli? "nappi-alasveto "))
              :type "button"
              :disabled (if disabled "disabled" "")
              :title title
@@ -347,9 +348,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if (and @auki? vayla-tyyli?)
               ^{:key :auki}
-              [:span.livicon-chevron-up {:class (when disabled "disabled")}]
+              [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (hash vaihtoehdot))
+                                         :class (when disabled "disabled")}]
               ^{:key :kiinni}
-              [:span.livicon-chevron-down {:class (when disabled "disabled")}])]
+              [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (hash vaihtoehdot))
+                                           :class (when disabled "disabled")}])]
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
