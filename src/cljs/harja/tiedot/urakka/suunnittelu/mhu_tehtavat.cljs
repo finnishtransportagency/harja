@@ -12,7 +12,7 @@
 
 (defrecord PaivitaMaara [solu arvo tyylit])
 (defrecord ValitseTaso [arvo taso])
-(defrecord HaeTehtavatJaMaarat [parametrit])
+(defrecord HaeTehtavat [parametrit])
 (defrecord TehtavaHakuOnnistui [tehtavat parametrit])
 (defrecord HakuEpaonnistui [])
 (defrecord MaaraHakuOnnistui [maarat prosessoi-tulokset])
@@ -203,12 +203,13 @@
       (p/paivita-taulukko! filtteroity-taulukko (-> app
                                                     (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
                                                     (update :valinnat #(assoc % :noudetaan (dec (:noudetaan %))))))))
-  HaeTehtavatJaMaarat
+  HaeTehtavat
   (process-event
     [{parametrit :parametrit} app]
     (-> app
-        (tuck-apurit/get! :tehtavat
-                          {:onnistui            ->TehtavaHakuOnnistui
+        (tuck-apurit/post! :tehtavat
+                           {:urakka-id          (:id  (-> @tiedot/tila :yleiset :urakka))}
+                           {:onnistui            ->TehtavaHakuOnnistui
                            :epaonnistui         ->HakuEpaonnistui
                            :onnistui-parametrit [parametrit]
                            :paasta-virhe-lapi?  true})

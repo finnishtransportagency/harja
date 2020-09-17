@@ -15,9 +15,9 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn hae-tehtavat [db]
-  (let [yksikkohintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat db)
-        kokonaishintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat db)
+(defn hae-tehtavat [db urakka-id]
+  (let [yksikkohintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat db urakka-id)
+        kokonaishintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat db urakka-id)
         tee-tehtavat #(mapv (fn [data] {:tehtava {:id (:apitunnus data) :selite (:nimi data) :yksikko (:yksikko data)}}) %)]
     (merge
       {:yksikkohintaiset (tee-tehtavat yksikkohintaiset-tehtavat)}
@@ -47,7 +47,7 @@
    {:tiedot      (urakan-tiedot urakka)
     :sopimukset  (hae-urakan-sopimukset db id)
     :materiaalit (hae-materiaalit db)
-    :tehtavat    (hae-tehtavat db)}})
+    :tehtavat    (hae-tehtavat db (:id urakka))}})
 
 (defn muodosta-vastaus-urakoiden-haulle [urakat]
   {:urakat (mapv (fn [urakka] {:urakka {:tiedot (urakan-tiedot urakka)}}) urakat)})
