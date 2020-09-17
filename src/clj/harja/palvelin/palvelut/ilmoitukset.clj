@@ -434,6 +434,7 @@
            :as this}]
     (julkaise-palvelu http :hae-ilmoitukset
                       (fn [user tiedot]
+                          (println "maarit ### tiedot pielessä :valitetty-urakkaan-loppuaika #inst \"2020-09-17T05:05:31.000-00:00\"" tiedot)
                         (hae-ilmoitukset db user tiedot 501)))
     (julkaise-palvelu http :hae-ilmoitus
                       (fn [user tiedot]
