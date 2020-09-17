@@ -1269,3 +1269,7 @@ WHERE urakka = :urakka-id AND id IN (:idt);
 -- Koska toteuman luonti ohjataan triggerillä eri tauluun, ei toteuman insert palauta oikein
 -- id kenttää. Tällä haetaan viimeksi luodun arvo.
 SELECT currval('toteuma_id_seq');
+
+-- name: toteuman-id-ulkoisella-idlla
+-- single?: true
+SELECT id FROM toteuma where ulkoinen_id = :ulkoinen_id;

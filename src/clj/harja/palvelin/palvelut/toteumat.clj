@@ -853,7 +853,8 @@
           karttapvm (or (geometriat-q/hae-karttapvm db) nyt)
           toteuma-id (when id (:toteuma (first (toteumat-q/hae-varustetoteuma db {:id id}))))
           toteuma-id (if (and id toteuma-id)
-                       (:id (toteumat-q/paivita-toteuma<! db
+                       (do
+                         (toteumat-q/paivita-toteuma<! db
                                                           {:alkanut nyt
                                                            :paattynyt nyt
                                                            :tyyppi "kokonaishintainen"
@@ -867,7 +868,8 @@
                                                            :loppuosa nil
                                                            :loppuetaisyys nil
                                                            :id toteuma-id
-                                                           :urakka urakka-id}))
+                                                           :urakka urakka-id})
+                         toteuma-id)
                        (toteumat-q/luo-uusi-toteuma db
                                                     {:urakka urakka-id
                                                      :sopimus sopimus-id
