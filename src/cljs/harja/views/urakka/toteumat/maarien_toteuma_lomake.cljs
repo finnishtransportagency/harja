@@ -170,14 +170,14 @@
                (when useampi?
                  [:div.lomakepalsta
                   [:div.row
-                   [:label "Sijainti"]
                    [kentat/tee-kentta
-                    {:nimi [indeksi :tierekisteriosoite] #_[::t/toteumat indeksi ::t/sijainti]
+                    {:nimi [indeksi :tierekisteriosoite]
                      ::ui-lomake/col-luokka ""
                      :teksti "Kyseiseen tehtävään ei ole sijaintia"
                      :pakollinen? (not ei-sijaintia)
                      :disabled? ei-sijaintia
                      :tyyppi :tierekisteriosoite
+                     :vayla-tyyli? true
                      :sijainti (r/wrap sijainti (constantly true))
                      }
                     (r/wrap sijainti
@@ -216,9 +216,7 @@
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava [{:otsikko "Työ valmis"
                          :nimi ::t/pvm
-                         ::ui-lomake/col-luokka (if (> (count toteumat) 1)
-                                                  "col-xs-12 col-sm-12 col-md-5"
-                                                  "")
+                         ::ui-lomake/col-luokka ""
                          :pakollinen? true
                          :tyyppi :pvm}
                         {:nimi ::t/toteumat
@@ -281,7 +279,6 @@
      #_[debug/debug app]
      #_[debug/debug lomake]
      #_[debug/debug validius]
-     #_[:div (str "Validi? " koko-validi?)]
      [:div.flex-row {:style {:padding-left "15px"
                              :padding-right "15px"}}
       [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]

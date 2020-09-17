@@ -265,7 +265,9 @@ fieldset.lomake-osa {
       max-width: ~"calc(50% - 20px)";
     }
   }
-  /*flex-grow: 1;*/
+  flex-grow: 1;
+  flex-basis:0;
+  min-width: 100px;
 
   /* Keskikokoinen näyttö */
   @media all and (max-width: 800px) {
@@ -284,11 +286,11 @@ fieldset.lomake-osa {
 
 .lomakepalstat {
   /* Flex muutos mahdollinen. Koodit jätetty tarkoituksella
-   Flexin kanssa lähinnä ongelmana alasvetovalikkojen laajeneminen liian suuriksi.
+   Flexin kanssa lähinnä ongelmana alasvetovalikkojen laajeneminen liian suuriksi.*/
 
   display:flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: flex-start;*/
+  justify-content: flex-start;
 
 }
