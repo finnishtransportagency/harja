@@ -3,13 +3,12 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
-    "koordinaatit": {
-      "id": "urn:harja/koordinaattisijainti",
+    "viivageometria": {
+      "id": "urn:harja/viivageometria",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json",
       "required": true
     }
   }
 }
-

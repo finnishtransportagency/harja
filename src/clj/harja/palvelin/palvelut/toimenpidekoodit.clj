@@ -21,17 +21,32 @@
               (map #(konv/array->vec % :hinnoittelu)))
         (q/hae-kaikki-toimenpidekoodit db)))
 
+(defn hae-tehtavaryhmat
+      "Palauttaa tehtäväryhmän id:n, nimen ja järjestyksen"
+      [db kayttaja]
+      (into []
+            (q/hae-tehtavaryhmat db)))
+
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
-  [db user {:keys [nimi emo yksikko hinnoittelu api-seuranta] :as rivi}]
-  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/seq->array hinnoittelu) api-seuranta (:id user))]
-    {:taso 4
-     :emo emo
-     :nimi nimi
-     :yksikko yksikko
-     :hinnoittelu hinnoittelu
-     :apiseuranta api-seuranta
-     :id (:id luotu)}))
+  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko hinnoittelu api-seuranta tehtavaryhma] :as rivi}]
+      (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo
+                                             voimassaolon-alkuvuosi voimassaolon-loppuvuosi
+                                             yksikko
+                                             (konv/seq->array hinnoittelu)
+                                             api-seuranta
+                                             (:id tehtavaryhma)
+                                             (:id user))]
+           {:taso                    4
+            :emo                     emo
+            :nimi                    nimi
+            :voimassaolon-alkuvuosi  voimassaolon-alkuvuosi
+            :voimassaolon-loppuvuosi voimassaolon-loppuvuosi
+            :yksikko                 yksikko
+            :hinnoittelu             hinnoittelu
+            :apiseuranta             api-seuranta
+            :tehtavaryhma            (:id tehtavaryhma)
+            :id                      (:id luotu)}))
 
 (defn poista-toimenpidekoodi
   "Merkitsee toimenpidekoodin poistetuksi. Palauttaa true jos koodi merkittiin poistetuksi, false muuten."
@@ -40,15 +55,17 @@
 
 (defn muokkaa-toimenpidekoodi
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
-
-  [db user {:keys [nimi emo yksikko id hinnoittelu api-seuranta passivoitu?] :as rivi}]
+  [db user {:keys [nimi emo voimassaolon-alkuvuosi voimassaolon-loppuvuosi yksikko id hinnoittelu api-seuranta tehtavaryhma passivoitu?] :as rivi}]
   (= 1 (q/muokkaa-toimenpidekoodi! db
                                    {:id id
                                     :kayttajaid (:id user)
                                     :nimi nimi
+                                    :voimassaolon-alkuvuosi voimassaolon-alkuvuosi
+                                    :voimassaolon-loppuvuosi voimassaolon-loppuvuosi
                                     :yksikko yksikko
                                     :hinnoittelu (konv/seq->array hinnoittelu)
                                     :apiseuranta api-seuranta
+                                    :tehtavaryhma (:id tehtavaryhma)
                                     :poistettu passivoitu?})))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
@@ -71,26 +88,30 @@
     (mapv #(hash-map :nimi %) tehtavat)))
 
 (defrecord Toimenpidekoodit []
-  component/Lifecycle
-  (start [this]
-    (doto (:http-palvelin this)
-      (julkaise-palvelu
-        :hae-toimenpidekoodit
-        (fn [kayttaja]
-          (oikeudet/ei-oikeustarkistusta!)
-          (hae-toimenpidekoodit (:db this) kayttaja))
-        {:last-modified (fn [user]
-                          (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
-      (julkaise-palvelu
-        :tallenna-tehtavat
-        (fn [user tiedot]
-          (tallenna-tehtavat (:db this) user tiedot)))
-      (julkaise-palvelu
-        :hae-reaaliaikaseurannan-tehtavat
-        (fn [_]
-          (oikeudet/ei-oikeustarkistusta!)
-          (hae-reaaliaikaseurannan-tehtavat))))
-    this)
+           component/Lifecycle
+           (start [this]
+                  (doto (:http-palvelin this)
+                        (julkaise-palvelu
+                          :hae-toimenpidekoodit
+                          (fn [kayttaja]
+                              (oikeudet/ei-oikeustarkistusta!)
+                              (hae-toimenpidekoodit (:db this) kayttaja))
+                          {:last-modified (fn [user]
+                                              (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
+                        (julkaise-palvelu
+                          :hae-tehtavaryhmat
+                          (fn [user]
+                              (hae-tehtavaryhmat (:db this) user)))
+                        (julkaise-palvelu
+                          :tallenna-tehtavat
+                          (fn [user tiedot]
+                              (tallenna-tehtavat (:db this) user tiedot)))
+                        (julkaise-palvelu
+                          :hae-reaaliaikaseurannan-tehtavat
+                          (fn [_]
+                              (oikeudet/ei-oikeustarkistusta!)
+                              (hae-reaaliaikaseurannan-tehtavat))))
+                  this)
 
   (stop [this]
     (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat :hae-reaaliaikaseurannan-tehtavat]]
