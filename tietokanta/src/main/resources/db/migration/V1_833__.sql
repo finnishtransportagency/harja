@@ -1,4 +1,4 @@
-ALTER TABLE harja.public.toimenpidekoodi
+ALTER TABLE toimenpidekoodi
 ADD column "voimassaolo_alkuvuosi" INTEGER,
 ADD column "voimassaolo_loppuvuosi" INTEGER;
 

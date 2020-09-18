@@ -195,21 +195,27 @@
         [:div.flex-row
          {:style {:justify-content "flex-start"
                   :align-items     "flex-end"}}
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Toimenpide"]
-          [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
-                                        :valitse-fn #(e! (t/->ValitseTaso % :toimenpide))
-                                        :format-fn  #(:nimi %)
-                                        :disabled   (disabloitu-alasveto? toimenpiteet)}
+         [:div
+          {:style {:width        "840px"
+                   :margin-right "15px"}}
+          [:label.alasvedon-otsikko "Toimenpide"]
+          [yleiset/livi-pudotusvalikko {:valinta      (:toimenpide valinnat)
+                                        :valitse-fn   #(e! (t/->ValitseTaso % :toimenpide))
+                                        :format-fn    #(:nimi %)
+                                        :disabled     (disabloitu-alasveto? toimenpiteet)
+                                        :vayla-tyyli? true}
            toimenpiteet]]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Hoitokausi"]
-          [yleiset/livi-pudotusvalikko {:valinta    (:hoitokausi valinnat)
-                                        :valitse-fn #(e! (t/->HaeMaarat {:hoitokausi        %
-                                                                         :prosessori        (partial luo-tehtava-taulukko e!)
-                                                                         :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
-                                        :format-fn  #(str "1.10." % "-30.9." (inc %))
-                                        :disabled   (disabloitu-alasveto? hoitokaudet)}
+         [:div
+          {:style {:width        "220px"
+                   :margin-right "15px"}}
+          [:label.alasvedon-otsikko "Hoitokausi"]
+          [yleiset/livi-pudotusvalikko {:valinta      (:hoitokausi valinnat)
+                                        :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi        %
+                                                                           :prosessori        (partial luo-tehtava-taulukko e!)
+                                                                           :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
+                                        :format-fn    #(str "1.10." % "-30.9." (inc %))
+                                        :disabled     (disabloitu-alasveto? hoitokaudet)
+                                        :vayla-tyyli? true}
            hoitokaudet]]
          [:div
           [:input#kopioi-tuleville-vuosille.vayla-checkbox
