@@ -144,7 +144,8 @@
                    :vayla-tyyli? true
                    :valinta-arvo identity
                    :valinnat tehtavat
-                   :pakollinen? true}
+                   :pakollinen? true
+                   :elementin-id (str "tehtava-valikko-" indeksi)}
                   (r/wrap tehtava
                           (r/partial paivita! ::t/tehtava indeksi))]]
                 [:div.row.form-group.required
@@ -240,7 +241,8 @@
                   :valinta-nayta :tehtava
                   :valinta-arvo identity
                   :valinnat tehtavat
-                  :pakollinen? true}
+                  :pakollinen? true
+                  :elementin-id (str "lisatyot-tehtavat")}
                  {:otsikko "Kuvaus"
                   ::ui-lomake/col-luokka ""
                   :nimi [::t/toteumat 0 ::t/lisatieto]
@@ -263,7 +265,8 @@
                                   :valinta-arvo identity
                                   :valinta-nayta (fn [arvo]
                                                    (:tehtava arvo))
-                                  :pakollinen? true}
+                                  :pakollinen? true
+                                  :elementin-id (str "akilliset-tehtavat-")}
                                  {:otsikko "Kuvaus"
                                   ::ui-lomake/col-luokka ""
                                   :nimi [::t/toteumat 0 ::t/lisatieto]
@@ -345,7 +348,8 @@
         :vayla-tyyli? true
         :palstoja 1
         :disabled? (not (= :maaramitattava (::t/tyyppi lomake)))
-        :pakollinen? true}
+        :pakollinen? true
+        :elementin-id (str "toimenpiteet-")}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi
         ;:oletusarvo :maaramitattava

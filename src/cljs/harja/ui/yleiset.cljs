@@ -170,9 +170,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn! vayla-tyyli?]} _]
+  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
   (let [auki? (atom false)
-        lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot]
+        lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo]
                      (let [disabled? (and disabled-vaihtoehdot
                                           (contains? disabled-vaihtoehdot vaihtoehto))]
                        [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
@@ -260,10 +260,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                                 (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                                   ^{:key (hash vaihtoehto)}
-                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])])
+                                  [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo])])
                              (for [vaihtoehto vaihtoehdot]
                                ^{:key (hash vaihtoehto)}
-                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot])))])]
+                               [lista-item (when li-luokka-fn (r/partial li-luokka-fn)) itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo])))])]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(when @auki?
                                      (reset! auki? false)
@@ -286,7 +286,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   (when data-cy
                     {:data-cy data-cy}))
            [:button
-            {:id (str "btn-" (hash vaihtoehdot))
+            {:id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))
              :class (str (when disabled "disabled ") (when-not vayla-tyyli? "nappi-alasveto "))
              :type "button"
              :disabled (if disabled "disabled" "")

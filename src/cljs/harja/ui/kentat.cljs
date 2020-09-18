@@ -615,7 +615,7 @@
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli?]} data]
+            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -641,7 +641,8 @@
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
                             :vayla-tyyli?          vayla-tyyli?
-                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+                            :elementin-id elementin-id}
        valinnat]))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
     ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
@@ -649,7 +650,7 @@
       (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                    valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
                    jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-                   nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli?]} data data-muokkaus-fn]
+                   nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data data-muokkaus-fn]
         (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
         (assert (fn? data-muokkaus-fn) "Data-muokkaus-fn pitäisi olla funktio, joka muuttaa näytettävää dataa jotenkin")
         (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -672,7 +673,8 @@
                                 :disabled              disabled?
                                 :data-cy               data-cy
                                 :vayla-tyyli?          vayla-tyyli?
-                                :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+                                :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+                                :elementin-id elementin-id}
            valinnat])))))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
