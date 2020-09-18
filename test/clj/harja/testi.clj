@@ -43,7 +43,7 @@
    {:println
     {:min-level
      (cond
-       (= "true" (System/getenv "NOLOG"))
+       (= "true" (System/getenv "HARJA_NOLOG"))
        :fatal
 
        :default

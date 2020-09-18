@@ -8,4 +8,4 @@ fi
 
 cd ~/harja/tietokanta/
 echo "Ajetaan migraatiot"
-mvn -Dharja.tietokanta.host=${POSTGRESQL_NAME} flyway:migrate
+mvn -Dharja.tietokanta.port=${POSTGRESQL_PORTTI:-5432} flyway:migrate

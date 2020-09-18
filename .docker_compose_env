@@ -1,6 +1,4 @@
-BUILD=DEV
-BRANCH=VHAR-1782
-COMMIT=_
-CLEAN_BUILD=false
-POSTGRESQL_NAME=harjadb
-SALLI_OLETUSKAYTTAJA=false
+POSTGRESQL_NAME="harjadb"
+DC_JAETTU_KANSIO="/opt/yhteiset_tiedostot"
+DC_VOLUME_CONSISTENCY=delegated
+LEININGEN_CLEAN='with-profile +dev-container clean'

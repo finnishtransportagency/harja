@@ -2,12 +2,13 @@
   "Tänne funktioita, jotka ovat hyödyllisiä devatessa."
   (:require [clojure.java.io :as io]
             [clojure.core.async :as async]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [harja.tyokalut.env :as env]))
 
 (defonce ^{:private true
            :doc "Arvot, jotka haetaan environment:istä. Näiden tulisi siis olla saatavana jo käännösaikana"}
          envrionment
-         {:dev? (boolean (System/getenv "HARJA_DEV_YMPARISTO"))})
+         {:dev? (true? (env/env "HARJA_DEV_YMPARISTO"))})
 
 (defonce ^{:doc "Tässä pidetään runtime configuraatiota. Hyödyllinen REPL:in kanssa."}
          config

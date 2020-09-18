@@ -10,21 +10,31 @@
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                  [test2junit "1.4.2"]
-                 [lein-eftest "0.5.0"]
-                 [lein-with-env-vars "0.2.0"]]
-       :env-vars {:HARJA_DEV_YMPARISTO true
-                  :HARJA_TIETOKANTA_HOST "localhost"
-                  :HARJA_TIETOKANTA_HOST_KAANNOS "localhost"
-                  ;; Testeihin devatessa
-                  :HARJA_AJA_GATLING_RAPORTTI false
-                  :NOLOG false}
-       ;; Käytetään tätä hookkia, jotta ei tarvitse erikseen kirjoitella leiningenille "with-env-vars", jotta nuo env-vars:it olisi käytössä
-       :hooks [leiningen.with-env-vars/auto-inject]
+                 [lein-eftest "0.5.0"]]
        ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
        ;; :resource-paths ["opt/sonic/7.6.2/*"]
        }
- :dev-compose {:env-vars {:HARJA_TIETOKANTA_HOST "harjadb"
-                          :HARJA_TIETOKANTA_HOST_KAANNOS "harjadb"}}
+ :repl {:repl-options {:init-ns harja.palvelin.main
+                       :init (harja.palvelin.main/-main)
+                       :port 4005
+                       :timeout 120000}}
+ :dev-ymparisto {:plugins [[lein-with-env-vars "0.2.0"]]
+                 :env-vars {:HARJA_DEV_YMPARISTO "true"
+                            :HARJA_TIETOKANTA_HOST "localhost"
+                            :HARJA_TIETOKANTA_HOST_KAANNOS "localhost"
+                            :HARJA_SALLI_OLETUSKAYTTAJA "false"
+                            ;; Testeihin devatessa
+                            :HARJA_AJA_GATLING_RAPORTTI "false"
+                            :HARJA_NOLOG "false"}}
+ :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/harja-target/%s/"))
+                 :compile-path "%s/classes"
+                 :clean-targets ^{:protect false
+                                  :replace true} ["dev-resources/js/out"
+                                                  "dev-resources/js/harja.js"
+                                                  "dev-resources/tmp"
+                                                  :target-path
+                                                  "resources/public/js/harja.js"
+                                                  "resource/public/js/harja"]}
  :test {:dependencies [[clj-webdriver "0.7.2"]
                        [org.seleniumhq.selenium/selenium-java "3.8.1"]
                        [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]

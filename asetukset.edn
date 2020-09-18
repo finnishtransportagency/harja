@@ -6,7 +6,7 @@
 
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
-                 ;:salli-oletuskayttaja? false
+                 :salli-oletuskayttaja? #=(eval (System/getenv "HARJA_SALLI_OLETUSKAYTTAJA"))
                  }
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
@@ -17,13 +17,13 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
- :tietokanta {:palvelin #=(System/getenv "HARJA_TIETOKANTA_HOST")
+ :tietokanta {:palvelin #=(eval (System/getenv "HARJA_TIETOKANTA_HOST"))
               :tietokanta "harja"
               :portti 5432
               :yhteyspoolin-koko 16
               :kayttaja "harja"
               :salasana "harja"}
- :tietokanta-replica {:palvelin #=(System/getenv "HARJA_TIETOKANTA_HOST")
+ :tietokanta-replica {:palvelin #=(eval (System/getenv "HARJA_TIETOKANTA_HOST"))
                       :tietokanta "harja"
                       :portti 5432
                       :yhteyspoolin-koko 16

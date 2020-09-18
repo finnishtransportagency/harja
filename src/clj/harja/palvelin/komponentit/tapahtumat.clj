@@ -36,8 +36,7 @@
 (defn tapahtuman-kanava
   "Palauttaa PostgreSQL:n kanavan tekstinä annetulle tapahtumalle."
   [db tapahtuma]
-  {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db)
-         (string? tapahtuma)]
+  {:pre [(string? tapahtuma)]
    :post [(or (nil? %)
               (string? %))]}
   (-> (q-tapahtumat/tapahtuman-kanava db {:nimi tapahtuma})
@@ -48,8 +47,7 @@
   "Yrittää tallenntaa kantaan uuden kanava-tapahtuma parin kantaan ja plauttaa kanavan.
    Jos kannassa on jo tapahtumalle kanava, ei tallenta mitään vaan palautetaan olemassa oleva kanava."
   [db tapahtuma]
-  {:pre [(instance? harja.palvelin.komponentit.tietokanta.Tietokanta db)
-         (string? tapahtuma)]
+  {:pre [(string? tapahtuma)]
    :post [(string? %)]}
   (let [uusi-tapahtuman-kanava (uusi-tapahtuman-kanava)
         vastaus (q-tapahtumat/lisaa-tapahtuma db {:nimi tapahtuma :kanava uusi-tapahtuman-kanava})]

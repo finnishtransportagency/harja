@@ -209,18 +209,13 @@
   :auto-clean false ;; for uberjar
 
   :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
-
-  ;; REPL kehitys
-  :repl-options {:init-ns harja.palvelin.main
-                 :init (harja.palvelin.main/-main)
-                 :port 4005
-                 :timeout 120000}
-
   
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
             "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
+            "compile-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "compile"]
+            "repl-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "repl"]
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"

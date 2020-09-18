@@ -1,7 +1,8 @@
-version: '3'
+version: '2.4'
 services:
   activemq:
     image: solita/harja-activemq:5.15.9
+    mem_limit: 500m
     environment:
       - "TZ=Europe/Helsinki"
     container_name: activemq
@@ -10,29 +11,115 @@ services:
       - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
   harja-app:
     image: solita/harja-app:latest
+    mem_reservation: 2g
+    mem_limit: 4g
+    cpu_shares: 10000
+    cpuset: 0-3
+    blkio_config:
+      weight: 1000
     depends_on:
-      - "harjadb"
+      - "${POSTGRESQL_NAME}"
     stdin_open: true
     ports:
-      - "3000-3001:3000" # web ports
-      - "4005-4006:4005" # REPL ports
+      - "127.0.0.1:3000-3001:3000" # web ports
+      - "127.0.0.1:4005-4006:4005" # REPL ports
     tty: true
     links:
-      - harjadb
+      - ${POSTGRESQL_NAME}
     environment:
       - "TZ=Europe/Helsinki"
+      - "POSTGRESQL_NAME=${POSTGRESQL_NAME}" # Tämä kuuluu oikeastaan .docker_compose_container_env tiedostoon, mutta asetetaan tässä, että varmasti tulee oikea nimi
+      - "DC_JAETTU_KANSIO=${DC_JAETTU_KANSIO}"
+      - "HARJA_DEV_YMPARISTO=true"
+      - "HARJA_TIETOKANTA_HOST=${POSTGRESQL_NAME}"
+      - "HARJA_TIETOKANTA_HOST_KAANNOS=${POSTGRESQL_NAME}"
+      - "HARJA_SALLI_OLETUSKAYTTAJA=false"
+      - "HARJA_AJA_GATLING_RAPORTTI=false"
+      - "HARJA_NOLOG=false"
     env_file:
-      - .docker_compose_env
-    command: bash /opt/odota-possu-ja-kaynnista-harja.sh
+      - .docker_compose_container_env
+    volumes:
+      - type: bind
+        source: .
+        target: /opt/harja
+        consistency: ${DC_VOLUME_CONSISTENCY}
+      - type: volume
+        source: yhteiset_tiedostot
+        target: "${DC_JAETTU_KANSIO}"
+    command: |
+      /bin/bash -c "
+      echo 'ALOITELLAAN KOMENTOA'
+      touch /var/log/harja.log
+      echo '1'
+      echo $$(ls  ${DC_JAETTU_KANSIO})
+      {
+       echo '2'
+       flock -x 200
+       echo '3'
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' 'with-profile +dev-container compile'
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+       #echo 'ALOITETAAN REPL'
+       #cd /opt/harja
+       #setsid lein trampoline repl :start :host harja-app > /var/log/harja.log 2>&1 &
+       #while [[ $$(ps -axf | grep -c java) != 2 &&
+       #          $$(ps -axf | grep -c lein) != 1 ]]
+       #do
+       #  echo 'Odotellaan trampoliinin sammumista...'
+       #  sleep 1;
+       #done;
+       #echo foo
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      echo '4'
+      cd /opt/harja
+      {
+       echo '5'
+       flock -x 200
+       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+       DEFINED_REPL_PORT=$$(lein show-profiles repl | awk '/port/ { match($$2, /[0-9]*/);print substr($$2,RSTART,RLENGTH) }')
+       if [[ -e ${DC_JAETTU_KANSIO}/repl.info ]]
+       then
+         REPL_HOST=$$(awk '{ print $$2 }' ${DC_JAETTU_KANSIO}/repl.info)
+         lein trampoline with-profile +dev-container repl :connect $${REPL_HOST}:$${DEFINED_REPL_PORT:-4005} > /var/log/harja.log 2>&1 </dev/null &
+       else
+         touch ${DC_JAETTU_KANSIO}/repl.info
+         printf '%s\n' 'REPL_IP $${THIS_IP}' > ${DC_JAETTU_KANSIO}/repl.info
+         echo 'ALOITETAAN REPL'
+         lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 > /var/log/harja.log 2>&1 </dev/null &
+         while [[ -z $$(curl $${THIS_IP}:$${DEFINED_REPL_PORT:-4005} | grep 'Empty reply from server') ]]
+         do
+            echo 'Käynnistetään repliä...'
+            sleep 20
+         done
+         echo 'REPL käynnistetty'
+         #printf '%s\n' 'REPL_PORT $${THIS_IP}' > ${DC_JAETTU_KANSIO}/repl.info
+       fi
+      } 200>${DC_JAETTU_KANSIO}/repl.lock
+      fg
+      #lein repl :headless :host harja-app > /var/log/harja.log 2>&1
+      #lein trampoline repl :headless :host 0.0.0.0
+      #while true
+      #do
+      #  sleep 100;
+      #done;
+      "
+
   harjadb:
     image: solita/harjadb:centos-12-compose
+    mem_limit: 1g
     stdin_open: true
     tty: true
     environment:
       - "TZ=Europe/Helsinki"
     env_file:
-      - .docker_compose_env
+      - .docker_compose_container_env
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-        - ./tietokanta:/var/lib/pgsql/harja/tietokanta
+        - "./tietokanta:/var/lib/pgsql/harja/tietokanta"
+volumes:
+  yhteiset_tiedostot:
