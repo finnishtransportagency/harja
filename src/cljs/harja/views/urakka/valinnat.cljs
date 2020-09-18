@@ -114,10 +114,7 @@
              (valitse urakka @valinta)))
 
        (fn [urakka valittu-aikavali]
-         (when (and
-                 (not (u/urakka-kaynnissa? urakka))
-                 ;; jos käyttäjä jo valinnut urakan sisältä aikavälin, ei resetoida VHAR-1243
-                 (pvm/jalkeen? (first @valittu-aikavali) (:loppupvm urakka)))
+         (when (not (u/urakka-kaynnissa? urakka))
            (reset! valittu-aikavali
                    (or @u/valittu-hoitokauden-kuukausi
                        @u/valittu-hoitokausi)))
