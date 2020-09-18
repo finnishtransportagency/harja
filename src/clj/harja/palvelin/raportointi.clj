@@ -154,7 +154,7 @@
                                        (fn [_]
                                          (lukot/vain-yhdelta-nodelta
                                            db "paivita-raportti-cache-oisin!" 300
-                                           #(do
+                                           (do
                                               (log/info "paivita-raportti-cache-oisin! :: Alkaa " (pvm/nyt))
                                               (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
                                               (raportit-q/paivita_raportti_cachet db)
