@@ -458,10 +458,11 @@
                       (let [valittu? (valitut vaihtoehto)]
                         [:div.checkbox {:class (when nayta-rivina? "checkbox-rivina")}
                          [:label
-                          [:input {:type      "checkbox" :checked (boolean valittu?)
-                                   :disabled  (if disabloi
-                                                (disabloi valitut vaihtoehto)
-                                                false)
+                          [:input {:id (hash (str "checkbox-" vaihtoehto))
+                                   :type "checkbox" :checked (boolean valittu?)
+                                   :disabled (if disabloi
+                                               (disabloi valitut vaihtoehto)
+                                               false)
                                    :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
                           (vaihtoehto-nayta vaihtoehto)]]))
            checkboxit (doall
@@ -1363,6 +1364,9 @@
         " / "
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
+
+(defmethod tee-kentta :valiotsikko [{:keys [teksti]} data]
+  [:div [:h3 teksti]])
 
 (defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
   [:span {:class (or luokka "label-ja-kentta")

@@ -1,8 +1,8 @@
-INSERT INTO paallystysmassa (urakka, massatyyppitunnus, raekoko, nimi, rc, esiintyma, km_arvo, muotoarvo,
-                             sideainetyyppi, pitoisuus, lisaaineet, luoja)
-VALUES ((SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka'), 'AB-16', 16,
-        'Alfattibetoni', 1, 'Kaislakallio', 'AN14', 20, '70/100', 5.40, 'Pippuria ja suolaa',
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'skanska')),
-       ((SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka'), 'SMA 16', 16,
-        'Kivimastiksiasfaltti', 2, 'Karjukallio', 'AN7', 10, '70/100', 5.80, 'Chiliä ja Currya',
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'skanska'));
+INSERT INTO pot2_massa (urakka_id, massatyyppi, nimi, max_raekoko, asfalttiasema, kuulamyllyluokka,
+                        litteyslukuluokka, DoP_nro, luoja, luotu)
+VALUES ((SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka'), 'AB-16', 'Alfattibetoni', 16,
+        'Jokimaan asema', 1, 'AN14', 20,
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'skanska'), now()),
+       ((SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka'), 'SMA 16', 'Kivimastiksiasfaltti', 16,
+        'Karvamaan asema', 2,  'AN7', 10,
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'skanska'), now());

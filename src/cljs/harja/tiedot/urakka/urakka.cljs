@@ -172,10 +172,15 @@
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 
+(def pot2-default-arvot {:massat nil
+                         :pot2-massa-lomake nil})
+
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
-                     :suunnittelu suunnittelu-default-arvot}))
+                     :suunnittelu suunnittelu-default-arvot
+                     :pot2 pot2-default-arvot}))
 
+(defonce pot2 (atom pot2-default-arvot))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 

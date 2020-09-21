@@ -146,3 +146,26 @@ CREATE TABLE pot2_massa_sideaine
     "lopputuote?"   BOOLEAN DEFAULT FALSE
 );
 CREATE INDEX pot2_massa_sideaine_idx ON pot2_massa_sideaine (pot2_massa_id);
+
+CREATE TABLE pot2_runkoaine
+(
+    nimi    TEXT,
+    "kuulamyllyarvo?" BOOLEAN,
+    "litteysluku?" BOOLEAN,
+    "massaprosentti?" BOOLEAN
+
+);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('Kiviaines', TRUE, TRUE, TRUE);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('Asfalttirouhe', TRUE, TRUE, TRUE);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('Erikseen lisättävä filleriaines', FALSE, FALSE, TRUE);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('Maku, Masuunikuonajauhe', TRUE, TRUE, TRUE);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('Fku, Ferrokromikuona (OKTO)', TRUE, TRUE, TRUE);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('TeKu, Teräskuona', TRUE, TRUE, TRUE);
+INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
+    VALUES ('Muu', FALSE, FALSE, TRUE);

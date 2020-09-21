@@ -258,8 +258,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
                                     (nayta-arvo s arvo)])
 
-                               (do (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (assoc s :lomake? true) arvo]))
+                               (do
+                                 ;(js/console.log " rivi 262 lomake.cljs s:" (pr-str s))
+                                 (try
+                                   (have #(contains? % :tyyppi) s)
+                                   [tee-kentta (assoc s :lomake? true) arvo]
+                                   (catch js/Error e
+                                     (js/console.log " error on have" (pr-str e))))))
                              [:div.form-control-static
                               (if fmt
                                 (fmt ((or hae #(get % nimi)) data))

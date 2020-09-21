@@ -326,7 +326,7 @@
                          "luoja" ::m/luoja-id
                          "muokkaaja" ::m/muokkaaja-id
                          "paallystyskohde" ::paallystyskohde-id}]
-  ["paallystysmassa" ::paallystysmassa
+  #_ ["paallystysmassa" ::paallystysmassa
    {"id" ::paallystysmassa-id
     "urakka" ::urakka/id
     "massatyyppitunnus" ::massatyyppitunnus

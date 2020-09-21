@@ -646,10 +646,10 @@
                         (fn [user tiedot]
                           (aseta-paallystysilmoituksen-tila db user tiedot))
                         {:kysely-spec ::pot-domain/aseta-paallystysilmoituksen-tila})
-      (julkaise-palvelu http :hae-urakan-paallystysmassat
+      #_ (julkaise-palvelu http :hae-urakan-paallystysmassat
                         (fn [user tiedot]
                           (hae-urakan-paallystysmassat db user tiedot)))
-      (julkaise-palvelu http :tallenna-urakan-paallystysmassa
+      #_ (julkaise-palvelu http :tallenna-urakan-paallystysmassa
                         (fn [user tiedot]
                           (tallenna-urakan-paallystysmassa db user tiedot)))
       this))
@@ -664,7 +664,7 @@
       :tallenna-paallystysilmoitusten-takuupvmt
       :hae-paallystyksen-maksuerat
       :tallenna-paallystyksen-maksuerat
-      :hae-urakan-paallystysmassat
-      :tallenna-urakan-paallystysmassa
+      ;:hae-urakan-paallystysmassat
+      ;:tallenna-urakan-paallystysmassa
       :aseta-paallystysilmoituksen-tila)
     this))

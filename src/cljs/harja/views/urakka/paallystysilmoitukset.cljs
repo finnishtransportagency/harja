@@ -28,6 +28,7 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
+            [harja.domain.pot2 :as pot2]
 
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka :as urakka]
@@ -35,6 +36,10 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
+            [harja.tiedot.urakka.pot2.massat :as tiedot-massat]
+
+            [harja.views.urakka.pot2.massalistaus :as massat-view]
+
 
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -92,7 +97,8 @@
                                                (:id urakka))
                       (not= tila :lukittu)
                       (false? lukittu?))
-        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
+        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)
+        _ (js/console.log "asiatarkastus " (pr-str asiatarkastus))]
 
     [:div.pot-asiatarkastus
      [:h3 "Asiatarkastus"]
@@ -1201,12 +1207,12 @@
        paallystysilmoitukset])))
 
 (defn nayta-massakirjasto-modal!
-  [urakka]
+  [e! urakka app]
 
   (modal/nayta!
     {:otsikko "Massakirjasto"
      :footer [napit/sulje #(modal/piilota!)]}
-      [:p [:id urakka]]
+      [:div "Urakka: " (:id urakka)]
   ))
 
 (defn- ilmoitusluettelo
@@ -1215,13 +1221,14 @@
     (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
-            sopimus-id (first valittu-sopimusnumero)]
+            sopimus-id (first valittu-sopimusnumero)
+            _ (js/console.log "ilmoitusluettelo :: avaa-massa-lomake?" (:avaa-massa-lomake? app))]
         [:div
          ; TODO: Näytetään massat käyttöliittymässä vasta kun ominaisuus on käytettävissä
          [:h3 "Massakirjasto"]
          ; TODO: Tähän kohti implementoidaan massakirjasto-modal, joka sisältäisi urakkaan sidotun massakirjasto-datan sekä tallennusmahdollisuudet niihin.
          [:button.namiska
-          {:on-click #(nayta-massakirjasto-modal! urakka)}
+          {:on-click #(e! (tiedot-massat/->NaytaListaus true))}
           [:span "Aloita Foobar-hommat"]]
 
          [:h3 "Päällystysmassat"]
@@ -1274,12 +1281,20 @@
         (e! (paallystys/->HaePaallystysmassat)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
-    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]
-      [:div.paallystysilmoitukset
-       [kartta/kartan-paikka]
-       [debug app {:otsikko "TUCK STATE"}]
-       (if paallystysilmoitus-lomakedata
-         [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
-         [:div
-          [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
-          [ilmoitusluettelo e! app]])])))
+    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-massat? avaa-massa-lomake?] :as app}]
+      (cond
+        pot2-massat?
+        [:div.pot2-massat
+         [massat-view/massat]]
+        ;avaa-massa-lomake?
+        #_ [:div.pot2-massalomake
+         [massat-view/massa-lomake e! app]]
+        :default
+        [:div.paallystysilmoitukset
+         [kartta/kartan-paikka]
+         [debug app {:otsikko "TUCK STATE"}]
+         (if paallystysilmoitus-lomakedata
+           [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+           [:div
+            [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
+            [ilmoitusluettelo e! app]])]))))

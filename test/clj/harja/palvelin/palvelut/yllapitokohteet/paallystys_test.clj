@@ -8,8 +8,11 @@
             [cheshire.core :as cheshire]
             [harja.domain.urakka :as urakka-domain]
             [harja.domain.sopimus :as sopimus-domain]
-            [harja.domain.paallystysilmoitus :as pot-domain]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat-domain]
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus-domain]
+            [harja.domain.pot2 :as pot2-domain]
             [harja.pvm :as pvm]
             [harja.domain.skeema :as skeema]
             [clojure.spec.alpha :as s]
@@ -20,10 +23,10 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
+            [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.domain.muokkaustiedot :as m]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.tyokalut.xml :as xml])
   (:use org.httpkit.fake))
@@ -51,7 +54,10 @@
                                             [:sonja :db :integraatioloki])
                         :paallystys (component/using
                                       (paallystys/->Paallystys)
-                                      [:http-palvelin :db :fim :sonja-sahkoposti])))))
+                                      [:http-palvelin :db :fim :sonja-sahkoposti])
+                        :pot2 (component/using
+                                (pot2/->POT2)
+                                [:http-palvelin :db :fim :sonja-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -60,6 +66,121 @@
 (use-fixtures :each
               urakkatieto-fixture
               jarjestelma-fixture)
+
+(defn- siivoa-muuttuvat [testi-col]
+  (do
+    (dissoc (into {} testi-col) :id ::m/muokattu ::m/luotu)))
+
+(def lisaine-default1
+  {:nimi (first pot2-domain/massan-lisaineet)
+   :pitoisuus 0.2M})
+
+(def lisaine-default2
+  {:nimi (second pot2-domain/massan-lisaineet)
+   :pitoisuus 1.5M})
+
+(def sideaine-default1
+  {:tyyppi "20/30"
+   :pitoisuus 50.1M
+   :lopputuote? true})                                      ;; lopputuote / lisätty
+
+(def sideaine-default2
+  {:tyyppi "50/70"
+   :pitoisuus 10.4M
+   :lopputuote? false})                                     ;; lopputuote / lisatty
+
+(def runkoaine-kiviaines-default1
+  {:kiviaine-esiintyma "Zatelliitti"
+   :kuulamyllyarvo 12.1M
+   :muotoarvo 1.1M
+   :massaprosentti 34.2M})
+
+(def runkoaine-kiviaines-default2
+  {:erikseen-lisattafa-fillerikiviaines (first pot2-domain/erikseen-lisattava-fillerikiviaines)
+   :massaprosentti 2.12M})
+
+(def default-pot2-massa
+  {:urakka-id (hae-utajarven-paallystysurakan-id)
+   ::pot2-domain/nimi "TestiMassa"
+   ::pot2-domain/massatyyppi (:lyhenne (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
+   ::pot2-domain/max_raekoko (first pot2-domain/massan-max-raekoko)
+   ::pot2-domain/asfalttiasema "Testi Asfalttiasema"
+   ::pot2-domain/kuulamyllyluokka (:nimi (first paallystysilmoitus-domain/+kuulamyllyt+))
+   ::pot2-domain/litteyslukuluokka "Muotoarvo 1"                         ;;  Vanhassa kielessä Muotoarvoluokka
+   ::pot2-domain/dop_nro 1.2M
+   :runkoaineet [runkoaine-kiviaines-default1 runkoaine-kiviaines-default2]
+   :sideaineet [sideaine-default1 sideaine-default2]
+   :lisa-aineet [lisaine-default1 lisaine-default2]})
+
+
+
+;; Pot2 liittyväisiä testejä. Siirtele nämä omaan tiedostoon kun tuntuu siltä
+(deftest tallenna-uusi-pot2-massa
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-pot2-massa
+                                +kayttaja-jvh+ default-pot2-massa)
+        _ (println "tallenna-uusi-pot2-massa :: vastaus " (pr-str vastaus))
+        oletus-vastaus {::pot2-domain/massatyyppi "BET",
+                        ::pot2-domain/asfalttiasema "Testi Asfalttiasema",
+                        ::pot2-domain/nimi "TestiMassa",
+                        ::pot2-domain/massa-id 3,
+                        ::pot2-domain/dop_nro nil,
+                        ::pot2-domain/litteyslukuluokka "Muotoarvo 1",
+                        ::m/luoja-id 3,
+                        ::pot2-domain/kuulamyllyluokka "AN5",
+                        ::pot2-domain/urakka-id 7,
+                        ::pot2-domain/max_raekoko 5
+                        :runkoaineet '({:runkoaine/pot2-massa-id 3,
+                                        :runkoaine/kiviaine_esiintyma "Zatelliitti",
+                                        :runkoaine/kuulamyllyarvo 12.1M,
+                                        :runkoaine/muotoarvo 1.1M,
+                                        :runkoaine/massaprosentti 34.2M,
+                                        :runkoaine/erikseen-lisattava-fillerikiviaines nil,
+                                        :runkoaine/id 1}
+                                       {:runkoaine/pot2-massa-id 3,
+                                        :runkoaine/kiviaine_esiintyma nil,
+                                        :runkoaine/kuulamyllyarvo nil,
+                                        :runkoaine/muotoarvo nil,
+                                        :runkoaine/massaprosentti 2.12M,
+                                        :runkoaine/erikseen-lisattava-fillerikiviaines "Kalkkifilleri (KF)",
+                                        :runkoaine/id 2})
+                        :sideaineet '({:sideaine/pot2-massa-id 3,
+                                       :sideaine/tyyppi "20/30",
+                                       :sideaine/pitoisuus 50.1M,
+                                       :sideaine/lopputuote? true,
+                                       :sideaine/id 1}
+                                      {:sideaine/pot2-massa-id 3,
+                                       :sideaine/tyyppi "50/70",
+                                       :sideaine/pitoisuus 10.4M,
+                                       :sideaine/lopputuote? false,
+                                       :sideaine/id 2})
+                        :lisa-aineet '({:lisaaine/pot2-massa-id 3,
+                                        :lisaaine/nimi "Kuitu",
+                                        :lisaaine/pitoisuus 0.2M,
+                                        :lisaaine/id 1}
+                                       {:lisaaine/pot2-massa-id 3,
+                                        :lisaaine/nimi "Tartuke",
+                                        :lisaaine/pitoisuus 1.5M,
+                                        :lisaaine/id 2})}
+        _ (println "oletetut lisäaineet" (pr-str oletus-vastaus))
+        ]
+    (is (= (siivoa-muuttuvat (:lisa-aineet vastaus)) (siivoa-muuttuvat (:lisa-aineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:runkoaineet vastaus)) (siivoa-muuttuvat (:runkoaineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:sideaineet vastaus)) (siivoa-muuttuvat (:sideaineet oletus-vastaus))))
+    ))
+
+(deftest hae-urakan-pot2-massat
+  (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-urakan-pot2-massa
+                          +kayttaja-jvh+ default-pot2-massa)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakan-pot2-massat
+                               +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
+        _ (println "hae-urakan-pot2-massat :: vastaus " (pr-str vastaus))
+        ]
+    (is (not (nil? vastaus)))
+
+    ))
 
 (def pot-testidata
   {:perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
@@ -107,7 +228,7 @@
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
                                 {;; Alikohteen tiedot
-                                 :poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
+                                 :poistettu true            ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
                                  :nimi "Tie 20"
                                  :tr-numero 20
                                  :tr-alkuosa 3
@@ -251,7 +372,7 @@
                            JOIN yllapitokohde yk ON yk.id = pi.paallystyskohde
                            WHERE yk.vuodet[1] >= 2019")]
     (doseq [[ilmoitusosa] ilmoitustiedot]
-      (is (skeema/validoi pot-domain/+paallystysilmoitus+
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           (konv/jsonb->clojuremap ilmoitusosa))))))
 
 (deftest hae-paallystysilmoitukset
@@ -717,8 +838,8 @@
 (deftest avaa-lukitun-potin-lukitus
   (let [kohde-id (hae-yllapitokohde-oulun-ohitusramppi)
         payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
-                 ::pot-domain/paallystyskohde-id kohde-id
-                 ::pot-domain/tila :valmis}
+                 ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
+                 ::paallystysilmoitus-domain/tila :valmis}
         tila-ennen-kutsua (keyword (second (first (q (str "SELECT id, tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :aseta-paallystysilmoituksen-tila +kayttaja-jvh+ payload)]
@@ -728,8 +849,8 @@
 (deftest avaa-lukitun-potin-lukitus-ei-sallittu-koska-tero-ei-tassa-urakanvalvojana
   (let [kohde-id (hae-yllapitokohde-oulun-ohitusramppi)
         payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
-                 ::pot-domain/paallystyskohde-id kohde-id
-                 ::pot-domain/tila :valmis}]
+                 ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
+                 ::paallystysilmoitus-domain/tila :valmis}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :aseta-paallystysilmoituksen-tila
                                            +kayttaja-tero+
@@ -759,17 +880,17 @@
         sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
     (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
-                                                            (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
-                                                                                                   .getText
-                                                                                                   xml/lue
-                                                                                                   first
-                                                                                                   :content
-                                                                                                   (some #(when (= :vastaanottajat (:tag %))
-                                                                                                            (:content %)))
-                                                                                                   first
-                                                                                                   :content
-                                                                                                   first))
-                                                            (reset! sahkoposti-valitetty true)))
+                                                             (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
+                                                                                                    .getText
+                                                                                                    xml/lue
+                                                                                                    first
+                                                                                                    :content
+                                                                                                    (some #(when (= :vastaanottajat (:tag %))
+                                                                                                             (:content %)))
+                                                                                                    first
+                                                                                                    :content
+                                                                                                    first))
+                                                             (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -976,7 +1097,7 @@
                                {:urakka-id (hae-utajarven-paallystysurakan-id)})]
     (is (= 2 (count massat)) "Testiurakoita on 2 ennen uuden tallennusta")
     (let [massat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :tallenna-urakan-paallystysmassa  +kayttaja-jvh+ uusi-massa)]
+                                 :tallenna-urakan-paallystysmassa +kayttaja-jvh+ uusi-massa)]
       (is (= 3 (count massat)) "Testiurakoita on 3 uuden massan tallentamisen jälkeen")
       (is (= uusi-massa (poista-muokkaustiedot (first (filter #(= (::paallystysilmoitus-domain/km-arvo %) "AE22") massat))))))
     ))

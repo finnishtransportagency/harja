@@ -12,6 +12,7 @@
   ;; Nyt tehdään yksi kysely, joka hakee kaikki urakan kohteiden linkitykset.
   ;; Jätetään tämä jatkoa varten, ota raportointi käyttöön testauksessa.
   #_{:report-slow-queries postgres/report-slow-queries})
+(defqueries "harja/kyselyt/pot2.sql")
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 

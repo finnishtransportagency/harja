@@ -292,16 +292,19 @@
   HaePaallystysmassat
   (process-event [_ {{urakka-id :id} :urakka :as app}]
     (-> app
-          (tuck-apurit/post! :hae-urakan-paallystysmassat
+          (tuck-apurit/post! :hae-urakan-pot2-massat
                              {:urakka-id urakka-id}
                              {:onnistui ->HaePaallystysmassatOnnistui
                               :epaonnistui ->HaePaallystysmassatEpaonnistui})))
+
   HaePaallystysmassatOnnistui
   (process-event [{vastaus :vastaus} {:as app}]
     (assoc app :paallystysmassat vastaus))
+
   HaePaallystysmassatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     app)
+
   HaePaallystysilmoitukset
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
