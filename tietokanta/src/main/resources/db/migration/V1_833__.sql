@@ -114,7 +114,7 @@ CREATE TABLE pot2_paallystystiedot
     tr_kaista            INTEGER
 );
 
-CREATE INDEX pot2_paallystystiedot_idx ON pot2_massa (pot2_id);
+CREATE INDEX pot2_paallystystiedot_idx ON pot2_paallystystiedot (pot2_id);
 
 CREATE TABLE pot2_massa_runkoaine
 (
