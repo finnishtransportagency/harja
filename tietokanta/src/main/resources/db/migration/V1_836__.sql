@@ -12,8 +12,7 @@
 CREATE TABLE pot2
 (
     id                  SERIAL PRIMARY KEY,
-    urakka_id           INTEGER REFERENCES urakka (id),
-    yllapitokohde       INTEGER REFERENCES yllapitokohde (id),
+    yllapitokohde       INTEGER NOT NULL REFERENCES yllapitokohde (id),
 
     takuupvm            DATE,
     tila                PAALLYSTYSTILA,
@@ -21,26 +20,28 @@ CREATE TABLE pot2
     lahetetty_yhaan     TIMESTAMP,
 
     -- muokkausmetatiedot
-    poistettu           BOOLEAN   DEFAULT FALSE,
+    poistettu           BOOLEAN DEFAULT FALSE,
     muokkaaja           INTEGER REFERENCES kayttaja (id),
     muokattu            TIMESTAMP,
     luoja               INTEGER REFERENCES kayttaja (id),
     luotu               TIMESTAMP DEFAULT NOW()
 );
-CREATE INDEX pot2_urakka_idx ON pot2 (urakka_id);
+CREATE INDEX pot2_yllapitokohde_idx ON pot2 (yllapitokohde);
+
+CREATE TYPE kuulamyllyluokka AS ENUM
+    ('AN5', 'AN7', 'AN10', 'AN14', 'AN19', 'AN30', 'AN22', 'Ei kuulamyllyä');
 
 CREATE TABLE pot2_massa
 (
     id                SERIAL PRIMARY KEY,
-    urakka_id         INTEGER REFERENCES urakka (id),
-    pot2_id           INTEGER REFERENCES pot2 (id),
+    urakka_id         INTEGER NOT NULL REFERENCES urakka (id),
     nimi              TEXT,
-    massatyyppi       TEXT,
-    max_raekoko       INTEGER,
+    massatyyppi       TEXT NOT NULL,
+    max_raekoko       INTEGER NOT NULL CHECK (max_raekoko IN (5, 8, 11, 16, 22, 31)),
     asfalttiasema     TEXT,
-    kuulamyllyluokka  TEXT,
+    kuulamyllyluokka  kuulamyllyluokka NOT NULL,
     litteyslukuluokka TEXT,
-    DoP_nro           NUMERIC,
+    DoP_nro           TEXT, --Pelkäänpä että DoP_nroa ei ole aina saatavilla heti, joten NOT NULL olisi vaarallinen käyttäjälähtöisyyden näkökulmasta?
 
     -- muokkausmetatiedot
     poistettu         BOOLEAN   DEFAULT FALSE,
@@ -89,8 +90,8 @@ INSERT INTO pot2_tyomenetelma (nimi, lyhenne, koodi)
 CREATE TABLE pot2_paallystystiedot
 (
     id                   SERIAL PRIMARY KEY,
-    pot2_id              INTEGER REFERENCES pot2 (id),
-    kohdeosa_id          INTEGER REFERENCES yllapitokohdeosa (id),
+    pot2_id              INTEGER NOT NULL REFERENCES pot2 (id),
+    kohdeosa_id          INTEGER REFERENCES NOT NULL yllapitokohdeosa (id),
     kuulamyllyarvo       NUMERIC,
     raekoko              INTEGER,
     esiintyma            TEXT,
@@ -119,37 +120,39 @@ CREATE INDEX pot2_paallystystiedot_idx ON pot2_paallystystiedot (pot2_id);
 CREATE TABLE pot2_massa_runkoaine
 (
     id                 SERIAL PRIMARY KEY,
-    pot2_massa_id      INTEGER REFERENCES pot2_massa (id),
+    pot2_massa_id      INTEGER NOT NULL REFERENCES pot2_massa (id),
     kiviaine_esiintyma TEXT,
-    kuulamyllyarvo     NUMERIC,
-    muotoarvo          NUMERIC,
-    massaprosentti     NUMERIC,
+    kuulamyllyarvo     NUMERIC(3,1),
+    muotoarvo          NUMERIC(3,1),
+    massaprosentti     INTEGER,
     erikseen_lisattava_fillerikiviaines TEXT -- Kalkkifilleri (KF), Lentotuhka (LT), Muu fillerikiviaines
 );
 CREATE INDEX pot2_massa_runkoaine_idx ON pot2_massa_runkoaine (pot2_massa_id);
 
-CREATE TABLE pot2_massa_lisaaine
-(
-    id            SERIAL PRIMARY KEY,
-    pot2_massa_id INTEGER REFERENCES pot2_massa (id),
-    nimi          TEXT,
-    pitoisuus     NUMERIC
-);
-CREATE INDEX pot2_massa_lisaaine_idx ON pot2_massa_lisaaine (pot2_massa_id);
 
 CREATE TABLE pot2_massa_sideaine
 (
     id            SERIAL PRIMARY KEY,
-    pot2_massa_id INTEGER REFERENCES pot2_massa (id),
+    pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
     tyyppi        TEXT,
     pitoisuus     NUMERIC,
     "lopputuote?"   BOOLEAN DEFAULT FALSE
 );
 CREATE INDEX pot2_massa_sideaine_idx ON pot2_massa_sideaine (pot2_massa_id);
 
+CREATE TABLE pot2_massa_lisaaine
+(
+    id            SERIAL PRIMARY KEY,
+    pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
+    nimi          TEXT,
+    pitoisuus     NUMERIC
+);
+CREATE INDEX pot2_massa_lisaaine_idx ON pot2_massa_lisaaine (pot2_massa_id);
+
 CREATE TABLE pot2_runkoaine
 (
-    nimi    TEXT,
+    id SERIAL PRIMARY KEY,
+    nimi    TEXT NOT NULL,
     "kuulamyllyarvo?" BOOLEAN,
     "litteysluku?" BOOLEAN,
     "massaprosentti?" BOOLEAN
