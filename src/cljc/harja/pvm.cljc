@@ -964,3 +964,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
        (tc/to-date-time
          (t/last-day-of-the-month
            (t/plus (tc/to-date-time (aika-iso8601 pvm))(t/months kk-maara))))))
+
+(defn kuukauden-ensimmainen-paiva
+  [pvm]
+  (dateksi (t/first-day-of-the-month (vuosi pvm) (kuukausi pvm))))
+
+(defn kuukauden-viimeinen-paiva
+  [pvm]
+  (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm))))
