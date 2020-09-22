@@ -91,7 +91,7 @@ CREATE TABLE pot2_paallystystiedot
 (
     id                   SERIAL PRIMARY KEY,
     pot2_id              INTEGER NOT NULL REFERENCES pot2 (id),
-    kohdeosa_id          INTEGER REFERENCES NOT NULL yllapitokohdeosa (id),
+    kohdeosa_id          INTEGER NOT NULL REFERENCES yllapitokohdeosa (id),
     kuulamyllyarvo       NUMERIC,
     raekoko              INTEGER,
     esiintyma            TEXT,
