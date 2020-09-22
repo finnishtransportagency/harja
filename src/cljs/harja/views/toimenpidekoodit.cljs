@@ -6,7 +6,8 @@
             [harja.tiedot.toimenpidekoodit :refer
              [koodit
               koodit-tasoittain
-              tyokoneiden-reaaliaikaseuranna-tehtavat]]
+              tyokoneiden-reaaliaikaseuranna-tehtavat
+              tehtavaryhmat]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
@@ -64,12 +65,11 @@
                           (get koodit-tasoittain 4))))
       []))))
 
-
-
+(defn resetoi-tehtavaryhmat [ryhmat]
+      (reset! tehtavaryhmat ryhmat))
 
 (defn resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat [tehtavat]
   (reset! tyokoneiden-reaaliaikaseuranna-tehtavat tehtavat))
-
 
 (defn tallenna-tehtavat [tehtavat uudet-tehtavat]
   (go (let [lisattavat
@@ -115,6 +115,9 @@
    ["yksikkohintainen" "kokonaishintainen"]
    ["kokonaishintainen" "muutoshintainen"]
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
+
+(def vuosi-valinnat
+       (range 2020 2034 1))
 
 (defn hae-emo [kaikki-tehtavat tehtava]
   (second (first (filter #(= (:id (second %))
@@ -201,7 +204,8 @@
             taso1 @valittu-taso1
             taso2 @valittu-taso2
             taso3 @valittu-taso3
-            valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))]
+            valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))
+            tehtavaryhmat-jarjestyksessa (sort-by :jarjestys @tehtavaryhmat)]
 
         [:div.container-fluid.toimenpidekoodit
          [:h3 "Tehtävien hallinta"]
@@ -276,9 +280,13 @@
             [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
               :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
               :leveys 8}
+             {:otsikko "Voimassaolo alkaa" :nimi :voimassaolon-alkuvuosi :tyyppi :valinta :leveys 2
+              :valinnat vuosi-valinnat}
+             {:otsikko "Voimassaolo päättyy" :nimi :voimassaolon-loppuvuosi :tyyppi :valinta :leveys 2
+              :valinnat vuosi-valinnat}
              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
               :leveys 2}
-             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 3
+             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet
               :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
@@ -296,8 +304,13 @@
               :tyyppi :checkbox
               :tasaa :keskita
               :fmt fmt/totuus
-              :leveys 1}
-
+              :leveys 2}
+             {:otsikko "Tehtäväryhmä"
+              :nimi :tehtavaryhma
+              :tyyppi :valinta
+              :valinnat tehtavaryhmat-jarjestyksessa
+              :valinta-nayta :nimi
+              :leveys 3}
              {:otsikko "Luoja"
               :nimi :luoja
               :tyyppi :string
@@ -310,8 +323,10 @@
 
     {:displayName "toimenpidekoodit"
      :component-did-mount
-     (fn [this]
-       (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
-                 tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))]
-             (resetoi-koodit toimenpidekoodit)
-             (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat))))}))
+                  (fn [this]
+                      (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
+                                tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))
+                                tehtavaryhmat (<! (k/get! :hae-tehtavaryhmat))]
+                               (resetoi-koodit toimenpidekoodit)
+                               (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat)
+                               (resetoi-tehtavaryhmat tehtavaryhmat))))}))

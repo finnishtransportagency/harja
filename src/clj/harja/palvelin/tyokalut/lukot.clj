@@ -46,3 +46,39 @@
          (do
            (Thread/sleep odotusvali)
            (recur)))))))
+
+(defmacro kokeile-lukollista
+  "Aja body lukon kanssa. Palauta nil, jos lukko on olemassa.
+
+  lukon-nimi on nimensä mukaan lukon nimi.
+
+  Aikavaraus on sekunteina lukon kesto."
+  [db lukon-nimi aikavaraus & body]
+  `(let [db# ~db
+         lukon-nimi# ~lukon-nimi
+         aikavaraus# ~aikavaraus
+         acquire# (lukko/aseta-lukko? db# lukon-nimi# aikavaraus#)]
+     (if acquire#
+       (do
+         (try
+           (do
+             (log/info (format "Lukko: %s puuttuu. Ajetaan funktio." lukon-nimi#))
+             (do ~@body))
+            #_ (finally
+             (lukko/avaa-lukko? db# lukon-nimi#))))
+       (log/info (format "Lukko: %s on asetettu. Toimintoa ei voida ajaa." lukon-nimi#)))))
+
+(def ^:dynamic *odotus-ms* 5000)
+
+(defmacro vain-yhdelta-nodelta
+  "Aja body vain yhdeltä nodelta.
+
+  Parametrit on avattu `kokeile-lukollista` funktiossa."
+  [db lukon-nimi aikavaraus & body]
+  `(kokeile-lukollista
+     ~db ~lukon-nimi ~aikavaraus
+     (try
+       (do ~@body)
+       (finally
+         ;; Sleep sen varmistamiseen, ettei tätä ajeta samaan aikaa useammalta nodelta
+         (Thread/sleep *odotus-ms*)))))

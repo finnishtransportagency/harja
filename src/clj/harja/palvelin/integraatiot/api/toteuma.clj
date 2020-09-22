@@ -38,23 +38,27 @@
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
-  (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
-    (:id (q-toteumat/paivita-toteuma-ulkoisella-idlla<!
-           db
-           {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
-            :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
-            :kayttaja (:id kirjaaja)
-            :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
-            :ytunnus (get-in toteuma [:suorittaja :ytunnus])
-            :lisatieto ""
-            :tyyppi (:toteumatyyppi toteuma)
-            :sopimus sopimus-id
-            :id (get-in toteuma [:tunniste :id])
-            :urakka urakka-id
-            :luoja (:id kirjaaja)
-            :tyokonetyyppi (:tyokonetyyppi tyokone)
-            :tyokonetunniste (:id tyokone)
-            :tyokoneen-lisatieto (:tunnus tyokone)}))))
+  (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)
+        paivitetty (q-toteumat/paivita-toteuma-ulkoisella-idlla<!
+                     db
+                     {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
+                      :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
+                      :kayttaja (:id kirjaaja)
+                      :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
+                      :ytunnus (get-in toteuma [:suorittaja :ytunnus])
+                      :lisatieto ""
+                      :tyyppi (:toteumatyyppi toteuma)
+                      :sopimus sopimus-id
+                      :id (get-in toteuma [:tunniste :id])
+                      :urakka urakka-id
+                      :luoja (:id kirjaaja)
+                      :tyokonetyyppi (:tyokonetyyppi tyokone)
+                      :tyokonetunniste (:id tyokone)
+                      :tyokoneen-lisatieto (:tunnus tyokone)})
+        toteuman-id (if paivitetty
+                      (:id paivitetty)
+                      (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
+    toteuman-id))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)

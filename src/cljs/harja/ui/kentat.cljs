@@ -8,8 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
             [harja.ui.sijaintivalitsin :as sijaintivalitsin]
-            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta
-                                      maarita-pudotusvalikon-suunta-ja-max-korkeus avautumissuunta-ja-korkeus-tyylit]]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px]]
             [harja.ui.napit :as napit]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
@@ -88,21 +87,9 @@
                        ((or nayta str) nyt-valittu) ""))
         tulokset (atom nil)
         valittu-idx (atom nil)
-        hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)
-        avautumissuunta (atom :alas)
-        max-korkeus (atom 0)
-        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
-                                                  (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
-                                                    (reset! avautumissuunta (:suunta maaritys))
-                                                    (reset! max-korkeus (:max-korkeus maaritys))))]
+        hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)]
     (komp/luo
-      (komp/dom-kuuntelija js/window
-                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
-                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
-      {:component-did-mount
-       (fn [this]
-         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [_ data]
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
@@ -161,8 +148,7 @@
             [:span.livicon-chevron-down]])
 
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
-                                              :style (avautumissuunta-ja-korkeus-tyylit
-                                                       @max-korkeus @avautumissuunta)}
+                                              :style {:max-height valinta-ul-max-korkeus-px}}
           (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
                                     (sort-by sort-fn @tulokset)
                                     @tulokset)
