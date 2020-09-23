@@ -184,8 +184,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                        (update :tyypit
                                #(if (empty? %) +ilmoitustyypit+ %))
                        (update :tilat
-                               #(if (empty? %) (into #{} tila-filtterit) %)))
-              _ (println "##### maarit haku tässä on kunnossa #object[Object 20200917T080531]" haku)]
+                               #(if (empty? %) (into #{} tila-filtterit) %)))]
           (tulos!
             {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
              :taustahaku? taustahaku?}))))
