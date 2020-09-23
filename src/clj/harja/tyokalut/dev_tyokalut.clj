@@ -1,5 +1,7 @@
 (ns harja.tyokalut.dev-tyokalut
-  "Tänne funktioita, jotka ovat hyödyllisiä devatessa."
+  "Tänne funktioita, jotka ovat hyödyllisiä devatessa, mutta ei tarvitse käyttää prodissa.
+   Jos on käytetty tuota defn-tyokalu makroa, niin pitäisi olla turvallista vaikka jokin
+   funktiokutsu jäisikin koodiin prodiin mentäessä"
   (:require [clojure.java.io :as io]
             [clojure.core.async :as async]
             [clojure.pprint :as pprint]
@@ -33,7 +35,7 @@
             dev-environment? (concat body#))))
 
 (defmacro defn-tyokalu
-  "Luo annetun funktion. Funktion body luodaan vain, jos DEV_YMPARISTO ympäristömuuttuja on true.
+  "Luo annetun funktion. Funktion body luodaan vain, jos HARJA_DEV_YMPARISTO ympäristömuuttuja on true.
    Näin turhaan ajettavaa koodia ei synny tuotantoon."
   [& fn-params]
   (let [nimi (first fn-params)

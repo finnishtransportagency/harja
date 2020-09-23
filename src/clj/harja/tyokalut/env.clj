@@ -3,7 +3,7 @@
 
 (defn env [ymparisto-muuttuja]
   {:pre [(string? ymparisto-muuttuja)]}
-  (let [ym (clj-str/trim (System/getenv ymparisto-muuttuja))]
+  (let [ym (clj-str/trim (str (System/getenv ymparisto-muuttuja)))]
     (cond
       (= "true" ym) true
       (= "false" ym) true
