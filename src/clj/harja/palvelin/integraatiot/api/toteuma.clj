@@ -37,7 +37,7 @@
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma tyokone]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
-  (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)
         paivitetty (q-toteumat/paivita-toteuma-ulkoisella-idlla<!
                      db
@@ -87,7 +87,7 @@
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma tyokone]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
-  (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
     (do
       (q-toteumat/luo-toteuma<!

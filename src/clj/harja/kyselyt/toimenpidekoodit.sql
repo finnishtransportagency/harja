@@ -140,12 +140,17 @@ WHERE api_tunnus = :apitunnus;
 
 -- name: hae-hinnoittelu
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
-SELECT hinnoittelu
-FROM toimenpidekoodi
-WHERE api_tunnus = :apitunnus and piilota IS NOT TRUE
+SELECT tpk4.hinnoittelu as hinnoittelu
+FROM toimenpidekoodi tpk4
+         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+         JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
+         JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
+WHERE tpk4.api_tunnus = :apitunnus and tpk4.piilota IS NOT TRUE
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
 -- Tehtävä on piilotettu, jos sitä ei käytetä mistään urakasta.
 -- Hoidon päällystyksen paikkauksen vanhat koodit TUOTANNOSSA.
-                                    and id not in
+                                    and tpk4.id not in
                                         (select id from toimenpidekoodi where id in (
                                           1417,
                                           1418,
