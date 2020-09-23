@@ -30,10 +30,11 @@
         "Poikkeusta ei heitetty epävalidista reittipisteestä, kun reittipiste on kirjattu toteuman päättymisen jälkeen.")))
 
 (deftest tarkiasta-toteuman-tehtavien-tarkistus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]
-    (validointi/tarkista-tehtavat db [{:tehtava {:id 1370}}] "kokonaishintainen")
-    (let [tehtavat [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]]
-      (is (thrown? Exception (validointi/tarkista-tehtavat db tehtavat "kokonaishintainen"))
-          "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla"))
-    (is (thrown? Exception (validointi/tarkista-tehtavat db {:tehtava {:id 1370}} "yksikköhintainen"))
-        "Poikkeusta ei heitetty, kun yritettiin kirjata yksikköhintaiselle toteumalle kokonaishintaisia tehtäviä")))
+         (let [db (tietokanta/luo-tietokanta testitietokanta)]
+              (let [tehtavat [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]]
+                   (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id tehtavat "kokonaishintainen"))
+                       "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla"))
+              (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id {:tehtava {:id 1370}} "yksikköhintainen"))
+                  "Poikkeusta ei heitetty, kun yritettiin kirjata yksikköhintaiselle toteumalle kokonaishintaisia tehtäviä")
+              (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id {:tehtava {:id 1370}} "kokonaishintainen"))
+                  "Poikkeusta ei heitetty, koska urakkaan palautuu vain yksi voimassaoleva tehtävä apitunnuksella 1370.")))
