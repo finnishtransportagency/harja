@@ -22,10 +22,15 @@
                              toteuman-alku
                              toteuman-loppu)}))))))
 
-(defn tarkista-tehtavat [db tehtavat hinnoittelu]
+(defn tarkista-tehtavat [db urakka-id tehtavat hinnoittelu]
   (doseq [tehtava tehtavat]
     (let [tehtava-apitunnus (get-in tehtava [:tehtava :id])
-          hinnoittelut (:hinnoittelu (konv/array->vec (first (q-toimenpidekoodi/hae-hinnoittelu db tehtava-apitunnus)) :hinnoittelu))]
+          vastaus (q-toimenpidekoodi/hae-hinnoittelu db {:urakka urakka-id :apitunnus tehtava-apitunnus} )
+          _ (when (> (count vastaus) 1)
+                (virheet/heita-viallinen-apikutsu-poikkeus
+                  {:koodi :liikaa-osumia
+                   :viesti (format "Apitunnuksella (id: %s) palautui liikaa osumia." tehtava-apitunnus)}))
+          hinnoittelut (:hinnoittelu (konv/array->vec (first vastaus) :hinnoittelu))]
 
       (when (or (not hinnoittelut) (empty? hinnoittelut))
         (virheet/heita-viallinen-apikutsu-poikkeus

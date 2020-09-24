@@ -41,11 +41,13 @@
   (when (:pistetoteuma data)
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in data [:pistetoteuma :toteuma :tehtavat])
       (get-in data [:pistetoteuma :toteuma :toteumatyyppi])))
   (doseq [pistetoteuma (:pistetoteumat data)]
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat])
       (get-in pistetoteuma [:pistetoteuma :toteuma :toteumatyyppi]))))
 
