@@ -14,8 +14,7 @@
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.palvelin.palvelut.maarien-toteumat-listatus-test :as maarien_toteumat-listatus-test]))
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 

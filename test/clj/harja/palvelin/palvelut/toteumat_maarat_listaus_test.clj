@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.maarien-toteumat-listatus-test
+(ns harja.palvelin.palvelut.toteumat-maarat-listaus-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
@@ -90,10 +90,10 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         maarien-toteumat-ilman-suunnitelmaa-2019 (vain-suunnitellut-maarat
                                                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                                           :urakan-maarien-toteumat +kayttaja-jvh+
-                                                                                           {:urakka-id urakka-id
-                                                                                            :alkupvm "2019-10-01"
-                                                                                            :loppupvm "2020-09-30"})
+                                                                   :urakan-maarien-toteumat +kayttaja-jvh+
+                                                                   {:urakka-id urakka-id
+                                                                    :alkupvm "2019-10-01"
+                                                                    :loppupvm "2020-09-30"})
                                                    true)
         maarien-toteumat-2020 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -141,15 +141,17 @@
 ;; Hae kaikki määrien toteumat tehtäväryhmän mukaan - tehtäväryhmä = ui:lla toimenpide
 (deftest maarien-toteumat-listaus-tehtavaryhmalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        maarien-toteumat-talvihoito (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :urakan-maarien-toteumat +kayttaja-jvh+
-                                                    {:urakka-id urakka-id
-                                                     :tehtavaryhma "1.0 TALVIHOITO"})
+        maarien-toteumat-21 (vain-suunnitellut-maarat
+                                      (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :urakan-maarien-toteumat +kayttaja-jvh+
+                                                      {:urakka-id urakka-id
+                                                       :tehtavaryhma "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"})
+                                      true)
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :urakan-maarien-toteumat +kayttaja-jvh+
                                                {:urakka-id urakka-id
                                                 :tehtavaryhma "6 MUUTA"})
-        oulun-mhu-urakan-maarien-toteuma-talvihoito (q
+        oulun-mhu-urakan-maarien-toteuma-21 (q
                                                       (str "SELECT *
                                                              FROM
                                                                   urakka_tehtavamaara ut,
@@ -159,7 +161,7 @@
                                                                     JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
                                                              WHERE tk.id = ut.tehtava
                                                                AND tr.id = tk.tehtavaryhma
-                                                               AND tr.otsikko = '1.0 TALVIHOITO'
+                                                               AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                                AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q
                                                  (str "SELECT *
@@ -174,5 +176,5 @@
                                                                AND tr.otsikko = '6 MUUTA'
                                                                AND ut.urakka = " urakka-id))
         ]
-    (is (= (count maarien-toteumat-talvihoito) (count oulun-mhu-urakan-maarien-toteuma-talvihoito)) "Määrien toteumien määrä")
+    (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")
     (is (= (count maarien-toteumat-muuta) (count oulun-mhu-urakan-maarien-toteuma-muuta)) "Määrien toteumien määrä")))
