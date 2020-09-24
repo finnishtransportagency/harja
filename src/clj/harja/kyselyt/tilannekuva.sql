@@ -9,6 +9,7 @@ SELECT
   i.tunniste,
   i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
