@@ -230,7 +230,10 @@
 
                                          ;; Jos excelissä on raha määrityksenä. Pyöristä kahteen desimaaliin
                                          (and (= :raha (:fmt sarake)) (number? naytettava-arvo))
-                                         (BigDecimal. (str/replace (fmt/desimaaliluku-opt naytettava-arvo 2 false) "," "."))
+                                         (BigDecimal.
+                                           (as-> (str/replace (fmt/desimaaliluku-opt naytettava-arvo 2 false) "," ".") naytettava-arvo
+                                             (str/replace naytettava-arvo "−" "-"))) ;; Mutetaan jostain erikoisesta tilanteesta
+                                             ;; tuleva ASCII 8722 merkki normaaliksi 45 miinusmerkiksi. Jos löydät syyn oudolle merkille. Voit korjata.
 
                                          :default
                                          naytettava-arvo)
