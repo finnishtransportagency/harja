@@ -28,8 +28,7 @@
     (str maara " " (cond
                      (or
                        (= tyyppi :kokonaishintainen)
-                       (= tyyppi :maaramitattava
-                          ))
+                       (= tyyppi :maaramitattava))
                      (:yksikko tehtava)
 
                      (or (= tyyppi :lisatyo)
@@ -91,7 +90,6 @@
          (fn [indeksi {tehtava ::t/tehtava
                        maara ::t/maara
                        lisatieto ::t/lisatieto
-                       ;sijainti ::t/sijainti
                        ei-sijaintia ::t/ei-sijaintia
                        toteuma-id ::t/toteuma-id
                        poistettu ::t/poistettu
@@ -116,7 +114,7 @@
               (when useampi?
                 [:div.flex-row
                  [:div.row
-                  (str "TEHTÄVÄ " indeksi)]
+                  (str "TEHTÄVÄ " (inc indeksi))]
                  [:div.row
                   [napit/poista
                    "Poista toteuma"
@@ -179,8 +177,7 @@
                      :disabled? ei-sijaintia
                      :tyyppi :tierekisteriosoite
                      :vayla-tyyli? true
-                     :sijainti (r/wrap sijainti (constantly true))
-                     }
+                     :sijainti (r/wrap sijainti (constantly true))}
                     (r/wrap sijainti
                             (r/partial paivita! :tierekisteriosoite indeksi))]]
                   [:div.row
@@ -352,7 +349,6 @@
         :elementin-id (str "toimenpiteet-")}
        {:tyyppi :radio-group
         :nimi ::t/tyyppi
-        ;:oletusarvo :maaramitattava
         :otsikko ""
         :vaihtoehdot [:maaramitattava :akillinen-hoitotyo :lisatyo]
         :nayta-rivina? true
@@ -380,15 +376,14 @@
          (when (= (count toteumat) 1)
            {:otsikko "Sijainti *"})
          (when (= (count toteumat) 1)
-           [{:nimi [0 :tierekisteriosoite] #_[::t/toteumat 0 ::t/sijainti]
+           [{:nimi [0 :tierekisteriosoite]
              ::ui-lomake/col-luokka ""
              :teksti "Kyseiseen tehtävään ei ole sijaintia"
              :pakollinen? (not ei-sijaintia)
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
              :vayla-tyyli? true
-             :sijainti (r/wrap sijainti (constantly true) #_(e! (tiedot/->PaivitaSijainti %)))
-             }
+             :sijainti (r/wrap sijainti (constantly true))}
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              ::ui-lomake/col-luokka ""
              :teksti "Kyseiseen tehtävään ei ole sijaintia"
