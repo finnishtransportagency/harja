@@ -49,8 +49,8 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(defn ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset ilmoitettu]}]
-  (let [ilmoitusaika (c/from-sql-time ilmoitettu)
+(defn ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset valitetty-urakkaan]}]
+  (let [ilmoitusaika (c/from-sql-time valitetty-urakkaan)
         vaadittu-kuittaustyyppi (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
         vaadittu-kuittausaika (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
         vaadittu-aika-kulunut? (t/after? (t/now) (t/plus ilmoitusaika vaadittu-kuittausaika))
@@ -91,8 +91,8 @@
 
 (defn- sisaltaa-aloituskuittauksen-aikavalilla?
   [ilmoitus kulunut-aika]
-  (let [{:keys [ilmoitettu kuittaukset]} ilmoitus
-        ilmoitusaika (c/from-sql-time ilmoitettu)
+  (let [{:keys [valitetty-urakkaan kuittaukset]} ilmoitus
+        ilmoitusaika (c/from-sql-time valitetty-urakkaan)
         aloituskuittaukset (filter
                              #(= (:kuittaustyyppi %) :aloitus)
                              kuittaukset)
@@ -122,11 +122,11 @@
                     aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
     max-maara]
-   (let [ilmoitettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :ilmoitettu-vakioaikavali :ilmoitettu-alkuaika :ilmoitettu-loppuaika))
-         ilmoitettu-aikavali-alku (when (first ilmoitettu-aikavali)
-                                    (konv/sql-timestamp (first ilmoitettu-aikavali)))
-         ilmoitettu-aikavali-loppu (when (second ilmoitettu-aikavali)
-                                     (konv/sql-timestamp (second ilmoitettu-aikavali)))
+   (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
+         valitetty-urakkaan-aikavali-alku (when (first valitetty-urakkaan-aikavali)
+                                    (konv/sql-timestamp (first valitetty-urakkaan-aikavali)))
+         valitetty-urakkaan-aikavali-loppu (when (second valitetty-urakkaan-aikavali)
+                                     (konv/sql-timestamp (second valitetty-urakkaan-aikavali)))
          toimenpiteet-aloitettu-aikavali (aikavaliehto hakuehdot :toimenpiteet-aloitettu-vakioaikavali :toimenpiteet-aloitettu-alkuaika :toimenpiteet-aloitettu-loppuaika)
          toimenpiteet-aloitettu-aikavali-alku (when (first toimenpiteet-aloitettu-aikavali)
                                                 (konv/sql-timestamp (first toimenpiteet-aloitettu-aikavali)))
@@ -144,7 +144,7 @@
                     :vesivayla :vesivayla-hoito
                     urakkatyyppi)
                   hallintayksikko
-                  (first ilmoitettu-aikavali) (second ilmoitettu-aikavali))
+                  (first valitetty-urakkaan-aikavali) (second valitetty-urakkaan-aikavali))
          _ (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))
@@ -154,8 +154,8 @@
          vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita)
          debug-viesti (str "Haetaan ilmoituksia: "
                            (viesti urakat "urakoista" "ilman urakoita")
-                           (viesti ilmoitettu-aikavali-alku "alkaen" "ilman alkuaikaa")
-                           (viesti ilmoitettu-aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                           (viesti valitetty-urakkaan-aikavali-alku "alkaen" "ilman alkuaikaa")
+                           (viesti valitetty-urakkaan-aikavali-loppu "päättyen" "ilman päättymisaikaa")
                            (viesti toimenpiteet-aloitettu-aikavali-alku "toimenpiteet alkaen" "ilman toimenpiteiden alkuaikaa")
                            (viesti toimenpiteet-aloitettu-aikavali-loppu "toimenpiteet päättyen" "ilman toimenpiteiden päättymisaikaa")
                            (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
@@ -179,16 +179,16 @@
                    ilmoitus-xf
                    (q/hae-ilmoitukset db
                                       {:urakat urakat
-                                       :alku_annettu (hakuehto-annettu? ilmoitettu-aikavali-alku)
-                                       :loppu_annettu (hakuehto-annettu? ilmoitettu-aikavali-loppu)
+                                       :alku_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-alku)
+                                       :loppu_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-loppu)
                                        :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
                                        :toimenpiteet_loppu_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-loppu)
                                        :kuittaamattomat (contains? tilat :kuittaamaton)
                                        :vastaanotetut (contains? tilat :vastaanotettu)
                                        :aloitetut (contains? tilat :aloitettu)
                                        :lopetetut (contains? tilat :lopetettu)
-                                       :alku ilmoitettu-aikavali-alku
-                                       :loppu ilmoitettu-aikavali-loppu
+                                       :alku valitetty-urakkaan-aikavali-alku
+                                       :loppu valitetty-urakkaan-aikavali-loppu
                                        :toimenpiteet_alku toimenpiteet-aloitettu-aikavali-alku
                                        :toimenpiteet_loppu toimenpiteet-aloitettu-aikavali-loppu
                                        :tyypit_annettu (hakuehto-annettu? tyypit)
