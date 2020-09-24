@@ -422,7 +422,7 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                          t.id                       AS toteuma_id,
                          tt.id                      AS toteuma_tehtava_id,
                          tk.nimi                    AS tehtava,
-                         tk.yksikko                 AS yksikko,
+                         tk.suunnitteluyksikko      AS yksikko,
                          tr1.otsikko                AS otsikko,
                          t.alkanut                  AS alkanut,
                          tt.maara                   AS maara,
@@ -458,7 +458,7 @@ SELECT ut.id                      AS id,
        t.maara                    AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        t.tyyppi                   AS tyyppi,
-       tk.yksikko                 AS yksikko,
+       tk.suunnitteluyksikko      AS yksikko,
        tk.kasin_lisattava_maara   AS "kasin-lisattava?"
     FROM urakka_tehtavamaara ut
              LEFT JOIN toteumat t
@@ -493,7 +493,7 @@ SELECT tk.id                      AS id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        t.tyyppi                   AS tyyppi,
-       tk.yksikko                 AS yksikko,
+       tk.suunnitteluyksikko      AS yksikko,
        tk.kasin_lisattava_maara   AS "kasin-lisattava?"
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
@@ -525,7 +525,7 @@ SELECT t.id        AS toteuma_id,
        tk.id                      AS tehtava_id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
-       tk.yksikko                 AS yksikko,
+       tk.suunnitteluyksikko      AS yksikko,
        tr3.otsikko                AS toimenpide_otsikko,
        tr3.id                     AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
@@ -556,7 +556,7 @@ SELECT t.id        AS toteuma_id,
        tk.id                      AS tehtava_id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
-       tk.yksikko                 AS yksikko,
+       tk.suunnitteluyksikko      AS yksikko,
        tr.otsikko                 AS toimenpide_otsikko,
        tr.id                      AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
@@ -580,7 +580,8 @@ SELECT t.id        AS toteuma_id,
 
 -- name: listaa-urakan-toteutumien-toimenpiteet
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
-SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
+SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko,
+                                tr.id
     FROM tehtavaryhma tr
     WHERE tr.emo IS NULL
       AND tr.tyyppi = 'ylataso'
@@ -589,7 +590,9 @@ SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
 -- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
 -- Listaa kaikki tehtävät tehtäväryhmän perusteella määrien toteumille. Äkillisille hoitotöille
 -- on ihan oma tehtäväryhmä ja tätä ei voida käyttää siihen
-SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
+SELECT tk.id AS id,
+       tk.nimi AS tehtava,
+       tk.suunnitteluyksikko AS yksikko
     FROM toimenpidekoodi tk,
          tehtavaryhma tr1
              JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
@@ -600,7 +603,7 @@ SELECT tk.id AS id, tk.nimi AS tehtava, tk.yksikko AS yksikko
 -- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat
 SELECT  tk.id AS id,
         tr.nimi AS tehtava,
-        tk.yksikko AS yksikko
+        tk.suunnitteluyksikko AS yksikko
     FROM toimenpidekoodi tk,
          tehtavaryhma tr
     WHERE (tr.nimi like '%Äkilliset hoitotyöt%'
@@ -611,7 +614,7 @@ SELECT  tk.id AS id,
 -- name: listaa-lisatoiden-tehtavat
 SELECT  tk.id AS id,
         tk.nimi as tehtava,
-        tk.yksikko AS yksikko
+        tk.suunnitteluyksikko AS yksikko
 FROM toimenpidekoodi tk,
      tehtavaryhma tr
 WHERE tk.nimi like '%Lisätyö%'
