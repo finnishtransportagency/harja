@@ -71,7 +71,7 @@
     (is (= odotettu-urakasta-26 (dissoc
                                   (first (filter #(= 26 (:urakka %))
                                                 ilmoitukset))
-                                  :ilmoitettu)))
+                                  :ilmoitettu :valitetty :valitetty-urakkaan)))
     (is (not (empty? ilmoitukset)))
     (is (= (count ilmoitukset) 7))))
 

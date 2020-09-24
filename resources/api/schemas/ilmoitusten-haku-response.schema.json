@@ -44,6 +44,12 @@
                 "required": true
               },
               "valitetty-harjaan": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/valitetty-urakkaan",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
+              "valitetty-urakkaan": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/valitetty-harjaan",
                 "type": "string",
                 "format": "date-time",
