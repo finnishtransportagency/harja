@@ -627,7 +627,9 @@
                             (get-in app [:hoitokauden-alkuvuosi])
                             (get-in app [:aikavali-alkupvm])
                             (get-in app [:aikavali-loppupvm]))
-    (assoc app :syottomoodi false))
+    (-> app
+      (assoc :syottomoodi false)
+      (assoc-in [:lomake ::t/toteumat] [])))
 
   TallennaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
