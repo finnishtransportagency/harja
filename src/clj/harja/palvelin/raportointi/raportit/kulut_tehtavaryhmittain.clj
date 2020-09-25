@@ -35,7 +35,6 @@
                              (budjetti-q/hae-budjettitavoite
                                db
                                {:urakka urakka-id}))]
-    (println ">" urakkatiedot hoitokaudet tavoitteet)
     (reduce #(-> tavoitteet
                  (get %2)
                  first
@@ -43,22 +42,32 @@
                  (+ %1)) 0 hoitokaudet)))
 
 (defn- kulut-urakalle
-  [db user {:keys [alkupvm urakka-id loppupvm]}]
-  (let [otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-                 {:leveys 1 :otsikko "Hoitokauden alusta"}
-                 {:leveys 1 :otsikko "Tässä kuussa"}]
-        alkupvm-tama-kuu (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))
-        loppupvm-tama-kuu (pvm/kuukauden-viimeinen-paiva (pvm/nyt))
+  [db {:keys [alkupvm urakka-id loppupvm]}]
+  (let [kuukausi-valittu? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+        hoitokausi-valittu? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+        alkupvm-valittu-kuu-tai-vali (cond
+                                       hoitokausi-valittu? (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))
+                                       :default alkupvm)
+        loppupvm-valittu-kuu-tai-vali (cond
+                                        hoitokausi-valittu? (pvm/kuukauden-viimeinen-paiva (pvm/nyt))
+                                        :default loppupvm)
+        alkupvm-hoitokausi (pvm/hoitokauden-alkupvm (dec (pvm/vuosi loppupvm)))
+        loppupvm-hoitokausi (pvm/hoitokauden-loppupvm (pvm/vuosi loppupvm))
         rivit-hoitokauden-alusta (mapv #(->
-                                          [(:tehtavaryhma %) (:summa %)])
-                                       (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm
-                                                                                            :loppupvm loppupvm
+                                          [(:jarjestys %) (:nimi %) (:summa %)])
+                                       (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
+                                                                                            :loppupvm loppupvm-hoitokausi
                                                                                             :urakka   urakka-id}))
         rivit-tassa-kuussa (mapv #(->
-                                    [(:tehtavaryhma %) (:summa %)])
-                                 (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-tama-kuu
-                                                                                      :loppupvm loppupvm-tama-kuu
+                                    [(:jarjestys %) (:nimi %) (:summa %)])
+                                 (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
+                                                                                      :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                       :urakka   urakka-id}))
+        otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
+         {:leveys 1 :otsikko (str "Hoitokauden alusta" (pvm/pvm alkupvm-hoitokausi) (pvm/pvm loppupvm-hoitokausi))}
+         {:leveys 1 :otsikko (cond
+                               kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
+                               :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
         rivit (loop [rivit-hoitokausi rivit-hoitokauden-alusta
                      rivit-kuukausi rivit-tassa-kuussa
                      kaikki {}]
@@ -72,22 +81,30 @@
                            (as-> kaikki ks
                                  (if (not (nil? rivi-hoitokausi))
                                    (assoc ks (first rivi-hoitokausi) [(first rivi-hoitokausi)
-                                                                (second rivi-hoitokausi)
-                                                                (nth (get ks (first rivi-hoitokausi)) 2 0)])
+                                                                      (second rivi-hoitokausi)
+                                                                      (nth rivi-hoitokausi 2)
+                                                                      (nth (get ks (second rivi-hoitokausi)) 3 0)])
                                    ks)
                                  (if (not (nil? rivi-kk))
                                    (assoc ks (first rivi-kk) [(first rivi-kk)
-                                                                 (nth (get ks (first rivi-kk)) 1 0)
-                                                                 (second rivi-kk)])
+                                                              (second rivi-kk)
+                                                              (nth (get ks (second rivi-kk)) 2 0)
+                                                              (nth rivi-hoitokausi 2)])
                                    ks))))))
-        rivit (mapv second rivit)
-        yhteensa 0 #_(reduce #(+ %1 (second %2)) 0 rivit)]
+        rivit (sort-by first (mapv second rivit))
+        rivit (mapv #(into [] (rest %)) rivit)
+        yhteensa (reduce #(->
+                            ["Yhteensä"
+                             (+ (second %1) (second %2))
+                             (+ (nth %1 2) (nth %2 2))])
+                         ["Yhteensä" 0 0]
+                         rivit)]
     {:otsikot  otsikot
      :yhteensa yhteensa
      :rivit    rivit}))
 
 (defn- kulut-hallintayksikolle
-  [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
+  [db {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (let [otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
                  {:leveys 1 :otsikko "Hoitokauden alusta"}
                  {:leveys 1 :otsikko "Tässä kuussa"}]
@@ -101,7 +118,7 @@
      :rivit   rivit}))
 
 (defn- kulut-koko-maalle
-  [db user {:keys [alkupvm loppupvm] :as opts}]
+  [db {:keys [alkupvm loppupvm] :as opts}]
   (let [otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
                  {:leveys 1 :otsikko "Hoitokauden alusta"}
                  {:leveys 1 :otsikko "Tässä kuussa"}]
@@ -118,14 +135,14 @@
      :rivit   rivit}))
 
 (defn- kulut-tehtavaryhmittain
-  [db user {:keys [urakka-id hallintayksikko-id] :as opts}]
+  [db {:keys [urakka-id hallintayksikko-id] :as opts}]
   (cond
-    urakka-id (kulut-urakalle db user opts)
-    hallintayksikko-id (kulut-hallintayksikolle db user opts)
-    :default (kulut-koko-maalle db user opts)))
+    urakka-id (kulut-urakalle db opts)
+    hallintayksikko-id (kulut-hallintayksikolle db opts)
+    :default (kulut-koko-maalle db opts)))
 
 (defn- hae-tavoitehinta
-  [db user {:keys [urakka-id alkupvm loppupvm] :as opts}]
+  [db {:keys [urakka-id alkupvm loppupvm] :as opts}]
   (cond
     urakka-id (tavoitehinta-urakalle db opts (first
                                                (urakat-q/hae-urakka db {:id urakka-id})))
@@ -133,7 +150,7 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm] :as parametrit}]
-  (let [{:keys [otsikot rivit yhteensa]} (kulut-tehtavaryhmittain db user parametrit)
+  (let [{:keys [otsikot rivit yhteensa]} (kulut-tehtavaryhmittain db parametrit)
         tavoitehinta (hae-tavoitehinta db user parametrit)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
      [:otsikko (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
@@ -143,8 +160,7 @@
      [:taulukko
       {}
       otsikot
-      rivit]
-     [:teksti (str "Yhteensä: " yhteensa)]
-     [:teksti (str "Urakkavuoden alusta tav.hintaan kuuluvia: ")]
+      (conj rivit yhteensa)]
+     [:teksti (str "Urakkavuoden alusta tav.hintaan kuuluvia: " (pr-str yhteensa))]
      [:teksti (str "Tavoitehinta: " tavoitehinta)]
-     [:teksti (str "Jäljellä: " (- tavoitehinta yhteensa))]]))
+     [:teksti (str "Jäljellä: " #_(- tavoitehinta yhteensa))]]))
