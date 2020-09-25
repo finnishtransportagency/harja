@@ -51,7 +51,7 @@
               },
               "sijainti": {
                 "id": "urn:harja/havainnot/0/sijainti",
-                "$ref": "file:resources/api/schemas/entities/geometria-sijainti.schema.json",
+                "$ref": "file:resources/api/schemas/entities/geometria-viivasijainti.schema.json",
                 "required": true
               },
               "suunta": {
@@ -71,6 +71,7 @@
               "suoritettavatTehtavat": {
                 "id": "urn:harja/havainnot/0/tyokonetehtava",
                 "type": "object",
+                "maxItems": 10,
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/suoritettavat-tehtavat.schema.json"
               }

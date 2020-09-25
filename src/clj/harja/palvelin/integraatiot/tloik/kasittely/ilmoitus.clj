@@ -46,7 +46,6 @@
                                                 valitetty otsikko paikankuvaus lisatieto
                                                 yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                 sijainti vastaanottaja tunniste viesti-id]}]
-      (println "MAARIT " valitetty-urakkaan)
   (ilmoitukset/paivita-ilmoitus!
     db
     {:urakka urakka-id

@@ -24,7 +24,8 @@
             [harja.transit :as t]
             [slingshot.slingshot :refer [throw+]]
             [clojure.java.io :as io]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.palvelin.tyokalut.lukot :as lukot]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -149,10 +150,15 @@
 ;; Asetetaan raportticachen päivitys klo 7:15, koska tietty urakoitsija lähettää usein jopa 7h pitkiä toteumia.
 ;; Esim. t.alkanut klo 22, saapuu API:in klo 5. Näin saadaan ajettua nekin vielä tuoreeltaan raporteille
 (defn paivita-raportti-cache-oisin! [db]
-  (ajastettu-tehtava/ajasta-paivittain [7 15 0]
+  (ajastettu-tehtava/ajasta-paivittain [1 0 0]
                                        (fn [_]
-                                         (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
-                                         (raportit-q/paivita_raportti_cachet db))))
+                                         (lukot/vain-yhdelta-nodelta
+                                           db "paivita-raportti-cache-oisin!" 300
+                                           (do
+                                             (log/info "paivita-raportti-cache-oisin! :: Alkaa " (pvm/nyt))
+                                             (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
+                                             (raportit-q/paivita_raportti_cachet db)
+                                             (log/info "paivita-raportti-cache-oisin! :: Loppuu " (pvm/nyt)))))))
 
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle

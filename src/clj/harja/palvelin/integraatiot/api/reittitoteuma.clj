@@ -230,12 +230,14 @@ maksimi-linnuntien-etaisyys 200)
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in data [:reittitoteuma :toteuma :tehtavat])
       (get-in data [:reittitoteuma :toteuma :toteumatyyppi])))
   (doseq [reittitoteuma (:reittitoteumat data)]
     (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])
       (get-in reittitoteuma [:reittitoteuma :toteuma :toteumatyyppi]))))
 
