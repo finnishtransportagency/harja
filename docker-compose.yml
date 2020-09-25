@@ -9,53 +9,22 @@ services:
     ports:
       - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
       - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
-  harja-app:
-    image: solita/harja-app:latest
-    mem_reservation: 2g
-    mem_limit: 4g
-    cpu_shares: 10000
-    cpuset: 0-3
-    blkio_config:
-      weight: 1000
+  harja-app-1:
+    extends:
+      file: docker-compose-common.yml
+      service: app
     depends_on:
       - "${POSTGRESQL_NAME}"
-    stdin_open: true
     ports:
-      - "127.0.0.1:3000-3001:3000" # web ports
-      - "127.0.0.1:4005-4006:4005" # REPL ports
-    tty: true
-    links:
-      - ${POSTGRESQL_NAME}
-    environment:
-      - "TZ=Europe/Helsinki"
-      - "POSTGRESQL_NAME=${POSTGRESQL_NAME}" # Tämä kuuluu oikeastaan .docker_compose_container_env tiedostoon, mutta asetetaan tässä, että varmasti tulee oikea nimi
-      - "DC_JAETTU_KANSIO=${DC_JAETTU_KANSIO}"
-      - "HARJA_DEV_YMPARISTO=true"
-      - "HARJA_TIETOKANTA_HOST=${POSTGRESQL_NAME}"
-      - "HARJA_TIETOKANTA_HOST_KAANNOS=${POSTGRESQL_NAME}"
-      - "HARJA_SALLI_OLETUSKAYTTAJA=false"
-      - "HARJA_AJA_GATLING_RAPORTTI=false"
-      - "HARJA_NOLOG=false"
-    env_file:
-      - .docker_compose_container_env
-    volumes:
-      - type: bind
-        source: .
-        target: /opt/harja
-        consistency: ${DC_VOLUME_CONSISTENCY}
-      - type: volume
-        source: yhteiset_tiedostot
-        target: "${DC_JAETTU_KANSIO}"
+      - "127.0.0.1:3000:3000" # web port
+      - "127.0.0.1:${BACKEND_REPL_PORT_1}:${BACKEND_REPL_PORT_1}" # REPL port
     command: |
       /bin/bash -c "
       echo 'ALOITELLAAN KOMENTOA'
       touch /var/log/harja.log
-      echo '1'
-      echo $$(ls  ${DC_JAETTU_KANSIO})
+      # Ei haluta, että useampi käännös pyörii yhtä aikaa
       {
-       echo '2'
        flock -x 200
-       echo '3'
        if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
        then
          echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
@@ -63,49 +32,123 @@ services:
          echo 'KÄÄNNÖS DONE'
          touch ${DC_JAETTU_KANSIO}/compile.done
        fi;
-       #echo 'ALOITETAAN REPL'
-       #cd /opt/harja
-       #setsid lein trampoline repl :start :host harja-app > /var/log/harja.log 2>&1 &
-       #while [[ $$(ps -axf | grep -c java) != 2 &&
-       #          $$(ps -axf | grep -c lein) != 1 ]]
-       #do
-       #  echo 'Odotellaan trampoliinin sammumista...'
-       #  sleep 1;
-       #done;
-       #echo foo
       } 200>${DC_JAETTU_KANSIO}/compile.lock
-      echo '4'
       cd /opt/harja
-      {
-       echo '5'
-       flock -x 200
-       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
-       DEFINED_REPL_PORT=$$(lein show-profiles repl | awk '/port/ { match($$2, /[0-9]*/);print substr($$2,RSTART,RLENGTH) }')
-       if [[ -e ${DC_JAETTU_KANSIO}/repl.info ]]
-       then
-         REPL_HOST=$$(awk '{ print $$2 }' ${DC_JAETTU_KANSIO}/repl.info)
-         lein trampoline with-profile +dev-container repl :connect $${REPL_HOST}:$${DEFINED_REPL_PORT:-4005} > /var/log/harja.log 2>&1 </dev/null &
-       else
-         touch ${DC_JAETTU_KANSIO}/repl.info
-         printf '%s\n' 'REPL_IP $${THIS_IP}' > ${DC_JAETTU_KANSIO}/repl.info
-         echo 'ALOITETAAN REPL'
-         lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 > /var/log/harja.log 2>&1 </dev/null &
-         while [[ -z $$(curl $${THIS_IP}:$${DEFINED_REPL_PORT:-4005} | grep 'Empty reply from server') ]]
-         do
-            echo 'Käynnistetään repliä...'
-            sleep 20
-         done
-         echo 'REPL käynnistetty'
-         #printf '%s\n' 'REPL_PORT $${THIS_IP}' > ${DC_JAETTU_KANSIO}/repl.info
-       fi
-      } 200>${DC_JAETTU_KANSIO}/repl.lock
+      # Enable job control
+      set -m
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+      echo 'ALOITETAAN REPL'
+      lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_1} > /var/log/harja.log 2>&1 </dev/null &
+      # Odotetaan, että back repl saadaan pystyyn
+      while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_1} 2>&1 | grep 'Empty reply from server')\" ]]
+      do
+        sleep 5
+      done
+      touch ${DC_JAETTU_KANSIO}/repl_1.done
+      echo 'REPL käynnistetty'
       fg
-      #lein repl :headless :host harja-app > /var/log/harja.log 2>&1
-      #lein trampoline repl :headless :host 0.0.0.0
-      #while true
-      #do
-      #  sleep 100;
-      #done;
+      "
+  harja-app-2:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    depends_on:
+      - "${POSTGRESQL_NAME}"
+    ports:
+      - "127.0.0.1:${BACKEND_REPL_PORT_2}:${BACKEND_REPL_PORT_2}" # Backend REPL port
+    command: |
+      /bin/bash -c "
+      echo 'ALOITELLAAN KOMENTOA'
+      touch /var/log/harja.log
+      # Ei haluta, että useampi käännös pyörii yhtä aikaa
+      {
+       flock -x 200
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' 'with-profile +dev-container compile'
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      cd /opt/harja
+      # Enable job control
+      set -m
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+      while [[ ! -e  ${DC_JAETTU_KANSIO}/repl_1.done ]]
+      do
+        sleep 1
+      done
+      echo 'ALOITETAAN REPL'
+      lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_2} > /var/log/harja.log 2>&1 </dev/null &
+      # Odotetaan, että back repl saadaan pystyyn
+      while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_2} 2>&1 | grep 'Empty reply from server')\" ]]
+      do
+        sleep 5
+      done
+      echo 'REPL käynnistetty'
+      fg
+      "
+  harja-frontend:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    depends_on:
+      - "${POSTGRESQL_NAME}"
+    ports:
+      - "127.0.0.1:${FRONTEND_REPL_PORT}:${FRONTEND_REPL_PORT}" # Frontend REPL port
+    command: |
+      /bin/bash -c "
+      echo 'ALOITELLAAN KOMENTOA'
+      touch /var/log/harja.log
+      {
+       flock -x 200
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' 'with-profile +dev-container compile'
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      cd /opt/harja
+      # Enable job control
+      # set -m
+
+      echo 'Aloitetaan LESS kääntäminen'
+      sh/tarkkaile_less.sh dev-container > /var/log/harja_less.log 2>&1 &
+      disown
+      lein with-profile +dev-container less once
+      echo 'Luodaan .edn filut figwheeliä varten'
+      lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
+      #echo 'Aloitetaan frontin kääntäminen'
+      #lein trampoline with-profile +dev-container run -m figwheel.main -fw false -bo figwheel_conf/luodut/dev-container > /var/log/harja_frontend.log 2>&1
+
+      echo 'Käynnistetään frontin repl'
+      lein trampoline with-profile +dev-container run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl > /var/log/harja_frontend.log 2>&1 &
+      disown
+
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+      #lein trampoline with-profile +dev-container run -m figwheel.main -H 0.0.0.0 -p ${FRONTEND_REPL_PORT} -b figwheel_conf/luodut/dev-container --repl >> /var/log/harja_frontend.log 2>&1 &
+      #FRONT_REPL_JOB_NUMBER=$$(jobs | awk 'match($$1, /^\[[[:digit:]]\]\+/) { print substr($$1, RSTART + 1, RLENGTH - 3) }')
+
+      while [[ $$(curl -s -o /dev/null -w '%{http_code}' $${THIS_IP}:${FRONTEND_REPL_PORT} 2>&1) != '200' ]]
+      do
+        sleep 5
+      done
+      echo 'Front repl käynnistetty'
+
+      #fg %$${FRONT_REPL_JOB_NUMBER}
+
+      # Ei tuoda figwheel.mainia eteen, koska se tuppaa feilaamaan aika herkästi,
+      # jolloinka joudutaan ajamaan tämä kontti uusiksi (hidasta puuhaa)
+      # Sen sijaan annetaan käyttäjän itse mennä konttiin sisälle ja pyöräyttää
+      # prosessi uudestaan käyntiin
+      while true
+      do
+        sleep 100
+      done
+
       "
 
   harjadb:

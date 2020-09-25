@@ -153,15 +153,15 @@
 
 (defmethod suorita-toiminto :help
   [_ _]
-  (println (str "ÄLÄ AJA TÄTÄ SELLAISTA .edn TIEDOSTOA VASTEN, JONKA SISÄLTÖÄ ET TIEDÄ!\n"
+  (println (str "\nÄLÄ AJA TÄTÄ SELLAISTA .edn TIEDOSTOA VASTEN, JONKA SISÄLTÖÄ ET TIEDÄ!\n"
                 "Tämä johtuu siitä, että annetujen .edn sisältämä koodi evaluoidaan.\n"
                 "Jos ensimmäisen annetun .edn tiedoston nimi alkaa '-' merkillä, tulee\n"
-                "optiot ja filut erottaa '--' merkillä"
+                "optiot ja filut erottaa '" asetusten-lopetus-merkki "' merkillä\n\n"
                 "----------------------------------------------------------------------\n"
                 "Tätä työkalua voi käyttää .edn tiedoston kirjoittamisessa toiseen tiedostoon.\n"
                 "Huom! .edn sisältämä koodi evaluoidaan.\n\n"
                 "lein run -m harja.tyokalut.edn-eval [-h] [-o directory] [-n name] files\n"
-                "lein run -m harja.tyokalut.edn-eval -h\n\n"
+                "lein run -m harja.tyokalut.edn-eval -h\n"
                 "----------------------------------------------------------------------\n\n"
                 "Options:\n"
                 (reduce (fn [s [_ {{:keys [lyhyt pitka]} :nimi doc :doc}]]
@@ -192,7 +192,12 @@
     (println "polku: " polku)
     (println "nimi: " nimi)
     (with-open [w (io/writer (str polku nimi))]
-      (pprint/pprint (read-string (slurp edn-tiedosto)) w))))
+      (let [input-data (read-string (slurp edn-tiedosto))]
+        (when (meta input-data)
+          (println "META LÖYTY")
+          (.write w "^")
+          (pprint/pprint (meta input-data) w))
+        (pprint/pprint input-data w)))))
 
 (defn -main [& args]
   (tarkista-argumentit! args)

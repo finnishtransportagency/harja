@@ -32,16 +32,17 @@ else
   lisaa_env_muuttuja LEININGEN_CLEAN '""'
 fi
 
-sed -i '' -e "s/BRANCH=.*/BRANCH=$(git branch --show-current)/g" "${HARJA_DIR}/.docker_compose_container_env"
+sed -i '' -e "s/BRANCH=.*/BRANCH=$(git branch --show-current)/g" "${HARJA_DIR}/.docker_compose_env"
 
 echo "Käynnistetään compose ja ohjataan output ${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log tiedostoon ..."
-docker-compose --env-file $COMPOSE_ENV_FILE up --scale harja-app=2 > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
+docker-compose --env-file $COMPOSE_ENV_FILE up > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
 
 DOCKER_COMPOSE_PID=$!
+FRONTEND_REPL_PORT="$(awk -F "=" '/FRONTEND_REPL_PORT/ { print $2 }' ${COMPOSE_ENV_FILE})"
 
 echo "DOCKER_COMPOSE_PID=${DOCKER_COMPOSE_PID}"
 
-while [[ ! $(nc -z localhost 3000) &&
+while [[ $(curl -s -o /dev/null -w '%{http_code}' localhost:${FRONTEND_REPL_PORT} 2>&1) != '200' &&
          -n "$(ps -A | grep ${DOCKER_COMPOSE_PID} | grep -v grep)" ]]
 do
     echo "$(ps -A | grep ${DOCKER_COMPOSE_PID} | grep -v grep)"

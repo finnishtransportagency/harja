@@ -4,9 +4,9 @@
                       [org.clojure/test.check "0.9.0"]
                       [org.apache.pdfbox/pdfbox "2.0.8"]
 
-                      [com.bhauman/figwheel-main "0.2.1"]
+                      [com.bhauman/figwheel-main "0.2.11"]
                       [com.bhauman/rebel-readline-cljs "0.1.4"]]
-       :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
+       :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                  [test2junit "1.4.2"]
@@ -14,10 +14,6 @@
        ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
        ;; :resource-paths ["opt/sonic/7.6.2/*"]
        }
- :repl {:repl-options {:init-ns harja.palvelin.main
-                       :init (harja.palvelin.main/-main)
-                       :port 4005
-                       :timeout 120000}}
  :dev-ymparisto {:plugins [[lein-with-env-vars "0.2.0"]]
                  :env-vars {:HARJA_DEV_YMPARISTO "true"
                             :HARJA_TIETOKANTA_HOST "localhost"
@@ -26,15 +22,26 @@
                             ;; Testeihin devatessa
                             :HARJA_AJA_GATLING_RAPORTTI "false"
                             :HARJA_NOLOG "false"}}
- :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/harja-target/%s/"))
-                 :compile-path "%s/classes"
+ :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]}
+ :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
+                 :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/js"))
+                                            #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))
+                                            "dev-resources/tmp"
+                                            "resources"]
+                 :less ^:replace {:source-paths ["dev-resources/less/application"
+                                                 "dev-resources/less/laadunseuranta/application"]
+                                  :target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))}
+                 :jvm-opts ["-Xverify:none"]
+                 :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
                  :clean-targets ^{:protect false
-                                  :replace true} ["dev-resources/js/out"
-                                                  "dev-resources/js/harja.js"
+                                  :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/js"))
+                                                  #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))
                                                   "dev-resources/tmp"
-                                                  :target-path
-                                                  "resources/public/js/harja.js"
-                                                  "resource/public/js/harja"]}
+                                                  :target-path]}
+ :repl {:repl-options {:init-ns harja.palvelin.main
+                       :init (harja.palvelin.main/-main)
+                       :port 4005
+                       :timeout 120000}}
  :test {:dependencies [[clj-webdriver "0.7.2"]
                        [org.seleniumhq.selenium/selenium-java "3.8.1"]
                        [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
