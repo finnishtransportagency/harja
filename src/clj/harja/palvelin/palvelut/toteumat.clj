@@ -404,10 +404,10 @@
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (do
       (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
-      (toteumat-q/poista-toteuma! db (:id user) toteuma-id)
-      (toteumat-q/poista-toteuma-tehtava! db {:kayttaja (:id user)
-                                              :toteuma-id toteuma-id}))
-
+      (jdbc/with-db-transaction [tx db]
+                                (toteumat-q/poista-toteuma! tx (:id user) toteuma-id)
+                                (toteumat-q/poista-toteuma-tehtava! tx {:kayttaja (:id user)
+                                                                        :toteuma-id toteuma-id})))
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 ;(def ___malli
