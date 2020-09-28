@@ -151,7 +151,7 @@
 (defn suorita
   [db user {:keys [alkupvm loppupvm] :as parametrit}]
   (let [{:keys [otsikot rivit yhteensa]} (kulut-tehtavaryhmittain db parametrit)
-        tavoitehinta (hae-tavoitehinta db user parametrit)]
+        tavoitehinta (hae-tavoitehinta db parametrit)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
      [:otsikko (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
      [:teksti (str "Rapsapapsa! " (pr-str parametrit)
