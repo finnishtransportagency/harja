@@ -310,7 +310,7 @@
           anti-csrf-token-secret-key (:anti-csrf-token asetukset)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
-                          (route/files "" {:root "dev-resources"}))]
+                          (route/files "" {:root (:dev-resources-path asetukset)}))]
       (swap! lopetus-fn
              (constantly
                (http/run-server

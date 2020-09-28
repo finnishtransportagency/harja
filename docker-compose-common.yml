@@ -21,6 +21,7 @@ services:
       - "HARJA_SALLI_OLETUSKAYTTAJA=false"
       - "HARJA_AJA_GATLING_RAPORTTI=false"
       - "HARJA_NOLOG=false"
+      - "HARJA_DEV_RESOURCES_PATH=${DC_JAETTU_KANSIO}/${BRANCH}/dev-resources"
     env_file:
       - .docker_compose_container_env
     volumes:

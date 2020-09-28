@@ -19,23 +19,24 @@
                             :HARJA_TIETOKANTA_HOST "localhost"
                             :HARJA_TIETOKANTA_HOST_KAANNOS "localhost"
                             :HARJA_SALLI_OLETUSKAYTTAJA "false"
+                            :HARJA_DEV_RESOURCES_PATH "dev-resources"
                             ;; Testeihin devatessa
                             :HARJA_AJA_GATLING_RAPORTTI "false"
                             :HARJA_NOLOG "false"}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]}
  :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
-                 :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/js"))
-                                            #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))
+                 :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
+                                            ;#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/js"))
+                                            ;#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))
                                             "dev-resources/tmp"
                                             "resources"]
                  :less ^:replace {:source-paths ["dev-resources/less/application"
                                                  "dev-resources/less/laadunseuranta/application"]
-                                  :target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))}
+                                  :target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))}
                  :jvm-opts ["-Xverify:none"]
                  :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
                  :clean-targets ^{:protect false
-                                  :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/js"))
-                                                  #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))
+                                  :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                                   "dev-resources/tmp"
                                                   :target-path]}
  :repl {:repl-options {:init-ns harja.palvelin.main

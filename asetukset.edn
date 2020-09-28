@@ -7,7 +7,7 @@
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
                  :salli-oletuskayttaja? #=(eval (System/getenv "HARJA_SALLI_OLETUSKAYTTAJA"))
-                 }
+                 :dev-resources-path #=(eval (System/getenv "HARJA_DEV_RESOURCES_PATH"))}
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
  :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"

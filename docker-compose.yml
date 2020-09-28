@@ -38,6 +38,7 @@ services:
       set -m
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
       echo 'ALOITETAAN REPL'
+      # < dev/null koska https://github.com/technomancy/leiningen/issues/1173
       lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_1} > /var/log/harja.log 2>&1 </dev/null &
       # Odotetaan, että back repl saadaan pystyyn
       while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_1} 2>&1 | grep 'Empty reply from server')\" ]]

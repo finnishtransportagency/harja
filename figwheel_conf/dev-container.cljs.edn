@@ -1,5 +1,5 @@
 ^{:watch-dirs ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
-  :css-dirs [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/css"))]
+  :css-dirs [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))]
   :reload-clj-files false
   :load-warninged-code true
   :open-url false
@@ -9,8 +9,8 @@
 {:main harja.asiakas.main
  :optimizations :none
  :source-map true
- :output-to #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/js/harja.js" ))
- :output-dir #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/js/out" ))
+ :output-to #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/js/harja.js" ))
+ :output-dir #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/js/out" ))
  :asset-path "js/out"
  :libs ["src/js/kuvataso.js"]
  :closure-output-charset "US-ASCII"
