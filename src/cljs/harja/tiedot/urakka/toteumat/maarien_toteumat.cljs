@@ -70,20 +70,19 @@
 
 (defn validoinnit
   ([avain lomake indeksi]
-   (let []
-     (avain {::t/maara [(tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-nil)
-                        (tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-tyhja)
-                        (tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/numero)]
-             ::t/lisatieto [(tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
-                                              tila/ei-nil)
-                            (tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
-                                              tila/ei-tyhja)]
-             ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
-             ::t/tehtava [tila/ei-nil tila/ei-tyhja]
-             ::t/sijainti [(tila/silloin-kun #(nil? (get-in lomake [::t/toteumat indeksi ::t/ei-sijaintia]))
-                                             tila/ei-nil)]
-             ::t/tyyppi [tila/ei-nil]
-             ::t/pvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]})))
+   (avain {::t/maara [(tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-nil)
+                      (tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-tyhja)
+                      (tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/numero)]
+           ::t/lisatieto [(tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
+                                            tila/ei-nil)
+                          (tila/silloin-kun #(= :lisatyo (::t/tyyppi lomake))
+                                            tila/ei-tyhja)]
+           ::t/toimenpide [tila/ei-nil tila/ei-tyhja]
+           ::t/tehtava [tila/ei-nil tila/ei-tyhja]
+           ::t/sijainti [(tila/silloin-kun #(nil? (get-in lomake [::t/toteumat indeksi ::t/ei-sijaintia]))
+                                           tila/ei-nil)]
+           ::t/tyyppi [tila/ei-nil]
+           ::t/pvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]}))
   ([avain lomake]
    (validoinnit avain lomake 0))
   ([avain]
