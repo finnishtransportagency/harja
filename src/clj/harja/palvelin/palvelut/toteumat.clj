@@ -456,12 +456,7 @@
                  :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
         (jdbc/with-db-transaction [db db]
                                   (doall
-                                    (for [{maara                                                        :maara
-                                           lisatieto                                                    :lisatieto
-                                           tehtava                                                      :tehtava
-                                           toteuma-id                                                   :toteuma-id
-                                           toteuma-tehtava-id                                           :toteuma-tehtava-id
-                                           poistettu                                                    :poistettu
+                                    (for [{:keys [maara lisatieto tehtava toteuma-id toteuma-tehtava-id poistettu]
                                            {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} :sijainti
                                            :as                                                          _toteuma} toteumat]
                                       (if poistettu
