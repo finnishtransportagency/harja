@@ -211,7 +211,7 @@
                              {:otsikko "Kaikki" :id 0}
                              (:valittu-toimenpide app))
         valittu-hoitokausi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
-                             2019
+                             vuosi
                              (get-in app [:hoitokauden-alkuvuosi]))
         syottomoodi (get-in app [:syottomoodi])
         filtterit (:hakufiltteri app)]
@@ -239,7 +239,7 @@
       [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
         "Lisaa toteuma"
-        #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app)))
+        (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
         {:vayla-tyyli? true
          :luokka "suuri"}]]]
      [:div.flex-row
