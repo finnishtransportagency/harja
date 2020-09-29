@@ -11,7 +11,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
+            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
+            [namespacefy.core :as namespacefy])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -250,11 +251,7 @@
                                             toteumat)
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
-          toteumat (mapv #(into {}                          ; siivotaan namespacet lähetettävästä
-                                (map
-                                  (fn [[k v]]
-                                    [(-> k name keyword) v])
-                                  %))
+          toteumat (mapv namespacefy/unnamespacefy
                          toteumat)]
       (if (true? validi?)
         (tuck-apurit/post! :tallenna-toteuma
