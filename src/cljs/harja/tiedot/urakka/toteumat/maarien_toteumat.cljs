@@ -195,20 +195,18 @@
     t))
 
 (defn- vaihda-toimenpide-tyypin-mukaan [app tyyppi]
-  (let [toimenpide
-        (cond
-          (= tyyppi :akillinen-hoitotyo)
-          (some (fn [toimenpide]
-                  (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
-                    toimenpide))
-                (get-in app [:toimenpiteet]))
-          (= tyyppi :lisatyo)
-          (some (fn [toimenpide]
-                  (when (= "7.0 LISÄTYÖT" (:otsikko toimenpide))
-                    toimenpide))
-                (get-in app [:toimenpiteet]))
-          :else {:otsikko "Kaikki" :id 0})]
-    toimenpide))
+  (cond
+    (= tyyppi :akillinen-hoitotyo)
+    (some (fn [toimenpide]
+            (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
+              toimenpide))
+          (get-in app [:toimenpiteet]))
+    (= tyyppi :lisatyo)
+    (some (fn [toimenpide]
+            (when (= "7.0 LISÄTYÖT" (:otsikko toimenpide))
+              toimenpide))
+          (get-in app [:toimenpiteet]))
+    :else {:otsikko "Kaikki" :id 0}))
 
 (defn- paivita-sijainti-toteumiin [toteumat app]
   (map-indexed (fn [indeksi toteuma]
