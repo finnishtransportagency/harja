@@ -4,35 +4,37 @@ set -euo pipefail
 HARJA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 COMPOSE_ENV_FILE="${HARJA_DIR}/.docker_compose_env"
 
+source "${HARJA_DIR}/sh/os_riippuvaiset_fns.sh"
+mkdir -p "${HARJA_DIR}/dev-resources/tmp"
+
 lisaa_env_muuttuja() {
   NIMI=$1
   ARVO=$2
   if [[ -n $(awk "/^${NIMI}/ { print }" $COMPOSE_ENV_FILE) ]]
   then
     # Ympäristömuuttujalle on annettu jokin arvo
-    sed -i '' -e "s/${NIMI}.*/${NIMI}=${ARVO}/g" $COMPOSE_ENV_FILE
+    os_sed_inplace -e "s/${NIMI}.*/${NIMI}=${ARVO}/g" $COMPOSE_ENV_FILE
   else
     # Ympäristömuuttujalle ei ole annettu arvoa
     printf "%s\n" "${NIMI}=${ARVO}" >> $COMPOSE_ENV_FILE
   fi
 }
 
-if [[ "$OSTYPE" == "darwin"* ]]
+if [[ "$OMA_OS_TYPE" == 'OSX' ]]
 then
-  # Hostina toimii Mac OSX
-  lisaa_env_muuttuja DC_VOLUME_CONSISTENCY delegated
+    lisaa_env_muuttuja DC_VOLUME_CONSISTENCY delegated
 else
-  lisaa_env_muuttuja DC_VOLUME_CONSISTENCY consistent
+    lisaa_env_muuttuja DC_VOLUME_CONSISTENCY consistent
 fi
 
 if [[ -n "$(echo $@ | grep clean)" ]]
 then
-  lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'"
+    lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'"
 else
-  lisaa_env_muuttuja LEININGEN_CLEAN '""'
+    lisaa_env_muuttuja LEININGEN_CLEAN '""'
 fi
 
-sed -i '' -e "s/BRANCH=.*/BRANCH=$(git branch --show-current)/g" "${HARJA_DIR}/.docker_compose_env"
+os_sed_inplace -e "s/BRANCH=.*/BRANCH=$(git branch --show-current)/g" "${HARJA_DIR}/.docker_compose_env"
 
 echo "Käynnistetään compose ja ohjataan output ${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log tiedostoon ..."
 docker-compose --env-file $COMPOSE_ENV_FILE up > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
