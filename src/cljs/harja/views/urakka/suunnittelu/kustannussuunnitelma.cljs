@@ -380,7 +380,7 @@
 (defsolu SuunnitelmienTilaOtsikko []
   (fn suunnitelman-selitteet [this]
     [:div#suunnitelman-selitteet
-     [:span [ikonit/ok] "Kaikki kentätä täytetty"]
+     [:span [ikonit/ok] "Kaikki kentältä täytetty"]
      [:span [ikonit/livicon-question] "Keskeneräinen"]
      [:span [ikonit/remove] "Suunnitelma puuttuu"]]))
 
@@ -2591,7 +2591,7 @@
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma
-           [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+           [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Kulut-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
            (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
              [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
                                               (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
@@ -2615,7 +2615,7 @@
              (get-in app [:gridit :suunnitelmien-tila :grid])
              (:kantahaku-valmis? app)]
             [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
-            [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma  Sampoa varten. Ks. Laskutus > Maksuerät."]]
+            [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma Sampoa varten. Ks. Kulut > Maksuerät."]]
            [:span.viiva-alas]
            [hankintakustannukset-taulukot
             (get-in app [:domain :kirjoitusoikeus?])
