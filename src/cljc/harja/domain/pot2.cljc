@@ -177,8 +177,8 @@
     "luoja" ::m/luoja-id
     "muokkaaja" ::m/muokkaaja-id
     "paallystyskohde" ::paallystyskohde-id}]
-  ["pot2_tyomenetelma" ::pot2-tyomenetelma]
-  ["pot2_paallystystiedot" ::pot2-paallystystiedot
+  ["pot2_kulutuskerros_toimenpide" ::pot2-kulutuskerros-toimenpide]
+  ["pot2_paallystekerros" ::pot2-paallystekerros
    {"kuulamyllyarvo" ::paallystysiedot-km-arvo}]
   ["pot2_massa_runkoaine" ::pot2-massa-runkoaine
    {"id" :runkoaine/id
