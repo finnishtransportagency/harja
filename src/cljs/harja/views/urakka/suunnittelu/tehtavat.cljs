@@ -105,7 +105,9 @@
                                                                                       ""
                                                                                       maara))
                                                                             :class #{(sarakkeiden-leveys :maara-input) "input-default"}
-                                                                            :disabled? (some = [nil "" "-" yksikko])
+                                                                            :disabled? (or (nil? yksikko)
+                                                                                           ("" yksikko)
+                                                                                           ("-" yksikko))
                                                                             :on-blur (fn [arvo]
                                                                                        (let [arvo (-> arvo (.. -target -value))]
                                                                                          (when (validi? arvo :numero)
