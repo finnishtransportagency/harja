@@ -68,6 +68,9 @@
          {:leveys 1 :otsikko (cond
                                kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
                                :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
+        ; [id otsikko summa]
+        ; [id otsikko summa-hka summa-kk]
+        ;  0  1       2         3
         rivit (loop [rivit-hoitokausi rivit-hoitokauden-alusta
                      rivit-kuukausi rivit-tassa-kuussa
                      kaikki {}]
@@ -83,13 +86,13 @@
                                    (assoc ks (first rivi-hoitokausi) [(first rivi-hoitokausi)
                                                                       (second rivi-hoitokausi)
                                                                       (nth rivi-hoitokausi 2)
-                                                                      (nth (get ks (second rivi-hoitokausi)) 3 0)])
+                                                                      (nth (get ks (first rivi-hoitokausi)) 3 0)])
                                    ks)
                                  (if (not (nil? rivi-kk))
                                    (assoc ks (first rivi-kk) [(first rivi-kk)
                                                               (second rivi-kk)
-                                                              (nth (get ks (second rivi-kk)) 2 0)
-                                                              (nth rivi-hoitokausi 2)])
+                                                              (nth (get ks (first rivi-kk)) 2 0)
+                                                              (nth rivi-kk 2)])
                                    ks))))))
         rivit (sort-by first (mapv second rivit))
         rivit (mapv #(into [] (rest %)) rivit)
@@ -101,6 +104,7 @@
                          rivit)]
     {:otsikot  otsikot
      :yhteensa yhteensa
+     :debug    ["HKA" rivit-hoitokauden-alusta "RTA" rivit-tassa-kuussa "APVMVKV" alkupvm-valittu-kuu-tai-vali "LPVKV" loppupvm-valittu-kuu-tai-vali "APVHK" alkupvm-hoitokausi "LPVHK" loppupvm-hoitokausi]
      :rivit    rivit}))
 
 (defn- kulut-hallintayksikolle
@@ -150,13 +154,14 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm] :as parametrit}]
-  (let [{:keys [otsikot rivit yhteensa]} (kulut-tehtavaryhmittain db parametrit)
+  (let [{:keys [otsikot rivit yhteensa debug]} (kulut-tehtavaryhmittain db parametrit)
         tavoitehinta (hae-tavoitehinta db parametrit)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
      [:otsikko (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
      [:teksti (str "Rapsapapsa! " (pr-str parametrit)
                    " rivit " (pr-str rivit)
                    " th " (pr-str tavoitehinta))]
+     [:teksti (str "DEBUG" (pr-str debug))]
      [:taulukko
       {}
       otsikot
