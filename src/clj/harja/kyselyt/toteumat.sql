@@ -435,8 +435,6 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                            toimenpidekoodi tk,
                            toteuma t,
                            tehtavaryhma tr1
-                               JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-                               JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
                       WHERE tk.id = tt.toimenpidekoodi
                         AND t.id = tt.toteuma
                         AND t.poistettu IS NOT TRUE
@@ -465,9 +463,6 @@ SELECT ut.id                      AS id,
                        ON t.toimenpidekoodi_id = ut.tehtava AND t."hoitokauden-alkuvuosi" = ut."hoitokauden-alkuvuosi",
          toimenpidekoodi tk,
          tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-
     WHERE ut.tehtava = tk.id
       AND tr1.id = tk.tehtavaryhma
 
@@ -499,8 +494,6 @@ SELECT tk.id                      AS id,
          toimenpidekoodi tk,
          toteuma t,
          tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
     WHERE tk.id = tt.toimenpidekoodi
       AND tk.id NOT IN (SELECT ut.tehtava
                             FROM urakka_tehtavamaara ut
@@ -595,9 +588,11 @@ SELECT tk.id AS id,
        tk.suunnitteluyksikko AS yksikko
     FROM toimenpidekoodi tk,
          tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-    WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND (tk.kasin_lisattava_maara = true OR tr1.otsikko = '7.0 LISÄTYÖT' OR tr1.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA')
+    WHERE tr1.id = tk.tehtavaryhma
+      AND tk.taso = 4
+      AND (tk.kasin_lisattava_maara = true
+        OR (tk.kasin_lisattava_maara = false AND tr1.otsikko = '7.0 LISÄTYÖT')
+        OR (tk.kasin_lisattava_maara = false AND tr1.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA'))
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
 
 -- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat

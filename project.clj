@@ -81,12 +81,6 @@
                  [cljs-ajax "0.8.0"]
 
                  [reagent "0.9.1"]
-                 [data-frisk-reagent "0.4.5"]
-
-
-                 [data-frisk-reagent "0.4.5"]
-
-
 
                  [alandipert/storage-atom "2.0.1"]
 
