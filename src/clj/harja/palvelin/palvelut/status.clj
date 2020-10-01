@@ -43,10 +43,10 @@
 
 (defn sonja-yhteyden-tila-ok?
   [db kehitysmoodi? timeout-ms komponenttien-tila]
-  (let [taman-palvelimen-tila-ok? (fn []
-                                    (get-in @komponenttien-tila [:sonja :kaikki-ok?]))
-        jonku-palvelimen-tila-ok? (fn []
-                                    (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
+  (letfn [(taman-palvelimen-tila-ok? []
+            (get-in @komponenttien-tila [:sonja :kaikki-ok?]))
+          (jonku-palvelimen-tila-ok? []
+            (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
     (tarkista-tila! timeout-ms
                     (fn []
                       (or (taman-palvelimen-tila-ok?)

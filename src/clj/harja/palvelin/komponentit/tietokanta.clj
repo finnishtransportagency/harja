@@ -4,6 +4,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
+            [taoensso.timbre :as log]
 
             [harja.palvelin.tyokalut.event-apurit :as event-apurit]
             [harja.kyselyt.status :as status-q]
@@ -33,7 +34,8 @@
                                                      (= 1 (.getObject rs 1))
                                                      false)]
                                      (event-julkaisija kanta-ok?)))
-                                 (catch Throwable _
+                                 (catch Throwable t
+                                   (log/error "Kannan tilan tarkastaminen epäonnistui: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
                                    (event-julkaisija false))))))
 
 (defn tarkkaile-replicaa [db-replica lopeta-tarkkailu-kanava
@@ -43,7 +45,8 @@
                           paivitystiheys-ms
                           (fn []
                             (let [replikoinnin-viive (try (status-q/hae-replikoinnin-viive db-replica)
-                                                          (catch Throwable _
+                                                          (catch Throwable t
+                                                            (log/error "Replican tilan tarkastaminen epäonnistui: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
                                                             :virhe))
                                   replica-ok? (boolean (and (not= :virhe replikoinnin-viive)
                                                             (not (and replikoinnin-viive

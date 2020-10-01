@@ -4,6 +4,7 @@
     [clojure.core.async :as a :refer [<! go timeout]]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.fim :as fim]
@@ -190,6 +191,7 @@
                                               :tarkkailun-nimi :db)
                                        kehitysmoodi)
             [:komponentti-event])
+      :db-event (event-tietokanta/luo-tietokanta tietokanta)
       :db-replica (component/using
                     (tietokanta/luo-tietokanta (assoc tietokanta-replica
                                                       :tarkkailun-timeout-arvot
@@ -200,7 +202,7 @@
                     [:komponentti-event])
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)
-                              [:db])
+                              {:db :db-event})
 
       :todennus (component/using
                   (todennus/http-todennus (:sahke-headerit asetukset))

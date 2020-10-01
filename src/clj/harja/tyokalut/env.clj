@@ -6,7 +6,7 @@
   (let [ym (clj-str/trim (str (System/getenv ymparisto-muuttuja)))]
     (cond
       (= "true" ym) true
-      (= "false" ym) true
+      (= "false" ym) false
       (re-find #"^-?\d+$" ym) (Long/parseLong ym)
       (re-find #"^-?\d+(\.\d+)?$" ym) (Double/parseDouble ym)
       :else ym)))
