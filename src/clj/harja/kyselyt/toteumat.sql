@@ -481,7 +481,10 @@ SELECT tk.id                      AS id,
        t.id                       AS toteuma_id,
        tt.id                      AS toteuma_tehtava_id,
        t.urakka                   AS urakka,
-       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       CASE
+           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)
+           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)
+           END AS "hoitokauden-alkuvuosi",
        tk.nimi                    AS tehtava,
        tr1.otsikko                AS tehtavaryhma,
        -1                         AS suunniteltu_maara,
@@ -513,7 +516,10 @@ ORDER BY tehtavaryhma ASC, toteuma_aika ASC;
 -- name: hae-maarien-toteuma
 -- Hae yksittäinen toteuma muokkaukseen
 SELECT t.id        AS toteuma_id,
-       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       CASE
+           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)
+           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)
+           END AS "hoitokauden-alkuvuosi",
        tk.nimi                    AS tehtava,
        tk.id                      AS tehtava_id,
        tt.maara                   AS toteutunut,
@@ -544,7 +550,10 @@ SELECT t.id        AS toteuma_id,
 -- name: hae-akillinen-toteuma
 -- Hae yksittäinen äkillinen hoitottyö toteuma muokkaukseen
 SELECT t.id        AS toteuma_id,
-       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       CASE
+           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)
+           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)
+           END AS "hoitokauden-alkuvuosi",
        tk.nimi                    AS tehtava,
        tk.id                      AS tehtava_id,
        tt.maara                   AS toteutunut,
@@ -590,30 +599,8 @@ SELECT tk.id AS id,
          tehtavaryhma tr1
     WHERE tr1.id = tk.tehtavaryhma
       AND tk.taso = 4
-      AND (tk.kasin_lisattava_maara = true
-        OR (tk.kasin_lisattava_maara = false AND tr1.otsikko = '7.0 LISÄTYÖT')
-        OR (tk.kasin_lisattava_maara = false AND tr1.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA'))
+      AND tk.kasin_lisattava_maara = true
       AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
-
--- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat
-SELECT  tk.id AS id,
-        tr.nimi AS tehtava,
-        tk.suunnitteluyksikko AS yksikko
-    FROM toimenpidekoodi tk,
-         tehtavaryhma tr
-    WHERE (tr.nimi like '%Äkilliset hoitotyöt%'
-      or tr.nimi like '%Tilaajan rahavaraus%'
-      or tr.nimi like '%Vahinkojen korjaukset%')
-      AND tk.tehtavaryhma = tr.id;
-
--- name: listaa-lisatoiden-tehtavat
-SELECT  tk.id AS id,
-        tk.nimi as tehtava,
-        tk.suunnitteluyksikko AS yksikko
-FROM toimenpidekoodi tk,
-     tehtavaryhma tr
-WHERE tk.nimi like '%Lisätyö%'
-  AND tk.tehtavaryhma = tr.id;
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset

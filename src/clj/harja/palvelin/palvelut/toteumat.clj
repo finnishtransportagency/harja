@@ -389,17 +389,6 @@
     (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:tehtavaryhma tehtavaryhma})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn hae-akillisten-hoitotoiden-toimenpiteiden-tehtavat [db user {:keys [urakka-id]}]
-  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (toteumat-q/listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat db)
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
-; lisätöillä ei ole oikeasti omia tehtäviä, mutta niille on olemassa dummytehtävät
-(defn hae-lisatoiden-toimenpiteiden-tehtavat [db user {:keys [urakka-id]}]
-  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (toteumat-q/listaa-lisatoiden-tehtavat db)
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
 (defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (do
@@ -1105,12 +1094,6 @@
       :maarien-toteutumien-toimenpiteiden-tehtavat
       (fn [user tiedot]
         (hae-maarien-toteumien-toimenpiteiden-tehtavat db-replica user tiedot))
-      :akillisten-hoitotoiden-toimenpiteiden-tehtavat
-      (fn [user tiedot]
-        (hae-akillisten-hoitotoiden-toimenpiteiden-tehtavat db-replica user tiedot))
-      :lisatoiden-toimenpiteiden-tehtavat
-      (fn [user tiedot]
-        (hae-lisatoiden-toimenpiteiden-tehtavat db-replica user tiedot))
       :tallenna-toteuma
       (fn [user tiedot]
         (tallenna-toteuma! db user tiedot))
@@ -1179,7 +1162,6 @@
       :urakan-maarien-toteumat
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
-      :akillisten-hoitotoiden-toimenpiteiden-tehtavat
       :tallenna-toteuma
       :hae-maarien-toteuma
       :hae-akillinen-toteuma
