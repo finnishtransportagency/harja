@@ -232,12 +232,11 @@
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (t/->HaeTehtavat
-                            {:hoitokausi         (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
+                            {:hoitokausi         :kaikki
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div#vayla
-         ;[debug/debug app]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
