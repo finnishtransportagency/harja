@@ -64,10 +64,10 @@
                                                                                       :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                       :urakka   urakka-id}))
         otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-         {:leveys 1 :otsikko (str "Hoitokauden alusta" (pvm/pvm alkupvm-hoitokausi) (pvm/pvm loppupvm-hoitokausi))}
-         {:leveys 1 :otsikko (cond
-                               kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
-                               :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
+                 {:leveys 1 :otsikko (str "Hoitokauden alusta" (pvm/pvm alkupvm-hoitokausi) (pvm/pvm loppupvm-hoitokausi))}
+                 {:leveys 1 :otsikko (cond
+                                       kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
+                                       :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
         ; [id otsikko summa]
         ; [id otsikko summa-hka summa-kk]
         ;  0  1       2         3
@@ -95,13 +95,21 @@
                                                               (nth rivi-kk 2)])
                                    ks))))))
         rivit (sort-by first (mapv second rivit))
-        rivit (mapv #(into [] (rest %)) rivit)
         yhteensa (reduce #(->
                             ["Yhteensä"
-                             (+ (second %1) (second %2))
-                             (+ (nth %1 2) (nth %2 2))])
+                             (+ (second %1) (nth %2 2))
+                             (+ (nth %1 2) (nth %2 3))])
                          ["Yhteensä" 0 0]
-                         rivit)]
+                         rivit)
+        muuta-pilkut-ja-poista-id (comp
+                                    (map (fn [k]
+                                           (rest
+                                             (transduce
+                                               (comp (map str)
+                                                     (map #(clojure.string/replace % #"(\d+)\.(\d+)" "$1,$2")))
+                                               conj
+                                               k)))))
+        rivit (into [] muuta-pilkut-ja-poista-id rivit)]
     {:otsikot  otsikot
      :yhteensa yhteensa
      :debug    ["HKA" rivit-hoitokauden-alusta "RTA" rivit-tassa-kuussa "APVMVKV" alkupvm-valittu-kuu-tai-vali "LPVKV" loppupvm-valittu-kuu-tai-vali "APVHK" alkupvm-hoitokausi "LPVHK" loppupvm-hoitokausi]
