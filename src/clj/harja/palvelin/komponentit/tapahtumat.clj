@@ -9,11 +9,11 @@
             [cheshire.core :as cheshire]
             [clojure.core.async :refer [thread] :as async]
             [clojure.string :as clj-str]
+            [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tapahtumat :as q-tapahtumat]
             [harja.fmt :as fmt]
             [taoensso.timbre :as log])
-  (:import [com.mchange.v2.c3p0 C3P0ProxyConnection]
-           [org.postgresql PGNotification]
+  (:import [org.postgresql PGNotification]
            [org.postgresql.util PSQLException]
            [java.util UUID]
            [java.net InetAddress]))
@@ -56,14 +56,18 @@
       (tapahtuman-kanava db {:nimi tapahtuma})
       (:kanava (first vastaus)))))
 
-(defn- kuuntele-klusterin-tapahtumaa! [tapahtuma-connection db tapahtuma]
+(defn- kuuntele-klusterin-tapahtumaa! [db tapahtuma]
   (let [kaytettava-kanava (kaytettava-kanava! db tapahtuma)]
-    (u tapahtuma-connection (str "LISTEN " kaytettava-kanava))
-    kaytettava-kanava))
+    (jdbc/with-db-connection [db db]
+      (let [connection (jdbc/db-connection db)]
+        (u connection (str "LISTEN " kaytettava-kanava)))
+      kaytettava-kanava)))
 
-(defn- kuuroudu-klusterin-tapahtumasta [tapahtuma-connection db tapahtuma]
+(defn- kuuroudu-klusterin-tapahtumasta [db tapahtuma]
   (let [tapahtuman-kanava (tapahtuman-kanava db tapahtuma)]
-    (u tapahtuma-connection (str "UNLISTEN " tapahtuman-kanava))))
+    (jdbc/with-db-connection [db db]
+      (let [connection (jdbc/db-connection db)]
+        (u connection (str "UNLISTEN " tapahtuman-kanava))))))
 
 
 (def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
@@ -81,7 +85,7 @@
       (.replace "<" "")
       (.replace ">" "")))
 
-(defn- uusi-tietokantayhteys! [db ajossa connection kuuntelijat tarkkailijat]
+#_(defn- uusi-tietokantayhteys! [db ajossa connection kuuntelijat tarkkailijat]
   ;; Luotetaan siihen, että tätä ajaa vain yksi säie, start-funktion (thread (loop ... )) -blokki,
   ;; joten tätä ei yritetä tehdä yhtä aikaa useasta suunnasta/säikeestä.
   (reset! ajossa false)
@@ -109,61 +113,63 @@
 (defprotocol Kuuroudu
   (kuuroudu! [this tapahtuma]))
 
-(defrecord Tapahtumat [connection kuuntelijat tarkkailijat ajossa]
+(defrecord Tapahtumat [kuuntelijat tarkkailijat ajossa]
   component/Lifecycle
   (start [this]
     (let [tarkkailu-kanava (async/chan (async/sliding-buffer 1000)
-                                 (map (fn [arvo]
-                                        (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot perus-broadcast jonosta\n"
-                                                        "  tiedot: " arvo))
-                                        arvo))
-                                 (fn [t]
-                                   (log/error t "perus-broadcast jonossa tapahtui virhe")))
-          broadcast (async/pub tarkkailu-kanava ::event (fn [] (async/sliding-buffer 1000)))
+                                       (map (fn [arvo]
+                                              (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot perus-broadcast jonosta\n"
+                                                              "  tiedot: " arvo))
+                                              arvo))
+                                       (fn [t]
+                                         (log/error t "perus-broadcast jonossa tapahtui virhe")))
+          broadcast (async/pub tarkkailu-kanava ::tapahtuma (fn [] (async/sliding-buffer 1000)))
           this (assoc this ::tarkkailu-kanava tarkkailu-kanava
                       ::broadcast broadcast)]
       (log/info "Tapahtumat-komponentti käynnistyy")
       (reset! tarkkailijat {})
       (reset! kuuntelijat {})
       (reset! ajossa true)
-      (reset! connection (doto (.getConnection (:datasource (:db this)))
+      #_(reset! connection (doto (.getConnection (:datasource (:db this)))
                            (.setAutoCommit false)))
       ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "sonjaping" tai "urakan_123_tapahtumat".
       ;; arvona kullakin avaimella on seq async-kanavia (?)
       (thread (loop []
-                (when @ajossa
-                  (try
-                    (with-open [stmt (.createStatement @connection)
-                                rs (.executeQuery stmt "SELECT 1")]
-                      (doseq [^PGNotification notification (seq (.rawConnectionOperation @connection
-                                                                                         get-notifications
-                                                                                         C3P0ProxyConnection/RAW_CONNECTION
-                                                                                         (into-array Object [])))]
-                        (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
-                        (log/debug "kuuntelijat:" @kuuntelijat)
-                        (let [data (cheshire/decode (.getParameter notification))]
-                          (doseq [kasittelija (get @kuuntelijat (.getName notification))]
-                            ;; Käsittelijä ei sitten saa blockata
-                            (kasittelija data))
-                          (async/put! tarkkailu-kanava {::tapahtuma (.getName notification) ::data data}))))
-                    (catch PSQLException e
-                      (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
-                      (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
-                      (uusi-tietokantayhteys! (:db this) ajossa connection kuuntelijat tarkkailijat)))
+                (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
+                  (let [connection (cast (Class/forName "org.postgresql.jdbc.PgConnection")
+                                         (jdbc/db-connection db))]
+                    (loop [break? false]
+                      (when (and (not break?)
+                                 @ajossa)
+                        (try
+                          (doseq [^PGNotification notification (.getNotifications connection)]
+                            (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
+                            (log/debug "kuuntelijat:" @kuuntelijat)
+                            (let [data (cheshire/decode (.getParameter notification))]
+                              (doseq [kasittelija (get @kuuntelijat (.getName notification))]
+                                ;; Käsittelijä ei sitten saa blockata
+                                (kasittelija data))
+                              (async/put! tarkkailu-kanava {::tapahtuma (.getName notification) ::data data})))
+                          (catch PSQLException e
+                            (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
+                            (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
+                            (recur true)))
 
-                  (Thread/sleep 5000)
-                  (recur))))
+                        (Thread/sleep 5000)
+                        (recur false)))))
+                (recur)))
       this))
 
   (stop [this]
     (reset! ajossa false)
-    (run! #(u @connection (str "UNLISTEN " %))
-          (map first @kuuntelijat))
-    (doseq [[pos-kanava async-kanava] @tarkkailijat]
-      (u @connection (str "UNLISTEN " pos-kanava))
-      (async/close! async-kanava))
+    (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
+      (let [connection (jdbc/db-connection db)]
+        (run! #(u connection (str "UNLISTEN " %))
+              (map first @kuuntelijat))
+        (doseq [[pos-kanava async-kanava] @tarkkailijat]
+          (u connection (str "UNLISTEN " pos-kanava))
+          (async/close! async-kanava))))
     (async/close! (::tarkkailu-kanava this))
-    (.close @connection)
     this)
 
   Kuuroudu
@@ -177,8 +183,8 @@
   ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
   (kuuntele! [this tapahtuma callback]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
-          kanava (kuuntele-klusterin-tapahtumaa! @(:connection this) (:db this) tapahtuma)]
-      (swap! kuuntelijat update-in [kanava] conj callback)))
+          kanava (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)]
+      (swap! kuuntelijat update kanava conj callback)))
   (tarkkaile! [this tapahtuma tyyppi]
     (let [kuuntelija-kanava (async/chan 1000
                                         (map (fn [v]
@@ -209,4 +215,4 @@
                                                                                                                     (.toString (InetAddress/getLocalHost)))})}))))
 
 (defn luo-tapahtumat []
-  (->Tapahtumat (atom nil) (atom nil) (atom nil) (atom false)))
+  (->Tapahtumat (atom nil) (atom nil) (atom false)))

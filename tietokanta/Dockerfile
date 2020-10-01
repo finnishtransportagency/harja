@@ -19,8 +19,6 @@ ENV PGDATA="/var/lib/pgsql/${POSTGRESQL_VERSION}/data"
 
 WORKDIR /var/lib/pgsql
 
-RUN echo "FOO"
-
 ADD container_sh/hae-migraatiot-ja-testidata.sh ./hae-migraatiot-ja-testidata.sh
 ADD container_sh/odota-kaynnistymista.sh ./odota-kaynnistymista.sh
 ADD container_sh/aja-migraatiot.sh ./aja-migraatiot.sh
