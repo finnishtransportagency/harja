@@ -111,8 +111,7 @@
            (count kaikki-ilmoitukset)))
 
     (is (= (set/union (idt hoito-ilmoitukset)
-                      (idt paallystys-ilmoitukset)
-                      (idt teiden-hoito-ilmoitukset))
+                      (idt paallystys-ilmoitukset))
            (idt kaikki-ilmoitukset)))))
 
 (deftest tallenna-ilmoitustoimenpide
