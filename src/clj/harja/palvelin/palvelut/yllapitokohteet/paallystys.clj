@@ -596,20 +596,6 @@
     (hae-urakan-paallystysilmoitus-paallystyskohteella db user {:urakka-id urakka-id
                                                                 :paallystyskohde-id kohde-id})))
 
-(defn- hae-urakan-paallystysmassat
-  [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [massat (yllapito-q/hae-urakan-paallystysmassat db {::urakka-domain/id urakka-id})]
-    massat)
-  )
-
-(defn- tallenna-urakan-paallystysmassa
-  [db user tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (::urakka-domain/id tiedot))
-  (yllapito-q/tallenna-urakan-paallystysmassa db tiedot)
-  ; Tallennus palauttaa tallennetun paallystysmassan, mutta haetaan koko setti uusiksi
-  (yllapito-q/hae-urakan-paallystysmassat db (:harja.domin.urakka/id tiedot)))
-
 
 (defrecord Paallystys []
   component/Lifecycle
@@ -646,12 +632,6 @@
                         (fn [user tiedot]
                           (aseta-paallystysilmoituksen-tila db user tiedot))
                         {:kysely-spec ::pot-domain/aseta-paallystysilmoituksen-tila})
-      #_ (julkaise-palvelu http :hae-urakan-paallystysmassat
-                        (fn [user tiedot]
-                          (hae-urakan-paallystysmassat db user tiedot)))
-      #_ (julkaise-palvelu http :tallenna-urakan-paallystysmassa
-                        (fn [user tiedot]
-                          (tallenna-urakan-paallystysmassa db user tiedot)))
       this))
 
   (stop [this]
@@ -664,7 +644,5 @@
       :tallenna-paallystysilmoitusten-takuupvmt
       :hae-paallystyksen-maksuerat
       :tallenna-paallystyksen-maksuerat
-      ;:hae-urakan-paallystysmassat
-      ;:tallenna-urakan-paallystysmassa
       :aseta-paallystysilmoituksen-tila)
     this))

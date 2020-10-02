@@ -61,17 +61,3 @@
                        (map konv/alaviiva->rakenne))
                      (hae-yllapitokohteiden-tiedot-sahkopostilahetykseen db {:idt kohde-idt}))]
     tiedot))
-
-
-(defn hae-urakan-paallystysmassat
-  [db hakuehdot]
-  (fetch db
-         ::paallystysilmoitus/paallystysmassa
-         paallystysilmoitus/paallystysmassan-tiedot
-         hakuehdot))
-
-(defn tallenna-urakan-paallystysmassa
-  [db hakuehdot]
-  (insert! db
-         ::paallystysilmoitus/paallystysmassa
-         hakuehdot))
