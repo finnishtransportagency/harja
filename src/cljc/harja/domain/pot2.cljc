@@ -180,6 +180,7 @@
   ["pot2_kulutuskerros_toimenpide" ::pot2-kulutuskerros-toimenpide]
   ["pot2_paallystekerros" ::pot2-paallystekerros
    {"kuulamyllyarvo" ::paallystysiedot-km-arvo}]
+  ["pot2_runkoainetyyppi" ::pot2-runkoainetyyppi]
   ["pot2_massa_runkoaine" ::pot2-massa-runkoaine
    {"id" :runkoaine/id
     "pot2_massa_id" :runkoaine/pot2-massa-id
@@ -224,8 +225,7 @@
                                        :lisaaine/pot2-massa-id)}
    {::sideaineet (specql.rel/has-many :pot2-massa/id
                                       ::pot2-massa-sideaine
-                                      :sideaine/pot2-massa-id)}]
-  ["pot2_runkoaine" ::pot2-runkoaine])
+                                      :sideaine/pot2-massa-id)}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
 (def litteyslukuluokat [1, 2, 3, 4, 5, 6])

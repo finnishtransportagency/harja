@@ -66,9 +66,6 @@ VALUES
 ('Verkko (lujitekangas)', 'Verkko (lujitekangas)', 670),
 ('Verkko (muu)', 'Verkko (muu)', 671);
 
-
-
-
 CREATE TYPE kuulamyllyluokka AS ENUM
     ('AN5', 'AN7', 'AN10', 'AN14', 'AN19', 'AN30', 'AN22', 'Ei kuulamyllyä');
 
@@ -77,11 +74,12 @@ CREATE TABLE pot2_massa
     id                SERIAL PRIMARY KEY,
     urakka_id         INTEGER NOT NULL REFERENCES urakka (id),
     nimi              TEXT,
+    nimen_tarkenne    TEXT,
     massatyyppi       TEXT NOT NULL,
     max_raekoko       INTEGER NOT NULL CHECK (max_raekoko IN (5, 8, 11, 16, 22, 31)),
     asfalttiasema     TEXT,
     kuulamyllyluokka  kuulamyllyluokka NOT NULL,
-    litteyslukuluokka TEXT,
+    litteyslukuluokka DECIMAL (3,1) NOT NULL,
     DoP_nro           TEXT, -- DoP_nroa ei ole aina saatavilla heti? Siksi ei NOT NULL
 
     -- muokkausmetatiedot
@@ -95,17 +93,37 @@ CREATE INDEX massa_urakka_idx ON pot2_massa (urakka_id);
 COMMENT ON TABLE pot2_massa IS
     E'Uusien päällystysilmoitusten hallinnassa käytettävän materiaalikirjaston taulu, jonne kirjataan urakan päällystemassat ja niiden ominaisuudet.';
 
+
+CREATE TABLE pot2_mursketyyppi
+(
+    koodi   INTEGER PRIMARY KEY,
+    nimi    TEXT,
+    lyhenne TEXT
+);
+INSERT INTO pot2_mursketyyppi (nimi, lyhenne, koodi)
+VALUES
+('Kalliomurske', 'KaM', 1),
+('Soramurske', 'SoM', 2),
+('(Uusio) RA, Asfalttirouhe', 'Asf.rouhe', 3),
+('Muu', 'Muu', 4);
+
+CREATE TYPE murskeen_rakeisuus AS ENUM
+    ('0/32', '0/40', '0/45', '0/56', '0/63');
+
+CREATE TYPE iskunkestavyys AS ENUM
+    ('LA30', 'LA35', 'LA40');
+
 CREATE TABLE pot2_murske
 (
     id                SERIAL PRIMARY KEY,
     urakka_id         INTEGER NOT NULL REFERENCES urakka (id),
     nimi              TEXT,
-    massatyyppi       TEXT NOT NULL,
-    max_raekoko       INTEGER NOT NULL CHECK (max_raekoko IN (5, 8, 11, 16, 22, 31)),
-    asfalttiasema     TEXT,
-    kuulamyllyluokka  kuulamyllyluokka NOT NULL,
-    litteyslukuluokka TEXT,
-    DoP_nro           TEXT, -- DoP_nroa ei ole aina saatavilla heti? Siksi ei NOT NULL
+    nimen_tarkenne    TEXT,
+    tyyppi            INTEGER NOT NULL REFERENCES pot2_mursketyyppi(koodi),
+    esiintyma         TEXT NOT NULL,
+    rakeisuus         murskeen_rakeisuus,
+    iskunkestavyys    iskunkestavyys,
+    DoP_nro           TEXT, -- ei ole kaikentyyppisillä murskeilla, täten nullable
 
     -- muokkausmetatiedot
     poistettu         BOOLEAN   DEFAULT FALSE,
@@ -118,15 +136,33 @@ CREATE INDEX murske_urakka_idx ON pot2_murske (urakka_id);
 COMMENT ON TABLE pot2_murske IS
     E'Uusien päällystysilmoitusten hallinnassa käytettävän materiaalikirjaston taulu, jonne kirjataan urakan murskeet ja niiden ominaisuudet.';
 
+CREATE TABLE pot2_runkoainetyyppi (
+    koodi   INTEGER PRIMARY KEY,
+    nimi    TEXT,
+    lyhenne TEXT);
+INSERT INTO pot2_runkoainetyyppi (nimi, lyhenne, koodi)
+VALUES ('Kiviaines', 'Kiviaines', 1),
+       ('Asfalttirouhe', 'Asf.rouhe', 2),
+       ('Erikseen lisättävä fillerikiviaines', 'Filleri', 3),
+       ('Masuunikuonajauhe', 'MaKu', 4),
+       ('Ferrokromikuona (OKTO)', 'FKu', 5),
+       ('Teräskuona', 'TeKu', 6),
+       ('Muu', 'Muu', 7);
+
+CREATE TYPE fillerityyppi AS ENUM
+    ('Kalkkifilleri (KF)', 'Lentotuhka (LT)', 'Muu fillerikiviaines');
+
 CREATE TABLE pot2_massa_runkoaine
 (
-    id                 SERIAL PRIMARY KEY,
-    pot2_massa_id      INTEGER NOT NULL REFERENCES pot2_massa (id),
-    kiviaine_esiintyma TEXT,
-    kuulamyllyarvo     NUMERIC(3,1),
-    muotoarvo          NUMERIC(3,1),
-    massaprosentti     INTEGER,
-    erikseen_lisattava_fillerikiviaines TEXT -- Kalkkifilleri (KF), Lentotuhka (LT), Muu fillerikiviaines
+    id SERIAL PRIMARY KEY,
+    pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
+    tyyppi INTEGER NOT NULL REFERENCES pot2_runkoainetyyppi(koodi),
+    esiintyma    TEXT,
+    fillerityyppi fillerityyppi,
+    kuvaus TEXT,
+    kuulamyllyarvo NUMERIC,
+    litteysluku NUMERIC,
+    massaprosentti NUMERIC
 );
 CREATE INDEX pot2_massa_runkoaine_idx ON pot2_massa_runkoaine (pot2_massa_id);
 
@@ -135,9 +171,9 @@ CREATE TABLE pot2_massa_sideaine
 (
     id            SERIAL PRIMARY KEY,
     pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
+    "lopputuote?" BOOLEAN DEFAULT TRUE, -- FALSE = lisätty sideaine
     tyyppi        TEXT,
-    pitoisuus     NUMERIC,
-    "lopputuote?"   BOOLEAN DEFAULT FALSE
+    pitoisuus     NUMERIC
 );
 CREATE INDEX pot2_massa_sideaine_idx ON pot2_massa_sideaine (pot2_massa_id);
 
@@ -149,30 +185,6 @@ CREATE TABLE pot2_massa_lisaaine
     pitoisuus     NUMERIC
 );
 CREATE INDEX pot2_massa_lisaaine_idx ON pot2_massa_lisaaine (pot2_massa_id);
-
-CREATE TABLE pot2_runkoaine
-(
-    id SERIAL PRIMARY KEY,
-    nimi    TEXT NOT NULL,
-    "kuulamyllyarvo?" BOOLEAN,
-    "litteysluku?" BOOLEAN,
-    "massaprosentti?" BOOLEAN
-
-);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('Kiviaines', TRUE, TRUE, TRUE);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('Asfalttirouhe', TRUE, TRUE, TRUE);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('Erikseen lisättävä filleriaines', FALSE, FALSE, TRUE);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('Maku, Masuunikuonajauhe', TRUE, TRUE, TRUE);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('Fku, Ferrokromikuona (OKTO)', TRUE, TRUE, TRUE);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('TeKu, Teräskuona', TRUE, TRUE, TRUE);
-INSERT INTO pot2_runkoaine (nimi, "kuulamyllyarvo?", "litteysluku?", "massaprosentti?")
-    VALUES ('Muu', FALSE, FALSE, TRUE);
 
 -- Päällystysilmoitus2 eli POT2
 CREATE TABLE pot2
