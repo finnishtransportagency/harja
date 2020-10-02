@@ -54,7 +54,7 @@
        }
 
  :sonja
- {:url "tcp://localhost:61616"
+ {:url  #=(eval (str "tcp://" (System/getenv "HARJA_SONJA_BROKER_HOST") ":" (System/getenv "HARJA_SONJA_BROKER_PORT")))
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq}

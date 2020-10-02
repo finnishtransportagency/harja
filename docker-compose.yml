@@ -7,7 +7,7 @@ services:
       - "TZ=Europe/Helsinki"
     container_name: activemq
     ports:
-      - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
+      - "127.0.0.1:${HARJA_SONJA_BROKER_PORT}:61616" # broker (admin:adminactivemq)(amq:amq)
       - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
   harja-app-1:
     extends:
@@ -37,9 +37,15 @@ services:
       # Enable job control
       set -m
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
       echo 'ALOITETAAN REPL'
       # < dev/null koska https://github.com/technomancy/leiningen/issues/1173
-      lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_1} > /var/log/harja.log 2>&1 </dev/null &
+      lein trampoline with-profile $${LEIN_PROFILES} repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_1} > /var/log/harja.log 2>&1 </dev/null &
       # Odotetaan, että back repl saadaan pystyyn
       while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_1} 2>&1 | grep 'Empty reply from server')\" ]]
       do
@@ -80,8 +86,14 @@ services:
       do
         sleep 1
       done
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
       echo 'ALOITETAAN REPL'
-      lein trampoline with-profile +dev-container repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_2} > /var/log/harja.log 2>&1 </dev/null &
+      lein trampoline with-profile $${LEIN_PROFILES} repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_2} > /var/log/harja.log 2>&1 </dev/null &
       # Odotetaan, että back repl saadaan pystyyn
       while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_2} 2>&1 | grep 'Empty reply from server')\" ]]
       do

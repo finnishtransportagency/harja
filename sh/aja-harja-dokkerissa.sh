@@ -44,6 +44,13 @@ else
     lisaa_env_muuttuja DC_VOLUME_CONSISTENCY consistent local
 fi
 
+if [[ -n "$(echo $@ | grep emacs)" ]]
+then
+    lisaa_env_muuttuja LEININGEN_EMACS_PROFILE "dev-emacs" local
+else
+    lisaa_env_muuttuja LEININGEN_EMACS_PROFILE '' local
+fi
+
 if [[ -n "$(echo $@ | grep clean)" ]]
 then
     lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'"

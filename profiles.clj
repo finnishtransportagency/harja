@@ -22,12 +22,12 @@
                             :HARJA_DEV_RESOURCES_PATH "dev-resources"
                             ;; Testeihin devatessa
                             :HARJA_AJA_GATLING_RAPORTTI "false"
-                            :HARJA_NOLOG "false"}}
+                            :HARJA_NOLOG "false"
+                            :HARJA_SONJA_BROKER_HOST "localhost"
+                            :HARJA_SONJA_BROKER_PORT 61616}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]}
  :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
                  :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
-                                            ;#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/js"))
-                                            ;#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))
                                             "dev-resources/tmp"
                                             "resources"]
                  :less ^:replace {:source-paths ["dev-resources/less/application"
@@ -39,6 +39,7 @@
                                   :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                                   "dev-resources/tmp"
                                                   :target-path]}
+ :dev-emacs {:plugins [[cider/cider-nrepl "0.25.3"]]}
  :repl {:repl-options {:init-ns harja.palvelin.main
                        :init (harja.palvelin.main/-main)
                        :port 4005
