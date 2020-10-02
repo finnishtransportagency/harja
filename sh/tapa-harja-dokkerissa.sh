@@ -8,9 +8,9 @@ export BRANCH="$(git branch --show-current)"
 aja-yhteisessa-voluumissa() {
   if [[ -n $(docker ps | grep harja_harja-app_1) ]]
   then
-    docker exec -e BRANCH harja_harja-app_1 /bin/bash -c "cd \$\{DC_JAETTU_KANSIO\}; $1"
+    sudo docker exec -e BRANCH harja_harja-app_1 /bin/bash -c "cd \$\{DC_JAETTU_KANSIO\}; $1"
   else
-    docker run -e BRANCH --rm --volume=harja_yhteiset_tiedostot:/yt solita/harja-app:latest /bin/bash -c "cd /yt; $1"
+    sudo docker run -e BRANCH --rm --volume=harja_yhteiset_tiedostot:/yt solita/harja-app:latest /bin/bash -c "cd /yt; $1"
   fi
 }
 
@@ -25,4 +25,4 @@ then
   aja-yhteisessa-voluumissa 'find . -maxdepth 1 -mindepth 1 -type d -exec /bin/bash -c "if [[ ! \$1 = */$BRANCH ]]; then rm -rf \$1; fi;" _ {} \;'
 fi
 echo "SAMMUTETAAN DOCKER COMPOSE"
-docker-compose --env-file ${HARJA_DIR}/.docker_compose_env down
+sudo docker-compose --env-file "${HARJA_DIR}/dev-resources/tmp/yhdistetty_dc_env" down

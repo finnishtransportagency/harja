@@ -141,22 +141,22 @@
                     (loop [break? false]
                       (when (and (not break?)
                                  @ajossa)
-                        (try
-                          (doseq [^PGNotification notification (.getNotifications connection)]
-                            (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
-                            (log/debug "kuuntelijat:" @kuuntelijat)
-                            (let [data (cheshire/decode (.getParameter notification))]
-                              (doseq [kasittelija (get @kuuntelijat (.getName notification))]
-                                ;; Käsittelijä ei sitten saa blockata
-                                (kasittelija data))
-                              (async/put! tarkkailu-kanava {::tapahtuma (.getName notification) ::data data})))
-                          (catch PSQLException e
-                            (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
-                            (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
-                            (recur true)))
-
-                        (Thread/sleep 5000)
-                        (recur false)))))
+                        (let [tapahtumien-haku-onnistui? (try
+                                                           (doseq [^PGNotification notification (.getNotifications connection)]
+                                                             (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
+                                                             (log/debug "kuuntelijat:" @kuuntelijat)
+                                                             (let [data (cheshire/decode (.getParameter notification))]
+                                                               (doseq [kasittelija (get @kuuntelijat (.getName notification))]
+                                                                 ;; Käsittelijä ei sitten saa blockata
+                                                                 (kasittelija data))
+                                                               (async/put! tarkkailu-kanava {::tapahtuma (.getName notification) ::data data})))
+                                                           true
+                                                           (catch PSQLException e
+                                                             (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
+                                                             (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
+                                                             false))]
+                          (Thread/sleep 5000)
+                          (recur tapahtumien-haku-onnistui?))))))
                 (recur)))
       this))
 
