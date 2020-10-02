@@ -1096,26 +1096,6 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysmassat-taulukko [e! {:keys [paallystysmassat] :as app}]
-  [grid/grid
-  {:otsikko ""
-   :tunniste :id
-   :tyhja        (if (nil? paallystysmassat) [ajax-loader "Haetaan massatyyppejä..."] "Ei massatyyppejä")
-   :voi-lisata?  false
-   :voi-kumota?  false
-   :voi-poistaa? (constantly false)
-   :voi-muokata? true}
-  [{:otsikko "Massatyyppi" :hae #(str (get % ::pot/massatyyppitunnus) " - " (get % ::pot/nimi)) :muokattava? (constantly false) :tyyppi :string :leveys 20}
-   {:otsikko "RC-%" :nimi ::pot/rc :fmt #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
-   {:otsikko "Raekoko" :nimi ::pot/raekoko :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
-   {:otsikko "Kiviainesesiintymä" :nimi ::pot/esiintyma :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 15}
-   {:otsikko "KM-arvo" :nimi ::pot/km_arvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
-   {:otsikko "Muotoarvo" :nimi ::pot/muotoarvo :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :integer :leveys 5}
-   {:otsikko "Sideainetyyppi" :nimi ::pot/sideainetyyppi :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 10}
-   {:otsikko "Pitoisuus" :nimi ::pot/pitoisuus :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :numeric :leveys 5}
-   {:otsikko "Lisäaineet" :nimi ::pot/lisaaineet :fmt  #(or % "-") :muokattava? (constantly false) :tyyppi :string :leveys 25}]
-   paallystysmassat])
-
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
   (let [urakka-id (:id urakka)]
     [grid/grid
@@ -1215,31 +1195,22 @@
       [:div "Urakka: " (:id urakka)]
   ))
 
+
+
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
     (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
-            sopimus-id (first valittu-sopimusnumero)
-            _ (js/console.log "ilmoitusluettelo :: avaa-massa-lomake?" (:avaa-massa-lomake? app))]
+            sopimus-id (first valittu-sopimusnumero)]
         [:div
-         ; TODO: Näytetään massat käyttöliittymässä vasta kun ominaisuus on käytettävissä
-         [:h3 "Massakirjasto"]
-         ; TODO: Tähän kohti implementoidaan massakirjasto-modal, joka sisältäisi urakkaan sidotun massakirjasto-datan sekä tallennusmahdollisuudet niihin.
-         [:button.namiska
-          {:on-click #(e! (tiedot-massat/->NaytaListaus true))}
-          [:span "Aloita Foobar-hommat"]]
-
-         [:h3 "Päällystysmassat"]
-         [paallystysmassat-taulukko e! app]
+         [napit/nappi "Muokkaa urakan materiaaleja"
+          #(e! (tiedot-massat/->NaytaModal true))]
          [:h3 "Päällystysilmoitukset"]
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         #_[yha/yha-lahetysnappi {:oikeus       oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
-                                  :vuosi        valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
-                                  :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-virhe #(e! (paallystys/->YHAVientiEpaonnistui %)) :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
          [yha-lahetykset-taulukko e! (select-keys app #{:urakka :urakka-tila :paallystysilmoitukset :kohteet-yha-lahetyksessa})]]))))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
@@ -1282,19 +1253,12 @@
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
     (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-massat? avaa-massa-lomake?] :as app}]
-      (cond
-        pot2-massat?
-        [:div.pot2-massat
-         [massat-view/massat]]
-        ;avaa-massa-lomake?
-        #_ [:div.pot2-massalomake
-         [massat-view/massa-lomake e! app]]
-        :default
-        [:div.paallystysilmoitukset
-         [kartta/kartan-paikka]
-         [debug app {:otsikko "TUCK STATE"}]
-         (if paallystysilmoitus-lomakedata
-           [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
-           [:div
-            [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
-            [ilmoitusluettelo e! app]])]))))
+      [:div.paallystysilmoitukset
+       [kartta/kartan-paikka]
+       [debug app {:otsikko "TUCK STATE"}]
+       (if paallystysilmoitus-lomakedata
+         [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+         [:div
+          [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
+          [ilmoitusluettelo e! app]])
+       [massat-view/materiaalikirjasto-modal e! app]])))

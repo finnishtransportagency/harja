@@ -325,44 +325,7 @@
                          "paatos_tekninen_osa" ::paatos-tekninen-osa
                          "luoja" ::m/luoja-id
                          "muokkaaja" ::m/muokkaaja-id
-                         "paallystyskohde" ::paallystyskohde-id}]
-  #_ ["paallystysmassa" ::paallystysmassa
-   {"id" ::paallystysmassa-id
-    "urakka" ::urakka/id
-    "massatyyppitunnus" ::massatyyppitunnus
-    "raekoko" ::raekoko
-    "nimi" ::nimi
-    "rc" ::rc
-    "esiintyma" ::esiintyma
-    "km_arvo" ::km-arvo
-    "muotoarvo" ::muotoarvo
-    "sideainetyyppi" ::sideainetyyppi
-    "pitoisuus" ::pitoisuus
-    "lisaaineet" ::lisaaineet
-    "poistettu" ::m/poistettu?
-    "muokkaaja" ::m/muokkaaja-id
-    "muokattu" ::m/muokattu
-    "luoja" ::m/luoja-id
-    "luotu" ::m/luotu}])
-
-(def paallystysmassan-tiedot
-  #{::paallystysmassa-id
-    ::urakka/id
-    ::massatyyppitunnus
-    ::raekoko
-    ::nimi
-    ::rc
-    ::esiintyma
-    ::km-arvo
-    ::muotoarvo
-    ::sideainetyyppi
-    ::pitoisuus
-    ::lisaaineet
-    ::m/poistettu?
-    ::m/muokkaaja-id
-    ::m/muokattu
-    ::m/luoja-id
-    ::m/luotu})
+                         "paallystyskohde" ::paallystyskohde-id}])
 
 (s/def ::tallennettavat-paallystysilmoitusten-takuupvmt
   (s/coll-of (s/keys :req [::id ::takuupvm ::paallystyskohde-id])))

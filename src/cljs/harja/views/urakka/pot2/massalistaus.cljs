@@ -13,9 +13,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
-            [harja.ui.kommentit :as kommentit]
-            [harja.ui.leijuke :as leijuke]
-            [harja.ui.lomake :as lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.validointi :as v]
@@ -135,7 +132,7 @@
      [debug app {:otsikko "TUCK STATE"}]
      [ui-lomake/lomake
       {
-       :muokkaa! #(e! (tiedot-massa/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+       :muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
        #_(fn [data]
            (do
              ;;todo muokkausfunkkari
@@ -252,6 +249,48 @@
 
        lomake]]]))
 
+
+(defn- paallystysmassat-taulukko [e! {:keys [massat] :as app}]
+  (log "jarno, päällystysmassat " (pr-str massat))
+  [grid/grid
+   {:otsikko "Massat"
+    :tunniste :id
+    :tyhja        (if (nil? massat)
+                    [ajax-loader "Haetaan massatyyppejä..."]
+                    "Urakalle ei ole vielä lisätty massoja")
+    :voi-lisata?  false
+    :voi-kumota?  false
+    :voi-poistaa? (constantly false)
+    :voi-muokata? true}
+   [{:otsikko "Massatyyppi" :hae #(str (get % ::pot2-domain/massatyyppi) " - " ) :tyyppi :string :leveys 20}
+
+    {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
+     :komponentti (fn [rivi] [:span "Runkoaineet TODO"])}
+    {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
+     :komponentti (fn [rivi] [:span "Sideaineet TODO"])}
+    {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisa-aineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
+     :komponentti (fn [rivi] [:span "Lisäaineet TODO"])}
+    {:otsikko "Toiminnot" :nimi ::pot2-domain/lisa-aineet :fmt #(or % "-") :tyyppi :komponentti :leveys 5
+     :komponentti (fn [rivi] [:span
+                              [napit/nappi ""
+                               #(log "pen painettu")
+                               {:ikoninappi? true :luokka "klikattava"
+                                :ikoni (ikonit/livicon-pen)}]
+                              [napit/nappi ""
+                               #(log "duplicate painettu")
+                               {:ikoninappi? true :luokka "klikattava"
+                                :ikoni (ikonit/duplicate)}]])}]
+   massat])
+
+(defn- kantavan-kerroksen-materiaalit-taulukko [e! {:keys [murskeet] :as app}])
+
+(defn- materiaalikirjasto [e! {:keys [massat murskeet] :as app}]
+  (log "materiaalikirjasto, massat " (pr-str massat ))
+  (log "materiaalikirjasto, murskeet " (pr-str murskeet ))
+  [:span
+   [paallystysmassat-taulukko e! app]
+   [kantavan-kerroksen-materiaalit-taulukko e! app]])
+
 (defn massat* [e! app]
   (komp/luo
     (komp/lippu tiedot-massa/pot2-nakymassa?)
@@ -265,7 +304,6 @@
             _ (js/console.log "massalistatus :: " "avaa-massa-lomake?" (pr-str avaa-massa-lomake?))]
 
         [:div
-         [:div.row (str "Urakan materiaalikirjasto - " #_(:nimi urakka))]
          [:div.row
           [:h2 "Massat"]
           [napit/uusi
@@ -276,7 +314,18 @@
 
           (if avaa-massa-lomake?
             [massa-lomake e! app]
-            [listaa-massat app])]]))))
+            [materiaalikirjasto app])]]))))
 
-(defn massat []
-  [tuck/tuck tila/pot2 massat*])
+
+
+(defn materiaalikirjasto-modal [e! app]
+  (log "materiaalikirjasto-modal " (pr-str app))
+  [modal/modal
+   {:otsikko "Urakan materiaalikirjasto - "
+    :luokka "materiaalikirjasto-modal"
+    :nakyvissa? @tiedot-massa/nayta-materiaalikirjasto?
+    :sulje-fn #(swap! tiedot-massa/nayta-materiaalikirjasto? not)}
+   [:div
+    [tuck/tuck tila/pot2 massat*]]])
+
+

@@ -14,9 +14,10 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def pot2-nakymassa? (atom false))
+(def nayta-materiaalikirjasto? (atom false))
 
 (defrecord UusiMassa [avaa-massa-lomake?])
-(defrecord AvaaModal [avaa])
+(defrecord NaytaModal [avataanko?])
 (defrecord NaytaListaus [nayta])
 
 (defrecord TallennaLomake [data])
@@ -42,6 +43,12 @@
                       :epaonnistui ->HaePot2MassatEpaonnistui}))
 
 (extend-protocol tuck/Event
+
+  NaytaModal
+  (process-event [{avataanko? :avataanko?} app]
+    (do
+      (reset! nayta-materiaalikirjasto? avataanko?)
+      app))
 
   HaePot2Massat
   (process-event [_ app]
