@@ -179,7 +179,7 @@
         :valinnat paallystys-ja-paikkaus/+paallystetyypit-ja-nil+
         :pakollinen? true}
        {:otsikko "Max raekoko"
-        :nimi ::pot2-domain/max_raekoko
+        :nimi ::pot2-domain/max-raekoko
         ::ui-lomake/col-luokka "col-xs-12 col-md-3"
         ;:virhe? todo
         :tyyppi :valinta
@@ -203,12 +203,6 @@
         ;:pakollinen? true
         :vayla-tyyli? true
         }
-       {:otsikko "Asfalttiasema"
-        :nimi ::pot2-domain/asfalttiasema
-        ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-        :tyyppi :string
-        :pakollinen? true
-        :vayla-tyyli? true}
        {:otsikko "Kuulamyllyluokka"
         :nimi ::pot2-domain/kuulamyllyluokka
         ::ui-lomake/col-luokka "col-xs-12 col-md-3"
@@ -284,7 +278,8 @@
 
 (defn- kantavan-kerroksen-materiaalit-taulukko [e! {:keys [murskeet] :as app}])
 
-(defn- materiaalikirjasto [e! {:keys [massat murskeet] :as app}]
+(defn- materiaalikirjasto [e! {:keys [runkoaineet massat murskeet] :as app}]
+  (log "materiaalikirjasto, runkoaineet " (pr-str runkoaineet ))
   (log "materiaalikirjasto, massat " (pr-str massat ))
   (log "materiaalikirjasto, murskeet " (pr-str murskeet ))
   [:span
@@ -296,7 +291,7 @@
     (komp/lippu tiedot-massa/pot2-nakymassa?)
     (komp/piirretty (fn [this]
                       (e! (tiedot-massa/->HaePot2Massat))
-                      (e! (tiedot-massa/->HaeMassanRunkoaineet))))
+                      (e! (tiedot-massa/->HaeKoodistot))))
     (fn [e! app]
       (let [
             avaa-massa-lomake? (:avaa-massa-lomake? app)
@@ -305,7 +300,6 @@
 
         [:div
          [:div.row
-          [:h2 "Massat"]
           [napit/uusi
            "Lisaa massa"
            #(e! (tiedot-massa/->UusiMassa true))
@@ -314,14 +308,14 @@
 
           (if avaa-massa-lomake?
             [massa-lomake e! app]
-            [materiaalikirjasto app])]]))))
+            [materiaalikirjasto e! app])]]))))
 
 
 
 (defn materiaalikirjasto-modal [e! app]
   (log "materiaalikirjasto-modal " (pr-str app))
   [modal/modal
-   {:otsikko "Urakan materiaalikirjasto - "
+   {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
     :luokka "materiaalikirjasto-modal"
     :nakyvissa? @tiedot-massa/nayta-materiaalikirjasto?
     :sulje-fn #(swap! tiedot-massa/nayta-materiaalikirjasto? not)}

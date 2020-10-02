@@ -103,8 +103,7 @@
   {:urakka-id (hae-utajarven-paallystysurakan-id)
    ::pot2-domain/nimi "TestiMassa"
    ::pot2-domain/massatyyppi (:lyhenne (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
-   ::pot2-domain/max_raekoko (first pot2-domain/massan-max-raekoko)
-   ::pot2-domain/asfalttiasema "Testi Asfalttiasema"
+   ::pot2-domain/max-raekoko (first pot2-domain/massan-max-raekoko)
    ::pot2-domain/kuulamyllyluokka (:nimi (first paallystysilmoitus-domain/+kuulamyllyt+))
    ::pot2-domain/litteyslukuluokka "Muotoarvo 1"                         ;;  Vanhassa kielessä Muotoarvoluokka
    ::pot2-domain/dop_nro 1.2M
@@ -129,36 +128,36 @@
                         ::m/luoja-id 3,
                         ::pot2-domain/kuulamyllyluokka "AN5",
                         ::pot2-domain/urakka-id 7,
-                        ::pot2-domain/max_raekoko 5
-                        :runkoaineet '({:runkoaine/pot2-massa-id 3,
-                                        :runkoaine/kiviaine_esiintyma "Zatelliitti",
+                        ::pot2-domain/max-raekoko 5
+                        :runkoaineet '({:pot2-massa/id 3,
+                                        :runkoaine/esiintyma "Zatelliitti",
                                         :runkoaine/kuulamyllyarvo 12.1M,
                                         :runkoaine/muotoarvo 1.1M,
                                         :runkoaine/massaprosentti 34.2M,
                                         :runkoaine/erikseen-lisattava-fillerikiviaines nil,
                                         :runkoaine/id 1}
-                                       {:runkoaine/pot2-massa-id 3,
-                                        :runkoaine/kiviaine_esiintyma nil,
+                                       {:pot2-massa/id 3,
+                                        :runkoaine/esiintyma nil,
                                         :runkoaine/kuulamyllyarvo nil,
                                         :runkoaine/muotoarvo nil,
                                         :runkoaine/massaprosentti 2.12M,
                                         :runkoaine/erikseen-lisattava-fillerikiviaines "Kalkkifilleri (KF)",
                                         :runkoaine/id 2})
-                        :sideaineet '({:sideaine/pot2-massa-id 3,
+                        :sideaineet '({:pot2-massa/id 3,
                                        :sideaine/tyyppi "20/30",
                                        :sideaine/pitoisuus 50.1M,
                                        :sideaine/lopputuote? true,
                                        :sideaine/id 1}
-                                      {:sideaine/pot2-massa-id 3,
+                                      {:pot2-massa/id 3,
                                        :sideaine/tyyppi "50/70",
                                        :sideaine/pitoisuus 10.4M,
                                        :sideaine/lopputuote? false,
                                        :sideaine/id 2})
-                        :lisa-aineet '({:lisaaine/pot2-massa-id 3,
+                        :lisa-aineet '({:pot2-massa/id 3,
                                         :lisaaine/nimi "Kuitu",
                                         :lisaaine/pitoisuus 0.2M,
                                         :lisaaine/id 1}
-                                       {:lisaaine/pot2-massa-id 3,
+                                       {:pot2-massa/id 3,
                                         :lisaaine/nimi "Tartuke",
                                         :lisaaine/pitoisuus 1.5M,
                                         :lisaaine/id 2})}

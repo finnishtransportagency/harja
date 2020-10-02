@@ -49,35 +49,44 @@
                       ::pot2-domain/pot2-massa
                       #{:pot2-massa/id
                         ::pot2-domain/nimi
+                        ::pot2-domain/nimen-tarkenne
+                        ::pot2-domain/nimi
+                        ::pot2-domain/nimi
+                        ::pot2-domain/nimi
                         [::pot2-domain/runkoaineet
                          #{:runkoaine/id
-                           :runkoaine/pot2-massa-id
-                           :runkoaine/erikseen-lisattava-fillerikiviaines
-                           :runkoaine/kiviaine_esiintyma}]
+                           :pot2-massa/id
+                           :runkoaine/fillerityyppi
+                           :runkoaine/esiintyma
+                           :runkoaine/kuvaus
+                           :runkoaine/kuulamyllyarvo
+                           :runkoaine/litteysluku
+                           :runkoaine/massaprosentti}]
                         [::pot2-domain/lisa-aineet
                          #{:lisaaine/id
-                           :lisaaine/pot2-massa-id
+                           :pot2-massa/id
                            :lisaaine/nimi
                            :lisaaine/pitoisuus}]
                         [::pot2-domain/sideaineet
                          #{:sideaine/id
-                           :sideaine/pot2-massa-id
+                           :pot2-massa/id
                            :sideaine/tyyppi
                            :sideaine/pitoisuus
-                           :sideaine/lopputuote?}]}
+                           :sideaine/lopputuotteen}]}
                       {::pot2-domain/urakka-id urakka-id
                        ::pot2-domain/poistettu? false})
         _ (println "hae-urakan-pot2-massat :: massat" (pr-str massat) )]
     massat))
 
-(defn hae-urakan-pot2-runkoaineet [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [_ (println "hae-urakan-pot2-runkoaineet :: urakka-id" (pr-str urakka-id))
-        runkoaineet (fetch db ::pot2-domain/pot2-runkoaine
-                           (specql/columns ::pot2-domain/pot2-runkoaine)
+(defn hae-pot2-koodistot [db user {:keys []}]
+  (oikeudet/ei-oikeustarkistusta!)
+  (let [_ (println "hae-urakan-pot2-koodistot ")
+        runkoaineet (fetch db ::pot2-domain/pot2-runkoainetyyppi
+                           (specql/columns ::pot2-domain/pot2-runkoainetyyppi)
                            {})
-        _ (println "hae-urakan-pot2-massat :: massat" (pr-str runkoaineet) )]
-    runkoaineet))
+        koodistot {:runkoaineet runkoaineet}
+        _ (println "hae-pot2-koodistot: " (pr-str koodistot) )]
+    koodistot))
 
 (defn tallenna-urakan-paallystysmassa [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (:urakka-id tiedot))
@@ -98,8 +107,7 @@
                          {::pot2-domain/urakka-id (::pot2-domain/urakka-id tiedot)
                           ::pot2-domain/nimi (::pot2-domain/nimi tiedot)
                           ::pot2-domain/massatyyppi (::pot2-domain/massatyyppi tiedot)
-                          ::pot2-domain/max_raekoko (::pot2-domain/max_raekoko tiedot)
-                          ::pot2-domain/asfalttiasema (::pot2-domain/asfalttiasema tiedot)
+                          ::pot2-domain/max-raekoko (::pot2-domain/max-raekoko tiedot)
                           ::pot2-domain/kuulamyllyluokka (::pot2-domain/kuulamyllyluokka tiedot)
                           ::pot2-domain/litteyslukuluokka (str (::pot2-domain/litteyslukuluokka tiedot))
                           ::pot2-domain/dop_nro (bigdec (::pot2-domain/dop_nro tiedot))}))
@@ -108,8 +116,8 @@
         _ (println "tallenna-urakan-paallystysmassa :: massa-id" (pr-str massa-id))
         runkoaineet (for [r massan_runkoaineet]
                       (upsert! db ::pot2-domain/pot2-massa-runkoaine
-                               {:runkoaine/pot2-massa-id massa-id
-                                :runkoaine/kiviaine_esiintyma (:kiviaine-esiintyma r)
+                               {:pot2-massa/id massa-id
+                                :runkoaine/esiintyma (:kiviaine-esiintyma r)
                                 :runkoaine/kuulamyllyarvo (when (:kuulamyllyarvo r)
                                                             (bigdec (:kuulamyllyarvo r)))
                                 :runkoaine/muotoarvo (:muotoarvo r)
@@ -120,7 +128,7 @@
         massa (assoc massa :runkoaineet runkoaineet)
         sideaineet (for [s massan_sideaineet]
                      (upsert! db ::pot2-domain/pot2-massa-sideaine
-                              {:sideaine/pot2-massa-id massa-id
+                              {:pot2-massa/id massa-id
                                :sideaine/tyyppi (:tyyppi s)
                                :sideaine/pitoisuus (bigdec (:pitoisuus s))
                                :sideaine/lopputuote? (:lopputuote? s)}))
@@ -128,7 +136,7 @@
         massa (assoc massa :sideaineet sideaineet)
         lisa-aineet (for [s massan_lisa-aineet]
                      (upsert! db ::pot2-domain/pot2-massa-lisaaine
-                              {:lisaaine/pot2-massa-id massa-id
+                              {:pot2-massa/id massa-id
                                :lisaaine/nimi (:nimi s)
                                :lisaaine/pitoisuus (bigdec (:pitoisuus s))}))
         _ (println "tallenna-urakan-paallystysmassa :: lisa-aineet" (pr-str lisa-aineet))
@@ -147,9 +155,9 @@
       (julkaise-palvelu http :hae-urakan-pot2-massat
                         (fn [user tiedot]
                           (hae-urakan-pot2-massat db user tiedot)))
-      (julkaise-palvelu http :hae-urakan-pot2-runkoaineet
+      (julkaise-palvelu http :hae-pot2-koodistot
                         (fn [user tiedot]
-                          (hae-urakan-pot2-runkoaineet db user tiedot)))
+                          (hae-pot2-koodistot db user tiedot)))
       (julkaise-palvelu http :tallenna-urakan-pot2-massa
                         (fn [user tiedot]
                           (tallenna-urakan-paallystysmassa db user tiedot)))
@@ -159,6 +167,6 @@
     (poista-palvelut
       (:http-palvelin this)
       :hae-urakan-pot2-massat
-      :hae-urakan-pot2-runkoaineet
+      :hae-pot2-koodistot
       :tallenna-urakan-pot2-massa)
     this))

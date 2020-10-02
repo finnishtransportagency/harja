@@ -31,9 +31,9 @@
 (defrecord HaePot2MassatOnnistui [vastaus])
 (defrecord HaePot2MassatEpaonnistui [vastaus])
 
-(defrecord HaeMassanRunkoaineet [])
-(defrecord HaeMassanRunkoaineetOnnistui [vastaus])
-(defrecord HaeMassanRunkoaineetEpaonnistui [vastaus])
+(defrecord HaeKoodistot [])
+(defrecord HaeKoodistotOnnistui [vastaus])
+(defrecord HaeKoodistotEpaonnistui [vastaus])
 
 
 (defn- hae-massat [_]
@@ -63,19 +63,19 @@
   (process-event [{vastaus :vastaus} app]
     app)
 
-  HaeMassanRunkoaineet
+  HaeKoodistot
   (process-event [_ app]
     (-> app
-        (tuck-apurit/post! :hae-urakan-pot2-runkoaineet
+        (tuck-apurit/post! :hae-pot2-koodistot
                            {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                           {:onnistui ->HaeMassanRunkoaineetOnnistui
-                            :epaonnistui ->HaeMassanRunkoaineetEpaonnistui})))
+                           {:onnistui ->HaeKoodistotOnnistui
+                            :epaonnistui ->HaeKoodistotEpaonnistui})))
 
-  HaeMassanRunkoaineetOnnistui
+  HaeKoodistotOnnistui
   (process-event [{vastaus :vastaus} {:as app}]
     (assoc app :runkoaineet vastaus))
 
-  HaeMassanRunkoaineetEpaonnistui
+  HaeKoodistotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     app)
 

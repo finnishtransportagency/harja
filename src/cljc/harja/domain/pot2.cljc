@@ -173,41 +173,51 @@
 
 (define-tables
   ["pot2" ::pot2
-   {"paatos_tekninen_osa" ::paatos-tekninen-osa
+   {"id" ::id
+    "paatos_tekninen_osa" ::paatos-tekninen-osa
     "luoja" ::m/luoja-id
     "muokkaaja" ::m/muokkaaja-id
     "paallystyskohde" ::paallystyskohde-id}]
-  ["pot2_kulutuskerros_toimenpide" ::pot2-kulutuskerros-toimenpide]
+  ["pot2_kulutuskerros_toimenpide" ::pot2-kulutuskerros-toimenpide
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+  ["pot2_kantava_kerros_toimenpide" ::pot2-kantava-kerros-toimenpide
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
   ["pot2_paallystekerros" ::pot2-paallystekerros
    {"kuulamyllyarvo" ::paallystysiedot-km-arvo}]
   ["pot2_runkoainetyyppi" ::pot2-runkoainetyyppi]
   ["pot2_massa_runkoaine" ::pot2-massa-runkoaine
    {"id" :runkoaine/id
-    "pot2_massa_id" :runkoaine/pot2-massa-id
+    "pot2_massa_id" :pot2-massa/id
+    "tyyppi" :runkoaine/tyyppi
+    "esiintyma" :runkoaine/esiintyma
+    "fillerityyppi" :runkoaine/fillerityyppi
+    "kuvaus" :runkoaine/kuvaus
     "kuulamyllyarvo" :runkoaine/kuulamyllyarvo
-    "kiviaine_esiintyma" :runkoaine/kiviaine_esiintyma
-    "erikseen_lisattava_fillerikiviaines" :runkoaine/erikseen-lisattava-fillerikiviaines
-    "muotoarvo" :runkoaine/muotoarvo
+    "litteysluku" :runkoaine/litteysluku
     "massaprosentti" :runkoaine/massaprosentti}]
   ["pot2_massa_lisaaine" ::pot2-massa-lisaaine
    {"id" :lisaaine/id
-    "pot2_massa_id" :lisaaine/pot2-massa-id
+    "pot2_massa_id" :pot2-massa/id
     "nimi" :lisaaine/nimi
     "pitoisuus" :lisaaine/pitoisuus}]
   ["pot2_massa_sideaine" ::pot2-massa-sideaine
    {"id" :sideaine/id
-    "pot2_massa_id" :sideaine/pot2-massa-id
+    "pot2_massa_id" :pot2-massa/id
     "tyyppi" :sideaine/tyyppi
     "pitoisuus" :sideaine/pitoisuus
-    "lopputuote?" :sideaine/lopputuote?}]
+    "lopputuotteen" :sideaine/lopputuotteen}]
   ["pot2_massa" ::pot2-massa
    {"id" :pot2-massa/id
     "pot2_id" ::pot2-id
     "urakka_id" ::urakka-id
     "nimi" ::nimi
+    "nimen_tarkenne" ::nimen-tarkenne
     "massatyyppi" ::massatyyppi
-    "max_raekoko" ::max_raekoko
-    "asfalttiasema" ::asfalttiasema
+    "max_raekoko" ::max-raekoko
     "kuulamyllyluokka" ::kuulamyllyluokka
     "litteyslukuluokka" ::litteyslukuluokka
     "dop_nro" ::dop_nro
@@ -219,13 +229,13 @@
     "luotu" ::m/luotu}
    {::runkoaineet (specql.rel/has-many :pot2-massa/id
                                        ::pot2-massa-runkoaine
-                                       :runkoaine/pot2-massa-id)}
+                                       :pot2-massa/id)}
    {::lisa-aineet (specql.rel/has-many :pot2-massa/id
                                        ::pot2-massa-lisaaine
-                                       :lisaaine/pot2-massa-id)}
+                                       :pot2-massa/id)}
    {::sideaineet (specql.rel/has-many :pot2-massa/id
                                       ::pot2-massa-sideaine
-                                      :sideaine/pot2-massa-id)}])
+                                      :pot2-massa/id)}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
 (def litteyslukuluokat [1, 2, 3, 4, 5, 6])

@@ -23,21 +23,3 @@ VALUES
  NULL,
  NULL,
  (SELECT id FROM kayttaja WHERE nimi = 'Skanska Asfaltti Oy'));
-
-INSERT INTO pot2_massa(
-    urakka_id,
-    nimi,
-    massatyyppi,
-    max_raekoko,
-    asfalttiasema,
-    kuulamyllyluokka,
-    litteyslukuluokka,
-    dop_nro,
-    poistettu,
-    muokkaaja,
-    muokattu,
-    luoja,
-    luotu) VALUES (
-                      (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka',
-                   '')
-                 )
