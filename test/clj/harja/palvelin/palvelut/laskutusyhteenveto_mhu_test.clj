@@ -89,7 +89,7 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-03))]
-      (is (= 130.8M (:perusluku talvihoito))))))
+      (is (= 120.8M (:perusluku talvihoito))))))
 
 (deftest mhu-laskutusyhteenvedon-tavoitehinnat
   (testing "mhu-laskutusyhteenvedon-tavoitehinnat"
