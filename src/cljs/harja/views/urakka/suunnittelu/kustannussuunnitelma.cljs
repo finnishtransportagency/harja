@@ -2591,7 +2591,10 @@
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma
-           [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Kulut-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+           [:div "Suunnitelluista kustannuksista muodostetaan kustannussuunnitelman summa Sampoa varten. Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa."[:br]
+           "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä automaattisesti kuluina Sampoon lähetettäviin maksueriin."[:br]
+           "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lisätää maksueriin eräpäivän mukaan."[:br]
+           "Kustannussuunnitelmien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. "]
            (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
              [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
                                               (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
@@ -2615,7 +2618,7 @@
              (get-in app [:gridit :suunnitelmien-tila :grid])
              (:kantahaku-valmis? app)]
             [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
-            [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma Sampoa varten. Ks. Kulut > Maksuerät."]]
+            [:div "**) Kuukausisummat syöttää urakanvalvoja. Kuukausisuunnitelmista muodostuu Sampoon lähetettävä kustannussuunnitelman summa. Ks. Kulut > Maksuerät."]]
            [:span.viiva-alas]
            [hankintakustannukset-taulukot
             (get-in app [:domain :kirjoitusoikeus?])

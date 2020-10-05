@@ -240,7 +240,7 @@
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div#vayla
          ;[debug/debug app]
-         [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
+         [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat
