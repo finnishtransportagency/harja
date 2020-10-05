@@ -165,22 +165,75 @@ CREATE TABLE pot2_massa_runkoaine
 );
 CREATE INDEX pot2_massa_runkoaine_idx ON pot2_massa_runkoaine (pot2_massa_id);
 
+CREATE TABLE pot2_sideainetyyppi(
+    koodi   INTEGER PRIMARY KEY,
+    nimi    TEXT,
+    lyhenne TEXT);
+INSERT INTO pot2_sideainetyyppi(nimi, lyhenne, koodi)
+VALUES ('Bitumi, 20/30', 'Bitumi, 20/30', 1),
+       ('Bitumi, 35/50', 'Bitumi, 35/50', 2),
+       ('Bitumi, 50/70', 'Bitumi, 50/70', 3),
+       ('Bitumi, 70/100', 'Bitumi, 70/100', 4),
+       ('Bitumi, 100/150', 'Bitumi, 100/150', 5),
+       ('Bitumi, 160/220', 'Bitumi, 160/220', 6),
+       ('Bitumi, 250/330', 'Bitumi, 250/330', 7),
+       ('Bitumi, 330/430', 'Bitumi, 330/430', 8),
+       ('Bitumi, 500/650', 'Bitumi, 500/650', 9),
+       ('Bitumi, 650/900', 'Bitumi, 650/900', 10),
+       ('Bitumi, V1500', 'Bitumi, V1500', 11),
+       ('Bitumi, V3000', 'Bitumi, V3000', 12),
+       ('Polymeerimodifioitu bitumi, PMB 75/130-65',
+        'Polymeerimodifioitu bitumi, PMB 75/130-65', 13),
+       ('Polymeerimodifioitu bitumi, PMB 75/130-70',
+        'Polymeerimodifioitu bitumi, PMB 75/130-70', 14),
+       ('Polymeerimodifioitu bitumi, PMB 40/100-70',
+        'Polymeerimodifioitu bitumi, PMB 40/100-70', 15),
+       ('Polymeerimodifioitu bitumi, PMB 40/100-75',
+        'Polymeerimodifioitu bitumi, PMB 40/100-75', 16),
+       ('Bitumiliuokset ja fluksatut bitumit, BL0',
+        'Bitumiliuokset ja fluksatut bitumit, BL0', 17),
+       ('Bitumiliuokset ja fluksatut bitumit, BL5',
+        'Bitumiliuokset ja fluksatut bitumit, BL5', 18),
+       ('Bitumiliuokset ja fluksatut bitumit, BL2Bio',
+        'Bitumiliuokset ja fluksatut bitumit, BL2Bio', 19),
+       ('Bitumiemulsiot, BE-L', 'Bitumiemulsiot, BE-L', 20),
+       ('Bitumiemulsiot, PBE-L', 'Bitumiemulsiot, PBE-L', 21),
+       ('Bitumiemulsiot, BE-SIP', 'Bitumiemulsiot, BE-SIP', 22),
+       ('Bitumiemulsiot, BE-SOP', 'Bitumiemulsiot, BE-SOP', 23),
+       ('Bitumiemulsiot, BE-AB', 'Bitumiemulsiot, BE-AB', 24),
+       ('Bitumiemulsiot, BE-PAB', 'Bitumiemulsiot, BE-PAB', 25),
+       ('KF, Kalkkifilleri', 'KF', 26),
+       ('Muu, erikoisbitumi', 'Muu, erik.bit.', 27),
+       ('Bitumiemulsiot, BE-PAB', 'Bit.em.', 28);
 
 CREATE TABLE pot2_massa_sideaine
 (
     id            SERIAL PRIMARY KEY,
     pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
     "lopputuote?" BOOLEAN DEFAULT TRUE, -- FALSE = lisätty sideaine
-    tyyppi        TEXT,
+    tyyppi        INTEGER NOT NULL REFERENCES  pot2_sideainetyyppi(koodi),
     pitoisuus     NUMERIC
 );
 CREATE INDEX pot2_massa_sideaine_idx ON pot2_massa_sideaine (pot2_massa_id);
 
-CREATE TABLE pot2_massa_lisaaine
-(
+CREATE TABLE pot2_lisaainetyyppi(
+    koodi   INTEGER PRIMARY KEY,
+    nimi    TEXT,
+    lyhenne TEXT);
+INSERT INTO pot2_lisaainetyyppi(nimi, lyhenne, koodi)
+VALUES ('Kuitu', 'Kuitu', 1),
+       ('Tartuke', 'Tartuke', 2),
+       ('Sementti', 'Sementti', 3),
+       ('Luonnonasfaltti', 'Luonnonasfaltti', 4),
+       ('Kumi- tai muovirouhe', 'Kumi- tai muovirouhe', 5),
+       ('Väriaine', 'Väriaine', 6),
+       ('Muu kemiallinen aine','Muu kemiallinen aine', 7);
+
+
+CREATE TABLE pot2_massa_lisaaine(
     id            SERIAL PRIMARY KEY,
     pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
-    nimi          TEXT,
+    tyyppi        INTEGER NOT NULL REFERENCES pot2_lisaainetyyppi(koodi),
     pitoisuus     NUMERIC
 );
 CREATE INDEX pot2_massa_lisaaine_idx ON pot2_massa_lisaaine (pot2_massa_id);

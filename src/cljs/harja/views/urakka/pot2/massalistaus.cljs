@@ -244,11 +244,46 @@
        lomake]]]))
 
 
-(defn- paallystysmassat-taulukko [e! {:keys [massat] :as app}]
-  (log "jarno, päällystysmassat " (pr-str massat))
+
+#_ {:harja.domain.pot2/massatyyppi "SMA 16", :harja.domain.pot2/runkoaineet [{:runkoaine/litteysluku 4.5, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/id 4, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 5, :runkoaine/kuulamyllyarvo 11.2} {:runkoaine/litteysluku 6.5, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/id 3, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 3, :runkoaine/fillerityyppi "Kalkkifilleri (KF)", :runkoaine/kuulamyllyarvo 8.2} {:runkoaine/litteysluku 6.5, :runkoaine/kuvaus "Jämäkkä runkoaine.", :runkoaine/id 2, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 85, :runkoaine/kuulamyllyarvo 9.2}], :harja.domain.pot2/lisa-aineet [{:lisaaine/id 2, :lisaaine/pitoisuus 0.5, :lisaaine/tyyppi 1, :pot2-massa/id 2}], :harja.domain.pot2/nimi "Kivimastiksiasfaltti", :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/dop_nro "987654331-2", :harja.domain.pot2/litteyslukuluokka 2, :pot2-massa/id 2, :harja.domain.pot2/kuulamyllyluokka "AN7", :harja.domain.pot2/sideaineet [{:sideaine/pitoisuus 5.5, :sideaine/id 2, :sideaine/lopputuote? true, :pot2-massa/id 2, :sideaine/tyyppi 5}]}
+(defn- massan-runkoaineet
+  [rivi runkoainetyypit]
+[:span
+ (for [aine (reverse
+              (sort-by :runkoaine/massaprosentti
+                       (:harja.domain.pot2/runkoaineet rivi)))]
+   [:span
+    [:div
+     (str (tiedot-massa/ainetyypin-koodi->nimi runkoainetyypit (:runkoaine/tyyppi aine))
+          " ("
+          (:runkoaine/esiintyma aine) ")")
+   [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]
+    (when (:runkoaine/kuulamyllyarvo aine)
+      [:div "-kuulamyllyarvo " (:runkoaine/kuulamyllyarvo aine)])
+    (when (:runkoaine/litteysluku aine)
+      [:div "-litteysluku " (:runkoaine/litteysluku aine)])])])
+
+(defn- massan-sideaineet [rivi sideainetyypit]
+  [:div "Sideaineet" ])
+
+(defn- massan-lisaaineet [rivi lisaainetyypit]
+  [:div "Lisäaineet"])
+
+(defn- massan-toiminnot [e! rivi]
+  [:span
+   [napit/nappi ""
+    #(log "pen painettu")
+    {:ikoninappi? true :luokka "klikattava"
+     :ikoni (ikonit/livicon-pen)}]
+   [napit/nappi ""
+    #(log "duplicate painettu")
+    {:ikoninappi? true :luokka "klikattava"
+     :ikoni (ikonit/duplicate)}]])
+
+(defn- paallystysmassat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Massat"
-    :tunniste :id
+    :tunniste :pot2-massa/id
     :tyhja        (if (nil? massat)
                     [ajax-loader "Haetaan massatyyppejä..."]
                     "Urakalle ei ole vielä lisätty massoja")
@@ -256,24 +291,20 @@
     :voi-kumota?  false
     :voi-poistaa? (constantly false)
     :voi-muokata? true}
-   [{:otsikko "Massatyyppi" :hae #(str (get % ::pot2-domain/massatyyppi) " - " ) :tyyppi :string :leveys 20}
+   [{:otsikko "Massatyyppi" :hae pot2-domain/massatyypin-nimi :tyyppi :string :leveys 8}
 
-    {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
-     :komponentti (fn [rivi] [:span "Runkoaineet TODO"])}
+    {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 5
+     :komponentti (fn [rivi]
+                    [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
     {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
-     :komponentti (fn [rivi] [:span "Sideaineet TODO"])}
+     :komponentti (fn [rivi]
+                    [massan-sideaineet rivi (:sideainetyypit materiaalikoodistot)])}
     {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisa-aineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
-     :komponentti (fn [rivi] [:span "Lisäaineet TODO"])}
+     :komponentti (fn [rivi]
+                    [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
     {:otsikko "Toiminnot" :nimi ::pot2-domain/lisa-aineet :fmt #(or % "-") :tyyppi :komponentti :leveys 5
-     :komponentti (fn [rivi] [:span
-                              [napit/nappi ""
-                               #(log "pen painettu")
-                               {:ikoninappi? true :luokka "klikattava"
-                                :ikoni (ikonit/livicon-pen)}]
-                              [napit/nappi ""
-                               #(log "duplicate painettu")
-                               {:ikoninappi? true :luokka "klikattava"
-                                :ikoni (ikonit/duplicate)}]])}]
+     :komponentti (fn [rivi]
+                    [massan-toiminnot e! rivi])}]
    massat])
 
 (defn- kantavan-kerroksen-materiaalit-taulukko [e! {:keys [murskeet] :as app}])
@@ -313,7 +344,6 @@
 
 
 (defn materiaalikirjasto-modal [e! app]
-  (log "materiaalikirjasto-modal " (pr-str app))
   [modal/modal
    {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
     :luokka "materiaalikirjasto-modal"

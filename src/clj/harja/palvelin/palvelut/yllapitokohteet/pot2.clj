@@ -50,29 +50,32 @@
                       #{:pot2-massa/id
                         ::pot2-domain/nimi
                         ::pot2-domain/nimen-tarkenne
-                        ::pot2-domain/nimi
-                        ::pot2-domain/nimi
-                        ::pot2-domain/nimi
+                        ::pot2-domain/massatyyppi
+                        ::pot2-domain/max-raekoko
+                        ::pot2-domain/kuulamyllyluokka
+                        ::pot2-domain/litteyslukuluokka
+                        ::pot2-domain/dop_nro
                         [::pot2-domain/runkoaineet
                          #{:runkoaine/id
                            :pot2-massa/id
+                           :runkoaine/tyyppi
                            :runkoaine/fillerityyppi
                            :runkoaine/esiintyma
                            :runkoaine/kuvaus
                            :runkoaine/kuulamyllyarvo
                            :runkoaine/litteysluku
                            :runkoaine/massaprosentti}]
-                        [::pot2-domain/lisa-aineet
-                         #{:lisaaine/id
-                           :pot2-massa/id
-                           :lisaaine/nimi
-                           :lisaaine/pitoisuus}]
                         [::pot2-domain/sideaineet
                          #{:sideaine/id
                            :pot2-massa/id
                            :sideaine/tyyppi
                            :sideaine/pitoisuus
-                           :sideaine/lopputuotteen}]}
+                           :sideaine/lopputuote?}]
+                        [::pot2-domain/lisa-aineet
+                         #{:lisaaine/id
+                           :pot2-massa/id
+                           :lisaaine/tyyppi
+                           :lisaaine/pitoisuus}]}
                       {::pot2-domain/urakka-id urakka-id
                        ::pot2-domain/poistettu? false})
         _ (println "hae-urakan-pot2-massat :: massat" (pr-str massat) )]
@@ -81,10 +84,18 @@
 (defn hae-pot2-koodistot [db user {:keys []}]
   (oikeudet/ei-oikeustarkistusta!)
   (let [_ (println "hae-urakan-pot2-koodistot ")
-        runkoaineet (fetch db ::pot2-domain/pot2-runkoainetyyppi
+        runkoainetyypit (fetch db ::pot2-domain/pot2-runkoainetyyppi
                            (specql/columns ::pot2-domain/pot2-runkoainetyyppi)
                            {})
-        koodistot {:runkoaineet runkoaineet}
+        sideainetyypit (fetch db ::pot2-domain/pot2-sideainetyyppi
+                          (specql/columns ::pot2-domain/pot2-sideainetyyppi)
+                          {})
+        lisaainetyypit (fetch db ::pot2-domain/pot2-lisaainetyyppi
+                              (specql/columns ::pot2-domain/pot2-lisaainetyyppi)
+                              {})
+        koodistot {:runkoainetyypit runkoainetyypit
+                   :sideainetyypit sideainetyypit
+                   :lisaainetyypit lisaainetyypit}
         _ (println "hae-pot2-koodistot: " (pr-str koodistot) )]
     koodistot))
 

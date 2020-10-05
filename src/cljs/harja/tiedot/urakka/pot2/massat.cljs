@@ -65,15 +65,17 @@
 
   HaeKoodistot
   (process-event [_ app]
-    (-> app
-        (tuck-apurit/post! :hae-pot2-koodistot
-                           {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                           {:onnistui ->HaeKoodistotOnnistui
-                            :epaonnistui ->HaeKoodistotEpaonnistui})))
+    (if-not (:materiaalikoodistot app)
+      (-> app
+         (tuck-apurit/post! :hae-pot2-koodistot
+                            {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                            {:onnistui ->HaeKoodistotOnnistui
+                             :epaonnistui ->HaeKoodistotEpaonnistui}))
+      app))
 
   HaeKoodistotOnnistui
   (process-event [{vastaus :vastaus} {:as app}]
-    (assoc app :runkoaineet vastaus))
+    (assoc app :materiaalikoodistot vastaus))
 
   HaeKoodistotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -133,3 +135,8 @@
     (js/console.log "TyhjennaLomake" (pr-str data))
     (assoc app :avaa-massa-lomake? false))
   )
+
+(defn ainetyypin-koodi->nimi [ainetyypit koodi]
+  (::pot2-domain/nimi (first
+                        (filter #(= (::pot2-domain/koodi %) koodi)
+                                ainetyypit))))

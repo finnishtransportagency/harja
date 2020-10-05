@@ -8,6 +8,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
             [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
                       ]))
   #?(:cljs
@@ -186,9 +187,10 @@
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
-  ["pot2_paallystekerros" ::pot2-paallystekerros
-   {"kuulamyllyarvo" ::paallystysiedot-km-arvo}]
+  ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_runkoainetyyppi" ::pot2-runkoainetyyppi]
+  ["pot2_sideainetyyppi" ::pot2-sideainetyyppi]
+  ["pot2_lisaainetyyppi" ::pot2-lisaainetyyppi]
   ["pot2_massa_runkoaine" ::pot2-massa-runkoaine
    {"id" :runkoaine/id
     "pot2_massa_id" :pot2-massa/id
@@ -202,14 +204,14 @@
   ["pot2_massa_lisaaine" ::pot2-massa-lisaaine
    {"id" :lisaaine/id
     "pot2_massa_id" :pot2-massa/id
-    "nimi" :lisaaine/nimi
+    "tyyppi" :lisaaine/tyyppi
     "pitoisuus" :lisaaine/pitoisuus}]
   ["pot2_massa_sideaine" ::pot2-massa-sideaine
    {"id" :sideaine/id
     "pot2_massa_id" :pot2-massa/id
     "tyyppi" :sideaine/tyyppi
     "pitoisuus" :sideaine/pitoisuus
-    "lopputuotteen" :sideaine/lopputuotteen}]
+    "lopputuote?" :sideaine/lopputuote?}]
   ["pot2_massa" ::pot2-massa
    {"id" :pot2-massa/id
     "pot2_id" ::pot2-id
@@ -273,3 +275,12 @@
    "Bitumiemulsiot, BE-SOP"
    "Bitumiemulsiot, BE-AB"
    "Bitumiemulsiot, BE-PAB"])
+
+(defn massatyypin-nimi [rivi]
+  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
+  (str (::massatyyppi rivi)
+       " ("
+       (str/join ", " (remove nil? [(::dop_nro rivi)
+                                    (::nimen-tarkenne rivi)
+                                    (::kuulamyllyluokka rivi)]))
+       ")"))
