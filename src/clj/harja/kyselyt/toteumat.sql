@@ -595,12 +595,17 @@ SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko,
 SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
-    FROM toimenpidekoodi tk,
-         tehtavaryhma tr1
-    WHERE tr1.id = tk.tehtavaryhma
-      AND tk.taso = 4
-      AND tk.kasin_lisattava_maara = true
-      AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
+FROM toimenpidekoodi tk,
+     tehtavaryhma tr1,
+     urakka u
+WHERE tr1.id = tk.tehtavaryhma
+  AND tk.taso = 4
+  AND tk.kasin_lisattava_maara = true
+  AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
+  AND u.id = :urakka
+  AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
+
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
