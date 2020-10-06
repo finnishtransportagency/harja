@@ -21,12 +21,12 @@ BEFORE UPDATE
 FOR EACH ROW
 EXECUTE PROCEDURE esta_nimen_ja_kanavan_paivitys();
 
-CREATE OR REPLACE FUNCTION julkaise_tapahtuma(kanva_ TEXT, data JSONB) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION julkaise_tapahtuma(kanava_ TEXT, data JSONB) RETURNS void AS $$
 BEGIN
   UPDATE tapahtuma
   SET uusin_arvo=data
   WHERE kanava=kanava_;
 
-  SELECT pg_notify(kanva_, data);
+  SELECT pg_notify(kanava_, data);
 END;
 $$ LANGUAGE plpgsql;

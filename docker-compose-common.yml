@@ -16,6 +16,7 @@ services:
       - "FRONTEND_REPL_PORT=${FRONTEND_REPL_PORT}"
       - "HOST_USER_ID=${HOST_USER_ID}"
       - "DC_JAETTU_KANSIO=${DC_JAETTU_KANSIO}"
+      - "HARJA_DIR=${DC_HARJA_KANSIO}"
       - "HARJA_DEV_YMPARISTO=true"
       - "HARJA_TIETOKANTA_HOST=${POSTGRESQL_NAME}"
       - "HARJA_TIETOKANTA_HOST_KAANNOS=${POSTGRESQL_NAME}"
@@ -30,7 +31,7 @@ services:
     volumes:
       - type: bind
         source: .
-        target: /opt/harja
+        target: "${DC_HARJA_KANSIO}"
         consistency: ${DC_VOLUME_CONSISTENCY}
       - type: volume
         source: yhteiset_tiedostot

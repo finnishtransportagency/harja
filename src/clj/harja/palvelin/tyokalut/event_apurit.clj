@@ -11,12 +11,13 @@
 
 (defn lisaa-jono!
   ([this event]
-   {:pre [(satisfies? i/IEvent this)
-          (s/valid? ::ke/event-spec event)]
+   {:pre [;(satisfies? i/IEvent this)
+          (s/valid? ::ke/event-spec event)
+          ]
     :post [(satisfies? i/IEvent %)]}
    (i/lisaa-jono this event))
   ([this event tyyppi]
-   {:pre [(satisfies? i/IEvent this)
+   {:pre [;(satisfies? i/IEvent this)
           (s/valid? ::ke/event-spec event)
           (s/valid? ::ke/tyyppi-spec tyyppi)]
     :post [(satisfies? i/IEvent %)]}
@@ -24,13 +25,13 @@
 
 (defn eventin-kuuntelija!
   [this event]
-  {:pre [(satisfies? i/IEvent this)
+  {:pre [;(satisfies? i/IEvent this)
          (s/valid? ::ke/event-spec event)]}
   (i/eventin-kuuntelija this event))
 
 (defn julkaise-event
   [this event data]
-  {:pre [(satisfies? i/IEvent this)
+  {:pre [;(satisfies? i/IEvent this)
          (s/valid? ::ke/event-spec event)
          (not (nil? data))]
    :post [(boolean? %)]}

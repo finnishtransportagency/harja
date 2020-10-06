@@ -29,4 +29,6 @@
         (hae-sonjan-tila db kehitysmoodi?))
       {:kysely-spec ::sd/hae-jonojen-tilat-kysely
        :vastaus-spec ::sd/hae-jonojen-tilat-vastaus})
+    this)
+  (stop [this]
     this))

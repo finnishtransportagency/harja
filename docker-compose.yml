@@ -22,27 +22,33 @@ services:
       /bin/bash -c "
       echo 'ALOITELLAAN KOMENTOA'
       touch /var/log/harja.log
-      # Ei haluta, että useampi käännös pyörii yhtä aikaa
-      {
-       flock -x 200
-       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
-       then
-         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
-         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' 'with-profile +dev-container compile'
-         echo 'KÄÄNNÖS DONE'
-         touch ${DC_JAETTU_KANSIO}/compile.done
-       fi;
-      } 200>${DC_JAETTU_KANSIO}/compile.lock
-      cd /opt/harja
-      # Enable job control
-      set -m
-      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+
       if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
       then
         LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
       else
         LEIN_PROFILES=+dev-container
       fi
+
+      # Ei haluta, että useampi käännös pyörii yhtä aikaa
+      {
+       flock -x 200
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' \"with-profile $${LEIN_PROFILES} compile\"
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      cd ${DC_HARJA_KANSIO}
+      if [[ -d /opt/.harja ]]
+      then
+        mv /opt/.harja ../.harja
+      fi
+      # Enable job control
+      set -m
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
       echo 'ALOITETAAN REPL'
       # < dev/null koska https://github.com/technomancy/leiningen/issues/1173
       lein trampoline with-profile $${LEIN_PROFILES} repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_1} > /var/log/harja.log 2>&1 </dev/null &
@@ -67,18 +73,30 @@ services:
       /bin/bash -c "
       echo 'ALOITELLAAN KOMENTOA'
       touch /var/log/harja.log
+
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
+
       # Ei haluta, että useampi käännös pyörii yhtä aikaa
       {
        flock -x 200
        if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
        then
          echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
-         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' 'with-profile +dev-container compile'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' \"with-profile $${LEIN_PROFILES} compile\"
          echo 'KÄÄNNÖS DONE'
          touch ${DC_JAETTU_KANSIO}/compile.done
        fi;
       } 200>${DC_JAETTU_KANSIO}/compile.lock
-      cd /opt/harja
+      cd ${DC_HARJA_KANSIO}
+      if [[ -d /opt/.harja ]]
+      then
+        mv /opt/.harja ../.harja
+      fi
       # Enable job control
       set -m
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
@@ -86,12 +104,6 @@ services:
       do
         sleep 1
       done
-      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
-      then
-        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
-      else
-        LEIN_PROFILES=+dev-container
-      fi
       echo 'ALOITETAAN REPL'
       lein trampoline with-profile $${LEIN_PROFILES} repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_2} > /var/log/harja.log 2>&1 </dev/null &
       # Odotetaan, että back repl saadaan pystyyn
@@ -115,24 +127,36 @@ services:
       /bin/bash -c "
       echo 'ALOITELLAAN KOMENTOA'
       touch /var/log/harja.log
+
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
+
       {
        flock -x 200
        if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
        then
          echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
-         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' 'with-profile +dev-container compile'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' \"with-profile $${LEIN_PROFILES} compile\"
          echo 'KÄÄNNÖS DONE'
          touch ${DC_JAETTU_KANSIO}/compile.done
        fi;
       } 200>${DC_JAETTU_KANSIO}/compile.lock
-      cd /opt/harja
+      cd ${DC_HARJA_KANSIO}
+      if [[ -d /opt/.harja ]]
+      then
+        mv /opt/.harja ../.harja
+      fi
       # Enable job control
       # set -m
 
       echo 'Aloitetaan LESS kääntäminen'
       sh/tarkkaile_less.sh dev-container > /var/log/harja_less.log 2>&1 &
       disown
-      lein with-profile +dev-container less once
+      lein with-profile $${LEIN_PROFILES} less once
       echo 'Luodaan .edn filut figwheeliä varten'
       mkdir -p figwheel_conf/luodut
       lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
@@ -140,7 +164,7 @@ services:
       #lein trampoline with-profile +dev-container run -m figwheel.main -fw false -bo figwheel_conf/luodut/dev-container > /var/log/harja_frontend.log 2>&1
 
       echo 'Käynnistetään frontin repl'
-      lein trampoline with-profile +dev-container run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl > /var/log/harja_frontend.log 2>&1 &
+      lein trampoline with-profile $${LEIN_PROFILES} run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl > /var/log/harja_frontend.log 2>&1 &
       disown
 
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)

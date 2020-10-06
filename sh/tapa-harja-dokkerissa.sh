@@ -3,6 +3,7 @@ set -euo pipefail
 
 HARJA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 POISTA_MUUT_BRANCHIT="$([[ -n "$(echo $@ | grep rob)" ]]; echo $?)"
+POISTA_TRAMPOLIINIT="$([[ -n "$(echo $@ | grep rt)" ]]; echo $?)"
 export BRANCH="$(git branch --show-current)"
 
 aja-yhteisessa-voluumissa() {
@@ -24,5 +25,13 @@ then
   echo "POISTETAAN MUIDEN BRANCHIEN COMPILE FILUT"
   aja-yhteisessa-voluumissa 'find . -maxdepth 1 -mindepth 1 -type d -exec /bin/bash -c "if [[ ! \$1 = */$BRANCH ]]; then rm -rf \$1; fi;" _ {} \;'
 fi
+
+if [[ $POISTA_TRAMPOLIINIT -eq 0 ]]
+then
+    # Poistetaan figwheelin trampoliini cachet
+    echo "POISTETAAN TRAMPOLIINI CACHET"
+    find "${HARJA_DIR}/target/trampolines" -type f -delete
+fi
+
 echo "SAMMUTETAAN DOCKER COMPOSE"
-sudo docker-compose --env-file "${HARJA_DIR}/dev-resources/tmp/yhdistetty_dc_env" down
+sudo docker-compose --env-file "${HARJA_DIR}/yhdistetty_dc_env" down

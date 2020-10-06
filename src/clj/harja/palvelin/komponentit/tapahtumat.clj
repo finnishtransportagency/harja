@@ -18,6 +18,13 @@
            [java.util UUID]
            [java.net InetAddress]))
 
+(defonce ^{:private true
+           :doc "Tähän yhteyteen kaikki LISTEN hommat."}
+         event-yhteys nil)
+
+(def ^:private tama-host (fmt/leikkaa-merkkijono 512
+                                       (.toString (InetAddress/getLocalHost))))
+
 (defn- uusi-tapahtuman-kanava []
   (str "k_" (clj-str/replace (str (UUID/randomUUID)) #"-" "_")))
 
@@ -39,9 +46,7 @@
   {:pre [(string? tapahtuma)]
    :post [(or (nil? %)
               (string? %))]}
-  (-> (q-tapahtumat/tapahtuman-kanava db {:nimi tapahtuma})
-      first
-      :kanava))
+  (q-tapahtumat/tapahtuman-kanava db {:nimi tapahtuma}))
 
 (defn- kaytettava-kanava!
   "Yrittää tallenntaa kantaan uuden kanava-tapahtuma parin kantaan ja plauttaa kanavan.
@@ -53,21 +58,17 @@
         vastaus (q-tapahtumat/lisaa-tapahtuma db {:nimi tapahtuma :kanava uusi-tapahtuman-kanava})]
     (println "---> VASTAUS: " vastaus)
     (if (empty? vastaus)
-      (tapahtuman-kanava db {:nimi tapahtuma})
+      (tapahtuman-kanava db tapahtuma)
       (:kanava (first vastaus)))))
 
 (defn- kuuntele-klusterin-tapahtumaa! [db tapahtuma]
   (let [kaytettava-kanava (kaytettava-kanava! db tapahtuma)]
-    (jdbc/with-db-connection [db db]
-      (let [connection (jdbc/db-connection db)]
-        (u connection (str "LISTEN " kaytettava-kanava)))
-      kaytettava-kanava)))
+    (u event-yhteys (str "LISTEN " kaytettava-kanava))
+    kaytettava-kanava))
 
 (defn- kuuroudu-klusterin-tapahtumasta [db tapahtuma]
   (let [tapahtuman-kanava (tapahtuman-kanava db tapahtuma)]
-    (jdbc/with-db-connection [db db]
-      (let [connection (jdbc/db-connection db)]
-        (u connection (str "UNLISTEN " tapahtuman-kanava))))))
+    (u event-yhteys (str "UNLISTEN " tapahtuman-kanava))))
 
 
 (def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
@@ -130,7 +131,7 @@
       (reset! tarkkailijat {})
       (reset! kuuntelijat {})
       (reset! ajossa true)
-      #_(reset! connection (doto (.getConnection (:datasource (:db this)))
+      #_(reset! connection (doto (.getConnection (:datasource (get-in this [:db :db-spec])))
                            (.setAutoCommit false)))
       ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "sonjaping" tai "urakan_123_tapahtumat".
       ;; arvona kullakin avaimella on seq async-kanavia (?)
@@ -138,11 +139,13 @@
                 (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
                   (let [connection (cast (Class/forName "org.postgresql.jdbc.PgConnection")
                                          (jdbc/db-connection db))]
+                    (alter-var-root #'event-yhteys (constantly connection))
                     (loop [break? false]
                       (when (and (not break?)
                                  @ajossa)
                         (let [tapahtumien-haku-onnistui? (try
-                                                           (doseq [^PGNotification notification (.getNotifications connection)]
+                                                           (println "NOTIFIKAATIOT")
+                                                           (doseq [^PGNotification notification (seq (.getNotifications connection))]
                                                              (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
                                                              (log/debug "kuuntelijat:" @kuuntelijat)
                                                              (let [data (cheshire/decode (.getParameter notification))]
@@ -161,20 +164,18 @@
       this))
 
   (stop [this]
+    (run! #(u event-yhteys (str "UNLISTEN " %))
+          (map first @kuuntelijat))
+    (doseq [[pos-kanava async-kanava] @tarkkailijat]
+      (u event-yhteys (str "UNLISTEN " pos-kanava))
+      (async/close! async-kanava))
     (reset! ajossa false)
-    (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
-      (let [connection (jdbc/db-connection db)]
-        (run! #(u connection (str "UNLISTEN " %))
-              (map first @kuuntelijat))
-        (doseq [[pos-kanava async-kanava] @tarkkailijat]
-          (u connection (str "UNLISTEN " pos-kanava))
-          (async/close! async-kanava))))
     (async/close! (::tarkkailu-kanava this))
     this)
 
   Kuuroudu
   (kuuroudu! [this tapahtuma]
-    (let [kanava (tapahtuman-kanava (:db this) tapahtuma)]
+    (let [kanava (tapahtuman-kanava (get-in this [:db :db-spec]) tapahtuma)]
       (swap! kuuntelijat #(dissoc % kanava))
       #_(u @connection (str "UNLISTEN " kanava))))
 
@@ -194,13 +195,14 @@
                                                (::data v)))
                                         (fn [t]
                                           (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
-          possu-kanava (kaytettava-kanava! (:db this) tapahtuma)]
+          tapahtuma (tapahtuman-nimi tapahtuma)
+          possu-kanava (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)]
       (case tyyppi
         :perus nil
-        :viimeisin (when-let [arvo (-> (q-tapahtumat/uusin-arvo (:db this) {:nimi tapahtuma}) first :uusin-arvo)]
+        :viimeisin (when-let [arvo (q-tapahtumat/uusin-arvo (get-in this [:db :db-spec]) {:nimi tapahtuma})]
                      (async/put! kuuntelija-kanava {::data arvo})))
       (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
-      (swap! (:tarkkailijat this) assoc possu-kanava kuuntelija-kanava)
+      (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
       kuuntelija-kanava))
   (tarkkaile! [this tapahtuma]
     (tarkkaile! this tapahtuma :perus))
@@ -208,11 +210,10 @@
   Julkaise
   (julkaise! [this tapahtuma payload]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
-          db (:db this)
+          db (get-in this [:db :db-spec])
           kanava (tapahtuman-kanava db tapahtuma)]
       (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (cheshire/encode {:payload payload
-                                                                                  :palvelin (fmt/leikkaa-merkkijono 512
-                                                                                                                    (.toString (InetAddress/getLocalHost)))})}))))
+                                                                                  :palvelin tama-host})}))))
 
 (defn luo-tapahtumat []
   (->Tapahtumat (atom nil) (atom nil) (atom false)))

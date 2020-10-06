@@ -39,7 +39,8 @@
                                   :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                                   "dev-resources/tmp"
                                                   :target-path]}
- :dev-emacs {:plugins [[cider/cider-nrepl "0.25.3"]]}
+ :dev-emacs {:plugins [[cider/cider-nrepl "0.25.3"]
+                       [refactor-nrepl "2.5.0"]]}
  :repl {:repl-options {:init-ns harja.palvelin.main
                        :init (harja.palvelin.main/-main)
                        :port 4005

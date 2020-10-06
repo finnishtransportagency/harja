@@ -68,3 +68,4 @@ src/cljs-dev/harja/repl.cljs
 /.clj-kondo/.cache/
 figwheel_conf/luodut/
 .local_env
+yhdistetty_dc_env

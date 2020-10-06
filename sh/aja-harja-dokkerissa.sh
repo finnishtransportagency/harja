@@ -30,7 +30,7 @@ lisaa_env_muuttuja() {
     if [[ -n $(awk "/^${NIMI}/ { print }" $ENV_FILE) ]]
     then
         # Ympäristömuuttujalle on annettu jokin arvo
-        os_sed_inplace -e "s/${NIMI}.*/${NIMI}=${ARVO}/g" $ENV_FILE
+        os_sed_inplace -e "s/${NIMI}.*/${NIMI}=${ARVO//\//\\/}/g" $ENV_FILE
     else
         # Ympäristömuuttujalle ei ole annettu arvoa
         printf "%s\n" "${NIMI}=${ARVO}" >> $ENV_FILE
@@ -55,22 +55,23 @@ if [[ -n "$(echo $@ | grep clean)" ]]
 then
     lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'"
 else
-    lisaa_env_muuttuja LEININGEN_CLEAN '""'
+    lisaa_env_muuttuja LEININGEN_CLEAN ''
 fi
 
 lisaa_env_muuttuja BRANCH $(git branch --show-current) local
 lisaa_env_muuttuja HOST_USER_ID ${UID} local
+lisaa_env_muuttuja DC_HARJA_KANSIO ${HARJA_DIR} local
 
 # --env-file ei tue useaa filua, joten tehdään näin
-touch -f "${HARJA_DIR}/dev-resources/tmp/yhdistetty_dc_env"
+touch -f "${HARJA_DIR}/yhdistetty_dc_env"
 
 {
     cat ${COMPOSE_ENV_FILE} | grep -v '#'
     cat ${LOCAL_ENV_FILE} | grep -v '#'
-} > "${HARJA_DIR}/dev-resources/tmp/yhdistetty_dc_env"
+} > "${HARJA_DIR}/yhdistetty_dc_env"
 
 echo "Käynnistetään compose ja ohjataan output ${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log tiedostoon ..."
-sudo docker-compose --env-file "${HARJA_DIR}/dev-resources/tmp/yhdistetty_dc_env" up > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
+sudo docker-compose --env-file "${HARJA_DIR}/yhdistetty_dc_env" up > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
 
 DOCKER_COMPOSE_PID=$!
 FRONTEND_REPL_PORT="$(awk -F "=" '/FRONTEND_REPL_PORT/ { print $2 }' ${COMPOSE_ENV_FILE})"

@@ -23,7 +23,8 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut :as kanavasulut]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
-            [harja.domain.geometriaaineistot :as ga])
+            [harja.domain.geometriaaineistot :as ga]
+            [clojure.core.async :as async])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
            (java.sql Timestamp)))
@@ -417,5 +418,8 @@
                      :kanavien-hakutehtava
                      :kanavien-paivitystehtava]
             :let [lopeta-fn (get this tehtava)]]
-      (when lopeta-fn (lopeta-fn)))
+      (cond
+        (fn? lopeta-fn) (lopeta-fn)
+        (nil? lopeta-fn) nil
+        :else (async/close! lopeta-fn)))
     this))
