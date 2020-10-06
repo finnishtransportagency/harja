@@ -2608,7 +2608,7 @@
              (get-in app [:domain :kuluva-hoitokausi])
              (get-in app [:domain :indeksit])]
             [:span#tavoite-ja-kattohinta-huomio
-             "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
+             "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
            [:span.viiva-alas]
            [haitari-laatikko
             "Suunnitelmien tila"
