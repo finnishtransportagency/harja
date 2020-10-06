@@ -2594,7 +2594,7 @@
            [:div "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten. Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa."[:br][:br]
            "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä kuluina Sampon maksueriin." [:br]
            "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lasketaan mukaan maksueriin eräpäivän mukaan."[:br][:br]
-           "Kustannussuunnitelmien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. "[:br][:br]]
+           "Sampoon lähetettävien kustannussuunnitelmasummien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. "[:br][:br]]
            (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
              [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
                                               (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
