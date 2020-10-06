@@ -149,10 +149,11 @@
             (nil? hoitokauden-alkuvuosi))
     (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
   (jarjesta-tehtavahierarkia
-    (if (= :kaikki hoitokauden-alkuvuosi)
-      (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
-      (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
-                                            :hoitokausi [hoitokauden-alkuvuosi]}))))
+    (let [haettu (if (= :kaikki hoitokauden-alkuvuosi)
+                   (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
+                   (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
+                                                         :hoitokausi [hoitokauden-alkuvuosi]}))]
+      haettu)))
 
 (defn tallenna-tehtavamaarat
   "Luo tai päivittää urakan hoitokauden tehtävämäärät."
@@ -191,7 +192,6 @@
                                     ;;  update
                                     (do
                                       (apply q/paivita-tehtavamaara! parametrit)))))))
-
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 

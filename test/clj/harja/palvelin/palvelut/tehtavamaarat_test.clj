@@ -26,29 +26,34 @@
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
-
+(def tehtava-id-1 2991)
+(def tehtava-id-2 2992)
+(def rumpujen-tarkastus 3020)
+(def tehtava-id-3 1222)
+(def tehtava-id-4 1414)
 
 (def paivitettavat-olemassaolevat-tehtavat
-  [{:tehtava-id 1430 :maara 111 }
-   {:tehtava-id 1414 :maara 222 }
-   {:tehtava-id 3041 :maara 666.6 }
-   {:tehtava-id 3009 :maara 444 }])
+  [{:tehtava-id 1430 :maara 111}
+   {:tehtava-id 1414 :maara 666.7}
+   ; {:tehtava-id 1370 :maara 666.6}
+   ;{:tehtava-id 1222 :maara 444}
+   ])
 
 (def uudet-tehtavat
-  [{:tehtava-id 1428 :maara 555 }
-   {:tehtava-id 2991 :maara 666 }
-   {:tehtava-id 2992 :maara 7.77 }
-   {:tehtava-id 3004 :maara 88.8 }
-   {:tehtava-id 1429 :maara 999 }
-   {:tehtava-id 3021 :maara 666 }])
+  [{:tehtava-id 1428 :maara 555}
+   {:tehtava-id tehtava-id-1 :maara 666}
+   {:tehtava-id 2992 :maara 7.77}
+   {:tehtava-id 3004 :maara 88.8}
+   {:tehtava-id 1429 :maara 999}
+   {:tehtava-id 3021 :maara 666}])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id 2992 :maara 6.66 }
-   {:tehtava-id 1430 :maara 999 }])
+  [{:tehtava-id tehtava-id-2 :maara 6.66}
+   {:tehtava-id 1430 :maara 999}])
 
 (def virheellinen-tehtava
-  [{:tehtava-id 2992 :maara 6.66 }
-   {:tehtava-id 666 :maara 999 }])
+  [{:tehtava-id tehtava-id-2 :maara 6.66}
+   {:tehtava-id 666 :maara 999}])
 
 ;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
 
@@ -56,20 +61,37 @@
 ;; jos tehtävähierarkian tehtävien tiedoissa tapahtuu muutoksia, tämä testi feilaa ja täytyy päivittää
 (deftest tehtavahierarkian-haku
   (let [hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tehtavahierarkia +kayttaja-jvh+
+                                  :tehtavahierarkia
+                                  +kayttaja-jvh+
                                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    (is (= (count hierarkia) 104) "Hierarkiassa on 104 osaa.")
-    (is (= (:tehtava (first (filter #(= 4579 (:tehtava-id %)) hierarkia))) "Rumpujen tarkastus") "Tehtävähierarkiassa palautuu tietoja.")))
+    (is (= (count hierarkia) 108) "Hierarkiassa on 108 osaa.")
+    (is (= (:tehtava (first (filter #(= rumpujen-tarkastus (:tehtava-id %)) hierarkia))) "Rumpujen tarkastus") "Tehtävähierarkiassa palautuu tietoja.")))
 
 
 
 (deftest tehtavaryhmat-ja-toimenpiteet-testi
-  (let [tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [tr-tp-lkm (ffirst
+                    (q (str "SELECT count(distinct tr3.id)
+                             FROM tehtavaryhma tr1
+                             JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
+                             JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
+                             LEFT JOIN toimenpidekoodi tpk4
+                             ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
+                             tpk4.poistettu is not true AND tpk4.piilota is not true
+                             JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                             JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = "
+                            @oulun-maanteiden-hoitourakan-2019-2024-id
+                            "WHERE tr1.emo is null")))
+        tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tehtavaryhmat-ja-toimenpiteet
                                                    +kayttaja-jvh+
-                                                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    (is (= tehtavaryhmat-ja-toimenpiteet false) "Palauttaa tehtäväryhmä ja toimenpidelistan")
-    (is (= true false) "Tyhjä lista jos ei löydy urakkaa")
+                                                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
+        tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                      :tehtavaryhmat-ja-toimenpiteet
+                                                                      +kayttaja-jvh+
+                                                                      {:urakka-id 36565345})]
+    (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")
+    (is (empty? tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id) "Tyhjä lista jos ei löydy urakkaa")
     (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                           :tehtavaryhmat-ja-toimenpiteet
                                                           +kayttaja-jvh+
@@ -118,38 +140,37 @@
         hoitokausi-2020 (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                        :hoitokauden-alkuvuosi 2020})]
-
     ;; tehtävähierarkia
-    (is (= (count tehtavamaarat-ja-hierarkia) 118) "Hierarkiassa on 118 osaa.")
-    (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
+    (is (= (count tehtavamaarat-ja-hierarkia) 115) "Hierarkiassa on 115 osaa.")
+    (is (= (:maara (first (filter #(and (= tehtava-id-4 (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
-                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-ja-hierarkia))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa.")
+                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-ja-hierarkia))) 33.4M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa.")
 
     ;; tehtävämäärä
     (is (= (count tehtavamaarat) tehtavamaarat-kannassa) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
-    (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
-                                        (= 2020 (:hoitokauden-alkuvuosi %))
-                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein.")
+    (is (= (:maara (first (filter #(and (= tehtava-id-3 (:tehtava-id %))
+                                       (= 2020 (:hoitokauden-alkuvuosi %))
+                                       (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein.")
 
     ;; hoitokauden tietojen päivitys
     (is (= (count tehtavamaarat-ennen-paivitysta) (count tehtavamaarat-paivityksen-jalkeen)) "Rivejä ei lisätty, kun tietoja päivitettiin.")
     (is (= tehtavamaarat-paivita tehtavahierarkia-paivityksen-jalkeen) "Tallennusfunktio palauttaa vastauksena kannan tilan samanlaisena kuin erillinen hierarkianhakufunktio.")
-    (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= tehtava-id-4 (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
-                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-paivita))) 666.6M) "Päivitys päivitti määrän.")
+                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-paivita))) 666.7M) "Päivitys päivitti määrän.")
 
     ;; hoitokauden tietojen lisäys
     (is (= (count tehtavamaarat-lisayksen-jalkeen) 10) "Uudet rivit lisättiin, vanhat säilyivät.")
-    (is (= (:maara (first (filter #(and (= 4561 (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= tehtava-id-1 (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-lisaa))) 666M) "Lisäys lisäsi määrän.")
 
     ;; uuden hoitokauden lisäys
-    (is (= (count hoitokausi-2022-lisaa) 118) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
+    (is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
-    (is (= (:maara (first (filter #(and (= 4589 (:tehtava-id %))
-                                        (= 2022 (:hoitokauden-alkuvuosi %))
-                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
+    (is (= (:maara (first (filter #(and (= tehtava-id-2 (:tehtava-id %))
+                                       (= 2022 (:hoitokauden-alkuvuosi %))
+                                       (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
     (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
     (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
 
@@ -196,8 +217,8 @@
                            (not= 0 (:maara %))
                            (some? (:maara %))) tehtavat-ja-maarat-urakan-ulkopuolelta)) "Urakan ulkopuolella ei löydy määriä")
     (is (true? (let [maaralliset (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat-kaikki)]
-             (and (some #(= 2020 (:hoitokauden-alkuvuosi %)) maaralliset)
-                  (some #(= 2022 (:hoitokauden-alkuvuosi %)) maaralliset)))) "Palauttaa kaikki määrät")
+                 (and (some #(= 2020 (:hoitokauden-alkuvuosi %)) maaralliset)
+                      (some #(= 2022 (:hoitokauden-alkuvuosi %)) maaralliset)))) "Palauttaa kaikki määrät")
     (is (every? #(and (nil? (:urakka %))
                       (nil? (:hoitokauden-alkuvuosi %))
                       (or (= 0 (:maara %))
