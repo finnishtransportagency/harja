@@ -247,14 +247,14 @@
 
 #_ {:harja.domain.pot2/massatyyppi "SMA 16", :harja.domain.pot2/runkoaineet [{:runkoaine/litteysluku 4.5, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/id 4, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 5, :runkoaine/kuulamyllyarvo 11.2} {:runkoaine/litteysluku 6.5, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/id 3, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 3, :runkoaine/fillerityyppi "Kalkkifilleri (KF)", :runkoaine/kuulamyllyarvo 8.2} {:runkoaine/litteysluku 6.5, :runkoaine/kuvaus "Jämäkkä runkoaine.", :runkoaine/id 2, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 85, :runkoaine/kuulamyllyarvo 9.2}], :harja.domain.pot2/lisa-aineet [{:lisaaine/id 2, :lisaaine/pitoisuus 0.5, :lisaaine/tyyppi 1, :pot2-massa/id 2}], :harja.domain.pot2/nimi "Kivimastiksiasfaltti", :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/dop_nro "987654331-2", :harja.domain.pot2/litteyslukuluokka 2, :pot2-massa/id 2, :harja.domain.pot2/kuulamyllyluokka "AN7", :harja.domain.pot2/sideaineet [{:sideaine/pitoisuus 5.5, :sideaine/id 2, :sideaine/lopputuote? true, :pot2-massa/id 2, :sideaine/tyyppi 5}]}
 (defn- massan-runkoaineet
-  [rivi runkoainetyypit]
+  [rivi ainetyypit]
 [:span
  (for [aine (reverse
               (sort-by :runkoaine/massaprosentti
                        (:harja.domain.pot2/runkoaineet rivi)))]
    [:span
     [:div
-     (str (tiedot-massa/ainetyypin-koodi->nimi runkoainetyypit (:runkoaine/tyyppi aine))
+     (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
           " ("
           (:runkoaine/esiintyma aine) ")")
    [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]
@@ -263,14 +263,28 @@
     (when (:runkoaine/litteysluku aine)
       [:div "-litteysluku " (:runkoaine/litteysluku aine)])])])
 
-(defn- massan-sideaineet [rivi sideainetyypit]
-  [:div "Sideaineet" ])
+(defn- massan-sideaineet [rivi ainetyypit]
+  [:span
+   (for [aine (reverse
+                (sort-by :sideaine/pitoisuus
+                         (:harja.domain.pot2/sideaineet rivi)))]
+     [:span
+      [:div
+       (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
+       [:span.pull-right (str (:sideaine/pitoisuus aine) "%")]]])])
 
-(defn- massan-lisaaineet [rivi lisaainetyypit]
-  [:div "Lisäaineet"])
+(defn- massan-lisaaineet [rivi ainetyypit]
+  [:span
+   (for [aine (reverse
+                (sort-by :lisaaine/pitoisuus
+                         (:harja.domain.pot2/lisa-aineet rivi)))]
+     [:span
+      [:div
+       (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
+       [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
 (defn- massan-toiminnot [e! rivi]
-  [:span
+  [:span.pull-right
    [napit/nappi ""
     #(log "pen painettu")
     {:ikoninappi? true :luokka "klikattava"
@@ -278,31 +292,37 @@
    [napit/nappi ""
     #(log "duplicate painettu")
     {:ikoninappi? true :luokka "klikattava"
-     :ikoni (ikonit/duplicate)}]])
+     :ikoni (ikonit/livicon-duplicate)}]])
 
 (defn- paallystysmassat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Massat"
     :tunniste :pot2-massa/id
-    :tyhja        (if (nil? massat)
-                    [ajax-loader "Haetaan massatyyppejä..."]
-                    "Urakalle ei ole vielä lisätty massoja")
-    :voi-lisata?  false
-    :voi-kumota?  false
+    :tyhja (if (nil? massat)
+             [ajax-loader "Haetaan massatyyppejä..."]
+             "Urakalle ei ole vielä lisätty massoja")
+    :voi-lisata? false
+    :voi-kumota? false
     :voi-poistaa? (constantly false)
-    :voi-muokata? true}
-   [{:otsikko "Massatyyppi" :hae pot2-domain/massatyypin-nimi :tyyppi :string :leveys 8}
-
-    {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 5
+    :voi-muokata? true
+    :custom-toiminto {:teksti "Luo uusi massa"
+                      :toiminto #(e! (tiedot-massa/->UusiMassa true))
+                      :opts {:ikoni (ikonit/livicon-plus)
+                             :style {:background-color "#fff"
+                                     :border "none"
+                                     :color "#0066cc"}}}}
+   [{:otsikko "Massatyyppi" :hae pot2-domain/massatyypin-nimi :tyyppi :string
+     :solun-luokka (constantly "bold") :leveys 8}
+    {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
     {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
      :komponentti (fn [rivi]
                     [massan-sideaineet rivi (:sideainetyypit materiaalikoodistot)])}
-    {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisa-aineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
+    {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisa-aineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
-    {:otsikko "Toiminnot" :nimi ::pot2-domain/lisa-aineet :fmt #(or % "-") :tyyppi :komponentti :leveys 5
+    {:otsikko "Toiminnot" :nimi ::pot2-domain/lisa-aineet :fmt #(or % "-") :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [massan-toiminnot e! rivi])}]
    massat])
@@ -310,9 +330,6 @@
 (defn- kantavan-kerroksen-materiaalit-taulukko [e! {:keys [murskeet] :as app}])
 
 (defn- materiaalikirjasto [e! {:keys [runkoaineet massat murskeet] :as app}]
-  (log "materiaalikirjasto, runkoaineet " (pr-str runkoaineet ))
-  (log "materiaalikirjasto, massat " (pr-str massat ))
-  (log "materiaalikirjasto, murskeet " (pr-str murskeet ))
   [:span
    [paallystysmassat-taulukko e! app]
    [kantavan-kerroksen-materiaalit-taulukko e! app]])
@@ -325,21 +342,12 @@
                       (e! (tiedot-massa/->HaeKoodistot))))
     (fn [e! app]
       (let [
-            avaa-massa-lomake? (:avaa-massa-lomake? app)
-            _ (js/console.log "massat* :: app" (pr-str app))
-            _ (js/console.log "massalistatus :: " "avaa-massa-lomake?" (pr-str avaa-massa-lomake?))]
+            avaa-massa-lomake? (:avaa-massa-lomake? app)]
 
         [:div
-         [:div.row
-          [napit/uusi
-           "Lisaa massa"
-           #(e! (tiedot-massa/->UusiMassa true))
-           {:vayla-tyyli? true
-            :luokka "suuri"}]
-
-          (if avaa-massa-lomake?
-            [massa-lomake e! app]
-            [materiaalikirjasto e! app])]]))))
+         (if avaa-massa-lomake?
+           [massa-lomake e! app]
+           [materiaalikirjasto e! app])]))))
 
 
 

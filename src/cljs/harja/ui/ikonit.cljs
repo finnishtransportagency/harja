@@ -545,6 +545,8 @@
   [:span.livicon-minus])
 (defn livicon-pen []
   [:span.livicon-pen])
+(defn livicon-duplicate []
+  [:span.livicon-duplicate])
 (defn livicon-warning-sign []
   [:span.livicon-exclamation-triangle])
 (defn livicon-trash []
