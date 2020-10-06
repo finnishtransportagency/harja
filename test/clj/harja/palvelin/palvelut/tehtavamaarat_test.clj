@@ -29,40 +29,55 @@
 
 
 (def paivitettavat-olemassaolevat-tehtavat
-  [{:tehtava-id 1430 :maara 111}
-   {:tehtava-id 1414 :maara 222}
-   {:tehtava-id 4579 :maara 666.6}
-   {:tehtava-id 4610 :maara 444}])
+  [{:tehtava-id 1430 :maara 111 }
+   {:tehtava-id 1414 :maara 222 }
+   {:tehtava-id 3041 :maara 666.6 }
+   {:tehtava-id 3009 :maara 444 }])
 
 (def uudet-tehtavat
-  [{:tehtava-id 1428 :maara 555}
-   {:tehtava-id 4561 :maara 666}
-   {:tehtava-id 4570 :maara 7.77}
-   {:tehtava-id 4583 :maara 88.8}
-   {:tehtava-id 4590 :maara 999}
-   {:tehtava-id 4617 :maara 666}])
+  [{:tehtava-id 1428 :maara 555 }
+   {:tehtava-id 2991 :maara 666 }
+   {:tehtava-id 2992 :maara 7.77 }
+   {:tehtava-id 3004 :maara 88.8 }
+   {:tehtava-id 1429 :maara 999 }
+   {:tehtava-id 3021 :maara 666 }])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id 4589 :maara 6.66}
-   {:tehtava-id 1430 :maara 999}])
+  [{:tehtava-id 2992 :maara 6.66 }
+   {:tehtava-id 1430 :maara 999 }])
 
 (def virheellinen-tehtava
-  [{:tehtava-id 4589 :maara 6.66}
-   {:tehtava-id 666 :maara 999}])
+  [{:tehtava-id 2992 :maara 6.66 }
+   {:tehtava-id 666 :maara 999 }])
 
 ;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
 
 
 ;; jos tehtävähierarkian tehtävien tiedoissa tapahtuu muutoksia, tämä testi feilaa ja täytyy päivittää
-#_(deftest tehtavahierarkian-haku
+(deftest tehtavahierarkian-haku
   (let [hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tehtavahierarkia +kayttaja-jvh+)]
+                                  :tehtavahierarkia +kayttaja-jvh+
+                                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
     (is (= (count hierarkia) 104) "Hierarkiassa on 104 osaa.")
     (is (= (:tehtava (first (filter #(= 4579 (:tehtava-id %)) hierarkia))) "Rumpujen tarkastus") "Tehtävähierarkiassa palautuu tietoja.")))
 
 
+
+(deftest tehtavaryhmat-ja-toimenpiteet-testi
+  (let [tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tehtavaryhmat-ja-toimenpiteet
+                                                   +kayttaja-jvh+
+                                                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
+    (is (= tehtavaryhmat-ja-toimenpiteet false) "Palauttaa tehtäväryhmä ja toimenpidelistan")
+    (is (= true false) "Tyhjä lista jos ei löydy urakkaa")
+    (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                          :tehtavaryhmat-ja-toimenpiteet
+                                                          +kayttaja-jvh+
+                                                          {})) "Virhe jos ei parametria")))
+
+
 ; käyttää ennakkoon tallennettua testidataa
-#_(deftest tallenna-tehtavamaarat-testi
+(deftest tallenna-tehtavamaarat-testi
   (let [tehtavamaarat-ja-hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                                :hoitokauden-alkuvuosi 2020})
@@ -105,7 +120,7 @@
                                                                        :hoitokauden-alkuvuosi 2020})]
 
     ;; tehtävähierarkia
-    (is (= (count tehtavamaarat-ja-hierarkia) 118) "Hierarkiassa on 104 osaa.")
+    (is (= (count tehtavamaarat-ja-hierarkia) 118) "Hierarkiassa on 118 osaa.")
     (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-ja-hierarkia))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa.")
@@ -143,10 +158,52 @@
 (deftest tallenna-tehtavamaarat-virhekasittely-testi
   (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tehtavamaarat
                                                 +kayttaja-jvh+ {:urakka-id             @oulun-alueurakan-2014-2019-id
-                                                                 :hoitokauden-alkuvuosi 2022
-                                                                 :tehtavamaarat         uudet-tehtavat})) "Hoidon urakassa ei tallenneta tehtävä- ja määräluetteloa.")
+                                                                :hoitokauden-alkuvuosi 2022
+                                                                :tehtavamaarat         uudet-tehtavat})) "Hoidon urakassa ei tallenneta tehtävä- ja määräluetteloa.")
 
   (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tehtavamaarat
                                                 +kayttaja-jvh+ {:urakka-id             @oulun-alueurakan-2014-2019-id
-                                                                 :hoitokauden-alkuvuosi 2022
-                                                                 :tehtavamaarat         virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
+                                                                :hoitokauden-alkuvuosi 2022
+                                                                :tehtavamaarat         virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
+
+(deftest tehtavahierarkian-haku-maarineen-testi
+  (let [tehtavat-ja-maarat (kutsu-palvelua
+                             (:http-palvelin jarjestelma)
+                             :tehtavamaarat-hierarkiassa
+                             +kayttaja-jvh+
+                             {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                              :hoitokauden-alkuvuosi 2020})
+        tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
+                                                 (:http-palvelin jarjestelma)
+                                                 :tehtavamaarat-hierarkiassa
+                                                 +kayttaja-jvh+
+                                                 {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                                  :hoitokauden-alkuvuosi 2028})
+        tehtavat-ja-maarat-kaikki (kutsu-palvelua
+                                    (:http-palvelin jarjestelma)
+                                    :tehtavamaarat-hierarkiassa
+                                    +kayttaja-jvh+
+                                    {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                     :hoitokauden-alkuvuosi :kaikki})
+        tehtavat-ja-maarat-ei-urakkaa (kutsu-palvelua
+                                        (:http-palvelin jarjestelma)
+                                        :tehtavamaarat-hierarkiassa
+                                        +kayttaja-jvh+
+                                        {:urakka-id             904569045
+                                         :hoitokauden-alkuvuosi 2020})]
+    (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle")
+    (is (empty? (filter #(and
+                           (not= 0 (:maara %))
+                           (some? (:maara %))) tehtavat-ja-maarat-urakan-ulkopuolelta)) "Urakan ulkopuolella ei löydy määriä")
+    (is (true? (let [maaralliset (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat-kaikki)]
+             (and (some #(= 2020 (:hoitokauden-alkuvuosi %)) maaralliset)
+                  (some #(= 2022 (:hoitokauden-alkuvuosi %)) maaralliset)))) "Palauttaa kaikki määrät")
+    (is (every? #(and (nil? (:urakka %))
+                      (nil? (:hoitokauden-alkuvuosi %))
+                      (or (= 0 (:maara %))
+                          (nil? (:maara %)))) tehtavat-ja-maarat-ei-urakkaa) "Tietoja ei löydy, jos ei urakkaa")
+    (is (thrown? IllegalArgumentException (kutsu-palvelua
+                                            (:http-palvelin jarjestelma)
+                                            :tehtavamaarat-hierarkiassa
+                                            +kayttaja-jvh+
+                                            {})) "Virhe jos ei parametria")))

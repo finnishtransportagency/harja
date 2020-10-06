@@ -25,7 +25,8 @@ WHERE urakka = :urakka
   AND tehtava = :tehtava;
 
 -- name: tehtavaryhmat-ja-toimenpiteet-urakalle
-SELECT tpk3.id       as "toimenpide-id",
+SELECT distinct
+       tpk3.id       as "toimenpide-id",
        tpk3.nimi     as "toimenpide",
        tr3.nimi      as "tehtavaryhma-nimi",
        tr3.id        as "tehtavaryhma-id",
@@ -129,8 +130,9 @@ ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 
 -- name: hae-validit-tehtava-idt
-SELECT id as "tehtava-id"
+SELECT id as "tehtava-id", yksikko as "yksikko"
 FROM toimenpidekoodi
 WHERE tehtavaryhma IS NOT NULL
+and yksikko is not null
   AND poistettu IS NOT TRUE
   AND piilota IS NOT TRUE;

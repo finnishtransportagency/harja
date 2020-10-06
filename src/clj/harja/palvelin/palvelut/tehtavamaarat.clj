@@ -29,12 +29,14 @@
 
 (defn hae-tehtavahierarkia
   "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
-  [db user]
+  [db user {:keys [urakka-id]}]
   (into []
-        (q/hae-tehtavahierarkia db)))
+        (q/hae-tehtavahierarkia db {:urakka urakka-id})))
 
 (defn tehtavaryhmat-ja-toimenpiteet
   [db user {:keys [urakka-id]}]
+  (when (not urakka-id)
+    (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
   (into [] (q/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
 
 (defn- muodosta-hierarkia
@@ -143,6 +145,9 @@
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (when (or (nil? urakka-id)
+            (nil? hoitokauden-alkuvuosi))
+    (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
   (jarjesta-tehtavahierarkia
     (if (= :kaikki hoitokauden-alkuvuosi)
       (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
@@ -173,7 +178,9 @@
                                                      :kayttaja   (:id user)}]]
                                   ;; TODO: Kaikki feilaa jos yksi feilaa. Olisiko parempi tallentaa ne mitkä voidaan?
                                   (when (empty?
-                                          (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
+                                          (filter #(= (:tehtava-id tm)
+                                                      (:tehtava-id %))
+                                                  validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
 
                                   (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
@@ -198,8 +205,8 @@
           (hae-tehtavat (:db this) user tiedot)))
       (julkaise-palvelu
         :tehtavahierarkia
-        (fn [user]
-          (hae-tehtavahierarkia (:db this) user)))
+        (fn [user tiedot]
+          (hae-tehtavahierarkia (:db this) user tiedot)))
       (julkaise-palvelu
         :tehtavamaarat-hierarkiassa
         (fn [user tiedot]
