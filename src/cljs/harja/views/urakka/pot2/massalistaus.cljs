@@ -252,6 +252,7 @@
  (for [aine (reverse
               (sort-by :runkoaine/massaprosentti
                        (:harja.domain.pot2/runkoaineet rivi)))]
+   ^{:key (:runkoaine/id aine)}
    [:span
     [:div
      (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
@@ -268,6 +269,7 @@
    (for [aine (reverse
                 (sort-by :sideaine/pitoisuus
                          (:harja.domain.pot2/sideaineet rivi)))]
+     ^{:key (:sideaine/id aine)}
      [:span
       [:div
        (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
@@ -278,6 +280,7 @@
    (for [aine (reverse
                 (sort-by :lisaaine/pitoisuus
                          (:harja.domain.pot2/lisa-aineet rivi)))]
+     ^{:key (:lisaaine/id aine)}
      [:span
       [:div
        (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
@@ -332,7 +335,8 @@
 (defn- materiaalikirjasto [e! {:keys [runkoaineet massat murskeet] :as app}]
   [:span
    [paallystysmassat-taulukko e! app]
-   [kantavan-kerroksen-materiaalit-taulukko e! app]])
+   [kantavan-kerroksen-materiaalit-taulukko e! app]
+   [napit/sulje #(swap! tiedot-massa/nayta-materiaalikirjasto? not)]])
 
 (defn massat* [e! app]
   (komp/luo

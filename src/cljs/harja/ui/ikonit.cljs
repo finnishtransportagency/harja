@@ -590,6 +590,8 @@
   [:span.livicon-rotate-left])
 (defn peru []
   [:span.livicon-rotate-left])
+(defn sulje []
+  [:span.livicon-delete])
 (defn tee-sittenkin []
   [:span.livicon-rotate-right])
 (defn tallenna []

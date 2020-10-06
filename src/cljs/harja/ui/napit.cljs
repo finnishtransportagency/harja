@@ -298,7 +298,8 @@
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
-                                            :else "nappi-toissijainen") " " luokka)})]))
+                                            :else "nappi-toissijainen") " " luokka)
+                             :ikoni  (ikonit/sulje)})]))
 
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
