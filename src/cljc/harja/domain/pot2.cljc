@@ -223,7 +223,7 @@
     "max_raekoko" ::max-raekoko
     "kuulamyllyluokka" ::kuulamyllyluokka
     "litteyslukuluokka" ::litteyslukuluokka
-    "dop_nro" ::dop_nro
+    "dop_nro" ::dop-nro
     "poistettu" ::poistettu?
 
     "muokkaaja" ::m/muokkaaja-id
@@ -277,11 +277,21 @@
    "Bitumiemulsiot, BE-AB"
    "Bitumiemulsiot, BE-PAB"])
 
-(defn massatyypin-rikastettu-nimi [rivi]
+(defn ainetyypin-koodi->nimi [ainetyypit koodi]
+  (::nimi (first
+            (filter #(= (::koodi %) koodi)
+                    ainetyypit))))
+
+(defn ainetyypin-koodi->lyhenne [ainetyypit koodi]
+  (::lyhenne (first
+            (filter #(= (::koodi %) koodi)
+                    ainetyypit))))
+
+(defn massatyypin-rikastettu-nimi [massatyypit rivi]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (str (::massatyyppi rivi)
-       " ("
-       (str/join ", " (remove nil? [(::dop_nro rivi)
-                                    (::nimen-tarkenne rivi)
-                                    (::kuulamyllyluokka rivi)]))
-       ")"))
+  (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi rivi))
+       (str/join " " (remove nil? (mapv val
+                                        (select-keys rivi [::max-raekoko
+                                                           ::dop-nro
+                                                           ::nimen-tarkenne
+                                                           ::kuulamyllyluokka]))))))

@@ -104,7 +104,7 @@ CREATE TABLE pot2_massa
     nimen_tarkenne    TEXT,
     max_raekoko       INTEGER NOT NULL CHECK (max_raekoko IN (5, 8, 11, 16, 22, 31)),
     kuulamyllyluokka  kuulamyllyluokka NOT NULL,
-    litteyslukuluokka DECIMAL (3,1) NOT NULL,
+    litteyslukuluokka INTEGER NOT NULL,
     DoP_nro           TEXT, -- DoP_nroa ei ole aina saatavilla heti? Siksi ei NOT NULL
 
     -- muokkausmetatiedot

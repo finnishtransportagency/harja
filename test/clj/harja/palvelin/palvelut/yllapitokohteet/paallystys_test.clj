@@ -105,8 +105,8 @@
    ::pot2-domain/tyyppi (:lyhenne (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
    ::pot2-domain/max-raekoko (first pot2-domain/massan-max-raekoko)
    ::pot2-domain/kuulamyllyluokka (:nimi (first paallystysilmoitus-domain/+kuulamyllyt+))
-   ::pot2-domain/litteyslukuluokka "Muotoarvo 1"                         ;;  Vanhassa kielessä Muotoarvoluokka
-   ::pot2-domain/dop_nro 1.2M
+   ::pot2-domain/litteyslukuluokka 1
+   ::pot2-domain/dop-nro 1.2M
    :runkoaineet [runkoaine-kiviaines-default1 runkoaine-kiviaines-default2]
    :sideaineet [sideaine-default1 sideaine-default2]
    :lisa-aineet [lisaine-default1 lisaine-default2]})
@@ -123,8 +123,8 @@
                         ::pot2-domain/asfalttiasema "Testi Asfalttiasema",
                         ::pot2-domain/nimen-tarkenne "Tarkenne",
                         ::pot2-domain/massa-id 3,
-                        ::pot2-domain/dop_nro nil,
-                        ::pot2-domain/litteyslukuluokka "Muotoarvo 1",
+                        ::pot2-domain/dop-nro nil,
+                        ::pot2-domain/litteyslukuluokka 1,
                         ::m/luoja-id 3,
                         ::pot2-domain/kuulamyllyluokka "AN5",
                         ::pot2-domain/urakka-id 7,

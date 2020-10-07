@@ -53,7 +53,7 @@
                         ::pot2-domain/max-raekoko
                         ::pot2-domain/kuulamyllyluokka
                         ::pot2-domain/litteyslukuluokka
-                        ::pot2-domain/dop_nro
+                        ::pot2-domain/dop-nro
                         [::pot2-domain/runkoaineet
                          #{:runkoaine/id
                            :pot2-massa/id
@@ -102,58 +102,61 @@
 
 (defn tallenna-urakan-paallystysmassa [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (:urakka-id tiedot))
-  (let [massa-id (:massa-id tiedot)
-        _ (println "tallenna-urakan-paallystysmassa :: tiedot" (pr-str tiedot))
-        massan_runkoaineet (:runkoaineet tiedot)
-        massan_sideaineet (:sideaineet tiedot)
-        massan_lisa-aineet (:lisa-aineet tiedot)
-        massa (upsert! db ::pot2-domain/pot2-massa
-                       (merge
-                         (if massa-id
-                           {::pot2-domain/massa-id massa-id
-                            ::muokkaustiedot/muokattu (pvm/nyt)
-                            ::muokkaustiedot/muokkaaja-id (:id user)}
-                           {::muokkaustiedot/luotu (pvm/nyt)
-                            ::muokkaustiedot/luoja-id (:id user)}
-                           )
-                         {::pot2-domain/urakka-id (::pot2-domain/urakka-id tiedot)
-                          ::pot2-domain/nimen-tarkenne (::pot2-domain/nimen-tarkenne tiedot)
-                          ::pot2-domain/tyyppi (::pot2-domain/tyyppi tiedot)
-                          ::pot2-domain/max-raekoko (::pot2-domain/max-raekoko tiedot)
-                          ::pot2-domain/kuulamyllyluokka (::pot2-domain/kuulamyllyluokka tiedot)
-                          ::pot2-domain/litteyslukuluokka (str (::pot2-domain/litteyslukuluokka tiedot))
-                          ::pot2-domain/dop_nro (bigdec (::pot2-domain/dop_nro tiedot))}))
-        _ (println "tallenna-urakan-paallystysmassa :: massa" (pr-str massa))
-        massa-id (:pot2-massa/id massa)
-        _ (println "tallenna-urakan-paallystysmassa :: massa-id" (pr-str massa-id))
-        runkoaineet (for [r massan_runkoaineet]
-                      (upsert! db ::pot2-domain/pot2-massa-runkoaine
-                               {:pot2-massa/id massa-id
-                                :runkoaine/esiintyma (:kiviaine-esiintyma r)
-                                :runkoaine/kuulamyllyarvo (when (:kuulamyllyarvo r)
-                                                            (bigdec (:kuulamyllyarvo r)))
-                                :runkoaine/muotoarvo (:muotoarvo r)
-                                :runkoaine/massaprosentti (when (:massaprosentti r)
-                                                                     (bigdec (:massaprosentti r)))
-                                :runkoaine/erikseen-lisattava-fillerikiviaines (:erikseen-lisattafa-fillerikiviaines r)}))
-        _ (println "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
-        massa (assoc massa :runkoaineet runkoaineet)
-        sideaineet (for [s massan_sideaineet]
-                     (upsert! db ::pot2-domain/pot2-massa-sideaine
-                              {:pot2-massa/id massa-id
-                               :sideaine/tyyppi (:tyyppi s)
-                               :sideaine/pitoisuus (bigdec (:pitoisuus s))
-                               :sideaine/lopputuote? (:lopputuote? s)}))
-        _ (println "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
-        massa (assoc massa :sideaineet sideaineet)
-        lisa-aineet (for [s massan_lisa-aineet]
-                     (upsert! db ::pot2-domain/pot2-massa-lisaaine
-                              {:pot2-massa/id massa-id
-                               :lisaaine/nimi (:nimi s)
-                               :lisaaine/pitoisuus (bigdec (:pitoisuus s))}))
-        _ (println "tallenna-urakan-paallystysmassa :: lisa-aineet" (pr-str lisa-aineet))
-        massa (assoc massa :lisa-aineet lisa-aineet)]
-    massa))
+  (jdbc/with-db-transaction
+    [db db]
+    (let [massa-id (:massa-id tiedot)
+          _ (println "tallenna-urakan-paallystysmassa :: tiedot" (pr-str tiedot))
+          massan_runkoaineet (:runkoaineet tiedot)
+          massan_sideaineet (:sideaineet tiedot)
+          massan_lisa-aineet (:lisa-aineet tiedot)
+          massa (upsert! db ::pot2-domain/pot2-massa
+                         (merge
+                           (if massa-id
+                             {::pot2-domain/massa-id massa-id
+                              ::muokkaustiedot/muokattu (pvm/nyt)
+                              ::muokkaustiedot/muokkaaja-id (:id user)}
+                             {::muokkaustiedot/luotu (pvm/nyt)
+                              ::muokkaustiedot/luoja-id (:id user)}
+                             )
+                           (select-keys tiedot [::pot2-domain/urakka-id
+                                                ::pot2-domain/nimen-tarkenne
+                                                ::pot2-domain/tyyppi
+                                                ::pot2-domain/max-raekoko
+                                                ::pot2-domain/kuulamyllyluokka
+                                                ::pot2-domain/litteyslukuluokka
+                                                ::pot2-domain/dop-nro])
+                           ))
+          _ (println "tallenna-urakan-paallystysmassa :: massa" (pr-str massa))
+          massa-id (:pot2-massa/id massa)
+          _ (println "tallenna-urakan-paallystysmassa :: massa-id" (pr-str massa-id))
+          #_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_ runkoaineet (for [r massan_runkoaineet]
+                        (upsert! db ::pot2-domain/pot2-massa-runkoaine
+                                 {:pot2-massa/id massa-id
+                                  :runkoaine/esiintyma (:kiviaine-esiintyma r)
+                                  :runkoaine/kuulamyllyarvo (when (:kuulamyllyarvo r)
+                                                              (bigdec (:kuulamyllyarvo r)))
+                                  :runkoaine/muotoarvo (:muotoarvo r)
+                                  :runkoaine/massaprosentti (when (:massaprosentti r)
+                                                              (bigdec (:massaprosentti r)))
+                                  :runkoaine/erikseen-lisattava-fillerikiviaines (:erikseen-lisattafa-fillerikiviaines r)}))
+          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
+          massa (assoc massa :runkoaineet runkoaineet)
+          sideaineet (for [s massan_sideaineet]
+                       (upsert! db ::pot2-domain/pot2-massa-sideaine
+                                {:pot2-massa/id massa-id
+                                 :sideaine/tyyppi (:tyyppi s)
+                                 :sideaine/pitoisuus (bigdec (:pitoisuus s))
+                                 :sideaine/lopputuote? (:lopputuote? s)}))
+          _ (println "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
+          massa (assoc massa :sideaineet sideaineet)
+          lisa-aineet (for [s massan_lisa-aineet]
+                        (upsert! db ::pot2-domain/pot2-massa-lisaaine
+                                 {:pot2-massa/id massa-id
+                                  :lisaaine/nimi (:nimi s)
+                                  :lisaaine/pitoisuus (bigdec (:pitoisuus s))}))
+          _ (println "tallenna-urakan-paallystysmassa :: lisa-aineet" (pr-str lisa-aineet))
+          massa (assoc massa :lisa-aineet lisa-aineet)]
+      massa)))
 
 
 (defrecord POT2 []

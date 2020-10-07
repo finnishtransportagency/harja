@@ -52,31 +52,6 @@
 
     (str/join "," (map :lisaaine/nimi lisa-aineet))))
 
-(defn- listaa-massat [app]
-  (let [row-index-atom (r/atom 0)
-        massat (:massat app)]
-    [:div.table-default
-     [debug app {:otsikko "TUCK STATE"}]
-     [:table
-      [:thead.table-default-header
-       [:tr
-        [:th {:style {:width "20%"}} "Massatyyppi"]
-        [:th {:style {:width "20%"}} "Runkoaineet"]
-        [:th {:style {:width "20%"}} "Sideaineet"]
-        [:th {:style {:width "20%"}} "Lisäaineet"]
-        [:th {:style {:width "20%"}} ""]]]
-      [:tbody
-       (for [m massat
-             :let [_ (reset! row-index-atom (inc @row-index-atom))]]
-         ^{:key (hash m)}
-         [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
-          [:td {:style {:width "20%"}} (::pot2-domain/nimi m)]
-          [:td {:style {:width "20%"}} ""]
-          [:td {:style {:width "20%"}} (str/join "," (map :sideaine/tyyppi (::pot2-domain/sideaineet m)))]
-          [:td {:style {:width "20%"}} (listaa-lisa-aineet (::pot2-domain/lisa-aineet m))]
-          [:td {:style {:width "20%"}} "---"]])
-       ]]]))
-
 (defn- valitut-sideaineet [{:keys [e! app]} {{sideaineet :sideaineet :as lomake} :data}]
   (let [_ (js/console.log "valitut-sideaineet :: lomake" (pr-str lomake))
         _ (js/console.log "valitut-sideaineet :: sideaineet" (pr-str sideaineet))
@@ -103,31 +78,15 @@
          sideaineet))]
     ))
 
-(defn massa-lomake [e! app]
-  (let [massa (:massa app)
+(defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
+  (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
+        _ (log "jarno massatyypit " (pr-str massatyypit))
+        _ (log "jarno runkoainetyypit " (pr-str runkoainetyypit))
+        _ (log "jarno sideainetyypit " (pr-str sideainetyypit))
+        _ (log "jarno lisaainetyypit " (pr-str lisaainetyypit))
+        massa (:massa app)
         lomake (:pot2-massa-lomake app)
-        _ (js/console.log "massa-lomake :: lomake " (pr-str lomake))
-        _ (js/console.log "massa-lomake :: app " (pr-str app))
-        ;runkoaineen-materiaalit [{:id 1 :nimi "jotain on"}{:id 2 :nimi "Runkoaine 2"}]
-        runkoaineen-materiaalit (keep ::pot2-domain/nimi (:runkoaineet app)) #_["jako" "apila" "uusikatu"]
-        _ (js/console.log "massa-lomake :: runkoaineen-materiaalit " (pr-str runkoaineen-materiaalit))
-        sideaine-index 0
-        sideaineet-kentat {:otsikko "Tyyppi"
-                           :nimi :sideaineet
-                           ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-                           :tyyppi :komponentti
-                           :komponentti (fn [_] [:div "jes"]) #_(r/partial valitut-sideaineet {:e! e!
-                                                                                               :app app})}
-        #_ [{:teksti "Lopputuotteen sideaine"
-                            :tyyppi :valiotsikko
-                            ::ui-lomake/col-luokka "col-xs-12"}
-                           ;; TODO: Näitä pitää pystyä lisäämään useita
-                           {:otsikko "Tyyppi"
-                            :nimi :sideaineet
-                            ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-                            :tyyppi :komponentti
-                            :komponentti [:div "jes"] #_ (r/partial valitut-sideaineet {:e! e!
-                                                                        :app app})}]]
+        _ (js/console.log "massa-lomake :: lomake " (pr-str lomake))]
     [:div
      [debug app {:otsikko "TUCK STATE"}]
      [ui-lomake/lomake
@@ -141,14 +100,9 @@
              ))
        ;:voi-muokata? true
        ;:tarkkaile-ulkopuolisia-muutoksia? true
-       :header-fn (fn [data]
-                    [:<>
-                     [:div.flex-row {:style {:padding-left "15px"
-                                             :padding-right "15px"}}
-                      [:h2 (if (:pot2-massa/id massa)
-                             "Muokkaa massaa"
-                             "Luo uusi massa")]
-                      ]])
+       :otsikko (if (:pot2-massa/id massa)
+                  "Muokkaa massaa"
+                  "Uusi massa")
        :footer-fn (fn [data]
                     [:div.flex-row.alkuun
                      [napit/tallenna
@@ -165,73 +119,47 @@
                        :luokka "suuri"}]])
        :vayla-tyyli? true
        }
-      [{:otsikko "Massatyyppi"
-        :nimi ::pot2-domain/tyyppi
-        ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-        ;:virhe? todo
-        :tyyppi :valinta
-        :valinta-nayta (fn [rivi]
-                         (if (:koodi rivi)
-                           (str (:lyhenne rivi) " - " (:nimi rivi))
-                           (:nimi rivi)))
-        :vayla-tyyli? true
-        :valinta-arvo identity
-        :valinnat paallystys-ja-paikkaus/+paallystetyypit-ja-nil+
-        :pakollinen? true}
-       {:otsikko "Max raekoko"
-        :nimi ::pot2-domain/max-raekoko
-        ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-        ;:virhe? todo
-        :tyyppi :valinta
-        :valinta-nayta (fn [rivi]
-                         (str rivi))
-        :vayla-tyyli? true
-        :valinta-arvo identity
-        :valinnat pot2-domain/massan-max-raekoko
-        :pakollinen? true}
-       {:otsikko "DoP nro"
-        :nimi ::pot2-domain/dop_nro
-        ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-        :tyyppi :positiivinen-numero
-        :validoi [[:ei-tyhja "Anna DoP nro"]]
-        :vayla-tyyli? true
-        :pakollinen? true}
-       {:otsikko "Massan nimi"
-        :nimi (pot2-domain/massatyypin-rikastettu-nimi
-                lomake)
-        :tyyppi :string
-        ;:pakollinen? true
-        :vayla-tyyli? true
-        }
-       {:otsikko "Kuulamyllyluokka"
-        :nimi ::pot2-domain/kuulamyllyluokka
-        ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-        ;:virhe? todo
-        :tyyppi :valinta
-        :valinta-nayta (fn [rivi]
-                         (str (:nimi rivi)))
-        :vayla-tyyli? true
-        :valinta-arvo identity
-        :valinnat paallystysilmoitus-domain/+kyylamyllyt-ja-nil+
-        :pakollinen? true}
-       {:otsikko "Litteyslukuluokka"
-        :nimi ::pot2-domain/litteyslukuluokka
-        ::ui-lomake/col-luokka "col-xs-12 col-md-3"
-        ;:virhe? todo
-        :tyyppi :valinta
-        :valinta-nayta (fn [rivi]
-                         (str rivi))
-        :vayla-tyyli? true
-        :valinta-arvo identity
-        :valinnat pot2-domain/litteyslukuluokat
-        :pakollinen? true}
+      [(ui-lomake/rivi
+         {:otsikko "Massatyyppi"
+          :nimi ::pot2-domain/tyyppi :tyyppi :valinta
+          :valinta-nayta ::pot2-domain/nimi :valinta-arvo ::pot2-domain/koodi :valinnat massatyypit
+          :pakollinen? true :vayla-tyyli? true}
+         {:otsikko "Max raekoko" :nimi ::pot2-domain/max-raekoko
+          :tyyppi :valinta
+          :valinta-nayta (fn [rivi]
+                           (str rivi))
+          :vayla-tyyli? true
+          :valinta-arvo identity
+          :valinnat pot2-domain/massan-max-raekoko
+          :pakollinen? true}
+         {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
+          :vayla-tyyli? true})
+       (ui-lomake/rivi
+         {:otsikko "Kuulamyllyluokka"
+          :nimi ::pot2-domain/kuulamyllyluokka
+          :tyyppi :valinta :valinta-nayta (fn [rivi]
+                           (str (:nimi rivi)))
+          :vayla-tyyli? true :valinta-arvo :nimi
+          :valinnat paallystysilmoitus-domain/+kyylamyllyt-ja-nil+
+          :pakollinen? true}
+         {:otsikko "Litteyslukuluokka"
+          :nimi ::pot2-domain/litteyslukuluokka :tyyppi :valinta
+          :valinta-nayta (fn [rivi]
+                           (str rivi))
+          :vayla-tyyli? true
+          :valinta-arvo identity
+          :valinnat pot2-domain/litteyslukuluokat
+          :pakollinen? true}
+         {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
+          :validoi [[:ei-tyhja "Anna DoP nro"]]
+          :vayla-tyyli? true :pakollinen? true})
+
        {:nimi :runkoaineet
         :otsikko "Runkoaineen materiaali"
         :tyyppi :checkbox-group
-        :vaihtoehdot runkoaineen-materiaalit
-        :vaihtoehto-nayta (fn [rivi]
-                            (str rivi))}
-       sideaineet-kentat
+        :vaihtoehdot (map ::pot2-domain/nimi runkoainetyypit)
+        :vaihtoehto-nayta str}
+
        ;; TODO Lisätty sideaine pitää lisätä
        #_{}
        {:nimi :lisa-aineet
@@ -252,7 +180,7 @@
    ^{:key (:runkoaine/id aine)}
    [:span
     [:div
-     (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
+     (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
           " ("
           (:runkoaine/esiintyma aine) ")")
    [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]
@@ -269,7 +197,7 @@
      ^{:key (:sideaine/id aine)}
      [:span
       [:div
-       (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
+       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
        [:span.pull-right (str (:sideaine/pitoisuus aine) "%")]]])])
 
 (defn- massan-lisaaineet [rivi ainetyypit]
@@ -280,7 +208,7 @@
      ^{:key (:lisaaine/id aine)}
      [:span
       [:div
-       (str (tiedot-massa/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
+       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
        [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
 (defn- massan-toiminnot [e! rivi]
@@ -309,7 +237,9 @@
                       :toiminto #(e! (tiedot-massa/->UusiMassa true))
                       :opts {:ikoni (ikonit/livicon-plus)
                              :luokka "napiton-nappi"}}}
-   [{:otsikko "Massatyyppi" :hae pot2-domain/massatyypin-rikastettu-nimi :tyyppi :string
+   [{:otsikko "Massatyyppi" :tyyppi :string
+     :hae (fn [rivi]
+            (pot2-domain/massatyypin-rikastettu-nimi (:massatyypit materiaalikoodistot) rivi))
      :solun-luokka (constantly "bold") :leveys 8}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
@@ -327,7 +257,7 @@
 
 (defn- kantavan-kerroksen-materiaalit-taulukko [e! {:keys [murskeet] :as app}])
 
-(defn- materiaalikirjasto [e! {:keys [runkoaineet massat murskeet] :as app}]
+(defn- materiaalikirjasto [e! app]
   [:span
    [paallystysmassat-taulukko e! app]
    [kantavan-kerroksen-materiaalit-taulukko e! app]
@@ -340,13 +270,10 @@
                       (e! (tiedot-massa/->HaePot2Massat))
                       (e! (tiedot-massa/->HaeKoodistot))))
     (fn [e! app]
-      (let [
-            avaa-massa-lomake? (:avaa-massa-lomake? app)]
-
-        [:div
-         (if avaa-massa-lomake?
-           [massa-lomake e! app]
-           [materiaalikirjasto e! app])]))))
+      [:div
+       (if (:avaa-massa-lomake? app)
+         [massa-lomake e! app]
+         [materiaalikirjasto e! app])])))
 
 
 

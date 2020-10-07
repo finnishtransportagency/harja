@@ -1256,8 +1256,7 @@
     (komp/sisaan-ulos
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] true))
-        (e! (paallystys/->HaePaallystysilmoitukset))
-        (e! (paallystys/->HaePaallystysmassat)))
+        (e! (paallystys/->HaePaallystysilmoitukset)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
     (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-massat? avaa-massa-lomake?] :as app}]
