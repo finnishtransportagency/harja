@@ -111,7 +111,7 @@
       (tuck-apurit/post! :tallenna-urakan-pot2-massa
                          (-> massa
                              (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id))
-                             (assoc ::pot2-domain/massatyyppi (get-in massa [::pot2-domain/massatyyppi :lyhenne]))
+                             (assoc ::pot2-domain/tyyppi (get-in massa [::pot2-domain/tyyppi :lyhenne]))
                              (assoc ::pot2-domain/kuulamyllyluokka (get-in massa [::pot2-domain/kuulamyllyluokka :nimi]))
                              (assoc :lisa-aineet lisa-aineet)
                              (assoc :sideaineet sideaineet))

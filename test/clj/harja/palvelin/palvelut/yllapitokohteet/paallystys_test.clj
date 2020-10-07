@@ -101,8 +101,8 @@
 
 (def default-pot2-massa
   {:urakka-id (hae-utajarven-paallystysurakan-id)
-   ::pot2-domain/nimi "TestiMassa"
-   ::pot2-domain/massatyyppi (:lyhenne (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
+   ::pot2-domain/nimen-tarkenne "Tarkenne"
+   ::pot2-domain/tyyppi (:lyhenne (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
    ::pot2-domain/max-raekoko (first pot2-domain/massan-max-raekoko)
    ::pot2-domain/kuulamyllyluokka (:nimi (first paallystysilmoitus-domain/+kuulamyllyt+))
    ::pot2-domain/litteyslukuluokka "Muotoarvo 1"                         ;;  Vanhassa kielessä Muotoarvoluokka
@@ -119,9 +119,9 @@
                                 :tallenna-urakan-pot2-massa
                                 +kayttaja-jvh+ default-pot2-massa)
         _ (println "tallenna-uusi-pot2-massa :: vastaus " (pr-str vastaus))
-        oletus-vastaus {::pot2-domain/massatyyppi "BET",
+        oletus-vastaus {::pot2-domain/tyyppi "BET",
                         ::pot2-domain/asfalttiasema "Testi Asfalttiasema",
-                        ::pot2-domain/nimi "TestiMassa",
+                        ::pot2-domain/nimen-tarkenne "Tarkenne",
                         ::pot2-domain/massa-id 3,
                         ::pot2-domain/dop_nro nil,
                         ::pot2-domain/litteyslukuluokka "Muotoarvo 1",

@@ -166,7 +166,7 @@
        :vayla-tyyli? true
        }
       [{:otsikko "Massatyyppi"
-        :nimi ::pot2-domain/massatyyppi
+        :nimi ::pot2-domain/tyyppi
         ::ui-lomake/col-luokka "col-xs-12 col-md-3"
         ;:virhe? todo
         :tyyppi :valinta
@@ -197,8 +197,8 @@
         :vayla-tyyli? true
         :pakollinen? true}
        {:otsikko "Massan nimi"
-        :nimi ::pot2-domain/nimi
-        ;::ui-lomake/col-luokka "col-xs-12 col-md-3"
+        :nimi (pot2-domain/massatyypin-rikastettu-nimi
+                lomake)
         :tyyppi :string
         ;:pakollinen? true
         :vayla-tyyli? true
@@ -243,9 +243,6 @@
 
        lomake]]]))
 
-
-
-#_ {:harja.domain.pot2/massatyyppi "SMA 16", :harja.domain.pot2/runkoaineet [{:runkoaine/litteysluku 4.5, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/id 4, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 5, :runkoaine/kuulamyllyarvo 11.2} {:runkoaine/litteysluku 6.5, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/id 3, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 3, :runkoaine/fillerityyppi "Kalkkifilleri (KF)", :runkoaine/kuulamyllyarvo 8.2} {:runkoaine/litteysluku 6.5, :runkoaine/kuvaus "Jämäkkä runkoaine.", :runkoaine/id 2, :runkoaine/esiintyma "Sammalkallio", :pot2-massa/id 2, :runkoaine/massaprosentti 85, :runkoaine/kuulamyllyarvo 9.2}], :harja.domain.pot2/lisa-aineet [{:lisaaine/id 2, :lisaaine/pitoisuus 0.5, :lisaaine/tyyppi 1, :pot2-massa/id 2}], :harja.domain.pot2/nimi "Kivimastiksiasfaltti", :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/dop_nro "987654331-2", :harja.domain.pot2/litteyslukuluokka 2, :pot2-massa/id 2, :harja.domain.pot2/kuulamyllyluokka "AN7", :harja.domain.pot2/sideaineet [{:sideaine/pitoisuus 5.5, :sideaine/id 2, :sideaine/lopputuote? true, :pot2-massa/id 2, :sideaine/tyyppi 5}]}
 (defn- massan-runkoaineet
   [rivi ainetyypit]
 [:span
@@ -311,10 +308,8 @@
     :custom-toiminto {:teksti "Luo uusi massa"
                       :toiminto #(e! (tiedot-massa/->UusiMassa true))
                       :opts {:ikoni (ikonit/livicon-plus)
-                             :style {:background-color "#fff"
-                                     :border "none"
-                                     :color "#0066cc"}}}}
-   [{:otsikko "Massatyyppi" :hae pot2-domain/massatyypin-nimi :tyyppi :string
+                             :luokka "napiton-nappi"}}}
+   [{:otsikko "Massatyyppi" :hae pot2-domain/massatyypin-rikastettu-nimi :tyyppi :string
      :solun-luokka (constantly "bold") :leveys 8}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]

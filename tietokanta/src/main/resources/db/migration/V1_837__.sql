@@ -1,6 +1,7 @@
 -- Vähä inserttejä helpottavaa settia
 --DROP TABLE pot2;
 --DROP TABLE pot2_massa;
+--DROP TABLE pot2_massatyyppi;
 --DROP TABLE pot2_murske;
 --DROP TABLE pot2_kulutuskerros_toimenpide;
 --DROP TABLE pot2_paallystekerros;
@@ -69,13 +70,38 @@ VALUES
 CREATE TYPE kuulamyllyluokka AS ENUM
     ('AN5', 'AN7', 'AN10', 'AN14', 'AN19', 'AN30', 'AN22', 'Ei kuulamyllyä');
 
+CREATE TABLE pot2_massatyyppi (
+    koodi   INTEGER PRIMARY KEY,
+    nimi    TEXT,
+    lyhenne TEXT);
+INSERT INTO pot2_massatyyppi (nimi, lyhenne, koodi)
+VALUES ('BET, Betoni', 'BET', 1),
+       ('AA, Avoin asfaltti', 'AA', 11),
+       ('AB, Asfalttibetoni', 'AB', 12),
+       ('EAB, Asfalttibetoni', 'EAB', 566), --- koodi > 565 = koodi ei tiedossa
+       ('ABtiivis', 'ABtiivis', 567),
+       ('EA, Epäjatkuva asfaltti (poistunut)', 'EA', 13),
+       ('SMA, Kivimastiksiasfaltti', 'SMA', 14),
+       ('ABK, Kantavan kerroksen AB', 'ABK', 15),
+       ('EABK, Kantavan kerroksen EAB', 'EABK', 568),
+       ('ABS, Sidekerroksen AB', 'ABS', 16),
+       ('VA, Valuasfaltti', 'VA', 17),
+       ('PAB-B, Pehmeät asfalttibetonit', 'PAB-B', 21),
+       ('EPAB-B, Pehmeät E asfalttibetonit', 'EPAB-B', 569),
+       ('PAB-V, Pehmeät asfalttibetonit', 'PAB-V', 22),
+       ('EPAB-V, Pehmeät asfalttibetonit', 'EPAB-V', 570),
+       ('PAB-O, Pehmeät asfalttibetonit', 'PAB-O', 23),
+       ('Komposiittiasfaltti', 'Komposiittiasfaltti', 571),
+       ('Pehmeät asfalttibetonit', 'Pehmeät asfalttibetonit', 20),
+       ('Kovat asfalttibetonit', 'Kovat asfalttibetonit', 10),
+       ('Ei tietoa', 'Ei tietoa', 99);
+
 CREATE TABLE pot2_massa
 (
     id                SERIAL PRIMARY KEY,
     urakka_id         INTEGER NOT NULL REFERENCES urakka (id),
-    nimi              TEXT,
+    tyyppi            INTEGER NOT NULL REFERENCES pot2_massatyyppi(koodi),
     nimen_tarkenne    TEXT,
-    massatyyppi       TEXT NOT NULL,
     max_raekoko       INTEGER NOT NULL CHECK (max_raekoko IN (5, 8, 11, 16, 22, 31)),
     kuulamyllyluokka  kuulamyllyluokka NOT NULL,
     litteyslukuluokka DECIMAL (3,1) NOT NULL,

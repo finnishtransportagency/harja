@@ -48,9 +48,8 @@
         massat (fetch db
                       ::pot2-domain/pot2-massa
                       #{:pot2-massa/id
-                        ::pot2-domain/nimi
+                        ::pot2-domain/tyyppi
                         ::pot2-domain/nimen-tarkenne
-                        ::pot2-domain/massatyyppi
                         ::pot2-domain/max-raekoko
                         ::pot2-domain/kuulamyllyluokka
                         ::pot2-domain/litteyslukuluokka
@@ -83,7 +82,9 @@
 
 (defn hae-pot2-koodistot [db user {:keys []}]
   (oikeudet/ei-oikeustarkistusta!)
-  (let [_ (println "hae-urakan-pot2-koodistot ")
+  (let [massatyypit (fetch db ::pot2-domain/pot2-massatyyppi
+                               (specql/columns ::pot2-domain/pot2-massatyyppi)
+                               {})
         runkoainetyypit (fetch db ::pot2-domain/pot2-runkoainetyyppi
                            (specql/columns ::pot2-domain/pot2-runkoainetyyppi)
                            {})
@@ -93,10 +94,10 @@
         lisaainetyypit (fetch db ::pot2-domain/pot2-lisaainetyyppi
                               (specql/columns ::pot2-domain/pot2-lisaainetyyppi)
                               {})
-        koodistot {:runkoainetyypit runkoainetyypit
+        koodistot {:massatyypit massatyypit
+                   :runkoainetyypit runkoainetyypit
                    :sideainetyypit sideainetyypit
-                   :lisaainetyypit lisaainetyypit}
-        _ (println "hae-pot2-koodistot: " (pr-str koodistot) )]
+                   :lisaainetyypit lisaainetyypit}]
     koodistot))
 
 (defn tallenna-urakan-paallystysmassa [db user tiedot]
@@ -116,8 +117,8 @@
                             ::muokkaustiedot/luoja-id (:id user)}
                            )
                          {::pot2-domain/urakka-id (::pot2-domain/urakka-id tiedot)
-                          ::pot2-domain/nimi (::pot2-domain/nimi tiedot)
-                          ::pot2-domain/massatyyppi (::pot2-domain/massatyyppi tiedot)
+                          ::pot2-domain/nimen-tarkenne (::pot2-domain/nimen-tarkenne tiedot)
+                          ::pot2-domain/tyyppi (::pot2-domain/tyyppi tiedot)
                           ::pot2-domain/max-raekoko (::pot2-domain/max-raekoko tiedot)
                           ::pot2-domain/kuulamyllyluokka (::pot2-domain/kuulamyllyluokka tiedot)
                           ::pot2-domain/litteyslukuluokka (str (::pot2-domain/litteyslukuluokka tiedot))

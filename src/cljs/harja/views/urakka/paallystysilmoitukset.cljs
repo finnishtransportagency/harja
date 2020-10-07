@@ -1205,9 +1205,17 @@
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
-         [napit/nappi "Muokkaa urakan materiaaleja"
-          #(e! (tiedot-massat/->NaytaModal true))]
-         [:h3 "Päällystysilmoitukset"]
+         [:div
+          [:h3 {:style {:display "inline-block"}}
+           "Päällystysilmoitukset"]
+          [napit/nappi "Muokkaa urakan materiaaleja"
+           #(e! (tiedot-massat/->NaytaModal true))
+           {:ikoni (ikonit/livicon-pen)
+            :luokka "napiton-nappi"
+            :style {:background-color "#fafafa"
+                    :margin-left "2rem"}}]]
+
+
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]

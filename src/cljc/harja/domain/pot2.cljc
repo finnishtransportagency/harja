@@ -188,6 +188,7 @@
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
   ["pot2_paallystekerros" ::pot2-paallystekerros]
+  ["pot2_massatyyppi" ::pot2-massatyyppi]
   ["pot2_runkoainetyyppi" ::pot2-runkoainetyyppi]
   ["pot2_sideainetyyppi" ::pot2-sideainetyyppi]
   ["pot2_lisaainetyyppi" ::pot2-lisaainetyyppi]
@@ -218,7 +219,7 @@
     "urakka_id" ::urakka-id
     "nimi" ::nimi
     "nimen_tarkenne" ::nimen-tarkenne
-    "massatyyppi" ::massatyyppi
+    "tyyppi" ::tyyppi
     "max_raekoko" ::max-raekoko
     "kuulamyllyluokka" ::kuulamyllyluokka
     "litteyslukuluokka" ::litteyslukuluokka
@@ -276,7 +277,7 @@
    "Bitumiemulsiot, BE-AB"
    "Bitumiemulsiot, BE-PAB"])
 
-(defn massatyypin-nimi [rivi]
+(defn massatyypin-rikastettu-nimi [rivi]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
   (str (::massatyyppi rivi)
        " ("
