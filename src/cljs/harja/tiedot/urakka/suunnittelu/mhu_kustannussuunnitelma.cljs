@@ -2244,15 +2244,20 @@
           jhk-tiedot (vec (mapcat (fn [{:keys [omanimi osan-paikka data-koskee-ennen-urakkaa?]}]
                                     (if data-koskee-ennen-urakkaa?
                                       (mapv (fn [m]
-                                              (select-keys m
-                                                           #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
+                                              (-> m
+                                                  (select-keys #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka})
+                                                  (update :tunnit #(or % 0))
+                                                  (update :tuntipalkka #(or % 0))))
                                             (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero)]))
                                       (mapv (fn [hoitokauden-numero]
                                               (let [tiedot (if omanimi
                                                              (select-keys (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka)])
                                                                           #{:vuosi :kuukausi :tunnit :tuntipalkka :toimenkuva-id :osa-kuukaudesta})
                                                              (select-keys (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero) (first osan-paikka)])
-                                                                          #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))]
+                                                                          #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
+                                                    tiedot (-> tiedot
+                                                               (update :tunnit #(or % 0))
+                                                               (update :tuntipalkka #(or % 0)))]
                                                 (if (contains? tiedot :osa-kuukaudesta)
                                                   tiedot
                                                   (assoc tiedot :osa-kuukaudesta 1))))

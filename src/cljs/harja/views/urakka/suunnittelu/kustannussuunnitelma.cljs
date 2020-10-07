@@ -816,7 +816,6 @@
                                #_(grid/paivita-osa! solu/*this*
                                                   (fn [solu]
                                                     (assoc solu :nappi-nakyvilla? false)))
-                               (println "ON BLUR ARVO: " arvo)
                                (when arvo
                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
                                                         :arvo arvo
