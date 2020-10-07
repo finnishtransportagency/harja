@@ -26,33 +26,42 @@
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
-(def tehtava-id-1 2991)
-(def tehtava-id-2 2992)
+
+; testidatan id:itä
+(def id-ise-rampit 2991)
+(def id-ic-2-ajorat 2992)
+(def id-suolaus 1369)
+(def id-palteiden-poisto 1414)
+(def id-portaiden-talvihuolto 3004)
+(def id-opastustaulut 1430)
+(def id-yksityisten-rumpujen 3021)
+(def id-ic-rampit 2995)
+(def id-levahdys 2997)
+(def id-kalium 3000)
+
 (def rumpujen-tarkastus 3020)
-(def tehtava-id-3 1222)
-(def tehtava-id-4 1414)
+
 
 (def paivitettavat-olemassaolevat-tehtavat
-  [{:tehtava-id 1430 :maara 111}
-   {:tehtava-id 1414 :maara 666.7}
-   ; {:tehtava-id 1370 :maara 666.6}
-   ;{:tehtava-id 1222 :maara 444}
-   ])
+  [{:tehtava-id id-opastustaulut :maara 111}
+   {:tehtava-id id-palteiden-poisto :maara 666.7}
+   {:tehtava-id id-levahdys :maara 666.6}
+   {:tehtava-id id-ic-2-ajorat :maara 444}])
 
 (def uudet-tehtavat
-  [{:tehtava-id 1428 :maara 555}
-   {:tehtava-id tehtava-id-1 :maara 666}
-   {:tehtava-id 2992 :maara 7.77}
-   {:tehtava-id 3004 :maara 88.8}
-   {:tehtava-id 1429 :maara 999}
-   {:tehtava-id 3021 :maara 666}])
+  [{:tehtava-id id-kalium :maara 555}
+   {:tehtava-id id-ise-rampit :maara 666}
+   {:tehtava-id id-suolaus :maara 7.77}
+   {:tehtava-id id-portaiden-talvihuolto :maara 88.8}
+   {:tehtava-id id-ic-rampit :maara 999}
+   {:tehtava-id id-yksityisten-rumpujen :maara 666}])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id tehtava-id-2 :maara 6.66}
-   {:tehtava-id 1430 :maara 999}])
+  [{:tehtava-id id-ic-2-ajorat :maara 6.66}
+   {:tehtava-id id-opastustaulut :maara 999}])
 
 (def virheellinen-tehtava
-  [{:tehtava-id tehtava-id-2 :maara 6.66}
+  [{:tehtava-id id-ic-2-ajorat :maara 6.66}
    {:tehtava-id 666 :maara 999}])
 
 ;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
@@ -142,37 +151,37 @@
                                                                        :hoitokauden-alkuvuosi 2020})]
     ;; tehtävähierarkia
     (is (= (count tehtavamaarat-ja-hierarkia) 115) "Hierarkiassa on 115 osaa.")
-    (is (= (:maara (first (filter #(and (= tehtava-id-4 (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-palteiden-poisto (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-ja-hierarkia))) 33.4M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa.")
 
     ;; tehtävämäärä
     (is (= (count tehtavamaarat) tehtavamaarat-kannassa) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
-    (is (= (:maara (first (filter #(and (= tehtava-id-3 (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-levahdys (:tehtava-id %))
                                        (= 2020 (:hoitokauden-alkuvuosi %))
-                                       (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein.")
+                                       (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 55.5M) "Hoitokauden tehtävämäärä palautuu oikein.")
 
     ;; hoitokauden tietojen päivitys
     (is (= (count tehtavamaarat-ennen-paivitysta) (count tehtavamaarat-paivityksen-jalkeen)) "Rivejä ei lisätty, kun tietoja päivitettiin.")
     (is (= tehtavamaarat-paivita tehtavahierarkia-paivityksen-jalkeen) "Tallennusfunktio palauttaa vastauksena kannan tilan samanlaisena kuin erillinen hierarkianhakufunktio.")
-    (is (= (:maara (first (filter #(and (= tehtava-id-4 (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-palteiden-poisto (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-paivita))) 666.7M) "Päivitys päivitti määrän.")
 
     ;; hoitokauden tietojen lisäys
-    (is (= (count tehtavamaarat-lisayksen-jalkeen) 10) "Uudet rivit lisättiin, vanhat säilyivät.")
-    (is (= (:maara (first (filter #(and (= tehtava-id-1 (:tehtava-id %))
+    (is (= (count tehtavamaarat-lisayksen-jalkeen) 14) "Uudet rivit lisättiin, vanhat säilyivät.")
+    (is (= (:maara (first (filter #(and (= id-ise-rampit (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-lisaa))) 666M) "Lisäys lisäsi määrän.")
 
     ;; uuden hoitokauden lisäys
     (is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
-    (is (= (:maara (first (filter #(and (= tehtava-id-2 (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-ic-2-ajorat (:tehtava-id %))
                                        (= 2022 (:hoitokauden-alkuvuosi %))
                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
-    (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
-    (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
+    (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
+    (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
 
 
 
