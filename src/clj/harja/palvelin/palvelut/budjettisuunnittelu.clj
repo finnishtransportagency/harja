@@ -256,7 +256,8 @@
   [db user {:keys [urakka-id toimenpide-avain ajat summa]}]
   {:pre [(integer? urakka-id)
          (keyword? toimenpide-avain)
-         (number? summa)]}
+         (or (nil? summa)
+             (number? summa))]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [toimenpide (toimenpide-avain->toimenpide toimenpide-avain)

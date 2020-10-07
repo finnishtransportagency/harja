@@ -816,17 +816,16 @@
                                #_(grid/paivita-osa! solu/*this*
                                                   (fn [solu]
                                                     (assoc solu :nappi-nakyvilla? false)))
-                               (when arvo
-                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
-                                                        :arvo arvo
-                                                        :solu solu/*this*
-                                                        :ajettavat-jarejestykset true
-                                                        :triggeroi-seuranta? true}
-                                                       true
-                                                       hoitokauden-numero
-                                                       :hankinnat)
-                                 (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))]
+                               (t/paivita-solun-arvo {:paivitettava-asia       :aseta-suunnittellut-hankinnat!
+                                                      :arvo                    arvo
+                                                      :solu                    solu/*this*
+                                                      :ajettavat-jarejestykset true
+                                                      :triggeroi-seuranta?     true}
+                                                     true
+                                                     hoitokauden-numero
+                                                     :hankinnat)
+                               (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                               (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/suunnittellut-hankinnat-rajapinta
                                        (t/suunnittellut-hankinnat-dr)

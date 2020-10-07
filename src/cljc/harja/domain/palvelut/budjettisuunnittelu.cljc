@@ -29,7 +29,7 @@
                      #(not= % ##Inf)
                      #(<= 1 % 12)))
 (s/def ::toimenkuva-id ::positive-int?)
-(s/def ::summa ::positive-number?)
+(s/def ::summa (s/nilable ::positive-number?))
 (s/def ::tavoitehinta ::positive-number?)
 (s/def ::kattohinta ::positive-number?)
 (s/def ::toimenpide-avain (s/and keyword?

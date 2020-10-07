@@ -248,6 +248,7 @@
          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
                                              (range hoitokauden-numero 6)
                                              [hoitokauden-numero])
+         _ (println "ARVO: " arvo)
 
          arvo (if (re-matches #"\d*,\d+" arvo)
                 (clj-str/replace arvo #"," ".")
@@ -260,7 +261,7 @@
                                   paivitettavat-hoitokauden-numerot))
          paivita-domain (fn [tila]
                           (reduce (fn [tila hoitokauden-numero]
-                                    (assoc-in tila (domain-polku-fn tunniste hoitokauden-numero valittu-toimenpide) (js/Number arvo)))
+                                    (assoc-in tila (domain-polku-fn tunniste hoitokauden-numero valittu-toimenpide) (if (empty? arvo) nil (js/Number arvo))))
                                   tila
                                   paivitettavat-hoitokauden-numerot))]
      ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
@@ -550,6 +551,8 @@
                                                                                                                                                                                              {:ensimmainen []
                                                                                                                                                                                               :toinen []}
                                                                                                                                                                                              johto-ja-hallintokorvauksien-yhteenvedot)
+                                                                                                                        _ (println "korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle")
+                                                                                                                        _ (cljs.pprint/pprint korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle)
                                                                                                                         korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle (cond-> (update korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :ensimmainen (fn [arvot] (remove #(= % :ei-aseteta) arvot)))
                                                                                                                                                                                           (not viimeinen-hoitokausi?) (update :toinen (fn [arvot] (remove #(= % :ei-aseteta) arvot))))]
                                                                                                                     (update-in tila
@@ -902,16 +905,19 @@
                                                                                   tila
                                                                                   paivitettavat-hoitokauden-numerot))
                                                          paivita-domain (fn [tila]
-                                                                          (reduce (fn [tila hoitokauden-numero]
-                                                                                    (update-in tila [:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                                                               (fn [hoitokauden-varaukset]
-                                                                                                 (if osan-paikka
-                                                                                                   (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] (js/Number arvo))
-                                                                                                   (mapv (fn [varaus]
-                                                                                                           (assoc varaus osa (js/Number arvo)))
-                                                                                                         hoitokauden-varaukset)))))
-                                                                                  tila
-                                                                                  paivitettavat-hoitokauden-numerot))]
+                                                                          (let [arvo (if (empty? arvo)
+                                                                                       nil
+                                                                                       (js/Number arvo))]
+                                                                            (reduce (fn [tila hoitokauden-numero]
+                                                                                      (update-in tila [:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                                 (fn [hoitokauden-varaukset]
+                                                                                                   (if osan-paikka
+                                                                                                     (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
+                                                                                                     (mapv (fn [varaus]
+                                                                                                             (assoc varaus osa arvo))
+                                                                                                           hoitokauden-varaukset)))))
+                                                                                    tila
+                                                                                    paivitettavat-hoitokauden-numerot)))]
                                                      ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
                                                      (if hoitokauden-numero
                                                        (if (and paivitetaan-domain?
@@ -1445,10 +1451,10 @@
                                                                                                               (let [toimenkuva (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :toimenkuva])
                                                                                                                     yhteensa-arvot (if toimenkuva
                                                                                                                                      (mapv (fn [hoitokauden-arvot]
-                                                                                                                                                          (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])]
-                                                                                                                                                            (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
-                                                                                                                                                               tuntipalkka)))
-                                                                                                                                                        omat-jh-korvaukset)
+                                                                                                                                             (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])]
+                                                                                                                                               (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
+                                                                                                                                                  tuntipalkka)))
+                                                                                                                                           omat-jh-korvaukset)
                                                                                                                                      (vec (repeat 5 :ei-aseteta)))]
                                                                                                                 (assoc-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto nimi] yhteensa-arvot)))}})))
                                          {}
@@ -2155,6 +2161,8 @@
                                                                :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                :summa summa
                                                                :ajat ajat})]
+      (println "TALLENNETAAN SUMMALLA: " (str summa))
+      (println "SUMMA NIL? " (nil? summa))
       (laheta-ja-odota-vastaus app
                                {:palvelu post-kutsu
                                 :payload lahetettava-data
