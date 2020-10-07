@@ -1944,8 +1944,8 @@
                                                                                        :vuosi (pvm/vuosi urakan-aloituspvm)
                                                                                        :kk-v kk-v
                                                                                        :osa-kuukaudesta 1
-                                                                                       :tunnit 0
-                                                                                       :tuntipalkka 0
+                                                                                       :tunnit nil
+                                                                                       :tuntipalkka nil
                                                                                        :kuukausi 10}
                                                                                 kokonaiset (vec (repeat (js/Math.floor kk-v) arvot))
                                                                                 osittainen? (not= 0 (- kk-v (count kokonaiset)))]
@@ -1965,8 +1965,8 @@
                                                                                             (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
                                                                                               (-> data
                                                                                                   (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                                         :tunnit (or tunnit 0)
-                                                                                                         :tuntipalkka (or tuntipalkka 0)
+                                                                                                         :tunnit (or tunnit nil)
+                                                                                                         :tuntipalkka (or tuntipalkka nil)
                                                                                                          :kk-v kk-v)
                                                                                                   (select-keys #{:aika :kk-v :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta})))))]
                                                (if data-koskee-ennen-urakkaa?
@@ -2003,8 +2003,8 @@
                                                                                                        (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                                                                                                               :toimenkuva toimenkuva
                                                                                                               :toimenkuva-id toimenkuva-id
-                                                                                                              :tunnit (or tunnit 0)
-                                                                                                              :tuntipalkka (or tuntipalkka 0))
+                                                                                                              :tunnit (or tunnit nil)
+                                                                                                              :tuntipalkka (or tuntipalkka nil))
                                                                                                        (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta}))))]
                                                       [(assoc omat-korvaukset omanimi (vec (vals (sort-by #(-> % key first)
                                                                                                           (fn [aika-1 aika-2]
@@ -2017,7 +2017,7 @@
               kuluva-hoitokauden-numero (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
-                                  tayttamattomat-rivit (remove #(and (= 0 (:tunnit %)) (= 0 (:tuntipalkka %)))
+                                  tayttamattomat-rivit (remove #(and (nil? (:tunnit %)) (nil? (:tuntipalkka %)))
                                                                (get-in jh-korvaukset [nimi kuluva-hoitokauden-numero]))
                                   maksukausi (case (count tayttamattomat-rivit)
                                                5 :kesa

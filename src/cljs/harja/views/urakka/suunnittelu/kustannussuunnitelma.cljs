@@ -32,17 +32,15 @@
 (defn summa-formatointi [teksti]
   (cond
     (= t/vaihtelua-teksti teksti) t/vaihtelua-teksti
-    (or (nil? teksti) (= "" teksti) (js/isNaN teksti)) "0,00"
+    (or (nil? teksti) (= "" teksti) (js/isNaN teksti)) ""
     :else (let [teksti (clj-str/replace (str teksti) "," ".")]
             (fmt/desimaaliluku teksti 2 true))))
 
 (defn summa-formatointi-uusi [teksti]
-  (if (nil? teksti)
+  (if (or (= "" teksti) (js/isNaN teksti) (nil? teksti))
     ""
     (let [teksti (clj-str/replace (str teksti) "," ".")]
-      (if (or (= "" teksti) (js/isNaN teksti))
-        "0,00"
-        (fmt/desimaaliluku teksti 2 true)))))
+      (fmt/desimaaliluku teksti 2 true))))
 
 (defn summa-formatointi-aktiivinen [teksti]
   (let [teksti-ilman-pilkkua (clj-str/replace (str teksti) "," ".")]
@@ -818,6 +816,7 @@
                                #_(grid/paivita-osa! solu/*this*
                                                   (fn [solu]
                                                     (assoc solu :nappi-nakyvilla? false)))
+                               (println "ON BLUR ARVO: " arvo)
                                (when arvo
                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
                                                         :arvo arvo
