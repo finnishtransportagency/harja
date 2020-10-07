@@ -317,8 +317,7 @@
         datan-arvo (fn [data avain]
                      (if avain (get data avain) data))
         taytetty? (fn [arvo avain]
-                    (and (not (nil? (datan-arvo arvo avain)))
-                         (not= 0 (datan-arvo arvo avain))))
+                    (not (nil? (datan-arvo arvo avain))))
         valmis? (fn [data avain]
                   (every? #(taytetty? % avain)
                           data))
