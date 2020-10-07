@@ -29,14 +29,14 @@
 
 ; testidatan id:itä
 (def id-ise-rampit 2991)
-(def id-ic-2-ajorat 2992)
+(def id-ib-rampit 1446)
 (def id-suolaus 1369)
 (def id-palteiden-poisto 1414)
 (def id-portaiden-talvihuolto 3004)
 (def id-opastustaulut 1430)
 (def id-yksityisten-rumpujen 3021)
 (def id-ic-rampit 2995)
-(def id-levahdys 2997)
+(def id-K2 1441)
 (def id-kalium 3000)
 
 (def rumpujen-tarkastus 3020)
@@ -45,8 +45,8 @@
 (def paivitettavat-olemassaolevat-tehtavat
   [{:tehtava-id id-opastustaulut :maara 111}
    {:tehtava-id id-palteiden-poisto :maara 666.7}
-   {:tehtava-id id-levahdys :maara 666.6}
-   {:tehtava-id id-ic-2-ajorat :maara 444}])
+   {:tehtava-id id-K2 :maara 666.6}
+   {:tehtava-id id-ib-rampit :maara 444}])
 
 (def uudet-tehtavat
   [{:tehtava-id id-kalium :maara 555}
@@ -57,11 +57,11 @@
    {:tehtava-id id-yksityisten-rumpujen :maara 666}])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id id-ic-2-ajorat :maara 6.66}
+  [{:tehtava-id id-ib-rampit :maara 6.66}
    {:tehtava-id id-opastustaulut :maara 999}])
 
 (def virheellinen-tehtava
-  [{:tehtava-id id-ic-2-ajorat :maara 6.66}
+  [{:tehtava-id id-ib-rampit :maara 6.66}
    {:tehtava-id 666 :maara 999}])
 
 ;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
@@ -157,7 +157,7 @@
 
     ;; tehtävämäärä
     (is (= (count tehtavamaarat) tehtavamaarat-kannassa) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
-    (is (= (:maara (first (filter #(and (= id-levahdys (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-K2 (:tehtava-id %))
                                        (= 2020 (:hoitokauden-alkuvuosi %))
                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 55.5M) "Hoitokauden tehtävämäärä palautuu oikein.")
 
@@ -177,7 +177,7 @@
     ;; uuden hoitokauden lisäys
     (is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
-    (is (= (:maara (first (filter #(and (= id-ic-2-ajorat (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-ib-rampit (:tehtava-id %))
                                        (= 2022 (:hoitokauden-alkuvuosi %))
                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
     (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
