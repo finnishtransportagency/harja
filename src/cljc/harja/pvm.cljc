@@ -570,6 +570,15 @@
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
 
+(defn hoitokauden-alkuvuosi
+  "Odottaa saavansa org.joda.time.DateTime objektin"
+  [^org.joda.time.DateTime pvm]
+  (let [vuosi (.getYear pvm)
+        kuukausi (.getMonthOfYear pvm)]
+    (if (> 10 kuukausi)
+      (dec vuosi)
+      (inc vuosi))))
+
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
   [pvm]
@@ -835,7 +844,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (paivia-valissa eka toka)))
 
 (defn iso-8601->pvm
-  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon joda-time päivämääräksi."
   [teksti]
   (df/parse (df/formatter "yyyy-MM-dd") teksti))
 
