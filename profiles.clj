@@ -3,6 +3,7 @@
 {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                       [org.clojure/test.check "0.9.0"]
                       [org.apache.pdfbox/pdfbox "2.0.8"]
+                      [data-frisk-reagent "0.4.5"]
 
                       [com.bhauman/figwheel-main "0.2.1"]
                       [com.bhauman/rebel-readline-cljs "0.1.4"]]

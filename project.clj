@@ -82,6 +82,8 @@
 
                  [reagent "0.9.1"]
 
+
+
                  [alandipert/storage-atom "2.0.1"]
 
                  [clj-time "0.15.0"]
