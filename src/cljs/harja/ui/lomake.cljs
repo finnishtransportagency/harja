@@ -201,7 +201,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn kentan-input
   "Määritellään kentän input"
   [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?]
-  (let [{:keys [nimi hae aseta]} s
+  (let [{:keys [nimi hae aseta kentan-arvon-luokka]} s
         hae (or hae #(get % nimi))
         init-arvo (atom (hae data))
         arvo (atom (hae data))
@@ -224,7 +224,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                        (if aseta
                          (vaihda! (aseta data uusi-arvo))
                          (vaihda! (assoc data nimi uusi-arvo))))))))
-    (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
+    (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi kentan-arvon-luokka yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
          data muokattava? muokkaa muokkaa-kenttaa-fn _ tarkkaile-ulkopuolisia-muutoksia?]
       (reset! seurannan-muuttujat
               {:vaihda! (muokkaa-kenttaa-fn nimi)
@@ -265,10 +265,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                    [tee-kentta (assoc s :lomake? true) arvo]
                                    (catch js/Error e
                                      (js/console.log " error on have" (pr-str e))))))
-                             [:div.form-control-static
-                              (if fmt
-                                (fmt ((or hae #(get % nimi)) data))
-                                (nayta-arvo s arvo))]))
+                             [:div {:class (str "form-control-static "
+                                                (or kentan-arvon-luokka ""))}
+                                    (if fmt
+                                      (fmt ((or hae #(get % nimi)) data))
+                                      (nayta-arvo s arvo))]))
             kentta (if yksikko-kentalle
                      [:div.kentta-ja-yksikko
                       kentta

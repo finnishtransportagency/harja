@@ -88,7 +88,6 @@
         lomake (:pot2-massa-lomake app)
         _ (js/console.log "massa-lomake :: lomake " (pr-str lomake))]
     [:div
-     [debug app {:otsikko "TUCK STATE"}]
      [ui-lomake/lomake
       {
        :muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
@@ -119,7 +118,13 @@
                        :luokka "suuri"}]])
        :vayla-tyyli? true
        }
-      [(ui-lomake/rivi
+      [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string
+        :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
+        :hae (fn [rivi]
+               (if-not (::pot2-domain/tyyppi rivi)
+                 "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
+                 (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi)))}
+       (ui-lomake/rivi
          {:otsikko "Massatyyppi"
           :nimi ::pot2-domain/tyyppi :tyyppi :valinta
           :valinta-nayta ::pot2-domain/nimi :valinta-arvo ::pot2-domain/koodi :valinnat massatyypit
@@ -169,7 +174,8 @@
         :vaihtoehto-nayta (fn [rivi]
                             (str rivi))}
 
-       lomake]]]))
+       lomake]]
+     [debug app {:otsikko "TUCK STATE"}]]))
 
 (defn- massan-runkoaineet
   [rivi ainetyypit]

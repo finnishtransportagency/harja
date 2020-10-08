@@ -16,6 +16,7 @@
 (def pot2-nakymassa? (atom false))
 (def nayta-materiaalikirjasto? (atom false))
 
+(defrecord AlustaTila [])
 (defrecord UusiMassa [avaa-massa-lomake?])
 (defrecord NaytaModal [avataanko?])
 (defrecord NaytaListaus [nayta])
@@ -43,6 +44,10 @@
                       :epaonnistui ->HaePot2MassatEpaonnistui}))
 
 (extend-protocol tuck/Event
+
+  AlustaTila
+  (process-event [_ {:as app}]
+    (assoc app :pot2-massa-lomake nil))
 
   NaytaModal
   (process-event [{avataanko? :avataanko?} app]
