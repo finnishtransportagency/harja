@@ -2006,23 +2006,17 @@
                                                           taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
                                                                                                  (constantly true)
                                                                                                  (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
-                                                                                                   (if (contains? kuukaudet kuukausi)
-                                                                                                     (-> data
-                                                                                                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                                                :toimenkuva toimenkuva
-                                                                                                                :toimenkuva-id toimenkuva-id
-                                                                                                                :tunnit (or tunnit nil)
-                                                                                                                :tuntipalkka (or tuntipalkka nil)
-                                                                                                                :maksukuukaudet kuukaudet)
-                                                                                                         (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet}))
-                                                                                                     (-> data
-                                                                                                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                                                :toimenkuva toimenkuva
-                                                                                                                :toimenkuva-id toimenkuva-id
-                                                                                                                :tunnit nil
-                                                                                                                :tuntipalkka nil
-                                                                                                                :maksukuukaudet kuukaudet)
-                                                                                                         (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet})))))]
+                                                                                                   (let [data (-> data
+                                                                                                                  (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                                                         :toimenkuva toimenkuva
+                                                                                                                         :toimenkuva-id toimenkuva-id
+                                                                                                                         :tunnit (or tunnit nil)
+                                                                                                                         :tuntipalkka (or tuntipalkka nil)
+                                                                                                                         :maksukuukaudet kuukaudet)
+                                                                                                                  (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet}))]
+                                                                                                     (if (contains? kuukaudet kuukausi)
+                                                                                                       data
+                                                                                                       (dissoc data :tunnit :tuntipalkka)))))]
                                                       [(assoc omat-korvaukset omanimi (vec (vals (sort-by #(-> % key first)
                                                                                                           (fn [aika-1 aika-2]
                                                                                                             (pvm/ennen? aika-1 aika-2))
