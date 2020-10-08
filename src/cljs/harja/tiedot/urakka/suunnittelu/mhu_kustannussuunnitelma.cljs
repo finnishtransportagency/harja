@@ -1467,8 +1467,13 @@
                                            {(keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]]
                                                                                                             :aseta (fn [tila jh-korvaukset]
                                                                                                                      (let [yhteensa-arvot (mapv (fn [hoitokauden-arvot]
-                                                                                                                                                  (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])]
-                                                                                                                                                    (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
+                                                                                                                                                  (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])
+                                                                                                                                                        tunnit (reduce (fn [summa {:keys [tunnit osa-kuukaudesta]}]
+                                                                                                                                                                         (+ summa
+                                                                                                                                                                            (* tunnit osa-kuukaudesta)))
+                                                                                                                                                                       0
+                                                                                                                                                                       hoitokauden-arvot)]
+                                                                                                                                                    (* tunnit
                                                                                                                                                        tuntipalkka)))
                                                                                                                                                 jh-korvaukset)]
                                                                                                                        (assoc-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi] yhteensa-arvot)))}}))

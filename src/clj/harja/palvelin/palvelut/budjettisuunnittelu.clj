@@ -15,7 +15,8 @@
              [kiinteahintaiset-tyot :as kiin-q]
              [kustannusarvioidut-tyot :as ka-q]
              [toimenpideinstanssit :as tpi-q]
-             [indeksit :as i-q]]
+             [indeksit :as i-q]
+             [konversio :as konv]]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]]
