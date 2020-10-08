@@ -575,9 +575,9 @@
   [^org.joda.time.DateTime pvm]
   (let [vuosi (.getYear pvm)
         kuukausi (.getMonthOfYear pvm)]
-    (if (> 10 kuukausi)
-      (dec vuosi)
-      (inc vuosi))))
+    (if (>= 10 kuukausi)
+      vuosi
+      (dec vuosi))))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."

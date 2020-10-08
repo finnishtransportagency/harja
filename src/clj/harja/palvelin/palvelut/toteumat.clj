@@ -373,6 +373,13 @@
 (defn hae-urakan-maarien-toteumat [db user {:keys [urakka-id tehtavaryhma alkupvm loppupvm] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (let [t (if (= "Kaikki" tehtavaryhma) nil tehtavaryhma)
+          urakan-alkuvuosi (urakat-q/hae-urakan-alkuvuosi db urakka-id)
+          alkupvm (if (nil? alkupvm)
+                    (str  urakan-alkuvuosi "-10-01")
+                    alkupvm)
+          loppupvm (if (nil? loppupvm)
+                    (str (inc urakan-alkuvuosi) "-09-30")
+                    loppupvm)
           res (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
                                                              :tehtavaryhma t
                                                              :alkupvm alkupvm

@@ -433,8 +433,7 @@ WITH toteumat AS (SELECT tt.toimenpidekoodi         AS toimenpidekoodi_id,
                       WHERE t.id = tt.toteuma
                         AND t.urakka = :urakka
                         AND t.poistettu = FALSE
-                        AND (:alkupvm::DATE IS NULL OR
-                             t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                        AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
                         AND tt.urakka_id = :urakka
                         AND tt.poistettu = FALSE
                         --AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
@@ -442,8 +441,7 @@ WITH toteumat AS (SELECT tt.toimenpidekoodi         AS toimenpidekoodi_id,
      ut_tehtavat as (SELECT ut.tehtava as tehtava
                          FROM urakka_tehtavamaara ut
                          WHERE ut.urakka = :urakka
-                           AND (:alkupvm::DATE IS NULL OR
-                                ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi::INT))
+                           AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi::INT)
 -- Haetaan ne tehtävät, joilla on suunniteltu määrätoteuma olemassa
 SELECT ut.id                      AS id,
        t.toteuma_id               AS tid, --  toteuma_id - datan siirtomäärän vähentämisen takia lyhennetty
@@ -464,7 +462,7 @@ SELECT ut.id                      AS id,
       AND tr.id = tk.tehtavaryhma
       AND ut.urakka = :urakka
       AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
-      AND (:alkupvm::DATE IS NULL OR (ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi::INT))
+      AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi::INT
 UNION
 -- ei union all, koska ei haluta duplikaatteja
 -- Haetaan ne tehtävät, joilla ei ole suunniteltua määrää olemassa
@@ -485,8 +483,7 @@ SELECT tk.id                      AS id,
     WHERE
           t.urakka = :urakka
       AND t.poistettu = FALSE
-      AND (:alkupvm::DATE IS NULL OR
-           t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+      AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
       AND tk.id = tt.toimenpidekoodi
       AND tk.id NOT IN (select tehtava from ut_tehtavat)
       AND tt.urakka_id = :urakka
