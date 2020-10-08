@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain
-  (:require [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.kyselyt.tarkastukset :as tarkastukset-q]
-            [harja.kyselyt
+  (:require [harja.kyselyt
+             [hallintayksikot :as hallintayksikot-q]
+             [tarkastukset :as tarkastukset-q]
              [urakat :as urakat-q]
              [laskut :as kulut-q]
              [aliurakoitsijat :as ali-q]
