@@ -37,7 +37,8 @@ SELECT jh.tunnit,
        jh."ennen-urakkaa",
        jh."osa-kuukaudesta",
        jht.toimenkuva,
-       jht.id AS "toimenkuva-id"
+       jht.id AS "toimenkuva-id",
+       jht.maksukuukaudet
 FROM johto_ja_hallintokorvaus jh
   JOIN johto_ja_hallintokorvaus_toimenkuva jht ON jh."toimenkuva-id" = jht.id AND jht."urakka-id" = jh."urakka-id"
 WHERE jh."urakka-id" = :urakka-id;
