@@ -15,7 +15,8 @@
              [kiinteahintaiset-tyot :as kiin-q]
              [kustannusarvioidut-tyot :as ka-q]
              [toimenpideinstanssit :as tpi-q]
-             [indeksit :as i-q]]
+             [indeksit :as i-q]
+             [konversio :as konv]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]]
@@ -25,8 +26,7 @@
              [toimenpidekoodi :as tpk]
              [tehtavaryhma :as tr]
              [urakka :as ur]]
-            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
 (defn- key-from-val [m v]
   (some (fn [[k v_]]
