@@ -380,7 +380,7 @@
 (defsolu SuunnitelmienTilaOtsikko []
   (fn suunnitelman-selitteet [this]
     [:div#suunnitelman-selitteet
-     [:span [ikonit/ok] "Kaikki kentätä täytetty"]
+     [:span [ikonit/ok] "Kaikki kentältä täytetty"]
      [:span [ikonit/livicon-question] "Keskeneräinen"]
      [:span [ikonit/remove] "Suunnitelma puuttuu"]]))
 
@@ -2591,7 +2591,10 @@
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma
-           [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+           [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten. Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa." ]
+                  [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä kuluna Sampon maksuerään."[:br]
+                   "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lasketaan mukaan maksueriin eräpäivän mukaan."]
+                  [:p "Sampoon lähetettävien kustannussuunnitelmasummien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. " [:br]]]
            (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
              [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
                                               (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
@@ -2605,7 +2608,7 @@
              (get-in app [:domain :kuluva-hoitokausi])
              (get-in app [:domain :indeksit])]
             [:span#tavoite-ja-kattohinta-huomio
-             "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
+             "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
            [:span.viiva-alas]
            [haitari-laatikko
             "Suunnitelmien tila"
@@ -2615,7 +2618,7 @@
              (get-in app [:gridit :suunnitelmien-tila :grid])
              (:kantahaku-valmis? app)]
             [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
-            [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma  Sampoa varten. Ks. Laskutus > Maksuerät."]]
+            [:div "**) Kuukausisummat syöttää urakanvalvoja. Kuukausisuunnitelmista muodostuu Sampoon lähetettävä kustannussuunnitelman summa. Ks. Kulut > Maksuerät."]]
            [:span.viiva-alas]
            [hankintakustannukset-taulukot
             (get-in app [:domain :kirjoitusoikeus?])

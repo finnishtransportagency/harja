@@ -26,18 +26,17 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
-  ;; TODO, kun on tarkoitus näyttää MHU urakat loppukäyttäjille,
-  ;; muuta '(if debug/kehitys? :teiden-hoito ::foo)' => ':teiden-hoito'
-  (case valilehti
-    :materiaalit (and (not (#{(if debug/kehitys? :teiden-hoito ::foo) :paallystys :tiemerkinta} tyyppi))
-                      (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-    :tehtavat (= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
-    :suola (#{:hoito (if debug/kehitys? :teiden-hoito ::foo)} tyyppi)
-    :muut (not (ur/vesivaylaurakkatyyppi? tyyppi))
-    :kiintiot (= tyyppi :vesivayla-hoito)
-    :kokonaishintaiset (not= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
-    :yksikkohintaiset (not= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
-    :kustannussuunnitelma (= tyyppi (if debug/kehitys? :teiden-hoito ::foo))))
+      (case valilehti
+            :materiaalit (and (not (#{ :teiden-hoito  :paallystys :tiemerkinta} tyyppi))
+                              (not (ur/vesivaylaurakkatyyppi? tyyppi)))
+            :tehtavat (= tyyppi  :teiden-hoito )
+            :suola (#{:hoito  :teiden-hoito } tyyppi)
+            :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
+                            (not= tyyppi :teiden-hoito))
+            :kiintiot (= tyyppi :vesivayla-hoito)
+            :kokonaishintaiset (not= tyyppi  :teiden-hoito )
+            :yksikkohintaiset (not= tyyppi  :teiden-hoito )
+            :kustannussuunnitelma (= tyyppi  :teiden-hoito )))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
