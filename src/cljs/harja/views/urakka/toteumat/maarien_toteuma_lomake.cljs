@@ -371,7 +371,7 @@
            :maaramitattava maaramitattava
            :lisatyo lisatyo
            (:vahinkojen-korjaukset :tilaajan-varaukset :akillinen-hoitotyo) akilliset-ja-korjaukset
-           [])
+           maaramitattava)                                  ;; Default arvona oletetaan sen olevan määrämitattava
          (when (= (count toteumat) 1)
            {:otsikko "Sijainti *"})
          (when (= (count toteumat) 1)
