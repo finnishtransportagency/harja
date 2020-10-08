@@ -1,6 +1,6 @@
 -- Tee uusi 9kk partitio toteuma taululle
 SELECT * FROM luo_toteumataulun_partitio( '2019-10-01'::DATE, '2020-07-01'::DATE);
--- Muokataan aiemmin kaikki ensimmäiset toteumat siältänyt partitio uuden nimiseksi, koska se sisältää
+-- Muokataan aiemmin kaikki ensimmäiset toteumat sisältänyt partitio uuden nimiseksi, koska se sisältää
 -- nyt eri tiedot
 -- Poistetaan ensin constraint
 ALTER TABLE toteuma_010101_200701 DROP CONSTRAINT toteuma_010101_200701_alkanut_check;
