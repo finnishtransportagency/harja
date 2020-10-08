@@ -37,13 +37,13 @@ VALUES
 ('Pientareen päällystys', 'Piennar', 667);
 
 
-CREATE TABLE pot2_kantava_kerros_toimenpide
+CREATE TABLE pot2_alusta_toimenpide
 (
     koodi   INTEGER PRIMARY KEY,
     nimi    TEXT,
     lyhenne TEXT
 );
-INSERT INTO pot2_kantava_kerros_toimenpide (nimi, lyhenne, koodi)
+INSERT INTO pot2_alusta_toimenpide (nimi, lyhenne, koodi)
 VALUES
 ('Massanvaihto', 'MV', 1),
 ('Bitumiemusiostabilointi', 'BEST', 11),
@@ -313,7 +313,7 @@ CREATE INDEX pot2_paallystekerros_kohdeosa_idx ON pot2_paallystekerros (pot2_id)
 COMMENT ON TABLE pot2_paallystekerros IS
     E'Päällysteen kulutuskerros tai alempi päällystekerros. Aiemmin, eli POT1-aikana suuri osa tästä tiedosta löytyi taulusta paallystysilmoitus.osoitteet. Tyypillisesti sis. mm. päällystemassoja ja näihin liittyviä toimenpiteitä.';
 
-CREATE TABLE pot2_kantava_kerros
+CREATE TABLE pot2_alusta
 (
     id                   SERIAL PRIMARY KEY,
     pot2_id              INTEGER NOT NULL REFERENCES pot2 (id),
@@ -324,10 +324,10 @@ CREATE TABLE pot2_kantava_kerros
     tr_loppuosa          INTEGER NOT NULL CHECK ( tr_loppuosa > 0),
     tr_ajorata           INTEGER NOT NULL CHECK ( tr_ajorata > 0),
     tr_kaista            INTEGER NOT NULL CHECK ( tr_kaista > 0),
-    toimenpide           INTEGER NOT NULL REFERENCES pot2_kantava_kerros_toimenpide(koodi),
+    toimenpide           INTEGER NOT NULL REFERENCES pot2_alusta_toimenpide(koodi),
     toimenpide_tiedot    TEXT,
     materiaali           INTEGER NOT NULL REFERENCES pot2_murske(id)
 );
-CREATE INDEX pot2_kantava_kerros_idx ON pot2_kantava_kerros (pot2_id);
-COMMENT ON TABLE pot2_kantava_kerros IS
-    E'Päällysteen kantava kerros. Aiemmin, eli POT1-aikana suuri osa tästä tiedosta löytyi taulusta paallystysilmoitus.ilmoitustiedot.alustatoimet. Tyypillisesti sis. mm. murskeita, verkkoja, näihin liittyviä toimenpiteitä';
+CREATE INDEX pot2_alusta_idx ON pot2_alusta (pot2_id);
+COMMENT ON TABLE pot2_alusta IS
+    E'Päällysteen alusta. Aiemmin, eli POT1-aikana suuri osa tästä tiedosta löytyi taulusta paallystysilmoitus.ilmoitustiedot.alustatoimet. Tyypillisesti sis. mm. murskeita, verkkoja, näihin liittyviä toimenpiteitä';

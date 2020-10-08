@@ -183,11 +183,12 @@
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
-  ["pot2_kantava_kerros_toimenpide" ::pot2-kantava-kerros-toimenpide
+  ["pot2_alusta_toimenpide" ::pot2-alusta-toimenpide
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
   ["pot2_paallystekerros" ::pot2-paallystekerros]
+  ["pot2_alusta" ::pot2-alusta]
   ["pot2_massatyyppi" ::pot2-massatyyppi]
   ["pot2_runkoainetyyppi" ::pot2-runkoainetyyppi]
   ["pot2_sideainetyyppi" ::pot2-sideainetyyppi]

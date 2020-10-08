@@ -118,7 +118,7 @@
                        :luokka "suuri"}]])
        :vayla-tyyli? true
        }
-      [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string
+      [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
