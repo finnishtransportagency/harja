@@ -95,9 +95,7 @@
 
 (deftest hae-ilmoitukset-tyypin-mukaan
   (let [hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
-                                 :urakkatyyppi :hoito))
-        teiden-hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
-                                        :urakkatyyppi :teiden-hoito))
+                                 :urakkatyyppi :hoito)) ;; Teiden hoidon ilmoitukset palautuvat hoito-ilmoitusten mukana
         paallystys-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
                                       :urakkatyyppi :paallystys))
         kaikki-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
@@ -109,13 +107,11 @@
     (is (= 3 (count paallystys-ilmoitukset)))
 
     (is (< (count paallystys-ilmoitukset)
-           (+ (count hoito-ilmoitukset)
-              (count teiden-hoito-ilmoitukset))
+           (count hoito-ilmoitukset)
            (count kaikki-ilmoitukset)))
 
     (is (= (set/union (idt hoito-ilmoitukset)
-                      (idt paallystys-ilmoitukset)
-                      (idt teiden-hoito-ilmoitukset))
+                      (idt paallystys-ilmoitukset))
            (idt kaikki-ilmoitukset)))))
 
 (deftest tallenna-ilmoitustoimenpide
