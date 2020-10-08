@@ -388,7 +388,7 @@
 
 (defn hae-maarien-toteumien-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma]}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:tehtavaryhma tehtavaryhma})
+    (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:urakka urakka-id :tehtavaryhma tehtavaryhma})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
