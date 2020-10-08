@@ -14,6 +14,7 @@
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.palvelut.budjettisuunnittelu :as bs]
             [cljs.spec.alpha :as s]
             [harja.tyokalut.regex :as re]
             [goog.dom :as dom]
@@ -45,6 +46,14 @@
             jokin eventti, joka aiheuttaa modaalin näkymisen ja tästä modaalista halutaan nakata uusi
             eventti voi olla mahdollista, että e!:tä tarvii tässäkin ns:ssa."}
   *e!* nil)
+
+(defn dissoc-nils [m]
+  (reduce-kv (fn [m k v]
+               (if (nil? v)
+                 m
+                 (assoc m k v)))
+             {}
+             m))
 
 (defn laskutukseen-perustuvan-taulukon-nakyvyys! []
   (let [{:keys [toimenpide laskutukseen-perustuen-valinta]} (-> @tiedot/suunnittelu-kustannussuunnitelma :suodattimet :hankinnat)
@@ -202,11 +211,6 @@
           0
           arvot))
 
-(def maksukauden-kuukaudet
-  {:molemmat (vec (range 1 13))
-   :talvi (vec (concat (range 1 5) (range 10 13)))
-   :kesa (vec (range 5 10))})
-
 (defn kuukausi-kuuluu-maksukauteen? [kuukausi maksukausi]
   (cond
     (= maksukausi :kesa) (<= 5 kuukausi 9)
@@ -248,7 +252,6 @@
          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
                                              (range hoitokauden-numero 6)
                                              [hoitokauden-numero])
-         _ (println "ARVO: " arvo)
 
          arvo (if (re-matches #"\d*,\d+" arvo)
                 (clj-str/replace arvo #"," ".")
@@ -332,6 +335,11 @@
                               (boolean (some #(or (= :valmis %)
                                                   (= :kesken %))
                                              data)))
+        yhdista-tilat (fn [& tilat]
+                        (cond
+                          (aggregaatti-valmis? tilat) :valmis
+                          (aggregaatti-kesken? tilat) :kesken
+                          :else :aloittamatta))
         suunnitelman-tila (fn [data avain]
                             (cond
                               (valmis? data avain) :valmis
@@ -340,14 +348,8 @@
         aggregaatin-tila (fn [rahavarausten-tilat]
                            (let [toimenpiteen-tilat-kuluvalle-hoitokaudelle (map #(get % :kuluva-hoitokausi) rahavarausten-tilat)
                                  toimenpiteen-tilat-seuraavalle-hoitokaudelle (map #(get % :seuraava-hoitokausi) rahavarausten-tilat)]
-                             (cond-> {:kuluva-hoitokausi (cond
-                                                           (aggregaatti-valmis? toimenpiteen-tilat-kuluvalle-hoitokaudelle) :valmis
-                                                           (aggregaatti-kesken? toimenpiteen-tilat-kuluvalle-hoitokaudelle) :kesken
-                                                           :else :aloittamatta)}
-                                     (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (cond
-                                                                                               (aggregaatti-valmis? toimenpiteen-tilat-seuraavalle-hoitokaudelle) :valmis
-                                                                                               (aggregaatti-kesken? toimenpiteen-tilat-seuraavalle-hoitokaudelle) :kesken
-                                                                                               :else :aloittamatta)))))
+                             (cond-> {:kuluva-hoitokausi (apply yhdista-tilat toimenpiteen-tilat-kuluvalle-hoitokaudelle) }
+                                     (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (apply yhdista-tilat toimenpiteen-tilat-seuraavalle-hoitokaudelle)))))
         suunnitelman-tila-ikoniksi (fn [suunnitelman-tila]
                                      (case suunnitelman-tila
                                        :aloittamatta ikonit/remove
@@ -396,6 +398,57 @@
                                                                          (assoc hoitokausien-tila
                                                                                 :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
                                                                                 :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))}))
+        johto-ja-hallintokorvausten-rajapinta-asetukset (fn []
+                                                          {:polut (vec
+                                                                    (concat (map (fn [n]
+                                                                                   (let [nimi (jh-omienrivien-nimi n)]
+                                                                                     [:domain :johto-ja-hallintokorvaukset nimi]))
+                                                                                 (range 1 (inc jh-korvausten-omiariveja-lkm)))
+                                                                            (map (fn [{:keys [toimenkuva maksukausi]}]
+                                                                                   [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi])
+                                                                                 johto-ja-hallintokorvaukset-pohjadata)))
+                                                           :init (fn [tila]
+                                                                   (update-in tila
+                                                                              [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
+                                                                              merge
+                                                                              (cond-> {:kuluva-hoitokausi :aloittamatta}
+                                                                                      (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
+                                                           :aseta (fn [tila & korvaukset]
+                                                                    (let [jh-suunnitelmien-tilat (mapv (fn [jh-korvaukset-kaikille-hoitokausille]
+                                                                                                         (let [jh-korvaukset-kuluvalle-ja-seuraavalle-hoitokaudelle (if viimeinen-hoitokausi?
+                                                                                                                                                                      [(get jh-korvaukset-kaikille-hoitokausille (dec ensimmainen-hoitokauden-numero))]
+                                                                                                                                                                      (vec (->> jh-korvaukset-kaikille-hoitokausille (drop (dec ensimmainen-hoitokauden-numero)) (take 2))))]
+                                                                                                           (mapv (fn [hoitokauden-arvot]
+                                                                                                                   (let [oma-arvo? #(boolean (:maksukuukaudet %))
+                                                                                                                         oma-arvo-maaritelty? #(boolean (:toimenkuva %))
+                                                                                                                         oma-arvo-maaritelty-kuukaudelle? #(contains? (:maksukuukaudet %) (:kuukausi %))
+                                                                                                                         hoitokauden-arvot (filter #(or (not (oma-arvo? %))
+                                                                                                                                                        (not (oma-arvo-maaritelty? %))
+                                                                                                                                                        (oma-arvo-maaritelty-kuukaudelle? %))
+                                                                                                                                                   hoitokauden-arvot)
+                                                                                                                         hoitokauden-arvo (first hoitokauden-arvot)
+                                                                                                                         tuntipalkka (get hoitokauden-arvo :tuntipalkka)
+                                                                                                                         oma-hoitokausirivi-jolla-ei-nimea? (and (contains? hoitokauden-arvo :toimenkuva)
+                                                                                                                                                                 (nil? (:toimenkuva hoitokauden-arvo)))]
+                                                                                                                     (if oma-hoitokausirivi-jolla-ei-nimea?
+                                                                                                                       :valmis
+                                                                                                                       (yhdista-tilat (suunnitelman-tila hoitokauden-arvot :tunnit)
+                                                                                                                                      (if tuntipalkka
+                                                                                                                                        :valmis
+                                                                                                                                        :aloittamatta)))))
+                                                                                                                 jh-korvaukset-kuluvalle-ja-seuraavalle-hoitokaudelle)))
+                                                                                                       korvaukset)]
+                                                                      (update-in tila
+                                                                                 [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
+                                                                                 (fn [hoitokausien-tila]
+                                                                                   (cond-> (assoc hoitokausien-tila :kuluva-hoitokausi (apply yhdista-tilat (keep (fn [arvot]
+                                                                                                                                                                    (when-let [arvo (first arvot)]
+                                                                                                                                                                      arvo))
+                                                                                                                                                                  jh-suunnitelmien-tilat)))
+                                                                                           (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (apply yhdista-tilat (keep (fn [arvot]
+                                                                                                                                                                                (when-let [arvo (second arvot)]
+                                                                                                                                                                                  arvo))
+                                                                                                                                                                              jh-suunnitelmien-tilat))))))))})
         rahavaraus->nimi (fn [rahavaraus]
                            (case rahavaraus
                              :kokonaishintainen-ja-lisatyo "Suunnitellut hankinnat"
@@ -519,47 +572,7 @@
                                    (reduce (fn [haut [h-avain id]]
                                              (merge haut
                                                     {(keyword (str "hallinnollinen-" id "-seuranta")) (if (= h-avain :johto-ja-hallintokorvaus)
-                                                                                                        {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]]
-                                                                                                         :init (fn [tila]
-                                                                                                                 (update-in tila
-                                                                                                                            [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
-                                                                                                                            merge
-                                                                                                                            (cond-> {:kuluva-hoitokausi :aloittamatta}
-                                                                                                                                    (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
-                                                                                                         :aseta (fn [tila johto-ja-hallintokorvauksien-yhteenvedot]
-                                                                                                                  (let [korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle (reduce-kv (fn [tilat k v]
-                                                                                                                                                                                               (let [omarivi? (= (clj-str/replace (jh-omienrivien-nimi 0) #"\d" "X")
-                                                                                                                                                                                                                 (clj-str/replace k #"\d" "X"))
-                                                                                                                                                                                                     maksukausien-arvot-ensimmaiselle-hoitokaudelle (if omarivi?
-                                                                                                                                                                                                                                                      [(get v (dec ensimmainen-hoitokauden-numero))]
-                                                                                                                                                                                                                                                      (keep (fn [[maksukausi hoitokausien-arvot]]
-                                                                                                                                                                                                                                                              (let [seurataan-ennen-urakkaa-arvoja? (and (nil? maksukausi) (= 1 ensimmainen-hoitokauden-numero))]
-                                                                                                                                                                                                                                                                (if seurataan-ennen-urakkaa-arvoja?
-                                                                                                                                                                                                                                                                  (first hoitokausien-arvot)
-                                                                                                                                                                                                                                                                  (get hoitokausien-arvot (dec ensimmainen-hoitokauden-numero)))))
-                                                                                                                                                                                                                                                            v))
-                                                                                                                                                                                                     maksukausien-arvot-seuraavalle-hoitokaudelle (when (not viimeinen-hoitokausi?)
-                                                                                                                                                                                                                                                    (if omarivi?
-                                                                                                                                                                                                                                                      [(get v (dec toisen-hoitokauden-numero))]
-                                                                                                                                                                                                                                                      (keep (fn [[maksukausi hoitokausien-arvot]]
-                                                                                                                                                                                                                                                              (let [ennen-urakkaa? (nil? maksukausi)]
-                                                                                                                                                                                                                                                                (when-not ennen-urakkaa?
-                                                                                                                                                                                                                                                                  (get hoitokausien-arvot (dec toisen-hoitokauden-numero)))))
-                                                                                                                                                                                                                                                            v)))]
-                                                                                                                                                                                                 (cond-> (update tilat :ensimmainen concat maksukausien-arvot-ensimmaiselle-hoitokaudelle)
-                                                                                                                                                                                                         (not viimeinen-hoitokausi?) (update :toinen concat maksukausien-arvot-seuraavalle-hoitokaudelle))))
-                                                                                                                                                                                             {:ensimmainen []
-                                                                                                                                                                                              :toinen []}
-                                                                                                                                                                                             johto-ja-hallintokorvauksien-yhteenvedot)
-                                                                                                                        _ (println "korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle")
-                                                                                                                        _ (cljs.pprint/pprint korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle)
-                                                                                                                        korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle (cond-> (update korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :ensimmainen (fn [arvot] (remove #(= % :ei-aseteta) arvot)))
-                                                                                                                                                                                          (not viimeinen-hoitokausi?) (update :toinen (fn [arvot] (remove #(= % :ei-aseteta) arvot))))]
-                                                                                                                    (update-in tila
-                                                                                                                               [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
-                                                                                                                               (fn [hoitokausien-tila]
-                                                                                                                                 (cond-> (assoc hoitokausien-tila :kuluva-hoitokausi (suunnitelman-tila (get korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :ensimmainen) nil))
-                                                                                                                                         (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (suunnitelman-tila (get korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :toinen) nil)))))))}
+                                                                                                        (johto-ja-hallintokorvausten-rajapinta-asetukset)
                                                                                                         (hallinnollisten-rajapinta-asetukset h-avain))}))
                                            {}
                                            hallinnollisten-idt)))))
@@ -2001,16 +2014,34 @@
                                                           toimenkuva (some #(when (= (:toimenkuva-id %) toimenkuva-id)
                                                                               (:toimenkuva %))
                                                                            (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat]))
+                                                          kuukaudet (into #{} (:maksukuukaudet (first asia-kannasta)))
+                                                          #_#_asia-kannasta (if (empty? kuukaudet)
+                                                                          asia-kannasta
+                                                                          (filter #(contains? kuukaudet (:kuukausi %))
+                                                                                  asia-kannasta))
                                                           taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
                                                                                                  (constantly true)
+                                                                                                 #_(fn [_ kuukausi]
+                                                                                                   (or (empty? kuukaudet)
+                                                                                                       (contains? kuukaudet kuukausi)))
                                                                                                  (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
-                                                                                                   (-> data
-                                                                                                       (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                                              :toimenkuva toimenkuva
-                                                                                                              :toimenkuva-id toimenkuva-id
-                                                                                                              :tunnit (or tunnit nil)
-                                                                                                              :tuntipalkka (or tuntipalkka nil))
-                                                                                                       (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta}))))]
+                                                                                                   (if (contains? kuukaudet kuukausi)
+                                                                                                     (-> data
+                                                                                                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                                                :toimenkuva toimenkuva
+                                                                                                                :toimenkuva-id toimenkuva-id
+                                                                                                                :tunnit (or tunnit nil)
+                                                                                                                :tuntipalkka (or tuntipalkka nil)
+                                                                                                                :maksukuukaudet kuukaudet)
+                                                                                                         (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet}))
+                                                                                                     (-> data
+                                                                                                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                                                :toimenkuva toimenkuva
+                                                                                                                :toimenkuva-id toimenkuva-id
+                                                                                                                :tunnit nil
+                                                                                                                :tuntipalkka nil
+                                                                                                                :maksukuukaudet kuukaudet)
+                                                                                                         (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet})))))]
                                                       [(assoc omat-korvaukset omanimi (vec (vals (sort-by #(-> % key first)
                                                                                                           (fn [aika-1 aika-2]
                                                                                                             (pvm/ennen? aika-1 aika-2))
@@ -2022,9 +2053,7 @@
               kuluva-hoitokauden-numero (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
-                                  tayttamattomat-rivit (remove #(and (nil? (:tunnit %)) (nil? (:tuntipalkka %)))
-                                                               (get-in jh-korvaukset [nimi kuluva-hoitokauden-numero]))
-                                  maksukausi (case (count tayttamattomat-rivit)
+                                  maksukausi (case (count (get-in omat-jh-korvaukset [(dec jarjestysnumero) 1 0 :maksukuukaudet]))
                                                5 :kesa
                                                7 :talvi
                                                :molemmat)
@@ -2161,11 +2190,9 @@
                                                                :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                :summa summa
                                                                :ajat ajat})]
-      (println "TALLENNETAAN SUMMALLA: " (str summa))
-      (println "SUMMA NIL? " (nil? summa))
       (laheta-ja-odota-vastaus app
                                {:palvelu post-kutsu
-                                :payload lahetettava-data
+                                :payload (dissoc-nils lahetettava-data)
                                 :onnistui ->TallennaHankintojenArvotOnnistui
                                 :epaonnistui ->TallennaHankintojenArvotEpaonnistui})))
   TallennaHankintojenArvotOnnistui
@@ -2227,7 +2254,7 @@
                                                      :ajat ajat})]
       (laheta-ja-odota-vastaus app
                                {:palvelu post-kutsu
-                                :payload lahetettava-data
+                                :payload (dissoc-nils lahetettava-data)
                                 :onnistui ->TallennaKustannusarvoituOnnistui
                                 :epaonnistui ->TallennaKustannusarvoituEpaonnistui})))
   TallennaKustannusarvoituOnnistui
@@ -2252,23 +2279,18 @@
           jhk-tiedot (vec (mapcat (fn [{:keys [omanimi osan-paikka data-koskee-ennen-urakkaa?]}]
                                     (if data-koskee-ennen-urakkaa?
                                       (mapv (fn [m]
-                                              (-> m
-                                                  (select-keys #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka})
-                                                  (update :tunnit #(or % 0))
-                                                  (update :tuntipalkka #(or % 0))))
+                                              (select-keys m #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
                                             (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero)]))
-                                      (mapv (fn [hoitokauden-numero]
+                                      (keep (fn [hoitokauden-numero]
                                               (let [tiedot (if omanimi
                                                              (select-keys (get-in app [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero) (first osan-paikka)])
                                                                           #{:vuosi :kuukausi :tunnit :tuntipalkka :toimenkuva-id :osa-kuukaudesta})
                                                              (select-keys (get-in app [:domain :johto-ja-hallintokorvaukset tunnisteen-toimenkuva tunnisteen-maksukausi (dec hoitokauden-numero) (first osan-paikka)])
-                                                                          #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
-                                                    tiedot (-> tiedot
-                                                               (update :tunnit #(or % 0))
-                                                               (update :tuntipalkka #(or % 0)))]
-                                                (if (contains? tiedot :osa-kuukaudesta)
-                                                  tiedot
-                                                  (assoc tiedot :osa-kuukaudesta 1))))
+                                                                          #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))]
+                                                (cond
+                                                  (empty? tiedot) nil
+                                                  (contains? tiedot :osa-kuukaudesta) tiedot
+                                                  :else (assoc tiedot :osa-kuukaudesta 1))))
                                             paivitettavat-hoitokauden-numerot)))
                                   tunnisteet))
           toimenkuva-id (when-let [omanimi (get-in tunnisteet [0 :omanimi])]
@@ -2276,7 +2298,7 @@
           lahetettava-data (merge {:urakka-id urakka-id
                                    :ennen-urakkaa? (and (nil? tunnisteen-maksukausi)
                                                         (nil? tunnisteen-omanimi))
-                                   :jhk-tiedot jhk-tiedot}
+                                   :jhk-tiedot (mapv dissoc-nils jhk-tiedot)}
                                   ;; Itsetäytetyillä rivillä on id. Vakioilla ei.
                                   (if toimenkuva-id
                                     {:toimenkuva-id toimenkuva-id}
@@ -2363,25 +2385,23 @@
                                     jhk-tiedot (vec (mapcat (fn [hoitokauden-data]
                                                               (map (fn [data]
                                                                      (assoc (select-keys data #{:vuosi :kuukausi :toimenkuva-id})
-                                                                            :osa-kuukaudesta 1
-                                                                            :tunnit 0
-                                                                            :tuntipalkka 0))
+                                                                            :osa-kuukaudesta 1))
                                                                    hoitokauden-data))
                                                             data-hoitokausittain))
                                     toimenkuva-id (get-in jhk-tiedot [0 :toimenkuva-id])
                                     lahetettava-data {:urakka-id urakka-id
                                                       :ennen-urakkaa? false
                                                       :jhk-tiedot jhk-tiedot
-                                                      :toimenkuva-id toimenkuva-id}
+                                                      :toimenkuva-id toimenkuva-id
+                                                      :maksukausi maksukausi}
                                     app (update-in app
                                                    [:domain :johto-ja-hallintokorvaukset nimi]
                                                    (fn [jh-korvaukset]
                                                      (mapv (fn [hoitokausikohtaiset]
-                                                             (mapv (fn [kustannus]
-                                                                     (if (poistettava-kustannus? kustannus)
-                                                                       (assoc kustannus :tunnit 0 :tuntipalkka 0)
-                                                                       kustannus))
-                                                                   hoitokausikohtaiset))
+                                                             (vec (keep (fn [kustannus]
+                                                                          (when-not (poistettava-kustannus? kustannus)
+                                                                            kustannus))
+                                                                        hoitokausikohtaiset)))
                                                            jh-korvaukset)))]
                                 (piilota-modal!)
                                 (paivita-ui!)

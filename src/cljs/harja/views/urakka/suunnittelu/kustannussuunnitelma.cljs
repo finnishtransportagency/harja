@@ -19,6 +19,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log error]]
+            [harja.domain.palvelut.budjettisuunnittelu :as bj]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [goog.dom :as dom])
@@ -1462,7 +1463,7 @@
                                                                   :osat [{:tyyppi :teksti
                                                                           :luokat #{"table-default"}
                                                                           :fmt aika-tekstilla-fmt}
-                                                                         (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                         (syote-solu {:nappi? true :fmt summa-formatointi-uusi :paivitettava-asia :aseta-tunnit!
                                                                                       :solun-index 1
                                                                                       :blur-tallenna! (partial blur-tallenna! false (str toimenkuva "-" maksukausi "-taulukko"))
                                                                                       :nappia-painettu-tallenna! nappia-painettu-tallenna!})
@@ -1594,7 +1595,7 @@
                                                                        :osat [{:tyyppi :teksti
                                                                                :luokat #{"table-default"}
                                                                                :fmt aika-tekstilla-fmt}
-                                                                              (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                              (syote-solu {:nappi? true :fmt summa-formatointi-uusi :paivitettava-asia :aseta-tunnit!
                                                                                            :solun-index 1
                                                                                            :blur-tallenna! (partial blur-tallenna! false rivin-nimi)
                                                                                            :nappia-painettu-tallenna! nappia-painettu-tallenna!})
@@ -1677,7 +1678,7 @@
                                                                                                                                                      v)
                                                                                                                                                    rivi))
                                                                                                                                            vuoden-jh-korvaukset))
-                                                                                                                  :tunnisteen-kasittely (fn [data-sisalto-grid _]
+                                                                                                                  :tunnisteen-kasittely (fn [data-sisalto-grid data]
                                                                                                                                           (vec
                                                                                                                                             (map-indexed (fn [i rivi]
                                                                                                                                                            (vec
@@ -1772,7 +1773,7 @@
                                              (merge polut
                                                     {(keyword "piillota-itsetaytettyja-riveja-" nimi) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :maksukausi]]
                                                                                                        :toiminto! (fn [g _ maksukausi]
-                                                                                                                    (let [naytettavat-kuukaudet (into #{} (t/maksukauden-kuukaudet maksukausi))]
+                                                                                                                    (let [naytettavat-kuukaudet (into #{} (bj/maksukauden-kuukaudet maksukausi))]
                                                                                                                       (doseq [rivi (grid/hae-grid (grid/get-in-grid (grid/etsi-osa g nimi) [1]) :lapset)]
                                                                                                                         (let [aika (grid/solun-arvo (grid/get-in-grid rivi [0]))
                                                                                                                               piillotetaan? (and aika (not (contains? naytettavat-kuukaudet (pvm/kuukausi aika))))]
@@ -2547,21 +2548,26 @@
                                                                        [suunnittellut-hankinnat-grid true nil]
                                                                        [hankinnat-laskutukseen-perustuen-grid true nil]
                                                                        [rahavarausten-grid false nil]
-                                                                       [(partial maarataulukko "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :erillishankinnat-disablerivit]
-                                                                       [johto-ja-hallintokorvaus-laskulla-grid true nil]
+                                                                       [(partial maarataulukko "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset]) true #{:erillishankinnat-disablerivit}]
+                                                                       [johto-ja-hallintokorvaus-laskulla-grid true (reduce (fn [tapahtumien-tunnisteet jarjestysnumero]
+                                                                                                                              (let [nimi (t/jh-omienrivien-nimi jarjestysnumero)]
+                                                                                                                                (conj tapahtumien-tunnisteet (keyword "piillota-itsetaytettyja-riveja-" nimi))))
+                                                                                                                            #{}
+                                                                                                                            (range 1 (inc t/jh-korvausten-omiariveja-lkm)))]
                                                                        [johto-ja-hallintokorvaus-laskulla-yhteenveto-grid true nil]
-                                                                       [(partial maarataulukko "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :toimistokulut-disablerivit]
-                                                                       [(partial maarataulukko "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset]) true :hoidonjohtopalkkio-disablerivit]
-                                                                       [(partial maarataulukko "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false) true :tilaajan-varaukset-disablerivit]]
+                                                                       [(partial maarataulukko "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]) true #{:toimistokulut-disablerivit}]
+                                                                       [(partial maarataulukko "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset]) true #{:hoidonjohtopalkkio-disablerivit}]
+                                                                       [(partial maarataulukko "tilaajan-varaukset" [:yhteenvedot :tilaajan-varaukset] false false) true #{:tilaajan-varaukset-disablerivit}]]
                                                            lahdetty-nakymasta? (:lahdetty-nakymasta? @nakyman-setup)]
                                                       (when (and (not lahdetty-nakymasta?)
                                                                  (not (nil? tf)))
-                                                        (let [[taulukko-f paivita-raidat? tapahtuma-tunniste] tf
+                                                        (let [[taulukko-f paivita-raidat? tapahtumien-tunnisteet] tf
                                                               taulukko (taulukko-f)]
                                                           (when paivita-raidat?
                                                             (t/paivita-raidat! (grid/osa-polusta taulukko [::g-pohjat/data])))
-                                                          (when tapahtuma-tunniste
-                                                            (grid/triggeroi-tapahtuma! taulukko tapahtuma-tunniste))
+                                                          (when tapahtumien-tunnisteet
+                                                            (doseq [tapahtuma-tunniste tapahtumien-tunnisteet]
+                                                              (grid/triggeroi-tapahtuma! taulukko tapahtuma-tunniste)))
                                                           (recur tfs
                                                                  (:lahdetty-nakymasta? @nakyman-setup)))))))))))))
       (komp/ulos (fn []

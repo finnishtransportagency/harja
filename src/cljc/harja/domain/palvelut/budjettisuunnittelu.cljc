@@ -12,6 +12,13 @@
 
 (def toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto})
 
+(defn maksukauden-kuukaudet [maksukausi]
+  (case maksukausi
+    :molemmat (vec (range 1 13))
+    :talvi (vec (concat (range 1 5) (range 10 13)))
+    :kesa (vec (range 5 10))
+    (vec (range 1 13))))
+
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 (s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf)))
 
@@ -29,7 +36,7 @@
                      #(not= % ##Inf)
                      #(<= 1 % 12)))
 (s/def ::toimenkuva-id ::positive-int?)
-(s/def ::summa (s/nilable ::positive-number?))
+(s/def ::summa ::positive-number?)
 (s/def ::tavoitehinta ::positive-number?)
 (s/def ::kattohinta ::positive-number?)
 (s/def ::toimenpide-avain (s/and keyword?
@@ -67,7 +74,8 @@
 
 (s/def ::indeksi (s/keys :req-un [::vuosi ::indeksikerroin]))
 
-(s/def ::jhk-tieto (s/keys :req-un [::tunnit ::tuntipalkka ::osa-kuukaudesta]))
+(s/def ::jhk-tieto (s/keys :req-un [::osa-kuukaudesta]
+                           :opt-un [::tunnit ::tuntipalkka]))
 
 (s/def ::jhk-tiedot (s/and #(s/valid? ::kuukausi-ajat (mapv (fn [tiedot]
                                                               (select-keys tiedot #{:vuosi :kuukausi}))
@@ -77,13 +85,15 @@
 (s/def ::ennen-urakkaa? boolean?)
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::ennen-urakkaa? ::jhk-tiedot]
-                                                             :opt-un [::toimenkuva-id ::toimenkuva]))
+                                                             :opt-un [::toimenkuva-id ::toimenkuva ::maksukausi]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
-(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::summa ::ajat]))
+(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::ajat]
+                                                       :opt-un [::summa]))
 (s/def ::tallenna-kustannusarvioitu-tyo-vastaus any?)
 
-(s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat ::summa]))
+(s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat]
+                                                       :opt-n [::summa]))
 (s/def ::tallenna-kiinteahintaiset-tyot-vastaus any?)
 
 (s/def ::tallenna-budjettitavoite-kysely (s/keys :req-un [::urakka-id ::tavoitteet]))
