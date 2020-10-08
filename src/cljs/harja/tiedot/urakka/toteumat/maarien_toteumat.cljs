@@ -219,7 +219,7 @@
                toteumat))
 
 (defn- uusi-pvm-lomakkeelle [app]
-  (let [vuosi (if (> (pvm/kuukausi (pvm/nyt)) 10)
+  (let [vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                 (:hoitokauden-alkuvuosi app)
                 (+ 1 (:hoitokauden-alkuvuosi app)))
         kuukausi (- (pvm/kuukausi (pvm/nyt)) 1)
@@ -418,6 +418,7 @@
                               (:aikavali-loppupvm app))
       (hae-tehtavat toimenpide)
       (-> app
+          (assoc :ajax-loader true)
           (assoc :valittu-toimenpide toimenpide)
           (assoc-in [:lomake ::t/toimenpide] toimenpide)
           (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] nil))))
@@ -496,6 +497,7 @@
     (do
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi nil nil)
       (-> app
+          (assoc :ajax-loader true)
           (assoc-in [:hoitokauden-alkuvuosi] vuosi)
           (assoc-in [:toteuma :aikavali-alkupvm] nil)
           (assoc-in [:toteuma :aikavali-loppupvm] nil))))
@@ -520,7 +522,7 @@
           loppupvm (when aikavali-loppupvm
                      (pvm/iso8601 aikavali-loppupvm))]
       (hae-toteutuneet-maarat urakka-id toimenpide hoitokauden-alkuvuosi alkupvm loppupvm))
-    app)
+    (assoc app :ajax-loader true))
 
   HaeToimenpiteet
   (process-event [_ app]
@@ -540,12 +542,13 @@
     (let [ryhmitelty-tehtava (ryhmittele-tehtavat vastaus hakufiltterit)]
       (-> app
           (assoc-in [:toteutuneet-maarat] vastaus)
-          (assoc-in [:toteutuneet-maarat-grouped] ryhmitelty-tehtava))))
+          (assoc-in [:toteutuneet-maarat-grouped] ryhmitelty-tehtava)
+          (assoc :ajax-loader false))))
 
   ToteutuneetMaaratHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    app)
+    (assoc app :ajax-loader false))
 
   TehtavatHakuOnnistui
   (process-event [{vastaus :vastaus {:keys [filtteri]} :parametrit} app]
@@ -605,7 +608,9 @@
                             (get-in app [:aikavali-alkupvm])
                             (get-in app [:aikavali-loppupvm]))
 
-    (assoc app :syottomoodi false))
+    (-> app
+        (assoc :ajax-loader true)
+        (assoc :syottomoodi false)))
 
   PoistaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -623,6 +628,7 @@
                             (get-in app [:aikavali-loppupvm]))
     (-> app
         (assoc :syottomoodi false)
+        (assoc :ajax-loader true)
         (assoc-in [:lomake ::t/toteumat] [])))
 
   TallennaToteumaEpaonnistui

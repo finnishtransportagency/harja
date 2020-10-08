@@ -188,11 +188,13 @@
         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
-      [:tbody
-       (doall
-         (for [l ll]
-           ^{:key (hash l)}
-           l))]]]))
+      (if (:ajax-loader app)
+        [yleiset/ajax-loader "Haetaan..."]
+        [:tbody
+         (doall
+           (for [l ll]
+             ^{:key (hash l)}
+             l))])]]))
 
 (def filtterit-keyword->string
   {:maaramitattavat "Määrämitattavat"
