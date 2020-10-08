@@ -1,6 +1,3 @@
--- Ennen uusien partitioiden synnyttämistä, päivitetään yhden härön toteuman ajankohtaa
-UPDATE toteuma SET alkanut = '1000-01-01 00:00:00' WHERE id = 5606292;
-
 -- Tee uusi 9kk partitio toteuma taululle
 SELECT * FROM luo_toteumataulun_partitio( '2019-10-01'::DATE, '2020-07-01'::DATE);
 -- Muokataan aiemmin kaikki ensimmäiset toteumat siältänyt partitio uuden nimiseksi, koska se sisältää
@@ -124,4 +121,5 @@ ALTER TABLE toteuma_tehtava ADD COLUMN urakka_id INTEGER;
 UPDATE toteuma_tehtava set poistettu = false where poistettu is null;
 ALTER TABLE toteuma_tehtava ALTER COLUMN poistettu SET NOT NULL;
 ALTER TABLE toteuma_tehtava ALTER COLUMN poistettu SET DEFAULT FALSE;
+
 
