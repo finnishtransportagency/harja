@@ -869,12 +869,7 @@
                                                             (mapv (fn [[tyyppi data]]
                                                                     {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
                                                                                                                                                                  [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
-                                                                  toimenpiteen-rahavaraukset)
-                                                            #_(when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
-                                                                (mapv (fn [[tyyppi data]]
-                                                                        {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                                                                                                                                     [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
-                                                                      toimenpiteen-rahavaraukset))))
+                                                                  toimenpiteen-rahavaraukset)))
                                                 :haku (fn [rahavaraukset johdetut-arvot]
                                                         (let [arvot (if (nil? johdetut-arvot)
                                                                       (mapv #(assoc (select-keys % #{:aika :maara})
@@ -965,12 +960,7 @@
                                                                                     (mapcat (fn [[tyyppi data]]
                                                                                               ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
                                                                                               [{(keyword (str "rahavaraukset-yhteenveto-" valittu-toimenpide "-" tyyppi "-" (dec hoitokauden-numero))) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                                                                                                                                                                                          [:suodattimet :hankinnat :toimenpide]]}]
-                                                                                              #_(map (fn [index]
-                                                                                                       ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
-                                                                                                       {(keyword (str "rahavaraukset-yhteenveto-" valittu-toimenpide "-" tyyppi "-" index)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi index]
-                                                                                                                                                                                                               [:suodattimet :hankinnat :toimenpide]]})
-                                                                                                     (range (count data))))
+                                                                                                                                                                                                                          [:suodattimet :hankinnat :toimenpide]]}])
                                                                                             toimenpiteen-rahavaraukset))))))
                                                                   :siivoa-tila (fn [tila _ _ tyyppi]
                                                                                  (update-in tila
@@ -1962,8 +1952,6 @@
                                                                                        :vuosi (pvm/vuosi urakan-aloituspvm)
                                                                                        :kk-v kk-v
                                                                                        :osa-kuukaudesta 1
-                                                                                       :tunnit nil
-                                                                                       :tuntipalkka nil
                                                                                        :kuukausi 10}
                                                                                 kokonaiset (vec (repeat (js/Math.floor kk-v) arvot))
                                                                                 osittainen? (not= 0 (- kk-v (count kokonaiset)))]
@@ -2015,15 +2003,8 @@
                                                                               (:toimenkuva %))
                                                                            (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat]))
                                                           kuukaudet (into #{} (:maksukuukaudet (first asia-kannasta)))
-                                                          #_#_asia-kannasta (if (empty? kuukaudet)
-                                                                          asia-kannasta
-                                                                          (filter #(contains? kuukaudet (:kuukausi %))
-                                                                                  asia-kannasta))
                                                           taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
                                                                                                  (constantly true)
-                                                                                                 #_(fn [_ kuukausi]
-                                                                                                   (or (empty? kuukaudet)
-                                                                                                       (contains? kuukaudet kuukausi)))
                                                                                                  (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
                                                                                                    (if (contains? kuukaudet kuukausi)
                                                                                                      (-> data
