@@ -1,8 +1,10 @@
 (ns harja.ui.debug
   "UI komponentti datan inspectointiin"
   (:require [harja.ui.yleiset :as yleiset]
+            [harja.df-data :as dfd]
             [harja.loki :refer [log]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [datafrisk.core :as d]))
 
 (defonce kehitys? true)
 
@@ -85,3 +87,10 @@
     (fn [item]
       [:div.debug
        [debug-show item [] @open-paths toggle! options]])))
+
+
+(defn df-shell [data]
+  [d/DataFriskShell data])
+
+(defn df-shell-kaikki []
+  [df-shell @dfd/data])
