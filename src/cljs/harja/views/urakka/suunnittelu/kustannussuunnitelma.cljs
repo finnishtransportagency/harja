@@ -223,19 +223,14 @@
                                    (set! esta-blur_ true)
                                    (set! (.. event -target -value) nil)))))
                  :on-blur (fn [arvo]
-                            #_(when nappi?
-                              (grid/paivita-osa! solu/*this*
-                                                 (fn [solu]
-                                                   (assoc solu :nappi-nakyvilla? false))))
-                            (when arvo
-                              (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
-                                                     :arvo arvo
-                                                     :solu solu/*this*
-                                                     :ajettavat-jarejestykset true
-                                                     :triggeroi-seuranta? true}
-                                                    true)
-                              (blur-tallenna!)
-                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                            (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
+                                                   :arvo arvo
+                                                   :solu solu/*this*
+                                                   :ajettavat-jarejestykset true
+                                                   :triggeroi-seuranta? true}
+                                                  true)
+                            (blur-tallenna!)
+                            (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))
                  :on-key-down (fn [event]
                                 (when (= "Enter" (.. event -key))
                                   (.. event -target blur)))}
@@ -537,9 +532,7 @@
                                                                                              (when (= arvo t/vaihtelua-teksti)
                                                                                                (set! esta-blur_ true)
                                                                                                (set! (.. event -target -value) nil))))
-                                                                               :on-blur (fn [arvo]
-                                                                                          (when arvo
-                                                                                            (on-blur arvo)))
+                                                                               :on-blur on-blur
                                                                                :on-key-down (fn [event]
                                                                                               (when (= "Enter" (.. event -key))
                                                                                                 (.. event -target blur)))}
@@ -638,7 +631,7 @@
                                                      :nimi ::hankintakustannukset
                                                      :osat [{:tyyppi :nappi
                                                              :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
-                                                             :luokat #{"table-default" "linkki"}}
+                                                             :luokat #{"table-default" "linkki-ilman-hoverointia"}}
                                                             {:tyyppi :ikoni
                                                              :luokat #{"table-default" "keskita"}}
                                                             {:tyyppi :ikoni
@@ -698,7 +691,7 @@
                                                         :luokat #{"suunnitelma-rivi"}
                                                         :osat [{:tyyppi :nappi
                                                                 :toiminnot {:on-click (fn [_] (mene-idlle "hallinnolliset-toimenpiteet"))}
-                                                                :luokat #{"table-default" "linkki"}}
+                                                                :luokat #{"table-default" "linkki-ilman-hoverointia"}}
                                                                {:tyyppi :ikoni
                                                                 :luokat #{"table-default" "keskita"}}
                                                                {:tyyppi :ikoni
@@ -714,7 +707,7 @@
                                                                :luokat #{"suunnitelma-rivi"}
                                                                :osat [{:tyyppi :nappi
                                                                        :toiminnot {:on-click (fn [_] (mene-idlle (str id "-osio")))}
-                                                                       :luokat #{"table-default" "linkki" "solu-sisenna-1"}}
+                                                                       :luokat #{"table-default" "linkki-ilman-hoverointia" "solu-sisenna-1"}}
                                                                       {:tyyppi :ikoni
                                                                        :luokat #{"table-default" "keskita"}}
                                                                       {:tyyppi :ikoni
@@ -781,7 +774,7 @@
                                                  (fn [tila]
                                                    (update-in tila [:gridit :suunnittellut-hankinnat :grid] f))))}
                              (fn [hoitokauden-numero rivit-alla arvo]
-                               (when (and arvo (not (empty? rivit-alla)))
+                               (when (not (empty? rivit-alla))
                                  (doseq [rivi rivit-alla
                                          :let [maara-solu (grid/get-in-grid rivi [1])
                                                piillotettu? (grid/piillotettu? rivi)]]
@@ -814,9 +807,6 @@
                                                        hoitokauden-numero
                                                        :hankinnat)))
                              (fn [hoitokauden-numero arvo]
-                               #_(grid/paivita-osa! solu/*this*
-                                                  (fn [solu]
-                                                    (assoc solu :nappi-nakyvilla? false)))
                                (t/paivita-solun-arvo {:paivitettava-asia       :aseta-suunnittellut-hankinnat!
                                                       :arvo                    arvo
                                                       :solu                    solu/*this*
@@ -895,7 +885,7 @@
                                                  (fn [tila]
                                                    (update-in tila [:gridit :laskutukseen-perustuvat-hankinnat :grid] f))))}
                              (fn [hoitokauden-numero rivit-alla arvo]
-                               (when (and arvo (not (empty? rivit-alla)))
+                               (when (not (empty? rivit-alla))
                                  (doseq [rivi rivit-alla
                                          :let [maara-solu (grid/get-in-grid rivi [1])
                                                piillotettu? (grid/piillotettu? rivi)]]
@@ -928,17 +918,16 @@
                                                        hoitokauden-numero
                                                        :hankinnat)))
                              (fn [hoitokauden-numero arvo]
-                               (when arvo
-                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
-                                                        :arvo arvo
-                                                        :solu solu/*this*
-                                                        :ajettavat-jarejestykset true
-                                                        :triggeroi-seuranta? true}
-                                                       true
-                                                       hoitokauden-numero
-                                                       :hankinnat)
-                                 (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))]
+                               (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
+                                                      :arvo arvo
+                                                      :solu solu/*this*
+                                                      :ajettavat-jarejestykset true
+                                                      :triggeroi-seuranta? true}
+                                                     true
+                                                     hoitokauden-numero
+                                                     :hankinnat)
+                               (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                               (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/laskutukseen-perustuvat-hankinnat-rajapinta
                                        (t/laskutukseen-perustuvat-hankinnat-dr)
@@ -1113,22 +1102,21 @@
                                                                                                                                                                         (set! esta-blur_ true)
                                                                                                                                                                         (set! (.. event -target -value) nil))))
                                                                                                                                                         :on-blur (fn [arvo]
-                                                                                                                                                                   (when arvo
-                                                                                                                                                                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                                            :arvo arvo
-                                                                                                                                                                                            :solu solu/*this*
-                                                                                                                                                                                            :ajettavat-jarejestykset true
-                                                                                                                                                                                            :triggeroi-seuranta? true}
-                                                                                                                                                                                           true)
-                                                                                                                                                                     (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
-                                                                                                                                                                           tallennettavien-arvojen-osat (if (= ::datarivi (grid/hae-osa vanhempiosa :nimi))
-                                                                                                                                                                                                          (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
-                                                                                                                                                                                                          (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))
-                                                                                                                                                                           tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
-                                                                                                                                                                                                              :tunniste-rajapinnan-dataan)
-                                                                                                                                                                                            tallennettavien-arvojen-osat)]
-                                                                                                                                                                       (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet))
-                                                                                                                                                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
+                                                                                                                                                                   (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
+                                                                                                                                                                                          :arvo arvo
+                                                                                                                                                                                          :solu solu/*this*
+                                                                                                                                                                                          :ajettavat-jarejestykset true
+                                                                                                                                                                                          :triggeroi-seuranta? true}
+                                                                                                                                                                                         true)
+                                                                                                                                                                   (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
+                                                                                                                                                                         tallennettavien-arvojen-osat (if (= ::datarivi (grid/hae-osa vanhempiosa :nimi))
+                                                                                                                                                                                                        (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
+                                                                                                                                                                                                        (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))
+                                                                                                                                                                         tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                                                                                                                                            :tunniste-rajapinnan-dataan)
+                                                                                                                                                                                          tallennettavien-arvojen-osat)]
+                                                                                                                                                                     (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet))
+                                                                                                                                                                     (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                                                                                                                                         :on-key-down (fn [event]
                                                                                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                                                                                          (.. event -target blur)))}
@@ -1182,18 +1170,14 @@
                                                                                                                                                                                                         (fn [solu]
                                                                                                                                                                                                           (assoc solu :nappi-nakyvilla? true))))
                                                                                                                                                                          :on-blur (fn [arvo]
-                                                                                                                                                                                    #_(grid/paivita-osa! solu/*this*
-                                                                                                                                                                                                       (fn [solu]
-                                                                                                                                                                                                         (assoc solu :nappi-nakyvilla? false)))
-                                                                                                                                                                                    (when arvo
-                                                                                                                                                                                      (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                                                             :arvo arvo
-                                                                                                                                                                                                             :solu solu/*this*
-                                                                                                                                                                                                             :ajettavat-jarejestykset true
-                                                                                                                                                                                                             :triggeroi-seuranta? true}
-                                                                                                                                                                                                            true)
-                                                                                                                                                                                      (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                                                                                                                                                                      (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
+                                                                                                                                                                                    (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
+                                                                                                                                                                                                           :arvo arvo
+                                                                                                                                                                                                           :solu solu/*this*
+                                                                                                                                                                                                           :ajettavat-jarejestykset true
+                                                                                                                                                                                                           :triggeroi-seuranta? true}
+                                                                                                                                                                                                          true)
+                                                                                                                                                                                    (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                                                                                                                                                                    (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))
                                                                                                                                                                          :on-key-down (fn [event]
                                                                                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                                                                                           (.. event -target blur)))}
@@ -1497,43 +1481,44 @@
                                                                                       (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                                                     false
                                                                                     {:on-change (fn [arvo]
-                                                                                                  (when arvo
-                                                                                                    (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
-                                                                                                                           :arvo arvo
-                                                                                                                           :solu solu/*this*
-                                                                                                                           :ajettavat-jarejestykset #{:mapit}}
-                                                                                                                          false)))
+                                                                                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                                                         :arvo arvo
+                                                                                                                         :solu solu/*this*
+                                                                                                                         :ajettavat-jarejestykset #{:mapit}}
+                                                                                                                        false))
                                                                                      :on-blur (fn [arvo]
-                                                                                                (when arvo
-                                                                                                  (let [solu solu/*this*
-                                                                                                        paivita-ui! (fn []
-                                                                                                                      (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
-                                                                                                                                             :arvo arvo
-                                                                                                                                             :solu solu
-                                                                                                                                             :ajettavat-jarejestykset true
-                                                                                                                                             :triggeroi-seuranta? true}
-                                                                                                                                            true))
-                                                                                                        paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
-                                                                                                        paivita! (fn []
-                                                                                                                   (paivita-ui!)
-                                                                                                                   (paivita-kanta!))
-                                                                                                        peruuta! (fn [vanha-arvo]
-                                                                                                                   (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :yhteenveto rivin-nimi :toimenkuva] vanha-arvo)))]
-                                                                                                    (if (= "" (clj-str/trim arvo))
-                                                                                                      (let [paivita-seuraavalla-tickilla! (fn []
-                                                                                                                                            (r/next-tick paivita!))]
-                                                                                                        (e! (t/->PoistaOmaJHDdata :toimenkuva
-                                                                                                                                  rivin-nimi
-                                                                                                                                  nil
-                                                                                                                                  modal/piilota!
-                                                                                                                                  paivita-seuraavalla-tickilla!
-                                                                                                                                  (r/partial (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
-                                                                                                                                               (poista-modal! :toimenkuva
-                                                                                                                                                              data-hoitokausittain
-                                                                                                                                                              poista!
-                                                                                                                                                              {:toimenkuva toimenkuva}
-                                                                                                                                                              (partial peruuta! (get-in vanhat-arvot [0 :toimenkuva]))))))))
-                                                                                                      (paivita!)))))
+                                                                                                (let [arvo (if (= "" (clj-str/trim arvo))
+                                                                                                             nil
+                                                                                                             arvo)
+                                                                                                      solu solu/*this*
+                                                                                                      paivita-ui! (fn []
+                                                                                                                    (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
+                                                                                                                                           :arvo arvo
+                                                                                                                                           :solu solu
+                                                                                                                                           :ajettavat-jarejestykset true
+                                                                                                                                           :triggeroi-seuranta? true}
+                                                                                                                                          true))
+                                                                                                      paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
+                                                                                                      paivita! (fn []
+                                                                                                                 (paivita-ui!)
+                                                                                                                 (paivita-kanta!))
+                                                                                                      peruuta! (fn [vanha-arvo]
+                                                                                                                 (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :yhteenveto rivin-nimi :toimenkuva] vanha-arvo)))]
+                                                                                                  (if (nil? arvo)
+                                                                                                    (let [paivita-seuraavalla-tickilla! (fn []
+                                                                                                                                          (r/next-tick paivita!))]
+                                                                                                      (e! (t/->PoistaOmaJHDdata :toimenkuva
+                                                                                                                                rivin-nimi
+                                                                                                                                nil
+                                                                                                                                modal/piilota!
+                                                                                                                                paivita-seuraavalla-tickilla!
+                                                                                                                                (r/partial (fn [toimenkuva data-hoitokausittain poista! vanhat-arvot]
+                                                                                                                                             (poista-modal! :toimenkuva
+                                                                                                                                                            data-hoitokausittain
+                                                                                                                                                            poista!
+                                                                                                                                                            {:toimenkuva toimenkuva}
+                                                                                                                                                            (partial peruuta! (get-in vanhat-arvot [0 :toimenkuva]))))))))
+                                                                                                    (paivita!))))
                                                                                      :on-key-down (fn [event]
                                                                                                     (when (= "Enter" (.. event -key))
                                                                                                       (.. event -target blur)))}
@@ -1932,24 +1917,23 @@
                                                            :triggeroi-seuranta? false}
                                                           false)))
                                 (fn [arvo]
-                                  (when arvo
-                                    (t/paivita-solun-arvo {:paivitettava-asia aseta-yhteenveto-avain
-                                                           :arvo arvo
-                                                           :solu solu/*this*
-                                                           :ajettavat-jarejestykset #{:mapit}
-                                                           :triggeroi-seuranta? true}
-                                                          true)
-                                    (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
-                                          tallennettavien-arvojen-osat (if (= ::data-rivi (grid/hae-osa vanhempiosa :nimi))
-                                                                         (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
-                                                                         (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
-                                      (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
-                                                                                                          :tunniste-rajapinnan-dataan)
-                                                                                        tallennettavien-arvojen-osat))))
-                                    (when paivita-kattohinta?
-                                      (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
+                                  (t/paivita-solun-arvo {:paivitettava-asia aseta-yhteenveto-avain
+                                                         :arvo arvo
+                                                         :solu solu/*this*
+                                                         :ajettavat-jarejestykset #{:mapit}
+                                                         :triggeroi-seuranta? true}
+                                                        true)
+                                  (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
+                                        tallennettavien-arvojen-osat (if (= ::data-rivi (grid/hae-osa vanhempiosa :nimi))
+                                                                       (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
+                                                                       (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
+                                    (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                                        :tunniste-rajapinnan-dataan)
+                                                                                      tallennettavien-arvojen-osat))))
+                                  (when paivita-kattohinta?
+                                    (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                 (fn [rivit-alla arvo]
-                                  (when (and arvo (not (empty? rivit-alla)))
+                                  (when (not (empty? rivit-alla))
                                     (doseq [rivi rivit-alla
                                             :let [maara-solu (grid/get-in-grid rivi [1])]]
                                       (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
@@ -1975,16 +1959,15 @@
                                                            :ajettavat-jarejestykset #{:mapit}}
                                                           false)))
                                 (fn [arvo]
-                                  (when arvo
-                                    (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
-                                                           :arvo arvo
-                                                           :solu solu/*this*
-                                                           :ajettavat-jarejestykset true
-                                                           :triggeroi-seuranta? true}
-                                                          true)
-                                    (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                    (when paivita-kattohinta?
-                                      (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))))
+                                  (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
+                                                         :arvo arvo
+                                                         :solu solu/*this*
+                                                         :ajettavat-jarejestykset true
+                                                         :triggeroi-seuranta? true}
+                                                        true)
+                                  (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                  (when paivita-kattohinta?
+                                    (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          rajapinta (t/maarataulukon-rajapinta polun-osa aseta-yhteenveto-avain aseta-avain)]
      (grid/rajapinta-grid-yhdistaminen! g
                                         rajapinta
