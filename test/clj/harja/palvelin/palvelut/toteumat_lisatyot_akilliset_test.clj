@@ -86,13 +86,18 @@
                                              :toteuma-id nil
                                              :toteuma-tehtava-id nil
                                              :maara 1M}]})
-
+(defn hae-default-lisatyon-tehtava []
+  (let [res (first (q
+                     (str "SELECT id,nimi,yksikko FROM toimenpidekoodi where nimi = 'Lisätyö (talvihoito)'")))]
+    {:id (first res)
+     :otsikko (second res)
+     :yksikko (nth res 2)}))
 (def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                       :toimenpide {:id 171
                                    :otsikko "7.0 LISÄTYÖT"}
                       :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "26.06.2020")
                       :tyyppi :lisatyo
-                      :toteumat [{:tehtava {:id 3164 :otsikko "Lisätyö (talvihoito)" :yksikko nil}
+                      :toteumat [{:tehtava {:id (:id (hae-default-lisatyon-tehtava)) :otsikko (:otsikko (hae-default-lisatyon-tehtava)) :yksikko (:yksikko (hae-default-lisatyon-tehtava))}
                                   :ei-sijaintia true
                                   :sijainti {:numero nil
                                              :alkuosa nil
