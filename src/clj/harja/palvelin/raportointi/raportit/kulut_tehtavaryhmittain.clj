@@ -35,11 +35,12 @@
                              (budjetti-q/hae-budjettitavoite
                                db
                                {:urakka urakka-id}))]
-    (reduce #(-> tavoitteet
-                 (get %2)
-                 first
-                 :tavoitehinta
-                 (+ %1)) 0 hoitokaudet)))
+    (when (every? #(contains? tavoitteet %1) hoitokaudet)
+      (reduce #(-> tavoitteet
+                   (get %2)
+                   first
+                   :tavoitehinta
+                   (+ %1)) 0 hoitokaudet))))
 
 (defn- kulut-urakalle
   [db {:keys [alkupvm urakka-id loppupvm]}]
@@ -163,17 +164,27 @@
 (defn suorita
   [db user {:keys [alkupvm loppupvm] :as parametrit}]
   (let [{:keys [otsikot rivit yhteensa debug]} (kulut-tehtavaryhmittain db parametrit)
-        tavoitehinta (hae-tavoitehinta db parametrit)]
+        tavoitehinta (hae-tavoitehinta db parametrit)
+        yhteensa-hoitokauden-alusta (second yhteensa)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
-     [:otsikko (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
+     [:otsikko]
      [:teksti (str "Rapsapapsa! " (pr-str parametrit)
                    " rivit " (pr-str rivit)
                    " th " (pr-str tavoitehinta))]
      [:teksti (str "DEBUG" (pr-str debug))]
      [:taulukko
-      {:viimeinen-rivi-yhteenveto? true}
+      {:viimeinen-rivi-yhteenveto? true
+       :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
       otsikot
       (conj rivit yhteensa)]
-     [:teksti (str "Urakkavuoden alusta tav.hintaan kuuluvia: " (pr-str yhteensa))]
-     [:teksti (str "Tavoitehinta: " tavoitehinta)]
-     [:teksti (str "Jäljellä: " #_(- tavoitehinta yhteensa))]]))
+     [:taulukko
+      {:otsikko                    "Urakkavuoden alusta"
+       :viimeinen-rivi-yhteenveto? true}
+      [{:leveys 1 :otsikko ""} {:leveys 1 :otsikko ""}]
+      [["Urakkavuoden alusta tav.hintaan kuuluvia: " (str yhteensa-hoitokauden-alusta)]
+       ["Tavoitehinta: " (if (some? tavoitehinta)
+                           (str tavoitehinta)
+                           "Tavoitehintaa ei saatu")]
+       ["Jäljellä: " (if (some? tavoitehinta)
+                       (str (- tavoitehinta yhteensa-hoitokauden-alusta))
+                       "Tavoitehintaa ei saatu")]]]]))

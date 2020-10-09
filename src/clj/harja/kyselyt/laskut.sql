@@ -14,18 +14,20 @@ WHERE l.urakka = :urakka
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
+with kohdistukset_ajalla as (select summa, tehtavaryhma from lasku_kohdistus lk
+                                join lasku l on lk.lasku = l.id and l.urakka = :urakka and l.erapaiva >= :alkupvm ::date and l.erapaiva <= :loppupvm ::date
+                             where l.id = lk.lasku and lk.poistettu is not true)
 select tr3.id as "tehtavaryhma",
-       sum(lk.summa) as "summa",
+       sum(kohd.summa) as "summa",
        tr3.jarjestys as "jarjestys",
        tr3.nimi as "nimi"
 from tehtavaryhma tr1
        join tehtavaryhma tr2 on tr1.id = tr2.emo
        join tehtavaryhma tr3 on tr2.id = tr3.emo
-       left join lasku_kohdistus lk on tr3.id = lk.tehtavaryhma and lk.poistettu is not true
-       left join lasku l on l.id = lk.lasku and l.urakka = :urakka and l.erapaiva <= :loppupvm ::date and l.erapaiva >= :alkupvm ::date
+       left join kohdistukset_ajalla kohd on tr3.id = kohd.tehtavaryhma
 where tr1.emo is null
 group by tr3.nimi, tr3.id, tr3.jarjestys
-order by tr3.jarjestys
+order by tr3.jarjestys;
 
 --name: hae-hallintayksikon-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan hallintayksikon kaikki kulut tehtäväryhmittäin
