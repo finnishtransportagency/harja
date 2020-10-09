@@ -22,7 +22,7 @@ from tehtavaryhma tr1
        join tehtavaryhma tr2 on tr1.id = tr2.emo
        join tehtavaryhma tr3 on tr2.id = tr3.emo
        left join lasku_kohdistus lk on tr3.id = lk.tehtavaryhma and lk.poistettu is not true
-       left join lasku l on l.id = lk.lasku and l.urakka = :urakka and l.erapaiva <= :loppupvm and l.erapaiva >= :alkupvm
+       left join lasku l on l.id = lk.lasku and l.urakka = :urakka and l.erapaiva <= :loppupvm ::date and l.erapaiva >= :alkupvm ::date
 where tr1.emo is null
 group by tr3.nimi, tr3.id, tr3.jarjestys
 order by tr3.jarjestys

@@ -85,14 +85,14 @@
                                  (if (not (nil? rivi-hoitokausi))
                                    (assoc ks (first rivi-hoitokausi) [(first rivi-hoitokausi)
                                                                       (second rivi-hoitokausi)
-                                                                      (nth rivi-hoitokausi 2)
-                                                                      (nth (get ks (first rivi-hoitokausi)) 3 0)])
+                                                                      (or (nth rivi-hoitokausi 2) 0)
+                                                                      (or (nth (get ks (first rivi-hoitokausi)) 3 0) 0)])
                                    ks)
                                  (if (not (nil? rivi-kk))
                                    (assoc ks (first rivi-kk) [(first rivi-kk)
                                                               (second rivi-kk)
-                                                              (nth (get ks (first rivi-kk)) 2 0)
-                                                              (nth rivi-kk 2)])
+                                                              (or (nth (get ks (first rivi-kk)) 2 0) 0)
+                                                              (or (nth rivi-kk 2) 0)])
                                    ks))))))
         rivit (sort-by first (mapv second rivit))
         yhteensa (reduce #(->
@@ -171,7 +171,7 @@
                    " th " (pr-str tavoitehinta))]
      [:teksti (str "DEBUG" (pr-str debug))]
      [:taulukko
-      {}
+      {:viimeinen-rivi-yhteenveto? true}
       otsikot
       (conj rivit yhteensa)]
      [:teksti (str "Urakkavuoden alusta tav.hintaan kuuluvia: " (pr-str yhteensa))]
