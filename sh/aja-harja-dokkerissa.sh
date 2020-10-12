@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+#if type -P lein >/dev/null 2>&1
+#then
+#  lein clean;
+#fi
+
 HARJA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 COMPOSE_ENV_FILE="${HARJA_DIR}/.docker_compose_env"
 LOCAL_ENV_FILE="${HARJA_DIR}/.local_env"
@@ -58,7 +63,7 @@ else
     lisaa_env_muuttuja LEININGEN_CLEAN ''
 fi
 
-lisaa_env_muuttuja BRANCH $(git branch --show-current) local
+lisaa_env_muuttuja BRANCH "$(git branch --show-current)" local
 lisaa_env_muuttuja HOST_USER_ID ${UID} local
 lisaa_env_muuttuja DC_HARJA_KANSIO ${HARJA_DIR} local
 

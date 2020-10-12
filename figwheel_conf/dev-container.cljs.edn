@@ -5,7 +5,7 @@
   :open-url false
   :ring-server-options {:port #=(eval (Integer/parseInt (System/getenv "FRONTEND_REPL_PORT")))
                         :host "0.0.0.0"}
-  :connect-url #=(eval (str "ws://harja-frontend:" (System/getenv "FRONTEND_REPL_PORT") "/figwheel-connect"))}
+  :connect-url #=(eval (str "ws://localhost:" (System/getenv "FRONTEND_REPL_PORT") "/figwheel-connect"))}
 {:main harja.asiakas.main
  :optimizations :none
  :source-map true

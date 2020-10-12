@@ -127,6 +127,7 @@ services:
       /bin/bash -c "
       echo 'ALOITELLAAN KOMENTOA'
       touch /var/log/harja.log
+      apt-get install -y screen
 
       if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
       then
@@ -164,8 +165,7 @@ services:
       #lein trampoline with-profile +dev-container run -m figwheel.main -fw false -bo figwheel_conf/luodut/dev-container > /var/log/harja_frontend.log 2>&1
 
       echo 'Käynnistetään frontin repl'
-      lein trampoline with-profile $${LEIN_PROFILES} run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl > /var/log/harja_frontend.log 2>&1 &
-      disown
+      screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES} run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl
 
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
       #lein trampoline with-profile +dev-container run -m figwheel.main -H 0.0.0.0 -p ${FRONTEND_REPL_PORT} -b figwheel_conf/luodut/dev-container --repl >> /var/log/harja_frontend.log 2>&1 &
