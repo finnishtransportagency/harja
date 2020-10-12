@@ -472,9 +472,9 @@
     (virhe-modal {:virhe [(reduce-kv (fn [m k v]
                                        (assoc m k (distinct
                                                     (flatten
-                                                      (vals (if (map? v)
+                                                      (if (map? v)
                                                               v
-                                                              (map (fn [kohde] (second kohde)) v)))))))
+                                                              (map (fn [kohde] (vals kohde)) v))))))
                                      {} (:virhe vastaus))]}
                  "Päällystysilmoituksen tallennus epäonnistui!")
     app)
