@@ -98,18 +98,15 @@
 
   PaivitaLomake
   (process-event [{data :data} app]
-    (do
-      (js/console.log "PaivitaLomake data" (pr-str data))
-      (js/console.log "PaivitaLomake app" (pr-str app)))
     (-> app
-        (update :pot2-massa-lomake2 merge data)))
+        (update :pot2-massa-lomake merge data)))
 
   TallennaLomake
   (process-event [{data :data} app]
-    (let [massa (:pot2-massa-lomake2 app)
-          lisa-aineet (get-in app [:pot2-massa-lomake2 :lisa-aineet]) ;; Todo: Sisältää nyt tasan yhden arvon setissä
+    (let [massa (:pot2-massa-lomake app)
+          lisa-aineet (get-in app [:pot2-massa-lomake :lisa-aineet]) ;; Todo: Sisältää nyt tasan yhden arvon setissä
           lisa-aineet [{:pitoisuus 0.2M :nimi (first lisa-aineet)}]
-          sideaineet (get-in app [:pot2-massa-lomake2 :sideaineet]) ;; Todo: Sisältää nyt tasan yhden arvon setissä
+          sideaineet (get-in app [:pot2-massa-lomake :sideaineet]) ;; Todo: Sisältää nyt tasan yhden arvon setissä
           sideaineet [{:pitoisuus 5M :tyyppi (first sideaineet) :lopputuote? true}]
           _ (js/console.log "TallennaLomake data" (pr-str data))
           _ (js/console.log "TallennaLomake massa" (pr-str massa))]
@@ -136,5 +133,6 @@
   TyhjennaLomake
   (process-event [{data :data} app]
     (js/console.log "TyhjennaLomake" (pr-str data))
-    (assoc app :avaa-massa-lomake? false))
-  )
+    (-> app
+        (assoc :pot2-massa-lomake nil
+               :avaa-massa-lomake? false))))

@@ -259,12 +259,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     (nayta-arvo s arvo)])
 
                                (do
-                                 ;(js/console.log " rivi 262 lomake.cljs s:" (pr-str s))
-                                 (try
-                                   (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (assoc s :lomake? true) arvo]
-                                   (catch js/Error e
-                                     (js/console.log " error on have" (pr-str e))))))
+                                 (have #(contains? % :tyyppi) s)
+                                 [tee-kentta (assoc s :lomake? true) arvo]))
                              [:div {:class (str "form-control-static "
                                                 (or kentan-arvon-luokka ""))}
                                     (if fmt

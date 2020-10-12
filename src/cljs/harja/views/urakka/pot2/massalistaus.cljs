@@ -89,16 +89,7 @@
         _ (js/console.log "massa-lomake :: lomake " (pr-str lomake))]
     [:div
      [ui-lomake/lomake
-      {
-       :muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
-       #_(fn [data]
-           (do
-             ;;todo muokkausfunkkari
-             (js/console.log "muokkaa!" (pr-str data))
-             (e! (tiedot-massa/->PaivitaLomake data))
-             ))
-       ;:voi-muokata? true
-       ;:tarkkaile-ulkopuolisia-muutoksia? true
+      {:muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
        :otsikko (if (:pot2-massa/id massa)
                   "Muokkaa massaa"
                   "Uusi massa")
@@ -116,8 +107,7 @@
                       #(e! (tiedot-massa/->TyhjennaLomake data))
                       {:vayla-tyyli? true
                        :luokka "suuri"}]])
-       :vayla-tyyli? true
-       }
+       :vayla-tyyli? true}
       [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
         :hae (fn [rivi]
@@ -143,7 +133,7 @@
          {:otsikko "Kuulamyllyluokka"
           :nimi ::pot2-domain/kuulamyllyluokka
           :tyyppi :valinta :valinta-nayta (fn [rivi]
-                           (str (:nimi rivi)))
+                                            (str (:nimi rivi)))
           :vayla-tyyli? true :valinta-arvo :nimi
           :valinnat paallystysilmoitus-domain/+kyylamyllyt-ja-nil+
           :pakollinen? true}
@@ -157,24 +147,24 @@
           :pakollinen? true}
          {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
           :validoi [[:ei-tyhja "Anna DoP nro"]]
-          :vayla-tyyli? true :pakollinen? true})
+          :vayla-tyyli? true :pakollinen? true})]
 
-       {:nimi :runkoaineet
-        :otsikko "Runkoaineen materiaali"
-        :tyyppi :checkbox-group
-        :vaihtoehdot (map ::pot2-domain/nimi runkoainetyypit)
-        :vaihtoehto-nayta str}
+      #_{:nimi :runkoaineet
+         :otsikko "Runkoaineen materiaali"
+         :tyyppi :checkbox-group
+         :vaihtoehdot (map ::pot2-domain/nimi runkoainetyypit)
+         :vaihtoehto-nayta str}
 
-       ;; TODO Lisätty sideaine pitää lisätä
-       #_{}
-       {:nimi :lisa-aineet
-        :otsikko "Lisäaineet"
-        :tyyppi :checkbox-group
-        :vaihtoehdot pot2-domain/massan-lisaineet
-        :vaihtoehto-nayta (fn [rivi]
-                            (str rivi))}
+      ;; TODO Lisätty sideaine pitää lisätä
+      #_{}
+      #_{:nimi :lisa-aineet
+         :otsikko "Lisäaineet"
+         :tyyppi :checkbox-group
+         :vaihtoehdot pot2-domain/massan-lisaineet
+         :vaihtoehto-nayta (fn [rivi]
+                             (str rivi))}
 
-       lomake]]
+      lomake]
      [debug app {:otsikko "TUCK STATE"}]]))
 
 (defn- massan-runkoaineet
@@ -273,6 +263,7 @@
   (komp/luo
     (komp/lippu tiedot-massa/pot2-nakymassa?)
     (komp/piirretty (fn [this]
+                      (e! (tiedot-massa/->AlustaTila))
                       (e! (tiedot-massa/->HaePot2Massat))
                       (e! (tiedot-massa/->HaeKoodistot))))
     (fn [e! app]
@@ -283,7 +274,7 @@
 
 
 
-(defn materiaalikirjasto-modal [e! app]
+(defn materiaalikirjasto-modal [_ _]
   [modal/modal
    {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
     :luokka "materiaalikirjasto-modal"
