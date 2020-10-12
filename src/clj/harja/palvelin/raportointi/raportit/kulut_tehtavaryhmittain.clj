@@ -46,14 +46,17 @@
   [db {:keys [alkupvm urakka-id loppupvm]}]
   (let [kuukausi-valittu? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         hoitokausi-valittu? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+        _ (println alkupvm loppupvm (pvm/aikana alkupvm 0 0 0 0) (pvm/joda-timeksi loppupvm) (pvm/joda-timeksi alkupvm) (pvm/aikana loppupvm 23 59 59 0) #_(pvm/suomen-aikavyohykkeeseen alkupvm) #_(pvm/suomen-aikavyohykkeeseen loppupvm))
         alkupvm-valittu-kuu-tai-vali (cond
                                        hoitokausi-valittu? (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))
                                        :default alkupvm)
         loppupvm-valittu-kuu-tai-vali (cond
                                         hoitokausi-valittu? (pvm/kuukauden-viimeinen-paiva (pvm/nyt))
                                         :default loppupvm)
-        alkupvm-hoitokausi (pvm/hoitokauden-alkupvm (dec (pvm/vuosi loppupvm)))
-        loppupvm-hoitokausi (pvm/hoitokauden-loppupvm (pvm/vuosi loppupvm))
+        alkupvm-hoitokausi (if (pvm/ennen? loppupvm (pvm/hoitokauden-loppupvm (pvm/vuosi loppupvm)))
+                             (pvm/hoitokauden-alkupvm (dec (pvm/vuosi loppupvm)))
+                             (pvm/hoitokauden-alkupvm (pvm/vuosi loppupvm)))
+        loppupvm-hoitokausi (pvm/hoitokauden-loppupvm (inc (pvm/vuosi alkupvm-hoitokausi)))
         rivit-hoitokauden-alusta (mapv #(->
                                           [(:jarjestys %) (:nimi %) (:summa %)])
                                        (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
@@ -65,9 +68,9 @@
                                                                                       :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                       :urakka   urakka-id}))
         otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-                 {:leveys 1 :otsikko (str "Hoitokauden alusta" (pvm/pvm alkupvm-hoitokausi) (pvm/pvm loppupvm-hoitokausi))}
+                 {:leveys 1 :otsikko (str "Hoitokauden alusta " (pvm/pvm alkupvm-hoitokausi) "-" (pvm/pvm loppupvm-hoitokausi))}
                  {:leveys 1 :otsikko (cond
-                                       kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
+                                       kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm-valittu-kuu-tai-vali)) " " (pvm/vuosi alkupvm-valittu-kuu-tai-vali))
                                        :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
         ; [id otsikko summa]
         ; [id otsikko summa-hka summa-kk]
@@ -168,8 +171,8 @@
         yhteensa-hoitokauden-alusta (second yhteensa)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
      #_[:teksti (str "Rapsapapsa! " (pr-str parametrit)
-                   " rivit " (pr-str rivit)
-                   " th " (pr-str tavoitehinta))]
+                     " rivit " (pr-str rivit)
+                     " th " (pr-str tavoitehinta))]
      #_[:teksti (str "DEBUG" (pr-str debug))]
      [:taulukko
       {:viimeinen-rivi-yhteenveto? true
