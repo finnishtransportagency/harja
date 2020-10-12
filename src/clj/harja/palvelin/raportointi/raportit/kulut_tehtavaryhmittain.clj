@@ -167,11 +167,10 @@
         tavoitehinta (hae-tavoitehinta db parametrit)
         yhteensa-hoitokauden-alusta (second yhteensa)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
-     [:otsikko]
-     [:teksti (str "Rapsapapsa! " (pr-str parametrit)
+     #_[:teksti (str "Rapsapapsa! " (pr-str parametrit)
                    " rivit " (pr-str rivit)
                    " th " (pr-str tavoitehinta))]
-     [:teksti (str "DEBUG" (pr-str debug))]
+     #_[:teksti (str "DEBUG" (pr-str debug))]
      [:taulukko
       {:viimeinen-rivi-yhteenveto? true
        :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
@@ -187,4 +186,4 @@
                            "Tavoitehintaa ei saatu")]
        ["Jäljellä: " (if (some? tavoitehinta)
                        (str (- tavoitehinta yhteensa-hoitokauden-alusta))
-                       "Tavoitehintaa ei saatu")]]]]))
+                       "Tavoitehintaa ei saatu - jäljellä olevaa ei voitu laskea")]]]]))
