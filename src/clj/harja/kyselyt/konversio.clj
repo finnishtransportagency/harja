@@ -9,7 +9,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.pvm :as pvm])
-  (:import (clojure.lang Keyword)))
+  (:import (clojure.lang Keyword)
+           (java.io ByteArrayOutputStream ObjectOutputStream)))
 
 
 (defn yksi
@@ -386,3 +387,9 @@
                  \~ "%7E"
                  %)
               teksti)))
+
+(defn to-byte-array [x]
+  (with-open [out (ByteArrayOutputStream.)
+              os (ObjectOutputStream. out)]
+    (.writeObject os x)
+    (.toByteArray out)))

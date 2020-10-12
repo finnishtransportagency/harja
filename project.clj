@@ -136,7 +136,9 @@
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
-                 [clj-gatling "0.13.0" :exclusions [[clj-time]]]]
+                 [clj-gatling "0.13.0" :exclusions [[clj-time]]]
+
+                 [digest "1.4.9"]]
 
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]

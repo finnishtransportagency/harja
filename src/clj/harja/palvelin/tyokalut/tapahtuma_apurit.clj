@@ -1,41 +1,41 @@
-(ns harja.palvelin.tyokalut.event-apurit
+(ns harja.palvelin.tyokalut.tapahtuma-apurit
   (:require [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
-            [harja.palvelin.tyokalut.interfact :as i]
-            [harja.palvelin.tyokalut.komponentti-event :as ke]
-            [taoensso.timbre :as log]))
+            [harja.fmt :as fmt]
+            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [harja.tyokalut.predikaatti :as p]
+            [taoensso.timbre :as log])
+  (:import [java.net InetAddress]))
 
 (def ^{:private true
        :dynamic true}
   *log-error* false)
 
-(defn lisaa-jono!
-  ([this event]
-   {:pre [;(satisfies? i/IEvent this)
-          (s/valid? ::ke/event-spec event)
-          ]
-    :post [(satisfies? i/IEvent %)]}
-   (i/lisaa-jono this event))
-  ([this event tyyppi]
-   {:pre [;(satisfies? i/IEvent this)
-          (s/valid? ::ke/event-spec event)
-          (s/valid? ::ke/tyyppi-spec tyyppi)]
-    :post [(satisfies? i/IEvent %)]}
-   (i/lisaa-jono this event tyyppi)))
+(def host-nimi (fmt/leikkaa-merkkijono 512
+                                       (.toString (InetAddress/getLocalHost))))
 
-(defn eventin-kuuntelija!
-  [this event]
-  {:pre [;(satisfies? i/IEvent this)
-         (s/valid? ::ke/event-spec event)]}
-  (i/eventin-kuuntelija this event))
+(defn tapahtuman-julkaisia!
+  ([tapahtuma]
+   (tapahtuman-julkaisia! tapahtuma :perus))
+  ([tapahtuma tyyppi]
+   {:pre [(s/valid? ::tapahtumat/tapahtuma tapahtuma)
+          (s/valid? ::tapahtumat/tyyppi tyyppi)]
+    :post [(p/chan? %)]}
+   (tapahtumat/tarkkaile! (tapahtumat/tarkkailija) tapahtuma tyyppi)))
 
-(defn julkaise-event
-  [this event data]
-  {:pre [;(satisfies? i/IEvent this)
-         (s/valid? ::ke/event-spec event)
+(defn tapahtuman-kuuntelija!
+  [tapahtuma f]
+  {:pre [(s/valid? ::tapahtumat/tapahtuma tapahtuma)
+         (ifn? f)]
+   :post [(fn? f)]}
+  (tapahtumat/kuuntele! (tapahtumat/tarkkailija) tapahtuma f))
+
+(defn julkaise-tapahtuma
+  [tapahtuma data]
+  {:pre [(s/valid? ::tapahtumat/tapahtuma tapahtuma)
          (not (nil? data))]
    :post [(boolean? %)]}
-  (i/julkaise-event this event data))
+  (tapahtumat/julkaise! (tapahtumat/tarkkailija) tapahtuma data host-nimi))
 
 (defn tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
   (async/go
@@ -47,8 +47,8 @@
         (recur (async/alts! [lopeta-tarkkailu-kanava]
                             :default false))))))
 
-(defn kuuntele-eventtia [this event f & args]
-  (let [kuuntelija (eventin-kuuntelija! this event)]
+(defn tarkkaile-tapahtumaa [tapahtuma tyyppi f & args]
+  (let [kuuntelija (tapahtuman-julkaisia! tapahtuma tyyppi)]
     (when kuuntelija
       (async/go
         (loop [arvo (async/<! kuuntelija)]
@@ -61,11 +61,11 @@
 
 (defn event-julkaisija
   "Palauttaa funktion, jolle annettava data julkaistaan aina tässä määritetylle eventille."
-  [this event]
+  [tapahtuma]
   (fn [data]
     (when *log-error*
-      (log/error (str "Event: " event " sai dataksi: " data)))
-    (julkaise-event this event data)))
+      (log/error (str "Event: " tapahtuma " sai dataksi: " data)))
+    (julkaise-tapahtuma tapahtuma data)))
 
 (defn event-datan-spec
   "Tarkoitettu wrapperiksi event-julkaisija:lle. Julkaistavaksi tarkoitettu data ensin validoidaan tälle annettua spekkiä vasten.

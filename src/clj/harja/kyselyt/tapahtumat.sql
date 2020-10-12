@@ -9,6 +9,7 @@ ON CONFLICT (nimi) DO NOTHING
 RETURNING kanava;
 
 -- name: julkaise-tapahtuma
+-- single?: true
 SELECT julkaise_tapahtuma(:kanava::TEXT, :data::JSONB);
 
 -- name: uusin-arvo

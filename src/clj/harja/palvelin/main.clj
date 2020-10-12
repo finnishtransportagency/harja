@@ -4,7 +4,6 @@
     [clojure.core.async :as a :refer [<! go timeout]]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.fim :as fim]
@@ -168,19 +167,13 @@
     [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
     [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
 
-    [harja.palvelin.tyokalut.event-apurit :as event-apurit])
+    [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit])
 
   (:gen-class))
 
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
-    (konfiguroi-lokitus asetukset)
-
-    (if-let [virheet (tarkista-asetukset asetukset)]
-      (log/error "Validointivirhe asetuksissa:" virheet))
-    (tarkista-ymparisto!)
-
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
       :db (component/using
@@ -191,7 +184,6 @@
                                               :tarkkailun-nimi :db)
                                        kehitysmoodi)
             [:komponentti-event])
-      :db-event (event-tietokanta/luo-tietokanta tietokanta)
       :db-replica (component/using
                     (tietokanta/luo-tietokanta (assoc tietokanta-replica
                                                       :tarkkailun-timeout-arvot
@@ -200,13 +192,10 @@
                                                       :tarkkailun-nimi :db-replica)
                                                kehitysmoodi)
                     [:komponentti-event])
-      :klusterin-tapahtumat (component/using
-                              (tapahtumat/luo-tapahtumat)
-                              {:db :db-event})
 
       :todennus (component/using
                   (todennus/http-todennus (:sahke-headerit asetukset))
-                  [:db :klusterin-tapahtumat])
+                  [:db])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
@@ -279,7 +268,7 @@
       ;; T-LOIK
       :tloik (component/using
                (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
-               [:sonja :db :integraatioloki :klusterin-tapahtumat
+               [:sonja :db :integraatioloki
                 :sonja-sahkoposti :labyrintti])
 
       ;; Tierekisteri
@@ -535,7 +524,7 @@
       :sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
-                                   [:db :pois-kytketyt-ominaisuudet :integraatioloki :sonja :klusterin-tapahtumat])
+                                   [:db :pois-kytketyt-ominaisuudet :integraatioloki :sonja])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
@@ -666,7 +655,7 @@
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :tierekisteri :vkm])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :klusterin-tapahtumat
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
@@ -755,41 +744,52 @@
           vastaus)))))
 
 (defn- merkkaa-kaynnistyminen! []
-  (let [ke (komponentti-event/komponentti-event)]
-    (event-apurit/lisaa-jono! ke :harja-tila :viimeisin)
-    (event-apurit/julkaise-event ke :harja-tila {:viesti "Harja käynnistyy"
-                                                 :kaikki-ok? false})))
+  (event-apurit/julkaise-tapahtuma :harja-tila
+                                   {:viesti "Harja käynnistyy"
+                                    :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
-  (let [ke (komponentti-event/komponentti-event)]
-    (event-apurit/julkaise-event ke
-                                 :harja-tila
-                                 {:viesti "Harja käynnistetty"
-                                  :kaikki-ok? true})))
+  (event-apurit/julkaise-tapahtuma :harja-tila
+                                   {:viesti "Harja käynnistetty"
+                                    :kaikki-ok? true}))
+
+(defn- kaynnista-harja-tarkkailija! [asetukset]
+  (tapahtumat/kaynnista! asetukset))
+
+(defn- sammuta-harja-tarkkailija! []
+  )
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
-    ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
-    ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
-    (Thread/setDefaultUncaughtExceptionHandler
-      (reify Thread$UncaughtExceptionHandler
-        (uncaughtException [_ thread e]
-          (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-          (log/error "Virhe: " e))))
-    (merkkaa-kaynnistyminen!)
-    (alter-var-root #'harja-jarjestelma
-                    (constantly
-                      (-> (lue-asetukset asetusfile)
-                          luo-jarjestelma
-                          component/start)))
-    (aloita-sonja harja-jarjestelma)
-    (merkkaa-kaynnistetyksi!)
+    (let [asetukset (lue-asetukset asetusfile)]
+      ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
+      ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
+      (Thread/setDefaultUncaughtExceptionHandler
+        (reify Thread$UncaughtExceptionHandler
+          (uncaughtException [_ thread e]
+            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
+            (log/error "Virhe: " e))))
+
+      (konfiguroi-lokitus asetukset)
+      (if-let [virheet (tarkista-asetukset asetukset)]
+        (log/error "Validointivirhe asetuksissa:" virheet))
+      (tarkista-ymparisto!)
+      (kaynnista-harja-tarkkailija! asetukset)
+      (merkkaa-kaynnistyminen!)
+      (alter-var-root #'harja-jarjestelma
+                      (constantly
+                        (-> asetukset
+                            luo-jarjestelma
+                            component/start)))
+      (aloita-sonja harja-jarjestelma)
+      (merkkaa-kaynnistetyksi!))
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
+  (sammuta-harja-tarkkailija!)
   (when harja-jarjestelma
     (alter-var-root #'harja-jarjestelma (fn [s]
                                           (component/stop s)

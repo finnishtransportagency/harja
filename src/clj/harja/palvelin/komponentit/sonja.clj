@@ -10,7 +10,7 @@
             [hiccup.core :refer [html]]
             [clojure.string :as clj-str]
             [harja.pvm :as pvm]
-            [harja.palvelin.tyokalut.event-apurit :as event-apurit]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
@@ -582,8 +582,7 @@
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
-  (start [{:keys [db komponentti-event] :as this}]
-    (event-apurit/lisaa-jono! komponentti-event :sonja-tila :viimeisin)
+  (start [{:keys [db] :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
           ;; yhteys-ok? ei kaiketi käytetä missään?
           yhteys-ok? (atom false)
@@ -592,7 +591,7 @@
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
-          event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija komponentti-event :sonja-tila)
+          event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija :sonja-tila)
                                                           ::sonja-tila)
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
@@ -610,8 +609,8 @@
       (assoc this
              :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava event-julkaisija db))))
 
-  (stop [{:keys [lopeta-tarkkailu-kanava komponentti-event kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
-    (event-apurit/julkaise-event komponentti-event :sonja-tila :suljetaan)
+  (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
+    (event-apurit/julkaise-tapahtuma :sonja-tila :suljetaan)
     (>!! lopeta-tarkkailu-kanava true)
     (async/close! lopeta-tarkkailu-kanava)
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)

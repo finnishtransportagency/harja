@@ -8,22 +8,33 @@
   (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [clojure.core.async :refer [thread] :as async]
+            [clojure.spec.alpha :as s]
             [clojure.string :as clj-str]
             [clojure.java.jdbc :as jdbc]
+
+            [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
+
+            [harja.kyselyt.konversio :as konv]
+
             [harja.kyselyt.tapahtumat :as q-tapahtumat]
-            [harja.fmt :as fmt]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [digest :as digest])
   (:import [org.postgresql PGNotification]
            [org.postgresql.util PSQLException]
-           [java.util UUID]
-           [java.net InetAddress]))
+           [java.util UUID]))
 
 (defonce ^{:private true
            :doc "Tähän yhteyteen kaikki LISTEN hommat."}
          event-yhteys nil)
 
-(def ^:private tama-host (fmt/leikkaa-merkkijono 512
-                                       (.toString (InetAddress/getLocalHost))))
+(defonce harja-tarkkailija nil)
+
+(defn sha256 [x]
+  (digest/sha-256 (konv/to-byte-array x)))
+
+(s/def ::tapahtuma (s/or :keyword keyword?
+                         :string string?))
+(s/def ::tyyppi #{:perus :viimeisin})
 
 (defn- uusi-tapahtuman-kanava []
   (str "k_" (clj-str/replace (str (UUID/randomUUID)) #"-" "_")))
@@ -66,11 +77,6 @@
     (u event-yhteys (str "LISTEN " kaytettava-kanava))
     kaytettava-kanava))
 
-(defn- kuuroudu-klusterin-tapahtumasta [db tapahtuma]
-  (let [tapahtuman-kanava (tapahtuman-kanava db tapahtuma)]
-    (u event-yhteys (str "UNLISTEN " tapahtuman-kanava))))
-
-
 (def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
                             .getMethods
                             (filter #(and (= (.getName %) "getNotifications")
@@ -86,33 +92,12 @@
       (.replace "<" "")
       (.replace ">" "")))
 
-#_(defn- uusi-tietokantayhteys! [db ajossa connection kuuntelijat tarkkailijat]
-  ;; Luotetaan siihen, että tätä ajaa vain yksi säie, start-funktion (thread (loop ... )) -blokki,
-  ;; joten tätä ei yritetä tehdä yhtä aikaa useasta suunnasta/säikeestä.
-  (reset! ajossa false)
-  (log/info "Uudelleenalustetaan tietokannan kuunteluyhteys")
-  (try
-    (log/debug "Yritetään sulkea vanha tietokantayhteys")
-    (.close @connection)
-    (catch Exception e
-      (log/warn "Vanhan tietokanta yhteyden sulkemisessa tapahtui poikkeus" e)))
-  (reset! connection (.getConnection (:datasource db)))
-  (log/debug "Saatiin uusi uusi tietokantayhteys")
-  (doseq [kanava (distinct (concat (keys @kuuntelijat)
-                                   (keys @tarkkailijat)))]
-    (log/debug "Aloitetaan kuuntelu kanavalle: " kanava)
-    (u @connection (str "LISTEN " kanava)))
-  (reset! ajossa true))
-
 (defprotocol Kuuntele
   (kuuntele! [this tapahtuma callback])
   (tarkkaile! [this tapahtuma] [this tapahtuma tyyppi]))
 
 (defprotocol Julkaise
-  (julkaise! [this tapahtuma payload]))
-
-(defprotocol Kuuroudu
-  (kuuroudu! [this tapahtuma]))
+  (julkaise! [this tapahtuma payload host-name]))
 
 (defrecord Tapahtumat [kuuntelijat tarkkailijat ajossa]
   component/Lifecycle
@@ -124,15 +109,13 @@
                                               arvo))
                                        (fn [t]
                                          (log/error t "perus-broadcast jonossa tapahtui virhe")))
-          broadcast (async/pub tarkkailu-kanava ::tapahtuma (fn [] (async/sliding-buffer 1000)))
+          broadcast (async/pub tarkkailu-kanava ::tapahtuma (fn [topic] (async/sliding-buffer 1000)))
           this (assoc this ::tarkkailu-kanava tarkkailu-kanava
                       ::broadcast broadcast)]
       (log/info "Tapahtumat-komponentti käynnistyy")
       (reset! tarkkailijat {})
       (reset! kuuntelijat {})
       (reset! ajossa true)
-      #_(reset! connection (doto (.getConnection (:datasource (get-in this [:db :db-spec])))
-                           (.setAutoCommit false)))
       ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "sonjaping" tai "urakan_123_tapahtumat".
       ;; arvona kullakin avaimella on seq async-kanavia (?)
       (thread (loop []
@@ -173,19 +156,21 @@
     (async/close! (::tarkkailu-kanava this))
     this)
 
-  Kuuroudu
-  (kuuroudu! [this tapahtuma]
-    (let [kanava (tapahtuman-kanava (get-in this [:db :db-spec]) tapahtuma)]
-      (swap! kuuntelijat #(dissoc % kanava))
-      #_(u @connection (str "UNLISTEN " kanava))))
-
   Kuuntele
   ;; Kuutele! ja tarkkaile! ero on se, että eventin sattuessa kuuntele! kutsuu callback funktiota kun taas
   ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
   (kuuntele! [this tapahtuma callback]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
-          kanava (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)]
-      (swap! kuuntelijat update kanava conj callback)))
+          kanava (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)
+          fn-tunnistin (str (gensym "callback"))]
+      (swap! kuuntelijat update kanava conj (with-meta callback {:tunnistin fn-tunnistin}))
+      (fn []
+        (swap! kuuntelijat
+               update
+               kanava
+               (fn [kanavan-callbackit]
+                 (keep #(not= fn-tunnistin (-> % meta :tunnistin))
+                       kanavan-callbackit))))))
   (tarkkaile! [this tapahtuma tyyppi]
     (let [kuuntelija-kanava (async/chan 1000
                                         (map (fn [v]
@@ -201,6 +186,8 @@
         :perus nil
         :viimeisin (when-let [arvo (q-tapahtumat/uusin-arvo (get-in this [:db :db-spec]) {:nimi tapahtuma})]
                      (async/put! kuuntelija-kanava {::data arvo})))
+      (println "----< [(::broadcast this) possu-kanava kuuntelija-kanava]")
+      (clojure.pprint/pprint [(::broadcast this) possu-kanava kuuntelija-kanava])
       (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
       (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
       kuuntelija-kanava))
@@ -208,12 +195,30 @@
     (tarkkaile! this tapahtuma :perus))
 
   Julkaise
-  (julkaise! [this tapahtuma payload]
+  (julkaise! [this tapahtuma payload host-name]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           db (get-in this [:db :db-spec])
-          kanava (tapahtuman-kanava db tapahtuma)]
-      (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (cheshire/encode {:payload payload
-                                                                                  :palvelin tama-host})}))))
+          kanava (tapahtuman-kanava db tapahtuma)
+          julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (cheshire/encode {:payload payload
+                                                                                                         :palvelin host-name})})]
+      (when-not julkaisu-onnistui?
+        (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" payload)))
+      julkaisu-onnistui?)))
 
 (defn luo-tapahtumat []
   (->Tapahtumat (atom nil) (atom nil) (atom false)))
+
+(defn tarkkailija []
+  (if-let [tapahtumat (:klusterin-tapahtumat harja-tarkkailija)]
+    tapahtumat
+    (throw (Exception. "Harjatarkkailijaa ei vielä käynnistetty!"))))
+
+(defn kaynnista! [{:keys [tietokanta]}]
+  (alter-var-root #'harja-tarkkailija
+                  (constantly
+                    (component/start
+                      (component/system-map
+                        :db-event (event-tietokanta/luo-tietokanta tietokanta)
+                        :klusterin-tapahtumat (component/using
+                                                (luo-tapahtumat)
+                                                {:db :db-event}))))))

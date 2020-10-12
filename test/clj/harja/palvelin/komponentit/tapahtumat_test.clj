@@ -29,7 +29,7 @@
     (testing "Perustapaus" (tapahtumat/kuuntele! (:klusterin-tapahtumat jarjestelma) "seppo"
                                                  (fn kuuntele-callback [viesti] (reset! saatiin true)
                                                    (println "viesti saatu:" viesti)))
-             (tapahtumat/julkaise! (:klusterin-tapahtumat jarjestelma) "seppo" "foo")
+             (tapahtumat/julkaise! (:klusterin-tapahtumat jarjestelma) "seppo" "foo" "testi")
              (is (odota-arvo saatiin)))
     (testing "Toipuminen kantayhteyden katkosta"
       (reset! saatiin nil)
@@ -37,7 +37,7 @@
       (pudota-ja-luo-testitietokanta-templatesta)
       (dotimes [_ 5]
         (try
-          (tapahtumat/julkaise! (:klusterin-tapahtumat jarjestelma) "seppo" "foo")
+          (tapahtumat/julkaise! (:klusterin-tapahtumat jarjestelma) "seppo" "foo" "testi")
           (catch Exception e
             (Thread/sleep 500))))
       (is (odota-arvo saatiin)))))

@@ -6,7 +6,7 @@
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
 
-            [harja.palvelin.tyokalut.event-apurit :as event-apurit]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
             [harja.kyselyt.status :as status-q]
             [harja.tyokalut.muunnos :as muunnos])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
@@ -53,11 +53,10 @@
                                                                       (> replikoinnin-viive replikoinnin-max-viive-ms)))))]
                               (event-julkaisija replica-ok?)))))
 
-(defn luo-db-eventit [{:keys [komponentti-event] :as this} db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
-  (let [event (db-tunnistin->db-tila-event db-nimi)
-        event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija komponentti-event event)
+(defn luo-db-eventit [this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
+  (let [tapahtuma (db-tunnistin->db-tila-event db-nimi)
+        event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija tapahtuma)
                                                         ::db-event)]
-    (event-apurit/lisaa-jono! komponentti-event event :viimeisin)
     (case db-nimi
       :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
       :db-replica (tarkkaile-replicaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
@@ -73,9 +72,9 @@
       (when kehitysmoodi
         (autoreload/start-autoreload))
       (assoc this ::lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava)))
-  (stop [{:keys [komponentti-event] :as this}]
+  (stop [this]
     (when db-nimi
-      (event-apurit/julkaise-event komponentti-event (db-tunnistin->db-tila-event db-nimi) :suljetaan)
+      (event-apurit/julkaise-tapahtuma (db-tunnistin->db-tila-event db-nimi) :suljetaan)
       (async/>!! (:lopeta-tarkkailu-kanava this) true))
     (DataSources/destroy  datasource)
     (when kehitysmoodi

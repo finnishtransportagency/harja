@@ -1,7 +1,7 @@
 (ns harja.palvelin.komponentit.komponenttien-tila
   (:require [com.stuartsierra.component :as component]
             [clj-time.coerce :as tc]
-            [harja.palvelin.tyokalut.event-apurit :as event-apurit]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
             [harja.pvm :as pvm]))
 
 (defn olion-tila-aktiivinen? [tila]
@@ -45,32 +45,32 @@
                (assoc :sonja jms-tila)
                (assoc-in [:sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat jms-tila)))))))
 
-(defn- aloita-sonjan-tarkkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :sonja-tila tallenna-sonjan-tila-cacheen komponenttien-tila))
+(defn- aloita-sonjan-tarkkailu! [komponenttien-tila]
+  (event-apurit/tarkkaile-tapahtumaa :sonja-tila :viimeisin tallenna-sonjan-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-dbn-tila-cacheen [kanta-ok? komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (assoc-in kt [:db :kaikki-ok?] kanta-ok?))))
 
-(defn- aloita-db-tarkkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :db-tila tallenna-dbn-tila-cacheen komponenttien-tila))
+(defn- aloita-db-tarkkailu! [komponenttien-tila]
+  (event-apurit/tarkkaile-tapahtumaa :db-tila :viimeisin tallenna-dbn-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-db-replikan-tila-cacheen [replica-ok? komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (assoc-in kt [:db-replica :kaikki-ok?] replica-ok?))))
 
-(defn- aloita-db-replican-tarrkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :db-replica-tila tallenna-db-replikan-tila-cacheen komponenttien-tila))
+(defn- aloita-db-replican-tarrkailu! [komponenttien-tila]
+  (event-apurit/tarkkaile-tapahtumaa :db-replica-tila :viimeisin tallenna-db-replikan-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-harjan-tila-cacheen [harjan-tila komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (assoc kt :harja harjan-tila))))
 
-(defn- aloita-harjan-tarkkailu! [komponentti-event komponenttien-tila]
-  (event-apurit/kuuntele-eventtia komponentti-event :harja-tila tallenna-harjan-tila-cacheen komponenttien-tila))
+(defn- aloita-harjan-tarkkailu! [komponenttien-tila]
+  (event-apurit/tarkkaile-tapahtumaa :harja-tila :viimeisin tallenna-harjan-tila-cacheen komponenttien-tila))
 
 
 (defn- tyhjenna-cache! [komponenttien-tila]
@@ -78,12 +78,12 @@
 
 (defrecord KomponentinTila [komponenttien-tila]
   component/Lifecycle
-  (start [{:keys [komponentti-event] :as this}]
+  (start [this]
     (assoc this
-           ::harja-kuuntelija (aloita-harjan-tarkkailu! komponentti-event komponenttien-tila)
-           ::sonja-kuuntelija (aloita-sonjan-tarkkailu! komponentti-event komponenttien-tila)
-           ::db-kuuntelija (aloita-db-tarkkailu! komponentti-event komponenttien-tila)
-           ::db-replica-kuuntelija (aloita-db-replican-tarrkailu! komponentti-event komponenttien-tila)))
+           ::harja-kuuntelija (aloita-harjan-tarkkailu! komponenttien-tila)
+           ::sonja-kuuntelija (aloita-sonjan-tarkkailu! komponenttien-tila)
+           ::db-kuuntelija (aloita-db-tarkkailu! komponenttien-tila)
+           ::db-replica-kuuntelija (aloita-db-replican-tarrkailu! komponenttien-tila)))
   (stop [this]
     (event-apurit/lopeta-eventin-kuuntelu (::sonja-kuuntelija this))
     (event-apurit/lopeta-eventin-kuuntelu (::db-kuuntelija this))
