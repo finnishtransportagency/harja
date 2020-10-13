@@ -469,14 +469,19 @@
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (virhe-modal {:virhe [(reduce-kv (fn [m k v]
-                                       (assoc m k (distinct
-                                                    (flatten
-                                                      (if (map? v)
-                                                              v
-                                                              (map (fn [kohde] (vals kohde)) v))))))
-                                     {} (:virhe vastaus))]}
-                 "Päällystysilmoituksen tallennus epäonnistui!")
+                 ;; Näytä käyttäjälle jotakin myös virheistä, joita validointi ei ole napannut.
+                 (let [vastaus-virhe (if (= :error (:failure vastaus))
+                                      {:virhe [{:teksti (get-in vastaus [:parse-error :original-text])}] }
+                                      (:virhe vastaus))]
+                   (virhe-modal {:virhe [(reduce-kv (fn [m k v]
+                                         (assoc m k (distinct
+                                                      (flatten
+                                                        (if (map? v)
+                                                          v
+                                                          (map (fn [kohde]
+                                                                   (if (empty? kohde) nil (vals kohde))) v))))))
+                                     {} vastaus-virhe)]}
+                 "Päällystysilmoituksen tallennus epäonnistui!"))
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
