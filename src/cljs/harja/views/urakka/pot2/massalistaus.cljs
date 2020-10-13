@@ -78,12 +78,34 @@
          sideaineet))]
     ))
 
+(defn- ainevalinta-kentat [e! rivi tyyppi aineet]
+  [:span
+   (for [t aineet]
+      (let [polun-avaimet [tyyppi (::pot2-domain/koodi t)]
+            {:keys [valittu? esiintyma km-arvo litteysluku massapr]} (get-in rivi (cons :data polun-avaimet))]
+        ^{:key t}
+        [:div.runkoainevalinta
+         [kentat/tee-kentta
+          {:tyyppi :checkbox
+           :teksti (::pot2-domain/nimi t)
+           :nayta-rivina? true}
+          (r/wrap
+            valittu?
+            (fn [arvo]
+              (e! (tiedot-massa/->PaivitaRunkoaineenTieto (conj polun-avaimet :valittu?) arvo))))]
+
+         (if valittu?
+           [:div
+            [kentat/tee-kentta
+             {:tyyppi :string :teksti "Kiviainesesiintymä"}
+             (r/wrap
+               esiintyma
+               (fn [arvo]
+                 (e! (tiedot-massa/->PaivitaRunkoaineenTieto (conj polun-avaimet :esiintyma) arvo))))]]
+           [:span "ei valittu"])]))])
+
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
-        _ (log "jarno massatyypit " (pr-str massatyypit))
-        _ (log "jarno runkoainetyypit " (pr-str runkoainetyypit))
-        _ (log "jarno sideainetyypit " (pr-str sideainetyypit))
-        _ (log "jarno lisaainetyypit " (pr-str lisaainetyypit))
         massa (:massa app)
         lomake (:pot2-massa-lomake app)
         _ (js/console.log "massa-lomake :: lomake " (pr-str lomake))]
@@ -147,22 +169,16 @@
           :pakollinen? true}
          {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
           :validoi [[:ei-tyhja "Anna DoP nro"]]
-          :vayla-tyyli? true :pakollinen? true})]
+          :vayla-tyyli? true :pakollinen? true})
 
-      #_{:nimi :runkoaineet
-         :otsikko "Runkoaineen materiaali"
-         :tyyppi :checkbox-group
-         :vaihtoehdot (map ::pot2-domain/nimi runkoainetyypit)
-         :vaihtoehto-nayta str}
 
-      ;; TODO Lisätty sideaine pitää lisätä
-      #_{}
-      #_{:nimi :lisa-aineet
-         :otsikko "Lisäaineet"
-         :tyyppi :checkbox-group
-         :vaihtoehdot pot2-domain/massan-lisaineet
-         :vaihtoehto-nayta (fn [rivi]
-                             (str rivi))}
+
+       {:nimi :runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti
+        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :runkoaineet runkoainetyypit])}
+       {:nimi :sideaineet :otsikko "Sideaineet" :tyyppi :komponentti
+        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideainetyypit])}
+       {:nimi :lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti
+        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]
 
       lomake]
      [debug app {:otsikko "TUCK STATE"}]]))

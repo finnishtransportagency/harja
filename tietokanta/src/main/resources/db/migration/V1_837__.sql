@@ -2,6 +2,9 @@
 --DROP TABLE pot2;
 --DROP TABLE pot2_massa;
 --DROP TABLE pot2_massatyyppi;
+--DROP TABLE pot2_runkoainetyyppi;
+--DROP TABLE pot2_sideainetyyppi;
+--DROP TABLE pot2_lisaainetyyppi;
 --DROP TABLE pot2_murske;
 --DROP TABLE pot2_kulutuskerros_toimenpide;
 --DROP TABLE pot2_paallystekerros;
@@ -222,15 +225,14 @@ VALUES ('Bitumi, 20/30', 'Bitumi, 20/30', 1),
         'Bitumiliuokset ja fluksatut bitumit, BL5', 18),
        ('Bitumiliuokset ja fluksatut bitumit, BL2Bio',
         'Bitumiliuokset ja fluksatut bitumit, BL2Bio', 19),
-       ('Bitumiemulsiot, BE-L', 'Bitumiemulsiot, BE-L', 20),
-       ('Bitumiemulsiot, PBE-L', 'Bitumiemulsiot, PBE-L', 21),
-       ('Bitumiemulsiot, BE-SIP', 'Bitumiemulsiot, BE-SIP', 22),
-       ('Bitumiemulsiot, BE-SOP', 'Bitumiemulsiot, BE-SOP', 23),
-       ('Bitumiemulsiot, BE-AB', 'Bitumiemulsiot, BE-AB', 24),
-       ('Bitumiemulsiot, BE-PAB', 'Bitumiemulsiot, BE-PAB', 25),
+       ('Bitumiemulsiot, BE-L', 'Bit.emuls., BE-L', 20),
+       ('Bitumiemulsiot, PBE-L', 'Bit.emuls., PBE-L', 21),
+       ('Bitumiemulsiot, BE-SIP', 'Bit.emuls., BE-SIP', 22),
+       ('Bitumiemulsiot, BE-SOP', 'Bit.emuls., BE-SOP', 23),
+       ('Bitumiemulsiot, BE-AB', 'Bit.emuls., BE-AB', 24),
+       ('Bitumiemulsiot, BE-PAB', 'Bit.emuls., BE-PAB', 25),
        ('KF, Kalkkifilleri', 'KF', 26),
-       ('Muu, erikoisbitumi', 'Muu, erik.bit.', 27),
-       ('Bitumiemulsiot, BE-PAB', 'Bit.em.', 28);
+       ('Muu, erikoisbitumi', 'Muu, erik.bit.', 27);
 
 CREATE TABLE pot2_massa_sideaine
 (
