@@ -59,7 +59,7 @@
 
          "Muutos- ja lisätyöt" :muut-tyot
          (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
-                    (#{:hoito} (:tyyppi ur)))
+                    (not mhu-urakka?))
            [muut-tyot/muut-tyot-toteumat ur])
 
          "Suola" :suola

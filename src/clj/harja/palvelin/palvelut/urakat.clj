@@ -42,7 +42,7 @@
          k 1]
     ;; Palautetaan nil, jos ei löydy urakkaa kilometrin säteeltä tai
     ;; ollaan loopattu jo 10 kertaa eikä olla löydätty vain yhtä urakkaa
-    (when (and (< radius 1000)
+    (when (and (< radius 500)
                (< k 10))
       (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi )
                                   (q/hae-urakka-sijainnilla db urakkatyyppi x y radius)))]

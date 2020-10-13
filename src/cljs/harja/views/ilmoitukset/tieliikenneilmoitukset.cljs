@@ -263,7 +263,7 @@
                                                     (not kirjoitusoikeus?))
                                       :checked (valitut-ilmoitukset rivi)}]]))
            :leveys 1})
-        {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
+        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
@@ -277,7 +277,7 @@
         {:otsikko "Sijainti" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
          :tyyppi :pvm-aika
-         :leveys 7}
+         :leveys 5}
 
         {:otsikko "Selitteet" :nimi :selitteet
          :tyyppi :komponentti

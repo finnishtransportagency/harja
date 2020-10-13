@@ -998,3 +998,99 @@ UPDATE toimenpidekoodi set api_tunnus = id where api_tunnus is null and api_seur
 
 -- Poistetut tehtävät
 DELETE FROM toimenpidekoodi where nimi = 'Muut päällysteiden paikkaukseen liittyvät työt';
+
+-- Tehtävä- ja määräluettelossa näkyvien yksiköiden päivitys
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = 'kuivatonnia'
+WHERE taso = 4
+  AND nimi in ('Suolaus', 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)');
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = 'tonnia'
+WHERE taso = 4
+  AND nimi in
+      ('Liukkaudentorjunta hiekoituksella', 'Ennalta arvaamattomien kuljetusten avustaminen', 'Sorateiden pölynsidonta',
+       'Liikenteen varmistaminen kelirikkokohteessa');
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = 'kpl'
+WHERE taso = 4
+  AND nimi in
+      ('Valvontakameratolppien puhdistus/tarkistus keväisin', 'Nopeusnäyttötaulujen ylläpito, käyttö ja siirto');
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = 'jm'
+WHERE taso = 4
+  AND nimi in ('Meluesteiden pesu');
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = 'tiekm'
+WHERE taso = 4
+  AND nimi in ('Katupölynsidonta'); -- Tässä yksikkö on h
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = 'm3'
+WHERE taso = 4
+  AND nimi in ('Maakivien (>1m3) poisto');
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = yksikko
+WHERE taso = 4
+  AND suunnitteluyksikko IS NULL;
+
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = ''
+WHERE taso = 4
+  AND nimi in ('Levähdysalueen puhtaanapito');
+
+
+-- Äkillisten hoitotöiden ja vahinkojen korjaamisen nimeäminen selkeämmin
+-- Päivitetään myös liik.ymp.hoito => l.ymp.hoito
+UPDATE toimenpidekoodi
+SET nimi               = 'Äkillinen hoitotyö (talvihoito)',
+    suunnitteluyksikko = 'euroa'
+WHERE nimi = 'Äkillinen hoitotyö'
+  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23104');
+
+UPDATE toimenpidekoodi
+SET nimi               = 'Äkillinen hoitotyö (l.ymp.hoito)',
+    suunnitteluyksikko = 'euroa'
+WHERE nimi IN ('Äkillinen hoitotyö', 'Äkillinen hoitotyö (liik.ymp.hoito)')
+  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23116');
+
+UPDATE toimenpidekoodi
+SET nimi               = 'Äkillinen hoitotyö (soratiet)',
+    suunnitteluyksikko = 'euroa'
+WHERE nimi IN ('Äkillinen hoitotyö')
+  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23124');
+
+UPDATE toimenpidekoodi
+SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
+    suunnitteluyksikko = 'euroa'
+WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen'
+  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23104');
+
+UPDATE toimenpidekoodi
+SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
+    suunnitteluyksikko = 'euroa'
+WHERE nimi IN ('Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen',
+               'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (liik.ymp.hoito)')
+  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23116');
+
+UPDATE toimenpidekoodi
+SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)',
+    suunnitteluyksikko = 'euroa'
+WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen'
+  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23124');
+
+-- Käyttöliittymän kautta lisättyjen tehtävien puuttuvien yksiköiden päivitys
+UPDATE toimenpidekoodi
+SET yksikko = 'kpl'
+WHERE taso = 4
+  AND nimi in ('Valvontakameratolppien puhdistus/tarkistus keväisin');
+
+-- Siivotaan suunnitteluyksikkö. Kun arvo on null, ei Tehtävä- ja määräluettelossa suunnitella tehtävän määriä.
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = null
+WHERE suunnitteluyksikko = ''
+   OR suunnitteluyksikko = '-';
