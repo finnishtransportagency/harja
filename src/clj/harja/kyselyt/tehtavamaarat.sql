@@ -25,13 +25,18 @@ WHERE urakka = :urakka
   AND tehtava = :tehtava;
 
 -- name: tehtavaryhmat-ja-toimenpiteet-urakalle
+WITH tehtavaryhma_valitaso AS (
+    -- Haetaan välitason lisätyön tehtäväryhmä. nimi = 'Välitaso Lisätyöt', mutta koska nimi voi vaihtua
+    -- niin käytetään yksilöivää tunnistetta
+    SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='0b65b36d-e84e-40b6-a0ad-e4f539f05227'
+)
 SELECT tpk3.id       as "toimenpide-id",
        tpk3.nimi     as "toimenpide",
        tr3.nimi      as "tehtavaryhma-nimi",
        tr3.id        as "tehtavaryhma-id",
        tr3.jarjestys as "jarjestys",
        tpi.id        as "toimenpideinstanssi"
-FROM tehtavaryhma tr1
+  FROM tehtavaryhma tr1
          JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
          JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
          LEFT JOIN toimenpidekoodi tpk4
@@ -39,8 +44,10 @@ FROM tehtavaryhma tr1
                       tpk4.poistettu is not true AND tpk4.piilota is not true
          JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
          JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
-WHERE tr1.emo is null and tr3.nimi not like '%Lisätyöt%'
-order by tr3.jarjestys;
+ WHERE
+       tr1.emo is null
+   AND tr3.emo not in (SELECT id FROM tehtavaryhma_valitaso)
+ ORDER BY tr3.jarjestys;
 
 -- name: hae-tehtavahierarkia
 -- Palauttaa tehtävähierarkian kokonaisuudessaan.

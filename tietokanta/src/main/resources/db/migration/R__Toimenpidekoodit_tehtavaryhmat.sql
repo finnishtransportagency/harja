@@ -182,13 +182,24 @@ INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, n
 ON CONFLICT (nimi) DO UPDATE SET emo = (select id from tehtavaryhma where nimi = 'Välitaso Muut liik.ymp.hoitosasiat'), jarjestys = 159;
 
 ---- dummy
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('7.0 LISÄTYÖT', 'Lisätyöt', null, 'ylataso', 990, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('7.0 LISÄTYÖT', 'Välitaso Lisätyöt', (select id from tehtavaryhma where otsikko = '7.0 LISÄTYÖT' and nimi = 'Lisätyöt'), 'valitaso', 991, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('7.0 LISÄTYÖT', 'Alataso Lisätyöt', (select id from tehtavaryhma where otsikko = '7.0 LISÄTYÖT' and nimi = 'Välitaso Lisätyöt'), 'alataso', 992, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('7.0 LISÄTYÖT', 'Lisätyöt', null, 'ylataso', 990, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('7.0 LISÄTYÖT', 'Välitaso Lisätyöt', (select id from tehtavaryhma where otsikko = '7.0 LISÄTYÖT' and nimi = 'Lisätyöt'), 'valitaso', 991, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('7.0 LISÄTYÖT', 'Alataso Lisätyöt', (select id from tehtavaryhma where otsikko = '7.0 LISÄTYÖT' and nimi = 'Välitaso Lisätyöt'), 'alataso', 992, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
 -- Samaan kastiin kuuluu myös '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' - se on saatava näkymään määrien toteumat sivulla
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Liikenteen varmistaminen', null, 'ylataso', 993, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Välitaso Liikenteen varmistaminen', (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Liikenteen varmistaminen'), 'valitaso', 994, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) values ('4 LIIKENTEEN VARfäMISTAMINEN ERIKOISTILANTEESSA', 'Alataso Liikenteen varmistaminen', (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Välitaso Liikenteen varmistaminen'), 'alataso', 995, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE);
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES
+('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Liikenteen varmistaminen', null,
+ 'ylataso', 993, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'),
+ FALSE);
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES
+('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Välitaso Liikenteen varmistaminen',
+ (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Liikenteen varmistaminen'),
+ 'valitaso', 994, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'),
+ FALSE);
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES
+('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Alataso Liikenteen varmistaminen',
+ (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Välitaso Liikenteen varmistaminen'),
+ 'alataso', 995, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'),
+ FALSE);
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- MHU: Uudet tehtävät. Näille ei löydynyt vastaavuutta vanhoista tehtävistä. -----------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -417,32 +428,57 @@ ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma
 
 --- MHU: Lisätyöt - nämä ovat dummy-tehtäviä, joita käytetään lisätöitä kirjatessa selventämään. Kuuluvat toimenpiteelle (tehtäväryhmä) 7.0 Lisätyöt
 
-INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
     VALUES ('Lisätyö (talvihoito)',
             (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 990, NULL,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23104'), current_timestamp,
-            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE);
+            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
 
-INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
     VALUES ('Lisätyö (l.ymp.hoito)',
             (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 991, NULL,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23116'), current_timestamp,
-            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE);
+            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
 
-INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen)
+INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
     VALUES ('Lisätyö (sorateiden hoito)',
             (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 992, NULL,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23124'), current_timestamp,
-            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE);
+            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
 
 -- MHU - äkillset hoitotyöt -- nämä ovat dummy-tehtäviä, joita käytetään äkillisiä hoitotöitä kirjatessa selventämään. Kuuluvat toimenpiteelle (tehtäväryhmä) 4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES
- ('Äkillinen hoitotyö (talvihoito, liikenteen varmistaminen)', (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),	NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE);
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES
- ('Äkillinen hoitotyö (l.ymp.hoito, liikenteen varmistaminen)', (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),	NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23116'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE);
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES
- ('Äkillinen hoitotyö (soratiet, liikenteen varmistaminen)', (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),	NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE);
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara) VALUES
+ ('Äkillinen hoitotyö (talvihoito, liikenteen varmistaminen)',
+  (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),
+  NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23104'), current_timestamp,
+  (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara) VALUES
+ ('Äkillinen hoitotyö (l.ymp.hoito, liikenteen varmistaminen)',
+  (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),
+  NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23116'),
+  current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara) VALUES
+ ('Äkillinen hoitotyö (soratiet, liikenteen varmistaminen)',
+  (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),
+  NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23124'),
+  current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
 
+-- MHU - äkillset hoitotyöt -- nämä ovat dummy-tehtäviä, joita käytetään äkillisiä hoitotöitä kirjatessa selventämään. Kuuluvat toimenpiteelle (tehtäväryhmä) 4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara) VALUES
+('Kolmansien osapuolien aiheuttamien vahinkojen korjaaminen (äkillinen, talvihoito)',
+ (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),
+ NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23104'), current_timestamp,
+ (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara) VALUES
+('Kolmansien osapuolien aiheuttamien vahinkojen korjaaminen (äkillinen, l.ymp.hoito)',
+ (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),
+ NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23116'),
+ current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara) VALUES
+('Kolmansien osapuolien aiheuttamien vahinkojen korjaaminen (äkillinen, soratiet)',
+ (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen'),
+ NULL,	135, NULL, (select id from toimenpidekoodi where koodi = '23124'),
+ current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, TRUE);
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -371,12 +371,12 @@ SELECT alkanut
 -- Luo uuden tehtävän toteumalle
 INSERT
 INTO toteuma_tehtava
-(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi)
+(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi, urakka_id)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta,
         (CASE WHEN :paivanhinta :: NUMERIC IS NULL
           THEN TRUE
          ELSE FALSE
-         END));
+         END), :urakka_id);
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
@@ -418,12 +418,9 @@ WHERE urakka = :urakka
 
 -- name: listaa-urakan-maarien-toteumat
 -- Listaa maarien toteumat
-WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
+WITH toteumat AS (SELECT tt.toimenpidekoodi         AS toimenpidekoodi_id,
                          t.id                       AS toteuma_id,
                          tt.id                      AS toteuma_tehtava_id,
-                         tk.nimi                    AS tehtava,
-                         tk.suunnitteluyksikko      AS yksikko,
-                         tr1.otsikko                AS otsikko,
                          t.alkanut                  AS alkanut,
                          tt.maara                   AS maara,
                          t.tyyppi                   as tyyppi,
@@ -432,95 +429,77 @@ WITH toteumat AS (SELECT tk.id                      AS toimenpidekoodi_id,
                              WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)
                             END AS "hoitokauden-alkuvuosi"
                       FROM toteuma_tehtava tt,
-                           toimenpidekoodi tk,
-                           toteuma t,
-                           tehtavaryhma tr1
-                               JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-                               JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-                      WHERE tk.id = tt.toimenpidekoodi
-                        AND t.id = tt.toteuma
-                        AND t.poistettu IS NOT TRUE
-                        AND tt.poistettu IS NOT TRUE
+                           toteuma t
+                      WHERE t.id = tt.toteuma
                         AND t.urakka = :urakka
-                        AND tr1.id = tk.tehtavaryhma
-                        AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
-                        AND (:alkupvm::DATE IS NULL OR
-                             t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
+                        AND t.poistettu = FALSE
+                        AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+                        AND tt.urakka_id = :urakka
+                        AND tt.poistettu = FALSE
+                        --AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
+                        ),
+     ut_tehtavat as (SELECT ut.tehtava as tehtava
+                         FROM urakka_tehtavamaara ut
+                         WHERE ut.urakka = :urakka
+                           AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi::INT)
 -- Haetaan ne tehtävät, joilla on suunniteltu määrätoteuma olemassa
 SELECT ut.id                      AS id,
-       t.toteuma_id               AS toteuma_id,
-       t.toteuma_tehtava_id       AS toteuma_tehtava_id,
-       ut.urakka                  AS urakka,
-       ut."hoitokauden-alkuvuosi" AS "hoitokauden-alkuvuosi",
+       t.toteuma_id               AS tid, --  toteuma_id - datan siirtomäärän vähentämisen takia lyhennetty
        tk.nimi                    AS tehtava,
-       tr1.otsikko                AS tehtavaryhma,
-       ut.maara                   AS suunniteltu_maara,
-       t.maara                    AS toteutunut,
-       t.alkanut                  AS toteuma_aika,
+       tr.otsikko                 AS tryh, -- tehtavaryhma - datan siirtomäärän vähentämisen takia lyhennetty
+       ut.maara                   AS skpl, -- suunniteltu_maara - datan siirtomäärän vähentämisen takia lyhennetty
+       t.maara                    AS tot,
+       t.alkanut                  AS taika, -- totetuma-aika - datan siirtomäärän vähentämisen takia lyhennetty
        t.tyyppi                   AS tyyppi,
-       tk.suunnitteluyksikko      AS yksikko,
-       tk.kasin_lisattava_maara   AS "kasin-lisattava?"
+       tk.suunnitteluyksikko      AS yk, -- yksikkö - datan siirtomäärän vähentämisen takia lyhennetty
+       tk.kasin_lisattava_maara   AS "k?" -- "kasin-lisattava?" - datan siirtomäärän vähentämisen takia lyhennetty
     FROM urakka_tehtavamaara ut
              LEFT JOIN toteumat t
                        ON t.toimenpidekoodi_id = ut.tehtava AND t."hoitokauden-alkuvuosi" = ut."hoitokauden-alkuvuosi",
          toimenpidekoodi tk,
-         tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-
+         tehtavaryhma tr
     WHERE ut.tehtava = tk.id
-      AND tr1.id = tk.tehtavaryhma
-
+      AND tr.id = tk.tehtavaryhma
       AND ut.urakka = :urakka
-      AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
-      AND (:alkupvm::DATE IS NULL OR (ut."hoitokauden-alkuvuosi" = CASE
-                                                                       WHEN EXTRACT(MONTH FROM :alkupvm::DATE) >= 10
-                                                                           THEN EXTRACT(YEAR FROM :alkupvm::DATE)
-                                                                       WHEN EXTRACT(MONTH FROM :alkupvm::DATE) <= 9
-                                                                           THEN (EXTRACT(YEAR FROM :alkupvm::DATE) - 1) END AND
-                                      (t.alkanut IS NULL OR t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)))
+      AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
+      AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi::INT
 UNION
 -- ei union all, koska ei haluta duplikaatteja
 -- Haetaan ne tehtävät, joilla ei ole suunniteltua määrää olemassa
 SELECT tk.id                      AS id,
-       t.id                       AS toteuma_id,
-       tt.id                      AS toteuma_tehtava_id,
-       t.urakka                   AS urakka,
-       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       t.id                       AS tid, -- toteuma_id - datan siirtomäärän vähentämisen takia lyhennetty
        tk.nimi                    AS tehtava,
-       tr1.otsikko                AS tehtavaryhma,
-       -1                         AS suunniteltu_maara,
-       tt.maara                   AS toteutunut,
-       t.alkanut                  AS toteuma_aika,
+       tr.otsikko                 AS tryh, -- tehtavaryhma - datan siirtomäärän vähentämisen takia lyhennetty
+       -1                         AS skpl, -- suunniteltu_maara - datan siirtomäärän vähentämisen takia lyhennetty
+       tt.maara                   AS tot, -- toteutunut määrä - datan siirtomäärän vähentämisen takia lyhennetty
+       t.alkanut                  AS taika, -- toteuma-aika - datan siirtomäärän vähentämisen takia lyhennetty
        t.tyyppi                   AS tyyppi,
-       tk.suunnitteluyksikko      AS yksikko,
-       tk.kasin_lisattava_maara   AS "kasin-lisattava?"
+       tk.suunnitteluyksikko      AS yk, -- yksikkö - datan siirtomäärän vähentämisen takia lyhennetty
+       tk.kasin_lisattava_maara   AS "k?" -- "kasin-lisattava?" - datan siirtomäärän vähentämisen takia lyhennetty
     FROM toteuma_tehtava tt,
          toimenpidekoodi tk,
          toteuma t,
-         tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-    WHERE tk.id = tt.toimenpidekoodi
-      AND tk.id NOT IN (SELECT ut.tehtava
-                            FROM urakka_tehtavamaara ut
-                            WHERE ut.urakka = :urakka
-                              AND (:alkupvm::DATE IS NULL OR
-                                   ut."hoitokauden-alkuvuosi" BETWEEN EXTRACT(YEAR FROM :alkupvm::DATE) AND EXTRACT(YEAR FROM :loppupvm::DATE)))
-      AND t.id = tt.toteuma
-      AND t.poistettu IS NOT TRUE
-      AND tt.poistettu IS NOT TRUE
-      AND t.urakka = :urakka
-      AND tr1.id = tk.tehtavaryhma
-      AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
-      AND (:alkupvm::DATE IS NULL OR
-           t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-ORDER BY tehtavaryhma ASC, toteuma_aika ASC;
+         tehtavaryhma tr
+    WHERE
+          t.urakka = :urakka
+      AND t.poistettu = FALSE
+      AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+      AND tk.id = tt.toimenpidekoodi
+      AND tk.id NOT IN (select tehtava from ut_tehtavat)
+      AND tt.urakka_id = :urakka
+      AND tt.poistettu = FALSE
+      AND tt.toteuma = t.id
+      AND tr.id = tk.tehtavaryhma
+      AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
+ORDER BY tryh ASC, taika ASC;
 
 -- name: hae-maarien-toteuma
 -- Hae yksittäinen toteuma muokkaukseen
 SELECT t.id        AS toteuma_id,
-       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       CASE
+           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)::INT
+           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)::INT
+           END AS "hoitokauden-alkuvuosi",
        tk.nimi                    AS tehtava,
        tk.id                      AS tehtava_id,
        tt.maara                   AS toteutunut,
@@ -551,7 +530,10 @@ SELECT t.id        AS toteuma_id,
 -- name: hae-akillinen-toteuma
 -- Hae yksittäinen äkillinen hoitottyö toteuma muokkaukseen
 SELECT t.id        AS toteuma_id,
-       EXTRACT(YEAR FROM alkanut) AS "hoitokauden-alkuvuosi",
+       CASE
+           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)::INT
+           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)::INT
+           END AS "hoitokauden-alkuvuosi",
        tk.nimi                    AS tehtava,
        tk.id                      AS tehtava_id,
        tt.maara                   AS toteutunut,
@@ -593,32 +575,17 @@ SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko,
 SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
-    FROM toimenpidekoodi tk,
-         tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-    WHERE tr1.id = tk.tehtavaryhma AND tk.taso = 4 AND (tk.kasin_lisattava_maara = true OR tr1.otsikko = '7.0 LISÄTYÖT' OR tr1.otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA')
-      AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma);
-
--- name: listaa-akillisten-hoitotoiden-toimenpiteiden-tehtavat
-SELECT  tk.id AS id,
-        tr.nimi AS tehtava,
-        tk.suunnitteluyksikko AS yksikko
-    FROM toimenpidekoodi tk,
-         tehtavaryhma tr
-    WHERE (tr.nimi like '%Äkilliset hoitotyöt%'
-      or tr.nimi like '%Tilaajan rahavaraus%'
-      or tr.nimi like '%Vahinkojen korjaukset%')
-      AND tk.tehtavaryhma = tr.id;
-
--- name: listaa-lisatoiden-tehtavat
-SELECT  tk.id AS id,
-        tk.nimi as tehtava,
-        tk.suunnitteluyksikko AS yksikko
 FROM toimenpidekoodi tk,
-     tehtavaryhma tr
-WHERE tk.nimi like '%Lisätyö%'
-  AND tk.tehtavaryhma = tr.id;
+     tehtavaryhma tr1,
+     urakka u
+WHERE tr1.id = tk.tehtavaryhma
+  AND tk.taso = 4
+  AND tk.kasin_lisattava_maara = true
+  AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
+  AND u.id = :urakka
+  AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
+
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
@@ -707,12 +674,12 @@ SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta,
-                             lisatieto, indeksi)
+                             lisatieto, indeksi, urakka_id)
 VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto,
         (CASE WHEN :paivan_hinta :: NUMERIC IS NULL
           THEN TRUE
          ELSE FALSE
-         END));
+         END), :urakka_id);
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät

@@ -51,9 +51,9 @@
 
 (defn vain-suunnitellut-maarat [maarien-toteumat ilman-suunnitelmaa?]
   (keep (fn [t]
-          (if (and (:suunniteltu_maara t) (if ilman-suunnitelmaa?
-                                            (> (:suunniteltu_maara t) 0)
-                                            (> 0 (:suunniteltu_maara t))))
+          (if (and (:skpl t) (if ilman-suunnitelmaa?
+                               (> (:skpl t) 0)
+                               (> 0 (:skpl t))))
             t
             nil))
         maarien-toteumat))
@@ -62,28 +62,9 @@
 ;; Rajoituksettomuus on tässä kohdassa vähän ristiriitaista, koska suunniteltua määrää ei voi laittaa kuin joillekin
 ;; tietyille tehtäville. Niinpä teoriassa on mahdollista, että urakka_tehtavamaara taulussa on "suunniteltuja" tehtäviä, joita tämä haku
 ;; ei löydä. Kannattaa varmistaa todellinen suunniteltu tehtäväilanne sivulta Suunnittelu > Tehtävät ja määrät.
-(deftest maarien-toteumat-listaus-ilman-rajoituksia-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        maarien-toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :urakan-maarien-toteumat +kayttaja-jvh+
-                                         {:urakka-id urakka-id})
-        maarien-toteumat-suunnitelman-kanssa (vain-suunnitellut-maarat maarien-toteumat true)
-        maarien-toteumat-ilman-suunnitelmaa (vain-suunnitellut-maarat maarien-toteumat false)
-        oulun-mhu-suunnitellut-toteumat (ffirst (q
-                                                  (str "SELECT count(*)
-                                                             FROM urakka_tehtavamaara ut, toimenpidekoodi tk
-                                                             WHERE ut.tehtava = tk.id
-                                                             AND tk.taso = 4
-                                                             AND tk.tehtavaryhma is not null
-                                                             AND ut.urakka = " urakka-id)))
-        oulun-mhu-suunnittelemattomat-toteumat (ffirst (q
-                                                         (str "SELECT count(t.*)
-                                                             FROM toteuma t, toteuma_tehtava tt
-                                                             WHERE t.urakka = " urakka-id " AND tt.toteuma = t.id
-                                                             AND t.id NOT IN (select id from urakka_tehtavamaara ut where ut.urakka = " urakka-id ")")))]
-
-    (is (= (count maarien-toteumat-suunnitelman-kanssa) oulun-mhu-suunnitellut-toteumat) "Suunniteltujen määrien toteumien määrä")
-    (is (= (count maarien-toteumat-ilman-suunnitelmaa) oulun-mhu-suunnittelemattomat-toteumat) "Suunnittelemattomien määrien toteumien määrä")))
+;; Suorituskyvyn takia on ollut myös pakko lisätä vähintään jonkinlainen aikarajaus, joka käytännössä meinaa, että hoitokauden-alkuvuosi on annettava.
+;; Joten tällaista rajoittamatonta testiä ei voida enää tehdä
+;(deftest maarien-toteumat-listaus-ilman-rajoituksia-test)
 
 ;; Hae kaikki määrien toteumat hoitovuoden mukaan
 (deftest maarien-toteumat-hoittovuodelle-test
@@ -145,7 +126,9 @@
                                       (kutsu-palvelua (:http-palvelin jarjestelma)
                                                       :urakan-maarien-toteumat +kayttaja-jvh+
                                                       {:urakka-id urakka-id
-                                                       :tehtavaryhma "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"})
+                                                       :tehtavaryhma "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+                                                       :alkupvm "2020-10-01"
+                                                       :loppupvm "2021-09-30"})
                                       true)
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :urakan-maarien-toteumat +kayttaja-jvh+
@@ -161,6 +144,7 @@
                                                                     JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
                                                              WHERE tk.id = ut.tehtava
                                                                AND tr.id = tk.tehtavaryhma
+                                                               AND ut.\"hoitokauden-alkuvuosi\" = 2020
                                                                AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                                AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q
@@ -174,6 +158,7 @@
                                                              WHERE tk.id = ut.tehtava
                                                                AND tr.id = tk.tehtavaryhma
                                                                AND tr.otsikko = '6 MUUTA'
+                                                               AND ut.\"hoitokauden-alkuvuosi\" = 2020
                                                                AND ut.urakka = " urakka-id))
         ]
     (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")

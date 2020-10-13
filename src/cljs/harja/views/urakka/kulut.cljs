@@ -188,19 +188,19 @@
 (defn koontilaskun-kk-droppari
   [{:keys [koontilaskun-kuukausi paivitys-fn koontilaskun-kuukausi-meta disabled]}]
   [yleiset/livi-pudotusvalikko
-   {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta))
-    :disabled     disabled
-    :vayla-tyyli? true
+   {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta))
+    :disabled      disabled
+    :vayla-tyyli?  true
     :skrollattava? true
-    :valinta      koontilaskun-kuukausi
-    :valitse-fn   #(paivitys-fn {:validoitava? true}
-                                :koontilaskun-kuukausi %)
-    :format-fn    (fn [a]
-                    (if (nil? a)
-                      "Ei valittu"
-                      (let [[kk hv] (str/split a #"/")]
-                        (str (get kuukaudet-strs (keyword kk)) " - "
-                             (get hoitovuodet-strs (keyword hv))))))}
+    :valinta       koontilaskun-kuukausi
+    :valitse-fn    #(paivitys-fn {:validoitava? true}
+                                 :koontilaskun-kuukausi %)
+    :format-fn     (fn [a]
+                     (if (nil? a)
+                       "Ei valittu"
+                       (let [[kk hv] (str/split a #"/")]
+                         (str (get kuukaudet-strs (keyword kk)) " - "
+                              (get hoitovuodet-strs (keyword hv))))))}
    (for [hv (range 1 6)
          kk kuukaudet]
      (str (name kk) "/" hv "-hoitovuosi"))])
@@ -562,36 +562,16 @@
                                         (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
                                         :else true)
                      :disabloitu?     (not= 0 haetaan)
-                     :muutos-fn       #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
-                                                                        resetoi-kohdistukset)
-                                             jalkiprosessointi-fn (if (.. % -target -checked)
-                                                                    (fn [lomake]
-                                                                      (vary-meta
-                                                                        lomake
-                                                                        maaramitallisen-validoinnit
-                                                                        {:lomake  lomake
-                                                                         :indeksi 0})))]
-                                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
-       #_[:div.flex-row
-          [:input#kulu-normaali.vayla-radio
-           {:type            :radio
-            :name            "kulu-group"
-            :default-checked (cond
-                               (> (count kohdistukset) 1) false
-                               (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
-                               :else true)
-            :disabled        (not= 0 haetaan)
-            :on-change       #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
-                                                               resetoi-kohdistukset)
-                                    jalkiprosessointi-fn (if (.. % -target -checked)
-                                                           (fn [lomake]
-                                                             (vary-meta
-                                                               lomake
-                                                               maaramitallisen-validoinnit
-                                                               {:lomake  lomake
-                                                                :indeksi 0})))]
-                                (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
-          [:label {:for "kulu-normaali"} "Normaali suunniteltu tai määrämitattava hankintakulu"]]
+                     :muutos-fn       (r/partial #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
+                                                                                   resetoi-kohdistukset)
+                                                        jalkiprosessointi-fn (if (.. % -target -checked)
+                                                                               (fn [lomake]
+                                                                                 (vary-meta
+                                                                                   lomake
+                                                                                   maaramitallisen-validoinnit
+                                                                                   {:lomake  lomake
+                                                                                    :indeksi 0})))]
+                                                    (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn)))}]
        [:div.flex-row
         [:input#kulu-useampi.vayla-radio
          {:type            :radio
@@ -704,20 +684,12 @@
                          (not (false? (:numerolla-tarkistettu-pvm tarkistukset)))
                          (not (pvm/sama-pvm? erapaiva (get-in tarkistukset [:numerolla-tarkistettu-pvm :erapaiva]))))
                 (str "Annetulla numerolla on jo olemassa kirjaus,  jonka päivämäärä on " (-> tarkistukset
-                                                                                            :numerolla-tarkistettu-pvm
-                                                                                            :erapaiva
-                                                                                            pvm/pvm)
+                                                                                             :numerolla-tarkistettu-pvm
+                                                                                             :erapaiva
+                                                                                             pvm/pvm)
                      ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero."))])))
 
 
-
-#_(defn- uusi-lomake
-  [{e! :e! tila :tila lomake-skeema :lomake-skeema}]
-  [:div
-   (doall (mapcat (fn [[_osio sisallot]]
-                    (for [elementti sisallot]
-                      [vayla-kentta elementti]))
-                  lomake-skeema))])
 
 (defn- kulujen-syottolomake
   [e! _]
@@ -795,7 +767,7 @@
            #(e! (tiedot/->TallennaKulu))
            {:vayla-tyyli? true
             :luokka       "suuri"
-            :disabled (not validi?)}]
+            :disabled     (not validi?)}]
           [napit/peruuta
            "Peruuta"
            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
