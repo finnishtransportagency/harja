@@ -5,7 +5,9 @@
   (:require [clojure.java.io :as io]
             [clojure.core.async :as async]
             [clojure.pprint :as pprint]
-            [harja.tyokalut.env :as env]))
+            [clojure.walk :as walk]
+            [harja.tyokalut.env :as env]
+            [harja.kyselyt.konversio :as konv]))
 
 (defonce ^{:private true
            :doc "Arvot, jotka haetaan environment:istä. Näiden tulisi siis olla saatavana jo käännösaikana"}
@@ -15,6 +17,8 @@
 (defonce ^{:doc "Tässä pidetään runtime configuraatiota. Hyödyllinen REPL:in kanssa."}
          config
          (atom {:kirjoita-tiedostoon? true}))
+
+(def dev-environment? (:dev? envrionment))
 
 (defn merge-config! [conf]
   (swap! config merge conf))
@@ -28,8 +32,7 @@
                     (second fn-params))
         body# (if pre-post?#
                 (drop 2 fn-params)
-                (rest fn-params))
-        dev-environment? (:dev? envrionment)]
+                (rest fn-params))]
     (cond-> (list args#)
             (and dev-environment? pre-post?#) (concat [pre-post#])
             dev-environment? (concat body#))))
@@ -122,3 +125,16 @@
    datastruktuuri ei saisi olla aivan valtava."
   [tiedosto]
   (-> tiedosto slurp read-string))
+
+(defn-tyokalu datan-tiedot
+  "Palauttaa annetun datan hashit ja luokat mapissa"
+  ([data] (datan-tiedot data nil))
+  ([data {:keys [type-string?]}]
+   (walk/postwalk (fn [x]
+                    (if (map-entry? x)
+                      x
+                      (let [tyyppi (type x)]
+                        {:tyyppi (if type-string? (str tyyppi) tyyppi)
+                         :hash (konv/sha256 x)
+                         :data x})))
+                  data)))

@@ -1,7 +1,14 @@
 CREATE TABLE tapahtuma (
-   nimi TEXT PRIMARY KEY,
-   kanava TEXT UNIQUE NOT NULL,
+   kanava TEXT PRIMARY KEY,
+   nimi TEXT UNIQUE NOT NULL,
    uusin_arvo JSONB
+);
+
+CREATE TABLE tapahtuman_tiedot (
+    id SERIAL PRIMARY KEY,
+    arvo JSONB,
+    kanava TEXT REFERENCES tapahtuma(kanava),
+    luotu TIMESTAMP
 );
 
 CREATE OR REPLACE FUNCTION esta_nimen_ja_kanavan_paivitys() RETURNS trigger AS $$
@@ -15,25 +22,64 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER esta_nimen_ja_kanavan_paivitys
+CREATE TRIGGER tg_esta_nimen_ja_kanavan_paivitys
 BEFORE UPDATE
   ON tapahtuma
 FOR EACH ROW
 EXECUTE PROCEDURE esta_nimen_ja_kanavan_paivitys();
 
-CREATE OR REPLACE FUNCTION julkaise_tapahtuma(kanava_ TEXT, data JSONB) RETURNS bool AS
+CREATE OR REPLACE FUNCTION poista_vanhat_tapahtumat() RETURNS trigger AS $$
+BEGIN
+    DELETE FROM tapahtuman_tiedot
+    WHERE luotu < NOW() - interval '2 minutes';
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION resetoi_tapahtuman_tiedot_id_serial() RETURNS trigger AS $$
+BEGIN
+    IF(currval('tapahtuman_tiedot_id_seq') = 2147483647)
+    THEN
+      PERFORM setval('tapahtuman_tiedot_id_seq', 1);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ei välttämättä ideaalia hoitaa vanhdan datan
+-- poistoa triggerin kautta, mutta toimiipi
+CREATE TRIGGER tg_poista_vanhat_tapahtumat
+AFTER INSERT
+    ON tapahtuman_tiedot
+FOR EACH STATEMENT
+EXECUTE PROCEDURE poista_vanhat_tapahtumat();
+
+CREATE TRIGGER tg_resetoi_id_tapahtumien_tiedot_taulukosta
+AFTER INSERT
+    ON tapahtuman_tiedot
+FOR EACH STATEMENT
+EXECUTE PROCEDURE resetoi_tapahtuman_tiedot_id_serial();
+
+CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data JSONB) RETURNS bool AS
 $$
 DECLARE
     _sqlstate TEXT;
     message  TEXT;
     detail   TEXT;
     hint     TEXT;
+    _id INTEGER;
 BEGIN
     UPDATE tapahtuma
     SET uusin_arvo=data
-    WHERE kanava = kanava_;
+    WHERE kanava = _kanava;
 
-    SELECT pg_notify(kanava_, data);
+    INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu)
+    VALUES(data, _kanava, NOW())
+    RETURNING id
+    INTO _id;
+
+    PERFORM pg_notify(_kanava, _id::TEXT);
+
     RETURN true;
 
 EXCEPTION

@@ -8,7 +8,8 @@
             [clj-time.format :as format]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [digest :as digest])
   (:import (clojure.lang Keyword)
            (java.io ByteArrayOutputStream ObjectOutputStream)))
 
@@ -388,8 +389,26 @@
                  %)
               teksti)))
 
-(defn to-byte-array [x]
+(def null-writer (proxy [java.io.Writer]
+                        []
+                   (append ([_]) ([_ _ _]))
+                   (write ([_]) ([_ _ _]))))
+
+(defn to-byte-array
+  "Muuttaa annetun objektin byte-arrayksi"
+  [x]
+  ;; Jostain syystä input streamista tuleva data pitää ensin kirjoittaa jonnekkin ennen kuin konvertoi byte-arrayksi.
+  ;; Eli jos x on arvo, joka on luettu input streamista, niin ensin krijoitetaan se /dev/null:iin.
+  ;; Jos tätä ei tee, niin tuo ObjectOutputStream nakkaa:
+  ;
+  ; Execution error (NotSerializableException) at java.io.ObjectOutputStream/writeObject0 (ObjectOutputStream.java:1185).
+  ; clojure.lang.RT$4
+  (binding [*out* null-writer]
+    (pr x))
   (with-open [out (ByteArrayOutputStream.)
               os (ObjectOutputStream. out)]
     (.writeObject os x)
     (.toByteArray out)))
+
+(defn sha256 [x]
+  (digest/sha-256 (to-byte-array x)))

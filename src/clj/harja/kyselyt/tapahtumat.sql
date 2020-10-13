@@ -14,4 +14,12 @@ SELECT julkaise_tapahtuma(:kanava::TEXT, :data::JSONB);
 
 -- name: uusin-arvo
 -- single?: true
-SELECT uusin_arvo FROM tapahtuma WHERE nimi = :nimi
+SELECT uusin_arvo::TEXT FROM tapahtuma WHERE nimi = :nimi
+
+-- name: tapahtuman-arvot
+SELECT arvo::TEXT
+FROM tapahtuman_tiedot
+WHERE id IN (:idt)
+
+-- name: kaikki-kanavat
+SELECT kanava FROM tapahtuma;
