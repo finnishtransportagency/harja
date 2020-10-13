@@ -53,6 +53,7 @@
     [harja.palvelin.palvelut.aliurakoitsijat :as aliurakoitsijat]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
+    [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -357,6 +358,9 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
+      :toteumat (component/using
+                  (kustannusten-seuranta/->KustannustenSeuranta)
+                  [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])

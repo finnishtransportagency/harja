@@ -6,6 +6,7 @@
 
             [harja.loki :refer [log]]
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.views.urakka.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.kulut :as kohdistetut-kulut]
@@ -37,4 +38,10 @@
           :maksuerat
           ^{:key "maksuerat"}
           (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
-            [maksuerat/maksuerat-listaus])]]))))
+            [maksuerat/maksuerat-listaus])
+
+          "Kustannusten seuranta"
+          :kustannusten-seuranta
+          ^{:key "kustannusten-seuranta"}
+          [kustannusten-seuranta/kustannusten-seuranta]
+          ]]))))

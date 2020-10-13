@@ -204,6 +204,7 @@
                                                                         ::t/maara nil}]}}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
+(def kustannusten-seuranta-nakymassa? (atom false))
 
 
 (def kulut-default {:parametrit  {:haetaan 0}
@@ -221,6 +222,7 @@
 
 
 (defonce toteumat-maarat (cursor tila [:toteumat :maarien-toteumat]))
+(defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
