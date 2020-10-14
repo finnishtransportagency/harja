@@ -6,7 +6,7 @@
 
             [harja.loki :refer [log]]
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
-            [harja.views.urakka.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.views.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.kulut :as kohdistetut-kulut]

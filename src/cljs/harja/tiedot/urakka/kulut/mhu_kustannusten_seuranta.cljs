@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.kustannusten-seuranta
+(ns harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta
   "UI controlleri kustannusten seurantaan"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
@@ -30,8 +30,8 @@
 
 (defn ryhmittele-tehtavat
   [ryhmiteltavat]
-  (let [_ (js/console.log "ryhmiteltävät yksinkertainen: " (pr-str (group-by :tehtavaryhma ryhmiteltavat)))
-        ryhmitelty-tr (group-by :tehtavaryhma ryhmiteltavat)]
+  (let [_ (js/console.log "ryhmiteltävät yksinkertainen: " (pr-str (group-by :toimenpide ryhmiteltavat)))
+        ryhmitelty-tr (group-by :toimenpide ryhmiteltavat)]
     #_ (sort-by first
              (into {}
                    (map
@@ -39,7 +39,7 @@
                        [tehtavaryhma (sort-by first
                                               (group-by :tehtava tehtavat))])
                      ryhmitelty-tr)))
-    (group-by :tehtavaryhma ryhmiteltavat)))
+    (group-by :toimenpide ryhmiteltavat)))
 
 (defn hae-kustannukset [urakka-id toimenpide hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
   (let [alkupvm (when hoitokauden-alkuvuosi

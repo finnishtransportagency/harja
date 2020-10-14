@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kustannusten-seuranta
+(ns harja.views.urakka.kulut.mhu-kustannusten-seuranta
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.ikonit :as ikonit]
@@ -8,7 +8,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.kustannusten-seuranta :as kustannusten-seuranta-tiedot]
+            [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.ui.kentat :as kentat]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
@@ -27,7 +27,7 @@
 (defn- laske-prosentti
   "Olettaa saavansa molemmat parametrit big arvoina."
   [toteuma suunniteltu]
-  (if (or (= (big/->big 0) toteuma)
+  (if (or (big/eq (big/->big 0) toteuma)
           (nil? toteuma))
     0
     (big/fmt (big/mul (big/->big 100) (big/div suunniteltu toteuma)) 2)))
@@ -46,7 +46,7 @@
         toimenpiteet
         (map
           (fn [toimenpide]
-            (let [                                          ;_ (js/console.log "tehtavaryhma" (pr-str tehtavaryhma))
+            (let [_ (js/console.log "toimenpide" (pr-str toimenpide))
                   _ (reset! row-index-atom (inc @row-index-atom))
                   rivit (:tehtavat toimenpide)
                   muodostetut (if-not (= (get-in app [:valittu-rivi]) toimenpide)
@@ -54,7 +54,7 @@
                                (mapcat
                                  (fn [rivi]
                                    (let [_ (reset! row-index-atom (inc @row-index-atom))
-                                         _ (js/console.log "muodosteut mapcat :: rivi" (pr-str rivi))
+                                         _ (js/console.log "muodostetut mapcat :: rivi" (pr-str rivi))
                                          toteutunut-summa (big/->big (:toteutunut_summa rivi))
                                          budjetoitu-summa (big/->big (:budjetoitu_summa rivi))
                                          _ (js/console.log "toteutunut-summa" (pr-str toteutunut-summa) "budjetoitu-summa" (pr-str budjetoitu-summa))
@@ -64,7 +64,7 @@
                                      (concat
                                        [^{:key (hash rivi)}
                                         [:tr
-                                         [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi)]
+                                         [:td.strong {:style {:width (:tehtava leveydet)}} (:toimenpidekoodi_nimi rivi)]
                                          [:td {:style {:width (:caret leveydet)}} ]
                                          [:td {:style {:width (:budjetoitu leveydet)}} (str (big/fmt budjetoitu-summa 2) " ")]
                                          [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-summa 2) " ")]
