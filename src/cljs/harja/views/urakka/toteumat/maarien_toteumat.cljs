@@ -75,7 +75,9 @@
     "kpl"
 
     :else
-    ""))
+    (if (:yk rivi)
+      (:yk rivi)
+      "")))
 
 ; spekseistä laskettu
 (def leveydet {:tehtava "55%"
@@ -88,7 +90,7 @@
   (let [row-index-atom (r/atom 0)
         ll
         (mapcat
-          (fn [[tehtavaryhma rivit]]
+          (fn [[tryh rivit]]
             (let [_ (reset! row-index-atom (inc @row-index-atom))
                   muodostetut (mapcat
                                 (fn [rivi]
@@ -175,9 +177,9 @@
                                               [:td {:style {:width (:prosentti leveydet)}} "---"]])])))))
                                 rivit)]
               (concat [
-                       ^{:key (str "otsikko-" (hash tehtavaryhma))}
+                       ^{:key (str "otsikko-" (hash tryh))}
                        [:tr.header
-                        [:td {:colSpan "5"} tehtavaryhma]]]
+                        [:td {:colSpan "5"} tryh]]]
                       muodostetut)))
           r)]
     [:div.table-default

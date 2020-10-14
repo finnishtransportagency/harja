@@ -174,7 +174,7 @@
   [ryhmiteltavat filtterit]
   (let [ryhmiteltavat-filtteroitu (filter (tehtavien-filtteri-fn filtterit)
                                           ryhmiteltavat)
-        ryhmitelty-tr (group-by :tehtavaryhma
+        ryhmitelty-tr (group-by :tryh
                                 ryhmiteltavat-filtteroitu)]
     (sort-by first
              (into {}
