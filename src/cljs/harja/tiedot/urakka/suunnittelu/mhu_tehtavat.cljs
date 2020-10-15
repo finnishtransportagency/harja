@@ -185,19 +185,22 @@
                          (when (= 3 (:taso t))
                            t))
                        tehtavat)
-          {tehtavat->taulukko :tehtavat->taulukko} parametrit]
+          {tehtavat->taulukko :tehtavat->taulukko
+           hoitokausi         :hoitokausi} parametrit]
       (-> app
           (assoc :tehtavat-ja-toimenpiteet id-avaimilla-hierarkia
                  :tehtavat-taulukko (p/paivita-arvo (tehtavat->taulukko id-avaimilla-hierarkia) :lapset (filtteri-paivitys-fn toimenpide #{:tehtava})))
           (update :valinnat #(assoc % :noudetaan (do
                                                    (tuck-apurit/post! :tehtavamaarat-hierarkiassa
                                                                       {:urakka-id             urakka-id
-                                                                       :hoitokauden-alkuvuosi (or (:hoitokausi valinnat)
+                                                                       :hoitokauden-alkuvuosi (or hoitokausi
+                                                                                                  (:hoitokausi valinnat)
                                                                                                   alkuvuosi)}
                                                                       (merge
                                                                         {:onnistui           ->MaaraHakuOnnistui
                                                                          :epaonnistui        ->HakuEpaonnistui
-                                                                         :paasta-virhe-lapi? true} (when tehtavat->taulukko {:onnistui-parametrit [tehtavat->taulukko]})))
+                                                                         :paasta-virhe-lapi? true}
+                                                                        (when tehtavat->taulukko {:onnistui-parametrit [tehtavat->taulukko]})))
                                                    (:noudetaan %))
                                       :hoitokausi (pvm/vuosi (pvm/nyt))
                                       :toimenpide toimenpide)))))
@@ -216,11 +219,11 @@
     [{parametrit :parametrit} app]
     (-> app
         (tuck-apurit/post! :tehtavat
-                           {:urakka-id          (:id  (-> @tiedot/tila :yleiset :urakka))}
+                           {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))}
                            {:onnistui            ->TehtavaHakuOnnistui
-                           :epaonnistui         ->HakuEpaonnistui
-                           :onnistui-parametrit [parametrit]
-                           :paasta-virhe-lapi?  true})
+                            :epaonnistui         ->HakuEpaonnistui
+                            :onnistui-parametrit [parametrit]
+                            :paasta-virhe-lapi?  true})
         (update :valinnat #(assoc %
                              :virhe-noudettaessa false
                              :noudetaan (inc (:noudetaan %))))))

@@ -234,7 +234,7 @@
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (t/->HaeTehtavat
-                            {:hoitokausi         (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
+                            {:hoitokausi         :kaikki
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
