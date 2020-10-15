@@ -1,12 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain
-  (:require [harja.kyselyt
-             [hallintayksikot :as hallintayksikot-q]
-             [tarkastukset :as tarkastukset-q]
+  (:require
+    [clojure.string :as cstr]
+    [harja.kyselyt
              [urakat :as urakat-q]
              [laskut :as kulut-q]
-             [aliurakoitsijat :as ali-q]
-             [budjettisuunnittelu :as budjetti-q]
-             [kustannusarvioidut-tyot :as kust-q]]
+             [budjettisuunnittelu :as budjetti-q]]
             [harja.pvm :as pvm]))
 
 
@@ -46,7 +44,6 @@
   [db {:keys [alkupvm urakka-id loppupvm]}]
   (let [kuukausi-valittu? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         hoitokausi-valittu? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-        _ (println alkupvm loppupvm (pvm/aikana alkupvm 0 0 0 0) (pvm/joda-timeksi loppupvm) (pvm/joda-timeksi alkupvm) (pvm/aikana loppupvm 23 59 59 0) #_(pvm/suomen-aikavyohykkeeseen alkupvm) #_(pvm/suomen-aikavyohykkeeseen loppupvm))
         alkupvm-valittu-kuu-tai-vali (cond
                                        hoitokausi-valittu? (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))
                                        :default alkupvm)
@@ -110,7 +107,7 @@
                                            (rest
                                              (transduce
                                                (comp (map str)
-                                                     (map #(clojure.string/replace % #"(\d+)\.(\d+)" "$1,$2")))
+                                                     (map #(cstr/replace % #"(\d+)\.(\d+)" "$1,$2")))
                                                conj
                                                k)))))
         rivit (into [] muuta-pilkut-ja-poista-id rivit)]
