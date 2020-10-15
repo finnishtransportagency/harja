@@ -53,14 +53,21 @@
         alkupvm-hoitokausi (if (pvm/ennen? loppupvm (pvm/hoitokauden-loppupvm (pvm/vuosi loppupvm)))
                              (pvm/hoitokauden-alkupvm (dec (pvm/vuosi loppupvm)))
                              (pvm/hoitokauden-alkupvm (pvm/vuosi loppupvm)))
-        loppupvm-hoitokausi (pvm/hoitokauden-loppupvm (inc (pvm/vuosi alkupvm-hoitokausi)))
+        loppupvm-hoitokausi (let [loppu (pvm/hoitokauden-loppupvm (inc (pvm/vuosi alkupvm-hoitokausi)))]
+                              (if (pvm/jalkeen? loppu (pvm/nyt))
+                                (pvm/nyt)
+                                loppu))
         rivit-hoitokauden-alusta (mapv #(->
-                                          [(:jarjestys %) (:nimi %) (:summa %)])
+                                          [(:jarjestys %)
+                                           (:nimi %)
+                                           (:summa %)])
                                        (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
                                                                                             :loppupvm loppupvm-hoitokausi
                                                                                             :urakka   urakka-id}))
         rivit-tassa-kuussa (mapv #(->
-                                    [(:jarjestys %) (:nimi %) (:summa %)])
+                                    [(:jarjestys %)
+                                     (:nimi %)
+                                     (:summa %)])
                                  (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
                                                                                       :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                       :urakka   urakka-id}))
@@ -69,9 +76,6 @@
                  {:leveys 1 :otsikko (cond
                                        kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm-valittu-kuu-tai-vali)) " " (pvm/vuosi alkupvm-valittu-kuu-tai-vali))
                                        :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
-        ; [id otsikko summa]
-        ; [id otsikko summa-hka summa-kk]
-        ;  0  1       2         3
         rivit (loop [rivit-hoitokausi rivit-hoitokauden-alusta
                      rivit-kuukausi rivit-tassa-kuussa
                      kaikki {}]
@@ -102,18 +106,16 @@
                              (+ (nth %1 2) (nth %2 3))])
                          ["Yhteensä" 0 0]
                          rivit)
-        muuta-pilkut-ja-poista-id (comp
-                                    (map (fn [k]
-                                           (rest
-                                             (transduce
-                                               (comp (map str)
-                                                     (map #(cstr/replace % #"(\d+)\.(\d+)" "$1,$2")))
-                                               conj
-                                               k)))))
+        muuta-pilkut-ja-poista-id (map (fn [k]
+                                         (rest
+                                           (transduce
+                                             (comp (map str)
+                                                   (map #(cstr/replace % #"(\d+)\.(\d+)" "$1,$2")))
+                                             conj
+                                             k))))
         rivit (into [] muuta-pilkut-ja-poista-id rivit)]
     {:otsikot  otsikot
      :yhteensa yhteensa
-     :debug    ["HKA" rivit-hoitokauden-alusta "RTA" rivit-tassa-kuussa "APVMVKV" alkupvm-valittu-kuu-tai-vali "LPVKV" loppupvm-valittu-kuu-tai-vali "APVHK" alkupvm-hoitokausi "LPVHK" loppupvm-hoitokausi]
      :rivit    rivit}))
 
 (defn- kulut-hallintayksikolle
@@ -167,10 +169,6 @@
         tavoitehinta (hae-tavoitehinta db parametrit)
         yhteensa-hoitokauden-alusta (second yhteensa)]
     [:raportti {:nimi "Kulut tehtäväryhmittäin"}
-     #_[:teksti (str "Rapsapapsa! " (pr-str parametrit)
-                     " rivit " (pr-str rivit)
-                     " th " (pr-str tavoitehinta))]
-     #_[:teksti (str "DEBUG" (pr-str debug))]
      [:taulukko
       {:viimeinen-rivi-yhteenveto? true
        :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
