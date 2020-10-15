@@ -483,7 +483,7 @@
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli?]} data]
   (let [input-id (str "harja-checkbox-" (gensym))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
@@ -491,13 +491,20 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? disabled?]} data]
+      (fn [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli? disabled?
+                   iso-clickalue?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
-          [:div.boolean
+          [:div.boolean {:style {:padding (when iso-clickalue?
+                                            "14px")}
+                         :on-click (when iso-clickalue?
+                                     #(do
+                                        (.stopPropagation %)
+                                        (swap! data not)))}
            (let [checkbox [:div.checkbox
-                           [:label {:on-click #(.stopPropagation %)}
+                           [:label {:class label-luokka
+                                    :on-click #(.stopPropagation %)}
                             [:input {:id        input-id
                                      :type      "checkbox"
                                      :disabled  disabled?

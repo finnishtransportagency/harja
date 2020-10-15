@@ -46,63 +46,46 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn listaa-lisa-aineet [lisa-aineet]
-  (let [_ (js/console.log "lisa-aineet" (pr-str lisa-aineet))
-        _ (js/console.log "lisa-aineet2" (pr-str (map :lisaaine/nimi lisa-aineet)))]
+(defn- aineen-otsikko-checkbox
+  [e! {:keys [otsikko arvo label-luokka polku]}]
+  [kentat/tee-kentta
+   {:tyyppi :checkbox :label-luokka label-luokka
+    :teksti otsikko :vayla-tyyli? true
+    :nayta-rivina? true :iso-clickalue? true}
+   (r/wrap
+     arvo
+     (fn [uusi-arvo]
+       (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))])
 
-    (str/join "," (map :lisaaine/nimi lisa-aineet))))
-
-(defn- valitut-sideaineet [{:keys [e! app]} {{sideaineet :sideaineet :as lomake} :data}]
-  (let [_ (js/console.log "valitut-sideaineet :: lomake" (pr-str lomake))
-        _ (js/console.log "valitut-sideaineet :: sideaineet" (pr-str sideaineet))
-        paivita! (fn [polku indeksi arvo]
-                   (js/console.log "polku indeksi arvo" polku indeksi arvo))]
-    [:div
-     (doall
-       (map-indexed
-         (fn [indeksi sideaine]
-           [:div "indeksi"]
-           #_ [kentat/tee-kentta
-            {:otsikko "Tyyppi"
-             :nimi [:sideaineet indeksi]
-             ::ui-lomake/col-luokka ""
-             ;:virhe? (validi? [::t/toteumat indeksi ::t/tehtava])
-             :tyyppi :valinta
-             :valinta-nayta (fn [arvo] (str arvo))
-             :vayla-tyyli? true
-             :valinta-arvo identity
-             :valinnat pot2-domain/paallystemassan-sideaineet
-             :pakollinen? true}
-            (r/wrap sideaine
-                    (r/partial paivita! :sideaineet indeksi))])
-         sideaineet))]
-    ))
+(defn- otsikko-ja-kentta
+  [e! {:keys [otsikko tyyppi arvo polku pakollinen?]}]
+  [:div.otsikko-ja-kentta
+   [:div
+    [:span.kentan-label otsikko]
+    (when pakollinen? [:span.required-tahti " *"])]
+   [kentat/tee-kentta {:tyyppi tyyppi :teksti otsikko :nayta-rivina? false}
+    (r/wrap
+      arvo
+      (fn [uusi-arvo]
+        (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))]])
 
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
-  [:span
+  [:div.ainevalinta-kentat
    (for [t aineet]
       (let [polun-avaimet [tyyppi (::pot2-domain/koodi t)]
             {:keys [valittu? esiintyma km-arvo litteysluku massapr]} (get-in rivi (cons :data polun-avaimet))]
         ^{:key t}
-        [:div.runkoainevalinta
-         [kentat/tee-kentta
-          {:tyyppi :checkbox
-           :teksti (::pot2-domain/nimi t)
-           :nayta-rivina? true}
-          (r/wrap
-            valittu?
-            (fn [arvo]
-              (e! (tiedot-massa/->PaivitaRunkoaineenTieto (conj polun-avaimet :valittu?) arvo))))]
+        [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
+         [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
+                                      :arvo valittu? :label-luokka (when valittu? "bold")
+                                      :polku (conj polun-avaimet :valittu?)}]
 
-         (if valittu?
-           [:div
-            [kentat/tee-kentta
-             {:tyyppi :string :teksti "Kiviainesesiintymä"}
-             (r/wrap
-               esiintyma
-               (fn [arvo]
-                 (e! (tiedot-massa/->PaivitaRunkoaineenTieto (conj polun-avaimet :esiintyma) arvo))))]]
-           [:span "ei valittu"])]))])
+         (when valittu?
+           [:div.kentat-haitari
+         [otsikko-ja-kentta e! {:otsikko "Kiviainesesiintymä"
+                                :tyyppi :string :pakollinen? true
+                                :arvo esiintyma
+                                :polku (conj polun-avaimet :esiintyma)}]])]))])
 
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot

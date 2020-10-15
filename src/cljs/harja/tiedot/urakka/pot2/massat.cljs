@@ -26,7 +26,7 @@
 (defrecord TallennaMassaEpaonnistui [vastaus])
 (defrecord TyhjennaLomake [data])
 (defrecord PaivitaLomake [data])
-(defrecord PaivitaRunkoaineenTieto [polku arvo])
+(defrecord PaivitaAineenTieto [polku arvo])
 
 ;; Haut
 (defrecord HaePot2Massat [])
@@ -103,9 +103,9 @@
                       (update :pot2-massa-lomake merge data))]
       uusiapp))
 
-  PaivitaRunkoaineenTieto
+  PaivitaAineenTieto
   (process-event [{polku :polku arvo :arvo} app]
-    (log "PaivitaRunkoaineenTieto polku " (pr-str polku), " arvo:" (pr-str arvo))
+    (log "PaivitaAineenTieto polku " (pr-str polku), " arvo:" (pr-str arvo))
     (let [uusiapp (assoc-in app
                             (vec (cons :pot2-massa-lomake polku)) arvo)]
       uusiapp))
