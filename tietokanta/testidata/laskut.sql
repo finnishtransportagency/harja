@@ -36,6 +36,7 @@ $$
         tehtava_palkkio          INTEGER;
         tehtava_korvaus          INTEGER;
         tehtava_erillishankinnat INTEGER;
+        tehtava_mhu_hoidon_johto INTEGER;
 
     BEGIN
         kayttaja_id := (select id from kayttaja where kayttajanimi = 'Integraatio');
@@ -47,11 +48,12 @@ $$
         tinst_yllapito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Ylläpito TP');
         tinst_mhu_hoidon_johto := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         tehtava_talvihoito := (select id from tehtavaryhma where nimi = 'Talvihoito (A)');
-        tehtava_soratie := (select id from tehtavaryhma where nimi = 'Sorateiden hoito');
-        tehtava_paikkaus := (select id from tehtavaryhma where nimi = 'Päällysteiden paikkaus');
-        tehtava_yllapito := (select id from tehtavaryhma where nimi = 'MHU Ylläpito');
+        tehtava_soratie := (select id from tehtavaryhma where nimi = 'Sorastus (M)');
+        tehtava_paikkaus := (select id from tehtavaryhma where nimi = 'Kuumapäällyste (Y1)');
+        tehtava_yllapito := (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)');
         tehtava_palkkio := (select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)');
-        tehtava_korvaus := (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)');
+        tehtava_korvaus := (select id from tehtavaryhma where nimi = 'RKR-korjaus (Q)');
+        tehtava_mhu_hoidon_johto := (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)');
         tehtava_erillishankinnat := (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)');
 
 -- Laskut MHU raporttia varten -  Maksettu 15.10.2019 - Laskutuskausi alkaa 1.10
@@ -107,10 +109,10 @@ INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, teh
 -- Korvausinvestoinnit Oulu MHU MHU Korvausinvestointi TP
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 6000.77 AND tyyppi = 'kiinteasti-hinnoiteltu' AND erapaiva = '2019-10-16'), 1, tinst_korvaus,
- tehtava_yllapito, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 6000.77, '2019-10-01', '2019-10-31', current_timestamp, kayttaja_id);
+ tehtava_korvaus, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 6000.77, '2019-10-01', '2019-10-31', current_timestamp, kayttaja_id);
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 600.77 AND tyyppi = 'laskutettava' AND erapaiva = '2019-10-16'), 1, tinst_korvaus,
- tehtava_yllapito, NULL, 'lisatyo'::MAKSUERATYYPPI, 600.77, '2019-10-01', '2019-10-31', current_timestamp, kayttaja_id);
+ tehtava_korvaus, NULL, 'lisatyo'::MAKSUERATYYPPI, 600.77, '2019-10-01', '2019-10-31', current_timestamp, kayttaja_id);
 -- Ylläpito -  Oulu MHU MHU Ylläpito TP
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 7000.77 AND tyyppi = 'kiinteasti-hinnoiteltu' AND erapaiva = '2019-10-16'), 1, tinst_yllapito,
@@ -153,9 +155,9 @@ INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, teh
 ((select id from lasku where kokonaissumma = 500.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-03-20'), 1, tinst_paallystys, tehtava_paikkaus, NULL, 'lisatyo'::MAKSUERATYYPPI, 500.20, '2020-03-15', '2020-03-20', current_timestamp, kayttaja_id);
 -- Korvausinvestoinnit
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
-((select id from lasku where kokonaissumma = 6000.20 AND tyyppi = 'kiinteasti-hinnoiteltu' AND erapaiva = '2020-03-20'), 1, tinst_korvaus, tehtava_yllapito, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 6000.20, '2020-03-15', '2020-03-20', current_timestamp, kayttaja_id);
+((select id from lasku where kokonaissumma = 6000.20 AND tyyppi = 'kiinteasti-hinnoiteltu' AND erapaiva = '2020-03-20'), 1, tinst_korvaus, tehtava_korvaus, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 6000.20, '2020-03-15', '2020-03-20', current_timestamp, kayttaja_id);
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
-((select id from lasku where kokonaissumma = 600.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-03-20'), 1, tinst_korvaus, tehtava_yllapito, NULL, 'lisatyo'::MAKSUERATYYPPI, 600.20, '2020-03-15', '2020-03-20', current_timestamp, kayttaja_id);
+((select id from lasku where kokonaissumma = 600.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-03-20'), 1, tinst_korvaus, tehtava_korvaus, NULL, 'lisatyo'::MAKSUERATYYPPI, 600.20, '2020-03-15', '2020-03-20', current_timestamp, kayttaja_id);
 -- Ylläpito
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 7000.20 AND tyyppi = 'kiinteasti-hinnoiteltu' AND erapaiva = '2020-03-20'), 1, tinst_yllapito, tehtava_yllapito, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 7000.20, '2020-03-15', '2020-03-20', current_timestamp, kayttaja_id);
@@ -171,7 +173,7 @@ INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-20'), 1, tinst_mhu_hoidon_johto, tehtava_palkkio, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 10.20, '2020-04-15', '2020-04-20', current_timestamp, kayttaja_id);
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
-((select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21'), 1, tinst_mhu_hoidon_johto, tehtava_korvaus, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 10.20, '2020-04-15', '2020-04-20', current_timestamp, kayttaja_id);
+((select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21'), 1, tinst_mhu_hoidon_johto, tehtava_mhu_hoidon_johto, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 10.20, '2020-04-15', '2020-04-20', current_timestamp, kayttaja_id);
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22'), 1, tinst_mhu_hoidon_johto, tehtava_erillishankinnat, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 10.20, '2020-04-15', '2020-04-20', current_timestamp, kayttaja_id);
 

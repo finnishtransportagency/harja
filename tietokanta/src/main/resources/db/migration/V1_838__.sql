@@ -8,14 +8,11 @@ BEGIN
                   FROM toimenpidekoodi tk3
                            JOIN toimenpidekoodi tk4 ON tk4.emo = tk3.id
                            JOIN toimenpideinstanssi ti ON tk3.id = ti.toimenpide
-                           JOIN tehtavaryhma tr3 ON tk4.tehtavaryhma = tr3.id
-                           JOIN tehtavaryhma tr2 ON tr2.id = tr3.emo
-                           JOIN tehtavaryhma tr1 ON tr1.id = tr2.emo
+                           JOIN tehtavaryhma tr ON tk4.tehtavaryhma = tr.id
                   WHERE (tk4.id = tehtava_ OR tehtava_ IS NULL)
-                    AND tr1.emo IS NULL
+                    AND tr.tyyppi = 'alataso'::tehtavaryhmatyyppi
                     AND tk4.taso = 4
-                    AND (tr1.id = tehtavaryhma_ OR tr2.id = tehtavaryhma_ OR tr3.id = tehtavaryhma_ OR
-                         tehtavaryhma_ IS NULL)
+                    AND (tr.id = tehtavaryhma_ OR tehtavaryhma_ IS NULL)
                     AND (ti.id = toimenpideinstanssi_ OR toimenpideinstanssi_ IS NULL))
     INTO kaikki_ok;
     RETURN kaikki_ok;
