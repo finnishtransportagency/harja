@@ -4,3 +4,7 @@
   ;; Tuotannossa debug inspektori ei tee mitään
   )
 (defonce kehitys? true)
+
+(defn df-shell [& args])
+
+(defn df-shell-kaikki [& args])
