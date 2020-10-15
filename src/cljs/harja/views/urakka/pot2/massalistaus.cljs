@@ -73,7 +73,8 @@
   [:div.ainevalinta-kentat
    (for [t aineet]
       (let [polun-avaimet [tyyppi (::pot2-domain/koodi t)]
-            {:keys [valittu? esiintyma km-arvo litteysluku massapr]} (get-in rivi (cons :data polun-avaimet))]
+            {:keys [valittu? esiintyma km-arvo litteysluku massaprosentti pitoisuus]}
+            (get-in rivi (cons :data polun-avaimet))]
         ^{:key t}
         [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
          [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
@@ -82,10 +83,26 @@
 
          (when valittu?
            [:div.kentat-haitari
-         [otsikko-ja-kentta e! {:otsikko "Kiviainesesiintymä"
-                                :tyyppi :string :pakollinen? true
-                                :arvo esiintyma
-                                :polku (conj polun-avaimet :esiintyma)}]])]))])
+            [otsikko-ja-kentta e! {:otsikko "Kiviainesesiintymä"
+                                   :tyyppi :string :pakollinen? true
+                                   :arvo esiintyma
+                                   :polku (conj polun-avaimet :esiintyma)}]
+            [otsikko-ja-kentta e! {:otsikko "KM-arvo"
+                                   :tyyppi :numero :pakollinen? true
+                                   :arvo km-arvo
+                                   :polku (conj polun-avaimet :km-arvo)}]
+            [otsikko-ja-kentta e! {:otsikko "Litteysluku"
+                                   :tyyppi :numero :pakollinen? true
+                                   :arvo litteysluku
+                                   :polku (conj polun-avaimet :litteysluku)}]
+            [otsikko-ja-kentta e! {:otsikko "Massa-%"
+                                   :tyyppi :numero :pakollinen? true
+                                   :arvo massaprosentti
+                                   :polku (conj polun-avaimet :massaprosentti)}]
+            [otsikko-ja-kentta e! {:otsikko "Pitoisuus"
+                                   :tyyppi :numero :pakollinen? true
+                                   :arvo pitoisuus
+                                   :polku (conj polun-avaimet :pitoisuus)}]])]))])
 
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
