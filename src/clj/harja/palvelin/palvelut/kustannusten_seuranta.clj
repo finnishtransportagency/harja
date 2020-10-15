@@ -27,11 +27,12 @@
 (defn- hae-urakan-kustannusten-seuranta-toimenpideittain [db user {:keys [urakka-id tehtavaryhma alkupvm loppupvm] :as tiedot}]
   ;; TODO tarkista käyttöoikeudet
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [t (if (= "Kaikki" tehtavaryhma) nil tehtavaryhma)
+    (let [_ (println "hae-urakan-kustannusten-seuranta-toimenpideittain :: tiedot " (pr-str tiedot))
+          t (if (= "Kaikki" tehtavaryhma) nil tehtavaryhma)
           res (kustannusten-seuranta-q/listaa-tehtavat-ja-toimenpiteet-kustannusten-seurantaan db {:urakka urakka-id
                                                                                                    ;:tehtavaryhma t
-                                                                                                   ;:alkupvm alkupvm
-                                                                                                   ;:loppupvm loppupvm
+                                                                                                   :alkupvm alkupvm
+                                                                                                   :loppupvm loppupvm
                                                                                                    })
           _ (println "Rivit kustannusten seurantaan " (pr-str res))]
       res)

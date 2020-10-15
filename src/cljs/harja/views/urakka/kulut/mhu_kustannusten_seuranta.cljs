@@ -40,57 +40,63 @@
                :erotus "9%"
                :prosentti "9%"})
 
+(defn formatoi-naytolle->big
+  ([arvo] (formatoi-naytolle->big arvo false))
+  ([arvo on-big?]
+   (let [arvo (if on-big?
+                arvo
+                (big/->big arvo))]
+     (if (nil? arvo) "0,00"
+                     (big/fmt arvo 2)))))
+
 (defn- ryhmitellyt-taulukko [e! app r]
   (let [row-index-atom (r/atom 0)
         avattava? true
         toimenpiteet
         (map
           (fn [toimenpide]
-            (let [_ (js/console.log "toimenpide" (pr-str toimenpide))
-                  _ (reset! row-index-atom (inc @row-index-atom))
+            (let [_ (reset! row-index-atom (inc @row-index-atom))
                   rivit (:tehtavat toimenpide)
                   muodostetut (if-not (= (get-in app [:valittu-rivi]) toimenpide)
                                 nil
-                               (mapcat
-                                 (fn [rivi]
-                                   (let [_ (reset! row-index-atom (inc @row-index-atom))
-                                         _ (js/console.log "muodostetut mapcat :: rivi" (pr-str rivi))
-                                         toteutunut-summa (big/->big (:toteutunut_summa rivi))
-                                         budjetoitu-summa (big/->big (:budjetoitu_summa rivi))
-                                         _ (js/console.log "toteutunut-summa" (pr-str toteutunut-summa) "budjetoitu-summa" (pr-str budjetoitu-summa))
-                                         erotus (big/->big (big/minus budjetoitu-summa toteutunut-summa))
-                                         ;_ (js/console.log "erotus" erotus)
-                                         {:keys [tyyppi]} (first (second rivi))]
-                                     (concat
-                                       [^{:key (hash rivi)}
-                                        [:tr
-                                         [:td.strong {:style {:width (:tehtava leveydet)}} (:toimenpidekoodi_nimi rivi)]
-                                         [:td {:style {:width (:caret leveydet)}} ]
-                                         [:td {:style {:width (:budjetoitu leveydet)}} (str (big/fmt budjetoitu-summa 2) " ")]
-                                         [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-summa 2) " ")]
-                                         [:td {:style {:width (:erotus leveydet)}} (str (big/fmt erotus 2) " ")]
-                                         [:td {:style {:width (:prosentti leveydet)}} (laske-prosentti budjetoitu-summa toteutunut-summa)]]]
-
-                                       )))
-                                 rivit))]
-              (concat [
-                       ^{:key (str "otsikko-" (hash toimenpide))}
-                       [:tr.header
-                        (merge
-                          (when avattava?
-                            {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi toimenpide))})
-                          {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when avattava? "klikattava"))})
-                        [:td {:style {:width (:tehtava leveydet)}} (:toimenpide toimenpide)]
-                        [:td {:style {:width (:caret leveydet)}} (if
-                                                                   (= (get-in app [:valittu-rivi]) toimenpide)
-                                                                   [ikonit/livicon-chevron-up]
-                                                                   [ikonit/livicon-chevron-down])]
-                        [:td {:style {:width (:budjetoitu leveydet)}}  (:yht-budjetoitu-summa toimenpide)]
-                        [:td {:style {:width (:toteuma leveydet)}}  (:yht-toteutunut-summa toimenpide)]
-                        [:td {:style {:width (:erotus leveydet)}} (- (:yht-budjetoitu-summa toimenpide) (:yht-toteutunut-summa toimenpide)) ]
-                        [:td {:style {:width (:prosentti leveydet)}}  (laske-prosentti (big/->big (:yht-budjetoitu-summa toimenpide)) (big/->big (:yht-toteutunut-summa toimenpide)))]
-                        ]]
-                      muodostetut)))
+                                (mapcat
+                                  (fn [rivi]
+                                    (let [_ (reset! row-index-atom (inc @row-index-atom))
+                                          toteutunut-summa (big/->big (:toteutunut_summa rivi))
+                                          budjetoitu-summa (big/->big (:budjetoitu_summa rivi))
+                                          erotus (big/->big (big/minus budjetoitu-summa toteutunut-summa))
+                                          {:keys [tyyppi]} (first (second rivi))]
+                                      (concat
+                                        [^{:key (hash rivi)}
+                                         [:tr
+                                          [:td.strong {:style {:width (:tehtava leveydet)}} (str (or (:tehtava_nimi rivi) (:toimenpidekoodi_nimi rivi)))]
+                                          [:td {:style {:width (:caret leveydet)}}]
+                                          [:td {:style {:width (:budjetoitu leveydet)}} (str (formatoi-naytolle->big budjetoitu-summa false) " ")]
+                                          [:td {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
+                                          [:td {:style {:width (:erotus leveydet)}} (str (formatoi-naytolle->big erotus false) " ")]
+                                          [:td {:style {:width (:prosentti leveydet)}} (laske-prosentti budjetoitu-summa toteutunut-summa)]]])))
+                                  rivit))]
+              (doall (concat [
+                              ^{:key (str "otsikko-" (hash toimenpide))}
+                              [:tr.header
+                               (merge
+                                 (when avattava?
+                                   {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi toimenpide))})
+                                 {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when avattava? "klikattava"))})
+                               [:td {:style {:width (:tehtava leveydet)}} (:toimenpide toimenpide)]
+                               [:td {:style {:width (:caret leveydet)}} (if
+                                                                          (= (get-in app [:valittu-rivi]) toimenpide)
+                                                                          [ikonit/livicon-chevron-up]
+                                                                          [ikonit/livicon-chevron-down])]
+                               [:td {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (:toimenpide-budjetoitu-summa toimenpide))]
+                               [:td {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (:toimenpide-toteutunut-summa toimenpide))]
+                               [:td {:style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (:toimenpide-budjetoitu-summa toimenpide) (:toimenpide-toteutunut-summa toimenpide)))]
+                               [:td {:style {:width (:prosentti leveydet)}} (laske-prosentti
+                                                                              (big/->big
+                                                                                (or (:toimenpide-budjetoitu-summa toimenpide) 0))
+                                                                              (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0)))]
+                               ]]
+                             muodostetut))))
           r)]
     [:div.table-default
      [:table
@@ -103,6 +109,17 @@
         [:th {:style {:width (:erotus leveydet)}} "Erotus €"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
       [:tbody
+       ; Näytä yhteensä rivi, mikäli toimenpiteitä on olemassa
+       (when toimenpiteet
+         [:tr
+          [:th {:style {:width (:tehtava leveydet)}} (get-in app [:kustannukset-yhteensa :toimenpide])]
+          [:th {:style {:width (:caret leveydet)}} ""]
+          [:th {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]))]
+          [:th {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
+          [:th {:style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])))]
+          [:th {:style {:width (:prosentti leveydet)}} (laske-prosentti
+                                                         (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0))
+                                                         (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)))]])
        (doall
          (for [l toimenpiteet]
            ^{:key (hash l)}
@@ -117,7 +134,6 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         ryhmitellyt-maarat (get-in app [:kustannukset-grouped2])
-        _ (js/console.log  "ryhmitellyt-maarat" (pr-str ryhmitellyt-maarat))
         toimenpiteet (get-in app [:toimenpiteet])
         valittu-toimenpide (if (nil? (:valittu-toimenpide app))
                              {:otsikko "Kaikki" :id 0}
@@ -145,8 +161,7 @@
                                      :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn #(str "1.10." % "-30.9." (inc %))
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-        hoitokaudet]]
-      ]
+        hoitokaudet]]]
 
      [ryhmitellyt-taulukko e! app ryhmitellyt-maarat]]))
 
@@ -159,11 +174,12 @@
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset
                               (:id @nav/valittu-urakka)
                               (:valittu-toimenpide app)
-                              (get-in app [:hoitokauden-alkuvuosi]) nil nil)))))
+                              (:hoitokauden-alkuvuosi app)
+                              nil nil)))))
     (fn [e! app]
       [:div {:id "vayla"}
-       [:div "jee"
-         [kustannukset e! app]]])))
+       [:div
+        [kustannukset e! app]]])))
 
 (defn kustannusten-seuranta []
   (tuck/tuck tila/kustannusten-seuranta kustannusten-seuranta*))

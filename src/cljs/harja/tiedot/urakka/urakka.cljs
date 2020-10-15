@@ -203,6 +203,12 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}})
 
+(def kustannusten-seuranta-default-arvot {:kustannukset
+                                          {:valittu-toimenpide {:nimi "Kaikki" :id 0}
+                                           :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                                  (pvm/vuosi (pvm/nyt))
+                                                                                  (dec (pvm/vuosi (pvm/nyt))))}})
+
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
 
@@ -218,7 +224,8 @@
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
                      :suunnittelu suunnittelu-default-arvot
-                     :toteumat    toteumat-default-arvot}))
+                     :toteumat    toteumat-default-arvot
+                     :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
 
 (defonce toteumat-maarat (cursor tila [:toteumat :maarien-toteumat]))

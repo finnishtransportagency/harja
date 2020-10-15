@@ -16,9 +16,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (declare hae-kustannukset)
-(declare ryhmittele-tehtavat)
 
-(defrecord HaeKustannukset [urakka toimenpide hoitoikauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
+(defrecord HaeKustannukset [urakka toimenpide hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
 (defrecord KustannustenHakuOnnistui [vastaus])
 (defrecord KustannustenHakuEpaonnistui [vastaus])
 (defrecord ValitseToimenpide [urakka toimenpide])
@@ -28,21 +27,9 @@
 (defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 
-(defn ryhmittele-tehtavat
-  [ryhmiteltavat]
-  (let [_ (js/console.log "ryhmiteltävät yksinkertainen: " (pr-str (group-by :toimenpide ryhmiteltavat)))
-        ryhmitelty-tr (group-by :toimenpide ryhmiteltavat)]
-    #_ (sort-by first
-             (into {}
-                   (map
-                     (fn [[tehtavaryhma tehtavat]]
-                       [tehtavaryhma (sort-by first
-                                              (group-by :tehtava tehtavat))])
-                     ryhmitelty-tr)))
-    (group-by :toimenpide ryhmiteltavat)))
-
 (defn hae-kustannukset [urakka-id toimenpide hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
-  (let [alkupvm (when hoitokauden-alkuvuosi
+  (let [_ (js/console.log "hae-kustannukset ! " (pr-str hoitokauden-alkuvuosi))
+        alkupvm (when hoitokauden-alkuvuosi
                   (str hoitokauden-alkuvuosi "-10-01"))
         #_alkupvm #_(if aikavali-alkupvm
                       aikavali-alkupvm alkupvm)
@@ -83,36 +70,28 @@
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [ryhmitelty-tehtava (ryhmittele-tehtavat vastaus)
-          eka-toimenpide (first ryhmitelty-tehtava)
-          ekan-tehtavat (second eka-toimenpide)
-          ;_ (js/console.log "ekan-tehtavat" (pr-str ekan-tehtavat))
-          _ (doall
-              (mapv (fn [rivi]
-                      (js/console.log "second" (pr-str (second rivi)))) ekan-tehtavat))
-          ;_ (js/console.log "ekan-tehtavat" (pr-str ekan-tehtavat))
-          ;_
-          #_ (js/console.log "ekan-tehtavat-summat" (apply + (map (fn [rivi]
-                                                                 (let [_ (js/console.log "apply rivi" (pr-str rivi))]
-                                                                   (:toteutunut_summa (first (second rivi))))) ekan-tehtavat)))
-          _ (js/console.log "ryhmitelty-tehtava" (pr-str ryhmitelty-tehtava))
+    (let [ryhmitelty-tehtava (group-by :toimenpide vastaus)
           toimenpiteet (mapv
                          (fn [toimenpide]
-                           (let [toimenpiteen-tehtavat (second toimenpide)
-                                 _ (js/console.log "toimenpiteen-tehtavat" (pr-str toimenpiteen-tehtavat))]
+                           (let [toimenpiteen-tehtavat (second toimenpide)]
                              {:toimenpide (first toimenpide)
-                              :yht-toteutunut-summa (apply + (map (fn [rivi]
-                                                                    (:toteutunut_summa rivi))
-                                                                  toimenpiteen-tehtavat))
-                              :yht-budjetoitu-summa (apply + (map (fn [rivi]
-                                                                    (:budjetoitu_summa rivi))
-                                                                  toimenpiteen-tehtavat))
-                              :tehtavat toimenpiteen-tehtavat})
-                           )
+                              :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
+                                                                           (:toteutunut_summa rivi))
+                                                                         toimenpiteen-tehtavat))
+                              :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
+                                                                           (:budjetoitu_summa rivi))
+                                                                         toimenpiteen-tehtavat))
+                              :tehtavat toimenpiteen-tehtavat}))
                          ryhmitelty-tehtava)
-          _ (js/console.log "toimenpiteet" (pr-str toimenpiteet))
-          ]
+          yhteensa {:toimenpide "Tavoitehinta/Yhteensä"
+                    :yht-toteutunut-summa (apply + (map (fn [rivi]
+                                                          (:toimenpide-toteutunut-summa rivi))
+                                                        toimenpiteet))
+                    :yht-budjetoitu-summa (apply + (map (fn [rivi]
+                                                          (:toimenpide-budjetoitu-summa rivi))
+                                                        toimenpiteet))}]
       (-> app
+          (assoc-in [:kustannukset-yhteensa] yhteensa)
           (assoc-in [:kustannukset] vastaus)
           (assoc-in [:kustannukset-grouped] ryhmitelty-tehtava)
           (assoc-in [:kustannukset-grouped2] toimenpiteet))))
@@ -121,7 +100,6 @@
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
     app)
-
 
   HaeToimenpiteet
   (process-event [_ app]
