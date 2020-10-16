@@ -58,23 +58,87 @@
        (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))])
 
 (defn- otsikko-ja-kentta
-  [e! {:keys [otsikko tyyppi arvo polku pakollinen?]}]
-  [:div.otsikko-ja-kentta
+  [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys valinnat placeholder]}]
+  [:div.otsikko-ja-kentta.inline-block
    [:div
     [:span.kentan-label otsikko]
     (when pakollinen? [:span.required-tahti " *"])]
-   [kentat/tee-kentta {:tyyppi tyyppi :teksti otsikko :nayta-rivina? false}
+   [kentat/tee-kentta {:tyyppi tyyppi :teksti otsikko :nayta-rivina? false
+                       :leveys leveys :valinnat valinnat :placeholder placeholder}
     (r/wrap
       arvo
       (fn [uusi-arvo]
         (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))]])
 
+(defn- runkoaineiden-kentat [tiedot polun-avaimet]
+  (let [{:keys [esiintyma fillerityyppi km-arvo litteysluku
+                massaprosentti kuvaus]} tiedot
+        aineen-koodi (second polun-avaimet)]
+    ;; Käyttöliittymäsuunnitelman mukaisesti tietyillä runkoaineilla on tietyt kentät
+    ;; ja ainekohtaisia eroja käsitellään tässä contains? funktion avulla
+    (remove
+      nil?
+      [(when-not (contains? #{3 7} aineen-koodi)
+         {:otsikko "Kiviainesesiintymä"
+          :tyyppi :string :pakollinen? true
+          :arvo esiintyma :leveys "150px"
+          :polku (conj polun-avaimet :esiintyma)})
+       (when (contains? #{3} aineen-koodi)
+         {:otsikko "Tyyppi" :valinnat ["a" "b" "c"]
+          :tyyppi :valinta :pakollinen? true
+          :arvo fillerityyppi :leveys "150px"
+          :polku (conj polun-avaimet :fillerityyppi)})
+       (when-not (contains? #{3 7} aineen-koodi)
+         {:otsikko "KM-arvo"
+          :tyyppi :numero :pakollinen? true
+          :arvo km-arvo :leveys "55px"
+          :polku (conj polun-avaimet :km-arvo)})
+       (when-not (contains? #{3 7} aineen-koodi)
+         {:otsikko "Litteysluku"
+          :tyyppi :numero :pakollinen? true
+          :arvo litteysluku :leveys "68px"
+          :polku (conj polun-avaimet :litteysluku)})
+       (when (contains? #{7} aineen-koodi)
+         {:otsikko "Kuvaus" :placeholder "Anna ainetta kuvaava nimi"
+          :tyyppi :string :pakollinen? true
+          :arvo kuvaus :leveys "160px"
+          :polku (conj polun-avaimet :kuvaus)})
+       {:otsikko "Massa-%"
+        :tyyppi :numero :pakollinen? true
+        :arvo massaprosentti :leveys "55px"
+        :polku (conj polun-avaimet :massaprosentti)}])))
+
+(defn- sideaineiden-kentat [tiedot polun-avaimet]
+  (let [{:keys [sideainetyyppi pitoisuus]} tiedot]
+    [{:otsikko "Tyyppi" :valinnat ["a" "b" "c"]
+      :tyyppi :valinta :pakollinen? true
+      :arvo sideainetyyppi :leveys "150px"
+      :polku (conj polun-avaimet :sideainetyyppi)}
+     {:otsikko "Pitoisuus"
+      :tyyppi :numero :pakollinen? true
+      :arvo pitoisuus :leveys "55px"
+      :polku (conj polun-avaimet :pitoisuus)}]))
+
+(defn- lisaaineiden-kentat [tiedot polun-avaimet]
+  (let [{:keys [pitoisuus]} tiedot]
+    [{:otsikko "Pitoisuus"
+      :tyyppi :numero :pakollinen? true
+      :arvo pitoisuus :leveys "70px"
+      :polku (conj polun-avaimet :pitoisuus)}]))
+
+(defn- tyypin-kentat [tyyppi tiedot polun-avaimet]
+  (case tyyppi
+    :runkoaineet (runkoaineiden-kentat tiedot polun-avaimet)
+    :sideaineet (sideaineiden-kentat tiedot polun-avaimet)
+    :lisaaineet (lisaaineiden-kentat tiedot polun-avaimet)
+
+    nil))
+
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
   [:div.ainevalinta-kentat
    (for [t aineet]
       (let [polun-avaimet [tyyppi (::pot2-domain/koodi t)]
-            {:keys [valittu? esiintyma km-arvo litteysluku massaprosentti pitoisuus]}
-            (get-in rivi (cons :data polun-avaimet))]
+            {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
         ^{:key t}
         [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
          [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
@@ -83,26 +147,15 @@
 
          (when valittu?
            [:div.kentat-haitari
-            [otsikko-ja-kentta e! {:otsikko "Kiviainesesiintymä"
-                                   :tyyppi :string :pakollinen? true
-                                   :arvo esiintyma
-                                   :polku (conj polun-avaimet :esiintyma)}]
-            [otsikko-ja-kentta e! {:otsikko "KM-arvo"
-                                   :tyyppi :numero :pakollinen? true
-                                   :arvo km-arvo
-                                   :polku (conj polun-avaimet :km-arvo)}]
-            [otsikko-ja-kentta e! {:otsikko "Litteysluku"
-                                   :tyyppi :numero :pakollinen? true
-                                   :arvo litteysluku
-                                   :polku (conj polun-avaimet :litteysluku)}]
-            [otsikko-ja-kentta e! {:otsikko "Massa-%"
-                                   :tyyppi :numero :pakollinen? true
-                                   :arvo massaprosentti
-                                   :polku (conj polun-avaimet :massaprosentti)}]
-            [otsikko-ja-kentta e! {:otsikko "Pitoisuus"
-                                   :tyyppi :numero :pakollinen? true
-                                   :arvo pitoisuus
-                                   :polku (conj polun-avaimet :pitoisuus)}]])]))])
+            (for [k (tyypin-kentat tyyppi tiedot polun-avaimet)]
+              (do
+                ^{:key (:otsikko k)}
+                [:div.inline-block {:style {:margin-right "6px"}}
+                 [otsikko-ja-kentta e! k]]))])]))])
+
+(def sideaineen-kayttotapa
+  ["Lopputuotteen sideaine"
+   "Lisätty sideaine"])
 
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
@@ -174,10 +227,13 @@
 
 
        {:nimi :runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti
+        :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :runkoaineet runkoainetyypit])}
        {:nimi :sideaineet :otsikko "Sideaineet" :tyyppi :komponentti
+        :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideainetyypit])}
        {:nimi :lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti
+        :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]
 
       lomake]

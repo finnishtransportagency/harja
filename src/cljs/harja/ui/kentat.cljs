@@ -172,11 +172,13 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled?]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus
+                                       on-blur lomake? toiminta-f disabled? leveys]
                                 :as   kentta} data]
   [:input {:class       (cond-> nil
                                 lomake? (str "form-control ")
                                 disabled? (str "disabled"))
+           :style {:width (when leveys leveys)}
            :placeholder (placeholder kentta data)
            :on-change   #(let [v (-> % .-target .-value)]
                            (when (or (not regex) (re-matches regex v))
@@ -258,7 +260,7 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [{:keys [oletusarvo] :as kentta} data]
+(defmethod tee-kentta :numero [{:keys [oletusarvo leveys] :as kentta} data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
@@ -268,7 +270,7 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? leveys] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -280,6 +282,7 @@
           [:input {:class       (cond-> nil
                                         lomake? (str "form-control ")
                                         disabled? (str "disabled"))
+                   :style       {:width (when leveys leveys)}
                    :type        "text"
                    :disabled    disabled?
                    :placeholder (placeholder kentta data)
