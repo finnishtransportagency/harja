@@ -175,7 +175,7 @@
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-lisaa))) 666M) "Lisäys lisäsi määrän.")
 
     ;; uuden hoitokauden lisäys
-    (is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
+    #_(is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
     (is (= (:maara (first (filter #(and (= id-ib-rampit (:tehtava-id %))
                                        (= 2022 (:hoitokauden-alkuvuosi %))
