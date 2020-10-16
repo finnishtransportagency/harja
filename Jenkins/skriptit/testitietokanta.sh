@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+set -euo pipefail
 
 psql -h localhost -U harjatest template1 -c "DROP DATABASE IF EXISTS harjatest_template;"
 psql -h localhost -U harjatest template1 -c "CREATE DATABASE harjatest_template OWNER harjatest;"

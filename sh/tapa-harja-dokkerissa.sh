@@ -30,7 +30,10 @@ if [[ $POISTA_TRAMPOLIINIT -eq 0 ]]
 then
     # Poistetaan figwheelin trampoliini cachet
     echo "POISTETAAN TRAMPOLIINI CACHET"
-    find "${HARJA_DIR}/target/trampolines" -type f -delete
+    if [[ -d "${HARJA_DIR}/target/trampolines" ]]
+    then
+      find "${HARJA_DIR}/target/trampolines" -type f -delete;
+    fi
 fi
 
 echo "SAMMUTETAAN DOCKER COMPOSE"

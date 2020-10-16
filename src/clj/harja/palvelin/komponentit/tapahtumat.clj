@@ -19,11 +19,12 @@
             [harja.transit :as transit]
 
             [harja.kyselyt.tapahtumat :as q-tapahtumat]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.walk :as walk])
   (:import [org.postgresql PGNotification]
            [org.postgresql.util PSQLException]
            [java.util UUID]
-           (clojure.lang LazySeq PersistentList)))
+           (clojure.lang LazySeq PersistentList IMeta)))
 
 #_(defonce ^{:private true
            :doc "Tähän yhteyteen kaikki LISTEN hommat."}
@@ -36,11 +37,9 @@
 
 (defonce harja-tarkkailija nil)
 
-(def transit-write-handler {LazySeq
-                            (t/write-handler (constantly "lzse")
-                                             #(cast PersistentList %))})
+(def transit-write-handler {})
 
-(def transit-read-handler {"lzse" (t/read-handler #(cast PersistentList %))})
+(def transit-read-handler {})
 
 
 (s/def ::tapahtuma (s/or :keyword keyword?
@@ -108,12 +107,30 @@
       (.replace "<" "")
       (.replace ">" "")))
 
-(defn tarkasta-tapahtuman-data! [{:keys [payload palvelin hash lahetetty-data]} tapahtuma]
-  (when-not (= hash (konv/sha256 payload))
-    (log/error (str "[KOMPONENTTI-EVENT] Saatiin tapahtumasta " tapahtuma " erillainen data kuin lähetettiin."))
-    (when dev-tyokalut/dev-environment?
-      (log/info (str "[KOMPONENTTI-EVENT] Lahetetyn datan tiedot: " lahetetty-data))
-      (log/info (str "[KOMPONENTTI-EVENT] Saadun datan tiedot: " (dev-tyokalut/datan-tiedot payload {:type-string? true}))))))
+(defn sanitoi-julkaistava-data [data]
+  (walk/postwalk (fn [x]
+                   (cond-> x
+                           (instance? IMeta x) (with-meta nil)
+                           (instance? LazySeq x) (#(cast PersistentList %))
+                           ;; Walk funktiot käyttää 'into' funktiota, joka luo uuden
+                           ;; objektin niin, että sillä on eri hash
+                           (map? x) (#(apply array-map (mapcat identity %)))
+                           (set? x) (#(set %))
+                           (vector? x) (#(apply vector %))))
+                 data))
+
+(defn tapahtuman-data-ok?!
+  [{:keys [payload palvelin hash lahetetty-data]} tapahtuma]
+  (if-not (= hash (konv/sha256 payload))
+    (do (log/error (str "Saatiin tapahtumasta " tapahtuma " erillainen data kuin lähetettiin."))
+        (when dev-tyokalut/dev-environment?
+          (log/info (str "[KOMPONENTTI-EVENT] Saatu payload: " payload))
+          (log/info (str "[KOMPONENTTI-EVENT] palvelin: " palvelin))
+          (log/info (str "[KOMPONENTTI-EVENT] Lahetetyn datan tiedot: " lahetetty-data))
+          (log/info (str "[KOMPONENTTI-EVENT] Saadun datan tiedot: " (dev-tyokalut/datan-tiedot payload {:type-string? true})))
+          (dev-tyokalut/etsi-epakohta-datasta payload lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})))
+        false)
+    true))
 
 (defprotocol Kuuntele
   (kuuntele! [this tapahtuma callback])
@@ -165,11 +182,11 @@
                                                                                                                         tapahtuman-nimi (.getName notification)
                                                                                                                         json-data (-> (q-tapahtumat/tapahtuman-arvot db {:idt #{tapahtumadatan-id}}) first :arvo)
                                                                                                                         data (transit/lue-transit-string json-data transit-read-handler)]
-                                                                                                                    (tarkasta-tapahtuman-data! data tapahtuman-nimi)
-                                                                                                                    (doseq [kasittelija (get @kuuntelijat tapahtuman-nimi)]
-                                                                                                                      ;; Käsittelijä ei sitten saa blockata
-                                                                                                                      (kasittelija data))
-                                                                                                                    (async/put! tarkkailu-kanava {::tapahtuma tapahtuman-nimi ::data data})))
+                                                                                                                    (when (tapahtuman-data-ok?! data tapahtuman-nimi)
+                                                                                                                      (doseq [kasittelija (get @kuuntelijat tapahtuman-nimi)]
+                                                                                                                        ;; Käsittelijä ei sitten saa blockata
+                                                                                                                        (kasittelija data))
+                                                                                                                      (async/put! tarkkailu-kanava {::tapahtuma tapahtuman-nimi ::data data}))))
                                                                                                                 true
                                                                                                                 (catch PSQLException e
                                                                                                                   (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
@@ -243,15 +260,24 @@
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           db (get-in this [:db :db-spec])
           kanava (tapahtuman-kanava db tapahtuma)
-          julkaistava-data (merge {:payload payload
+          sanitoitu-payload (sanitoi-julkaistava-data payload)
+          julkaistava-data (merge {:payload sanitoitu-payload
                                    :palvelin host-name
-                                   :hash (konv/sha256 payload)}
+                                   :hash (konv/sha256 sanitoitu-payload)}
                                   (when dev-tyokalut/dev-environment?
-                                    {:lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})}))
+                                    {:lahetetty-data (dev-tyokalut/datan-tiedot sanitoitu-payload {:type-string? true})}))
+          _ (log/debug (str "[KOMPONENTTI-EVENT] sanitoitu-payload: " sanitoitu-payload))
+          _ (walk/prewalk (fn [x]
+                            (when (instance? IMeta x)
+                              (log/debug (str "[KOMPONENTTI-EVENT] sanitoitu-payload meata: " (meta x))))
+                            x)
+                          sanitoitu-payload)
+          _ (println (meta (get-in sanitoitu-payload [:olioiden-tilat :istunnot 0])))
+          #_#__ (println (.array (get-in sanitoitu-payload [:olioiden-tilat :istunnot 0])))
           julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (transit/clj->transit julkaistava-data
                                                                                                              transit-write-handler)})]
       (when-not julkaisu-onnistui?
-        (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" payload)))
+        (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" sanitoitu-payload)))
       julkaisu-onnistui?)))
 
 (defn luo-tapahtumat []

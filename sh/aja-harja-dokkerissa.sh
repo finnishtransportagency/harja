@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-#if type -P lein >/dev/null 2>&1
-#then
-#  lein clean;
-#fi
+if type -P lein >/dev/null 2>&1
+then
+  lein clean;
+fi
 
 HARJA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 COMPOSE_ENV_FILE="${HARJA_DIR}/.docker_compose_env"

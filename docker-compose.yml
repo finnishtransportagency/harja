@@ -160,6 +160,7 @@ services:
       lein with-profile $${LEIN_PROFILES} less once
       echo 'Luodaan .edn filut figwheeliä varten'
       mkdir -p figwheel_conf/luodut
+      rm figwheel_conf/luodut/*
       lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
       #echo 'Aloitetaan frontin kääntäminen'
       #lein trampoline with-profile +dev-container run -m figwheel.main -fw false -bo figwheel_conf/luodut/dev-container > /var/log/harja_frontend.log 2>&1

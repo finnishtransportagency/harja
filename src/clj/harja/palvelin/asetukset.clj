@@ -250,7 +250,7 @@
   (let [ensimmainen-arg (-> msg :vargs first)
         tunnus (when (string? ensimmainen-arg)
                  (second
-                   (re-find #"^\[(.*)\]"
+                   (re-find #"^\[([^\]]*)\]"
                             ensimmainen-arg)))]
     (when tunnus
       (str/lower-case tunnus))))

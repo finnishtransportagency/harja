@@ -138,3 +138,35 @@
                          :hash (konv/sha256 x)
                          :data x})))
                   data)))
+
+(defn-tyokalu etsi-epakohta-datasta [payload lahetetty saatu]
+  (let [parsimis-fn (fn [data]
+                      (cond
+                        (map? data) (mapv (fn [[k-data v-data]]
+                                            [(:hash k-data) (:hash v-data)])
+                                          data)
+                        (sequential? data) (mapv :hash data)
+                        :else (:hash data)))
+        seuraava-datapoint (fn [data eridata-index hash toisen-hash]
+                             (let [data (:data data)]
+                               (cond
+                                 (map? data) (let [k-tai-v (if (= (first hash) (first toisen-hash))
+                                                             val
+                                                             key)]
+                                               (-> data seq (nth eridata-index) k-tai-v))
+                                 (sequential? data) (nth data eridata-index)
+                                 :else data)))]
+    (loop [lahetetty lahetetty
+           saatu saatu]
+      (when-not (or (nil? lahetetty) (nil? saatu))
+        (let [sama-hash? (= (:hash saatu) (:hash lahetetty))
+              lahetetty-hash (parsimis-fn (:data lahetetty))
+              saatu-hash (parsimis-fn (:data saatu))
+              eridata-index (if (seqable? lahetetty-hash)
+                              (count (take-while true? (map #(= %1 %2) lahetetty-hash saatu-hash))))]
+          (if (and (not sama-hash?)
+                   (= lahetetty-hash saatu-hash))
+            [lahetetty
+             saatu]
+            (recur (seuraava-datapoint lahetetty eridata-index (get lahetetty-hash eridata-index) (get saatu-hash eridata-index))
+                   (seuraava-datapoint saatu eridata-index (get saatu-hash eridata-index) (get lahetetty-hash eridata-index)))))))))
