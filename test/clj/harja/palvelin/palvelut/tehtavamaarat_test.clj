@@ -197,6 +197,10 @@
                                                                 :tehtavamaarat         virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
 
 (deftest tehtavahierarkian-haku-maarineen-testi
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+    :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                            :hoitokauden-alkuvuosi 2022
+                                            :tehtavamaarat         uuden-hoitokauden-tehtavat})
   (let [tehtavat-ja-maarat (kutsu-palvelua
                              (:http-palvelin jarjestelma)
                              :tehtavamaarat-hierarkiassa
