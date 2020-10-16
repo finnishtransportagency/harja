@@ -585,7 +585,7 @@ SELECT
   t.jarjestelma,
   t.tehtavat,
   t.tyokonetyyppi,
-  ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
+  ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) as reitti
 FROM tyokonehavainto t
 WHERE
   ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
@@ -596,9 +596,30 @@ WHERE
 -- Rajaa toimenpiteellä
 (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
 -- Rajaa ajalla
-(t.lahetysaika BETWEEN :alku AND :loppu)
-GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi;
-
+(t.lahetysaika BETWEEN :alku AND :loppu) AND
+-- Vain pisteet yhdistetään viivaksi, viivoja ei yhdistetä toisiinsa
+st_geometrytype(sijainti) = 'ST_Point'
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi
+UNION
+SELECT
+    t.tyokoneid,
+    t.jarjestelma,
+    t.tehtavat,
+    t.tyokonetyyppi,
+    sijainti               as reitti
+FROM tyokonehavainto t
+WHERE
+        ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+    (t.urakkaid IN (:urakat) OR
+-- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+     (t.urakkaid IS NULL AND
+      (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+-- Rajaa toimenpiteellä
+    (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
+-- Rajaa ajalla
+    (t.lahetysaika BETWEEN :alku AND :loppu) AND
+-- Vain pisteet yhdistetään viivaksi, viivoja ei yhdistetä toisiinsa
+        st_geometrytype(sijainti) = 'ST_LineString';
 
 -- name: hae-toimenpidekoodit
 SELECT
