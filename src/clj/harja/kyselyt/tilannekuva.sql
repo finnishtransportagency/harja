@@ -585,7 +585,7 @@ SELECT
   t.jarjestelma,
   t.tehtavat,
   t.tyokonetyyppi,
-  ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) as reitti
+  ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
 FROM tyokonehavainto t
 WHERE
   ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
