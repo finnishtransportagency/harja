@@ -3,7 +3,7 @@
 
 (defrecord UudelleenKaynnistaja []
   component/Lifecycle
-  (start [{:keys [komponenttien-tila] :as this}]
+  (start [this]
 
     this)
   (stop [this]

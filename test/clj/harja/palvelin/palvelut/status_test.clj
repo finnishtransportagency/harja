@@ -9,7 +9,6 @@
             [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
             [harja.palvelin.palvelut.status :as status]
             [harja.kyselyt.jarjestelman-tila :as j-t]
-            [harja.palvelin.tyokalut.komponentti-event :as komponentti-event]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]

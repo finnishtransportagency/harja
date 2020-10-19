@@ -6,21 +6,21 @@
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
 
-            [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.kyselyt.status :as status-q]
             [harja.tyokalut.muunnos :as muunnos])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
 
-(s/def ::db-event boolean?)
+(s/def ::db-tapahtuma boolean?)
 
-(defn- db-tunnistin->db-tila-event [tunnistin]
+(defn- db-tunnistin->db-tila-tapahtuma [tunnistin]
   (keyword (str (name tunnistin) "-tila")))
 
 (defn tarkkaile-kantaa [db lopeta-tarkkailu-kanava
                         {:keys [paivitystiheys-ms kyselyn-timeout-ms]}
-                        event-julkaisija]
-  (event-apurit/tarkkaile lopeta-tarkkailu-kanava
+                        tapahtuma-julkaisija]
+  (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
                           paivitystiheys-ms
                           (fn []
                             (try (with-open [c (.getConnection (:datasource db))
@@ -33,15 +33,15 @@
                                    (let [kanta-ok? (if (.next rs)
                                                      (= 1 (.getObject rs 1))
                                                      false)]
-                                     (event-julkaisija kanta-ok?)))
+                                     (tapahtuma-julkaisija kanta-ok?)))
                                  (catch Throwable t
                                    (log/error "Kannan tilan tarkastaminen epäonnistui: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
-                                   (event-julkaisija false))))))
+                                   (tapahtuma-julkaisija false))))))
 
 (defn tarkkaile-replicaa [db-replica lopeta-tarkkailu-kanava
                           {:keys [paivitystiheys-ms replikoinnin-max-viive-ms]}
-                          event-julkaisija]
-  (event-apurit/tarkkaile lopeta-tarkkailu-kanava
+                          tapahtuma-julkaisija]
+  (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
                           paivitystiheys-ms
                           (fn []
                             (let [replikoinnin-viive (try (status-q/hae-replikoinnin-viive db-replica)
@@ -51,15 +51,15 @@
                                   replica-ok? (boolean (and (not= :virhe replikoinnin-viive)
                                                             (not (and replikoinnin-viive
                                                                       (> replikoinnin-viive replikoinnin-max-viive-ms)))))]
-                              (event-julkaisija replica-ok?)))))
+                              (tapahtuma-julkaisija replica-ok?)))))
 
-(defn luo-db-eventit [this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
-  (let [tapahtuma (db-tunnistin->db-tila-event db-nimi)
-        event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija tapahtuma)
-                                                        ::db-event)]
+(defn luo-db-tapahtumat [this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
+  (let [tapahtuma (db-tunnistin->db-tila-tapahtuma db-nimi)
+        tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija tapahtuma)
+                                                            ::db-tapahtuma)]
     (case db-nimi
-      :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
-      :db-replica (tarkkaile-replicaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot event-julkaisija)
+      :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot tapahtuma-julkaisija)
+      :db-replica (tarkkaile-replicaa this lopeta-tarkkailu-kanava tarkkailun-timeout-arvot tapahtuma-julkaisija)
       nil)))
 
 ;; Tietokanta on pelkkä clojure.java.jdbc kirjaston mukainen db-spec, joka sisältää pelkään yhteyspoolin
@@ -68,13 +68,13 @@
   (start [this]
     (let [lopeta-tarkkailu-kanava (async/chan)]
       (when db-nimi
-        (luo-db-eventit this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava))
+        (luo-db-tapahtumat this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava))
       (when kehitysmoodi
         (autoreload/start-autoreload))
       (assoc this ::lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava)))
   (stop [this]
     (when db-nimi
-      (event-apurit/julkaise-tapahtuma (db-tunnistin->db-tila-event db-nimi) :suljetaan)
+      (tapahtuma-apurit/julkaise-tapahtuma (db-tunnistin->db-tila-tapahtuma db-nimi) :suljetaan)
       (async/>!! (:lopeta-tarkkailu-kanava this) true))
     (DataSources/destroy  datasource)
     (when kehitysmoodi

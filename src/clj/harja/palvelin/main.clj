@@ -38,8 +38,6 @@
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
 
-    [harja.palvelin.tyokalut.komponentti-event :as komponentti-event]
-
     ;; Harjan bisneslogiikkapalvelut
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
     [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]
@@ -176,22 +174,18 @@
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
-      :db (component/using
-            (tietokanta/luo-tietokanta (assoc tietokanta
-                                              :tarkkailun-timeout-arvot
-                                              (select-keys (get-in asetukset [:komponenttien-tila :db])
-                                                           #{:paivitystiheys-ms :kyselyn-timeout-ms})
-                                              :tarkkailun-nimi :db)
-                                       kehitysmoodi)
-            [:komponentti-event])
-      :db-replica (component/using
-                    (tietokanta/luo-tietokanta (assoc tietokanta-replica
-                                                      :tarkkailun-timeout-arvot
-                                                      (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
-                                                                   #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
-                                                      :tarkkailun-nimi :db-replica)
-                                               kehitysmoodi)
-                    [:komponentti-event])
+      :db (tietokanta/luo-tietokanta (assoc tietokanta
+                                       :tarkkailun-timeout-arvot
+                                       (select-keys (get-in asetukset [:komponenttien-tila :db])
+                                                    #{:paivitystiheys-ms :kyselyn-timeout-ms})
+                                       :tarkkailun-nimi :db)
+                                     kehitysmoodi)
+      :db-replica (tietokanta/luo-tietokanta (assoc tietokanta-replica
+                                               :tarkkailun-timeout-arvot
+                                               (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
+                                                            #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
+                                               :tarkkailun-nimi :db-replica)
+                                             kehitysmoodi)
 
       :todennus (component/using
                   (todennus/http-todennus (:sahke-headerit asetukset))
@@ -233,7 +227,7 @@
                (sonja/luo-sonja (merge (:sonja asetukset)
                                        (select-keys (get-in asetukset [:komponenttien-tila :sonja])
                                                     #{:paivitystiheys-ms})))
-               [:db :komponentti-event])
+               [:db])
       :sonja-sahkoposti
       (component/using
         (let [{:keys [vastausosoite jonot suora? palvelin]}
@@ -308,13 +302,8 @@
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
 
-      :komponentti-event (komponentti-event/komponentti-event)
-      :komponenttien-tila (component/using
-                            (komponenttien-tila/komponentin-tila)
-                            [:komponentti-event])
-      :uudelleen-kaynnistaja (component/using
-                               (uudelleen-kaynnistaja/->UudelleenKaynnistaja)
-                               [:komponenttien-tila])
+      :komponenttien-tila (komponenttien-tila/komponentin-tila)
+      :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja)
 
       ;; Tarkastustehtävät
 

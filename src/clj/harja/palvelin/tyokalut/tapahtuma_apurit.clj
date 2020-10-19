@@ -56,10 +56,10 @@
           (recur (async/<! kuuntelija)))))
     kuuntelija))
 
-(defn lopeta-eventin-kuuntelu [kuuntelija]
+(defn lopeta-tapahtuman-kuuntelu [kuuntelija]
   (async/close! kuuntelija))
 
-(defn event-julkaisija
+(defn tapahtuma-julkaisija
   "Palauttaa funktion, jolle annettava data julkaistaan aina tässä määritetylle eventille."
   [tapahtuma]
   (fn [data]
@@ -67,12 +67,12 @@
       (log/error (str "Event: " tapahtuma " sai dataksi: " data)))
     (julkaise-tapahtuma tapahtuma data)))
 
-(defn event-datan-spec
+(defn tapahtuma-datan-spec
   "Tarkoitettu wrapperiksi event-julkaisija:lle. Julkaistavaksi tarkoitettu data ensin validoidaan tälle annettua spekkiä vasten.
    Jos validointi epäonnistuu, julkaistavaksi dataksi laitetaan {::validointi-epaonnistui [ feilannu data ]}, lisäksi virhe logitetaan."
-  [event-julkaisija spec]
+  [tapahtuma-julkaisija spec]
   (fn [data]
     (if (s/valid? spec data)
-      (event-julkaisija data)
+      (tapahtuma-julkaisija data)
       (binding [*log-error* true]
-        (event-julkaisija {::validointi-epaonnistui data})))))
+        (tapahtuma-julkaisija {::validointi-epaonnistui data})))))

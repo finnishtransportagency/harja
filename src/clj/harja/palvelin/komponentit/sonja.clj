@@ -10,7 +10,7 @@
             [hiccup.core :refer [html]]
             [clojure.string :as clj-str]
             [harja.pvm :as pvm]
-            [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
@@ -144,17 +144,17 @@
 (s/def ::sonja-tila (s/or :virhe (s/keys :req-un [::virhe])
                           :onnistunut (s/keys :req-un [::olioiden-tilat])))
 
-(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava event-julkaisija db]
-  (event-apurit/tarkkaile lopeta-tarkkailu-kanava
+(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
+  (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
                           paivitystiheys-ms
                           (fn []
                             (try
                               (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
                                     jms-tila (:vastaus vastaus)]
                                 (tallenna-sonjan-tila-kantaan db jms-tila)
-                                (event-julkaisija (or jms-tila {:virhe vastaus})))
+                                (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
                               (catch Throwable t
-                                (event-julkaisija :tilan-lukemisvirhe)
+                                (tapahtuma-julkaisija :tilan-lukemisvirhe)
                                 (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
@@ -591,8 +591,8 @@
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
-          event-julkaisija (event-apurit/event-datan-spec (event-apurit/event-julkaisija :sonja-tila)
-                                                          ::sonja-tila)
+          tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija :sonja-tila)
+                                                              ::sonja-tila)
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
@@ -607,10 +607,10 @@
           jms-saije (luo-jms-saije this saikeen-sammutus-kanava)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
       (assoc this
-             :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava event-julkaisija db))))
+             :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db))))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
-    (event-apurit/julkaise-tapahtuma :sonja-tila :suljetaan)
+    (tapahtuma-apurit/julkaise-tapahtuma :sonja-tila :suljetaan)
     (>!! lopeta-tarkkailu-kanava true)
     (async/close! lopeta-tarkkailu-kanava)
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
