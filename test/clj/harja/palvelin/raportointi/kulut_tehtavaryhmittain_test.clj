@@ -7,7 +7,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clojure.string :as cstr]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -54,21 +55,22 @@
                        (-> vastaus
                            (nth 2)
                            (nth 3)))
-        eka-luku (second yhteensa)
-        toka-luku (nth yhteensa 2)
+        pilkku->piste #(cstr/replace % #"(\d+),(\d+)" "$1.$2")
         numeroksi (fn [arvo]
                     (if (string? arvo)
-                      (Integer/parseInt arvo)
+                      (-> arvo
+                          pilkku->piste
+                          Float/parseFloat)
                       arvo))
+        eka-luku (numeroksi (second yhteensa))
+        toka-luku (numeroksi (nth yhteensa 2))
         raportti-avainsana (first vastaus)
         taulukot (nth vastaus 2)
         taulukko-avainsana (first taulukot)
         taulukon-rivit (-> vastaus
                            (nth 2)
                            (nth 3))]
-    (is (and
-          (= 10 (numeroksi 10))
-          (= 10 (numeroksi "10"))) "Testataan apufunkkari")
+
     (is (vector? vastaus) "Raportille palautuu tavaraa")
     (is (and (= :raportti raportti-avainsana)
              (= :taulukko taulukko-avainsana)
@@ -80,7 +82,7 @@
           (> eka-luku 0)) "Raportille lasketaan summat oikein (jos testidata muuttuu, tää voi kosahtaa)")
     (is (every? #(let [eka (numeroksi (second %))
                        toka (numeroksi (nth % 2))]
-                   (= 0 eka toka))
+                   (= 0.0 eka toka))
                 (-> vastaus-ulkopuolella
                     (nth 2)
                     (nth 3))) "Raportille ei tule väärää tavaraa")))
