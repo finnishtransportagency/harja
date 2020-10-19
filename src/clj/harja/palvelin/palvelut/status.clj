@@ -4,8 +4,6 @@
             [compojure.core :refer [GET]]
             [clojure.core.async :as async]
             [clojure.set :as clj-set]
-            [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
-            [harja.palvelin.komponentit.komponenttien-tila :as komponentin-tila]
             [cheshire.core :refer [encode]]
             [harja.tyokalut.muunnos :as muunnos]))
 
@@ -33,30 +31,33 @@
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (get-in @komponenttien-tila [:db :kaikki-ok?]))))
+                    (every? (fn [[_ host-tila]]
+                              (get-in host-tila [:db :kaikki-ok?]))
+                            @komponenttien-tila))))
 
 (defn replikoinnin-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (get-in @komponenttien-tila [:db-replica :kaikki-ok?]))))
+                    (every? (fn [[_ host-tila]]
+                              (get-in host-tila [:db-replica :kaikki-ok?]))
+                            @komponenttien-tila))))
 
 (defn sonja-yhteyden-tila-ok?
-  [db kehitysmoodi? timeout-ms komponenttien-tila]
-  (letfn [(taman-palvelimen-tila-ok? []
-            (get-in @komponenttien-tila [:sonja :kaikki-ok?]))
-          (jonku-palvelimen-tila-ok? []
-            (komponentin-tila/sonjayhteydet-kannasta-ok? (jarjestelman-tila/hae-sonjan-tila db kehitysmoodi?)))]
-    (tarkista-tila! timeout-ms
-                    (fn []
-                      (or (taman-palvelimen-tila-ok?)
-                          (jonku-palvelimen-tila-ok?))))))
+  [timeout-ms komponenttien-tila]
+  (tarkista-tila! timeout-ms
+                  (fn []
+                    (every? (fn [[_ host-tila]]
+                              (get-in host-tila [:sonja :kaikki-ok?]))
+                            @komponenttien-tila))))
 
 (defn harjan-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (get-in @komponenttien-tila [:harja :kaikki-ok?]))))
+                    (every? (fn [[_ host-tila]]
+                              (get-in host-tila [:harja :kaikki-ok?]))
+                            @komponenttien-tila))))
 
 (defn tietokannan-tila [komponenttien-tila]
   (async/go
@@ -76,10 +77,10 @@
        :viesti (when-not replikoinnin-tila-ok?
                  (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))})))
 
-(defn sonja-yhteyden-tila [komponenttien-tila db kehitysmoodi?]
+(defn sonja-yhteyden-tila [komponenttien-tila]
   (async/go
     (let [timeout-ms 1000 #_120000
-          yhteys-ok? (async/<! (sonja-yhteyden-tila-ok? db kehitysmoodi? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+          yhteys-ok? (async/<! (sonja-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
       {:ok? yhteys-ok?
        :komponentti :sonja
        :viesti (when-not yhteys-ok?
@@ -89,11 +90,14 @@
   (async/go
     (let [timeout-ms 10000
           kaikki-ok? (async/<! (harjan-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
-
       {:ok? kaikki-ok?
        :komponentti :harja
        :viesti (when-not kaikki-ok?
-                 (get-in @(get komponenttien-tila :komponenttien-tila) [:harja :viesti]))})))
+                 (apply str (interpose "\n"
+                                       (map (fn [[host host-tila]]
+                                              (str "HOST: " host "\n"
+                                                   "VIESTI: " (get-in host-tila [:harja :viesti])))
+                                            @(get komponenttien-tila :komponenttien-tila)))))})))
 
 (defn- nimea-komponentin-tila [komponentti ok?]
   (clj-set/rename-keys {komponentti ok?}
@@ -134,7 +138,7 @@
           (let [testit (async/merge
                          [(tietokannan-tila komponenttien-tila)
                           (replikoinnin-tila komponenttien-tila)
-                          (sonja-yhteyden-tila komponenttien-tila db kehitysmoodi?)
+                          (sonja-yhteyden-tila komponenttien-tila)
                           (harjan-tila komponenttien-tila)])
                 {:keys [status] :as lahetettava-viesti} (koko-status testit)]
             {:status status

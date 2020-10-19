@@ -38,36 +38,36 @@
                                   (tc/to-local-date-time paivitetty))))
                tilat)))
 
-(defn- tallenna-sonjan-tila-cacheen [jms-tila komponenttien-tila]
+(defn- tallenna-sonjan-tila-cacheen [{:keys [palvelin payload]} komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
            (-> kt
-               (assoc :sonja jms-tila)
-               (assoc-in [:sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat jms-tila)))))))
+               (assoc-in [palvelin :sonja] payload)
+               (assoc-in [palvelin :sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat payload)))))))
 
 (defn- aloita-sonjan-tarkkailu! [komponenttien-tila]
   (tapahtuma-apurit/tarkkaile-tapahtumaa :sonja-tila :viimeisin tallenna-sonjan-tila-cacheen komponenttien-tila))
 
-(defn- tallenna-dbn-tila-cacheen [kanta-ok? komponenttien-tila]
+(defn- tallenna-dbn-tila-cacheen [{:keys [palvelin payload]} komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
-           (assoc-in kt [:db :kaikki-ok?] kanta-ok?))))
+           (assoc-in kt [palvelin :db :kaikki-ok?] payload))))
 
 (defn- aloita-db-tarkkailu! [komponenttien-tila]
   (tapahtuma-apurit/tarkkaile-tapahtumaa :db-tila :viimeisin tallenna-dbn-tila-cacheen komponenttien-tila))
 
-(defn- tallenna-db-replikan-tila-cacheen [replica-ok? komponenttien-tila]
+(defn- tallenna-db-replikan-tila-cacheen [{:keys [palvelin payload]} komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
-           (assoc-in kt [:db-replica :kaikki-ok?] replica-ok?))))
+           (assoc-in kt [palvelin :db-replica :kaikki-ok?] payload))))
 
 (defn- aloita-db-replican-tarrkailu! [komponenttien-tila]
   (tapahtuma-apurit/tarkkaile-tapahtumaa :db-replica-tila :viimeisin tallenna-db-replikan-tila-cacheen komponenttien-tila))
 
-(defn- tallenna-harjan-tila-cacheen [harjan-tila komponenttien-tila]
+(defn- tallenna-harjan-tila-cacheen [{:keys [palvelin payload]} komponenttien-tila]
   (swap! komponenttien-tila
          (fn [kt]
-           (assoc kt :harja harjan-tila))))
+           (assoc-in kt [palvelin :harja] payload))))
 
 (defn- aloita-harjan-tarkkailu! [komponenttien-tila]
   (tapahtuma-apurit/tarkkaile-tapahtumaa :harja-tila :viimeisin tallenna-harjan-tila-cacheen komponenttien-tila))

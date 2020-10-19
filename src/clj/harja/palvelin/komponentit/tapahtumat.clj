@@ -77,18 +77,15 @@
    :post [(string? %)]}
   (let [uusi-tapahtuman-kanava (uusi-tapahtuman-kanava)
         vastaus (q-tapahtumat/lisaa-tapahtuma db {:nimi tapahtuma :kanava uusi-tapahtuman-kanava})]
-    (println "---> VASTAUS: " vastaus)
     (if (empty? vastaus)
       (tapahtuman-kanava db tapahtuma)
       (:kanava (first vastaus)))))
 
 (defn- kuuntelu-fn [kaytettava-kanava tapahtumayhteys]
-  (println "LISTENNNENNEENENEN")
   (u tapahtumayhteys (str "LISTEN " kaytettava-kanava)))
 
 (defn- kuuntele-klusterin-tapahtumaa! [db tapahtuma]
   (let [kaytettava-kanava (kaytettava-kanava! db tapahtuma)]
-    (println "--- PITÄS LÖYTYÄ")
     (async/put! tapahtuma-loopin-ajot (partial kuuntelu-fn kaytettava-kanava))
     kaytettava-kanava))
 
@@ -107,17 +104,12 @@
       (.replace "<" "")
       (.replace ">" "")))
 
-(defn sanitoi-julkaistava-data [data]
-  (walk/postwalk (fn [x]
-                   (cond-> x
-                           (instance? IMeta x) (with-meta nil)
-                           (instance? LazySeq x) (#(cast PersistentList %))
-                           ;; Walk funktiot käyttää 'into' funktiota, joka luo uuden
-                           ;; objektin niin, että sillä on eri hash
-                           (map? x) (#(apply array-map (mapcat identity %)))
-                           (set? x) (#(set %))
-                           (vector? x) (#(apply vector %))))
-                 data))
+(defn- julkaistavan-datan-muunnos
+  "Käytetään kerran transition koneiston läpi, jotta laskettu hash olisi aina sama, samalle datalle"
+  [data]
+  (transit/lue-transit-string (transit/clj->transit data
+                                                    {})
+                              {}))
 
 (defn tapahtuman-data-ok?!
   [{:keys [payload palvelin hash lahetetty-data]} tapahtuma]
@@ -128,7 +120,7 @@
           (log/info (str "[KOMPONENTTI-EVENT] palvelin: " palvelin))
           (log/info (str "[KOMPONENTTI-EVENT] Lahetetyn datan tiedot: " lahetetty-data))
           (log/info (str "[KOMPONENTTI-EVENT] Saadun datan tiedot: " (dev-tyokalut/datan-tiedot payload {:type-string? true})))
-          (dev-tyokalut/etsi-epakohta-datasta payload lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})))
+          #_(dev-tyokalut/etsi-epakohta-datasta payload lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})))
         false)
     true))
 
@@ -151,7 +143,8 @@
                                          (log/error t "perus-broadcast jonossa tapahtui virhe")))
           broadcast (async/pub tarkkailu-kanava ::tapahtuma (fn [topic] (async/sliding-buffer 1000)))
           this (assoc this ::tarkkailu-kanava tarkkailu-kanava
-                      ::broadcast broadcast)]
+                      ::broadcast broadcast)
+          kuuntelu-valmis (async/chan)]
       (log/info "Tapahtumat-komponentti käynnistyy")
       (reset! tarkkailijat {})
       (reset! kuuntelijat {})
@@ -161,6 +154,7 @@
       (thread (loop [kaatui-virheeseen? false
                      timeout-arvo 0]
                 (let [kaatui-virheeseen? (try (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
+                                                                       (async/put! kuuntelu-valmis true)
                                                                        (let [connection (cast (Class/forName "org.postgresql.jdbc.PgConnection")
                                                                                               (jdbc/db-connection db))]
                                                                          (when kaatui-virheeseen?
@@ -171,13 +165,9 @@
                                                                                       @ajossa)
                                                                              (let [f (async/poll! tapahtuma-loopin-ajot)]
                                                                                (when f
-                                                                                 (println "------ --- -- - -- LÖYTY f")
                                                                                  (f connection)))
                                                                              (let [tapahtumien-haku-onnistui? (try
-                                                                                                                (println "NOTIFIKAATIOT")
                                                                                                                 (doseq [^PGNotification notification (seq (.getNotifications connection))]
-                                                                                                                  (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
-                                                                                                                  (log/debug "kuuntelijat:" @kuuntelijat)
                                                                                                                   (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
                                                                                                                         tapahtuman-nimi (.getName notification)
                                                                                                                         json-data (-> (q-tapahtumat/tapahtuman-arvot db {:idt #{tapahtumadatan-id}}) first :arvo)
@@ -190,7 +180,7 @@
                                                                                                                 true
                                                                                                                 (catch PSQLException e
                                                                                                                   (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
-                                                                                                                  (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
+                                                                                                                  (log/error "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
                                                                                                                   false))]
                                                                                (Thread/sleep 5000)
                                                                                (recur (not tapahtumien-haku-onnistui?)))))))
@@ -200,6 +190,7 @@
                                                 true))]
                   (async/<!! (async/timeout (min (* 60 1000) timeout-arvo)))
                   (recur kaatui-virheeseen? (+ timeout-arvo (* 2 (max 500 timeout-arvo)))))))
+      (async/<!! kuuntelu-valmis)
       this))
 
   (stop [this]
@@ -236,7 +227,7 @@
                                                (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
                                                                "  event: " tapahtuma "\n"
                                                                "  tiedot: " v))
-                                               (::data v)))
+                                               (select-keys (::data v) #{:payload :palvelin})))
                                         (fn [t]
                                           (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
           tapahtuma (tapahtuman-nimi tapahtuma)
@@ -244,11 +235,7 @@
       (case tyyppi
         :perus nil
         :viimeisin (when-let [arvo (q-tapahtumat/uusin-arvo (get-in this [:db :db-spec]) {:nimi tapahtuma})]
-                     #_(println (str "arvo: " arvo))
-                     #_(println (transit/lue-transit-string arvo transit-read-handler))
                      (async/put! kuuntelija-kanava {::data (transit/lue-transit-string arvo transit-read-handler)})))
-      #_(println "----< [(::broadcast this) possu-kanava kuuntelija-kanava]")
-      #_(clojure.pprint/pprint [(::broadcast this) possu-kanava kuuntelija-kanava])
       (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
       (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
       kuuntelija-kanava))
@@ -260,24 +247,16 @@
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           db (get-in this [:db :db-spec])
           kanava (tapahtuman-kanava db tapahtuma)
-          sanitoitu-payload (sanitoi-julkaistava-data payload)
-          julkaistava-data (merge {:payload sanitoitu-payload
+          muunnettu-payload (julkaistavan-datan-muunnos payload)
+          julkaistava-data (merge {:payload muunnettu-payload
                                    :palvelin host-name
-                                   :hash (konv/sha256 sanitoitu-payload)}
+                                   :hash (konv/sha256 muunnettu-payload)}
                                   (when dev-tyokalut/dev-environment?
-                                    {:lahetetty-data (dev-tyokalut/datan-tiedot sanitoitu-payload {:type-string? true})}))
-          _ (log/debug (str "[KOMPONENTTI-EVENT] sanitoitu-payload: " sanitoitu-payload))
-          _ (walk/prewalk (fn [x]
-                            (when (instance? IMeta x)
-                              (log/debug (str "[KOMPONENTTI-EVENT] sanitoitu-payload meata: " (meta x))))
-                            x)
-                          sanitoitu-payload)
-          _ (println (meta (get-in sanitoitu-payload [:olioiden-tilat :istunnot 0])))
-          #_#__ (println (.array (get-in sanitoitu-payload [:olioiden-tilat :istunnot 0])))
+                                    {:lahetetty-data (dev-tyokalut/datan-tiedot muunnettu-payload {:type-string? true})}))
           julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (transit/clj->transit julkaistava-data
                                                                                                              transit-write-handler)})]
       (when-not julkaisu-onnistui?
-        (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" sanitoitu-payload)))
+        (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" muunnettu-payload)))
       julkaisu-onnistui?)))
 
 (defn luo-tapahtumat []
