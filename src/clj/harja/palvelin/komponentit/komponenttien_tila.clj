@@ -46,7 +46,7 @@
                (assoc-in [palvelin :sonja :kaikki-ok?] (sonjayhteys-ok? (:olioiden-tilat payload)))))))
 
 (defn- aloita-sonjan-tarkkailu! [komponenttien-tila]
-  (tapahtuma-apurit/tarkkaile-tapahtumaa :sonja-tila :viimeisin tallenna-sonjan-tila-cacheen komponenttien-tila))
+  (tapahtuma-apurit/tarkkaile-tapahtumaa :sonja-tila :viimeisin-per-palvelin tallenna-sonjan-tila-cacheen komponenttien-tila))
 
 (defn- tallenna-dbn-tila-cacheen [{:keys [palvelin payload]} komponenttien-tila]
   (swap! komponenttien-tila
@@ -70,7 +70,7 @@
            (assoc-in kt [palvelin :harja] payload))))
 
 (defn- aloita-harjan-tarkkailu! [komponenttien-tila]
-  (tapahtuma-apurit/tarkkaile-tapahtumaa :harja-tila :viimeisin tallenna-harjan-tila-cacheen komponenttien-tila))
+  (tapahtuma-apurit/tarkkaile-tapahtumaa :harja-tila :viimeisin-per-palvelin tallenna-harjan-tila-cacheen komponenttien-tila))
 
 
 (defn- tyhjenna-cache! [komponenttien-tila]

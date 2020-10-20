@@ -33,7 +33,10 @@
 (defonce ^{:private true
            :doc "Tämän kautta lähetetään queryja notify loopiin"}
          tapahtuma-loopin-ajot
-         (async/chan))
+         nil)
+
+(defonce ^:private kuuntelu-aloitettu nil)
+(defonce ^:private kuuntelu-aloitettu-broadcast nil)
 
 (defonce harja-tarkkailija nil)
 
@@ -44,7 +47,7 @@
 
 (s/def ::tapahtuma (s/or :keyword keyword?
                          :string string?))
-(s/def ::tyyppi #{:perus :viimeisin})
+(s/def ::tyyppi #{:perus :viimeisin :viimeisin-per-palvelin})
 
 (defn- uusi-tapahtuman-kanava []
   (str "k_" (clj-str/replace (str (UUID/randomUUID)) #"-" "_")))
@@ -77,17 +80,25 @@
    :post [(string? %)]}
   (let [uusi-tapahtuman-kanava (uusi-tapahtuman-kanava)
         vastaus (q-tapahtumat/lisaa-tapahtuma db {:nimi tapahtuma :kanava uusi-tapahtuman-kanava})]
-    (if (empty? vastaus)
+    (if (nil? vastaus)
       (tapahtuman-kanava db tapahtuma)
-      (:kanava (first vastaus)))))
+      vastaus)))
 
-(defn- kuuntelu-fn [kaytettava-kanava tapahtumayhteys]
+(defn- kuuntelu-fn
+  [kaytettava-kanava tapahtumayhteys]
+  {:pre [(string? kaytettava-kanava)
+         (uuid? (UUID/fromString (-> kaytettava-kanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))]}
   (u tapahtumayhteys (str "LISTEN " kaytettava-kanava)))
 
 (defn- kuuntele-klusterin-tapahtumaa! [db tapahtuma]
-  (let [kaytettava-kanava (kaytettava-kanava! db tapahtuma)]
-    (async/put! tapahtuma-loopin-ajot (partial kuuntelu-fn kaytettava-kanava))
-    kaytettava-kanava))
+  (let [kaytettava-kanava (kaytettava-kanava! db tapahtuma)
+        kuuntelu-aloitettu-tunnistin (str (gensym "kuuntelu"))
+        kuuntelu-aloitettu-huomauttaja (async/chan)]
+    (async/sub kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-tunnistin kuuntelu-aloitettu-huomauttaja)
+    (async/put! tapahtuma-loopin-ajot {:f (partial kuuntelu-fn kaytettava-kanava)
+                                       :tunnistin kuuntelu-aloitettu-tunnistin})
+    {:possu-kanava kaytettava-kanava
+     :kuuntelu-aloitettu-huomauttaja kuuntelu-aloitettu-huomauttaja}))
 
 (def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
                             .getMethods
@@ -134,6 +145,9 @@
 (defrecord Tapahtumat [kuuntelijat tarkkailijat ajossa]
   component/Lifecycle
   (start [this]
+    (alter-var-root #'tapahtuma-loopin-ajot (constantly (async/chan)))
+    (alter-var-root #'kuuntelu-aloitettu (constantly (async/chan)))
+    (alter-var-root #'kuuntelu-aloitettu-broadcast (constantly (async/pub kuuntelu-aloitettu ::kuuntelu)))
     (let [tarkkailu-kanava (async/chan (async/sliding-buffer 1000)
                                        (map (fn [arvo]
                                               (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot perus-broadcast jonosta\n"
@@ -163,9 +177,11 @@
                                                                          (loop [break? false]
                                                                            (when (and (not break?)
                                                                                       @ajossa)
-                                                                             (let [f (async/poll! tapahtuma-loopin-ajot)]
+                                                                             (let [{:keys [f tunnistin]} (async/poll! tapahtuma-loopin-ajot)]
                                                                                (when f
-                                                                                 (f connection)))
+                                                                                 (f connection)
+                                                                                 (when tunnistin
+                                                                                   (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin}))))
                                                                              (let [tapahtumien-haku-onnistui? (try
                                                                                                                 (doseq [^PGNotification notification (seq (.getNotifications connection))]
                                                                                                                   (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
@@ -182,7 +198,7 @@
                                                                                                                   (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
                                                                                                                   (log/error "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
                                                                                                                   false))]
-                                                                               (Thread/sleep 5000)
+                                                                               (Thread/sleep 1000)
                                                                                (recur (not tapahtumien-haku-onnistui?)))))))
                                               false
                                               (catch Throwable t
@@ -204,6 +220,11 @@
     (reset! ajossa false)
     (async/close! (::tarkkailu-kanava this))
     (async/close! tapahtuma-loopin-ajot)
+    (async/close! kuuntelu-aloitettu)
+    (async/close! kuuntelu-aloitettu-broadcast)
+    (alter-var-root #'tapahtuma-loopin-ajot nil)
+    (alter-var-root #'kuuntelu-aloitettu nil)
+    (alter-var-root #'kuuntelu-aloitettu-broadcast nil)
     this)
 
   Kuuntele
@@ -211,7 +232,7 @@
   ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
   (kuuntele! [this tapahtuma callback]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
-          kanava (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)
+          {kanava :possu-kanava} (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)
           fn-tunnistin (str (gensym "callback"))]
       (swap! kuuntelijat update kanava conj (with-meta callback {:tunnistin fn-tunnistin}))
       (fn []
@@ -222,23 +243,27 @@
                  (keep #(not= fn-tunnistin (-> % meta :tunnistin))
                        kanavan-callbackit))))))
   (tarkkaile! [this tapahtuma tyyppi]
-    (let [kuuntelija-kanava (async/chan 1000
-                                        (map (fn [v]
-                                               (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
-                                                               "  event: " tapahtuma "\n"
-                                                               "  tiedot: " v))
-                                               (select-keys (::data v) #{:payload :palvelin})))
-                                        (fn [t]
-                                          (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
-          tapahtuma (tapahtuman-nimi tapahtuma)
-          possu-kanava (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)]
-      (case tyyppi
-        :perus nil
-        :viimeisin (when-let [arvo (q-tapahtumat/uusin-arvo (get-in this [:db :db-spec]) {:nimi tapahtuma})]
-                     (async/put! kuuntelija-kanava {::data (transit/lue-transit-string arvo transit-read-handler)})))
-      (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
-      (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
-      kuuntelija-kanava))
+    (thread (let [kuuntelija-kanava (async/chan 1000
+                                                (map (fn [v]
+                                                       (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
+                                                                       "  event: " tapahtuma "\n"
+                                                                       "  tiedot: " v))
+                                                       (select-keys (::data v) #{:payload :palvelin})))
+                                                (fn [t]
+                                                  (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
+                  tapahtuma (tapahtuman-nimi tapahtuma)
+                  {:keys [possu-kanava kuuntelu-aloitettu-huomauttaja]} (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)]
+              (async/<!! kuuntelu-aloitettu-huomauttaja)
+              (case tyyppi
+                :perus nil
+                :viimeisin (when-let [arvo (q-tapahtumat/uusin-arvo (get-in this [:db :db-spec]) {:nimi tapahtuma})]
+                             (async/put! kuuntelija-kanava {::data (transit/lue-transit-string arvo transit-read-handler)}))
+                :viimeisin-per-palvelin (when-let [arvot (q-tapahtumat/uusin-arvo-per-palvelin (get-in this [:db :db-spec]) {:nimi tapahtuma})]
+                                          (doseq [[_ arvo] (transit/lue-transit-string arvot transit-read-handler)]
+                                            (async/put! kuuntelija-kanava {::data arvo}))))
+              (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
+              (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
+              kuuntelija-kanava)))
   (tarkkaile! [this tapahtuma]
     (tarkkaile! this tapahtuma :perus))
 
@@ -246,7 +271,7 @@
   (julkaise! [this tapahtuma payload host-name]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           db (get-in this [:db :db-spec])
-          kanava (tapahtuman-kanava db tapahtuma)
+          kanava (kaytettava-kanava! db tapahtuma)
           muunnettu-payload (julkaistavan-datan-muunnos payload)
           julkaistava-data (merge {:payload muunnettu-payload
                                    :palvelin host-name
@@ -276,3 +301,8 @@
                         :klusterin-tapahtumat (component/using
                                                 (luo-tapahtumat)
                                                 {:db :db-event}))))))
+
+(defn sammuta! []
+  (alter-var-root #'harja-tarkkailija (fn [s]
+                                        (component/stop s)
+                                        nil)))

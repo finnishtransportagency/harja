@@ -1,7 +1,8 @@
 CREATE TABLE tapahtuma (
    kanava TEXT PRIMARY KEY,
    nimi TEXT UNIQUE NOT NULL,
-   uusin_arvo JSONB
+   uusin_arvo JSONB,
+   palvelimien_uusimmat_arvot JSONB
 );
 
 CREATE TABLE tapahtuman_tiedot (
@@ -67,11 +68,45 @@ DECLARE
     message  TEXT;
     detail   TEXT;
     hint     TEXT;
+    palvelin TEXT;
     _id INTEGER;
+
+    palvelin_index INT = 0;
+    el JSONB;
 BEGIN
+
+    IF (jsonb_typeof(data) = 'array')
+    THEN
+        FOR el IN SELECT * FROM jsonb_array_elements(data)
+        LOOP
+            palvelin_index = palvelin_index + 1;
+            IF (el::TEXT ILIKE('%:palvelin%'))
+            THEN
+                EXIT;
+            END IF;
+        END LOOP;
+
+        SELECT data->>palvelin_index
+        INTO palvelin;
+    END IF;
+
     UPDATE tapahtuma
     SET uusin_arvo=data
-    WHERE kanava = _kanava;
+    WHERE kanava=_kanava;
+
+    IF palvelin IS NOT NULL
+    THEN
+        UPDATE tapahtuma
+        SET palvelimien_uusimmat_arvot=(SELECT jsonb_set(CASE WHEN palvelimien_uusimmat_arvot IS NULL
+                                                                  THEN '{}'::JSONB
+                                                              ELSE palvelimien_uusimmat_arvot
+                                                             END,
+                                                         ARRAY[palvelin]::TEXT[],
+                                                         data)
+                                        FROM tapahtuma
+                                        WHERE kanava=_kanava)
+        WHERE kanava=_kanava;
+    END IF;
 
     INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu)
     VALUES(data, _kanava, NOW())

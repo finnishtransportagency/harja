@@ -9,6 +9,7 @@ USER postgres
 CMD export POSTGRESQL_PORTTI=5433; \
     sed -i "s/port = 5432/port = ${POSTGRESQL_PORTTI}/g" ~/${POSTGRESQL_VERSION:-12}/data/postgresql.conf; \
     sed -i "s/#port =/port =/g" ~/${POSTGRESQL_VERSION:-12}/data/postgresql.conf; \
+    if [[ "${POSTGRESQL_LOG_ALL}" = "true" ]]; then echo "log_statement = all" >>  ~/${POSTGRESQL_VERSION:-12}/data/postgresql.conf; fi; \
     if [[ "${BUILD}" != "DEV" ]]; then bash hae-migraatiot-ja-testidata.sh; fi; \
     pg_ctl start; \
     bash odota-kaynnistymista.sh; \

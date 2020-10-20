@@ -47,14 +47,16 @@
         (recur (async/alts! [lopeta-tarkkailu-kanava]
                             :default false))))))
 
-(defn tarkkaile-tapahtumaa [tapahtuma tyyppi f & args]
-  (let [kuuntelija (tapahtuman-julkaisia! tapahtuma tyyppi)]
-    (when kuuntelija
-      (async/go
-        (loop [arvo (async/<! kuuntelija)]
-          (apply f arvo args)
-          (recur (async/<! kuuntelija)))))
-    kuuntelija))
+(defn tarkkaile-tapahtumaa
+  [tapahtuma tyyppi f & args]
+  {:post [(future? %)]}
+  (future (let [kuuntelija (async/<!! (tapahtuman-julkaisia! tapahtuma tyyppi))]
+            (when kuuntelija
+              (async/go
+                (loop [arvo (async/<! kuuntelija)]
+                  (apply f arvo args)
+                  (recur (async/<! kuuntelija)))))
+            kuuntelija)))
 
 (defn lopeta-tapahtuman-kuuntelu [kuuntelija]
   (async/close! kuuntelija))

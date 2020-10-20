@@ -733,11 +733,13 @@
           vastaus)))))
 
 (defn- merkkaa-kaynnistyminen! []
+  (log/debug "Merkataan HARJAn käynnistyminen")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistyy"
                                     :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
+  (log/debug "Merkataan HARJA käynnistetyksi")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
@@ -746,7 +748,7 @@
   (tapahtumat/kaynnista! asetukset))
 
 (defn- sammuta-harja-tarkkailija! []
-  )
+  (tapahtumat/sammuta!))
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try

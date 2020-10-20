@@ -1,14 +1,21 @@
 #!/bin/bash
 set -euo pipefail
 
-if type -P lein >/dev/null 2>&1
-then
-  lein clean;
-fi
+# shellcheck source=harja_dir.sh
+source "$( dirname "${BASH_SOURCE[0]}" )/harja_dir.sh" || exit
 
-HARJA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 COMPOSE_ENV_FILE="${HARJA_DIR}/.docker_compose_env"
 LOCAL_ENV_FILE="${HARJA_DIR}/.local_env"
+
+# shellcheck source=os_riippuvaiset_fns.sh
+source "${HARJA_DIR}/sh/os_riippuvaiset_fns.sh"
+
+if type -P lein >/dev/null 2>&1
+then
+  # shellcheck source=.dc/muuta_tiedostojen_oikeudet.sh
+  source "${HARJA_DIR}/sh/dc/muuta_tiedostojen_oikeudet.sh"
+  lein clean;
+fi
 
 mkdir -p "${HARJA_DIR}/dev-resources/tmp"
 
@@ -18,14 +25,12 @@ then
     echo "# Nämä muuttujat generoidaan tänne. Älä muokkaa käsin." > ${LOCAL_ENV_FILE}
 fi
 
-source "${HARJA_DIR}/sh/os_riippuvaiset_fns.sh"
-
 lisaa_env_muuttuja() {
     NIMI=$1
     shift
     ARVO=$1
     shift
-    if [[ -z "$@" ]]
+    if [[ -z "$*" ]]
     then
         ENV_FILE=$COMPOSE_ENV_FILE
     else

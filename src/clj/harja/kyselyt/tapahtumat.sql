@@ -3,6 +3,7 @@
 SELECT kanava FROM tapahtuma WHERE nimi = :nimi;
 
 -- name: lisaa-tapahtuma
+-- single?: true
 INSERT INTO tapahtuma (nimi, kanava)
   VALUES (:nimi, :kanava)
 ON CONFLICT (nimi) DO NOTHING
@@ -14,12 +15,20 @@ SELECT julkaise_tapahtuma(:kanava::TEXT, :data::JSONB);
 
 -- name: uusin-arvo
 -- single?: true
-SELECT uusin_arvo::TEXT FROM tapahtuma WHERE nimi = :nimi
+SELECT uusin_arvo::TEXT
+FROM tapahtuma
+WHERE nimi = :nimi;
+
+-- name: uusin-arvo-per-palvelin
+-- single?: true
+SELECT palvelimien_uusimmat_arvot::TEXT
+FROM tapahtuma
+WHERE nimi = :nimi;
 
 -- name: tapahtuman-arvot
 SELECT arvo::TEXT
 FROM tapahtuman_tiedot
-WHERE id IN (:idt)
+WHERE id IN (:idt);
 
 -- name: kaikki-kanavat
 SELECT kanava FROM tapahtuma;
