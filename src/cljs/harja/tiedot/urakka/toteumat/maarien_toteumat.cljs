@@ -130,7 +130,7 @@
 
                                  (constantly true))}]
      (tuck-apurit/post! rajapinta
-                        {:tehtavaryhma tehtavaryhma
+                        {:tehtavaryhma (:id toimenpide)
                          :urakka-id    (-> @tila/yleiset :urakka :id)}
                         {:onnistui            ->TehtavatHakuOnnistui
                          :onnistui-parametrit [parametrit]
@@ -400,6 +400,7 @@
   TyhjennaLomake
   (process-event [_ app]
     (assoc app :syottomoodi false
+               :tehtavat []
                :lomake (-> tila/toteumat-default-arvot
                            :maarien-toteumat
                            :lomake)))
@@ -627,7 +628,8 @@
                             (get-in app [:aikavali-alkupvm])
                             (get-in app [:aikavali-loppupvm]))
     (-> app
-        (assoc :syottomoodi false)
+        (assoc :syottomoodi false
+               :tehtavat [])
         (assoc :ajax-loader true)
         (assoc-in [:lomake ::t/toteumat] [])))
 
@@ -656,9 +658,10 @@
 
 (defn- hae-tehtavat [toimenpide]
   (let [tehtavaryhma (when toimenpide
-                       (:otsikko toimenpide))]
+                       (:id toimenpide))]
     (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
-                       {:tehtavaryhma tehtavaryhma}
+                       {:tehtavaryhma tehtavaryhma
+                        :urakka-id    (-> @tila/yleiset :urakka :id)}
                        {:onnistui           ->TehtavatHakuOnnistui
                         :epaonnistui        ->TehtavatHakuEpaonnistui
                         :paasta-virhe-lapi? true})))

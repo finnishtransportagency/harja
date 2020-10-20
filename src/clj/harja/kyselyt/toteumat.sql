@@ -577,14 +577,18 @@ SELECT tk.id AS id,
        tk.suunnitteluyksikko AS yksikko
 FROM toimenpidekoodi tk,
      tehtavaryhma tr1,
+     tehtavaryhma tr2,
+     tehtavaryhma tr3,
      urakka u
-WHERE tr1.id = tk.tehtavaryhma
+WHERE tk.tehtavaryhma = tr3.id
+  and tr2.emo = tr1.id
+  and tr3.emo = tr2.id
   AND tk.taso = 4
   AND tk.kasin_lisattava_maara = true
-  AND (:tehtavaryhma::TEXT IS NULL OR tr1.otsikko = :tehtavaryhma)
+  AND (:tehtavaryhma::INTEGER IS NULL OR tr1.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
 
 
 -- name: luo-erilliskustannus<!
