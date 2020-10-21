@@ -17,7 +17,8 @@
 (defn- db-tunnistin->db-tila-tapahtuma [tunnistin]
   (keyword (str (name tunnistin) "-tila")))
 
-(defn tarkkaile-kantaa [db lopeta-tarkkailu-kanava
+(defn tarkkaile-kantaa [db
+                        lopeta-tarkkailu-kanava
                         {:keys [paivitystiheys-ms kyselyn-timeout-ms]}
                         tapahtuma-julkaisija]
   (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava

@@ -19,4 +19,4 @@ echo "${HARJA_DIR}" | grep "$(echo ~)" || {
    }
 echo "Muutetaan oikeudet kansiossa ${HARJA_DIR}"
 
-sudo find "${HARJA_DIR}" -user root -exec chown "$KAYTTAJA":"$KAYTTAJA" {} \; ;
+sudo find -P "${HARJA_DIR}" -user root -exec chown "$KAYTTAJA":"$KAYTTAJA" {} \; ;

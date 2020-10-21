@@ -302,8 +302,10 @@
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
 
-      :komponenttien-tila (komponenttien-tila/komponentin-tila)
-      :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja)
+      :komponenttien-tila (komponenttien-tila/komponentin-tila (:komponenttien-tila asetukset))
+      :uudelleen-kaynnistaja (component/using
+                               (uudelleen-kaynnistaja/->UudelleenKaynnistaja (:komponenttien-tila asetukset))
+                               [:sonja])
 
       ;; Tarkastustehtävät
 

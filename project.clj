@@ -223,10 +223,10 @@
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "+prod" "compile-prod,"
+                        "with-profile" "prod" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                        "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"

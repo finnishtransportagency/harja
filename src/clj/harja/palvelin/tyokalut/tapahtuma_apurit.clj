@@ -48,14 +48,34 @@
                             :default false))))))
 
 (defn tarkkaile-tapahtumaa
-  [tapahtuma tyyppi f & args]
+  "Kuuntelee annettua tapahtumaa ja kutsuu funktiota f tapahtuman arvolla.
+   Jos tyyppi on annettu, asetetaan se tarkkailijan tyypiksi.
+   Jos timeout on annettu, kutsutaan funktiota f viimeistään timeoutin jälkeen.
+   Timeoutin tapahtuessa f saa kahdeksi ensimmäiseksi argumentikseen - nil ja true.
+   nil on timeoutista syntyvä arvo ja true vastaa kysymykseen 'menikö timeout loppuun?'.
+   Ilman timeouttia f saa ensimmäiseksi argumentikseen tapahtuman julkaissun arvon.
+   Lisäksi f:lle annetaan argumenteiksi tässä määritetty args."
+  [tapahtuma
+   {:keys [tyyppi timeout]
+    :or {tyyppi :perus timeout 0}}
+   f
+   & args]
   {:post [(future? %)]}
-  (future (let [kuuntelija (async/<!! (tapahtuman-julkaisia! tapahtuma tyyppi))]
+  (future (let [kuuntelija (async/<!! (tapahtuman-julkaisia! tapahtuma tyyppi))
+                timeout-annettu? (not= 0 timeout)]
             (when kuuntelija
               (async/go
-                (loop [arvo (async/<! kuuntelija)]
-                  (apply f arvo args)
-                  (recur (async/<! kuuntelija)))))
+                (loop [[arvo portti] (if timeout-annettu?
+                                       (async/alts! [kuuntelija
+                                                     (async/timeout timeout)])
+                                       [(async/<! kuuntelija) kuuntelija])]
+                  (if timeout-annettu?
+                    (apply f arvo (not= portti kuuntelija) args)
+                    (apply f arvo args))
+                  (recur (if timeout-annettu?
+                           (async/alts! [kuuntelija
+                                         (async/timeout timeout)])
+                           [(async/<! kuuntelija) kuuntelija])))))
             kuuntelija)))
 
 (defn lopeta-tapahtuman-kuuntelu [kuuntelija]
@@ -70,7 +90,7 @@
     (julkaise-tapahtuma tapahtuma data)))
 
 (defn tapahtuma-datan-spec
-  "Tarkoitettu wrapperiksi event-julkaisija:lle. Julkaistavaksi tarkoitettu data ensin validoidaan tälle annettua spekkiä vasten.
+  "Tarkoitettu wrapperiksi tapahtuma-julkaisija:lle. Julkaistavaksi tarkoitettu data ensin validoidaan tälle annettua spekkiä vasten.
    Jos validointi epäonnistuu, julkaistavaksi dataksi laitetaan {::validointi-epaonnistui [ feilannu data ]}, lisäksi virhe logitetaan."
   [tapahtuma-julkaisija spec]
   (fn [data]

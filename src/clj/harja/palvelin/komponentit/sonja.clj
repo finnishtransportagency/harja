@@ -373,7 +373,7 @@
     (-> kasky keys first)))
 
 (defmethod jms-toiminto! :aloita-yhteys
-  [{:keys [tila yhteys-ok?] :as sonja} _]
+  [{:keys [tila yhteys-aloitettu?] :as sonja} _]
   (try (let [{:keys [istunnot yhteys]} @tila
              poikkeuskuuntelija (tee-jms-poikkeuskuuntelija sonja)]
          ;; Alustetaan vastaanottaja jvm oliot
@@ -386,19 +386,19 @@
          (log/debug "Aloitetaan yhteys")
          (.start yhteys)
          (reset! jms-connection-tila "ACTIVE")
-         (reset! yhteys-ok? true)
+         (reset! yhteys-aloitettu? true)
          true)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :aloita-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defmethod jms-toiminto! :lopeta-yhteys
-  [{:keys [tila yhteys-ok?] :as sonja} _]
+  [{:keys [tila yhteys-aloitettu?] :as sonja} _]
   (try (let [{:keys [yhteys]} @tila]
          (log/debug "Lopetetaan yhteys")
          (.close yhteys)
          (reset! jms-connection-tila "CLOSED")
-         (reset! yhteys-ok? false)
+         (reset! yhteys-aloitettu? false)
          true)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :lopeta-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
@@ -580,12 +580,11 @@
         ;; Käskytyskanava on täynnä
         nil {:kaskytysvirhe :kasykytyskanava-taynna}))))
 
-(defrecord SonjaYhteys [asetukset tila yhteys-ok?]
+(defrecord SonjaYhteys [asetukset tila yhteys-aloitettu?]
   component/Lifecycle
   (start [{:keys [db] :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
-          ;; yhteys-ok? ei kaiketi käytetä missään?
-          yhteys-ok? (atom false)
+          yhteys-aloitettu? (atom false)
           ;; HUOM! käskytyskanavaan ei tulisi laittaa viestejä muuten kuin laheta-viesti-kaskytyskanavaan!
           ;; funktion kautta.
           kaskytyskanava (chan 100)
@@ -599,7 +598,7 @@
                           (aloita-yhdistaminen asetukset))
           this (assoc this
                  :tila JMS-oliot
-                 :yhteys-ok? yhteys-ok?
+                 :yhteys-aloitettu? yhteys-aloitettu?
                  :yhteys-future yhteys-future
                  :kaskytyskanava kaskytyskanava
                  :lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava
@@ -622,7 +621,7 @@
              (< (timeout 1000))
              (recur))))
     (assoc this :tila nil
-                :yhteys-ok? nil
+                :yhteys-aloitettu? nil
                 :yhteys-future nil
                 :kaskytyskanava nil
                 :lopeta-tarkkailu-kanava nil
