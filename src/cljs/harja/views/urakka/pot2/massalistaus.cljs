@@ -64,13 +64,16 @@
        (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))])
 
 (defn- otsikko-ja-kentta
-  [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys valinnat placeholder]}]
+  [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys placeholder
+              valinnat valinta-nayta valinta-arvo]}]
   [:div.otsikko-ja-kentta.inline-block
    [:div
     [:span.kentan-label otsikko]
     (when pakollinen? [:span.required-tahti " *"])]
    [kentat/tee-kentta {:tyyppi tyyppi :teksti otsikko :nayta-rivina? false
-                       :leveys leveys :valinnat valinnat :placeholder placeholder}
+                       :leveys leveys :placeholder placeholder
+                       :valinnat valinnat :valinta-nayta valinta-nayta
+                       :valinta-arvo valinta-arvo}
     (r/wrap
       arvo
       (fn [uusi-arvo]
@@ -116,10 +119,11 @@
 
 (defn- sideaineiden-kentat [tiedot polun-avaimet idx]
   (let [{:keys [sideainetyypit tyyppi pitoisuus]} tiedot]
-    (log "jarno sideainetyypit " (pr-str sideainetyypit) " tyyppi " (pr-str tyyppi ) " pitoisuus" pitoisuus)
-    [{:otsikko "Tyyppi" :valinnat ["a" "b" "c"]
+    [{:otsikko "Tyyppi" :valinnat sideainetyypit
       :tyyppi :valinta :pakollinen? true
-      :arvo tyyppi :leveys "150px"
+      :valinta-nayta ::pot2-domain/nimi
+      :valinta-arvo ::pot2-domain/koodi
+      :arvo tyyppi :leveys "250px"
       :polku (conj polun-avaimet :aineet idx :tyyppi)}
      {:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
@@ -142,30 +146,38 @@
     nil))
 
 
-(defn- sideaineet-komponentti [e! rivi kayttotapa polun-avaimet]
+(defn- sideaineet-komponentti [e! rivi kayttotapa polun-avaimet sideainetyypit]
   (let [aineet (or (get-in rivi (cons :data [:sideaineet kayttotapa :aineet]))
                    {0 {:tyyppi nil :pitoisuus nil}})]
     [:div
      (map-indexed (fn [idx [_ {tyyppi :tyyppi
                                pitoisuus :pitoisuus} :as arvot]]
-                    ^{:key (str idx)}
-                    [:div
-                     (for [sak (sideaineiden-kentat {:tyyppi tyyppi
-                                                     :pitoisuus pitoisuus}
-                                                    polun-avaimet idx)]
+                    (do
+                      (log "arvot " (pr-str arvot))
+                      ^{:key (str idx)}
+                      [:div
+                       (for [sak (sideaineiden-kentat {:tyyppi tyyppi
+                                                       :pitoisuus pitoisuus
+                                                       :sideainetyypit (vec sideainetyypit)}
+                                                      polun-avaimet idx)]
 
-                       ^{:key (str idx (:otsikko sak))}
-                       [:div.inline-block {:style {:margin-right "6px"}}
-                        [otsikko-ja-kentta e! sak]])])
+                         ^{:key (str idx (:otsikko sak))}
+                         [:div.inline-block {:style {:margin-right "6px"}}
+                          [otsikko-ja-kentta e! sak]])]))
                   aineet)
      [:div
       [napit/uusi "Lisää uusi"
        #(e! (tiedot-massa/->LisaaSideaine kayttotapa))
        {:luokka (str "napiton-nappi lisaa-sideaine")}]]]))
 
+(defn- ainevalintalaatikot [tyyppi aineet]
+  (if (= tyyppi :sideaineet)
+    sideaineen-kayttotavat
+    aineet))
+
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
   [:div.ainevalinta-kentat
-   (for [t aineet]
+   (for [t (ainevalintalaatikot tyyppi aineet)]
       (let [polun-avaimet [tyyppi (::pot2-domain/koodi t)]
             {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
         ^{:key t}
@@ -185,7 +197,7 @@
 
               :sideaineet
               [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
-               polun-avaimet])])]))])
+               polun-avaimet aineet])])]))])
 
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
@@ -259,7 +271,7 @@
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :runkoaineet runkoainetyypit])}
        {:nimi :sideaineet :otsikko "Sideaineet" :tyyppi :komponentti
         :palstoja 2
-        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideaineen-kayttotavat])}
+        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideainetyypit])}
        {:nimi :lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti
         :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]
