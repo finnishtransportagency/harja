@@ -46,6 +46,12 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sideaineen-kayttotavat
+  [{::pot2-domain/nimi "Lopputuotteen sideaine"
+    ::pot2-domain/koodi :lopputuote}
+   {::pot2-domain/nimi "Lisätty sideaine"
+    ::pot2-domain/koodi :lisatty}])
+
 (defn- aineen-otsikko-checkbox
   [e! {:keys [otsikko arvo label-luokka polku]}]
   [kentat/tee-kentta
@@ -84,7 +90,7 @@
           :arvo esiintyma :leveys "150px"
           :polku (conj polun-avaimet :esiintyma)})
        (when (contains? #{3} aineen-koodi)
-         {:otsikko "Tyyppi" :valinnat ["a" "b" "c"]
+         {:otsikko "Tyyppi" :valinnat pot2-domain/erikseen-lisattava-fillerikiviaines
           :tyyppi :valinta :pakollinen? true
           :arvo fillerityyppi :leveys "150px"
           :polku (conj polun-avaimet :fillerityyppi)})
@@ -108,16 +114,17 @@
         :arvo massaprosentti :leveys "55px"
         :polku (conj polun-avaimet :massaprosentti)}])))
 
-(defn- sideaineiden-kentat [tiedot polun-avaimet]
-  (let [{:keys [sideainetyyppi pitoisuus]} tiedot]
+(defn- sideaineiden-kentat [tiedot polun-avaimet idx]
+  (let [{:keys [sideainetyypit tyyppi pitoisuus]} tiedot]
+    (log "jarno sideainetyypit " (pr-str sideainetyypit) " tyyppi " (pr-str tyyppi ) " pitoisuus" pitoisuus)
     [{:otsikko "Tyyppi" :valinnat ["a" "b" "c"]
       :tyyppi :valinta :pakollinen? true
-      :arvo sideainetyyppi :leveys "150px"
-      :polku (conj polun-avaimet :sideainetyyppi)}
+      :arvo tyyppi :leveys "150px"
+      :polku (conj polun-avaimet :aineet idx :tyyppi)}
      {:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "55px"
-      :polku (conj polun-avaimet :pitoisuus)}]))
+      :polku (conj polun-avaimet :aineet idx :pitoisuus)}]))
 
 (defn- lisaaineiden-kentat [tiedot polun-avaimet]
   (let [{:keys [pitoisuus]} tiedot]
@@ -129,10 +136,32 @@
 (defn- tyypin-kentat [tyyppi tiedot polun-avaimet]
   (case tyyppi
     :runkoaineet (runkoaineiden-kentat tiedot polun-avaimet)
-    :sideaineet (sideaineiden-kentat tiedot polun-avaimet)
+    :sideaineet (sideaineiden-kentat tiedot polun-avaimet 0)
     :lisaaineet (lisaaineiden-kentat tiedot polun-avaimet)
 
     nil))
+
+
+(defn- sideaineet-komponentti [e! rivi kayttotapa polun-avaimet]
+  (let [aineet (or (get-in rivi (cons :data [:sideaineet kayttotapa :aineet]))
+                   {0 {:tyyppi nil :pitoisuus nil}})]
+    [:div
+     (map-indexed (fn [idx [_ {tyyppi :tyyppi
+                               pitoisuus :pitoisuus} :as arvot]]
+                    ^{:key (str idx)}
+                    [:div
+                     (for [sak (sideaineiden-kentat {:tyyppi tyyppi
+                                                     :pitoisuus pitoisuus}
+                                                    polun-avaimet idx)]
+
+                       ^{:key (str idx (:otsikko sak))}
+                       [:div.inline-block {:style {:margin-right "6px"}}
+                        [otsikko-ja-kentta e! sak]])])
+                  aineet)
+     [:div
+      [napit/uusi "Lisää uusi"
+       #(e! (tiedot-massa/->LisaaSideaine kayttotapa))
+       {:luokka (str "napiton-nappi lisaa-sideaine")}]]]))
 
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
   [:div.ainevalinta-kentat
@@ -147,15 +176,16 @@
 
          (when valittu?
            [:div.kentat-haitari
-            (for [k (tyypin-kentat tyyppi tiedot polun-avaimet)]
-              (do
+            (case tyyppi
+              (:runkoaineet :lisaaineet)
+              (for [k (tyypin-kentat tyyppi tiedot polun-avaimet)]
                 ^{:key (:otsikko k)}
                 [:div.inline-block {:style {:margin-right "6px"}}
-                 [otsikko-ja-kentta e! k]]))])]))])
+                 [otsikko-ja-kentta e! k]])
 
-(def sideaineen-kayttotapa
-  ["Lopputuotteen sideaine"
-   "Lisätty sideaine"])
+              :sideaineet
+              [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
+               polun-avaimet])])]))])
 
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
@@ -174,9 +204,7 @@
                       "Tallenna"
                       #(e! (tiedot-massa/->TallennaLomake data))
                       {:vayla-tyyli? true
-                       :luokka "suuri"
-                       ;:disabled (not koko-validi?)
-                       }]
+                       :luokka "suuri"}]
                      [napit/peruuta
                       "Peruuta"
                       #(e! (tiedot-massa/->TyhjennaLomake data))
@@ -231,7 +259,7 @@
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :runkoaineet runkoainetyypit])}
        {:nimi :sideaineet :otsikko "Sideaineet" :tyyppi :komponentti
         :palstoja 2
-        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideainetyypit])}
+        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideaineen-kayttotavat])}
        {:nimi :lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti
         :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]

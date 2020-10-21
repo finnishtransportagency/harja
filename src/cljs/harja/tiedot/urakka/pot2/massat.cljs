@@ -27,6 +27,7 @@
 (defrecord TyhjennaLomake [data])
 (defrecord PaivitaLomake [data])
 (defrecord PaivitaAineenTieto [polku arvo])
+(defrecord LisaaSideaine [sideaineen-kayttotapa])
 
 ;; Haut
 (defrecord HaePot2Massat [])
@@ -107,8 +108,17 @@
   (process-event [{polku :polku arvo :arvo} app]
     (log "PaivitaAineenTieto polku " (pr-str polku), " arvo:" (pr-str arvo))
     (let [uusiapp (assoc-in app
-                            (vec (cons :pot2-massa-lomake polku)) arvo)]
-      uusiapp))
+                    (vec (cons :pot2-massa-lomake polku)) arvo)]
+    uusiapp))
+
+  LisaaSideaine
+  (process-event [{sideaineen-kayttotapa :sideaineen-kayttotapa} app]
+    (let [aineiden-lkm
+          (count (get-in app
+                         [:pot2-massa-lomake :sideaineet sideaineen-kayttotapa :aineet]))]
+      (assoc-in app
+                [:pot2-massa-lomake :sideaineet sideaineen-kayttotapa :aineet aineiden-lkm]
+                {:tyyppi nil :pitoisuus nil})))
 
   TallennaLomake
   (process-event [{data :data} app]
