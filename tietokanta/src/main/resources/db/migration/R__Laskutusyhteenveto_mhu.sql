@@ -254,8 +254,8 @@ BEGIN
     -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, lasku_kohdistus sekä kustannusarvioitu_tyo.
     -- lasku_kohdistustaulusta joudutaan hakemaan tarkkaan tehtäväryhmällä
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
-    -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella 3055 - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
-    toimistotarvike_koodi := 3055;
+    -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
+    toimistotarvike_koodi := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.');
 
     RAISE NOTICE 'hoidon_johto_yhteenveto: toimenpidekoodi %' , toimenpide_koodi;
     johto_ja_hallinto_laskutettu := 0.0;
