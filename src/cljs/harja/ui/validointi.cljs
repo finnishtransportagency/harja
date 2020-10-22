@@ -10,7 +10,8 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
-            [harja.domain.tierekisteri :as tr])
+            [harja.domain.tierekisteri :as tr]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -392,3 +393,7 @@
                                       (get rivi nimi)))))
             s))
         skeema))
+
+(defn validoi-numero
+  [numero alaraja ylaraja]
+  (<= alaraja (str/replace numero "," ".") ylaraja))

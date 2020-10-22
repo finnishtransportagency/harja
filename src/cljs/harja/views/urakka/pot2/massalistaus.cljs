@@ -65,7 +65,7 @@
 
 (defn- otsikko-ja-kentta
   [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys placeholder
-              valinnat valinta-nayta valinta-arvo]}]
+              valinnat valinta-nayta valinta-arvo validoi-kentta-fn]}]
   [:div.otsikko-ja-kentta.inline-block
    [:div
     [:span.kentan-label otsikko]
@@ -73,7 +73,8 @@
    [kentat/tee-kentta {:tyyppi tyyppi :teksti otsikko :nayta-rivina? false
                        :leveys leveys :placeholder placeholder
                        :valinnat valinnat :valinta-nayta valinta-nayta
-                       :valinta-arvo valinta-arvo}
+                       :valinta-arvo valinta-arvo
+                       :validoi-kentta-fn validoi-kentta-fn}
     (r/wrap
       arvo
       (fn [uusi-arvo]
@@ -101,6 +102,7 @@
          {:otsikko "KM-arvo"
           :tyyppi :numero :pakollinen? true
           :arvo km-arvo :leveys "55px"
+          :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40))
           :polku (conj polun-avaimet :km-arvo)})
        (when-not (contains? #{3 7} aineen-koodi)
          {:otsikko "Litteysluku"
@@ -115,6 +117,7 @@
        {:otsikko "Massa-%"
         :tyyppi :numero :pakollinen? true
         :arvo massaprosentti :leveys "55px"
+        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
         :polku (conj polun-avaimet :massaprosentti)}])))
 
 (defn- sideaineiden-kentat [tiedot polun-avaimet idx]
@@ -128,6 +131,7 @@
      {:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "55px"
+      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
       :polku (conj polun-avaimet :aineet idx :pitoisuus)}]))
 
 (defn- lisaaineiden-kentat [tiedot polun-avaimet]
@@ -135,6 +139,7 @@
     [{:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "70px"
+      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
       :polku (conj polun-avaimet :pitoisuus)}]))
 
 (defn- tyypin-kentat [tyyppi tiedot polun-avaimet]

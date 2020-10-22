@@ -260,7 +260,7 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [{:keys [oletusarvo leveys] :as kentta} data]
+(defmethod tee-kentta :numero [{:keys [oletusarvo leveys :validoi-kentta-fn]   :as kentta} data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
@@ -270,7 +270,8 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? leveys] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f
+                   on-blur on-focus disabled? leveys validoi-kentta-fn]  :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -295,11 +296,14 @@
                                        v (if vaadi-ei-negatiivinen?
                                            (str/replace v #"-" "")
                                            v)]
-                                   (when (or (= v "")
-                                             (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                             ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
-                                             ;; mutta tätä välivaihetta ei tallenneta dataan
-                                             (re-matches #"[0-9,.-]+" v))
+                                   (when (and
+                                           (or (nil? validoi-kentta-fn)
+                                               (validoi-kentta-fn v))
+                                           (or (= v "")
+                                               (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                               ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
+                                               ;; mutta tätä välivaihetta ei tallenneta dataan
+                                               (re-matches #"[0-9,.-]+" v)))
                                      (reset! teksti v)
 
                                      (let [numero (if kokonaisluku?
