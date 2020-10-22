@@ -2,6 +2,7 @@
   (:require
     [taoensso.timbre :as log]
     [clojure.core.async :as a :refer [<! go timeout]]
+    [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
@@ -746,6 +747,20 @@
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
 
+(defn- kuuntele-tapahtumia! []
+  (event-apurit/tarkkaile-tapahtumaa :harjajarjestelman-restart
+                                     {}
+                                     (fn [{:keys [palvelin payload]}]
+                                       (when (= palvelin (event-apurit/host-nimi))
+                                         (alter-var-root #'harja-jarjestelma
+                                                         (fn [harja-jarjestelma]
+                                                           (try (jarjestelma/system-restart harja-jarjestelma payload)
+                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui nil)
+                                                                (catch Throwable t
+                                                                  (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
+                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil)
+                                                                  harja-jarjestelma))))))))
+
 (defn- kaynnista-harja-tarkkailija! [asetukset]
   (tapahtumat/kaynnista! asetukset))
 
@@ -768,6 +783,7 @@
         (log/error "Validointivirhe asetuksissa:" virheet))
       (tarkista-ymparisto!)
       (kaynnista-harja-tarkkailija! asetukset)
+      (kuuntele-tapahtumia!)
       (merkkaa-kaynnistyminen!)
       (alter-var-root #'harja-jarjestelma
                       (constantly
