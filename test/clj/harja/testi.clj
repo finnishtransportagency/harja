@@ -191,6 +191,11 @@
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
 
+(defn tapa-kanta [db]
+  (with-open [c (.getConnection temppidb)
+              ps (.createStatement c)]
+    (yrita-querya (fn [] (tapa-backend-kannasta ps db)) 5)))
+
 (defprotocol FeikkiHttpPalveluKutsu
   (kutsu-palvelua
     ;; GET
