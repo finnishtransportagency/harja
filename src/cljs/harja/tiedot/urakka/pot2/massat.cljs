@@ -123,17 +123,11 @@
   TallennaLomake
   (process-event [{data :data} app]
     (let [massa (:pot2-massa-lomake app)
-          lisa-aineet (get-in app [:pot2-massa-lomake :lisa-aineet]) ;; Todo: Sisältää nyt tasan yhden arvon setissä
-          lisa-aineet [{:pitoisuus 0.2M :nimi (first lisa-aineet)}]
-          sideaineet (get-in app [:pot2-massa-lomake :sideaineet]) ;; Todo: Sisältää nyt tasan yhden arvon setissä
-          sideaineet [{:pitoisuus 5M :tyyppi (first sideaineet) :lopputuote? true}]
           _ (js/console.log "TallennaLomake data" (pr-str data))
           _ (js/console.log "TallennaLomake massa" (pr-str massa))]
       (tuck-apurit/post! :tallenna-urakan-pot2-massa
                          (-> massa
-                             (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id))
-                             (assoc :lisa-aineet lisa-aineet)
-                             (assoc :sideaineet sideaineet))
+                             (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id)))
                          {:onnistui ->TallennaMassaOnnistui
                           :epaonnistui ->TallennaMassaEpaonnistui}))
     app)

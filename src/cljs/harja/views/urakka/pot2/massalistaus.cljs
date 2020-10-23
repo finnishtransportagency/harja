@@ -81,7 +81,7 @@
         (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))]])
 
 (defn- runkoaineiden-kentat [tiedot polun-avaimet]
-  (let [{:keys [esiintyma fillerityyppi km-arvo litteysluku
+  (let [{:keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
                 massaprosentti kuvaus]} tiedot
         aineen-koodi (second polun-avaimet)]
     ;; Käyttöliittymäsuunnitelman mukaisesti tietyillä runkoaineilla on tietyt kentät
@@ -99,11 +99,11 @@
           :arvo fillerityyppi :leveys "150px"
           :polku (conj polun-avaimet :fillerityyppi)})
        (when-not (contains? #{3 7} aineen-koodi)
-         {:otsikko "KM-arvo"
+         {:otsikko "kuulamyllyarvo"
           :tyyppi :numero :pakollinen? true
-          :arvo km-arvo :leveys "55px"
+          :arvo kuulamyllyarvo :leveys "55px"
           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40))
-          :polku (conj polun-avaimet :km-arvo)})
+          :polku (conj polun-avaimet :kuulamyllyarvo)})
        (when-not (contains? #{3 7} aineen-koodi)
          {:otsikko "Litteysluku"
           :tyyppi :numero :pakollinen? true
@@ -216,17 +216,25 @@
                   "Muokkaa massaa"
                   "Uusi massa")
        :footer-fn (fn [data]
-                    [:div.flex-row.alkuun
-                     [napit/tallenna
-                      "Tallenna"
-                      #(e! (tiedot-massa/->TallennaLomake data))
-                      {:vayla-tyyli? true
-                       :luokka "suuri"}]
-                     [napit/peruuta
-                      "Peruuta"
-                      #(e! (tiedot-massa/->TyhjennaLomake data))
-                      {:vayla-tyyli? true
-                       :luokka "suuri"}]])
+                    [:div
+                     (when-not (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
+                       [:div
+                        [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
+                        [:ul
+                         (for [puuttuva (ui-lomake/puuttuvat-pakolliset-kentat data)]
+                           [:li (name puuttuva)])]])
+                     [:div.flex-row.alkuun
+                      [napit/tallenna
+                       "Tallenna"
+                       #(e! (tiedot-massa/->TallennaLomake data))
+                       {:vayla-tyyli? true
+                        :luokka "suuri"
+                        :disabled (not (ui-lomake/voi-tallentaa? data))}]
+                      [napit/peruuta
+                       "Peruuta"
+                       #(e! (tiedot-massa/->TyhjennaLomake data))
+                       {:vayla-tyyli? true
+                        :luokka "suuri"}]]])
        :vayla-tyyli? true}
       [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"

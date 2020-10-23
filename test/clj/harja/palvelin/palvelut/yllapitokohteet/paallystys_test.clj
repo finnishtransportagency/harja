@@ -96,7 +96,7 @@
    :massaprosentti 34.2M})
 
 (def runkoaine-kiviaines-default2
-  {:erikseen-lisattafa-fillerikiviaines (first pot2-domain/erikseen-lisattava-fillerikiviaines)
+  {:erikseen-lisattava-fillerikiviaines (first pot2-domain/erikseen-lisattava-fillerikiviaines)
    :massaprosentti 2.12M})
 
 (def default-pot2-massa
