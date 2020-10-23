@@ -303,14 +303,15 @@
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
-    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (when metriikka
       (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
+          portti (or (:portti asetukset) asetukset)
           anti-csrf-token-secret-key (:anti-csrf-token asetukset)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
                           (route/files "" {:root "dev-resources"}))]
+      (log/info "HttpPalvelin käynnistetään portissa " portti)
       (swap! lopetus-fn
              (constantly
                (http/run-server
@@ -358,7 +359,7 @@
                                            :aktiiviset_pyynnot dec
                                            :pyyntoja_palveltu inc)))))
 
-                 {:port (or (:portti asetukset) asetukset)
+                 {:port portti
                   :thread (or (:threads asetukset) 8)
                   :max-body (or (:max-body-size asetukset) (* 1024 1024 8))
                   :max-line 40960})))
