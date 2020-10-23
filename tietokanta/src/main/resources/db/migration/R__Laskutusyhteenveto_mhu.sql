@@ -147,7 +147,7 @@ BEGIN
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
     -- sekä toimenpidekoodista 'Hoitourakan työnjohto'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
-    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
+    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
 
     hj_palkkio_laskutettu := 0.0;
     hj_palkkio_laskutetaan := 0.0;
@@ -255,7 +255,7 @@ BEGIN
     -- lasku_kohdistustaulusta joudutaan hakemaan tarkkaan tehtäväryhmällä
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
     -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
-    toimistotarvike_koodi := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.');
+    toimistotarvike_koodi := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
 
     RAISE NOTICE 'hoidon_johto_yhteenveto: toimenpidekoodi %' , toimenpide_koodi;
     johto_ja_hallinto_laskutettu := 0.0;
