@@ -202,6 +202,15 @@
     (is (= (:id poistettu-lasku) tallennettu-id) "Laskun poistaminen palauttaa poistetun laskun (poistettu-lasku)")
     (is (empty? poistetun-laskun-haku) "Poistettua laskua ei palaudu (poistetun-laskun-haku).")))
 
+(deftest tallenna-lasku-validaatio-petar-testi
+  (let [tallennettu-lasku
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely uusi-lasku})]
+
+    ;; Tallennus
+    (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")))
+
 
 (deftest paivita-maksuera-testi
   (let [lasku-kokonaishintainen-tyo

@@ -1,54 +1,65 @@
 (ns harja.palvelin.komponentit.http-palvelin-test
-  (:require [harja.palvelin.asetukset :as asetukset]
-            [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
-            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [harja.kyselyt.konversio :as konv]
+  (:require [harja.testi :refer :all]
             [clojure.test :refer :all]
-            [clojure.string :as clj-str]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout put! alts!! chan poll!]]
-            [clojure.set :as set]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [org.httpkit.client :as http]
-            [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
-            [cheshire.core :as cheshire]
-            [slingshot.slingshot :refer [try+]]
-
             [harja.palvelin.komponentit.http-palvelin :as palvelin]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.komponentit.fim-test :as fim-test]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
+            [harja.palvelin.index :as index]
+            [harja.kyselyt.anti-csrf :as anti-csrf-q]
+            [harja.palvelin.komponentit.todennus :as todennus]
+            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+            [clj-time.core :as t]))
 
-(def kayttaja "yit-rakennus")
+(def kayttaja +kayttaja-jvh+)
 
-(def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea
-    kayttaja
-    :api-ilmoitukset (component/using
-                       (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])))
+(def csrf-token-secret "foobar")
+
+(def random-avain "baz")
+
+(def csrf-token (index/muodosta-csrf-token random-avain
+                                           csrf-token-secret))
+(defn jarjestelma-fixture [testit]
+  (let [nyt (t/now)]
+    (pudota-ja-luo-testitietokanta-templatesta)
+    (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
+    (alter-var-root #'jarjestelma
+                    (fn [_]
+                      (component/start
+                        (component/system-map
+                          :todennus (component/using
+                                      (todennus/http-todennus {})
+                                      [:db])
+                          :db (tietokanta/luo-tietokanta testitietokanta)
+                          :http-palvelin (component/using
+                                           (http-palvelin/luo-http-palvelin {:portti portti
+                                                                             :anti-csrf-token csrf-token-secret} true)
+                                           [:todennus :db])))))
+    (anti-csrf-q/poista-ja-luo-csrf-sessio (:db jarjestelma) (:kayttajanimi kayttaja) csrf-token nyt)
+    (testit)
+    (alter-var-root #'jarjestelma component/stop)))
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn ok-get-palvelu [user] {})
+(defn ok-palvelu-get [user] {})
 
-(defn bad-request-get-palvelu [user]
+(defn bad-request-palvelu-get [user]
   (throw (IllegalArgumentException. "bad request")))
 
-(defn internal-server-error-get-palvelu [user]
+(defn internal-server-error-palvelu-get [user]
   (throw (RuntimeException. "internal server error")))
+
+(defn get-kutsu [palvelu]
+  @(http/get (str "http://localhost:" portti "/_/" (name palvelu))
+             {:headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
+                        "OAM_GROUPS" (interpose "," (:roolit kayttaja))
+                        "Content-Type" "application/json"
+                        "x-csrf-token" random-avain}}))
 
 (deftest get-palvelu-palauta-ok
   (println "petar palvelin " (:http-palvelin jarjestelma))
-  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :ok-palvelu ok-get-palvelu)
-  (let [vastaus (api-tyokalut/get-kutsu ["/_/ok-palvelu"] kayttaja portti)]
-    (println "petar vastaus " vastaus)
+  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :ok-palvelu ok-palvelu-get)
+  (let [vastaus (get-kutsu :ok-palvelu)]
+    (println "petar vastaus ")
+    (clojure.pprint/pprint vastaus)
     (is (= 200 (:status vastaus)))))
-

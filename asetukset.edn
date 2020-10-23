@@ -6,7 +6,7 @@
 
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
-                 ;:salli-oletuskayttaja? false
+                 :salli-oletuskayttaja? true
                  }
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
