@@ -5,7 +5,8 @@
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.tyokalut.predikaatti :as p]
             [taoensso.timbre :as log])
-  (:import [java.net InetAddress]))
+  (:import [java.net InetAddress]
+           [java.lang Math]))
 
 (def ^{:private true
        :dynamic true}
@@ -95,7 +96,7 @@
                         (ifn? f)))
                  (partition 3 args))]
    :post [(= (count %)
-             (Math/round (/ (count args) 3)))
+             (Math/round (float (/ (count args) 3))))
           (every? future? %)]}
   (let [tarkkaile-tapahtumaa-args (partition 3 args)]
     (mapv (fn [tarkkaile-tapahtumaa-arg]

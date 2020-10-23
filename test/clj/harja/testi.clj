@@ -5,6 +5,7 @@
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.http-palvelin :as http]
@@ -1088,6 +1089,7 @@
                                         (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
                                         [:http-palvelin]))
 
+(def harja-tarkkailija)
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -1095,19 +1097,24 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
+     (alter-var-root #'harja-tarkkailija
+                     (constantly
+                       (component/start
+                         (component/system-map
+                           :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+                           :klusterin-tapahtumat (component/using
+                                                   (tapahtumat/luo-tapahtumat)
+                                                   {:db :db-event})))))
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
                          (component/system-map
                            :db (tietokanta/luo-tietokanta testitietokanta)
                            :db-replica (tietokanta/luo-tietokanta testitietokanta)
-                           :klusterin-tapahtumat (component/using
-                                                   (tapahtumat/luo-tapahtumat)
-                                                   [:db])
 
                            :todennus (component/using
                                        (todennus/http-todennus)
-                                       [:db :klusterin-tapahtumat])
+                                       [:db])
                            :http-palvelin (component/using
                                             (http/luo-http-palvelin portti true)
                                             [:todennus])
@@ -1129,7 +1136,8 @@
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
                                        " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
      (testit#)
-     (alter-var-root #'jarjestelma component/stop)))
+     (alter-var-root #'jarjestelma component/stop)
+     (alter-var-root #'harja-tarkkailija component/stop)))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan

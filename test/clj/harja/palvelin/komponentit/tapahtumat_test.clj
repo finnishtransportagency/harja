@@ -63,3 +63,21 @@
               (Thread/sleep 500))))
         (is (odota-arvo saatiin))
         (lopetus-fn)))))
+
+(deftest possukanavien-luonti)
+
+(deftest hashaus-onnistuu)
+
+(deftest tarkkaile-kanavaa-testit-ok-tapaukset []
+  (testing "Perus tarkkailun aloitus onnistuu")
+  (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille")
+  (testing "Viimeisin tarkkailu onnistuu"))
+
+(deftest tarkkaile-kanavaa-testit-ei-ok-tapaukset []
+  (testing "Väärä hash saatu")
+  (testing "Väärän tyyppinen kuuntelija")
+  (testing "Käsky tapahtuma-looppiin ilman funktiota"))
+
+(deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin [])
+
+(deftest yhta-aikaa-julkaisu-toimii [])
