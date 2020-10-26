@@ -14,21 +14,17 @@
 
             [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
             [harja.tyokalut.dev-tyokalut :as dev-tyokalut]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
 
             [harja.kyselyt.konversio :as konv]
             [harja.transit :as transit]
 
             [harja.kyselyt.tapahtumat :as q-tapahtumat]
-            [taoensso.timbre :as log]
-            [clojure.walk :as walk])
+            [taoensso.timbre :as log])
   (:import [org.postgresql PGNotification]
            [org.postgresql.util PSQLException]
            [java.util UUID]
-           (clojure.lang LazySeq PersistentList IMeta)))
-
-#_(defonce ^{:private true
-           :doc "Tähän yhteyteen kaikki LISTEN hommat."}
-         event-yhteys nil)
+           (clojure.lang ArityException)))
 
 (defonce ^{:private true
            :doc "Tämän kautta lähetetään queryja notify loopiin"}
@@ -114,25 +110,28 @@
          (uuid? (UUID/fromString (-> kaytettava-kanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))]}
   (u tapahtumayhteys (str "LISTEN " kaytettava-kanava)))
 
-#_(defn- kuuntele-klusterin-tapahtumaa!
-  ([db tapahtuma] (kuuntele-klusterin-tapahtumaa! db tapahtuma nil nil))
-  ([db tapahtuma tunnistin lkm]
-   (let [kaytettava-kanava (kaytettava-kanava! db tapahtuma)
-         kuuntelu-aloitettu-tunnistin (or tunnistin (str (gensym "kuuntelu")))
-         kuuntelu-aloitettu-huomauttaja (async/chan)]
-     (async/sub kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-tunnistin kuuntelu-aloitettu-huomauttaja)
-     (async/put! tapahtuma-loopin-ajot {:f (partial kuuntelu-fn kaytettava-kanava)
-                                        :tunnistin kuuntelu-aloitettu-tunnistin
-                                        :yhta-aikaa? (boolean tunnistin)
-                                        :lkm lkm})
-     {:possu-kanava kaytettava-kanava
-      :kuuntelu-aloitettu-huomauttaja kuuntelu-aloitettu-huomauttaja})))
+(defn tapahtuman-data-ok?!
+  [{:keys [payload palvelin hash lahetetty-data]} tapahtuma]
+  (if-not (= hash (konv/sha256 payload))
+    (do (log/error (str "Saatiin tapahtumasta " tapahtuma " erillainen data kuin lähetettiin."))
+        (when dev-tyokalut/dev-environment?
+          (log/info (str "[KOMPONENTTI-EVENT] Saatu payload: " payload))
+          (log/info (str "[KOMPONENTTI-EVENT] palvelin: " palvelin))
+          (log/info (str "[KOMPONENTTI-EVENT] Lahetetyn datan tiedot: " lahetetty-data))
+          (log/info (str "[KOMPONENTTI-EVENT] Saadun datan tiedot: " (dev-tyokalut/datan-tiedot payload {:type-string? true})))
+          #_(dev-tyokalut/etsi-epakohta-datasta payload lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})))
+        false)
+    true))
 
 (defn paluuarvo [palautettava-arvo tapahtuma db]
-  (case palautettava-arvo
-    :viimeisin (q-tapahtumat/uusin-arvo db {:nimi tapahtuma})
-    :viimeisin-per-palvelin (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
-    nil))
+  (let [json-data (case palautettava-arvo
+                    :viimeisin (q-tapahtumat/uusin-arvo db {:nimi tapahtuma})
+                    :viimeisin-per-palvelin (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
+                    nil)]
+    (when json-data
+      (let [data (transit/lue-transit-string json-data transit-read-handler)]
+        (when (tapahtuman-data-ok?! data tapahtuma)
+          data)))))
 
 (defn- kuuntele-klusterin-tapahtumaa!
   [{:keys [db tapahtuma palautettava-arvo kuuntelun-jalkeen ryhmatunnistin lkm]}]
@@ -158,9 +157,7 @@
                   (println "---> paluuarvo: " paluuarvo)
                   (kuuntelun-jalkeen possukanava paluuarvo)
                   (async/put! kuuntelu-aloitettu-kuittaus true)
-                  [possukanava paluuarvo])))
-            #_{:possu-kanava kaytettava-kanava
-             :kuuntelu-aloitettu-huomauttaja kuuntelu-aloitettu-huomauttaja})))
+                  [possukanava paluuarvo]))))))
 
 (def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
                             .getMethods
@@ -187,19 +184,6 @@
       muunnos
       (do (log/error "Datan muuttaminen julkaisua varten ei onnistunut!")
           ::muunnos-epaonnistui))))
-
-(defn tapahtuman-data-ok?!
-  [{:keys [payload palvelin hash lahetetty-data]} tapahtuma]
-  (if-not (= hash (konv/sha256 payload))
-    (do (log/error (str "Saatiin tapahtumasta " tapahtuma " erillainen data kuin lähetettiin."))
-        (when dev-tyokalut/dev-environment?
-          (log/info (str "[KOMPONENTTI-EVENT] Saatu payload: " payload))
-          (log/info (str "[KOMPONENTTI-EVENT] palvelin: " palvelin))
-          (log/info (str "[KOMPONENTTI-EVENT] Lahetetyn datan tiedot: " lahetetty-data))
-          (log/info (str "[KOMPONENTTI-EVENT] Saadun datan tiedot: " (dev-tyokalut/datan-tiedot payload {:type-string? true})))
-          #_(dev-tyokalut/etsi-epakohta-datasta payload lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})))
-        false)
-    true))
 
 (defn pura-tapahtuma-loopin-ajot! [db yhta-aikaa-ajettavat]
   #_(println "--- pura-tapahtuma-loopin-ajot! 1 ----")
@@ -288,7 +272,6 @@
                                                                          (when kaatui-virheeseen?
                                                                            (doseq [{:keys [kanava]} (q-tapahtumat/kaikki-kanavat db)]
                                                                              (println "kanava: " kanava)
-                                                                             #_(kuuntelu-fn possukanava (jdbc/get-connection db))
                                                                              (kuuntelu-fn kanava connection))
                                                                            (reset! tapahtuma-loop-kaynnissa? true))
                                                                          (println "Kaikkea pitäs taasen kuunnella..")
@@ -362,19 +345,20 @@
   ;; Kuutele! ja tarkkaile! ero on se, että eventin sattuessa kuuntele! kutsuu callback funktiota kun taas
   ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
   (kuuntele! [this tapahtuma callback]
+    (let [arityjen-maara (tyokalut/arityt callback)]
+      (println "ARITYJEN MÄÄRÄT: " arityjen-maara)
+      (when-not (contains? arityjen-maara 1)
+        (throw (ArityException. (first arityjen-maara) "Callback funktio tapahtumalle pitää sisältää ainakin arity 1"))))
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           fn-tunnistin (str (gensym "callback"))
           kuuntelun-jalkeen (fn [possukanava _]
                               (swap! kuuntelijat update possukanava conj (with-meta callback {:tunnistin fn-tunnistin})))
-          #_#_{kanava :possukanava} (kuuntele-klusterin-tapahtumaa! (get-in this [:db :db-spec]) tapahtuma)
           _ (println "---- kuuntele! 1 ----")
           _ (println "---> KUUNNELLAAN TAPAHTUMAA: " tapahtuma)
           kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
                                                               :tapahtuma tapahtuma
                                                               :kuuntelun-jalkeen kuuntelun-jalkeen})
           [possukanava _] (async/<!! kuuntelu-sekvenssi)]
-      #_(swap! kuuntelijat update kanava conj (with-meta callback {:tunnistin fn-tunnistin}))
-      #_(async/put! kuuntelu-aloitettu-kuittaus true)
       (println "---- kuuntele! 2 ----")
       (println "---> kuuntelu-sekvenssi done")
       (if (= possukanava ::virhe)
@@ -407,14 +391,6 @@
                                                                     (async/put! kuuntelija-kanava {::data arvo})))
                                         (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
                                         (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava))
-                    #_#_{:keys [possu-kanava kuuntelu-aloitettu-huomauttaja]} (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
-                                                                                                           :tapahtuma tapahtuma
-                                                                                                           :palautettava-arvo (if (= :perus tyyppi)
-                                                                                                                                nil
-                                                                                                                                tyyppi)
-                                                                                                           :kuuntelun-jalkeen kuuntelun-jalkeen
-                                                                                                           :tunnistin tunnistin
-                                                                                                           :lkm lkm})
                     kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
                                                                         :tapahtuma tapahtuma
                                                                         :palautettava-arvo (if (= :perus tyyppi)
@@ -424,17 +400,6 @@
                                                                         :ryhmatunnistin tunnistin
                                                                         :lkm lkm})
                     [possukanava _] (async/<!! kuuntelu-sekvenssi)]
-                #_(async/<!! kuuntelu-aloitettu-huomauttaja)
-                #_(case tyyppi
-                  :perus nil
-                  :viimeisin (when-let [arvo (q-tapahtumat/uusin-arvo (get-in this [:db :db-spec]) {:nimi tapahtuma})]
-                               (async/put! kuuntelija-kanava {::data (transit/lue-transit-string arvo transit-read-handler)}))
-                  :viimeisin-per-palvelin (when-let [arvot (q-tapahtumat/uusin-arvo-per-palvelin (get-in this [:db :db-spec]) {:nimi tapahtuma})]
-                                            (doseq [[_ arvo] (transit/lue-transit-string arvot transit-read-handler)]
-                                              (async/put! kuuntelija-kanava {::data arvo}))))
-                #_(async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
-                #_(swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
-                #_(async/put! kuuntelu-aloitettu-kuittaus true)
                 (if (= ::virhe possukanava)
                   false
                   kuuntelija-kanava)))))

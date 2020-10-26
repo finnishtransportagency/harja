@@ -6,7 +6,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async])
+  (:import (java.util.concurrent TimeoutException)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'harja-tarkkailija
@@ -34,6 +35,13 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(defn <!!-timeout [kanava timeout]
+  (let [[arvo valmistunut-kanava] (async/alts!! [kanava
+                                                 (async/timeout timeout)])]
+    (if (not= valmistunut-kanava kanava)
+      (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
+      arvo)))
+
 (deftest julkaisu-ja-kuuntelu []
   (testing "tapahtumat-komponentti on luotu onnistuneesti"
     (is (some? (:klusterin-tapahtumat harja-tarkkailija))))
@@ -56,11 +64,11 @@
                                              (fn kuuntele-callback [viesti] (reset! saatiin true)
                                                (println "viesti saatu:" viesti)))
             kantakatkos (katkos-testikantaan!)]
-        (async/<!! kantakatkos)
+        (<!!-timeout kantakatkos 5000)
         (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
         (is (thrown? AssertionError (odota-arvo saatiin 1000)) "Ei pitäisi saada tapahtumia kun kanta on alhaalla")
         (async/>!! kantakatkos :kaynnista)
-        (async/<!! kantakatkos)
+        (<!!-timeout kantakatkos 5000)
         (loop [[kerta & loput-kerrat] (range 0 50)
                testattu-kerran? false]
           (when-not (or (nil? kerta)
@@ -81,17 +89,68 @@
 
 (deftest tarkkaile-kanavaa-testit-ok-tapaukset []
   (testing "Perus tarkkailun aloitus onnistuu"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
+      (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+            a-payload 42
+            odota-tapahtuma (async/go (async/<! tarkkailija))]
+        (is (not (false? tarkkailija)))
+        (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma 500))
+            "Kanavassa ei pitäisi olla vielä mitään")
+        (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
+        (is (= (<!!-timeout odota-tapahtuma 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload a-payload})
+            "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty"))
+      (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+            a-payload 1337
+            odota-tapahtuma (async/go (async/<! tarkkailija))]
+        (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
+        (is (= (<!!-timeout odota-tapahtuma 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload a-payload})
+            "Kanavaan ei pitäisi tulla kakutettua kamaa vaan juurikin se mikä on lähetetty"))))
+  (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
-          tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+          kuuntelu-ja-tarkkailu-lkm (atom 0)
+          tarkkailija-1 (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+          tarkkailija-2 (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+          tarkkailija-3 (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+          kuuntelija-1 (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a (fn [_] (swap! kuuntelu-ja-tarkkailu-lkm inc)))
+          kuuntelija-2 (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a (fn [_] (swap! kuuntelu-ja-tarkkailu-lkm inc)))
           a-payload 42
-          odota-tapahtuma (async/go (async/<! tarkkailija))]
-      (is (not (false? tarkkailija)))
+          odota-tapahtuma-1 (async/go (async/<! tarkkailija-1)
+                                    (swap! kuuntelu-ja-tarkkailu-lkm inc))
+          odota-tapahtuma-2 (async/go (async/<! tarkkailija-2)
+                                      (swap! kuuntelu-ja-tarkkailu-lkm inc))
+          odota-tapahtuma-3 (async/go (async/<! tarkkailija-3)
+                                      (swap! kuuntelu-ja-tarkkailu-lkm inc))]
+      (is (= 0 @kuuntelu-ja-tarkkailu-lkm))
       (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-      (is (= (async/<!! odota-tapahtuma)
-             {:palvelin (:nimi harja-tarkkailija)
-              :payload a-payload}))))
-  (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille")
-  (testing "Viimeisin tarkkailu onnistuu"))
+      (<!!-timeout odota-tapahtuma-1 1000)
+      (<!!-timeout odota-tapahtuma-2 1000)
+      (<!!-timeout odota-tapahtuma-3 1000)
+      (is (= 5 @kuuntelu-ja-tarkkailu-lkm))))
+  (testing "Viimeisin tarkkailu onnistuu"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          ensimmainen-a-payload 42]
+      (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+            odota-tapahtuma (async/go (async/<! tarkkailija))]
+        (is (not (false? tarkkailija)))
+        (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a ensimmainen-a-payload (:nimi harja-tarkkailija))
+        (is (= (<!!-timeout odota-tapahtuma 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload ensimmainen-a-payload})))
+      (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))
+            a-payload 1337]
+        (is (= (<!!-timeout tarkkailija 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload ensimmainen-a-payload})
+            "Kanavaan pitäisi tulla kakutettu arvo")
+        (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
+        (is (= (<!!-timeout tarkkailija 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload a-payload})
+            "Kanavaan pitäisi tulla kakutettu arvo")))))
 
 (deftest tarkkaile-kanavaa-testit-ei-ok-tapaukset []
   (testing "Väärä hash saatu")
