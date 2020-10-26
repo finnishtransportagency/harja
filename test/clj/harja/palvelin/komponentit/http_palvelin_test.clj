@@ -41,40 +41,46 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn ok-palvelu-get [user] {})
-
-(defn ok-palvelu-post [user data] "{}")
-
-(defn bad-request-palvelu-get [user]
-  (throw (IllegalArgumentException. "bad request")))
-
-(defn internal-server-error-palvelu-get [user]
-  (throw (RuntimeException. "internal server error")))
-
 (def headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
               "OAM_GROUPS" (interpose "," (:roolit kayttaja))
               "Content-Type" "application/json"
               "x-csrf-token" random-avain})
 
-(defn get-kutsu [palvelu]
+(defn- get-kutsu [palvelu]
   @(http/get (str "http://localhost:" portti "/_/" (name palvelu))
              {:headers headers}))
 
-(defn post-kutsu [palvelu body]
+(defn- post-kutsu [palvelu body]
   @(http/post (str "http://localhost:" portti "/_/" (name palvelu))
               {:headers headers
                :body body}))
 
-(deftest get-palvelu-palauta-ok
-  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :ok-palvelu ok-palvelu-get)
-  (let [vastaus (get-kutsu :ok-palvelu)]
+(defn- julkaise-ja-testaa [nimi get? palvelu-fn odotettu-status odotettu-body]
+  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) nimi palvelu-fn)
+  (let [vastaus (if get? (get-kutsu nimi) (post-kutsu nimi "{}"))]
     (println "petar vastaus ")
     (clojure.pprint/pprint vastaus)
-    (is (= 200 (:status vastaus)))))
+    (is (= odotettu-status (:status vastaus)))
+    (is (.contains (:body vastaus) odotettu-body))))
+
+(deftest get-palvelu-palauta-ok
+  (julkaise-ja-testaa :ok-palvelu-get true (fn [user] "kaikki OK") 200 "kaikki OK"))
 
 (deftest post-palvelu-palauta-ok
-  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :ok-palvelu ok-palvelu-post)
-  (let [vastaus (post-kutsu :ok-palvelu "{}")]
-    (println "petar vastaus ")
-    (clojure.pprint/pprint vastaus)
-    (is (= 200 (:status vastaus)))))
+  (julkaise-ja-testaa :ok-palvelu-post false (fn [user _] "kaikki OK") 200 "kaikki OK"))
+
+(deftest get-palvelu-feilaa-sisaisesti
+  (julkaise-ja-testaa :huono-palvelu-get true (fn [user] (throw (RuntimeException. "Simuloitu huono palvelu")))
+                      500 "Simuloitu huono palvelu"))
+
+(deftest post-palvelu-feilaa-sisaisesti
+  (julkaise-ja-testaa :huono-palvelu-post false (fn [user _] (throw (RuntimeException. "Simuloitu huono palvelu")))
+                      500 "Simuloitu huono palvelu"))
+
+(deftest get-palvelu-feilaa-kun-on-huono-pyynto
+  (julkaise-ja-testaa :huono-pyynto-get true (fn [user] (throw (IllegalArgumentException. "Simuloitu huono pyyntö")))
+                      400 "Simuloitu huono pyyntö"))
+
+(deftest post-palvelu-feilaa-kun-on-huono-pyynto
+  (julkaise-ja-testaa :huono-pyynto-post false (fn [user _] (throw (IllegalArgumentException. "Simuloitu huono pyyntö")))
+                      400 "Simuloitu huono pyyntö"))

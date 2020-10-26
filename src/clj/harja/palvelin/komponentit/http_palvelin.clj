@@ -142,9 +142,12 @@
               (catch harja.domain.roolit.EiOikeutta eo
                 ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                 (transit-vastaus 403 eo))
+              (catch IllegalArgumentException e
+                (log/error e "Virhe POST pyynnössä " nimi ", payload: " (pr-str kysely))
+                (transit-vastaus 400 {:virhe (.getMessage e)}))
               (catch Throwable e
                 (log/error e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
-                {:virhe (.getMessage e)}))))))))
+                (transit-vastaus 500 {:virhe (.getMessage e)})))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
@@ -165,17 +168,24 @@
                    if-modified-since
                    (not (.after last-modified if-modified-since)))
             {:status 304}
-            (let [vastaus (palvelu-fn (:kayttaja req))]
-              (validoi-vastaus! (:vastaus-spec optiot) vastaus)
-              {:status 200
-               :headers (merge {"Content-Type" "application/transit+json"}
-                               (if last-modified
-                                 {"cache-control" "private, max-age=0, must-revalidate"
-                                  "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
-                                 {"cache-control" "no-cache"}))
-               :body (with-open [out (ByteArrayOutputStream.)]
-                       (t/write (t/writer out :json) vastaus)
-                       (ByteArrayInputStream. (.toByteArray out)))})))))))
+            (try+
+              (let [vastaus (palvelu-fn (:kayttaja req))]
+                (validoi-vastaus! (:vastaus-spec optiot) vastaus)
+                {:status 200
+                 :headers (merge {"Content-Type" "application/transit+json"}
+                                 (if last-modified
+                                   {"cache-control" "private, max-age=0, must-revalidate"
+                                    "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
+                                   {"cache-control" "no-cache"}))
+                 :body (with-open [out (ByteArrayOutputStream.)]
+                         (t/write (t/writer out :json) vastaus)
+                         (ByteArrayInputStream. (.toByteArray out)))})
+              (catch IllegalArgumentException e
+                (log/error e "Virhe GET pyynnössä " nimi ", polku " (pr-str polku))
+                (transit-vastaus 400 {:virhe (.getMessage e)}))
+              (catch Throwable e
+                (log/error e "Virhe GET palvelussa " nimi ", polku: " (pr-str polku))
+                (transit-vastaus 500 {:virhe (.getMessage e)})))))))))
 
 (defprotocol HttpPalvelut
   "Protokolla HTTP palveluiden julkaisemiseksi."
