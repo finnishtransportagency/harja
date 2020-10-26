@@ -43,23 +43,38 @@
 
 (defn ok-palvelu-get [user] {})
 
+(defn ok-palvelu-post [user data] "{}")
+
 (defn bad-request-palvelu-get [user]
   (throw (IllegalArgumentException. "bad request")))
 
 (defn internal-server-error-palvelu-get [user]
   (throw (RuntimeException. "internal server error")))
 
+(def headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
+              "OAM_GROUPS" (interpose "," (:roolit kayttaja))
+              "Content-Type" "application/json"
+              "x-csrf-token" random-avain})
+
 (defn get-kutsu [palvelu]
   @(http/get (str "http://localhost:" portti "/_/" (name palvelu))
-             {:headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
-                        "OAM_GROUPS" (interpose "," (:roolit kayttaja))
-                        "Content-Type" "application/json"
-                        "x-csrf-token" random-avain}}))
+             {:headers headers}))
+
+(defn post-kutsu [palvelu body]
+  @(http/post (str "http://localhost:" portti "/_/" (name palvelu))
+              {:headers headers
+               :body body}))
 
 (deftest get-palvelu-palauta-ok
-  (println "petar palvelin " (:http-palvelin jarjestelma))
   (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :ok-palvelu ok-palvelu-get)
   (let [vastaus (get-kutsu :ok-palvelu)]
+    (println "petar vastaus ")
+    (clojure.pprint/pprint vastaus)
+    (is (= 200 (:status vastaus)))))
+
+(deftest post-palvelu-palauta-ok
+  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :ok-palvelu ok-palvelu-post)
+  (let [vastaus (post-kutsu :ok-palvelu "{}")]
     (println "petar vastaus ")
     (clojure.pprint/pprint vastaus)
     (is (= 200 (:status vastaus)))))
