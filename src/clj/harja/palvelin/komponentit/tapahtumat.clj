@@ -26,15 +26,15 @@
            [java.util UUID]
            (clojure.lang ArityException)))
 
-(defonce ^{:private true
+#_(defonce ^{:private true
            :doc "Tämän kautta lähetetään queryja notify loopiin"}
          tapahtuma-loopin-ajot
          nil)
 (defonce tapahtuma-loop-kaynnissa? (atom false))
 
-(defonce ^:private kuuntelu-aloitettu nil)
-(defonce ^:private kuuntelu-aloitettu-kuittaus nil)
-(defonce ^:private kuuntelu-aloitettu-broadcast nil)
+;(defonce ^:private kuuntelu-aloitettu nil)
+;(defonce ^:private kuuntelu-aloitettu-kuittaus nil)
+;(defonce ^:private kuuntelu-aloitettu-broadcast nil)
 (defonce ^{:dynamic true
            :doc "Kun jotain tapahtumaa aletaan tarkkailemaan, ei se tapahdu samantien.
                  Ensin pitää odottaa, että tapahtuma-loop lukee tapahtuma-loopin-ajot
@@ -134,7 +134,8 @@
           data)))))
 
 (defn- kuuntele-klusterin-tapahtumaa!
-  [{:keys [db tapahtuma palautettava-arvo kuuntelun-jalkeen ryhmatunnistin lkm]}]
+  [{:keys [db tapahtuma-loopin-ajot kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-kuittaus
+           tapahtuma palautettava-arvo kuuntelun-jalkeen ryhmatunnistin lkm]}]
   {:pre [(not (nil? db))
          (not (nil? tapahtuma))]}
   (thread (let [possukanava (kaytettava-kanava! db tapahtuma)]
@@ -185,7 +186,7 @@
       (do (log/error "Datan muuttaminen julkaisua varten ei onnistunut!")
           ::muunnos-epaonnistui))))
 
-(defn pura-tapahtuma-loopin-ajot! [db yhta-aikaa-ajettavat]
+(defn pura-tapahtuma-loopin-ajot! [db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat]
   #_(println "--- pura-tapahtuma-loopin-ajot! 1 ----")
   (let [ajot (loop [ajo (async/poll! tapahtuma-loopin-ajot)
                     ajot []]
@@ -241,11 +242,16 @@
   component/Lifecycle
   (start [this]
     (let [buffer-koko 10]
-      (alter-var-root #'tapahtuma-loopin-ajot (constantly (async/chan buffer-koko)))
-      (alter-var-root #'kuuntelu-aloitettu (constantly (async/chan)))
-      (alter-var-root #'kuuntelu-aloitettu-kuittaus (constantly (async/chan buffer-koko)))
-      (alter-var-root #'kuuntelu-aloitettu-broadcast (constantly (async/pub kuuntelu-aloitettu ::kuuntelu))))
-    (let [tarkkailu-kanava (async/chan (async/sliding-buffer 1000)
+      #_(alter-var-root #'tapahtuma-loopin-ajot (constantly (async/chan buffer-koko)))
+      #_(alter-var-root #'kuuntelu-aloitettu (constantly (async/chan)))
+      ;(alter-var-root #'kuuntelu-aloitettu-kuittaus (constantly (async/chan buffer-koko)))
+      #_(alter-var-root #'kuuntelu-aloitettu-broadcast (constantly (async/pub kuuntelu-aloitettu ::kuuntelu))))
+    (let [buffer-koko 10
+          tapahtuma-loopin-ajot (async/chan buffer-koko)
+          kuuntelu-aloitettu (async/chan)
+          kuuntelu-aloitettu-broadcast (async/pub kuuntelu-aloitettu ::kuuntelu)
+          kuuntelu-aloitettu-kuittaus (async/chan buffer-koko)
+          tarkkailu-kanava (async/chan (async/sliding-buffer 1000)
                                        (map (fn [arvo]
                                               (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot perus-broadcast jonosta\n"
                                                               "  tiedot: " arvo))
@@ -254,7 +260,11 @@
                                          (log/error t "perus-broadcast jonossa tapahtui virhe")))
           broadcast (async/pub tarkkailu-kanava ::tapahtuma (fn [topic] (async/sliding-buffer 1000)))
           this (assoc this ::tarkkailu-kanava tarkkailu-kanava
-                      ::broadcast broadcast)
+                      ::broadcast broadcast
+                           ::kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-broadcast
+                           ::tapahtuma-loopin-ajot tapahtuma-loopin-ajot
+                           ::kuuntelu-aloitettu kuuntelu-aloitettu
+                           ::kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus)
           kuuntelu-valmis (async/chan)]
       (log/info "Tapahtumat-komponentti käynnistyy")
       (reset! tarkkailijat {})
@@ -281,7 +291,7 @@
                                                                                    (not @ajossa))
                                                                              virhe?
                                                                              (do
-                                                                               (pura-tapahtuma-loopin-ajot! db yhta-aikaa-ajettavat)
+                                                                               (pura-tapahtuma-loopin-ajot! db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat)
                                                                                (let [tapahtumien-haku-onnistui? (try
                                                                                                                   (doseq [^PGNotification notification (seq (.getNotifications connection))]
                                                                                                                     (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
@@ -322,7 +332,7 @@
       this))
 
   (stop [this]
-    (async/put! tapahtuma-loopin-ajot
+    (async/put! (::tapahtuma-loopin-ajot this)
                 (fn [tapahtumayhteys]
                   (run! #(u tapahtumayhteys (str "UNLISTEN " %))
                         (map first @kuuntelijat))
@@ -332,14 +342,14 @@
     (reset! tapahtuma-loop-kaynnissa? false)
     (reset! ajossa false)
     (async/close! (::tarkkailu-kanava this))
-    (async/close! tapahtuma-loopin-ajot)
-    (async/close! kuuntelu-aloitettu)
-    (async/unsub-all kuuntelu-aloitettu-broadcast)
-    (async/close! kuuntelu-aloitettu-kuittaus)
-    (alter-var-root #'tapahtuma-loopin-ajot (constantly nil))
-    (alter-var-root #'kuuntelu-aloitettu-kuittaus (constantly nil))
-    (alter-var-root #'kuuntelu-aloitettu (constantly nil))
-    (alter-var-root #'kuuntelu-aloitettu-broadcast (constantly nil))
+    (async/close! (::tapahtuma-loopin-ajot this))
+    (async/close! (::kuuntelu-aloitettu this))
+    (async/unsub-all (::kuuntelu-aloitettu-broadcast this))
+    (async/close! (::kuuntelu-aloitettu-kuittaus this))
+    #_(alter-var-root #'tapahtuma-loopin-ajot (constantly nil))
+    ;(alter-var-root #'kuuntelu-aloitettu-kuittaus (constantly nil))
+    #_(alter-var-root #'kuuntelu-aloitettu (constantly nil))
+    #_(alter-var-root #'kuuntelu-aloitettu-broadcast (constantly nil))
     this)
 
   Kuuntele
@@ -359,6 +369,9 @@
           _ (println "---- kuuntele! 1 ----")
           _ (println "---> KUUNNELLAAN TAPAHTUMAA: " tapahtuma)
           kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
+                                                              :kuuntelu-aloitettu-broadcast (::kuuntelu-aloitettu-broadcast this)
+                                                              :tapahtuma-loopin-ajot (::tapahtuma-loopin-ajot this)
+                                                              :kuuntelu-aloitettu-kuittaus (::kuuntelu-aloitettu-kuittaus this)
                                                               :tapahtuma tapahtuma
                                                               :kuuntelun-jalkeen kuuntelun-jalkeen})
           [possukanava _] (async/<!! kuuntelu-sekvenssi)]
@@ -396,6 +409,9 @@
                                         (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
                                         (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava))
                     kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
+                                                                        :kuuntelu-aloitettu-broadcast (::kuuntelu-aloitettu-broadcast this)
+                                                                        :tapahtuma-loopin-ajot (::tapahtuma-loopin-ajot this)
+                                                                        :kuuntelu-aloitettu-kuittaus (::kuuntelu-aloitettu-kuittaus this)
                                                                         :tapahtuma tapahtuma
                                                                         :palautettava-arvo (if (= :perus tyyppi)
                                                                                              nil

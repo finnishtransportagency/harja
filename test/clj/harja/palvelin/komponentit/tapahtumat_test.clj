@@ -12,23 +12,27 @@
   (:import (java.util.concurrent TimeoutException)
            (clojure.lang ArityException)))
 
+(def toinen-harja-tarkkailija nil)
+(def toinen-jarjestelma nil)
+
+(defn luo-jarjestelma [_]
+  (component/start
+    (component/system-map
+      :db (tietokanta/luo-tietokanta testitietokanta)
+      :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db]))))
+
+(defn luo-harja-tarkkailija [nimi _]
+  (assoc (component/start
+           (component/system-map
+             :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+             :klusterin-tapahtumat (component/using
+                                     (tapahtumat/luo-tapahtumat)
+                                     {:db :db-event})))
+    :nimi nimi))
+
 (defn jarjestelma-fixture [testit]
-  (alter-var-root #'harja-tarkkailija
-                  (constantly
-                    (assoc (component/start
-                             (component/system-map
-                               :db-event (event-tietokanta/luo-tietokanta testitietokanta)
-                               :klusterin-tapahtumat (component/using
-                                                       (tapahtumat/luo-tapahtumat)
-                                                       {:db :db-event})))
-                      :nimi "tarkkailija-a")))
-  (alter-var-root
-   #'jarjestelma
-   (fn [_]
-     (component/start
-      (component/system-map
-       :db (tietokanta/luo-tietokanta testitietokanta)
-       :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])))))
+  (alter-var-root #'harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-a"))
+  (alter-var-root #'jarjestelma luo-jarjestelma)
 
   (testit)
   (try (alter-var-root #'jarjestelma component/stop)
@@ -36,7 +40,7 @@
   (try (alter-var-root #'harja-tarkkailija component/stop)
        (catch Exception e (println "saatiin poikkeus harja-tarkkailija systeemin sammutuksessa: " e))))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn <!!-timeout [kanava timeout]
   (let [[arvo valmistunut-kanava] (async/alts!! [kanava
@@ -169,26 +173,72 @@
       (is (thrown? IllegalArgumentException (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a 3)))
       (is (thrown? ArityException (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a (fn []))))))
   (testing "Käsky tapahtuma-looppiin ilman funktiota"
-    (let [err-count (atom 0)
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          err-count (atom 0)
           lahde-redefsista? (atom false)
-          original-pura-tapahtumat tapahtumat/pura-tapahtuma-loopin-ajot!]
-      (with-redefs [log/error (fn [& args]
-                                (swap! err-count inc))
-                    tapahtumat/pura-tapahtuma-loopin-ajot! (fn [& args]
+          original-pura-tapahtumat tapahtumat/pura-tapahtuma-loopin-ajot!
+          original-config log/*config*]
+      (log/merge-config! {:middleware [(fn [msg]
+                                         (println "MIDDLEW MSG")
+                                         (when (= :error (:level msg))
+                                           (swap! err-count inc))
+                                         msg)]})
+      (with-redefs [tapahtumat/pura-tapahtuma-loopin-ajot! (fn [& args]
                                                              (apply original-pura-tapahtumat args)
+                                                             (println "LÄHDE POIS")
                                                              (reset! lahde-redefsista? true))]
-        (async/put! @#'tapahtumat/tapahtuma-loopin-ajot {:f (fn [])})
-        (async/put! @#'tapahtumat/tapahtuma-loopin-ajot {:tunnistin "foo"})
-        (async/put! @#'tapahtumat/tapahtuma-loopin-ajot {})
+        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:f (fn [])})
+        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:tunnistin "foo"})
+        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {})
         (while (not @lahde-redefsista?)
           (async/<!! (async/timeout 10))))
+      (log/set-config! original-config)
       (is (= 3 @err-count)
           "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä"))))
 
-(deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin)
+(deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin
+  (alter-var-root #'toinen-harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-b"))
+  (alter-var-root #'toinen-jarjestelma luo-jarjestelma)
 
-(deftest yhta-aikaa-julkaisu-toimii)
+  (testing "Perus tarkkailun aloitus onnistuu molemmissa järjestelmissä"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          toinen-tapahtumat-k (:klusterin-tapahtumat toinen-harja-tarkkailija)]
+      (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+            toinen-tarkkailija (async/<!! (tapahtumat/tarkkaile! toinen-tapahtumat-k :tapahtuma-a))
+            a-payload 42
+            odota-tapahtuma (async/go (async/<! tarkkailija))
+            toinen-odota-tapahtuma (async/go (async/<! toinen-tarkkailija))]
+        (is (not (false? tarkkailija)))
+        (is (not (false? toinen-tarkkailija)))
+        (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
+        (is (= (<!!-timeout odota-tapahtuma 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload a-payload})
+            "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
+        (is (= (<!!-timeout toinen-odota-tapahtuma 1000)
+               {:palvelin (:nimi harja-tarkkailija)
+                :payload a-payload})
+            "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
+        (let [a-payload 1337
+              odota-tapahtuma (async/go (async/<! tarkkailija))
+              toinen-odota-tapahtuma (async/go (async/<! toinen-tarkkailija))]
+          (tapahtumat/julkaise! toinen-tapahtumat-k :tapahtuma-a a-payload (:nimi toinen-harja-tarkkailija))
+          (is (= (<!!-timeout odota-tapahtuma 1000)
+                 {:palvelin (:nimi toinen-harja-tarkkailija)
+                  :payload a-payload})
+              "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
+          (is (= (<!!-timeout toinen-odota-tapahtuma 1000)
+                 {:palvelin (:nimi toinen-harja-tarkkailija)
+                  :payload a-payload})
+              "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")))))
 
-(deftest possukanavien-luonti)
+  (try (alter-var-root #'toinen-jarjestelma component/stop)
+       (catch Exception e (println "saatiin poikkeus toisen komponentin sammutuksessa: " e)))
+  (try (alter-var-root #'toinen-harja-tarkkailija component/stop)
+       (catch Exception e (println "saatiin poikkeus toisen harja-tarkkailija systeemin sammutuksessa: " e))))
 
-(deftest hashaus-onnistuu)
+;(deftest yhta-aikaa-julkaisu-toimii)
+
+;(deftest possukanavien-luonti)
+
+;(deftest hashaus-onnistuu)
