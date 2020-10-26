@@ -2,12 +2,15 @@
   (:require [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
+            [harja.kyselyt.konversio :as konv]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
-            [clojure.core.async :as async])
-  (:import (java.util.concurrent TimeoutException)))
+            [clojure.core.async :as async]
+            [taoensso.timbre :as log])
+  (:import (java.util.concurrent TimeoutException)
+           (clojure.lang ArityException)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'harja-tarkkailija
@@ -42,7 +45,7 @@
       (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
       arvo)))
 
-(deftest julkaisu-ja-kuuntelu []
+(deftest julkaisu-ja-kuuntelu
   (testing "tapahtumat-komponentti on luotu onnistuneesti"
     (is (some? (:klusterin-tapahtumat harja-tarkkailija))))
   (let [saatiin (atom nil)]
@@ -83,11 +86,7 @@
         (is (odota-arvo saatiin 500) "Pitäisi saada tapahtumia, kun tapahtumaloop on alkanut")
         (lopetus-fn)))))
 
-(deftest possukanavien-luonti)
-
-(deftest hashaus-onnistuu)
-
-(deftest tarkkaile-kanavaa-testit-ok-tapaukset []
+(deftest tarkkaile-kanavaa-testit-ok-tapaukset
   (testing "Perus tarkkailun aloitus onnistuu"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
       (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
@@ -152,11 +151,44 @@
                 :payload a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")))))
 
-(deftest tarkkaile-kanavaa-testit-ei-ok-tapaukset []
-  (testing "Väärä hash saatu")
-  (testing "Väärän tyyppinen kuuntelija")
-  (testing "Käsky tapahtuma-looppiin ilman funktiota"))
+(deftest tarkkaile-kanavaa-testit-ei-ok-tapaukset
+  (testing "Väärä hash saatu"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          data {:a 1}
+          tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))]
+      (with-redefs [konv/sha256 (constantly "differentHash")]
+        (let [julkaisu-onnistui? (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a data (:nimi harja-tarkkailija))]
+          (is julkaisu-onnistui?)))
+      (is (thrown? TimeoutException (<!!-timeout tarkkailija 500))
+          "Väärällä hashillä olevaa dataa ei pitäisi antaa tarkkailijoille!")
+      (let [viimeisin-tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))]
+        (is (thrown? TimeoutException (<!!-timeout viimeisin-tarkkailija 500))
+            "Väärällä hashillä olevaa dataa ei pitäisi antaa viimeisin tarkkailijoille!"))))
+  (testing "Väärän tyyppinen kuuntelija"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
+      (is (thrown? IllegalArgumentException (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a 3)))
+      (is (thrown? ArityException (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a (fn []))))))
+  (testing "Käsky tapahtuma-looppiin ilman funktiota"
+    (let [err-count (atom 0)
+          lahde-redefsista? (atom false)
+          original-pura-tapahtumat tapahtumat/pura-tapahtuma-loopin-ajot!]
+      (with-redefs [log/error (fn [& args]
+                                (swap! err-count inc))
+                    tapahtumat/pura-tapahtuma-loopin-ajot! (fn [& args]
+                                                             (apply original-pura-tapahtumat args)
+                                                             (reset! lahde-redefsista? true))]
+        (async/put! @#'tapahtumat/tapahtuma-loopin-ajot {:f (fn [])})
+        (async/put! @#'tapahtumat/tapahtuma-loopin-ajot {:tunnistin "foo"})
+        (async/put! @#'tapahtumat/tapahtuma-loopin-ajot {})
+        (while (not @lahde-redefsista?)
+          (async/<!! (async/timeout 10))))
+      (is (= 3 @err-count)
+          "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä"))))
 
-(deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin [])
+(deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin)
 
-(deftest yhta-aikaa-julkaisu-toimii [])
+(deftest yhta-aikaa-julkaisu-toimii)
+
+(deftest possukanavien-luonti)
+
+(deftest hashaus-onnistuu)

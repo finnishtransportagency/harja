@@ -197,6 +197,7 @@
     #_(println (str "---> ajot: " ajot))
     (doseq [{:keys [f tunnistin ryhmatunnistin yhta-aikaa? lkm]} ajot]
       (cond
+        (not (and f tunnistin)) (log/error (str "Tapahtuma looppiin annettu käsky ilman tunnistinta tai funktiota. Tunnistin: " tunnistin " funktio: " f))
         (and yhta-aikaa?
              (-> @yhta-aikaa-ajettavat (get ryhmatunnistin) count (= (inc lkm))))
         (jdbc/with-db-transaction [db db]
@@ -345,6 +346,8 @@
   ;; Kuutele! ja tarkkaile! ero on se, että eventin sattuessa kuuntele! kutsuu callback funktiota kun taas
   ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
   (kuuntele! [this tapahtuma callback]
+    (when-not (ifn? callback)
+      (throw (IllegalArgumentException. "Tapahtuman kuuntelija callbackin pitää toteuttaa IFn protokolla")))
     (let [arityjen-maara (tyokalut/arityt callback)]
       (println "ARITYJEN MÄÄRÄT: " arityjen-maara)
       (when-not (contains? arityjen-maara 1)
@@ -384,11 +387,12 @@
                                                     (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
                     tapahtuma (tapahtuman-nimi tapahtuma)
                     kuuntelun-jalkeen (fn [possu-kanava paluu-arvo]
-                                        (case tyyppi
-                                          :perus nil
-                                          :viimeisin (async/put! kuuntelija-kanava {::data paluu-arvo})
-                                          :viimeisin-per-palvelin (doseq [[_ arvo] paluu-arvo]
-                                                                    (async/put! kuuntelija-kanava {::data arvo})))
+                                        (when-not (nil? paluu-arvo)
+                                          (case tyyppi
+                                            :perus nil
+                                            :viimeisin (async/put! kuuntelija-kanava {::data paluu-arvo})
+                                            :viimeisin-per-palvelin (doseq [[_ arvo] paluu-arvo]
+                                                                      (async/put! kuuntelija-kanava {::data arvo}))))
                                         (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
                                         (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava))
                     kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
