@@ -204,6 +204,13 @@
               [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
                polun-avaimet aineet])])]))])
 
+(defn- runko-side-ja-lisaaineet-voi-tallentaa?
+  [{:keys [runkoaineet sideaineet lisaaineet] :as lomake}]
+  ;; TODO: jos toteutus osoittautuu hyväksi, tähän voi implementoida runkoaineiden,
+  ;; sideaineiden ja lisäaineiden osalta validoinnin. Kannattaa käyttää siihen jotenkin hyväksi
+  ;; olemassaolevien kenttien määrityksiä, esim mikä kenttä on pakollinen jne.
+  true)
+
 (defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
         massa (:massa app)
@@ -222,6 +229,7 @@
                         [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
                         [:ul
                          (for [puuttuva (ui-lomake/puuttuvat-pakolliset-kentat data)]
+                           ^{:key (name puuttuva)}
                            [:li (name puuttuva)])]])
                      [:div.flex-row.alkuun
                       [napit/tallenna
@@ -229,7 +237,8 @@
                        #(e! (tiedot-massa/->TallennaLomake data))
                        {:vayla-tyyli? true
                         :luokka "suuri"
-                        :disabled (not (ui-lomake/voi-tallentaa? data))}]
+                        :disabled (not (and (ui-lomake/voi-tallentaa? data)
+                                            (runko-side-ja-lisaaineet-voi-tallentaa? (ui-lomake/ilman-lomaketietoja data))))}]
                       [napit/peruuta
                        "Peruuta"
                        #(e! (tiedot-massa/->TyhjennaLomake data))

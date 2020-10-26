@@ -195,7 +195,7 @@
   ["pot2_lisaainetyyppi" ::pot2-lisaainetyyppi]
   ["pot2_massa_runkoaine" ::pot2-massa-runkoaine
    {"id" :runkoaine/id
-    "pot2_massa_id" :pot2-massa/id
+    "pot2_massa_id" :runkoaine/pot2-massa-id
     "tyyppi" :runkoaine/tyyppi
     "esiintyma" :runkoaine/esiintyma
     "fillerityyppi" :runkoaine/fillerityyppi
@@ -203,17 +203,17 @@
     "kuulamyllyarvo" :runkoaine/kuulamyllyarvo
     "litteysluku" :runkoaine/litteysluku
     "massaprosentti" :runkoaine/massaprosentti}]
-  ["pot2_massa_lisaaine" ::pot2-massa-lisaaine
-   {"id" :lisaaine/id
-    "pot2_massa_id" :pot2-massa/id
-    "tyyppi" :lisaaine/tyyppi
-    "pitoisuus" :lisaaine/pitoisuus}]
   ["pot2_massa_sideaine" ::pot2-massa-sideaine
    {"id" :sideaine/id
-    "pot2_massa_id" :pot2-massa/id
+    "pot2_massa_id" :sideaine/pot2-massa-id
     "tyyppi" :sideaine/tyyppi
     "pitoisuus" :sideaine/pitoisuus
     "lopputuote?" :sideaine/lopputuote?}]
+  ["pot2_massa_lisaaine" ::pot2-massa-lisaaine
+   {"id" :lisaaine/id
+    "pot2_massa_id" :lisaaine/pot2-massa-id
+    "tyyppi" :lisaaine/tyyppi
+    "pitoisuus" :lisaaine/pitoisuus}]
   ["pot2_massa" ::pot2-massa
    {"id" :pot2-massa/id
     "pot2_id" ::pot2-id
@@ -233,13 +233,13 @@
     "luotu" ::m/luotu}
    {::runkoaineet (specql.rel/has-many :pot2-massa/id
                                        ::pot2-massa-runkoaine
-                                       :pot2-massa/id)}
-   {::lisa-aineet (specql.rel/has-many :pot2-massa/id
-                                       ::pot2-massa-lisaaine
-                                       :pot2-massa/id)}
+                                       :runkoaine/pot2-massa-id)}
    {::sideaineet (specql.rel/has-many :pot2-massa/id
                                       ::pot2-massa-sideaine
-                                      :pot2-massa/id)}])
+                                      :sideaine/pot2-massa-id)}
+   {::lisa-aineet (specql.rel/has-many :pot2-massa/id
+                                       ::pot2-massa-lisaaine
+                                       :lisaaine/pot2-massa-id)}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
 (def litteyslukuluokat [1, 2, 3, 4, 5, 6])
