@@ -28,7 +28,8 @@
   [tapahtuma f]
   {:pre [(s/valid? ::tapahtumat/tapahtuma tapahtuma)
          (ifn? f)]
-   :post [(fn? f)]}
+   :post [(or (false? %)
+              (fn? %))]}
   (tapahtumat/kuuntele! (tapahtumat/tarkkailija) tapahtuma f))
 
 (defn julkaise-tapahtuma
@@ -144,7 +145,8 @@
                                                       tapahtumat#)))))))
 
 (defn lopeta-tapahtuman-kuuntelu [kuuntelija]
-  (async/close! kuuntelija))
+  (when (p/chan? kuuntelija)
+    (async/close! kuuntelija)))
 
 (defn tapahtuma-julkaisija
   "Palauttaa funktion, jolle annettava data julkaistaan aina tässä määritetylle eventille."

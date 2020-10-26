@@ -151,7 +151,8 @@
                              (on-close kanava
                                        (fn [_]
                                          (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
-                                         (kuuntelun-lopetus-fn))))))))))))
+                                         (when kuuntelun-lopetus-fn
+                                           (kuuntelun-lopetus-fn)))))))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle

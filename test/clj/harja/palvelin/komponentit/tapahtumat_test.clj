@@ -5,19 +5,19 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [clojure.test :as t :refer [deftest is use-fixtures testing]]))
-
-(def harja-tarkkailija nil)
+            [clojure.test :as t :refer [deftest is use-fixtures testing]]
+            [clojure.core.async :as async]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'harja-tarkkailija
                   (constantly
-                    (component/start
-                      (component/system-map
-                        :db-event (event-tietokanta/luo-tietokanta testitietokanta)
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                {:db :db-event})))))
+                    (assoc (component/start
+                             (component/system-map
+                               :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+                               :klusterin-tapahtumat (component/using
+                                                       (tapahtumat/luo-tapahtumat)
+                                                       {:db :db-event})))
+                      :nimi "tarkkailija-a")))
   (alter-var-root
    #'jarjestelma
    (fn [_]
@@ -54,14 +54,25 @@
       (reset! saatiin nil)
       (let [lopetus-fn (tapahtumat/kuuntele! (:klusterin-tapahtumat harja-tarkkailija) "seppo"
                                              (fn kuuntele-callback [viesti] (reset! saatiin true)
-                                               (println "viesti saatu:" viesti)))]
-        (tapa-kanta "harjatest")
-        (dotimes [_ 5]
-          (try
-            (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
-            (catch Exception e
-              (Thread/sleep 500))))
-        (is (odota-arvo saatiin))
+                                               (println "viesti saatu:" viesti)))
+            kantakatkos (katkos-testikantaan!)]
+        (async/<!! kantakatkos)
+        (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
+        (is (thrown? AssertionError (odota-arvo saatiin 1000)) "Ei pitäisi saada tapahtumia kun kanta on alhaalla")
+        (async/>!! kantakatkos :kaynnista)
+        (async/<!! kantakatkos)
+        (loop [[kerta & loput-kerrat] (range 0 50)
+               testattu-kerran? false]
+          (when-not (or (nil? kerta)
+                        @tapahtumat/tapahtuma-loop-kaynnissa?)
+            (when-not testattu-kerran?
+              (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
+              (is (thrown? AssertionError (odota-arvo saatiin 200)) "Ei pitäisi saada tapahtumia ennenkuin tapahtumaloop on käynnissä"))
+            (async/<!! (async/timeout 100))
+            (recur loput-kerrat
+                   true)))
+        (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
+        (is (odota-arvo saatiin 500) "Pitäisi saada tapahtumia, kun tapahtumaloop on alkanut")
         (lopetus-fn)))))
 
 (deftest possukanavien-luonti)
@@ -69,7 +80,16 @@
 (deftest hashaus-onnistuu)
 
 (deftest tarkkaile-kanavaa-testit-ok-tapaukset []
-  (testing "Perus tarkkailun aloitus onnistuu")
+  (testing "Perus tarkkailun aloitus onnistuu"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+          a-payload 42
+          odota-tapahtuma (async/go (async/<! tarkkailija))]
+      (is (not (false? tarkkailija)))
+      (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
+      (is (= (async/<!! odota-tapahtuma)
+             {:palvelin (:nimi harja-tarkkailija)
+              :payload a-payload}))))
   (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille")
   (testing "Viimeisin tarkkailu onnistuu"))
 

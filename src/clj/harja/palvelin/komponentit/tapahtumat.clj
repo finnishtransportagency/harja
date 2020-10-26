@@ -34,6 +34,7 @@
            :doc "Tämän kautta lähetetään queryja notify loopiin"}
          tapahtuma-loopin-ajot
          nil)
+(defonce tapahtuma-loop-kaynnissa? (atom false))
 
 (defonce ^:private kuuntelu-aloitettu nil)
 (defonce ^:private kuuntelu-aloitettu-kuittaus nil)
@@ -88,12 +89,24 @@
    Jos kannassa on jo tapahtumalle kanava, ei tallenta mitään vaan palautetaan olemassa oleva kanava."
   [db tapahtuma]
   {:pre [(string? tapahtuma)]
-   :post [(string? %)]}
-  (let [uusi-tapahtuman-kanava (uusi-tapahtuman-kanava)
-        vastaus (q-tapahtumat/lisaa-tapahtuma db {:nimi tapahtuma :kanava uusi-tapahtuman-kanava})]
-    (if (nil? vastaus)
-      (tapahtuman-kanava db tapahtuma)
-      vastaus)))
+   :post [(or (string? %)
+              (and (keyword? %)
+                   (= (namespace ::this)
+                      (namespace %))))]}
+  (try (let [uusi-tapahtuman-kanava (uusi-tapahtuman-kanava)
+             vastaus (q-tapahtumat/lisaa-tapahtuma db {:nimi tapahtuma :kanava uusi-tapahtuman-kanava})]
+         (if (nil? vastaus)
+           (tapahtuman-kanava db tapahtuma)
+           vastaus))
+       (catch PSQLException e
+         (log/error (str "Yritettiin saada possukanavaa tapahtumalle: " tapahtuma
+                         ", mutta se epäonnistui tietokantavirheen takia.\n"
+                         "Virhe: " (.getMessage e) ".\nStack: " (.printStackTrace e)))
+         ::virhe)
+       (catch Throwable t
+         (log/error (str "Yritettiin saada possukanavaa tapahtumalle: " tapahtuma ", mutta se epäonnistui.\n"
+                         "Virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t)))
+         ::virhe)))
 
 (defn- kuuntelu-fn
   [kaytettava-kanava tapahtumayhteys]
@@ -125,25 +138,27 @@
   [{:keys [db tapahtuma palautettava-arvo kuuntelun-jalkeen ryhmatunnistin lkm]}]
   {:pre [(not (nil? db))
          (not (nil? tapahtuma))]}
-  (thread (let [possukanava (kaytettava-kanava! db tapahtuma)
-                kuuntelu-aloitettu-tunnistin (str (gensym "kuuntelu"))
-                kuuntelu-aloitettu-huomauttaja (async/chan)]
-            (println "--- kuuntele-klusterin-tapahtumaa! 1 ---")
-            (println "---> KÄYTETTÄVÄ KANAVA: " possukanava)
-            (async/sub kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-tunnistin kuuntelu-aloitettu-huomauttaja)
-            (async/put! tapahtuma-loopin-ajot {:f (fn [db]
-                                                    (kuuntelu-fn possukanava (jdbc/get-connection db))
-                                                    (paluuarvo palautettava-arvo tapahtuma db))
-                                               :tunnistin kuuntelu-aloitettu-tunnistin
-                                               :ryhmatunnistin ryhmatunnistin
-                                               :yhta-aikaa? (boolean ryhmatunnistin)
-                                               :lkm lkm})
-            (let [{::keys [paluuarvo]} (async/<!! kuuntelu-aloitettu-huomauttaja)]
-              (println "--- kuuntele-klusterin-tapahtumaa! 2 ---")
-              (println "---> paluuarvo: " paluuarvo)
-              (kuuntelun-jalkeen possukanava paluuarvo)
-              (async/put! kuuntelu-aloitettu-kuittaus true)
-              [possukanava paluuarvo])
+  (thread (let [possukanava (kaytettava-kanava! db tapahtuma)]
+            (if (= ::virhe possukanava)
+              [::virhe nil]
+              (let [kuuntelu-aloitettu-tunnistin (str (gensym "kuuntelu"))
+                    kuuntelu-aloitettu-huomauttaja (async/chan)]
+                (println "--- kuuntele-klusterin-tapahtumaa! 1 ---")
+                (println "---> KÄYTETTÄVÄ KANAVA: " possukanava)
+                (async/sub kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-tunnistin kuuntelu-aloitettu-huomauttaja)
+                (async/put! tapahtuma-loopin-ajot {:f (fn [db]
+                                                        (kuuntelu-fn possukanava (jdbc/get-connection db))
+                                                        (paluuarvo palautettava-arvo tapahtuma db))
+                                                   :tunnistin kuuntelu-aloitettu-tunnistin
+                                                   :ryhmatunnistin ryhmatunnistin
+                                                   :yhta-aikaa? (boolean ryhmatunnistin)
+                                                   :lkm lkm})
+                (let [{::keys [paluuarvo]} (async/<!! kuuntelu-aloitettu-huomauttaja)]
+                  (println "--- kuuntele-klusterin-tapahtumaa! 2 ---")
+                  (println "---> paluuarvo: " paluuarvo)
+                  (kuuntelun-jalkeen possukanava paluuarvo)
+                  (async/put! kuuntelu-aloitettu-kuittaus true)
+                  [possukanava paluuarvo])))
             #_{:possu-kanava kaytettava-kanava
              :kuuntelu-aloitettu-huomauttaja kuuntelu-aloitettu-huomauttaja})))
 
@@ -274,10 +289,10 @@
                                                                            (doseq [{:keys [kanava]} (q-tapahtumat/kaikki-kanavat db)]
                                                                              (println "kanava: " kanava)
                                                                              #_(kuuntelu-fn possukanava (jdbc/get-connection db))
-                                                                             (kuuntelu-fn kanava connection)))
+                                                                             (kuuntelu-fn kanava connection))
+                                                                           (reset! tapahtuma-loop-kaynnissa? true))
                                                                          (println "Kaikkea pitäs taasen kuunnella..")
                                                                          (loop [virhe? false]
-                                                                           (println "virhe?: " virhe?)
                                                                            (if (or virhe?
                                                                                    (not @ajossa))
                                                                              virhe?
@@ -303,10 +318,12 @@
                                                                                                                     false))]
                                                                                  (when tapahtumien-haku-onnistui?
                                                                                    (Thread/sleep 100))
-                                                                                 (recur (not tapahtumien-haku-onnistui?))))))))
+                                                                                 (when @ajossa
+                                                                                   (recur (not tapahtumien-haku-onnistui?)))))))))
                                               (catch Throwable t
                                                 (log/error "Tapahtuma loop kaatui: " (.getMessage t) ".\nStack: " (.printStackTrace t))
                                                 true))]
+                  (reset! tapahtuma-loop-kaynnissa? false)
                   (println "kaatui-virheeseen?: " kaatui-virheeseen?)
                   (println "@ajossa " @ajossa)
                   (println "timeout-arvo" timeout-arvo)
@@ -316,6 +333,7 @@
                                                    (+ timeout-arvo
                                                       (* 2
                                                          (max 500 timeout-arvo)))))))))
+      (reset! tapahtuma-loop-kaynnissa? true)
       (async/<!! kuuntelu-valmis)
       this))
 
@@ -327,6 +345,7 @@
                   (doseq [[pos-kanava async-kanava] @tarkkailijat]
                     (u tapahtumayhteys (str "UNLISTEN " pos-kanava))
                     (async/close! async-kanava))))
+    (reset! tapahtuma-loop-kaynnissa? false)
     (reset! ajossa false)
     (async/close! (::tarkkailu-kanava this))
     (async/close! tapahtuma-loopin-ajot)
@@ -358,15 +377,17 @@
       #_(async/put! kuuntelu-aloitettu-kuittaus true)
       (println "---- kuuntele! 2 ----")
       (println "---> kuuntelu-sekvenssi done")
-      (fn []
-        (println "---- lopetus-fn ---")
-        (swap! kuuntelijat
-               update
-               possukanava
-               (fn [kanavan-callbackit]
-                 (keep #(when-not (= fn-tunnistin (-> % meta :tunnistin))
-                          %)
-                       kanavan-callbackit))))))
+      (if (= possukanava ::virhe)
+        false
+        (fn []
+          (println "---- lopetus-fn ---")
+          (swap! kuuntelijat
+                 update
+                 possukanava
+                 (fn [kanavan-callbackit]
+                   (keep #(when-not (= fn-tunnistin (-> % meta :tunnistin))
+                            %)
+                         kanavan-callbackit)))))))
   (tarkkaile! [this tapahtuma tyyppi]
     (let [{:keys [tunnistin lkm]} *tarkkaile-yhta-aikaa*]
       (thread (let [kuuntelija-kanava (async/chan 1000
@@ -401,8 +422,8 @@
                                                                                              tyyppi)
                                                                         :kuuntelun-jalkeen kuuntelun-jalkeen
                                                                         :ryhmatunnistin tunnistin
-                                                                        :lkm lkm})]
-                (async/<!! kuuntelu-sekvenssi)
+                                                                        :lkm lkm})
+                    [possukanava _] (async/<!! kuuntelu-sekvenssi)]
                 #_(async/<!! kuuntelu-aloitettu-huomauttaja)
                 #_(case tyyppi
                   :perus nil
@@ -414,7 +435,9 @@
                 #_(async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
                 #_(swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava)
                 #_(async/put! kuuntelu-aloitettu-kuittaus true)
-                kuuntelija-kanava))))
+                (if (= ::virhe possukanava)
+                  false
+                  kuuntelija-kanava)))))
   (tarkkaile! [this tapahtuma]
     (tarkkaile! this tapahtuma :perus))
 
@@ -424,7 +447,8 @@
           db (get-in this [:db :db-spec])
           kanava (kaytettava-kanava! db tapahtuma)
           muunnettu-payload (julkaistavan-datan-muunnos payload)]
-      (if (= ::muunnos-epaonnistui muunnettu-payload)
+      (if (or (= ::muunnos-epaonnistui muunnettu-payload)
+              (= ::virhe kanava))
         false
         (let [julkaistava-data (merge {:payload muunnettu-payload
                                        :palvelin host-name

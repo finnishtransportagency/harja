@@ -22,9 +22,12 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
-    [clj-gatling.core :as gatling])
-  (:import (java.util Locale))
-  (:import (org.postgresql.util PSQLException)))
+    [clj-gatling.core :as gatling]
+    [clojure.java.jdbc :as jdbc])
+  (:import (org.postgresql.util PSQLException)
+           (java.util Locale)
+           (java.lang Boolean Exception)
+           (java.util.concurrent TimeoutException)))
 
 (def jarjestelma nil)
 
@@ -172,13 +175,28 @@
                                (com.mchange.v2.c3p0.DataSources/destroy temppidb)
                                (:datasource (luo-temppitietokanta)))))
 
-(defn yrita-querya [f n]
-  (dotimes [n n]
+(defn arvo-vapaa-portti
+  "Arpoo vapaan portinnumeron ja palauttaa sen"
+  []
+  (let [s (doto (java.net.ServerSocket. 0)
+            (.setReuseAddress true))]
     (try
-      (f)
-      (catch PSQLException e
-        (Thread/sleep 500)
-        (log/warn e "- yritetään uudelleen, yritys" n)))))
+      (.getLocalPort s)
+      (finally (.close s)))))
+
+(defn yrita-querya
+  ([f n] (yrita-querya f n true nil))
+  ([f n log?] (yrita-querya f n log? nil))
+  ([f n log? param?]
+   (dotimes [n-kierros n]
+     (try
+       (if param?
+         (f n-kierros)
+         (f))
+       (catch PSQLException e
+         (Thread/sleep 500)
+         (when log?
+           (log/warn e "- yritetään uudelleen, yritys" n-kierros)))))))
 
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
@@ -192,10 +210,91 @@
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
 
-(defn tapa-kanta [db]
-  (with-open [c (.getConnection temppidb)
-              ps (.createStatement c)]
-    (yrita-querya (fn [] (tapa-backend-kannasta ps db)) 5)))
+(defn katkos-testikantaan!
+  "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan
+   kanta pois ja luodaan se uusiksi.
+
+   Tämä palauttaa kanavan, josta pitää ensin lukea arvo ulos. Tämä arvo indikoi, että nyt on yhteys
+   kantaan poikki. Sen jälkeen testissä voipi tehdä mitä haluaa katkoksen aikana. Testin tulee antaa kanavaan
+   takaisin jokin arvo, jotta kanta luodaan taas uusiksi merkkaamaan katkoksen päätöstä. Tämän jälkeen
+   ei ole pakko lukea kanavasta enää arvoja ulos, mutta sinne laitetaan vielä yksi arvo merkkaamaan, että
+   kanta on valmis.
+
+   Jos tämä prosessi ei onnistu 30 sekunnin kuluessa, kanava suljetaan."
+  []
+  (let [kanava (async/chan)
+        db-name (:tietokanta testitietokanta)
+        timeout (* 30 1000)
+        testikanta-data-placeholder (str (gensym "kanta"))
+        kanta-asetukset {:dbtype "postgresql"
+                         :classname "org.postgresql.Driver"
+                         :dbname (:tietokanta testitietokanta)
+                         :host (System/getenv "HARJA_TIETOKANTA_HOST")
+                         :port (:portti testitietokanta)
+                         :user (:kayttaja testitietokanta)
+                         :password (:salasana testitietokanta)}
+        tmpkanta-asetukset {:dbtype "postgresql"
+                            :classname "org.postgresql.Driver"
+                            :dbname (:tietokanta temppitietokanta)
+                            :host (System/getenv "HARJA_TIETOKANTA_HOST")
+                            :port (:portti temppitietokanta)
+                            :user (:kayttaja temppitietokanta)
+                            :password (:salasana temppitietokanta)}
+        kierroksia 5
+        tapa-kanta (fn [kanta-asetukset db-name]
+                     (yrita-querya (fn [n-kierros]
+                                     (try
+                                       (jdbc/with-db-connection [db kanta-asetukset]
+                                                                (with-open [c (jdbc/get-connection db)
+                                                                            ps (.createStatement c)]
+                                                                  (.executeUpdate ps (str "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" db-name "'"))
+                                                                  (with-open [rs (tapa-backend-kannasta ps db-name)]
+                                                                    (if (.next rs)
+                                                                      (let [tulos (.getObject rs 1)]
+                                                                        (when-not (and (instance? Boolean
+                                                                                                  tulos)
+                                                                                       (= "true" (.toString tulos)))
+                                                                          (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
+                                                                      (throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään"))))))
+                                       (catch Exception e
+                                         (when (= n-kierros kierroksia)
+                                           (throw e)))))
+                                   kierroksia true true))]
+    (go (let [[arvo _] (async/alts!! [(go (jdbc/with-db-connection [db tmpkanta-asetukset]
+                                                                   (with-open [c (jdbc/get-connection db)
+                                                                               ps (.createStatement c)]
+                                                                     (.executeUpdate ps (str "CREATE USER " testikanta-data-placeholder " WITH SUPERUSER"))))
+                                          (tapa-kanta tmpkanta-asetukset db-name)
+                                          (jdbc/with-db-connection [db {:datasource temppidb}]
+                                                                   (with-open [c (jdbc/get-connection db)
+                                                                               ps (.createStatement c)]
+                                                                     (.executeUpdate ps (str "CREATE DATABASE " testikanta-data-placeholder " OWNER " testikanta-data-placeholder " TEMPLATE " db-name))
+                                                                     (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name))))
+                                          (async/>! kanava :katkos-kaynnissa)
+                                          ;; Odotetaan, että saadaan laittaa kanta takaisin pystyyn
+                                          (async/<! kanava)
+                                          (println "------------------------------------")
+                                          (println "---> KÄYNNISTEÄÄN UUSIKSI")
+                                          (tapa-kanta tmpkanta-asetukset testikanta-data-placeholder)
+                                          (jdbc/with-db-connection [db tmpkanta-asetukset]
+                                                                   (with-open [c (jdbc/get-connection db)
+                                                                               ps (.createStatement c)]
+                                                                     (.executeUpdate ps (str "CREATE DATABASE " db-name " OWNER "db-name " TEMPLATE " testikanta-data-placeholder ""))))
+                                          (println "---> KÄYNNISTETTY"))
+                                      (go (async/<! (async/timeout timeout))
+                                          ::timeout)])]
+          (jdbc/with-db-connection [db kanta-asetukset]
+                                   (with-open [c (jdbc/get-connection db)
+                                               ps (.createStatement c)]
+                                     #_(yrita-querya (fn [] (tapa-backend-kannasta ps testikanta-data-placeholder)) 5 false)
+                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder))) 5)
+                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP USER IF EXISTS " testikanta-data-placeholder))) 5)))
+          (println "---> TMP KANTA TAPETTU")
+          (async/put! kanava :kanta-uudetaan-kaynnissa)
+          (async/close! kanava)
+          (when (= ::timeout arvo)
+            (throw (TimeoutException. (str "Possukaktkoksen käsittely timeouttas " timeout " ms jälkeen"))))))
+    kanava))
 
 (defprotocol FeikkiHttpPalveluKutsu
   (kutsu-palvelua
@@ -325,15 +424,6 @@
    (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja))
   ([nimi kayttaja payload]
    (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja payload)))
-
-(defn arvo-vapaa-portti
-  "Arpoo vapaan portinnumeron ja palauttaa sen"
-  []
-  (let [s (doto (java.net.ServerSocket. 0)
-            (.setReuseAddress true))]
-    (try
-      (.getLocalPort s)
-      (finally (.close s)))))
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
