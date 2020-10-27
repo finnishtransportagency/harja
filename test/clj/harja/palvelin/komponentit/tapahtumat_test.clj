@@ -197,7 +197,16 @@
           (async/<!! (async/timeout 10))))
       (log/set-config! original-config)
       (is (= 3 @err-count)
-          "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä"))))
+          "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä")))
+  (testing "Väärä argumentti yhtäaikaa alkaville"
+    (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* 1]
+                                            (tapahtumat/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))
+    (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin :foo :lkm 3}]
+                                            (tapahtumat/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))
+    (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:lkm 3}]
+                                            (tapahtumat/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))
+    (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"}]
+                                            (tapahtumat/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))))
 
 (deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin
   (alter-var-root #'toinen-harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-b"))
@@ -303,9 +312,7 @@
           (with-redefs [tapahtumat/tarkkailija-kuuntelun-jalkeen (fn [& args]
                                                                       (let [original-fn (apply tarkkailija-kuuntelun-jalkeen-original args)]
                                                                         (fn [& args-sisa]
-                                                                          (println "Ajetaan tarkkailun jälkeinen fn")
                                                                           (apply original-fn args-sisa)
-                                                                          (println "nnetaan kakutus-tehty")
                                                                           (async/>!! kakutuskeskustelukanava :kakutus-tehty)
                                                                           (async/<!! kakutuskeskustelukanava))))]
             (let [tarkkailija (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin)]
@@ -320,12 +327,12 @@
                 (when-not (= i 10)
                   (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
-              (is (thrown? TimeoutException (<!!-timeout loop-ajettu 200))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu 400))
                   "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
               (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
-              (is (<!!-timeout loop-ajettu 200)
+              (is (<!!-timeout loop-ajettu 400)
                   "tapahtuma loop pitäsi nyt päästä loppuun")
-              (let [tarkkailija (<!!-timeout tarkkailija 200)]
+              (let [tarkkailija (<!!-timeout tarkkailija 400)]
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
                 (loop [arvo (<!!-timeout tarkkailija 200)
                        i 1]
@@ -333,12 +340,98 @@
                     (< i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                               :payload {:a i}})
                                      "Lähetetyt arvot pitäisi tulla järjestyksessä")
-                                 (recur (<!!-timeout tarkkailija 200)
+                                 (recur (<!!-timeout tarkkailija 400)
                                         (inc i)))
                     (= i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                              :payload {:a i}})
                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
-                                (is (thrown? TimeoutException (<!!-timeout tarkkailija 200))
+                                (is (thrown? TimeoutException (<!!-timeout tarkkailija 400))
                                     "Ei pitäisi olla enää tapahtumia")))))))))
-      (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista")
-      (testing "Tapahtumat tulee siinä järjestyksessä kuin ne on saapunut kantaan"))))
+      (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
+        (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+              kakutuskeskustelukanava (async/chan)
+              kuuntelu-fn-original @#'tapahtumat/kuuntelu-fn
+              _ (tapahtumat/julkaise! tapahtumat-k :tapahtuma-b {:b 1} (:nimi harja-tarkkailija))]
+          (with-redefs [tapahtumat/kuuntelu-fn (fn [& args]
+                                                 (async/>!! kakutuskeskustelukanava :kakutus-seuraavaksi)
+                                                 (async/<!! kakutuskeskustelukanava)
+                                                 (apply kuuntelu-fn-original args))]
+            (let [tarkkailija (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-b :viimeisin)]
+              (is (not (nil? (<!!-timeout (async/go-loop []
+                                            (async/offer! aja-loop true)
+                                            (if-let [tila (async/poll! kakutuskeskustelukanava)]
+                                              tila
+                                              (do (async/poll! loop-ajettu)
+                                                  (recur))))
+                                          2000))))
+              (loop [i 2]
+                (when-not (= i 10)
+                  (tapahtumat/julkaise! tapahtumat-k :tapahtuma-b {:b i} (:nimi harja-tarkkailija))
+                  (recur (inc i))))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu 200))
+                  "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
+              (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
+              (is (<!!-timeout loop-ajettu 200)
+                  "tapahtuma loop pitäsi nyt päästä loppuun")
+              (let [tarkkailija (<!!-timeout tarkkailija 200)]
+                (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
+                (do (is (= (<!!-timeout tarkkailija 200)
+                           {:palvelin (:nimi harja-tarkkailija)
+                            :payload {:b 9}}))
+                    (is (thrown? TimeoutException (<!!-timeout tarkkailija 200))
+                        "Pitäisi olla vain tuo yksi arvo"))))))))))
+
+(deftest ryhmittain-ajettavat-testit-ajetaan-yhta-aikaa
+  (let [aja-loop (async/chan)
+        loop-ajettu (async/chan)
+        loop-kunnes-realisoinut (fn loop-kunnes-realisoinut
+                                  ([kanava] (loop-kunnes-realisoinut kanava 2000))
+                                  ([kanava timeout]
+                                   (let [lopeta-looppaus (async/chan)]
+                                     (try (<!!-timeout (async/go-loop []
+                                                         (when-not (async/poll! lopeta-looppaus)
+                                                           (async/offer! aja-loop true)
+                                                           (if-let [kanavan-arvo (async/poll! kanava)]
+                                                             kanavan-arvo
+                                                             (do (async/poll! loop-ajettu)
+                                                                 (recur)))))
+                                                       timeout)
+                                          (catch TimeoutException e
+                                            (async/put! lopeta-looppaus true)
+                                            (throw e))))))
+        odota-yksi-loop (fn []
+                          (async/>!! aja-loop true)
+                          (<!!-timeout loop-ajettu 200))
+        tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
+    (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
+                                                      (async/<!! aja-loop)
+                                                      (let [paluuarvo (apply tapahtuma-loop-sisalto-original args)]
+                                                        (async/put! loop-ajettu true)
+                                                        paluuarvo))]
+      (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
+        (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
+          (let [tarkkailija-1 (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"
+                                                                           :lkm 2}]
+                                (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+                tarkkailija-2 (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a)
+                tarkkailija-2 (loop-kunnes-realisoinut tarkkailija-2)]
+            (is (thrown? TimeoutException (loop-kunnes-realisoinut tarkkailija-1 100))
+                "Tarkkailija-1 pitäisi odotella toista tarkkailijaa")
+            (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))
+            (odota-yksi-loop)
+            (is (= (<!!-timeout tarkkailija-2 200) {:palvelin (:nimi harja-tarkkailija)
+                                                    :payload {:a 1}})
+                "Tarkkailija-2 ei pitäisi jumittaa ykkösen takia")
+            (let [tarkkailija-3 (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"
+                                                                             :lkm 2}]
+                                  (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a))
+                  tarkkailija-3 (loop-kunnes-realisoinut tarkkailija-3)
+                  tarkkailija-1 (loop-kunnes-realisoinut tarkkailija-1)]
+              (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a 2} (:nimi harja-tarkkailija))
+              (odota-yksi-loop)
+              (is (= (<!!-timeout tarkkailija-1 200) {:palvelin (:nimi harja-tarkkailija)
+                                                      :payload {:a 2}}))
+              (is (= (<!!-timeout tarkkailija-2 200) {:palvelin (:nimi harja-tarkkailija)
+                                                      :payload {:a 2}}))
+              (is (= (<!!-timeout tarkkailija-3 200) {:palvelin (:nimi harja-tarkkailija)
+                                                      :payload {:a 2}})))))))))
