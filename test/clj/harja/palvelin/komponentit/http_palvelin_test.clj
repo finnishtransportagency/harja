@@ -29,7 +29,7 @@
                         (component/system-map
                           :db-event (event-tietokanta/luo-tietokanta testitietokanta)
                           :klusterin-tapahtumat (component/using
-                                                  (tapahtumat/luo-tapahtumat)
+                                                  (tapahtumat/luo-tapahtumat {:loop-odotus 100})
                                                   {:db :db-event})))))
     (alter-var-root #'jarjestelma
                     (fn [_]

@@ -50,7 +50,7 @@
                                                                  (:paivittainen-lahetysaika sampo)))
                                                 [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
                                                 [:db])))))
   ;; aloita-sonja palauttaa kanavan.
   (<!! (sut/aloita-sonja jarjestelma))

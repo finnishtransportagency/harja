@@ -33,7 +33,7 @@
                                               (komponenttien-tila/komponentin-tila)
                                               [:komponentti-event])
                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
                                                 [:db])
 
                         :todennus (component/using

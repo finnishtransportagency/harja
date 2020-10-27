@@ -17,6 +17,10 @@
 (def toinen-harja-tarkkailija nil)
 (def toinen-jarjestelma nil)
 
+(def tarkkailija-asetukset {:loop-odotus 100})
+(def default-odottelu (+ (:loop-odotus tarkkailija-asetukset) 600))
+(def default-odottelu-pidennetty (+ default-odottelu 1000))
+
 (defn luo-jarjestelma [_]
   (component/start
     (component/system-map
@@ -28,7 +32,7 @@
            (component/system-map
              :db-event (event-tietokanta/luo-tietokanta testitietokanta)
              :klusterin-tapahtumat (component/using
-                                     (tapahtumat/luo-tapahtumat)
+                                     (tapahtumat/luo-tapahtumat tarkkailija-asetukset)
                                      {:db :db-event})))
     :nimi nimi))
 
@@ -58,8 +62,8 @@
   (let [saatiin (atom nil)]
     (testing "Perustapaus"
       (let [lopetus-fn (tapahtumat/kuuntele! (:klusterin-tapahtumat harja-tarkkailija) "seppo"
-                                             (fn kuuntele-callback [viesti] (reset! saatiin true)
-                                               (println "viesti saatu:" viesti)))
+                                             (fn kuuntele-callback [viesti]
+                                               (reset! saatiin true)))
             kuuntelija-funktiot-kuuntelun-jalkeen @(get-in harja-tarkkailija [:klusterin-tapahtumat :kuuntelijat])]
         (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
         (is (odota-arvo saatiin))
@@ -71,8 +75,8 @@
     (testing "Toipuminen kantayhteyden katkosta"
       (reset! saatiin nil)
       (let [lopetus-fn (tapahtumat/kuuntele! (:klusterin-tapahtumat harja-tarkkailija) "seppo"
-                                             (fn kuuntele-callback [viesti] (reset! saatiin true)
-                                               (println "viesti saatu:" viesti)))
+                                             (fn kuuntele-callback [viesti]
+                                               (reset! saatiin true)))
             kantakatkos (katkos-testikantaan!)]
         (<!!-timeout kantakatkos 5000)
         (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
@@ -85,12 +89,12 @@
                         @tapahtumat/tapahtuma-loop-kaynnissa?)
             (when-not testattu-kerran?
               (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
-              (is (thrown? AssertionError (odota-arvo saatiin 200)) "Ei pitäisi saada tapahtumia ennenkuin tapahtumaloop on käynnissä"))
+              (is (thrown? AssertionError (odota-arvo saatiin default-odottelu)) "Ei pitäisi saada tapahtumia ennenkuin tapahtumaloop on käynnissä"))
             (async/<!! (async/timeout 100))
             (recur loput-kerrat
                    true)))
         (tapahtumat/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
-        (is (odota-arvo saatiin 500) "Pitäisi saada tapahtumia, kun tapahtumaloop on alkanut")
+        (is (odota-arvo saatiin default-odottelu) "Pitäisi saada tapahtumia, kun tapahtumaloop on alkanut")
         (lopetus-fn)))))
 
 (deftest tarkkaile-kanavaa-testit-ok-tapaukset
@@ -103,7 +107,7 @@
         (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma 500))
             "Kanavassa ei pitäisi olla vielä mitään")
         (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma 1000)
+        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty"))
@@ -111,7 +115,7 @@
             a-payload 1337
             odota-tapahtuma (async/go (async/<! tarkkailija))]
         (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma 1000)
+        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan ei pitäisi tulla kakutettua kamaa vaan juurikin se mikä on lähetetty"))))
@@ -125,16 +129,16 @@
           kuuntelija-2 (tapahtumat/kuuntele! tapahtumat-k :tapahtuma-a (fn [_] (swap! kuuntelu-ja-tarkkailu-lkm inc)))
           a-payload 42
           odota-tapahtuma-1 (async/go (async/<! tarkkailija-1)
-                                    (swap! kuuntelu-ja-tarkkailu-lkm inc))
+                                      (swap! kuuntelu-ja-tarkkailu-lkm inc))
           odota-tapahtuma-2 (async/go (async/<! tarkkailija-2)
                                       (swap! kuuntelu-ja-tarkkailu-lkm inc))
           odota-tapahtuma-3 (async/go (async/<! tarkkailija-3)
                                       (swap! kuuntelu-ja-tarkkailu-lkm inc))]
       (is (= 0 @kuuntelu-ja-tarkkailu-lkm))
       (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-      (<!!-timeout odota-tapahtuma-1 1000)
-      (<!!-timeout odota-tapahtuma-2 1000)
-      (<!!-timeout odota-tapahtuma-3 1000)
+      (<!!-timeout odota-tapahtuma-1 default-odottelu)
+      (<!!-timeout odota-tapahtuma-2 default-odottelu)
+      (<!!-timeout odota-tapahtuma-3 default-odottelu)
       (is (= 5 @kuuntelu-ja-tarkkailu-lkm))))
   (testing "Viimeisin tarkkailu onnistuu"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
@@ -143,17 +147,17 @@
             odota-tapahtuma (async/go (async/<! tarkkailija))]
         (is (not (false? tarkkailija)))
         (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a ensimmainen-a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma 1000)
+        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload ensimmainen-a-payload})))
       (let [tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))
             a-payload 1337]
-        (is (= (<!!-timeout tarkkailija 1000)
+        (is (= (<!!-timeout tarkkailija default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload ensimmainen-a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")
         (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout tarkkailija 1000)
+        (is (= (<!!-timeout tarkkailija default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")))))
@@ -166,10 +170,10 @@
       (with-redefs [konv/sha256 (constantly "differentHash")]
         (let [julkaisu-onnistui? (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a data (:nimi harja-tarkkailija))]
           (is julkaisu-onnistui?)))
-      (is (thrown? TimeoutException (<!!-timeout tarkkailija 500))
+      (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
           "Väärällä hashillä olevaa dataa ei pitäisi antaa tarkkailijoille!")
       (let [viimeisin-tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))]
-        (is (thrown? TimeoutException (<!!-timeout viimeisin-tarkkailija 500))
+        (is (thrown? TimeoutException (<!!-timeout viimeisin-tarkkailija default-odottelu))
             "Väärällä hashillä olevaa dataa ei pitäisi antaa viimeisin tarkkailijoille!"))))
   (testing "Väärän tyyppinen kuuntelija"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
@@ -182,13 +186,11 @@
           original-pura-tapahtumat tapahtumat/pura-tapahtuma-loopin-ajot!
           original-config log/*config*]
       (log/merge-config! {:middleware [(fn [msg]
-                                         (println "MIDDLEW MSG")
                                          (when (= :error (:level msg))
                                            (swap! err-count inc))
                                          msg)]})
       (with-redefs [tapahtumat/pura-tapahtuma-loopin-ajot! (fn [& args]
                                                              (apply original-pura-tapahtumat args)
-                                                             (println "LÄHDE POIS")
                                                              (reset! lahde-redefsista? true))]
         (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:f (fn [])})
         (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:tunnistin "foo"})
@@ -223,11 +225,11 @@
         (is (not (false? tarkkailija)))
         (is (not (false? toinen-tarkkailija)))
         (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma 1000)
+        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
-        (is (= (<!!-timeout toinen-odota-tapahtuma 1000)
+        (is (= (<!!-timeout toinen-odota-tapahtuma default-odottelu)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
@@ -235,11 +237,11 @@
               odota-tapahtuma (async/go (async/<! tarkkailija))
               toinen-odota-tapahtuma (async/go (async/<! toinen-tarkkailija))]
           (tapahtumat/julkaise! toinen-tapahtumat-k :tapahtuma-a a-payload (:nimi toinen-harja-tarkkailija))
-          (is (= (<!!-timeout odota-tapahtuma 1000)
+          (is (= (<!!-timeout odota-tapahtuma default-odottelu-pidennetty)
                  {:palvelin (:nimi toinen-harja-tarkkailija)
                   :payload a-payload})
               "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
-          (is (= (<!!-timeout toinen-odota-tapahtuma 1000)
+          (is (= (<!!-timeout toinen-odota-tapahtuma default-odottelu-pidennetty)
                  {:palvelin (:nimi toinen-harja-tarkkailija)
                   :payload a-payload})
               "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")))))
@@ -255,12 +257,12 @@
                                 :payload a-payload-palvelin-1}
           paluuarvo-palvelin-2 {:palvelin (:nimi toinen-harja-tarkkailija)
                                 :payload a-payload-palvelin-2}]
-      (is (let [paluuarvo (<!!-timeout tarkkailija 1000)]
+      (is (let [paluuarvo (<!!-timeout tarkkailija (* 2 default-odottelu-pidennetty))]
             (or (= paluuarvo paluuarvo-palvelin-1)
                 (= paluuarvo paluuarvo-palvelin-2)))
           "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
            Järjestystä ei ole fixattu")
-      (is (let [paluuarvo (<!!-timeout tarkkailija 1000)]
+      (is (let [paluuarvo (<!!-timeout tarkkailija (* 2 default-odottelu-pidennetty))]
             (or (= paluuarvo paluuarvo-palvelin-1)
                 (= paluuarvo paluuarvo-palvelin-2)))
           "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
@@ -300,7 +302,7 @@
         loop-ajettu (async/chan)
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
     (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
-                                                         (async/<!! aja-loop)
+                                                      (async/<!! aja-loop)
                                                       (let [paluuarvo (apply tapahtuma-loop-sisalto-original args)]
                                                         (async/put! loop-ajettu true)
                                                         paluuarvo))]
@@ -310,11 +312,11 @@
               tarkkailija-kuuntelun-jalkeen-original @#'tapahtumat/tarkkailija-kuuntelun-jalkeen
               _ (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))]
           (with-redefs [tapahtumat/tarkkailija-kuuntelun-jalkeen (fn [& args]
-                                                                      (let [original-fn (apply tarkkailija-kuuntelun-jalkeen-original args)]
-                                                                        (fn [& args-sisa]
-                                                                          (apply original-fn args-sisa)
-                                                                          (async/>!! kakutuskeskustelukanava :kakutus-tehty)
-                                                                          (async/<!! kakutuskeskustelukanava))))]
+                                                                   (let [original-fn (apply tarkkailija-kuuntelun-jalkeen-original args)]
+                                                                     (fn [& args-sisa]
+                                                                       (apply original-fn args-sisa)
+                                                                       (async/>!! kakutuskeskustelukanava :kakutus-tehty)
+                                                                       (async/<!! kakutuskeskustelukanava))))]
             (let [tarkkailija (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin)]
               (is (not (nil? (<!!-timeout (async/go-loop []
                                             (async/offer! aja-loop true)
@@ -322,30 +324,30 @@
                                               tila
                                               (do (async/poll! loop-ajettu)
                                                   (recur))))
-                                          2000))))
+                                          (+ default-odottelu 2000)))))
               (loop [i 2]
                 (when-not (= i 10)
                   (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
-              (is (thrown? TimeoutException (<!!-timeout loop-ajettu 400))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu default-odottelu))
                   "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
               (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
-              (is (<!!-timeout loop-ajettu 400)
+              (is (<!!-timeout loop-ajettu default-odottelu)
                   "tapahtuma loop pitäsi nyt päästä loppuun")
-              (let [tarkkailija (<!!-timeout tarkkailija 400)]
+              (let [tarkkailija (<!!-timeout tarkkailija default-odottelu)]
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
-                (loop [arvo (<!!-timeout tarkkailija 200)
+                (loop [arvo (<!!-timeout tarkkailija default-odottelu)
                        i 1]
                   (cond
                     (< i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
-                                              :payload {:a i}})
-                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
-                                 (recur (<!!-timeout tarkkailija 400)
-                                        (inc i)))
+                                             :payload {:a i}})
+                                    "Lähetetyt arvot pitäisi tulla järjestyksessä")
+                                (recur (<!!-timeout tarkkailija default-odottelu)
+                                       (inc i)))
                     (= i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                              :payload {:a i}})
                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
-                                (is (thrown? TimeoutException (<!!-timeout tarkkailija 400))
+                                (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
                                     "Ei pitäisi olla enää tapahtumia")))))))))
       (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
@@ -363,29 +365,29 @@
                                               tila
                                               (do (async/poll! loop-ajettu)
                                                   (recur))))
-                                          2000))))
+                                          (+ 2000 default-odottelu)))))
               (loop [i 2]
                 (when-not (= i 10)
                   (tapahtumat/julkaise! tapahtumat-k :tapahtuma-b {:b i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
-              (is (thrown? TimeoutException (<!!-timeout loop-ajettu 200))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu default-odottelu))
                   "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
               (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
-              (is (<!!-timeout loop-ajettu 200)
+              (is (<!!-timeout loop-ajettu default-odottelu)
                   "tapahtuma loop pitäsi nyt päästä loppuun")
-              (let [tarkkailija (<!!-timeout tarkkailija 200)]
+              (let [tarkkailija (<!!-timeout tarkkailija default-odottelu)]
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
-                (do (is (= (<!!-timeout tarkkailija 200)
+                (do (is (= (<!!-timeout tarkkailija default-odottelu)
                            {:palvelin (:nimi harja-tarkkailija)
                             :payload {:b 9}}))
-                    (is (thrown? TimeoutException (<!!-timeout tarkkailija 200))
+                    (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
                         "Pitäisi olla vain tuo yksi arvo"))))))))))
 
 (deftest ryhmittain-ajettavat-testit-ajetaan-yhta-aikaa
   (let [aja-loop (async/chan)
         loop-ajettu (async/chan)
         loop-kunnes-realisoinut (fn loop-kunnes-realisoinut
-                                  ([kanava] (loop-kunnes-realisoinut kanava 2000))
+                                  ([kanava] (loop-kunnes-realisoinut kanava (+ 2000 default-odottelu)))
                                   ([kanava timeout]
                                    (let [lopeta-looppaus (async/chan)]
                                      (try (<!!-timeout (async/go-loop []
@@ -401,7 +403,7 @@
                                             (throw e))))))
         odota-yksi-loop (fn []
                           (async/>!! aja-loop true)
-                          (<!!-timeout loop-ajettu 200))
+                          (<!!-timeout loop-ajettu default-odottelu))
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
     (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
                                                       (async/<!! aja-loop)
@@ -419,8 +421,8 @@
                 "Tarkkailija-1 pitäisi odotella toista tarkkailijaa")
             (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))
             (odota-yksi-loop)
-            (is (= (<!!-timeout tarkkailija-2 200) {:palvelin (:nimi harja-tarkkailija)
-                                                    :payload {:a 1}})
+            (is (= (<!!-timeout tarkkailija-2 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
+                                                                 :payload {:a 1}})
                 "Tarkkailija-2 ei pitäisi jumittaa ykkösen takia")
             (let [tarkkailija-3 (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"
                                                                              :lkm 2}]
@@ -429,9 +431,9 @@
                   tarkkailija-1 (loop-kunnes-realisoinut tarkkailija-1)]
               (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a 2} (:nimi harja-tarkkailija))
               (odota-yksi-loop)
-              (is (= (<!!-timeout tarkkailija-1 200) {:palvelin (:nimi harja-tarkkailija)
-                                                      :payload {:a 2}}))
-              (is (= (<!!-timeout tarkkailija-2 200) {:palvelin (:nimi harja-tarkkailija)
-                                                      :payload {:a 2}}))
-              (is (= (<!!-timeout tarkkailija-3 200) {:palvelin (:nimi harja-tarkkailija)
-                                                      :payload {:a 2}})))))))))
+              (is (= (<!!-timeout tarkkailija-1 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
+                                                                   :payload {:a 2}}))
+              (is (= (<!!-timeout tarkkailija-2 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
+                                                                   :payload {:a 2}}))
+              (is (= (<!!-timeout tarkkailija-3 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
+                                                                   :payload {:a 2}})))))))))

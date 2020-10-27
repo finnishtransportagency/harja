@@ -115,7 +115,7 @@
                                  (tloik-tk/luo-tloik-komponentti)
                                  [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
                                                 [:db])))))
   ;; aloita-sonja palauttaa kanavan.
   (binding [*sonja-yhteys* (go

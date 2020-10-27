@@ -29,6 +29,7 @@
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
                       :salasana "harja"}
+ :tarkkailija {:loop-odotus 100}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
