@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paallystys-test
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
+            [namespacefy.core :refer [namespacefy]]
             [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -71,45 +72,57 @@
   (do
     (dissoc (into {} testi-col) :id ::m/muokattu ::m/luotu)))
 
-(def lisaine-default1
-  {:nimi (first pot2-domain/massan-lisaineet)
-   :pitoisuus 0.2M})
-
-(def lisaine-default2
-  {:nimi (second pot2-domain/massan-lisaineet)
-   :pitoisuus 1.5M})
+(def lisaaine-default1
+  {1 (merge
+       {:valittu? true}
+       (namespacefy
+         {:pitoisuus 1.5M}
+         {:ns :lisaaine}))})
 
 (def sideaine-default1
-  {:tyyppi "20/30"
-   :pitoisuus 50.1M
-   :lopputuote? true})                                      ;; lopputuote / lisätty
+  {:lopputuote {:aineet {0 (namespacefy
+                             {:tyyppi "20/30"
+                              :pitoisuus 50.1M
+                              :lopputuote? true}
+                             {:ns :sideaine})}}}) ;; lopputuote / lisätty
 
 (def sideaine-default2
-  {:tyyppi "50/70"
-   :pitoisuus 10.4M
-   :lopputuote? false})                                     ;; lopputuote / lisatty
+  {:lopputuote (merge
+                 {:valittu? true}
+                 {:aineet {0 (namespacefy
+                               {:tyyppi 1
+                                :pitoisuus 10.56M
+                                :lopputuote? true}
+                               {:ns :sideaine})}})
+
+   :lisatty {:aineet {0 (merge
+                          {:valittu? true}
+                          (namespacefy
+                            {:tyyppi 2
+                             :pitoisuus 10.4M
+                             :lopputuote? false}
+                            {:ns :sideaine}))}}}) ;; lopputuote / lisatty
 
 (def runkoaine-kiviaines-default1
-  {:kiviaine-esiintyma "Zatelliitti"
-   :kuulamyllyarvo 12.1M
-   :muotoarvo 1.1M
-   :massaprosentti 34.2M})
-
-(def runkoaine-kiviaines-default2
-  {:erikseen-lisattava-fillerikiviaines (first pot2-domain/erikseen-lisattava-fillerikiviaines)
-   :massaprosentti 2.12M})
+  {1 (merge
+       {:valittu? true}
+       (namespacefy {:esiintyma "Zatelliitti"
+                    :kuulamyllyarvo 12.1M
+                    :litteysluku 4.1M
+                    :massaprosentti 34.2M}
+                   {:ns :runkoaine}))})
 
 (def default-pot2-massa
-  {:urakka-id (hae-utajarven-paallystysurakan-id)
+  {::pot2-domain/urakka-id (hae-utajarven-paallystysurakan-id)
    ::pot2-domain/nimen-tarkenne "Tarkenne"
-   ::pot2-domain/tyyppi (:lyhenne (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
+   ::pot2-domain/tyyppi (:koodi (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
    ::pot2-domain/max-raekoko (first pot2-domain/massan-max-raekoko)
    ::pot2-domain/kuulamyllyluokka (:nimi (first paallystysilmoitus-domain/+kuulamyllyt+))
    ::pot2-domain/litteyslukuluokka 1
-   ::pot2-domain/dop-nro 1.2M
-   :runkoaineet [runkoaine-kiviaines-default1 runkoaine-kiviaines-default2]
-   :sideaineet [sideaine-default1 sideaine-default2]
-   :lisaaineet [lisaine-default1 lisaine-default2]})
+   ::pot2-domain/dop-nro "12345abc"
+   ::pot2-domain/runkoaineet runkoaine-kiviaines-default1
+   ::pot2-domain/sideaineet sideaine-default2
+   ::pot2-domain/lisaaineet lisaaine-default1 })
 
 
 
@@ -119,53 +132,10 @@
                                 :tallenna-urakan-pot2-massa
                                 +kayttaja-jvh+ default-pot2-massa)
         _ (println "tallenna-uusi-pot2-massa :: vastaus " (pr-str vastaus))
-        oletus-vastaus {::pot2-domain/tyyppi "BET",
-                        ::pot2-domain/asfalttiasema "Testi Asfalttiasema",
-                        ::pot2-domain/nimen-tarkenne "Tarkenne",
-                        ::pot2-domain/massa-id 3,
-                        ::pot2-domain/dop-nro nil,
-                        ::pot2-domain/litteyslukuluokka 1,
-                        ::m/luoja-id 3,
-                        ::pot2-domain/kuulamyllyluokka "AN5",
-                        ::pot2-domain/urakka-id 7,
-                        ::pot2-domain/max-raekoko 5
-                        :runkoaineet '({:pot2-massa/id 3,
-                                        :runkoaine/esiintyma "Zatelliitti",
-                                        :runkoaine/kuulamyllyarvo 12.1M,
-                                        :runkoaine/muotoarvo 1.1M,
-                                        :runkoaine/massaprosentti 34.2M,
-                                        :runkoaine/erikseen-lisattava-fillerikiviaines nil,
-                                        :runkoaine/id 1}
-                                       {:pot2-massa/id 3,
-                                        :runkoaine/esiintyma nil,
-                                        :runkoaine/kuulamyllyarvo nil,
-                                        :runkoaine/muotoarvo nil,
-                                        :runkoaine/massaprosentti 2.12M,
-                                        :runkoaine/erikseen-lisattava-fillerikiviaines "Kalkkifilleri (KF)",
-                                        :runkoaine/id 2})
-                        :sideaineet '({:pot2-massa/id 3,
-                                       :sideaine/tyyppi "20/30",
-                                       :sideaine/pitoisuus 50.1M,
-                                       :sideaine/lopputuote? true,
-                                       :sideaine/id 1}
-                                      {:pot2-massa/id 3,
-                                       :sideaine/tyyppi "50/70",
-                                       :sideaine/pitoisuus 10.4M,
-                                       :sideaine/lopputuote? false,
-                                       :sideaine/id 2})
-                        :lisaaineet '({:pot2-massa/id 3,
-                                        :lisaaine/nimi "Kuitu",
-                                        :lisaaine/pitoisuus 0.2M,
-                                        :lisaaine/id 1}
-                                       {:pot2-massa/id 3,
-                                        :lisaaine/nimi "Tartuke",
-                                        :lisaaine/pitoisuus 1.5M,
-                                        :lisaaine/id 2})}
-        _ (println "oletetut lisäaineet" (pr-str oletus-vastaus))
-        ]
-    (is (= (siivoa-muuttuvat (:lisaaineet vastaus)) (siivoa-muuttuvat (:lisaaineet oletus-vastaus))))
-    (is (= (siivoa-muuttuvat (:runkoaineet vastaus)) (siivoa-muuttuvat (:runkoaineet oletus-vastaus))))
-    (is (= (siivoa-muuttuvat (:sideaineet vastaus)) (siivoa-muuttuvat (:sideaineet oletus-vastaus))))
+        oletus-vastaus #:harja.domain.pot2{:lisaaineet {1 {:valittu? true, :lisaaine/pitoisuus 1.5M}}, :dop-nro "12345abc", :max-raekoko 5, :urakka-id 7, :nimen-tarkenne "Tarkenne", :litteyslukuluokka 1, :runkoaineet {1 {:valittu? true, :runkoaine/esiintyma "Zatelliitti", :runkoaine/kuulamyllyarvo 12.1M, :runkoaine/litteysluku 4.1M, :runkoaine/massaprosentti 34.2M}}, :kuulamyllyluokka "AN5", :sideaineet {:lopputuote {:valittu? true, :aineet {0 #:sideaine{:tyyppi 1, :pitoisuus 10.56M, :lopputuote? true}}}, :lisatty {:aineet {0 {:valittu? true, :sideaine/tyyppi 2, :sideaine/pitoisuus 10.4M, :sideaine/lopputuote? false}}}}, :tyyppi 1}]
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/sideaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/sideaineet oletus-vastaus))))
     ))
 
 (deftest hae-urakan-pot2-massat
@@ -401,7 +371,7 @@
                                               {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
                                                :vuosi 2017})]
-    (is (= (count paallystysilmoitukset) 6) "Päällystysilmoituksia löytyi vuodelle 2017")))
+    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
 
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
   ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa
@@ -758,7 +728,7 @@
                                  ::sopimus-domain/id sopimus-id
                                  ::urakka-domain/vuosi 2017})
         leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
-    (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+    (is (= (count vastaus) 5) "Kaikki kohteet palautuu")
     (is (== (:kokonaishinta leppajarven-ramppi) 7248.95))
     (is (= (count (:maksuerat leppajarven-ramppi)) 2))))
 
@@ -793,7 +763,7 @@
                                     payload)
             leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
 
-        (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+        (is (= (count vastaus) 5) "Kaikki kohteet palautuu")
         (is (= (map #(dissoc % :id) (:maksuerat leppajarven-ramppi))
                tallennettavat-maksuerat))))))
 
@@ -817,7 +787,7 @@
                                   payload)
           leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
 
-      (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+      (is (= (count vastaus) 5) "Kaikki kohteet palautuu")
       (is (= (:maksueratunnus leppajarven-ramppi) "Uusi maksuerätunnus"))
       (is (= (:maksuerat leppajarven-ramppi)
              [{:id 1

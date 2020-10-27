@@ -225,12 +225,10 @@
           _ (println "tallenna-urakan-paallystysmassa :: sideaineet-kannasta" (pr-str sideaineet-kannasta))
 
           lisaaineet-kannasta (tallenna-lisaaineet db lisaaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet-kannasta" (pr-str lisaaineet-kannasta))
-
-          massa (assoc massa :runkoaineet runkoaineet
-                             :sideaineet sideaineet
-                             :lisaaineet lisaaineet)]
-      massa)))
+          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet-kannasta" (pr-str lisaaineet-kannasta))]
+      (assoc massa :harja.domain.pot2/runkoaineet runkoaineet
+                   :harja.domain.pot2/sideaineet sideaineet
+                   :harja.domain.pot2/lisaaineet lisaaineet))))
 
 
 (defrecord POT2 []
