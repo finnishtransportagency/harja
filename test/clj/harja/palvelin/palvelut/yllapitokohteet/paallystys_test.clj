@@ -109,7 +109,7 @@
    ::pot2-domain/dop-nro 1.2M
    :runkoaineet [runkoaine-kiviaines-default1 runkoaine-kiviaines-default2]
    :sideaineet [sideaine-default1 sideaine-default2]
-   :lisa-aineet [lisaine-default1 lisaine-default2]})
+   :lisaaineet [lisaine-default1 lisaine-default2]})
 
 
 
@@ -153,7 +153,7 @@
                                        :sideaine/pitoisuus 10.4M,
                                        :sideaine/lopputuote? false,
                                        :sideaine/id 2})
-                        :lisa-aineet '({:pot2-massa/id 3,
+                        :lisaaineet '({:pot2-massa/id 3,
                                         :lisaaine/nimi "Kuitu",
                                         :lisaaine/pitoisuus 0.2M,
                                         :lisaaine/id 1}
@@ -163,7 +163,7 @@
                                         :lisaaine/id 2})}
         _ (println "oletetut lisäaineet" (pr-str oletus-vastaus))
         ]
-    (is (= (siivoa-muuttuvat (:lisa-aineet vastaus)) (siivoa-muuttuvat (:lisa-aineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:lisaaineet vastaus)) (siivoa-muuttuvat (:lisaaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:runkoaineet vastaus)) (siivoa-muuttuvat (:runkoaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:sideaineet vastaus)) (siivoa-muuttuvat (:sideaineet oletus-vastaus))))
     ))

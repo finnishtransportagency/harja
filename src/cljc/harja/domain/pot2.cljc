@@ -237,7 +237,7 @@
    {::sideaineet (specql.rel/has-many :pot2-massa/id
                                       ::pot2-massa-sideaine
                                       :pot2-massa/id)}
-   {::lisa-aineet (specql.rel/has-many :pot2-massa/id
+   {::lisaaineet (specql.rel/has-many :pot2-massa/id
                                        ::pot2-massa-lisaaine
                                        :pot2-massa/id)}])
 

@@ -77,7 +77,7 @@
                                                                 :sideaine/lopputuote?}
                                                               {:pot2-massa/id (:pot2-massa/id %)}))
                     massat)
-        massat (map #(assoc % ::pot2-domain/lisa-aineet (fetch db
+        massat (map #(assoc % ::pot2-domain/lisaaineet (fetch db
                                                               ::pot2-domain/pot2-massa-lisaaine
                                                               #{:lisaaine/id
                                                                 :pot2-massa/id
@@ -112,22 +112,22 @@
   [db runkoaineet massa-id]
   (let [paluuarvo (atom [])]
     (doseq [[ra-tyyppi r] runkoaineet]
-      (let [runkoaine-id (:id r)
+      (let [runkoaine-id (:runkoaine/id r)
             runkoaine (if (:valittu? r)
                         (upsert! db ::pot2-domain/pot2-massa-runkoaine
                                  (merge
                                    {:pot2-massa/id massa-id
                                     :runkoaine/tyyppi ra-tyyppi
-                                    :runkoaine/esiintyma (:esiintyma r)
-                                    :runkoaine/kuulamyllyarvo (when (:kuulamyllyarvo r)
-                                                                (bigdec (:kuulamyllyarvo r)))
-                                    :runkoaine/litteysluku (when (:litteysluku r)
-                                                             (bigdec (:litteysluku r)))
-                                    :runkoaine/massaprosentti (when (:massaprosentti r)
-                                                                (bigdec (:massaprosentti r)))
-                                    :runkoaine/fillerityyppi (:fillerityyppi r)}
-                                   (when (:kuvaus r)
-                                     {:runkoaine/kuvaus (:kuvaus r)})
+                                    :runkoaine/esiintyma (:runkoaine/esiintyma r)
+                                    :runkoaine/kuulamyllyarvo (when (:runkoaine/kuulamyllyarvo r)
+                                                                (bigdec (:runkoaine/kuulamyllyarvo r)))
+                                    :runkoaine/litteysluku (when (:runkoaine/litteysluku r)
+                                                             (bigdec (:runkoaine/litteysluku r)))
+                                    :runkoaine/massaprosentti (when (:runkoaine/massaprosentti r)
+                                                                (bigdec (:runkoaine/massaprosentti r)))
+                                    :runkoaine/fillerityyppi (:runkoaine/fillerityyppi r)}
+                                   (when (:runkoaine/kuvaus r)
+                                     {:runkoaine/kuvaus (:runkoaine/kuvaus r)})
                                    (when runkoaine-id
                                      {:runkoaine/id runkoaine-id})))
                         ;; jos valittu? = false, kyseessä voi olla olemassaolevan runkoainetyypin poistaminen
@@ -141,18 +141,19 @@
   (let [paluuarvot (atom [])
         {valittu? :valittu?
          aineet :aineet} aineet-map]
-    (doseq [[idx {sideainerivin-id :id
-                  tyyppi :tyyppi
-                  pitoisuus :pitoisuus}] aineet]
+    (doseq [[_ {:sideaine/keys [id tyyppi pitoisuus]}] aineet]
       (let [paluurivi (if valittu?
                         (upsert! db ::pot2-domain/pot2-massa-sideaine
-                                 {:pot2-massa/id massa-id
-                                  :sideaine/tyyppi tyyppi
-                                  :sideaine/pitoisuus (bigdec pitoisuus)
-                                  :sideaine/lopputuote? (boolean (= kayttotapa :lopputuote))})
+                                 (merge
+                                   {:pot2-massa/id massa-id
+                                    :sideaine/tyyppi tyyppi
+                                    :sideaine/pitoisuus (bigdec pitoisuus)
+                                    :sideaine/lopputuote? (boolean (= kayttotapa :lopputuote))}
+                                   (when id
+                                     {:sideaine/id id})))
                         ;; jos valittu? = false, kyseessä voi olla olemassaolevan sideainetyypin poistaminen
-                        (when (int? sideainerivin-id)
-                          (delete! db ::pot2-domain/pot2-massa-sideaine {:sideaine/id sideainerivin-id
+                        (when (int? id)
+                          (delete! db ::pot2-domain/pot2-massa-sideaine {:sideaine/id id
                                                                          :pot2-massa/id massa-id})))]
         (swap! paluuarvot conj paluurivi)))
     @paluuarvot))
@@ -173,40 +174,41 @@
 (defn- tallenna-lisaaineet
   [db lisaaineet massa-id]
   (let [paluuarvo (atom [])]
-    (doseq [[la-tyyppi {lisaainerivin-id :id
-                        valittu? :valittu?
-                        pitoisuus :pitoisuus}] lisaaineet]
-      (println "Tallennalisäaine tyyppiä " la-tyyppi " lisäainerivin id: " lisaainerivin-id ", valittu?: "  valittu? ", pitoisuus: " pitoisuus)
+    (doseq [[la-tyyppi {:lisaaine/keys [id pitoisuus]
+                        valittu? :valittu?}] lisaaineet]
       (let [lisaaine (if valittu?
                        (upsert! db ::pot2-domain/pot2-massa-lisaaine
-                                {:pot2-massa/id massa-id
-                                 :lisaaine/tyyppi la-tyyppi
-                                 :lisaaine/pitoisuus (bigdec pitoisuus)})
+                                (merge
+                                  {:pot2-massa/id massa-id
+                                   :lisaaine/tyyppi la-tyyppi
+                                   :lisaaine/pitoisuus (bigdec pitoisuus)}
+                                  (when id
+                                    {:lisaaine/id id})))
                        ;; jos valittu? = false, kyseessä voi olla olemassaolevan lisaainetyypin poistaminen
-                       (when (int? lisaainerivin-id)
-                         (delete! db ::pot2-domain/pot2-massa-lisaaine {:lisaaine/id lisaainerivin-id
+                       (when (int? id)
+                         (delete! db ::pot2-domain/pot2-massa-lisaaine {:lisaaine/id id
                                                                         :pot2-massa/id massa-id})))]
         (swap! paluuarvo conj lisaaine)))
     @paluuarvo))
 
 (defn tallenna-urakan-paallystysmassa
-  [db user {:keys [runkoaineet sideaineet lisaaineet] :as tiedot}]
+  [db user {::pot2-domain/keys [runkoaineet sideaineet lisaaineet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (:urakka-id tiedot))
   (jdbc/with-db-transaction
     [db db]
-    (let [massa-id (:massa-id tiedot)
+    (let [massa-id (:pot2-massa/id tiedot)
           _ (println (str "" (if massa-id "UPDATE" "INSERT") " massa-id  " (pr-str massa-id)))
+          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
           _ (println "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
           _ (println "tallenna-urakan-paallystysmassa :: lisaaineet" (pr-str lisaaineet))
           massa (upsert! db ::pot2-domain/pot2-massa
                          (merge
                            (if massa-id
-                             {::pot2-domain/massa-id massa-id
+                             {:pot2-massa/id massa-id
                               ::muokkaustiedot/muokattu (pvm/nyt)
                               ::muokkaustiedot/muokkaaja-id (:id user)}
                              {::muokkaustiedot/luotu (pvm/nyt)
-                              ::muokkaustiedot/luoja-id (:id user)}
-                             )
+                              ::muokkaustiedot/luoja-id (:id user)})
                            (select-keys tiedot [::pot2-domain/urakka-id
                                                 ::pot2-domain/nimen-tarkenne
                                                 ::pot2-domain/tyyppi

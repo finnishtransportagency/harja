@@ -18,6 +18,7 @@
 
 (defrecord AlustaTila [])
 (defrecord UusiMassa [avaa-massa-lomake?])
+(defrecord MuokkaaMassaa [rivi])
 (defrecord NaytaModal [avataanko?])
 (defrecord NaytaListaus [nayta])
 
@@ -38,12 +39,38 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
+(defn- sideaine-kayttoliittyman-muotoon
+  "UI kilkkeet tarvitsevat runko-, side- ja lisäaineet muodossa {tyyppi {tiedot}}"
+  [aineet]
+  (let [lopputuotteen (remove #(false? (:sideaine/lopputuote? %)) aineet)
+        lisatyt (remove #(true? (:sideaine/lopputuote? %)) aineet)
+        aineet-map (fn [aineet]
+                     (if (empty? aineet)
+                       {}
+                       {:valittu? true
+                        :aineet (into {}
+                                      (map-indexed
+                                        (fn [idx aine]
+                                          {idx aine})
+                                        (vec aineet)))}))]
+    {:lopputuote (aineet-map lopputuotteen)
+     :lisatty (aineet-map lisatyt)}))
+
+(defn- aine-kayttoliittyman-muotoon
+  "UI kilkkeet tarvitsevat runko- ja lisäaineet muodossa {tyyppi {tiedot}}"
+  [aineet avain]
+  (into {}
+        (map (fn [aine]
+               {(avain aine) (assoc aine :valittu? true)})
+             (vec aineet))))
 
 (defn- hae-massat [_]
   (tuck-apurit/post! :hae-urakan-pot2-massat
                      {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
                      {:onnistui ->HaePot2MassatOnnistui
                       :epaonnistui ->HaePot2MassatEpaonnistui}))
+(def tyhja-sideaine
+  {:sideaine/tyyppi nil :sideaine/pitoisuus nil})
 
 (extend-protocol tuck/Event
 
@@ -91,7 +118,20 @@
   UusiMassa
   (process-event [{avaa-massa-lomake? :avaa-massa-lomake?} app]
     (js/console.log "Uusi massa lomake avataan" avaa-massa-lomake?)
-    (assoc app :avaa-massa-lomake? avaa-massa-lomake?))
+    (assoc app :avaa-massa-lomake? avaa-massa-lomake?
+               :pot2-massa-lomake nil))
+
+  MuokkaaMassaa
+  (process-event [{rivi :rivi} app]
+    (-> app
+        (assoc :avaa-massa-lomake? true
+               :pot2-massa-lomake rivi)
+        (assoc-in [:pot2-massa-lomake :harja.domain.pot2/runkoaineet]
+                  (aine-kayttoliittyman-muotoon (:harja.domain.pot2/runkoaineet rivi) :runkoaine/tyyppi))
+        (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet]
+                  (sideaine-kayttoliittyman-muotoon (:harja.domain.pot2/sideaineet rivi)))
+        (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet]
+                  (aine-kayttoliittyman-muotoon (:harja.domain.pot2/lisaaineet rivi) :lisaaine/tyyppi))))
 
   NaytaListaus
   (process-event [{nayta :nayta} app]
@@ -115,10 +155,10 @@
   (process-event [{sideaineen-kayttotapa :sideaineen-kayttotapa} app]
     (let [aineiden-lkm
           (count (get-in app
-                         [:pot2-massa-lomake :sideaineet sideaineen-kayttotapa :aineet]))]
+                         [:pot2-massa-lomake ::pot2-domain/sideaineet sideaineen-kayttotapa :aineet]))]
       (assoc-in app
-                [:pot2-massa-lomake :sideaineet sideaineen-kayttotapa :aineet aineiden-lkm]
-                {:tyyppi nil :pitoisuus nil})))
+                [:pot2-massa-lomake ::pot2-domain/sideaineet sideaineen-kayttotapa :aineet aineiden-lkm]
+                tyhja-sideaine)))
 
   TallennaLomake
   (process-event [{data :data} app]

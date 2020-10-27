@@ -81,8 +81,8 @@
         (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))]])
 
 (defn- runkoaineiden-kentat [tiedot polun-avaimet]
-  (let [{:keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
-                massaprosentti kuvaus]} tiedot
+  (let [{:runkoaine/keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
+                          massaprosentti kuvaus]} tiedot
         aineen-koodi (second polun-avaimet)]
     ;; Käyttöliittymäsuunnitelman mukaisesti tietyillä runkoaineilla on tietyt kentät
     ;; ja ainekohtaisia eroja käsitellään tässä contains? funktion avulla
@@ -92,55 +92,56 @@
          {:otsikko "Kiviainesesiintymä"
           :tyyppi :string :pakollinen? true
           :arvo esiintyma :leveys "150px"
-          :polku (conj polun-avaimet :esiintyma)})
+          :polku (conj polun-avaimet :runkoaine/esiintyma)})
        (when (contains? #{3} aineen-koodi)
          {:otsikko "Tyyppi" :valinnat pot2-domain/erikseen-lisattava-fillerikiviaines
           :tyyppi :valinta :pakollinen? true
           :arvo fillerityyppi :leveys "150px"
-          :polku (conj polun-avaimet :fillerityyppi)})
+          :polku (conj polun-avaimet :runkoaine/fillerityyppi)})
        (when-not (contains? #{3 7} aineen-koodi)
          {:otsikko "kuulamyllyarvo"
           :tyyppi :numero :pakollinen? true
           :arvo kuulamyllyarvo :leveys "55px"
           :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40))
-          :polku (conj polun-avaimet :kuulamyllyarvo)})
+          :polku (conj polun-avaimet :runkoaine/kuulamyllyarvo)})
        (when-not (contains? #{3 7} aineen-koodi)
          {:otsikko "Litteysluku"
           :tyyppi :numero :pakollinen? true
           :arvo litteysluku :leveys "68px"
-          :polku (conj polun-avaimet :litteysluku)})
+          :polku (conj polun-avaimet :runkoaine/litteysluku)})
        (when (contains? #{7} aineen-koodi)
          {:otsikko "Kuvaus" :placeholder "Anna ainetta kuvaava nimi"
           :tyyppi :string :pakollinen? true
           :arvo kuvaus :leveys "160px"
-          :polku (conj polun-avaimet :kuvaus)})
+          :polku (conj polun-avaimet :runkoaine/kuvaus)})
        {:otsikko "Massa-%"
         :tyyppi :numero :pakollinen? true
         :arvo massaprosentti :leveys "55px"
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
-        :polku (conj polun-avaimet :massaprosentti)}])))
+        :polku (conj polun-avaimet :runkoaine/massaprosentti)}])))
 
 (defn- sideaineiden-kentat [tiedot polun-avaimet idx]
-  (let [{:keys [sideainetyypit tyyppi pitoisuus]} tiedot]
+  (let [{:sideaine/keys [tyyppi pitoisuus]
+         sideainetyypit :sideainetyypit} tiedot]
     [{:otsikko "Tyyppi" :valinnat sideainetyypit
       :tyyppi :valinta :pakollinen? true
       :valinta-nayta ::pot2-domain/nimi
       :valinta-arvo ::pot2-domain/koodi
       :arvo tyyppi :leveys "250px"
-      :polku (conj polun-avaimet :aineet idx :tyyppi)}
+      :polku (conj polun-avaimet :aineet idx :sideaine/tyyppi)}
      {:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "55px"
       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
-      :polku (conj polun-avaimet :aineet idx :pitoisuus)}]))
+      :polku (conj polun-avaimet :aineet idx :sideaine/pitoisuus)}]))
 
 (defn- lisaaineiden-kentat [tiedot polun-avaimet]
-  (let [{:keys [pitoisuus]} tiedot]
+  (let [{:lisaaine/keys [pitoisuus]} tiedot]
     [{:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "70px"
       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
-      :polku (conj polun-avaimet :pitoisuus)}]))
+      :polku (conj polun-avaimet :lisaaine/pitoisuus)}]))
 
 (defn- tyypin-kentat [tyyppi tiedot polun-avaimet]
   (case tyyppi
@@ -152,23 +153,20 @@
 
 
 (defn- sideaineet-komponentti [e! rivi kayttotapa polun-avaimet sideainetyypit]
-  (let [aineet (or (get-in rivi (cons :data [:sideaineet kayttotapa :aineet]))
-                   {0 {:tyyppi nil :pitoisuus nil}})]
+  (let [aineet (or (get-in rivi (cons :data [::pot2-domain/sideaineet kayttotapa :aineet]))
+                   {0 tiedot-massa/tyhja-sideaine})]
     [:div
-     (map-indexed (fn [idx [_ {tyyppi :tyyppi
-                               pitoisuus :pitoisuus} :as arvot]]
-                    (do
-                      (log "arvot " (pr-str arvot))
-                      ^{:key (str idx)}
-                      [:div
-                       (for [sak (sideaineiden-kentat {:tyyppi tyyppi
-                                                       :pitoisuus pitoisuus
-                                                       :sideainetyypit (vec sideainetyypit)}
-                                                      polun-avaimet idx)]
+     (map-indexed (fn [idx [_ sideaine]]
+                    ^{:key (str idx)}
+                    [:div
+                     (for [sak (sideaineiden-kentat (merge
+                                                      sideaine
+                                                      {:sideainetyypit (vec sideainetyypit)})
+                                                    polun-avaimet idx)]
 
-                         ^{:key (str idx (:otsikko sak))}
-                         [:div.inline-block {:style {:margin-right "6px"}}
-                          [otsikko-ja-kentta e! sak]])]))
+                       ^{:key (str idx (:otsikko sak))}
+                       [:div.inline-block {:style {:margin-right "6px"}}
+                        [otsikko-ja-kentta e! sak]])])
                   aineet)
      [:div
       [napit/uusi "Lisää uusi"
@@ -183,7 +181,7 @@
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
   [:div.ainevalinta-kentat
    (for [t (ainevalintalaatikot tyyppi aineet)]
-      (let [polun-avaimet [tyyppi (::pot2-domain/koodi t)]
+      (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
             {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
         ^{:key t}
         [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
@@ -206,20 +204,18 @@
 
 (defn- runko-side-ja-lisaaineet-voi-tallentaa?
   [{:keys [runkoaineet sideaineet lisaaineet] :as lomake}]
-  ;; TODO: jos toteutus osoittautuu hyväksi, tähän voi implementoida runkoaineiden,
-  ;; sideaineiden ja lisäaineiden osalta validoinnin. Kannattaa käyttää siihen jotenkin hyväksi
+  ;; TODO: jos ja kun toteutus osoittautuu lopulta hyväksi, tähän voi implementoida runkoaineiden,
+  ;; sideaineiden ja lisäaineiden osalta validoinnin. Toistaiseksi ei käytetä aikaa. Kannattaa käyttää siihen jotenkin hyväksi
   ;; olemassaolevien kenttien määrityksiä, esim mikä kenttä on pakollinen jne.
   true)
 
-(defn massa-lomake [e! {:keys [massa lomake materiaalikoodistot] :as app}]
+(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
-        massa (:massa app)
-        lomake (:pot2-massa-lomake app)
-        _ (js/console.log "massa-lomake :: lomake " (pr-str lomake))]
+        _ (js/console.log "massa-pot2-massa-lomake :: pot2-massa-lomake " (pr-str pot2-massa-lomake))]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
-       :otsikko (if (:pot2-massa/id massa)
+       :otsikko (if (:pot2-massa/id pot2-massa-lomake)
                   "Muokkaa massaa"
                   "Uusi massa")
        :footer-fn (fn [data]
@@ -288,17 +284,14 @@
 
 
 
-       {:nimi :runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti
-        :palstoja 2
+       {:nimi ::pot2-domain/runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :runkoaineet runkoainetyypit])}
-       {:nimi :sideaineet :otsikko "Sideaineet" :tyyppi :komponentti
-        :palstoja 2
+       {:nimi ::pot2-domain/sideaineet :otsikko "Sideaineet" :tyyppi :komponentti :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideainetyypit])}
-       {:nimi :lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti
-        :palstoja 2
+       {:nimi ::pot2-domain/lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]
 
-      lomake]
+      pot2-massa-lomake]
      [debug app {:otsikko "TUCK STATE"}]]))
 
 (defn- massan-runkoaineet
@@ -336,7 +329,7 @@
   [:span
    (for [aine (reverse
                 (sort-by :lisaaine/pitoisuus
-                         (:harja.domain.pot2/lisa-aineet rivi)))]
+                         (:harja.domain.pot2/lisaaineet rivi)))]
      ^{:key (:lisaaine/id aine)}
      [:span
       [:div
@@ -346,7 +339,7 @@
 (defn- massan-toiminnot [e! rivi]
   [:span.pull-right
    [napit/nappi ""
-    #(log "pen painettu")
+    #(e! (tiedot-massa/->MuokkaaMassaa rivi))
     {:ikoninappi? true :luokka "klikattava"
      :ikoni (ikonit/livicon-pen)}]
    [napit/nappi ""
@@ -361,6 +354,7 @@
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
+    :rivi-klikattu #(e! (tiedot-massa/->MuokkaaMassaa %))
     :voi-lisata? false
     :voi-kumota? false
     :voi-poistaa? (constantly false)
@@ -379,10 +373,10 @@
     {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
      :komponentti (fn [rivi]
                     [massan-sideaineet rivi (:sideainetyypit materiaalikoodistot)])}
-    {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisa-aineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 4
+    {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisaaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
-    {:otsikko "Toiminnot" :nimi ::pot2-domain/lisa-aineet :fmt #(or % "-") :tyyppi :komponentti :leveys 3
+    {:otsikko "Toiminnot" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [massan-toiminnot e! rivi])}]
    massat])
