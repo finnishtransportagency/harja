@@ -163,7 +163,14 @@
     (.executeUpdate ps)))
 
 (defn- tapa-backend-kannasta [ps kanta]
-  (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()")))
+  (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
+    (if (.next rs)
+      (let [tulos (.getObject rs 1)]
+        (when-not (and (instance? Boolean
+                                  tulos)
+                       (= "true" (.toString tulos)))
+          (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
+      #_(throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään")))))
 
 (defn- luo-kannat-uudelleen []
   (alter-var-root #'db (fn [_]
@@ -248,7 +255,8 @@
                                                                 (with-open [c (jdbc/get-connection db)
                                                                             ps (.createStatement c)]
                                                                   (.executeUpdate ps (str "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" db-name "'"))
-                                                                  (with-open [rs (tapa-backend-kannasta ps db-name)]
+                                                                  (tapa-backend-kannasta ps db-name)
+                                                                  #_(with-open [rs (tapa-backend-kannasta ps db-name)]
                                                                     (if (.next rs)
                                                                       (let [tulos (.getObject rs 1)]
                                                                         (when-not (and (instance? Boolean

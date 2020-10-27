@@ -14,7 +14,7 @@ CREATE TABLE tapahtuman_tiedot (
 
 CREATE OR REPLACE FUNCTION esta_nimen_ja_kanavan_paivitys() RETURNS trigger AS $$
 BEGIN
-  IF (NEW.nimi != OLD.nimi AND NEW.kanava != OLD.kanava)
+  IF (NEW.nimi != OLD.nimi OR NEW.kanava != OLD.kanava)
   THEN
     RETURN NULL;
   ELSE

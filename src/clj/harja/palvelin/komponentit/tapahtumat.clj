@@ -160,7 +160,7 @@
                   (async/put! kuuntelu-aloitettu-kuittaus true)
                   [possukanava paluuarvo]))))))
 
-(def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
+#_(def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
                             .getMethods
                             (filter #(and (= (.getName %) "getNotifications")
                                           (= 0 (count (.getParameters %)))))
@@ -188,48 +188,104 @@
 
 (defn pura-tapahtuma-loopin-ajot! [db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat]
   #_(println "--- pura-tapahtuma-loopin-ajot! 1 ----")
-  (let [ajot (loop [ajo (async/poll! tapahtuma-loopin-ajot)
-                    ajot []]
-               (if (nil? ajo)
-                 ajot
-                 (recur (async/poll! tapahtuma-loopin-ajot)
-                        (conj ajot ajo))))
-        ajojen-lkm (volatile! 0)]
-    #_(println (str "---> ajot: " ajot))
-    (doseq [{:keys [f tunnistin ryhmatunnistin yhta-aikaa? lkm]} ajot]
-      (cond
-        (not (and f tunnistin)) (log/error (str "Tapahtuma looppiin annettu käsky ilman tunnistinta tai funktiota. Tunnistin: " tunnistin " funktio: " f))
-        (and yhta-aikaa?
-             (-> @yhta-aikaa-ajettavat (get ryhmatunnistin) count (= (inc lkm))))
-        (jdbc/with-db-transaction [db db]
-                                  (doseq [{:keys [f tunnistin]} (get @yhta-aikaa-ajettavat ryhmatunnistin)]
-                                    (let [paluuarvo (f db)]
-                                      (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
-                                                                      ::paluuarvo paluuarvo})
-                                      (vswap! ajojen-lkm inc)))
-                                  (let [paluuarvo (f db)]
-                                    (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
-                                                                    ::paluuarvo paluuarvo})
-                                    (vswap! ajojen-lkm inc)
-                                    (swap! yhta-aikaa-ajettavat dissoc ryhmatunnistin)))
-        yhta-aikaa?
-        (swap! yhta-aikaa-ajettavat update ryhmatunnistin conj {:f f :tunnistin tunnistin})
-        :else
-        (when f
-          (let [paluuarvo (f db)]
-            (when tunnistin
-              (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
-                                              ::paluuarvo paluuarvo}))
-            (vswap! ajojen-lkm inc))
-          #_(when tunnistin
-            (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin})))))
-    #_(println "---> ajojen-lkm! " @ajojen-lkm)
-    (async/<!! (async/go-loop [kuittaukset []]
-                 (when-not (= @ajojen-lkm (count kuittaukset))
-                   (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
-                     (println "--- pura-tapahtuma-loopin-ajot! 2 ----")
-                     (println (str "---> kuittaukset: " (conj kuittaukset kuittaus)))
-                     (recur (conj kuittaukset kuittaus))))))))
+  (try (let [ajot (loop [ajo (async/poll! tapahtuma-loopin-ajot)
+                         ajot []]
+                    (if (nil? ajo)
+                      ajot
+                      (recur (async/poll! tapahtuma-loopin-ajot)
+                             (conj ajot ajo))))
+             ajojen-lkm (volatile! 0)]
+         #_(println (str "---> ajot: " ajot))
+         (doseq [{:keys [f tunnistin ryhmatunnistin yhta-aikaa? lkm]} ajot]
+           (cond
+             (not (and f tunnistin)) (log/error (str "Tapahtuma looppiin annettu käsky ilman tunnistinta tai funktiota. Tunnistin: " tunnistin " funktio: " f))
+             (and yhta-aikaa?
+                  (-> @yhta-aikaa-ajettavat (get ryhmatunnistin) count (= (inc lkm))))
+             (jdbc/with-db-transaction [db db]
+                                       (doseq [{:keys [f tunnistin]} (get @yhta-aikaa-ajettavat ryhmatunnistin)]
+                                         (let [paluuarvo (f db)]
+                                           (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                                                           ::paluuarvo paluuarvo})
+                                           (vswap! ajojen-lkm inc)))
+                                       (let [paluuarvo (f db)]
+                                         (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                                                         ::paluuarvo paluuarvo})
+                                         (vswap! ajojen-lkm inc)
+                                         (swap! yhta-aikaa-ajettavat dissoc ryhmatunnistin)))
+             yhta-aikaa?
+             (swap! yhta-aikaa-ajettavat update ryhmatunnistin conj {:f f :tunnistin tunnistin})
+             :else
+             (when f
+               (let [paluuarvo (f db)]
+                 (when tunnistin
+                   (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                                   ::paluuarvo paluuarvo}))
+                 (vswap! ajojen-lkm inc))
+               #_(when tunnistin
+                   (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin})))))
+         #_(println "---> ajojen-lkm! " @ajojen-lkm)
+         (async/<!! (async/go-loop [kuittaukset []]
+                      (when-not (= @ajojen-lkm (count kuittaukset))
+                        (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
+                          (println "--- pura-tapahtuma-loopin-ajot! 2 ----")
+                          (println (str "---> kuittaukset: " (conj kuittaukset kuittaus)))
+                          (recur (conj kuittaukset kuittaus)))))))
+       (catch Throwable t
+         (log/error (str "Tapahtuma loopin ajot kaatui virheeseen: " (.getMessage t) "\nStack trace: " (.printStackTrace t))))))
+
+(defn- tapahtuma-loop-sisalto [{:keys [ajossa db connection tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus
+                                       kuuntelu-aloitettu yhta-aikaa-ajettavat kuuntelijat tarkkailu-kanava]}]
+  (pura-tapahtuma-loopin-ajot! db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat)
+  (println "1")
+  (let [tapahtumien-haku-onnistui? (try
+                                     (println "2")
+                                     (doseq [^PGNotification notification (seq (.getNotifications connection))]
+                                       (println "3")
+                                       (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
+                                             _ (println "4")
+                                             tapahtuman-nimi (.getName notification)
+                                             _ (println "5")
+                                             json-data (-> (q-tapahtumat/tapahtuman-arvot db {:idt #{tapahtumadatan-id}}) first :arvo)
+                                             _ (println "6")
+                                             data (transit/lue-transit-string json-data transit-read-handler)]
+                                         (println "7")
+                                         (when (tapahtuman-data-ok?! data tapahtuman-nimi)
+                                           (println "8")
+                                           (doseq [kasittelija (get @kuuntelijat tapahtuman-nimi)]
+                                             (println "--- kasittelija meta ---")
+                                             (println "---> meta: " (meta kasittelija))
+                                             ;; Käsittelijä ei sitten saa blockata
+                                             (kasittelija data))
+                                           (println "9")
+                                           (println {::tapahtuma tapahtuman-nimi ::data data})
+                                           (async/>!! tarkkailu-kanava {::tapahtuma tapahtuman-nimi ::data data})))
+                                       (println "10"))
+                                     (println "11")
+                                     true
+                                     (catch PSQLException e
+                                       (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
+                                       (log/error "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
+                                       false))]
+    (println "tapahtuman-haku-onnistui? " tapahtumien-haku-onnistui?)
+    (println "-- @ajossa " @ajossa)
+    (println "-- " (when @ajossa
+                    (not tapahtumien-haku-onnistui?)))
+    (when tapahtumien-haku-onnistui?
+      (async/<!! (async/timeout 100)))
+    (println "12")
+    (when @ajossa
+      (not tapahtumien-haku-onnistui?))))
+
+(defn- tarkkailija-kuuntelun-jalkeen [tyyppi kuuntelija-kanava broadcast tarkkailijat]
+  (fn [possu-kanava paluu-arvo]
+    (when-not (nil? paluu-arvo)
+      (case tyyppi
+        :perus nil
+        :viimeisin (async/put! kuuntelija-kanava {::data paluu-arvo})
+        :viimeisin-per-palvelin (doseq [[_ arvo] paluu-arvo]
+                                  (async/put! kuuntelija-kanava {::data arvo}))))
+    (async/sub broadcast possu-kanava kuuntelija-kanava)
+    (swap! tarkkailijat update possu-kanava conj kuuntelija-kanava)))
 
 (defprotocol Kuuntele
   (kuuntele! [this tapahtuma callback])
@@ -286,34 +342,14 @@
                                                                              (kuuntelu-fn kanava connection))
                                                                            (reset! tapahtuma-loop-kaynnissa? true))
                                                                          (println "Kaikkea pitäs taasen kuunnella..")
-                                                                         (loop [virhe? false]
-                                                                           (if (or virhe?
-                                                                                   (not @ajossa))
-                                                                             virhe?
-                                                                             (do
-                                                                               (pura-tapahtuma-loopin-ajot! db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat)
-                                                                               (let [tapahtumien-haku-onnistui? (try
-                                                                                                                  (doseq [^PGNotification notification (seq (.getNotifications connection))]
-                                                                                                                    (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
-                                                                                                                          tapahtuman-nimi (.getName notification)
-                                                                                                                          json-data (-> (q-tapahtumat/tapahtuman-arvot db {:idt #{tapahtumadatan-id}}) first :arvo)
-                                                                                                                          data (transit/lue-transit-string json-data transit-read-handler)]
-                                                                                                                      (when (tapahtuman-data-ok?! data tapahtuman-nimi)
-                                                                                                                        (doseq [kasittelija (get @kuuntelijat tapahtuman-nimi)]
-                                                                                                                          (println "--- kasittelija meta ---")
-                                                                                                                          (println "---> meta: " (meta kasittelija))
-                                                                                                                          ;; Käsittelijä ei sitten saa blockata
-                                                                                                                          (kasittelija data))
-                                                                                                                        (async/put! tarkkailu-kanava {::tapahtuma tapahtuman-nimi ::data data}))))
-                                                                                                                  true
-                                                                                                                  (catch PSQLException e
-                                                                                                                    (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
-                                                                                                                    (log/error "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
-                                                                                                                    false))]
-                                                                                 (when tapahtumien-haku-onnistui?
-                                                                                   (Thread/sleep 100))
-                                                                                 (when @ajossa
-                                                                                   (recur (not tapahtumien-haku-onnistui?)))))))))
+                                                                         (loop []
+                                                                           (if (or (not @ajossa)
+                                                                                   (tapahtuma-loop-sisalto {:ajossa ajossa :db db :connection connection :tapahtuma-loopin-ajot tapahtuma-loopin-ajot
+                                                                                                            :kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
+                                                                                                            :kuuntelu-aloitettu kuuntelu-aloitettu :yhta-aikaa-ajettavat yhta-aikaa-ajettavat
+                                                                                                            :kuuntelijat kuuntelijat :tarkkailu-kanava tarkkailu-kanava}))
+                                                                             true
+                                                                             (recur)))))
                                               (catch Throwable t
                                                 (log/error "Tapahtuma loop kaatui: " (.getMessage t) ".\nStack: " (.printStackTrace t))
                                                 true))]
@@ -399,15 +435,7 @@
                                                   (fn [t]
                                                     (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
                     tapahtuma (tapahtuman-nimi tapahtuma)
-                    kuuntelun-jalkeen (fn [possu-kanava paluu-arvo]
-                                        (when-not (nil? paluu-arvo)
-                                          (case tyyppi
-                                            :perus nil
-                                            :viimeisin (async/put! kuuntelija-kanava {::data paluu-arvo})
-                                            :viimeisin-per-palvelin (doseq [[_ arvo] paluu-arvo]
-                                                                      (async/put! kuuntelija-kanava {::data arvo}))))
-                                        (async/sub (::broadcast this) possu-kanava kuuntelija-kanava)
-                                        (swap! (:tarkkailijat this) update possu-kanava conj kuuntelija-kanava))
+                    kuuntelun-jalkeen (tarkkailija-kuuntelun-jalkeen tyyppi kuuntelija-kanava (::broadcast this) (:tarkkailijat this))
                     kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
                                                                         :kuuntelu-aloitettu-broadcast (::kuuntelu-aloitettu-broadcast this)
                                                                         :tapahtuma-loopin-ajot (::tapahtuma-loopin-ajot this)

@@ -6,10 +6,12 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [clojure.test :as t :refer [deftest is use-fixtures testing]]
+            [clojure.test :as t :refer [deftest is use-fixtures compose-fixtures testing]]
             [clojure.core.async :as async]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.string :as clj-str])
   (:import (java.util.concurrent TimeoutException)
+           (java.util UUID)
            (clojure.lang ArityException)))
 
 (def toinen-harja-tarkkailija nil)
@@ -31,6 +33,7 @@
     :nimi nimi))
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root #'harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-a"))
   (alter-var-root #'jarjestelma luo-jarjestelma)
 
@@ -231,14 +234,111 @@
                  {:palvelin (:nimi toinen-harja-tarkkailija)
                   :payload a-payload})
               "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")))))
+  (testing "viimeisin-per-palvelin tapahtuma toimii"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          toinen-tapahtumat-k (:klusterin-tapahtumat toinen-harja-tarkkailija)
+          a-payload-palvelin-1 42
+          a-payload-palvelin-2 1337
+          _ (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a a-payload-palvelin-1 (:nimi harja-tarkkailija))
+          _ (tapahtumat/julkaise! toinen-tapahtumat-k :tapahtuma-a a-payload-palvelin-2 (:nimi toinen-harja-tarkkailija))
+          tarkkailija (async/<!! (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin-per-palvelin))
+          paluuarvo-palvelin-1 {:palvelin (:nimi harja-tarkkailija)
+                                :payload a-payload-palvelin-1}
+          paluuarvo-palvelin-2 {:palvelin (:nimi toinen-harja-tarkkailija)
+                                :payload a-payload-palvelin-2}]
+      (is (let [paluuarvo (<!!-timeout tarkkailija 1000)]
+            (or (= paluuarvo paluuarvo-palvelin-1)
+                (= paluuarvo paluuarvo-palvelin-2)))
+          "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
+           Järjestystä ei ole fixattu")
+      (is (let [paluuarvo (<!!-timeout tarkkailija 1000)]
+            (or (= paluuarvo paluuarvo-palvelin-1)
+                (= paluuarvo paluuarvo-palvelin-2)))
+          "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
+           Järjestystä ei ole fixattu")))
 
   (try (alter-var-root #'toinen-jarjestelma component/stop)
        (catch Exception e (println "saatiin poikkeus toisen komponentin sammutuksessa: " e)))
   (try (alter-var-root #'toinen-harja-tarkkailija component/stop)
        (catch Exception e (println "saatiin poikkeus toisen harja-tarkkailija systeemin sammutuksessa: " e))))
 
-;(deftest yhta-aikaa-julkaisu-toimii)
+(deftest possukanavien-luonti
+  (let [uusi-tapahtuma "foo"
+        uusikanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) uusi-tapahtuma)]
+    (testing "Possukanavan luonti"
+      (let [toinen-tapahtuma "bar"
+            toinen-kanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) toinen-tapahtuma)]
+        (is (uuid? (UUID/fromString (-> uusikanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))
+            "Possukanavan pitäisi olla modifioitu versio UUID:stä")
+        (is (uuid? (UUID/fromString (-> toinen-kanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))
+            "Possukanavan pitäisi olla modifioitu versio UUID:stä")
+        (is (not= uusikanava toinen-kanava)
+            "Possukanavien nimet pitäisi olla uniikkeja!")
+        (is (= uusikanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) uusi-tapahtuma))
+            "Samalla tapahtumalla pitäisi palautua sama possukanava")))
+    (testing "Kannassa olevaa possukanavaa ei voi muokata"
+      (let [primary-key uusikanava]
+        (u "UPDATE tapahtuma SET kanava='foobar' WHERE kanava='" primary-key "'")
+        (u "UPDATE tapahtuma SET nimi='foobar' WHERE kanava='" primary-key "'")
+        (let [muokkauksen-jalkeen (first (q-map "SELECT nimi, kanava FROM tapahtuma WHERE kanava='" primary-key "'"))]
+          (is (= uusi-tapahtuma (:nimi muokkauksen-jalkeen))
+              "Olemassa olevan tapahtuman nimeä ei saisi muuttaa")
+          (is (= uusikanava (:kanava muokkauksen-jalkeen))
+              "Olemassa olevan tapahtuman kanavaa ei saisi muuttaa"))))))
 
-;(deftest possukanavien-luonti)
-
-;(deftest hashaus-onnistuu)
+(deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
+  (let [aja-loop (async/chan)
+        loop-ajettu (async/chan)
+        tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
+    (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
+                                                         (async/<!! aja-loop)
+                                                      (let [paluuarvo (apply tapahtuma-loop-sisalto-original args)]
+                                                        (async/put! loop-ajettu true)
+                                                        paluuarvo))]
+      (testing "Viimeisin tarkkailija saa kaikki tapahtumat kakutustapahtuman jälkeen"
+        (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+              kakutuskeskustelukanava (async/chan)
+              tarkkailija-kuuntelun-jalkeen-original @#'tapahtumat/tarkkailija-kuuntelun-jalkeen
+              _ (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))]
+          (with-redefs [tapahtumat/tarkkailija-kuuntelun-jalkeen (fn [& args]
+                                                                      (let [original-fn (apply tarkkailija-kuuntelun-jalkeen-original args)]
+                                                                        (fn [& args-sisa]
+                                                                          (println "Ajetaan tarkkailun jälkeinen fn")
+                                                                          (apply original-fn args-sisa)
+                                                                          (println "nnetaan kakutus-tehty")
+                                                                          (async/>!! kakutuskeskustelukanava :kakutus-tehty)
+                                                                          (async/<!! kakutuskeskustelukanava))))]
+            (let [tarkkailija (tapahtumat/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin)]
+              (is (not (nil? (<!!-timeout (async/go-loop []
+                                            (async/offer! aja-loop true)
+                                            (if-let [tila (async/poll! kakutuskeskustelukanava)]
+                                              tila
+                                              (do (async/poll! loop-ajettu)
+                                                  (recur))))
+                                          2000))))
+              (loop [i 2]
+                (when-not (= i 10)
+                  (tapahtumat/julkaise! tapahtumat-k :tapahtuma-a {:a i} (:nimi harja-tarkkailija))
+                  (recur (inc i))))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu 200))
+                  "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
+              (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
+              (is (<!!-timeout loop-ajettu 200)
+                  "tapahtuma loop pitäsi nyt päästä loppuun")
+              (let [tarkkailija (<!!-timeout tarkkailija 200)]
+                (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
+                (loop [arvo (<!!-timeout tarkkailija 200)
+                       i 1]
+                  (cond
+                    (< i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
+                                              :payload {:a i}})
+                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
+                                 (recur (<!!-timeout tarkkailija 200)
+                                        (inc i)))
+                    (= i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
+                                             :payload {:a i}})
+                                    "Lähetetyt arvot pitäisi tulla järjestyksessä")
+                                (is (thrown? TimeoutException (<!!-timeout tarkkailija 200))
+                                    "Ei pitäisi olla enää tapahtumia")))))))))
+      (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista")
+      (testing "Tapahtumat tulee siinä järjestyksessä kuin ne on saapunut kantaan"))))
