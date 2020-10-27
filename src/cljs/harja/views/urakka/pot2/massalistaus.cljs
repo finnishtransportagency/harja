@@ -311,9 +311,11 @@
    [:span
     [:div
      (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
-          (when (:runkoaine/esiintyma aine)
-            (str " (" (:runkoaine/esiintyma aine) ")")))
-   [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]
+          (if (:runkoaine/esiintyma aine)
+            (yleiset/str-suluissa-opt (:runkoaine/esiintyma aine))
+            (when (= 7 (:runkoaine/tyyppi aine))
+              (yleiset/str-suluissa-opt (:runkoaine/kuvaus aine)))))
+     [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]
     (when (:runkoaine/kuulamyllyarvo aine)
       [:div "-kuulamyllyarvo " (:runkoaine/kuulamyllyarvo aine)])
     (when (:runkoaine/litteysluku aine)

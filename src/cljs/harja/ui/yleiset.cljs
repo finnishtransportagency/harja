@@ -696,3 +696,7 @@ jatkon."
               (map
                 #(str/trim %)
                 (str/split osoitteet #",")))))
+
+(defn str-suluissa-opt [s]
+  (when s
+    (str " (" s ")")))

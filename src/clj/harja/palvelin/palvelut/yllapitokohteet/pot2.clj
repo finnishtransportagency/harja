@@ -58,7 +58,7 @@
                  ::pot2-domain/dop-nro
                  [::pot2-domain/runkoaineet
                   #{:runkoaine/id
-                    :runkoaine/pot2-massa-id
+                    :pot2-massa/id
                     :runkoaine/tyyppi
                     :runkoaine/fillerityyppi
                     :runkoaine/esiintyma
@@ -71,19 +71,19 @@
         massat (map #(assoc % ::pot2-domain/sideaineet (fetch db
                                                               ::pot2-domain/pot2-massa-sideaine
                                                               #{:sideaine/id
-                                                                :sideaine/pot2-massa-id
+                                                                :pot2-massa/id
                                                                 :sideaine/tyyppi
                                                                 :sideaine/pitoisuus
                                                                 :sideaine/lopputuote?}
-                                                              {:sideaine/pot2-massa-id (:pot2-massa/id %)}))
+                                                              {:pot2-massa/id (:pot2-massa/id %)}))
                     massat)
         massat (map #(assoc % ::pot2-domain/lisa-aineet (fetch db
                                                               ::pot2-domain/pot2-massa-lisaaine
                                                               #{:lisaaine/id
-                                                                :lisaaine/pot2-massa-id
+                                                                :pot2-massa/id
                                                                 :lisaaine/tyyppi
                                                                 :lisaaine/pitoisuus}
-                                                              {:lisaaine/pot2-massa-id (:pot2-massa/id %)}))
+                                                              {:pot2-massa/id (:pot2-massa/id %)}))
                     massat)
         _ (println "hae-urakan-pot2-massat :: massat" (pr-str massat) )]
     massat))
@@ -118,7 +118,7 @@
                                  (merge
                                    {:pot2-massa/id massa-id
                                     :runkoaine/tyyppi ra-tyyppi
-                                    :runkoaine/esiintyma (:esiintyma r)
+                                    :runkoaine/esiintymamassaprosentti (:esiintyma r)
                                     :runkoaine/kuulamyllyarvo (when (:kuulamyllyarvo r)
                                                                 (bigdec (:kuulamyllyarvo r)))
                                     :runkoaine/litteysluku (when (:litteysluku r)
@@ -126,6 +126,8 @@
                                     :runkoaine/massaprosentti (when (:massaprosentti r)
                                                                 (bigdec (:massaprosentti r)))
                                     :runkoaine/fillerityyppi (:fillerityyppi r)}
+                                   (when (:kuvaus r)
+                                     {:runkoaine/kuvaus (:kuvaus r)})
                                    (when runkoaine-id
                                      {:runkoaine/id runkoaine-id})))
                         ;; jos valittu? = false, kyseessä voi olla olemassaolevan runkoainetyypin poistaminen
