@@ -118,7 +118,7 @@
                                  (merge
                                    {:pot2-massa/id massa-id
                                     :runkoaine/tyyppi ra-tyyppi
-                                    :runkoaine/esiintymamassaprosentti (:esiintyma r)
+                                    :runkoaine/esiintyma (:esiintyma r)
                                     :runkoaine/kuulamyllyarvo (when (:kuulamyllyarvo r)
                                                                 (bigdec (:kuulamyllyarvo r)))
                                     :runkoaine/litteysluku (when (:litteysluku r)
