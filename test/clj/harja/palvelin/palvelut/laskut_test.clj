@@ -202,11 +202,12 @@
     (is (= (:id poistettu-lasku) tallennettu-id) "Laskun poistaminen palauttaa poistetun laskun (poistettu-lasku)")
     (is (empty? poistetun-laskun-haku) "Poistettua laskua ei palaudu (poistetun-laskun-haku).")))
 
-(deftest tallenna-lasku-validaatio-petar-testi
-  (let [tallennettu-lasku
+(deftest tallenna-lasku-erapaiva-validointi-petar-testi
+  (let [uusi-lasku-vaara-erapaiva (assoc uusi-lasku :erapaiva #inst "1921-12-15T21:00:00.000-00:00")
+        tallennettu-lasku
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely uusi-lasku})]
+                              :laskuerittely uusi-lasku-vaara-erapaiva})]
 
     ;; Tallennus
     (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")))
