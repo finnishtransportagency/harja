@@ -388,6 +388,42 @@ WHERE yllapitokohde IN (:idt)
       AND ypko.poistettu IS NOT TRUE
       AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti);
 
+-- name: hae-paikkauskohteen-paikkaukset-alueelle
+SELECT p."paikkauskohde-id"                 AS "yllapitokohde-id",
+       p.alkuaika,
+       p.loppuaika,
+       (p.tierekisteriosoite).tie           AS "tr-numero",
+       (p.tierekisteriosoite).aosa          AS "tr-alkuosa",
+       (p.tierekisteriosoite).aet           AS "tr-alkuetaisyys",
+       (p.tierekisteriosoite).losa          AS "tr-loppuosa",
+       (p.tierekisteriosoite).let           AS "tr-loppuetaisyys",
+       ST_Simplify(p.sijainti, :toleranssi) AS sijainti,
+       pt.ajorata                           AS "tr-ajorata"
+  FROM  paikkaus p
+            LEFT JOIN paikkauksen_tienkohta pt ON p.id = pt."paikkaus-id"
+ WHERE "paikkauskohde-id" IN (:idt)
+   AND p.alkuaika BETWEEN :alkupvm AND :loppupvm
+   AND p.poistettu IS NOT TRUE
+   AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), p.sijainti);
+
+-- name: hae-paikkauskohteen-paikkaukset
+SELECT p."paikkauskohde-id"                 AS "yllapitokohde-id",
+       p.alkuaika,
+       p.loppuaika,
+       (p.tierekisteriosoite).tie                         AS "tr-numero",
+       (p.tierekisteriosoite).aosa                        AS "tr-alkuosa",
+       (p.tierekisteriosoite).aet                   AS "tr-alkuetaisyys",
+       (p.tierekisteriosoite).losa                       AS "tr-loppuosa",
+       (p.tierekisteriosoite).let                  AS "tr-loppuetaisyys",
+       p.sijainti,
+       pt.ajorata                        AS "tr-ajorata"
+  FROM  paikkaus p
+            LEFT JOIN paikkauksen_tienkohta pt ON p.id = pt."paikkaus-id"
+ WHERE "paikkauskohde-id" IN (:idt)
+   AND p.alkuaika BETWEEN :alkupvm AND :loppupvm
+   AND p.poistettu IS NOT TRUE;
+
+
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,

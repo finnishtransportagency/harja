@@ -3,6 +3,7 @@
   color: @white;
   height: 40px;
   outline-style: solid;
+  border-style: solid;
 
   font-family: "Open Sans", sans-serif;
   font-style: normal;
@@ -40,6 +41,15 @@
   }
 }
 
+.outlinet-ja-borderit(@vari, @leveys, @offsetti) {
+  outline-color: @vari;
+  outline-width: @leveys;
+  outline-offset: @offsetti;
+
+  border-color: @vari;
+  border-width: @leveys;
+}
+
 /*--------------------------*\
 |       PRIMARY BUTTONS      |
 \*--------------------------*/
@@ -49,38 +59,28 @@
     &default {
       .yhteiset-arvot();
       background-color: @blue;
-      outline-color: @blue;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@blue, 1px, -1px);
 
       &:hover {
         .yhteiset-arvot();
         background-color: @blue-dark;
-        outline-color: @blue-dark;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
       }
       &:focus {
         .yhteiset-arvot();
         background-color: @blue-dark;
-        outline-color: @white;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@white, 2px, -2px);
         outline-style: dashed;
       }
       &:active {
         .yhteiset-arvot();
         background-color: @blue-darker;
-        outline-color: @blue-darker;
-        outline-width: 3px;
-        outline-offset: -3px;
+        .outlinet-ja-borderit(@blue-darker, 3px, -3px);
       }
       &:disabled {
         .yhteiset-arvot();
         background-color: @gray225;
-        outline-color: @gray225;
-        outline-width: 1px;
-        outline-offset: -1px;
+        .outlinet-ja-borderit(@gray225, 1px, -1px);
       }
     }
     &text {
@@ -110,37 +110,28 @@
     &default {
       .yhteiset-arvot();
       background-color: @green;
-      outline-color: @green;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@green, 1px, -1px);
+
       &:hover {
         .yhteiset-arvot();
         background-color: @green-dark;
-        outline-color: @green-dark;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@green-dark, 2px, -2px);
       }
       &:focus {
         .yhteiset-arvot();
         background-color: @green-dark;
-        outline-color: @white;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@white, 2px, -2px);
         outline-style: dashed;
       }
       &:active {
         .yhteiset-arvot();
         background-color: @green-darker;
-        outline-color: @green-darker;
-        outline-width: 3px; // TODO specissä 2. TARKASTA
-        outline-offset: -3px; // TODO specissä -2. TARKASTA
+        .outlinet-ja-borderit(@green-darker, 3px, -3px);  // TODO specissä 2 ja -2. TARKASTA
       }
       &:disabled {
         .yhteiset-arvot();
         background-color: @gray225;
-        outline-color: @gray225;
-        outline-width: 1px;
-        outline-offset: -1px;
+        .outlinet-ja-borderit(@gray225, 1px, -1px);
       }
     }
 
@@ -171,37 +162,27 @@
     &default {
       .yhteiset-arvot();
       background-color: @red;
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red, 1px, -1px);
       &:hover {
         .yhteiset-arvot();
         background-color: @red-dark;
-        outline-color: @red-dark;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@red-dark, 2px, -2px);
       }
       &:focus {
         .yhteiset-arvot();
         background-color: @red-dark;
-        outline-color: @white;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@white, 2px, -2px);
         outline-style: dashed;
       }
       &:active {
         .yhteiset-arvot();
         background-color: @red-darker;
-        outline-color: @red-darker;
-        outline-width: 3px; // TODO specissä 2. TARKASTA
-        outline-offset: -3px; // TODO specissä -2. TARKASTA
+        .outlinet-ja-borderit(@red-darker, 3px, -3px);  // TODO specissä 2 ja -2. TARKASTA
       }
       &:disabled {
         .yhteiset-arvot();
         background-color: @gray225;
-        outline-color: @gray225;
-        outline-width: 1px;
-        outline-offset: -1px;
+        .outlinet-ja-borderit(@gray225, 1px, -1px);
       }
     }
 
@@ -240,42 +221,32 @@
       .yhteiset-arvot();
       color: @blue;
       background-color: @white-hack;
-      outline-color: @blue;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@blue, 1px, -1px);
 
       &:hover {
         .yhteiset-arvot();
         color: @blue-dark;
         background-color: @white-hack;
-        outline-color: @blue-dark;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
       }
       &:focus {
         .yhteiset-arvot();
         color: @blue-dark;
         background-color: @white-hack;
-        outline-color: @blue-dark;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
         outline-style: dashed;
       }
       &:active {
         .yhteiset-arvot();
         color: @blue-darker;
         background-color: @white-hack;
-        outline-color: @blue-darker;
-        outline-width: 3px;
-        outline-offset: -3px;
+        .outlinet-ja-borderit(@blue-darker, 3px, -3px);
       }
       &:disabled {
         .yhteiset-arvot();
         color: @gray200;
         background-color: @white-hack;
-        outline-color: @gray200;
-        outline-width: 1px;
-        outline-offset: -1px;
+        .outlinet-ja-borderit(@gray200, 1px, -1px);
       }
     }
     &text {
@@ -306,42 +277,32 @@
       .yhteiset-arvot();
       color: @blue;
       background-color: transparent;
-      outline-color: transparent;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(transparent, 1px, -1px);
 
       &:hover {
         .yhteiset-arvot();
         color: @blue-dark;
         background-color: @gray235;
-        outline-color: @gray235;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@gray235, 2px, -2px);
       }
       &:focus {
         .yhteiset-arvot();
         color: @blue-dark;
         background-color: @gray235;
-        outline-color: @blue-dark;
-        outline-width: 2px;
-        outline-offset: -2px;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
         outline-style: dashed;
       }
       &:active {
         .yhteiset-arvot();
         color: @blue-darker;
         background-color: @gray225;
-        outline-color: @gray225;
-        outline-width: 3px;
-        outline-offset: -3px;
+        .outlinet-ja-borderit(@gray225, 3px, -3px);
       }
       &:disabled {
         .yhteiset-arvot();
         color: @gray200;
         background-color: transparent;
-        outline-color: transparent;
-        outline-width: 1px;
-        outline-offset: -1px;
+        .outlinet-ja-borderit(transparent, 1px, -1px);
       }
     }
   }

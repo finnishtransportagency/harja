@@ -98,10 +98,10 @@
                                                                             (.-offsetLeft @this-node)))))]
     (r/create-class
       {:display-name "Muokkauselementin-tila"
-       :component-will-mount (fn [this]
-                               (add-watch arvo-atom seuranta-avain
-                                          (fn [_ _ _ uusi-arvo]
-                                            (@grid-tilan-muokkaus-fn uusi-arvo))))
+       :UNSAFE_component-will-mount (fn [this]
+                                      (add-watch arvo-atom seuranta-avain
+                                                 (fn [_ _ _ uusi-arvo]
+                                                   (@grid-tilan-muokkaus-fn uusi-arvo))))
        :component-did-mount (fn [this]
                               (reset! this-node (r/dom-node this))
                               (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
@@ -109,31 +109,31 @@
        :component-will-unmount (fn [& _]
                                  (.removeEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
                                  (remove-watch arvo-atom seuranta-avain))
-       :component-will-receive-props (fn [this new-argv]
-                                       (let [[_ {vanha-valinta-arvo :valinta-arvo}
-                                              {vanha-skeema :skeema vanha-rivi :rivi} _ _] (r/argv this)
-                                             {:keys [aseta nimi valinta-arvo hae kentta-arity-3?]} (nth new-argv 1)
-                                             {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset rivi skeema id]} (nth new-argv 2)
-                                             hae-fn (or hae #(get % nimi))]
-                                         (when (and (not kentta-arity-3?)
-                                                    (not= (hae-fn rivi) (hae-fn vanha-rivi)))
-                                           (reset! arvo-atom (hae-fn rivi)))
-                                         (when (not= skeema vanha-skeema)
-                                           (reset! grid-tilan-muokkaus-fn
-                                                   (fn [uusi]
-                                                     (if aseta
-                                                       (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
-                                                                 id (fn [rivi]
-                                                                      (aseta rivi uusi)))
-                                                       (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
-                                                                 id assoc nimi uusi)))))
-                                         (when (not= valinta-arvo vanha-valinta-arvo)
-                                           (reset! data-muokkaus-fn
-                                                   (fn [uusi]
-                                                     (let [uusi (if valinta-arvo
-                                                                  (valinta-arvo uusi)
-                                                                  uusi)]
-                                                       (@grid-tilan-muokkaus-fn uusi)))))))
+       :UNSAFE_component-will-receive-props (fn [this new-argv]
+                                              (let [[_ {vanha-valinta-arvo :valinta-arvo}
+                                                     {vanha-skeema :skeema vanha-rivi :rivi} _ _] (r/argv this)
+                                                    {:keys [aseta nimi valinta-arvo hae kentta-arity-3?]} (nth new-argv 1)
+                                                    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset rivi skeema id]} (nth new-argv 2)
+                                                    hae-fn (or hae #(get % nimi))]
+                                                (when (and (not kentta-arity-3?)
+                                                           (not= (hae-fn rivi) (hae-fn vanha-rivi)))
+                                                  (reset! arvo-atom (hae-fn rivi)))
+                                                (when (not= skeema vanha-skeema)
+                                                  (reset! grid-tilan-muokkaus-fn
+                                                          (fn [uusi]
+                                                            (if aseta
+                                                              (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
+                                                                        id (fn [rivi]
+                                                                             (aseta rivi uusi)))
+                                                              (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
+                                                                        id assoc nimi uusi)))))
+                                                (when (not= valinta-arvo vanha-valinta-arvo)
+                                                  (reset! data-muokkaus-fn
+                                                          (fn [uusi]
+                                                            (let [uusi (if valinta-arvo
+                                                                         (valinta-arvo uusi)
+                                                                         uusi)]
+                                                              (@grid-tilan-muokkaus-fn uusi)))))))
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa
                     komponentti hae kentta-arity-3? komponentti-args] :as sarake}
@@ -595,11 +595,11 @@
                              :tyhja-args tyhja-args}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))
-       :component-will-receive-props (fn [this new-argv]
-                                       (let [old-argv (r/argv this)]
-                                         (when (not= (nth new-argv 2)
-                                                     (nth old-argv 2))
-                                           (reset! ohjaus (ohjaus-fn muokatut virheet varoitukset huomautukset (nth new-argv 2))))))
+       :UNSAFE_component-will-receive-props (fn [this new-argv]
+                                              (let [old-argv (r/argv this)]
+                                                (when (not= (nth new-argv 2)
+                                                            (nth old-argv 2))
+                                                  (reset! ohjaus (ohjaus-fn muokatut virheet varoitukset huomautukset (nth new-argv 2))))))
        :component-did-mount (fn [this]
                               (when luomisen-jalkeen
                                 (luomisen-jalkeen @muokatut)))})))

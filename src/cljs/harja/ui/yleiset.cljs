@@ -163,53 +163,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
-(defn maarita-pudotusvalikon-suunta-ja-max-korkeus [pudotusvalikko-komponentti]
-  (let [ikkunan-reunaan-jaava-tyhja-tila 15
-        solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
-        etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan solmu)
-        etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan solmu)
-        etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan solmu)
-        suunta (if (< etaisyys-alareunaan 75)
-                 (if (< etaisyys-oikeaan-reunaan 75)
-                   :ylos-vasen
-                   :ylos-oikea)
-                 (if (< etaisyys-oikeaan-reunaan 75)
-                   :alas-vasen
-                   :alas-oikea))]
-    {:suunta      suunta
-     :max-korkeus (if (or (= suunta :alas-oikea) (= suunta :alas-vasen))
-                    (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila)
-                    (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila))}))
-
-(defn avautumissuunta-ja-korkeus-tyylit
-  [max-korkeus avautumissuunta]
-  (merge {:max-height (fmt/pikseleina max-korkeus)}
-         (when (= avautumissuunta :alas-vasen)
-           {:top    "calc(100% - 1px)"
-            :right  "0"
-            :bottom "auto"})
-         (when (= avautumissuunta :alas-oikea)
-           {:top    "calc(100% - 1px)"
-            :bottom "auto"})
-         (when (= avautumissuunta :ylos-vasen)
-           {:bottom "calc(100% - 1px)"
-            :right  "0"
-            :top    "auto"})
-         (when (= avautumissuunta :ylos-oikea)
-           {:bottom "calc(100% - 1px)"
-            :top    "auto"})))
+(def valinta-ul-max-korkeus-px "420px")
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn!]} _]
   (let [auki? (atom false)
-        avautumissuunta (atom :alas)
-        max-korkeus (atom 0)
-        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
-                                                  (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
-                                                    (reset! avautumissuunta (:suunta maaritys))
-                                                    (reset! max-korkeus (:max-korkeus maaritys))))
         lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot]
                      (let [disabled? (and disabled-vaihtoehdot
                                           (contains? disabled-vaihtoehdot vaihtoehto))]
@@ -282,11 +242,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                           "block"
                                                           "none")}
                                               (when skrollattava?
-                                                {:overflow   "scroll"
-                                                 :max-height "420px"}))}
+                                                {:overflow "scroll"
+                                                 :max-height valinta-ul-max-korkeus-px}))}
                                {:class "dropdown-menu livi-alasvetolista"
-                                :style (avautumissuunta-ja-korkeus-tyylit
-                                         @max-korkeus @avautumissuunta)})
+                                :style {:max-height valinta-ul-max-korkeus-px}})
                          (doall
                            (if ryhmissa?
                              (for [ryhma nayta-ryhmat]
@@ -304,12 +263,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                      (reset! auki? false)
                                      (when kiinni-fn! (kiinni-fn!)))
                                   klikattu-ulkopuolelle-params)
-      (komp/dom-kuuntelija js/window
-                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
-                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
-      {:component-did-mount
-       (fn [this]
-         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]

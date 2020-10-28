@@ -112,6 +112,8 @@
      :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
               {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
               {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+              {:otsikko "Tiedotettu HARJAan" :tyyppi :pvm-aika :nimi :valitetty}
+              {:otsikko "Tiedotettu urakkaan" :tyyppi :pvm-aika :nimi :valitetty-urakkaan}
               {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
               {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
               {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
@@ -275,6 +277,10 @@
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-aloitus]}
                         #(get-in % [:yllapitokohde paikkaus-aloitus]))})
+              (when (:loppuaika yllapitokohdeosa)
+                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm :nimi :loppuaika})
+              (when (:tr-ajorata yllapitokohdeosa)
+                {:otsikko "Ajorata" :tyyppi :string :nimi :tr-ajorata})
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
                 {:otsikko paikkaus-valmis-teksti :tyyppi :pvm
                  :hae (hakufunktio

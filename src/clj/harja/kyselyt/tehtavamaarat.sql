@@ -25,7 +25,8 @@ WHERE urakka = :urakka
   AND tehtava = :tehtava;
 
 -- name: tehtavaryhmat-ja-toimenpiteet-urakalle
-SELECT tpk3.id       as "toimenpide-id",
+SELECT distinct
+       tpk3.id       as "toimenpide-id",
        tpk3.nimi     as "toimenpide",
        tr3.nimi      as "tehtavaryhma-nimi",
        tr3.id        as "tehtavaryhma-id",
@@ -63,7 +64,9 @@ SELECT tr1.jarjestys           as "otsikon-jarjestys",
        tpk4.api_tunnus         as "API-tunnus",
        tpk4.poistettu          as "Poistettu",
        tpk4.piilota            as "Piilota", -- älä näytä riviä käyttäjälle
-       tpk4.ensisijainen       as "Ensisijainen"
+       tpk4.ensisijainen       as "Ensisijainen",
+       tpk4.voimassaolo_alkuvuosi          as "voimassaolo_alkuvuosi",
+       tpk4.voimassaolo_loppuvuosi          as "voimassaolo_loppuvuosi"
 FROM tehtavaryhma tr1
          JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
          JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
@@ -71,7 +74,11 @@ FROM tehtavaryhma tr1
                    ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                       tpk4.poistettu is not true AND tpk4.piilota is not true
          JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+         JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
+         JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
 WHERE tr1.emo is null
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-tehtavahierarkia-maarineen
@@ -95,31 +102,38 @@ SELECT ut.urakka                  as "urakka",
        tpk4.api_tunnus            as "API-tunnus",
        tpk4.poistettu             as "Poistettu",
        tpk4.piilota               as "Piilota", -- älä näytä riviä käyttäjälle
-       tpk4.ensisijainen          as "Ensisijainen"
+       tpk4.ensisijainen          as "Ensisijainen",
+       tpk4.voimassaolo_alkuvuosi          as "voimassaolo_alkuvuosi",
+       tpk4.voimassaolo_loppuvuosi          as "voimassaolo_loppuvuosi"
 FROM tehtavaryhma tr1
          JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
          JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
          LEFT JOIN toimenpidekoodi tpk4
                    ON tr3.id = tpk4.tehtavaryhma AND tpk4.taso = 4 AND tpk4.ensisijainen is true AND
-                      tpk4.poistettu is not true AND tpk4.piilota is not true AND tpk4.nimi NOT IN
+                      tpk4.poistettu is not true AND tpk4.piilota is not true AND (tpk4.yksiloiva_tunniste NOT IN
                                                                                   (
-                                                                                   'Äkillinen hoitotyö (talvihoito)',
-                                                                                   'Äkillinen hoitotyö (l.ymp.hoito)',
-                                                                                   'Äkillinen hoitotyö (soratiet)',
-                                                                                   'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
-                                                                                   'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
-                                                                                   'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)'
-                                                                                  )
+                                                                                   'd373c08b-32eb-4ac2-b817-04106b862fb1', --'Äkillinen hoitotyö (talvihoito)',
+                                                                                   '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974', --'Äkillinen hoitotyö (l.ymp.hoito)',
+                                                                                   '1f12fe16-375e-49bf-9a95-4560326ce6cf', --'Äkillinen hoitotyö (soratiet)',
+                                                                                   'b3a7a210-4ba6-4555-905c-fef7308dc5ec', --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
+                                                                                   '63a2585b-5597-43ea-945c-1b25b16a06e2', --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
+                                                                                   '49b7388b-419c-47fa-9b1b-3797f1fab21d'  --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)'
+                                                                                   -- ei ehkä samassa järjestyksessä, mutta nuo tehtävät
+                                                                                 ) or tpk4.yksiloiva_tunniste is null)
          JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
          LEFT OUTER JOIN urakka_tehtavamaara ut
-                         ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokausi
+                         ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" in (:hoitokausi)
          LEFT OUTER JOIN urakka u ON ut.urakka = u.id
 WHERE tr1.emo is null
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
+
 -- name: hae-validit-tehtava-idt
-SELECT id as "tehtava-id"
+SELECT id as "tehtava-id", yksikko as "yksikko"
 FROM toimenpidekoodi
 WHERE tehtavaryhma IS NOT NULL
+and yksikko is not null
   AND poistettu IS NOT TRUE
   AND piilota IS NOT TRUE;

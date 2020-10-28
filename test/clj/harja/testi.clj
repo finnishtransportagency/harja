@@ -845,6 +845,9 @@
   (ffirst (q (str "SELECT id        x
                    FROM   urakka
                    WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
+(defn hae-pudasjarven-alueurakan-paasopimuksen-id []
+  (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
+                           (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null)"))))
 
 (defn hae-oulun-alueurakan-2005-2010-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =

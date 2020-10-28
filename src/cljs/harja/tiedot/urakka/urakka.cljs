@@ -17,10 +17,10 @@
                                                                                                :laskutukseen-perustuen-valinta #{}}
                                                               :kopioidaan-tuleville-vuosille? true}})
 
-(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
-                                                                  :toimenpide     nil
-                                                                  :valitaso       nil
-                                                                  :noudetaan      0}}
+(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
+                                                                  :toimenpide      nil
+                                                                  :valitaso        nil
+                                                                  :noudetaan       0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
 
 (defn ei-pakollinen [v-fn]
@@ -59,7 +59,7 @@
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
-                  :kulut/koontilaskun-kuukausi [ei-nil]
+                  :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
                   :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
                   :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
                   :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]})
@@ -78,7 +78,10 @@
                                 (fn [vs]
                                   (update vs polku
                                           (fn [kentta]
-                                            (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
+                                            #_ (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi)
+                                                  "validi?" (pr-str (validointi (get-in lomake polku)))
+                                                  "get-in lomake polku" (pr-str (get-in lomake polku))
+                                                  "lomake: " (pr-str lomake))
                                             (assoc kentta
                                               :tarkistettu? true
                                               :validointi validointi

@@ -322,10 +322,11 @@
               lisaystoimenpiteiden-idt))
           varustetoteumat))
 
-(defn- validoi-tehtavat [db varustetoteumat]
+(defn- validoi-tehtavat [db urakka-id varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat])
       (get-in varustetoteuma [:varustetoteuma :toteuma :toteumatyyppi]))))
 
@@ -338,7 +339,7 @@
                " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (validoi-tehtavat db varustetoteumat)
+    (validoi-tehtavat db urakka-id varustetoteumat)
     (let [varustetoteumat (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
           lisaystoimenpiteiden-idt (laheta-kirjaus-tierekisteriin db tierekisteri otsikko varustetoteumat)]
       (tee-onnistunut-vastaus lisaystoimenpiteiden-idt))))

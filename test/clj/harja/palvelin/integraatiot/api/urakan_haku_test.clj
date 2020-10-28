@@ -60,7 +60,7 @@
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
       (is (some #{"Auraus ja sohjonpoisto"}
              (set (distinct (map (comp :selite :tehtava) kokonaishintaiset)))))
-      (is (= 43 (count yksikkohintaiset)))
+      (is (= 34 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia

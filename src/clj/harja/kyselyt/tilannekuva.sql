@@ -9,6 +9,7 @@ SELECT
   i.tunniste,
   i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -448,6 +449,19 @@ WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
       AND ypk.urakka IN (:urakat);
 
+-- name: hae-paikkauskohteet-tilannekuvaan
+SELECT
+    pk.id,
+    pk.nimi,
+    'paikkaus' AS yllapitokohdetyotyyppi,
+    o.nimi                                AS "urakoitsija",
+    u.nimi AS "urakka"
+  FROM paikkauskohde pk
+           LEFT JOIN urakka u ON pk."urakka-id" = u.id
+           LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = pk."urakka-id") = o.id
+ WHERE pk."urakka-id" IN (:urakat)
+   AND pk.poistettu IS NOT TRUE;
+
 -- name: hae-toteumat
 -- fetch-size: 64
 -- row-fn: muunna-reitti
@@ -654,8 +668,10 @@ FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
 WHERE hal.id IN (:hallintayksikot);
 
--- name: hae-valittujen-urakoiden-viimeisin-toteuma
+-- name: hae-viimeisin-toteuma
+-- VHAR-2590 urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
+-- Tilannekuva tsekkaa tämän nykyisellään kerran minuutissa, joten voidaan hakea uudet
+-- toteumat aina jos Harjaan on tullut uusi toteuma ed. tarkistuksen jälkeen. Se on
+-- pienempi paha kuin täysin jumiutuva max(id) kysely.
 -- single?: true
-SELECT max(id)
-  FROM toteuma
- WHERE urakka in (:urakat);
+SELECT max(id) FROM toteuma;

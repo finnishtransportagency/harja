@@ -33,7 +33,7 @@
                                                       :hallintayksikko hallintayksikko-id
                                                       :alku alkupvm
                                                       :loppu loppupvm
-                                                      :urakkatyyppi "hoito"})
+                                                      :urakkatyyppi #{"hoito" "teiden-hoito"}})
         urakat-aikavalin-sisalla (filter
                                    #(not (suolasakko-ei-osu-aikavalille? loppupvm %))
                                    urakat)

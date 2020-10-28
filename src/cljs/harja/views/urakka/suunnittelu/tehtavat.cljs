@@ -105,7 +105,9 @@
                                                                                       ""
                                                                                       maara))
                                                                             :class #{(sarakkeiden-leveys :maara-input) "input-default"}
-                                                                            :disabled? (nil? yksikko)
+                                                                            :disabled? (or (nil? yksikko)
+                                                                                           (= "" yksikko)
+                                                                                           (= "-" yksikko))
                                                                             :on-blur (fn [arvo]
                                                                                        (let [arvo (-> arvo (.. -target -value))]
                                                                                          (when (validi? arvo :numero)
@@ -194,45 +196,51 @@
 
         [:div.flex-row
          {:style {:justify-content "flex-start"
-                  :align-items "flex-end"}}
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Toimenpide"]
-          [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
-                                        :valitse-fn #(e! (t/->ValitseTaso % :toimenpide))
-                                        :format-fn  #(:nimi %)
-                                        :disabled   (disabloitu-alasveto? toimenpiteet)}
+                  :align-items     "flex-end"}}
+         [:div
+          {:style {:width        "840px"
+                   :margin-right "15px"}}
+          [:label.alasvedon-otsikko "Toimenpide"]
+          [yleiset/livi-pudotusvalikko {:valinta      (:toimenpide valinnat)
+                                        :valitse-fn   #(e! (t/->ValitseTaso % :toimenpide))
+                                        :format-fn    #(:nimi %)
+                                        :disabled     (disabloitu-alasveto? toimenpiteet)
+                                        :vayla-tyyli? true}
            toimenpiteet]]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Hoitokausi"]
-          [yleiset/livi-pudotusvalikko {:valinta    (:hoitokausi valinnat)
-                                        :valitse-fn #(e! (t/->HaeMaarat {:hoitokausi        %
-                                                                         :prosessori        (partial luo-tehtava-taulukko e!)
-                                                                         :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
-                                        :format-fn  #(str "1.10." % "-30.9." (inc %))
-                                        :disabled   (disabloitu-alasveto? hoitokaudet)}
+         [:div
+          {:style {:width        "220px"
+                   :margin-right "15px"}}
+          [:label.alasvedon-otsikko "Hoitokausi"]
+          [yleiset/livi-pudotusvalikko {:valinta      (:hoitokausi valinnat)
+                                        :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi        %
+                                                                           :prosessori        (partial luo-tehtava-taulukko e!)
+                                                                           :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
+                                        :format-fn    #(str "1.10." % "-30.9." (inc %))
+                                        :disabled     (disabloitu-alasveto? hoitokaudet)
+                                        :vayla-tyyli? true}
            hoitokaudet]]
          [:div
           [:input#kopioi-tuleville-vuosille.vayla-checkbox
            {:type      "checkbox"
-            :checked   (:samat-kaikille valinnat)
-            :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
+            :checked   (:samat-tuleville valinnat)
+            :on-change #(e! (t/->SamatTulevilleMoodi (not (:samat-tuleville valinnat))))
             :disabled  (:noudetaan valinnat)}]
           [:label
            {:for "kopioi-tuleville-vuosille"}
-           "Samat suunnitellut määrät kaikille hoitokausille"]]]))))
+           "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
 (defn tehtavat*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (t/->HaeTehtavatJaMaarat
-                            {:hoitokausi         (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
+                      (e! (t/->HaeTehtavat
+                            {:hoitokausi         :kaikki
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div#vayla
          ;[debug/debug app]
-         [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan jokaisen hoitovuoden alussa. Urakoitsijajärjestelmästä kertyy automaattisesti toteuneita määriä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
+         [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
          [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
          [valitaso-filtteri e! app]
          (if taulukon-tehtavat

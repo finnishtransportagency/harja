@@ -9,7 +9,8 @@
             [harja.kyselyt.tehtavamaarat :as q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.pvm :as pvm]))
 
 
 (defn hae-validit-tehtavat
@@ -25,14 +26,17 @@
   (into []
         (q/hae-hoitokauden-tehtavamaarat-urakassa db {:urakka     urakka-id
                                                       :hoitokausi hoitokauden-alkuvuosi})))
+
 (defn hae-tehtavahierarkia
   "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
-  [db user]
+  [db user {:keys [urakka-id]}]
   (into []
-        (q/hae-tehtavahierarkia db)))
+        (q/hae-tehtavahierarkia db {:urakka urakka-id})))
 
 (defn tehtavaryhmat-ja-toimenpiteet
   [db user {:keys [urakka-id]}]
+  (when (not urakka-id)
+    (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
   (into [] (q/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
 
 (defn- muodosta-hierarkia
@@ -74,16 +78,16 @@
                        :taso      4})
               (update :valitasot
                       conj
-                      {:id       valitaso-id
-                       :nimi     otsikko
-                       :taso     3}))
+                      {:id   valitaso-id
+                       :nimi otsikko
+                       :taso 3}))
           (rest loput)
           (first loput))))))
 
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
-  [db user]
-  (let [kannasta (into [] (q/hae-tehtavahierarkia db))
+  [db user {:keys [urakka-id]}]
+  (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
         {:keys [tehtavat valitasot toimenpiteet]} (muodosta-hierarkia kannasta)]
     (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct valitasot)))))
 
@@ -120,16 +124,36 @@
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                              :urakka                urakka
                              :piillotettu?          false}))))
-        ;; TODO: Muodosta tehtävätyyppinen rivi
+    ;; TODO: Muodosta tehtävätyyppinen rivi
     @tulos))
+
+(defn hae-tehtavahierarkia-koko-urakan-ajalle
+  "Haetaan kaikkien hoitokausien tehtävämäärät"
+  [db {:keys [urakka]}]
+  (let [urakkatiedot (first (urakat-q/hae-urakka db {:id urakka}))
+        alkuvuosi (-> urakkatiedot
+                      :alkupvm
+                      pvm/vuosi)
+        loppuvuosi (-> urakkatiedot
+                       :loppupvm
+                       pvm/vuosi)]
+    (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka
+                                          :hoitokausi (range alkuvuosi
+                                                             (inc loppuvuosi))})))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (when (or (nil? urakka-id)
+            (nil? hoitokauden-alkuvuosi))
+    (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
   (jarjesta-tehtavahierarkia
-    (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
-                                          :hoitokausi hoitokauden-alkuvuosi})))
+    (let [haettu (if (= :kaikki hoitokauden-alkuvuosi)
+                   (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
+                   (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
+                                                         :hoitokausi [hoitokauden-alkuvuosi]}))]
+      haettu)))
 
 (defn tallenna-tehtavamaarat
   "Luo tai päivittää urakan hoitokauden tehtävämäärät."
@@ -155,7 +179,9 @@
                                                      :kayttaja   (:id user)}]]
                                   ;; TODO: Kaikki feilaa jos yksi feilaa. Olisiko parempi tallentaa ne mitkä voidaan?
                                   (when (empty?
-                                          (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
+                                          (filter #(= (:tehtava-id tm)
+                                                      (:tehtava-id %))
+                                                  validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
 
                                   (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
@@ -166,7 +192,6 @@
                                     ;;  update
                                     (do
                                       (apply q/paivita-tehtavamaara! parametrit)))))))
-
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
@@ -176,12 +201,12 @@
     (doto (:http-palvelin this)
       (julkaise-palvelu
         :tehtavat
-        (fn [user]
-          (hae-tehtavat (:db this) user)))
+        (fn [user tiedot]
+          (hae-tehtavat (:db this) user tiedot)))
       (julkaise-palvelu
         :tehtavahierarkia
-        (fn [user]
-          (hae-tehtavahierarkia (:db this) user)))
+        (fn [user tiedot]
+          (hae-tehtavahierarkia (:db this) user tiedot)))
       (julkaise-palvelu
         :tehtavamaarat-hierarkiassa
         (fn [user tiedot]

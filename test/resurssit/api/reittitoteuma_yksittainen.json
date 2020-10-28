@@ -43,6 +43,15 @@
               "maara": 123
             }
           }
+        },
+        {
+          "tehtava": {
+            "id": 987654,
+            "maara": {
+              "yksikko": "kpl",
+              "maara": 1
+            }
+          }
         }
       ],
       "materiaalit": [
@@ -72,6 +81,11 @@
             {
               "tehtava": {
                 "id": 1363
+              }
+            },
+            {
+              "tehtava": {
+                "id": 987654
               }
             }
           ],
@@ -103,6 +117,15 @@
               "tehtava": {
                 "id": 1363
               }
+            },
+            {
+              "tehtava": {
+                "id": 987654,
+                "maara": {
+                  "yksikko": "kpl",
+                  "maara": 1
+                }
+              }
             }
           ],
           "materiaalit": [
@@ -132,6 +155,15 @@
             {
               "tehtava": {
                 "id": 1363
+              }
+            },
+            {
+              "tehtava": {
+                "id": 987654,
+                "maara": {
+                  "yksikko": "kpl",
+                  "maara": 4
+                }
               }
             }
           ],

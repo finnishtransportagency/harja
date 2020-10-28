@@ -77,8 +77,10 @@
    [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari
                            (raportti-domain/virhetyylit tyyli)
                            "black")}
-
-    (if fmt (fmt arvo) arvo)]])
+    ;; Try to fix VHAR-2391 replacing - with its unicode representation
+    (str/replace
+      (if fmt (fmt arvo) arvo)
+      "-" "\u002D")]])
 
 
 (def alareuna
@@ -123,6 +125,7 @@
     ;; Jos halutaan tukea erityyppisiä sarakkeita,
     ;; pitää tänne lisätä formatter.
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
+    :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
@@ -336,6 +339,7 @@
                                  sisalto))
                    #_[[:fo:block {:id "raportti-loppu"}]]))))
 
+(def aikajana-rivimaara 25)
 
 (defmethod muodosta-pdf :aikajana [[_ optiot rivit]]
   (let [rivit (map (fn [rivi]
@@ -352,19 +356,24 @@
                    rivit)
 
         orientaatio (or *orientaatio* :landscape) ;; Dynamic binding ei toimi jos aikajana upotetaan toiseen raporttiin
-        aikajana (aikajana/aikajana (merge {:leveys (case orientaatio
-                                                      :portrait 750
-                                                      :landscape 1000)}
-                                           optiot)
-                                    rivit)]
+        partitiot (partition aikajana-rivimaara aikajana-rivimaara nil rivit)
+        aikajanat (map (fn [rows]
+                         (aikajana/aikajana (merge {:leveys (case orientaatio
+                                                              :portrait 750
+                                                              :landscape 1000)}
+                                                   optiot)
+                                            rows))
+                       partitiot)]
     [:fo:block
-     (when aikajana
-       [:fo:instream-foreign-object {:content-width (case orientaatio
-                                                      :portrait "19cm"
-                                                      :landscape "27.5cm")
+     (when (not-empty aikajanat)
+       (for [aikajana aikajanat]
+         [:fo:block
+          [:fo:instream-foreign-object {:content-width (case orientaatio
+                                                         :portrait "19cm"
+                                                         :landscape "27.5cm")
 
-                                     :content-height (str (+ 5 (count rivit)) "cm")}
-        aikajana])]))
+                                        :content-height (str (+ 5 (count rivit)) "cm")}
+           aikajana]]))]))
 
 (defmethod muodosta-pdf :default [elementti]
   (log/debug "PDF-raportti ei tue elementtiä " elementti)

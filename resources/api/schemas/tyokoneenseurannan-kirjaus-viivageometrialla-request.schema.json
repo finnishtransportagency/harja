@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "havainnot": {
+      "id": "urn:harja/havainnot",
+      "type": "array",
+      "maxItems": 4096,
+      "required": true,
+      "items": {
+        "id": "http://example.com/item-schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "havainto": {
+            "id": "urn:harja/havainnot/0",
+            "type": "object",
+            "required": true,
+            "properties": {
+              "tyokone": {
+                "id": "urn:harja/havainnot/0/tyokone",
+                "type": "object",
+                "additionalProperties": false,
+                "required": true,
+                "properties": {
+                  "id": {
+                    "id": "urn:harja/havainnot/0/tyokone/id",
+                    "type": "integer",
+                    "required": true
+                  },
+                  "tunnus": {
+                    "id": "urn:harja/havainnot/0/tyokone/tunnus",
+                    "type": "string",
+                    "required": false
+                  },
+                  "tyokonetyyppi": {
+                    "id": "urn:harja/havainnot/0/tyokone/tyyppi",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              },
+              "sijainti": {
+                "id": "urn:harja/havainnot/0/sijainti",
+                "$ref": "file:resources/api/schemas/entities/geometria-viivasijainti.schema.json",
+                "required": true
+              },
+              "suunta": {
+                "id": "urn:harja/havainnot/0/suunta",
+                "type": "number"
+              },
+              "urakkaid": {
+                "id": "urn:harja/havainnot/0/urakkaid",
+                "type": "integer"
+              },
+              "havaintoaika": {
+                "id": "urn:harja/havainnot/0/havaintoaika",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
+              "suoritettavatTehtavat": {
+                "id": "urn:harja/havainnot/0/tyokonetehtava",
+                "type": "object",
+                "maxItems": 10,
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/suoritettavat-tehtavat.schema.json"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
+            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]
             [harja.kyselyt.sopimukset :as sopimukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -36,24 +37,28 @@
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma tyokone]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
-  (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
-  (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
-    (:id (q-toteumat/paivita-toteuma-ulkoisella-idlla<!
-           db
-           {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
-            :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
-            :kayttaja (:id kirjaaja)
-            :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
-            :ytunnus (get-in toteuma [:suorittaja :ytunnus])
-            :lisatieto ""
-            :tyyppi (:toteumatyyppi toteuma)
-            :sopimus sopimus-id
-            :id (get-in toteuma [:tunniste :id])
-            :urakka urakka-id
-            :luoja (:id kirjaaja)
-            :tyokonetyyppi (:tyokonetyyppi tyokone)
-            :tyokonetunniste (:id tyokone)
-            :tyokoneen-lisatieto (:tunnus tyokone)}))))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma) (:toteumatyyppi toteuma))
+  (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)
+        paivitetty (q-toteumat/paivita-toteuma-ulkoisella-idlla<!
+                     db
+                     {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
+                      :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
+                      :kayttaja (:id kirjaaja)
+                      :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
+                      :ytunnus (get-in toteuma [:suorittaja :ytunnus])
+                      :lisatieto ""
+                      :tyyppi (:toteumatyyppi toteuma)
+                      :sopimus sopimus-id
+                      :id (get-in toteuma [:tunniste :id])
+                      :urakka urakka-id
+                      :luoja (:id kirjaaja)
+                      :tyokonetyyppi (:tyokonetyyppi tyokone)
+                      :tyokonetunniste (:id tyokone)
+                      :tyokoneen-lisatieto (:tunnus tyokone)})
+        toteuman-id (if paivitetty
+                      (:id paivitetty)
+                      (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
+    toteuman-id))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
@@ -82,9 +87,10 @@
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma tyokone]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
-  (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
-    (:id (q-toteumat/luo-toteuma<!
+    (do
+      (q-toteumat/luo-toteuma<!
            db
            {:urakka urakka-id
             :sopimus sopimus-id
@@ -105,7 +111,8 @@
             :lahde "harja-api"
             :tyokonetyyppi (:tyokonetyyppi tyokone)
             :tyokonetunniste (:id tyokone)
-            :tyokoneen-lisatieto (:tunnus tyokone)}))))
+            :tyokoneen-lisatieto (:tunnus tyokone)})
+      (q-toteumat/luodun-toteuman-id db))))
 
 (defn paivita-tai-luo-uusi-toteuma
   ([db urakka-id kirjaaja toteuma] (paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma nil))
@@ -133,21 +140,21 @@
                      (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti)))]}))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
-  (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
-  (q-toteumat/poista-toteuma_tehtava-toteuma-idlla!
-    db
-    toteuma-id)
-  (log/debug "Luodaan toteumalle uudet tehtävät")
-  (doseq [tehtava (:tehtavat toteuma)]
-    (log/debug "Luodaan tehtävä.")
-    (q-toteumat/luo-toteuma_tehtava<!
-      db
-      toteuma-id
-      (get-in tehtava [:tehtava :id])
-      (get-in tehtava [:tehtava :maara :maara])
-      (:id kirjaaja)
-      nil
-      nil)))
+      (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
+      (q-toteumat/poista-toteuma_tehtava-toteuma-idlla! db toteuma-id)
+      (log/debug "Luodaan toteumalle uudet tehtävät")
+      (doseq [tehtava (:tehtavat toteuma)]
+             (log/debug "Luodaan tehtävä.")
+             (let [tehtava-id (q-toimenpidekoodi/hae-tehtava-apitunnisteella db
+                                (get-in tehtava [:tehtava :id]))]
+                  (q-toteumat/luo-toteuma_tehtava<!
+                    db
+                    toteuma-id
+                    tehtava-id
+                    (get-in tehtava [:tehtava :maara :maara])
+                    (:id kirjaaja)
+                    nil
+                    nil))))
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit. Toteuma id: " toteuma-id)

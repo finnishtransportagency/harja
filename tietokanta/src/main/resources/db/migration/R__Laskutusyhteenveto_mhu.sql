@@ -2,6 +2,14 @@
 -- MHU-urakoiden laskutusyhteeneveto
 
 -- MHU hoidonjohdon erillishankinnat
+DROP FUNCTION IF EXISTS hj_erillishankinnat (hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+    toimenpide_koodi TEXT,
+    t_instanssi INTEGER,
+    urakka_id INTEGER,
+    sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+    indeksinimi VARCHAR,
+    perusluku NUMERIC);
+DROP TYPE IF EXISTS HJERILLISHANKINNAT_RIVI;
 CREATE TYPE HJERILLISHANKINNAT_RIVI AS
 (
     hj_erillishankinnat_laskutettu  NUMERIC,
@@ -99,7 +107,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+DROP FUNCTION IF EXISTS hj_palkkio(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                      toimenpide_koodi TEXT,
+                                      t_instanssi INTEGER, urakka_id INTEGER,
+                                      sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                      indeksinimi VARCHAR,
+                                      perusluku NUMERIC);
+
 -- MHU hoidonjohdon palkkio pilkotaan tähän
+DROP TYPE IF EXISTS HJPALKKIO_RIVI;
 CREATE TYPE HJPALKKIO_RIVI AS
 (
     hj_palkkio_laskutettu  NUMERIC,
@@ -130,7 +147,7 @@ BEGIN
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
     -- sekä toimenpidekoodista 'Hoitourakan työnjohto'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
-    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoitourakan työnjohto');
+    toimenpidekoodi_id := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
 
     hj_palkkio_laskutettu := 0.0;
     hj_palkkio_laskutetaan := 0.0;
@@ -204,6 +221,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- MHU hoidon johto on niin iso ja monimutkainen laskenta, että se on eriytetty tähän
+DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
+                                                   toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id INTEGER,
+                                                   sopimus_id INTEGER, indeksi_vuosi INTEGER, indeksi_kuukausi INTEGER,
+                                                   indeksinimi VARCHAR,
+                                                   perusluku NUMERIC);
+DROP TYPE IF EXISTS HOIDONJOHTO_RIVI;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
     johto_ja_hallinto_laskutettu  NUMERIC,
@@ -231,8 +254,8 @@ BEGIN
     -- Haetaan hoidon johdon yhteenvetoja tauluista: johto_ja_hallintokorvaus, lasku_kohdistus sekä kustannusarvioitu_tyo.
     -- lasku_kohdistustaulusta joudutaan hakemaan tarkkaan tehtäväryhmällä
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
-    -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella 3055 - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
-    toimistotarvike_koodi := 3055;
+    -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
+    toimistotarvike_koodi := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
 
     RAISE NOTICE 'hoidon_johto_yhteenveto: toimenpidekoodi %' , toimenpide_koodi;
     johto_ja_hallinto_laskutettu := 0.0;
@@ -332,6 +355,7 @@ DROP TYPE IF EXISTS LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI;
 CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
 (
     nimi                            VARCHAR,
+    maksuera_numero                 NUMERIC,
     tuotekoodi                      VARCHAR,
     tpi                             INTEGER,
     perusluku                       NUMERIC,
@@ -462,11 +486,12 @@ BEGIN
     -- Aina syyskuu MHU urakoissa. Indeksi otetaan siis aina edellisen vuoden syyskuusta.
 
     -- Loopataan urakan toimenpideinstanssien läpi
-    FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id
+    FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id, m.numero AS maksuera_numero
                  FROM toimenpideinstanssi tpi
                           JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                          JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
-                 WHERE tpi.urakka = ur
+                          JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                      maksuera m
+                 WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
         LOOP
             RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 
@@ -868,7 +893,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE '********************************** Käsitelly loppui toimenpiteelle: %  *************************************
     ', t.nimi;
 
-            rivi := (t.nimi, t.tuotekoodi, t.tpi, perusluku,
+            rivi := (t.nimi, t.maksuera_numero, t.tuotekoodi, t.tpi, perusluku,
                      kaikki_laskutettu, kaikki_laskutetaan,
                      tavoitehintaiset_laskutettu, tavoitehintaiset_laskutetaan,
                      lisatyot_laskutettu, lisatyot_laskutetaan,

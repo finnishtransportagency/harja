@@ -36,7 +36,8 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -119,13 +120,12 @@
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
-
-   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä"
+   [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
                                tiedot/aikavalit
                                valinnat-nyt
-                               {:vakioaikavali :ilmoitettu-vakioaikavali
-                                :alkuaika :ilmoitettu-alkuaika
-                                :loppuaika :ilmoitettu-loppuaika})
+                               {:vakioaikavali :valitetty-urakkaan-vakioaikavali
+                                :alkuaika      :valitetty-urakkaan-alkuaika
+                                :loppuaika     :valitetty-urakkaan-loppuaika})
     (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
                                tiedot/toimenpiteiden-aikavalit
                                valinnat-nyt
@@ -263,13 +263,13 @@
                                                     (not kirjoitusoikeus?))
                                       :checked (valitut-ilmoitukset rivi)}]]))
            :leveys 1})
-        {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
+        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
          :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
-        {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-         :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
+        {:otsikko "Tiedotettu urakkaan" :nimi :valitetty-urakkaan
+         :hae (comp pvm/pvm-aika :valitetty-urakkaan) :leveys 6}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
@@ -277,7 +277,7 @@
         {:otsikko "Sijainti" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
          :tyyppi :pvm-aika
-         :leveys 7}
+         :leveys 5}
 
         {:otsikko "Selitteet" :nimi :selitteet
          :tyyppi :komponentti

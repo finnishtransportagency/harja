@@ -6,9 +6,9 @@ SELECT
   ulompi_i.tunniste,
   u.nimi as urakkanimi,
   ulompi_i.ilmoitusid,
-  --ulompi_i.ilmoitettu, TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  ulompi_i.valitetty as ilmoitettu,
+  ulompi_i.ilmoitettu,
   ulompi_i.valitetty,
+  ulompi_i."valitetty-urakkaan",
   ulompi_i.yhteydenottopyynto,
   ulompi_i.otsikko,
   ulompi_i.lisatieto,
@@ -40,12 +40,11 @@ WHERE ulompi_i.id IN
        -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
       (sisempi_i.urakka IS NULL OR sisempi_i.urakka IN (:urakat)) AND
 
-      -- Tarkasta että ilmoituksen ilmoitusajankohta sopii hakuehtoihin
-      -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu korvattu sarakkeella valitetty kolme kertaa
+      -- Tarkasta että ilmoituksen valitysajankohta sopii hakuehtoihin. Tarkastellaan ilmoituksen urakkaan välittymistä.
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-       (:loppu_annettu IS FALSE AND sisempi_i.valitetty  >= :alku) OR
-       (:alku_annettu IS FALSE AND sisempi_i.valitetty  <= :loppu) OR
-       (sisempi_i.valitetty  BETWEEN :alku AND :loppu)) AND
+       (:loppu_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  >= :alku) OR
+       (:alku_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  <= :loppu) OR
+       (sisempi_i."valitetty-urakkaan"  BETWEEN :alku AND :loppu)) AND
 
       -- Tarkasta että ilmoituksen toimenpiteiden aloitus sopii hakuehtoihin
       ((:toimenpiteet_alku_annettu IS FALSE AND :toimenpiteet_loppu_annettu IS FALSE) OR
@@ -80,17 +79,18 @@ WHERE ulompi_i.id IN
 
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
-       sisempi_i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
-      -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu korvattu sarakkeella valitetty kaksi kertaa.
-       ORDER BY sisempi_i.valitetty DESC
+       sisempi_i.ilmoittaja_matkapuhelin
+           LIKE :ilmoittaja-puhelin)
+       ORDER BY sisempi_i."valitetty-urakkaan" DESC
        LIMIT :max-maara::INTEGER)
-ORDER BY ulompi_i.valitetty DESC, it.kuitattu DESC;
+ORDER BY ulompi_i."valitetty-urakkaan" DESC, it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille
 SELECT
   i.urakka,
-  -- i.ilmoitettu,
-  i.valitetty as ilmoitettu,        -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
+  i.ilmoitettu,
+  i.valitetty,
+  i."valitetty-urakkaan",
   i.ilmoitustyyppi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
@@ -106,14 +106,16 @@ WHERE i.id IN
          (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
-         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (:urakkatyyppi_annettu IS FALSE OR
+         CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
+          u2.tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+          ELSE u2.tyyppi = :urakkatyyppi::urakkatyyppi END) AND
          (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-          -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kolme kertaa.
-          (:loppu_annettu IS FALSE AND x.valitetty >= :alku) OR
-          (:alku_annettu IS FALSE AND x.valitetty <= :loppu) OR
-          (x.valitetty BETWEEN :alku AND :loppu)))
+          (:loppu_annettu IS FALSE AND x."valitetty-urakkaan" >= :alku) OR
+          (:alku_annettu IS FALSE AND x."valitetty-urakkaan" <= :loppu) OR
+          (x."valitetty-urakkaan" BETWEEN :alku AND :loppu)))
 ORDER by u.nimi;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
@@ -121,8 +123,8 @@ SELECT
   ilmoitusid,
   tunniste,
   tila,
-  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  ilmoitettu,
+  "valitetty-urakkaan",
   valitetty as "valitetty-harjaan",
   "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
   CASE
@@ -163,9 +165,9 @@ SELECT
   hy.id                                    AS hallintayksikko_id,
   hy.nimi                                  AS hallintayksikko_nimi,
   i.ilmoitusid,
-  -- i.ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  i.valitetty as ilmoitettu,
+  i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -235,9 +237,9 @@ SELECT
   i.ilmoitustyyppi,
   i.urakka,
   i.urakkatyyppi,
-  -- i.ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  i.valitetty as ilmoitettu,
+  i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -291,9 +293,9 @@ SELECT
   ilmoitusid,
   tunniste,
   tila,
-  -- ilmoitettu, -- TODO VHAR-1754 Väliaikaisesti. Välitetty = ilmoitettu kunnes ilmoitettu-tieto otetaan käyttöön UIlla.
-  valitetty as ilmoitettu, -- TEMP. Ks. kommentti yllä.
+  ilmoitettu,
   valitetty as "valitetty-harjaan",
+  "valitetty-urakkaan",
   "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
   CASE
       WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
@@ -328,8 +330,14 @@ WHERE urakka = :urakka AND
 
 
 -- name: hae-id-ilmoitus-idlla
--- Hakee id:n ilmoituksen id:llä
+-- Hakee id:n ilmoitus-id:llä
 SELECT id
+FROM ilmoitus
+WHERE ilmoitusid = :ilmoitusid;
+
+-- name: hae-id-ja-urakka-ilmoitus-idlla
+-- Hakee ilmoituksen id:n ja urakan ilmoitus-id:llä
+SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
 
@@ -350,7 +358,8 @@ INSERT INTO ilmoitus
  tunniste,
  viestiid,
  vastaanotettu,
- "vastaanotettu-alunperin")
+ "vastaanotettu-alunperin",
+ "valitetty-urakkaan")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -366,26 +375,27 @@ VALUES
    :tunniste,
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
-   :vastaanotettu-alunperin :: TIMESTAMPTZ);
+   :vastaanotettu-alunperin :: TIMESTAMPTZ,
+   :valitetty-urakkaan :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
 UPDATE ilmoitus
-SET
-  urakka             = :urakka,
-  ilmoitusid         = :ilmoitusid,
-  ilmoitettu         = :ilmoitettu,
-  valitetty          = :valitetty,
-  vastaanotettu      = :vastaanotettu,
-  yhteydenottopyynto = :yhteydenottopyynto,
-  otsikko            = :otsikko,
-  paikankuvaus       = :paikankuvaus,
-  lisatieto          = :lisatieto,
-  ilmoitustyyppi     = :ilmoitustyyppi :: ILMOITUSTYYPPI,
-  selitteet          = :selitteet :: TEXT [],
-  tunniste           = :tunniste,
-  muokattu           = NOW(),
-  viestiid           = :viestiid
+SET urakka               = :urakka,
+    ilmoitusid           = :ilmoitusid,
+    ilmoitettu           = :ilmoitettu,
+    valitetty            = :valitetty,
+    "valitetty-urakkaan" = :valitetty-urakkaan,
+    vastaanotettu = :vastaanotettu,
+    yhteydenottopyynto = :yhteydenottopyynto,
+    otsikko = :otsikko,
+    paikankuvaus = :paikankuvaus,
+    lisatieto = :lisatieto,
+    ilmoitustyyppi = :ilmoitustyyppi :: ILMOITUSTYYPPI,
+    selitteet = :selitteet :: TEXT [],
+    tunniste = :tunniste,
+    muokattu = NOW(),
+    viestiid = :viestiid
 WHERE id = :id;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!
@@ -547,9 +557,8 @@ FROM asiakaspalauteluokka apl
        (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
                                                                FROM urakka
                                                                WHERE hallintayksikko = :hallintayksikko_id)) AND
-        -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kaksi kertaa.
-       (:alkupvm :: DATE IS NULL OR i.valitetty >= :alkupvm) AND
-       (:loppupvm :: DATE IS NULL OR i.valitetty <= :loppupvm)
+       (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
+       (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
 GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
 
 -- name: hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
@@ -569,9 +578,8 @@ WHERE
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND
-  -- TODO VHAR-1754 Väliaikaisesti. Ilmoitettu on korvattu sarakkeella valitetty kaksi kertaa.
-  (:alkupvm :: DATE IS NULL OR valitetty >= :alkupvm) AND
-  (:loppupvm :: DATE IS NULL OR valitetty <= :loppupvm);
+  (:alkupvm :: DATE IS NULL OR "valitetty-urakkaan" >= :alkupvm) AND
+  (:loppupvm :: DATE IS NULL OR "valitetty-urakkaan" <= :loppupvm);
 
 
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet

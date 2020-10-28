@@ -114,10 +114,7 @@
              (valitse urakka @valinta)))
 
        (fn [urakka valittu-aikavali]
-         (when (and
-                 (not (u/urakka-kaynnissa? urakka))
-                 ;; jos käyttäjä jo valinnut urakan sisältä aikavälin, ei resetoida VHAR-1243
-                 (pvm/jalkeen? (first @valittu-aikavali) (:loppupvm urakka)))
+         (when (not (u/urakka-kaynnissa? urakka))
            (reset! valittu-aikavali
                    (or @u/valittu-hoitokauden-kuukausi
                        @u/valittu-hoitokausi)))
@@ -240,15 +237,6 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   (fn [ur]
     (valinnat/urakan-valinnat ur (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide]))))
-
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki
-  [ur]
-  (fn [ur]
-    (let [sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide])
-          sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki (update-in sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [:toimenpide :urakan-toimenpideinstassit-atom]
-                                                                            (fn [urakan-toimenpideinstanssit]
-                                                                              (r/wrap (vec (concat @urakan-toimenpideinstanssit [{:tpi_nimi "Kaikki"}])) identity)))]
-      (valinnat/urakan-valinnat ur sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki))))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali
   ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali ur {}))

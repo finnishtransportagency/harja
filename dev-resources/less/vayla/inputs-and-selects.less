@@ -6,6 +6,7 @@
   height: 40px;
   width: 100%;
   outline-style: solid;
+  border-style: solid;
 }
 .select-button-yhteiset-arvot() {
   display: flex;
@@ -34,6 +35,15 @@
   color: @gray25;
 }
 
+.outlinet-ja-borderit(@vari, @leveys, @offsetti) {
+  outline-color: @vari;
+  outline-width: @leveys;
+  outline-offset: @offsetti;
+
+  border-color: @vari;
+  border-width: @leveys;
+}
+
 label {
   &.input, &.select {
     .font-yhteiset-arvot();
@@ -58,16 +68,13 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px, -1px);
+
 
     &-nakoinen {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @gray200;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@gray200, 1px, -1px);
 
       display: flex;
       > * {
@@ -77,22 +84,16 @@ label {
     }
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      .outlinet-ja-borderit(@gray200, 2px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@focus-color, 3px, -3px);
     }
 
     &:disabled {
       background-color: @gray225;
-      outline-color: @gray200;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@gray200, 1px, -1px);
     }
   }
 
@@ -100,17 +101,17 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red, 1px, -1px);
 
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width:3px;
       }
     }
   }
@@ -182,26 +183,20 @@ label {
       }
     }
     position: relative;
-
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px, -1px);
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      .outlinet-ja-borderit(@gray200, 2px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@focus-color, 3px, -3px);
     }
 
     &:disabled {
       background-color: @gray225;
       outline-color: @gray200;
+      border-color: @gray200;
     }
   }
 
@@ -241,17 +236,16 @@ label {
         }
       }
       position: relative;
-      z-index: 100;
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red, 1px, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width: 3px;
       }
     }
   }
@@ -261,25 +255,20 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px, -1px);
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      .outlinet-ja-borderit(@gray200, 2px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@gray200, 3px, -3px);
     }
 
     &:disabled {
       background-color: @gray225;
       outline-color: @gray200;
+      border-color: @gray200;
     }
   }
 
@@ -287,16 +276,16 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red, 1px, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width: 3px;
       }
     }
   }
@@ -306,20 +295,14 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px, -1px);
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      .outlinet-ja-borderit(@gray200, 2px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@focus-color, 3px, -3px);
     }
 
     &:disabled {
@@ -332,17 +315,17 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red, 1px, -1px);
 
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width:3px;
       }
     }
   }
