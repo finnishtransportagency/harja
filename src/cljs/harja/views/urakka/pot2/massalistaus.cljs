@@ -309,10 +309,11 @@
             (when (= 7 (:runkoaine/tyyppi aine))
               (yleiset/str-suluissa-opt (:runkoaine/kuvaus aine)))))
      [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]
-    (when (:runkoaine/kuulamyllyarvo aine)
-      [:div "-kuulamyllyarvo " (:runkoaine/kuulamyllyarvo aine)])
-    (when (:runkoaine/litteysluku aine)
-      [:div "-litteysluku " (:runkoaine/litteysluku aine)])])])
+    [:ul.runkoaineen-tiedot
+     (when (:runkoaine/kuulamyllyarvo aine)
+       [:li "KM-arvo " (:runkoaine/kuulamyllyarvo aine)])
+     (when (:runkoaine/litteysluku aine)
+       [:li "Litteysluku " (:runkoaine/litteysluku aine)])]])])
 
 (defn- massan-sideaineet [rivi ainetyypit]
   [:span
@@ -355,10 +356,8 @@
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
     :rivi-klikattu #(e! (tiedot-massa/->MuokkaaMassaa %))
-    :voi-lisata? false
-    :voi-kumota? false
-    :voi-poistaa? (constantly false)
-    :voi-muokata? true
+    :voi-lisata? false :voi-kumota? false
+    :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Luo uusi massa"
                       :toiminto #(e! (tiedot-massa/->UusiMassa true))
                       :opts {:ikoni (ikonit/livicon-plus)
