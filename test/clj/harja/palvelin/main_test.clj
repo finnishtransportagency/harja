@@ -5,28 +5,70 @@
   (:require [harja.palvelin.main :as sut]
             [harja.palvelin.asetukset :as asetukset]
             [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
-            [clojure.test :as t :refer [deftest testing is]]
+            [harja.testi :as testi]
+            [com.stuartsierra.component :as component]
+            [com.stuartsierra.dependency :as dep]
+            [clojure.test :refer [is deftest testing use-fixtures]]
             [clojure.string :as str]
+            [clojure.edn :as edn]
             [clojure.java.io :as io])
   (:import (java.io File)))
 
 (def ^:dynamic *testiasetukset* nil)
 
 (defn- muokkaa-asetuksia [asetukset]
-  asetukset)
+  (testi/pudota-ja-luo-testitietokanta-templatesta)
+  (let [asetukset-datana (-> (edn/read-string asetukset)
+                             (assoc-in [:http-palvelin :portti] (testi/arvo-vapaa-portti))
+                             (assoc-in [:http-palvelin :salli-oletuskayttaja?] false)
+                             (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
+                             (assoc :tietokanta testi/testitietokanta)
+                             (assoc :tietokanta-replica testi/testitietokanta)
+                             #_(assoc-in [:tietokanta :palvelin] "localhost")
+                             #_(assoc-in [:tietokanta :portti] tietokannan-portti)
+                             #_(assoc-in [:tietokanta-replica :palvelin] "localhost")
+                             #_(assoc-in [:tietokanta-replica :portti] tietokannan-portti)
+                             (assoc :sonja {:url "tcp://localhost:61617"
+                                            :kayttaja ""
+                                            :salasana ""
+                                            :tyyppi :activemq})
+                             (assoc :sampo {})
+                             (assoc :tloik {})
+                             (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
+                             (assoc-in [:turi :urakan-tyotunnit-url] ""))]
+    (str asetukset-datana)))
+
+(defn- poista-sisimmat-sulut-reader-makrosta [s]
+  (str/replace s #"\#=\(.*(\([^\(\)]*\))" (fn [args]
+                                              (case (count args)
+                                                0 ""
+                                                1 (first args)
+                                                2 (apply str (let [lopputulos (first args)
+                                                                   pudotettavien-maara (count (second args))]
+                                                               (drop-last pudotettavien-maara lopputulos)))))))
+
+(defn- poista-reader-makrot [teksti korvaava-teksti]
+  (loop [teksti teksti
+         sisaltaa-readermakroja? (re-find #"\#=" teksti)]
+    (if sisaltaa-readermakroja?
+      (recur (-> teksti
+                 poista-sisimmat-sulut-reader-makrosta
+                 (str/replace #"\#=\([^\(\)]*\)" korvaava-teksti))
+             (re-find #"\#=" teksti))
+      teksti)))
 
 (defn- testiasetukset [testit]
   (let [file (File/createTempFile "asetukset" ".edn")
         asetukset (-> "asetukset.edn"
                       slurp
-                      (str/replace #"\#=\(.*?\)" "\"foo\"")
+                      (poista-reader-makrot "\"foo\"")
                       muokkaa-asetuksia)]
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
     (.delete file)))
 
-(t/use-fixtures :once testiasetukset)
+(use-fixtures :once testiasetukset)
 
 (def halutut-komponentit
   #{:metriikka
@@ -71,6 +113,7 @@
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
+    :komponenttien-tila
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat
@@ -92,9 +135,24 @@
       (doseq [k komponentit]
         (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!"))))
     (testing "Kaikkien komponenttien uudelleen käynnistys toimii"
-      (doseq [k komponentit]
-        (is (not (thrown? Throwable (jarjestelma/restart-komp (get jarjestelma k))))
-            (str "Komponentitn " k " uudelleen käynnistys ei toimi"))))))
+      (let [jarjestelma (component/start jarjestelma)
+            graph (component/dependency-graph jarjestelma komponentit)
+            komponentit-jarjestettyna (reverse (sort (dep/topo-comparator graph) komponentit))]
+        (println komponentit-jarjestettyna)
+        (doseq [k komponentit-jarjestettyna]
+          (when (= :ping k)
+            (println (get jarjestelma k)))
+          (try (@#'jarjestelma/restart-komp (get jarjestelma k))
+               (catch Throwable t
+                 (is false (str "Komponentin " k " uudelleen käynnistys ei toimi"))
+                 (println "----- MAIN TEST ERROR -----")
+                 (println "error: " (.getMessage t))
+                 (.printStackTrace t))))
+        (try (component/stop jarjestelma)
+             (catch Throwable t
+               (is false "Järjestelmän uudelleen käynnistys ei toimi")
+               (println "error: " (.getMessage t))
+               (.printStackTrace t)))))))
 
 #_(deftest restart-toimii
-  (is (= :ok (sut/dev-restart))))
+    (is (= :ok (sut/dev-restart))))

@@ -6,6 +6,6 @@
 (defn kutsu
   [palvelu & args]
   {:pre [(keyword? palvelu)]}
-  (if (contains? @rajapinta palvelu)
-    (apply (get @rajapinta palvelu) args)
+  (if-let [rajapinta-f (get @rajapinta palvelu)]
+    (apply rajapinta-f args)
     (log/warn (str "[JÄRJESTELMÄRAJAPINTA] Kutsuttiin järjestelmäpalvelua " palvelu ", mutta sitä ei ole määritetty"))))

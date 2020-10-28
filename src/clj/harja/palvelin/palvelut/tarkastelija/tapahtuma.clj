@@ -125,7 +125,7 @@
       (binding [*log-error* true]
         (tapahtuma-julkaisija {::validointi-epaonnistui data})))))
 
-(defrecord tapahtuma []
+(defrecord Tapahtuma []
   component/Lifecycle
   (start [{:keys [klusterin-tapahtumat rajapinta] :as this}]
     (rajapinta/lisaa rajapinta :tapahtuma-julkaisija (partial tapahtuma-julkaisija klusterin-tapahtumat))

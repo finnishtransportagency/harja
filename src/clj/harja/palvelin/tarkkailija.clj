@@ -18,7 +18,7 @@
                                                 (tapahtumat/luo-tapahtumat tarkkailija)
                                                 {:db :db-event})
                         :tapahtuma (component/using
-                                     (tapahtuma/->tapahtuma)
+                                     (tapahtuma/->Tapahtuma)
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija)
                         :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja komponenttien-tila (atom nil)))))))
