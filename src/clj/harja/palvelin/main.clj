@@ -3,12 +3,12 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as a :refer [<! go timeout]]
     [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
+    [harja.palvelin.tarkkailija :as tarkkailija]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.fim :as fim]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
@@ -16,7 +16,6 @@
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
-    [harja.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -170,6 +169,8 @@
 
   (:gen-class))
 
+(def asetukset-tiedosto "asetukset.edn")
+
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -304,9 +305,6 @@
                       :excel-vienti :excel-vienti})
 
       :komponenttien-tila (komponenttien-tila/komponentin-tila (:komponenttien-tila asetukset))
-      :uudelleen-kaynnistaja (component/using
-                               (uudelleen-kaynnistaja/->UudelleenKaynnistaja (:komponenttien-tila asetukset))
-                               [:sonja])
 
       ;; Tarkastustehtävät
 
@@ -747,25 +745,38 @@
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
 
+(defn- kaynnista-pelkastaan-jarjestelma
+  ([]
+   (let [asetukset (lue-asetukset asetukset-tiedosto)]
+     (kaynnista-pelkastaan-jarjestelma asetukset)))
+  ([asetukset]
+   (alter-var-root #'harja-jarjestelma
+                   (constantly
+                     (-> asetukset
+                         luo-jarjestelma
+                         component/start)))))
+
 (defn- kuuntele-tapahtumia! []
   (event-apurit/tarkkaile-tapahtumaa :harjajarjestelman-restart
                                      {}
                                      (fn [{:keys [palvelin payload]}]
                                        (when (= palvelin (event-apurit/host-nimi))
-                                         (alter-var-root #'harja-jarjestelma
-                                                         (fn [harja-jarjestelma]
-                                                           (try (jarjestelma/system-restart harja-jarjestelma payload)
-                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui nil)
-                                                                (catch Throwable t
-                                                                  (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
-                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil)
-                                                                  harja-jarjestelma))))))))
+                                         (if (= payload :all)
+                                           (kaynnista-pelkastaan-jarjestelma)
+                                           (when (nil? (alter-var-root #'harja-jarjestelma
+                                                                       (fn [harja-jarjestelma]
+                                                                         (try (jarjestelma/system-restart harja-jarjestelma payload)
+                                                                              (catch Throwable t
+                                                                                (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
+                                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil)
+                                                                                nil)))))
+                                             (kaynnista-pelkastaan-jarjestelma)))))))
 
 (defn- kaynnista-harja-tarkkailija! [asetukset]
-  (tapahtumat/kaynnista! asetukset))
+  (tarkkailija/kaynnista! asetukset))
 
 (defn- sammuta-harja-tarkkailija! []
-  (tapahtumat/sammuta!))
+  (tarkkailija/sammuta!))
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
@@ -785,11 +796,7 @@
       (kaynnista-harja-tarkkailija! asetukset)
       (kuuntele-tapahtumia!)
       (merkkaa-kaynnistyminen!)
-      (alter-var-root #'harja-jarjestelma
-                      (constantly
-                        (-> asetukset
-                            luo-jarjestelma
-                            component/start)))
+      (kaynnista-pelkastaan-jarjestelma asetukset)
       (aloita-sonja harja-jarjestelma)
       (merkkaa-kaynnistetyksi!))
     (catch Throwable t
@@ -805,7 +812,7 @@
                                           nil))))
 
 (defn -main [& argumentit]
-  (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
+  (kaynnista-jarjestelma (or (first argumentit) asetukset-tiedosto) true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
 (defn dev-start []

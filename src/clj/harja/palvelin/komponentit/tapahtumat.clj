@@ -12,9 +12,10 @@
             [clojure.string :as clj-str]
             [clojure.java.jdbc :as jdbc]
 
-            [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
             [harja.tyokalut.dev-tyokalut :as dev-tyokalut]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
+
+            [harja.palvelin.tapahtuma-protokollat :as p]
 
             [harja.kyselyt.konversio :as konv]
             [harja.transit :as transit]
@@ -38,8 +39,6 @@
 
                  Tälle tulee antaa arvoksi map, jossa avaimet :tunnistin ja :lkm"}
          *tarkkaile-yhta-aikaa* nil)
-
-(defonce harja-tarkkailija nil)
 
 (def transit-write-handler {})
 
@@ -248,13 +247,6 @@
     (async/sub broadcast possu-kanava kuuntelija-kanava)
     (swap! tarkkailijat update possu-kanava conj kuuntelija-kanava)))
 
-(defprotocol Kuuntele
-  (kuuntele! [this tapahtuma callback])
-  (tarkkaile! [this tapahtuma] [this tapahtuma tyyppi]))
-
-(defprotocol Julkaise
-  (julkaise! [this tapahtuma payload host-name]))
-
 (defrecord Tapahtumat [asetukset kuuntelijat tarkkailijat ajossa]
   component/Lifecycle
   (start [this]
@@ -335,7 +327,7 @@
     (async/close! (::kuuntelu-aloitettu-kuittaus this))
     this)
 
-  Kuuntele
+  p/Kuuntele
   ;; Kuutele! ja tarkkaile! ero on se, että eventin sattuessa kuuntele! kutsuu callback funktiota kun taas
   ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
   (kuuntele! [this tapahtuma callback]
@@ -398,9 +390,9 @@
                   false
                   kuuntelija-kanava)))))
   (tarkkaile! [this tapahtuma]
-    (tarkkaile! this tapahtuma :perus))
+    (p/tarkkaile! this tapahtuma :perus))
 
-  Julkaise
+  p/Julkaise
   (julkaise! [this tapahtuma payload host-name]
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           db (get-in this [:db :db-spec])
@@ -422,23 +414,3 @@
 
 (defn luo-tapahtumat [asetukset]
   (->Tapahtumat asetukset (atom nil) (atom nil) (atom false)))
-
-(defn tarkkailija []
-  (if-let [tapahtumat (:klusterin-tapahtumat harja-tarkkailija)]
-    tapahtumat
-    (throw (Exception. "Harjatarkkailijaa ei vielä käynnistetty!"))))
-
-(defn kaynnista! [{:keys [tietokanta tarkkailija]}]
-  (alter-var-root #'harja-tarkkailija
-                  (constantly
-                    (component/start
-                      (component/system-map
-                        :db-event (event-tietokanta/luo-tietokanta tietokanta)
-                        :klusterin-tapahtumat (component/using
-                                                (luo-tapahtumat tarkkailija)
-                                                {:db :db-event}))))))
-
-(defn sammuta! []
-  (alter-var-root #'harja-tarkkailija (fn [s]
-                                        (component/stop s)
-                                        nil)))

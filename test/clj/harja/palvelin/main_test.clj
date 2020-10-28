@@ -4,17 +4,23 @@
   Kun lisäät komponentin, lisää se myös testin keysettiin."
   (:require [harja.palvelin.main :as sut]
             [harja.palvelin.asetukset :as asetukset]
-            [clojure.test :as t :refer [deftest is]]
+            [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
+            [clojure.test :as t :refer [deftest testing is]]
             [clojure.string :as str]
             [clojure.java.io :as io])
   (:import (java.io File)))
 
 (def ^:dynamic *testiasetukset* nil)
+
+(defn- muokkaa-asetuksia [asetukset]
+  asetukset)
+
 (defn- testiasetukset [testit]
   (let [file (File/createTempFile "asetukset" ".edn")
         asetukset (-> "asetukset.edn"
                       slurp
-                      (str/replace #"\#=\(.*?\)" "\"foo\""))]
+                      (str/replace #"\#=\(.*?\)" "\"foo\"")
+                      muokkaa-asetuksia)]
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
@@ -24,7 +30,7 @@
 
 (def halutut-komponentit
   #{:metriikka
-    :db :db-replica :klusterin-tapahtumat
+    :db :db-replica
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
@@ -79,10 +85,16 @@
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
         komponentit (set (keys jarjestelma))]
-    (doseq [k halutut-komponentit]
-      (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!")))
-    (doseq [k komponentit]
-      (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
+    (testing "Kaikki halutut komponentit löytyy!"
+      (doseq [k halutut-komponentit]
+        (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!"))))
+    (testing "Ei löydy ylimääräisiä komponentteja"
+      (doseq [k komponentit]
+        (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!"))))
+    (testing "Kaikkien komponenttien uudelleen käynnistys toimii"
+      (doseq [k komponentit]
+        (is (not (thrown? Throwable (jarjestelma/restart-komp (get jarjestelma k))))
+            (str "Komponentitn " k " uudelleen käynnistys ei toimi"))))))
 
 #_(deftest restart-toimii
   (is (= :ok (sut/dev-restart))))

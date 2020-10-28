@@ -28,7 +28,7 @@
     [harja.palvelin.komponentit.fim :as fim]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut async]]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.tapahtuma-protokollat :as tapahtumat]
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
     [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]

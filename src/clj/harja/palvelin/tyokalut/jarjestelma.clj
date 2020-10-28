@@ -6,6 +6,10 @@
 (defprotocol IRestart
   (restart [this system-component]))
 
+(defn- restart-komp [komp]
+  (component/stop komp)
+  (component/start komp))
+
 (extend-type SystemMap
   IRestart
   (restart [system system-component-keys]
@@ -18,7 +22,7 @@
           system
           (let [[uudelleen-kaynnistettava-komponentti-avain & paivitettavat-komponentti-avaimet :as pk] (drop-while #(not= % component-key) all-keys-sorted)]
             (let [osittain-pysaytetty-systeemi (component/stop-system system pk)
-                  komponentti-uudelleen-kaynnistetty (component/update-system osittain-pysaytetty-systeemi uudelleen-kaynnistettava-komponentti-avain restart)]
+                  komponentti-uudelleen-kaynnistetty (component/update-system osittain-pysaytetty-systeemi uudelleen-kaynnistettava-komponentti-avain restart-komp)]
               (recur (component/update-system komponentti-uudelleen-kaynnistetty paivitettavat-komponentti-avaimet component/start)
                      component-keys))))))))
 
@@ -26,7 +30,7 @@
   [system system-component-keys]
   {:pre [(set? system-component-keys)
          (every? (fn [component-key]
-                   (satisfies? IRestart (get system component-key)))
+                   (satisfies? component/Lifecycle (get system component-key)))
                  system-component-keys)]
    :post [(instance? SystemMap %)]}
   (restart system system-component-keys))

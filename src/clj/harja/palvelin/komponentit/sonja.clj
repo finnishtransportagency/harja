@@ -387,6 +387,7 @@
          (.start yhteys)
          (reset! jms-connection-tila "ACTIVE")
          (reset! yhteys-aloitettu? true)
+         (tapahtuma-apurit/julkaise-tapahtuma :sonja-yhteys-aloitettu true)
          true)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :aloita-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
