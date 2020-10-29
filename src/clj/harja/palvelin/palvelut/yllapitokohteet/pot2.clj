@@ -139,7 +139,22 @@
   [db aineet-map kayttotapa massa-id]
   (let [paluuarvot (atom [])
         {valittu? :valittu?
-         aineet :aineet} aineet-map]
+         aineet :aineet} aineet-map
+        ;; UI:lta voi poistaa lisättyjä sideaineita siten että poistetut eivät tule mukaan payloadiin
+        ;; tarkistetaan ensin kannasta, onko sellaisia ja jos ne puuttuvat payloadista, poistetaan
+        ennestaan-kannassa-olevien-idt (into #{}
+                                             (map :sideaine/id
+                                                  (fetch db ::pot2-domain/pot2-massa-sideaine
+                                                         #{:sideaine/id}
+                                                         {:pot2-massa/id massa-id
+                                                          :sideaine/lopputuote? (boolean (= kayttotapa :lopputuote))})))
+        idt-jotka-poistettu-uilta (clojure.set/difference ennestaan-kannassa-olevien-idt (into #{}
+                                                                                     (map :sideaine/id
+                                                                                          (vals aineet))))]
+    (doseq [poistettavan-id idt-jotka-poistettu-uilta]
+      (when (int? poistettavan-id)
+        (delete! db ::pot2-domain/pot2-massa-sideaine {:sideaine/id poistettavan-id
+                                                       :pot2-massa/id massa-id})))
     (doseq [[_ {:sideaine/keys [id tyyppi pitoisuus]}] aineet]
       (let [paluurivi (if valittu?
                         (upsert! db ::pot2-domain/pot2-massa-sideaine
