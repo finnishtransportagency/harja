@@ -188,9 +188,9 @@ CREATE TABLE pot2_massa_runkoaine
     esiintyma    TEXT,
     fillerityyppi fillerityyppi,
     kuvaus TEXT,
-    kuulamyllyarvo NUMERIC,
-    litteysluku NUMERIC,
-    massaprosentti NUMERIC
+    kuulamyllyarvo NUMERIC(3,1),
+    litteysluku NUMERIC(3,1),
+    massaprosentti INTEGER
 );
 CREATE INDEX pot2_massa_runkoaine_idx ON pot2_massa_runkoaine (pot2_massa_id);
 
@@ -240,7 +240,7 @@ CREATE TABLE pot2_massa_sideaine
     pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
     "lopputuote?" BOOLEAN DEFAULT TRUE, -- FALSE = lisätty sideaine
     tyyppi        INTEGER NOT NULL REFERENCES  pot2_sideainetyyppi(koodi),
-    pitoisuus     NUMERIC
+    pitoisuus     NUMERIC(3,1)
 );
 CREATE INDEX pot2_massa_sideaine_idx ON pot2_massa_sideaine (pot2_massa_id);
 
@@ -252,7 +252,7 @@ INSERT INTO pot2_lisaainetyyppi(nimi, lyhenne, koodi)
 VALUES ('Kuitu', 'Kuitu', 1),
        ('Tartuke', 'Tartuke', 2),
        ('Sementti', 'Sementti', 3),
-       ('Luonnonasfaltti', 'Luonnonasfaltti', 4),
+       ('Bitumikaterouhe', 'Bitumikaterouhe', 4),
        ('Kumi- tai muovirouhe', 'Kumi- tai muovirouhe', 5),
        ('Väriaine', 'Väriaine', 6),
        ('Muu kemiallinen aine','Muu kemiallinen aine', 7);
@@ -262,7 +262,7 @@ CREATE TABLE pot2_massa_lisaaine(
     id            SERIAL PRIMARY KEY,
     pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
     tyyppi        INTEGER NOT NULL REFERENCES pot2_lisaainetyyppi(koodi),
-    pitoisuus     NUMERIC
+    pitoisuus     NUMERIC(3,1)
 );
 CREATE INDEX pot2_massa_lisaaine_idx ON pot2_massa_lisaaine (pot2_massa_id);
 

@@ -245,38 +245,8 @@
 (def litteyslukuluokat [1, 2, 3, 4, 5, 6])
 
 (def erikseen-lisattava-fillerikiviaines
+  ;; Huom! Tämän on matchattava postgres custom typen fillerityyppi -arvoihin
   ["Kalkkifilleri (KF)", "Lentotuhka (LT)", "Muu fillerikiviaines"])
-
-(def massan-lisaineet
-  ["Kuitu", "Tartuke", "Sementti", "Luonnonasfaltti", "Kumi- tai muovirouhe", "Väriaine",
-   "Muu kemiallinen aine"])
-
-(def paallystemassan-sideaineet
-  ["Bitumi, 20/30"
-   "Bitumi, 35/50"
-   "Bitumi, 50/70"
-   "Bitumi, 70/100"
-   "Bitumi, 100/150"
-   "Bitumi, 160/220"
-   "Bitumi, 250/330"
-   "Bitumi, 330/430"
-   "Bitumi, 500/650"
-   "Bitumi, 650/900"
-   "Bitumi, V1500"
-   "Bitumi, V3000"
-   "Polymeerimodifioitu bitumi, PMB 75/130-65"
-   "Polymeerimodifioitu bitumi, PMB 75/130-70"
-   "Polymeerimodifioitu bitumi, PMB 40/100-70"
-   "Polymeerimodifioitu bitumi, PMB 40/100-75"
-   "Bitumiliuokset ja fluksatut bitumit, BL0"
-   "Bitumiliuokset ja fluksatut bitumit, BL5"
-   "Bitumiliuokset ja fluksatut bitumit, BL2Bio"
-   "Bitumiemulsiot, BE-L"
-   "Bitumiemulsiot, PBE-L"
-   "Bitumiemulsiot, BE-SIP"
-   "Bitumiemulsiot, BE-SOP"
-   "Bitumiemulsiot, BE-AB"
-   "Bitumiemulsiot, BE-PAB"])
 
 (defn ainetyypin-koodi->nimi [ainetyypit koodi]
   (::nimi (first

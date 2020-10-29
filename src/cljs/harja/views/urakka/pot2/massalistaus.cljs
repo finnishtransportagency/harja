@@ -65,7 +65,8 @@
 
 (defn- otsikko-ja-kentta
   [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys placeholder
-              valinnat valinta-nayta valinta-arvo validoi-kentta-fn]}]
+              valinnat valinta-nayta valinta-arvo validoi-kentta-fn
+              desimaalien-maara kokonaisluku?]}]
   [:div.otsikko-ja-kentta.inline-block
    [:div
     [:span.kentan-label otsikko]
@@ -74,7 +75,9 @@
                        :leveys leveys :placeholder placeholder
                        :valinnat valinnat :valinta-nayta valinta-nayta
                        :valinta-arvo valinta-arvo
-                       :validoi-kentta-fn validoi-kentta-fn}
+                       :validoi-kentta-fn validoi-kentta-fn
+                       :desimaalien-maara desimaalien-maara
+                       :kokonaisluku? kokonaisluku?}
     (r/wrap
       arvo
       (fn [uusi-arvo]
@@ -99,25 +102,26 @@
           :arvo fillerityyppi :leveys "150px"
           :polku (conj polun-avaimet :runkoaine/fillerityyppi)})
        (when-not (contains? #{3 7} aineen-koodi)
-         {:otsikko "kuulamyllyarvo"
-          :tyyppi :numero :pakollinen? true
+         {:otsikko "Kuulamyllyarvo" :pakollinen? true
+          :tyyppi :numero :desimaalien-maara 1
           :arvo kuulamyllyarvo :leveys "55px"
-          :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40))
+          :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40 1))
           :polku (conj polun-avaimet :runkoaine/kuulamyllyarvo)})
        (when-not (contains? #{3 7} aineen-koodi)
-         {:otsikko "Litteysluku"
-          :tyyppi :numero :pakollinen? true
+         {:otsikko "Litteysluku" :pakollinen? true
+          :tyyppi :numero :desimaalien-maara 1
           :arvo litteysluku :leveys "68px"
+          :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 40 1))
           :polku (conj polun-avaimet :runkoaine/litteysluku)})
        (when (contains? #{7} aineen-koodi)
          {:otsikko "Kuvaus" :placeholder "Anna ainetta kuvaava nimi"
           :tyyppi :string :pakollinen? true
           :arvo kuvaus :leveys "160px"
           :polku (conj polun-avaimet :runkoaine/kuvaus)})
-       {:otsikko "Massa-%"
-        :tyyppi :numero :pakollinen? true
+       {:otsikko "Massa-%" :pakollinen? true
+        :tyyppi :numero :kokonaisluku? true
         :arvo massaprosentti :leveys "55px"
-        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
+        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 0))
         :polku (conj polun-avaimet :runkoaine/massaprosentti)}])))
 
 (defn- sideaineiden-kentat [tiedot polun-avaimet idx]
@@ -132,15 +136,15 @@
      {:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
       :arvo pitoisuus :leveys "55px"
-      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
+      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
       :polku (conj polun-avaimet :aineet idx :sideaine/pitoisuus)}]))
 
 (defn- lisaaineiden-kentat [tiedot polun-avaimet]
   (let [{:lisaaine/keys [pitoisuus]} tiedot]
-    [{:otsikko "Pitoisuus"
-      :tyyppi :numero :pakollinen? true
+    [{:otsikko "Pitoisuus" :pakollinen? true
+      :tyyppi :numero :desimaalien-maara 1
       :arvo pitoisuus :leveys "70px"
-      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100))
+      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
       :polku (conj polun-avaimet :lisaaine/pitoisuus)}]))
 
 (defn- tyypin-kentat [tyyppi tiedot polun-avaimet]

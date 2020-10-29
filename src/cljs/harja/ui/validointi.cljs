@@ -395,5 +395,14 @@
         skeema))
 
 (defn validoi-numero
-  [numero alaraja ylaraja]
-  (<= alaraja (str/replace numero "," ".") ylaraja))
+  "Validaattori numeroille, params: [numero alaraja ylaraja desimaalien-max-maara]"
+  [numero alaraja ylaraja desimaalien-max-maara]
+  (let [numero (clojure.string/replace numero "," ".")
+        desimaalit (when numero
+                     (count (second (clojure.string/split numero #"\."))))]
+    (and
+      (<= alaraja numero ylaraja)
+      ;; Estetään kirjoittamasta , tai . kokonaislukuun
+      (or (not= 0 desimaalien-max-maara) (not (clojure.string/includes? numero ".")))
+      (or (nil? numero)
+          (<= desimaalit desimaalien-max-maara)))))

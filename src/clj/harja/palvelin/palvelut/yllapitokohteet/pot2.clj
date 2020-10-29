@@ -123,8 +123,7 @@
                                                                 (bigdec (:runkoaine/kuulamyllyarvo r)))
                                     :runkoaine/litteysluku (when (:runkoaine/litteysluku r)
                                                              (bigdec (:runkoaine/litteysluku r)))
-                                    :runkoaine/massaprosentti (when (:runkoaine/massaprosentti r)
-                                                                (bigdec (:runkoaine/massaprosentti r)))
+                                    :runkoaine/massaprosentti (:runkoaine/massaprosentti r)
                                     :runkoaine/fillerityyppi (:runkoaine/fillerityyppi r)}
                                    (when (:runkoaine/kuvaus r)
                                      {:runkoaine/kuvaus (:runkoaine/kuvaus r)})

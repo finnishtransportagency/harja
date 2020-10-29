@@ -12,16 +12,16 @@ INSERT INTO pot2_massa_runkoaine(pot2_massa_id, tyyppi, esiintyma, fillerityyppi
                                  kuvaus, kuulamyllyarvo, litteysluku, massaprosentti)
 VALUES ((SELECT id FROM pot2_massa WHERE dop_nro = '1234567' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
         (SELECT koodi FROM pot2_runkoainetyyppi WHERE nimi = 'Kiviaines'),
-        'Kaiskakallio',  NULL, 'Kelpo runkoaine tämä.', 10.0, 9.5, 52.1),
+        'Kaiskakallio',  NULL, 'Kelpo runkoaine tämä.', 10.0, 9.5, 52),
        ((SELECT id FROM pot2_massa WHERE dop_nro = '987654331-2' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
        (SELECT koodi FROM pot2_runkoainetyyppi WHERE nimi = 'Kiviaines'),
-    'Sammalkallio',  NULL, 'Jämäkkä runkoaine.', 9.2, 6.5, 85.0),
+    'Sammalkallio',  NULL, 'Jämäkkä runkoaine.', 9.2, 6.5, 85),
        ((SELECT id FROM pot2_massa WHERE dop_nro = '987654331-2' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
         (SELECT koodi FROM pot2_runkoainetyyppi WHERE nimi = 'Erikseen lisättävä fillerikiviaines'),
-        'Sammalkallio',  'Kalkkifilleri (KF)', 'Oiva Filleri.', 8.2, 6.5, 3.0),
+        'Sammalkallio',  'Kalkkifilleri (KF)', 'Oiva Filleri.', 8.2, 6.5, 3),
        ((SELECT id FROM pot2_massa WHERE dop_nro = '987654331-2' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
         (SELECT koodi FROM pot2_runkoainetyyppi WHERE nimi = 'Asfalttirouhe'),
-        'Sammalkallio',  NULL, 'Oiva Filleri.', 11.2, 4.5, 5.0);
+        'Sammalkallio',  NULL, 'Rouhea aine.', 11.2, 4.5, 5);
 
 INSERT INTO pot2_massa_sideaine(pot2_massa_id, "lopputuote?", tyyppi, pitoisuus)
 VALUES ((SELECT id FROM pot2_massa WHERE dop_nro = '1234567' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
