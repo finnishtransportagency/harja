@@ -22,6 +22,7 @@
 
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.pot2 :as pot2-domain]
+            [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
 
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -172,10 +173,14 @@
                        [:div.inline-block {:style {:margin-right "6px"}}
                         [otsikko-ja-kentta e! sak]])])
                   aineet)
-     [:div
-      [napit/uusi "Lisää uusi"
-       #(e! (tiedot-massa/->LisaaSideaine kayttotapa))
-       {:luokka (str "napiton-nappi lisaa-sideaine")}]]]))
+     (when (= :lisatty kayttotapa)
+       [:div
+        [napit/uusi "Lisää uusi"
+         #(e! (tiedot-massa/->LisaaSideaine kayttotapa))
+         {:luokka (str "napiton-nappi lisaa-sideaine")}]
+        [napit/poista "Poista viimeisin"
+         #(e! (tiedot-massa/->PoistaSideaine kayttotapa))
+         {:luokka (str "napiton-nappi poista-sideaine")}]])]))
 
 (defn- ainevalintalaatikot [tyyppi aineet]
   (if (= tyyppi :sideaineet)
@@ -189,9 +194,11 @@
             {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
         ^{:key t}
         [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
-         [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
-                                      :arvo valittu? :label-luokka (when valittu? "bold")
-                                      :polku (conj polun-avaimet :valittu?)}]
+         (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
+                   (tiedot-massa/lisatty-sideaine-mahdollinen? (:data rivi)))
+           [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
+                                        :arvo valittu? :label-luokka (when valittu? "bold")
+                                        :polku (conj polun-avaimet :valittu?)}])
 
          (when valittu?
            [:div.kentat-haitari
@@ -206,16 +213,11 @@
               [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
                polun-avaimet aineet])])]))])
 
-(defn- runko-side-ja-lisaaineet-voi-tallentaa?
-  [{:keys [runkoaineet sideaineet lisaaineet] :as lomake}]
-  ;; TODO: jos ja kun toteutus osoittautuu lopulta hyväksi, tähän voi implementoida runkoaineiden,
-  ;; sideaineiden ja lisäaineiden osalta validoinnin. Toistaiseksi ei käytetä aikaa. Kannattaa käyttää siihen jotenkin hyväksi
-  ;; olemassaolevien kenttien määrityksiä, esim mikä kenttä on pakollinen jne.
-  true)
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
-        _ (js/console.log "massa-pot2-massa-lomake :: pot2-massa-lomake " (pr-str pot2-massa-lomake))]
+        _ (js/console.log "massa-pot2-massa-lomake :: pot2-massa-lomake " (pr-str pot2-massa-lomake))
+        muut-validointivirheet (pot2-validoinnit/runko-ja-sideaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
@@ -224,21 +226,24 @@
                   "Uusi massa")
        :footer-fn (fn [data]
                     [:div
-                     (when-not (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
+                     (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
+                                    (empty? muut-validointivirheet))
                        [:div
                         [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
                         [:ul
-                         (for [puuttuva (ui-lomake/puuttuvat-pakolliset-kentat data)]
-                           ^{:key (name puuttuva)}
-                           [:li (name puuttuva)])]])
+                         (for [puute (concat
+                                       (ui-lomake/puuttuvat-pakolliset-kentat data)
+                                       muut-validointivirheet)]
+                           ^{:key (name puute)}
+                           [:li (name puute)])]])
                      [:div.flex-row.alkuun
                       [napit/tallenna
                        "Tallenna"
                        #(e! (tiedot-massa/->TallennaLomake data))
                        {:vayla-tyyli? true
                         :luokka "suuri"
-                        :disabled (not (and (ui-lomake/voi-tallentaa? data)
-                                            (runko-side-ja-lisaaineet-voi-tallentaa? (ui-lomake/ilman-lomaketietoja data))))}]
+                        :disabled (or (not (ui-lomake/voi-tallentaa? data))
+                                      (not (empty? muut-validointivirheet)))}]
                       [napit/peruuta
                        "Peruuta"
                        #(e! (tiedot-massa/->TyhjennaLomake data))

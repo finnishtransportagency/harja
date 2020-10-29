@@ -29,6 +29,7 @@
 (defrecord PaivitaLomake [data])
 (defrecord PaivitaAineenTieto [polku arvo])
 (defrecord LisaaSideaine [sideaineen-kayttotapa])
+(defrecord PoistaSideaine [sideaineen-kayttotapa])
 
 ;; Haut
 (defrecord HaePot2Massat [])
@@ -38,6 +39,12 @@
 (defrecord HaeKoodistot [])
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
+
+(defn lisatty-sideaine-mahdollinen?
+  [rivi]
+  (let [asfalttirouhetta? ((set (keys (::pot2-domain/runkoaineet rivi))) 2)
+        bitumikaterouhetta? ((set (keys (::pot2-domain/lisaaineet rivi))) 4)]
+    (or asfalttirouhetta? bitumikaterouhetta?)))
 
 (defn- sideaine-kayttoliittyman-muotoon
   "UI kilkkeet tarvitsevat runko-, side- ja lisäaineet muodossa {tyyppi {tiedot}}"
@@ -159,6 +166,14 @@
       (assoc-in app
                 [:pot2-massa-lomake ::pot2-domain/sideaineet sideaineen-kayttotapa :aineet aineiden-lkm]
                 tyhja-sideaine)))
+
+  PoistaSideaine
+  (process-event [{sideaineen-kayttotapa :sideaineen-kayttotapa} app]
+    (let [aineiden-lkm
+          (count (get-in app
+                         [:pot2-massa-lomake ::pot2-domain/sideaineet sideaineen-kayttotapa :aineet]))]
+      (update-in app [:pot2-massa-lomake ::pot2-domain/sideaineet sideaineen-kayttotapa :aineet]
+                 dissoc (dec aineiden-lkm))))
 
   TallennaLomake
   (process-event [{data :data} app]
