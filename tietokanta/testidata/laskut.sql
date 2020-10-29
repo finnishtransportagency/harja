@@ -58,30 +58,30 @@ $$
 
 -- Laskut MHU raporttia varten -  Maksettu 15.10.2019 - Laskutuskausi alkaa 1.10
 -- Talvihoito
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 3000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 300.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 3000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 300.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 -- Soratiet
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 4000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 400.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 4000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 400.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 -- Päällysteet
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 5000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 500.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 5000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 500.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 -- Korvausinvestoinnit
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 6000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 600.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 6000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 600.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 -- Ylläpito
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 7000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-16', 700.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 7000.77, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-16', 700.77, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'lokakuu/1-hoitovuosi');
 
 
 -- Kohdistukset - 15.10.2019 - Laskutuskausi alkaa 1.10
@@ -123,20 +123,30 @@ INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, teh
 
 
 -- Laskut 20.03.2020
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 3000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 300.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 3000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 300.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
 -- Soratiet
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 4000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 400.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 4000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 400.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
 -- Päällystykset
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 5000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 500.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 5000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 500.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
 -- Korvausinvestoinnit
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 6000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 600.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 6000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 600.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
 -- Ylläpito
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 7000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-03-20', 700.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 7000.20, urakka_id, 'kiinteasti-hinnoiteltu', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-03-20', 700.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'maaliskuu/1-hoitovuosi');
 
 -- Kohdistukset 1.3.2020 - 31.3.2020
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
@@ -166,9 +176,12 @@ INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, teh
 
 -- Poikkeuskulut MHU ja Hoidon johdon hallinnolle - 04/2020
 -- Normaalisti näitä ei pitäisi lisätä, mutta koska se on käyttöliittymästä mahdollista, niin tehdään testiaineisto
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-04-20', 10.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-04-21', 10.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja) VALUES ('2020-04-22', 10.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id);
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-04-20', 10.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'huhtikuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-04-21', 10.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'huhtikuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+  VALUES ('2020-04-22', 10.20, urakka_id, 'laskutettava', current_timestamp, kayttaja_id, 'huhtikuu/1-hoitovuosi');
 -- Kohdistukset
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES
 ((select id from lasku where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-20'), 1, tinst_mhu_hoidon_johto, tehtava_palkkio, NULL, 'kokonaishintainen'::MAKSUERATYYPPI, 10.20, '2020-04-15', '2020-04-20', current_timestamp, kayttaja_id);
