@@ -1,9 +1,9 @@
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-15', 666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), 'laskutettava', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-10-15', 6666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), 'laskutettava', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
-INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES ('2019-09-15', 3666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), 'kiinteasti-hinnoiteltu', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-15', 666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), 'laskutettava', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-10-15', 6666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), 'laskutettava', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'lokakuu/1-hoitovuosi');
+INSERT INTO lasku (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
+VALUES ('2019-09-15', 3666.66, (select id from urakka where nimi = 'Oulun MHU 2019-2024'), 'kiinteasti-hinnoiteltu', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'lokakuu/1-hoitovuosi');
 
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES ((select id from lasku where kokonaissumma = 666.66), 1, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),(select id from tehtavaryhma where nimi = 'Vesakonraivaukset ja puun poisto (V)'), null, 'kokonaishintainen'::MAKSUERATYYPPI, 333.33, '2019-11-15', '2019-11-18', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
 INSERT INTO lasku_kohdistus (lasku, rivi, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, summa, suoritus_alku, suoritus_loppu, luotu, luoja) VALUES ((select id from lasku where kokonaissumma = 666.66), 2, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'),(select id from tehtavaryhma where nimi = 'Nurmetukset ja muut vihertyöt (N)'), null, 'kokonaishintainen'::MAKSUERATYYPPI, 222.22, '2019-11-22', '2019-11-25', current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
