@@ -128,17 +128,17 @@
 
 (defn paivamaaran-valinta
   [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi]}]
-  (let [{kk :kk vuosi :vuosi} (lasku/koontilaskun-kuukausi->kk-vuosi koontilaskun-kuukausi
-                                                                     (-> @tila/yleiset :urakka :alkupvm)
-                                                                     (-> @tila/yleiset :urakka :loppupvm))]
-    [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
-                                                 :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
-                                                 :pvm           erapaiva
-                                                 :pakota-suunta false
-                                                 :disabled      disabled
-                                                 :valittava?-fn #(if-not (nil? koontilaskun-kuukausi)
-                                                                   (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi)))
-                                                                   false)}])) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+  [pvm-valinta/pvm-valintakalenteri-inputilla
+   {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
+    :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default")
+                     "komponentin-input"}
+    :pvm           erapaiva
+    :pakota-suunta false
+    :disabled      disabled
+    :valittava?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn
+                     koontilaskun-kuukausi
+                     (-> @tila/yleiset :urakka :alkupvm)
+                     (-> @tila/yleiset :urakka :loppupvm))}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
 
 (defn koontilaskun-kk-droppari

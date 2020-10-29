@@ -57,4 +57,10 @@
                   vuosi))]
     {:kk kk :vuosi vuosi}))
 
+(defn koontilaskun-kuukauden-sisalla?-fn [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
+  (let [{kk :kk vuosi :vuosi} (koontilaskun-kuukausi->kk-vuosi koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)]
+    #(if-not (nil? koontilaskun-kuukausi)
+       (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi)))
+       false))) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+
 (s/def ::talenna-lasku (fn [lasku] true))
