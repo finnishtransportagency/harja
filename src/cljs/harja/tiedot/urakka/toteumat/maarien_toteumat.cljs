@@ -266,7 +266,8 @@
                               :epaonnistui ->HaeTehtavanToteumatEpaonnistui})
           (-> app
               (assoc :haetut-toteumat-lataa true)
-              (dissoc :haetut-toteumat))))))
+              (dissoc :haetut-toteumat)
+              (assoc :avattu-tehtava (:tehtava tehtava)))))))
 
   HaeTehtavanToteumatOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -450,6 +451,7 @@
 
   TyhjennaLomake
   (process-event [_ app]
+    (hae-tehtavat nil)
     (assoc app :syottomoodi false
                :tehtavat []
                :lomake (-> tila/toteumat-default-arvot
@@ -598,6 +600,7 @@
                   true (assoc-in [:lomake ::t/tyyppi] :maaramitattava)
                   ;; Aseta valittu tehtävä
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/tehtava] tehtava)
+                  true (assoc :valittu-tehtava tehtava)
                   ;; Aseta valittu toimenpide
                   (and
                     (not (nil? toimenpide))
@@ -618,6 +621,8 @@
           #_(-> app
                 (assoc-in [:lomake ::tila/validius] validius)
                 (assoc-in [:lomake ::tila/validi?] validi?))]
+      #_ (hae-toimenpiteelle-tehtavat-ja-aseta toimenpide tehtava)
+      (hae-tehtavat toimenpide tehtava)
       app))
 
   PoistaToteumaOnnistui
@@ -677,12 +682,14 @@
                         :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
                         :paasta-virhe-lapi? true})))
 
-(defn- hae-tehtavat [toimenpide]
-  (let [tehtavaryhma (when toimenpide
-                       (:id toimenpide))]
-    (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
-                       {:tehtavaryhma tehtavaryhma
-                        :urakka-id (-> @tila/yleiset :urakka :id)}
-                       {:onnistui ->TehtavatHakuOnnistui
-                        :epaonnistui ->TehtavatHakuEpaonnistui
-                        :paasta-virhe-lapi? true})))
+(defn- hae-tehtavat
+  ([toimenpide] (hae-tehtavat toimenpide nil))
+  ([toimenpide valittu-tehtava]
+   (let [tehtavaryhma (when toimenpide
+                        (:id toimenpide))]
+     (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
+                        {:tehtavaryhma tehtavaryhma
+                         :urakka-id (-> @tila/yleiset :urakka :id)}
+                        {:onnistui ->TehtavatHakuOnnistui
+                         :epaonnistui ->TehtavatHakuEpaonnistui
+                         :paasta-virhe-lapi? true}))))

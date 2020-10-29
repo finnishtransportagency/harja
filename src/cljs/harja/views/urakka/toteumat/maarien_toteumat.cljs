@@ -139,7 +139,7 @@
                                               (= true (:kasin_lisattava_maara (first (second rivi)))))
                                         [^{:key (str "lisää-toteuma-" (hash rivi))}
                                          [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
-                                          [:td {:style {:width (:tehtava leveydet)}} [lisaa-toteuma-linkki e! app (first rivi) (:tryh (first (second rivi)))]]
+                                          [:td {:style {:width (:tehtava leveydet)}} [lisaa-toteuma-linkki e! app (first rivi) (:toimenpide (first (second rivi)))]]
                                           [:td {:style {:width (:caret leveydet)}} ""]
                                           [:td {:style {:width (:toteuma leveydet)}} ""]
                                           [:td {:style {:width (:suunniteltu leveydet)}} ""]
