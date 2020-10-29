@@ -135,8 +135,7 @@
         oletus-vastaus #:harja.domain.pot2{:lisaaineet {1 {:valittu? true, :lisaaine/pitoisuus 1.5M}}, :dop-nro "12345abc", :max-raekoko 5, :urakka-id 7, :nimen-tarkenne "Tarkenne", :litteyslukuluokka 1, :runkoaineet {1 {:valittu? true, :runkoaine/esiintyma "Zatelliitti", :runkoaine/kuulamyllyarvo 12.1M, :runkoaine/litteysluku 4.1M, :runkoaine/massaprosentti 34}}, :kuulamyllyluokka "AN5", :sideaineet {:lopputuote {:valittu? true, :aineet {0 #:sideaine{:tyyppi 1, :pitoisuus 10.56M, :lopputuote? true}}}, :lisatty {:aineet {0 {:valittu? true, :sideaine/tyyppi 2, :sideaine/pitoisuus 10.4M, :sideaine/lopputuote? false}}}}, :tyyppi 1}]
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet oletus-vastaus))))
-    (is (= (siivoa-muuttuvat (:harja.domain.pot2/sideaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/sideaineet oletus-vastaus))))
-    ))
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/sideaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/sideaineet oletus-vastaus))))))
 
 (deftest hae-urakan-pot2-massat
   (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -145,11 +144,8 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                :hae-urakan-pot2-massat
                                +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
-        _ (println "hae-urakan-pot2-massat :: vastaus " (pr-str vastaus))
-        ]
-    (is (not (nil? vastaus)))
-
-    ))
+        oletettu-vastaus '({:harja.domain.pot2/runkoaineet [{:runkoaine/esiintyma "Kaiskakallio", :runkoaine/kuulamyllyarvo 10.0M, :runkoaine/kuvaus "Kelpo runkoaine tämä.", :runkoaine/massaprosentti 52, :runkoaine/litteysluku 9.5M, :pot2-massa/id 1, :runkoaine/tyyppi 1, :runkoaine/id 1}], :harja.domain.pot2/lisaaineet ({:lisaaine/pitoisuus 0.5M, :lisaaine/id 1, :lisaaine/tyyppi 2, :pot2-massa/id 1}), :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/litteyslukuluokka 1, :harja.domain.pot2/tyyppi 12, :pot2-massa/id 1, :harja.domain.pot2/kuulamyllyluokka "AN14", :harja.domain.pot2/dop-nro "1234567", :harja.domain.pot2/sideaineet ({:sideaine/tyyppi 6, :sideaine/lopputuote? true, :sideaine/pitoisuus 4.8M, :pot2-massa/id 1, :sideaine/id 1})} {:harja.domain.pot2/runkoaineet [{:runkoaine/esiintyma "Sammalkallio", :runkoaine/kuulamyllyarvo 9.2M, :runkoaine/kuvaus "Jämäkkä runkoaine.", :runkoaine/massaprosentti 85, :runkoaine/litteysluku 6.5M, :pot2-massa/id 2, :runkoaine/tyyppi 1, :runkoaine/id 2} {:runkoaine/id 3, :runkoaine/tyyppi 3, :runkoaine/kuvaus "Oiva Filleri.", :pot2-massa/id 2, :runkoaine/esiintyma "Sammalkallio", :runkoaine/litteysluku 6.5M, :runkoaine/fillerityyppi "Kalkkifilleri (KF)", :runkoaine/kuulamyllyarvo 8.2M, :runkoaine/massaprosentti 3} {:runkoaine/esiintyma "Sammalkallio", :runkoaine/kuulamyllyarvo 11.2M, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/massaprosentti 5, :runkoaine/litteysluku 4.5M, :pot2-massa/id 2, :runkoaine/tyyppi 2, :runkoaine/id 4}], :harja.domain.pot2/lisaaineet ({:lisaaine/pitoisuus 0.5M, :lisaaine/id 2, :lisaaine/tyyppi 1, :pot2-massa/id 2}), :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/litteyslukuluokka 2, :harja.domain.pot2/tyyppi 14, :pot2-massa/id 2, :harja.domain.pot2/kuulamyllyluokka "AN7", :harja.domain.pot2/dop-nro "987654331-2", :harja.domain.pot2/sideaineet ({:sideaine/tyyppi 5, :sideaine/lopputuote? true, :sideaine/pitoisuus 5.5M, :pot2-massa/id 2, :sideaine/id 2})} {:harja.domain.pot2/runkoaineet [{:runkoaine/esiintyma "Zatelliitti", :runkoaine/kuulamyllyarvo 12.1M, :runkoaine/massaprosentti 34, :runkoaine/litteysluku 4.1M, :pot2-massa/id 3, :runkoaine/tyyppi 1, :runkoaine/id 5}], :harja.domain.pot2/lisaaineet ({:lisaaine/pitoisuus 1.5M, :lisaaine/id 3, :lisaaine/tyyppi 1, :pot2-massa/id 3}), :harja.domain.pot2/nimen-tarkenne "Tarkenne", :harja.domain.pot2/max-raekoko 5, :harja.domain.pot2/litteyslukuluokka 1, :harja.domain.pot2/tyyppi 1, :pot2-massa/id 3, :harja.domain.pot2/kuulamyllyluokka "AN5", :harja.domain.pot2/dop-nro "12345abc", :harja.domain.pot2/sideaineet ({:sideaine/tyyppi 1, :sideaine/lopputuote? true, :sideaine/pitoisuus 10.6M, :pot2-massa/id 3, :sideaine/id 3})})]
+    (is (= vastaus oletettu-vastaus))))
 
 (def pot-testidata
   {:perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
