@@ -217,7 +217,7 @@
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
         _ (js/console.log "massa-pot2-massa-lomake :: pot2-massa-lomake " (pr-str pot2-massa-lomake))
-        muut-validointivirheet (pot2-validoinnit/runko-ja-sideaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)]
+        muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))

@@ -1,5 +1,4 @@
 (ns harja.tiedot.urakka.pot2.validoinnit
-
   (:require
     [harja.domain.pot2 :as pot2-domain]))
 
@@ -18,6 +17,28 @@
     7 #{:runkoaine/kuvaus
         :runkoaine/massaprosentti}))
 
+(def pakolliset-sideaineen-kentat
+  #{:sideaine/tyyppi :sideaine/pitoisuus})
+
+(defn- pakolliset-lisaaineen-kentat [_]
+  #{:lisaaine/pitoisuus})
+
+(defn- pakolliset-ainetyypin-kentat [ainetyyppi tyyppi]
+  (case ainetyyppi
+    :runkoaine (pakolliset-runkoaineen-kentat tyyppi)
+    :lisaaine (pakolliset-lisaaineen-kentat tyyppi)))
+
+(defn- keraa-runko-tai-lisaaineen-puutteet
+  [aineet ainetyyppi]
+  (into {}
+        (map (fn [[tyyppi aine]]
+               {tyyppi
+                (keep (fn [kentta]
+                        (when (and (:valittu? aine)
+                                   (nil? (aine kentta)))
+                          (name kentta)))
+                      (pakolliset-ainetyypin-kentat ainetyyppi tyyppi))})
+             aineet)))
 
 (defn- muotoile-ainetyypin-puutteet [puutteet ainetyypit ainetyypin-str]
   (apply str
@@ -36,15 +57,7 @@
   [runkoaineet runkoainetyypit]
   (if (empty? runkoaineet)
     "Valitse ainakin yksi runkoaine"
-    (let [puutteet (into {}
-                         (map (fn [[tyyppi aine]]
-                                {tyyppi
-                                 (keep (fn [kentta]
-                                         (when (and (:valittu? aine)
-                                                    (nil? (aine kentta)))
-                                           (name kentta)))
-                                       (pakolliset-runkoaineen-kentat tyyppi))})
-                              runkoaineet))
+    (let [puutteet (keraa-runko-tai-lisaaineen-puutteet runkoaineet :runkoaine)
           puutteet-luettavaksi (muotoile-ainetyypin-puutteet puutteet runkoainetyypit "Runkoaineesta ")]
       (if (empty? puutteet-luettavaksi)
         nil
@@ -58,7 +71,7 @@
                   (keep (fn [kentta]
                           (when (nil? (aine kentta))
                             (name kentta)))
-                        #{:sideaine/tyyppi :sideaine/pitoisuus})}))
+                        pakolliset-sideaineen-kentat)}))
              aineet)))
 
 
@@ -86,11 +99,21 @@
         (str lopputuotteen-puutteet-luettavaksi
              lisattyjen-puutteet-luettavaksi)))))
 
-(defn runko-ja-sideaineen-validointivirheet
+
+
+(defn- lisaaineiden-validointipuutteet
+  [lisaaineet lisaainetyypit]
+  (when-not (empty? lisaaineet)
+    (let [puutteet (keraa-runko-tai-lisaaineen-puutteet lisaaineet :lisaaine)
+          puutteet-luettavaksi (muotoile-ainetyypin-puutteet puutteet lisaainetyypit "Lisäaineesta ")]
+      (if (empty? puutteet-luettavaksi)
+        nil
+        puutteet-luettavaksi))))
+
+(defn runko-side-ja-lisaaineen-validointivirheet
   [{::pot2-domain/keys [runkoaineet sideaineet lisaaineet] :as lomake}
-   {:keys [runkoainetyypit sideainetyypit] :as materiaalikoodistot}]
+   {:keys [runkoainetyypit sideainetyypit lisaainetyypit]}]
   (let [runkoaineiden-puutteet (runkoaineiden-validointipuutteet runkoaineet runkoainetyypit)
         sideaineiden-puutteet (sideaineiden-validointipuutteet sideaineet sideainetyypit)
-        ; TODO: lisäaineiden validointi vielä..
-        ]
-    (remove nil? [runkoaineiden-puutteet sideaineiden-puutteet])))
+        lisaaineiden-puutteet (lisaaineiden-validointipuutteet lisaaineet lisaainetyypit)]
+    (remove nil? [runkoaineiden-puutteet sideaineiden-puutteet lisaaineiden-puutteet])))
