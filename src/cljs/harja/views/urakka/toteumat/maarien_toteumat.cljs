@@ -76,7 +76,9 @@
     "kpl"
 
     :else
-    ""))
+    (if (:yk rivi)
+      (:yk rivi)
+      "")))
 
 ; spekseistä laskettu
 (def leveydet {:tehtava "55%"
@@ -176,7 +178,7 @@
         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
-      (if (::haetut-tehtavat-lataa app) #_ (:ajax-loader app)
+      (if (:haetut-tehtavat-lataa app)
         [yleiset/ajax-loader "Haetaan..."]
         [:tbody
          (doall
