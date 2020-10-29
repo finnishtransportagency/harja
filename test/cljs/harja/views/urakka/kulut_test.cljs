@@ -22,4 +22,9 @@
                                  :koontilaskun-kuukausi "huhtikuu/1-hoitovuosi"}
                      tulos (paivamaaran-valinta parametrit)
                      valittava?-fn (:valittava?-fn (second tulos))]
-                 (is (valittava?-fn (pvm/->pvm "04.04.2015"))))))
+                 (is (valittava?-fn (pvm/->pvm "04.04.2015")))
+                 (is (valittava?-fn (pvm/->pvm "01.04.2015")))
+                 (is (valittava?-fn (pvm/->pvm "30.04.2015")))
+                 (is (not (valittava?-fn (pvm/->pvm "31.03.2015"))))
+                 (is (not (valittava?-fn (pvm/->pvm "01.05.2015"))))
+                 (is (not (valittava?-fn (pvm/->pvm "04.04.1985")))))))
