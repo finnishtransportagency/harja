@@ -31,11 +31,12 @@
 (defn- laske-prosentti
   "Olettaa saavansa molemmat parametrit big arvoina."
   [toteuma suunniteltu]
-  (if (or (big/eq (big/->big 0) toteuma)
-          (and (big/eq (big/->big 0) toteuma) (big/eq (big/->big 0) suunniteltu))
-          (nil? toteuma))
+  (if (or (nil? toteuma)
+          (nil? suunniteltu)
+          (big/eq (big/->big 0) toteuma)
+          (big/eq (big/->big 0) suunniteltu))
     0
-    (big/fmt (big/mul (big/->big 100) (big/div suunniteltu toteuma)) 2)))
+    (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2)))
 
 (defn- muokkaa-toteumaa-linkki [e! db-aika toteuma-id]
   [:a {:href "#"
@@ -81,45 +82,42 @@
 (def leveydet {:tehtava "55%"
                :caret "4%"
                :toteuma "15%"
-               :suunniteltu "17%"
-               :prosentti "9%"})
+               :suunniteltu "15%"
+               :prosentti "11%"})
 
-(defn- ryhmitellyt-taulukko [e! app r]
-  (let [row-index-atom (r/atom 0)
+(defn- ryhmitellyt-taulukko [e! app r toteumat]
+  (let [
+        row-index-atom (r/atom 0)
         ll
         (mapcat
           (fn [[tehtavaryhma rivit]]
             (let [_ (reset! row-index-atom (inc @row-index-atom))
                   muodostetut (mapcat
                                 (fn [rivi]
-                                  (let [_ (reset! row-index-atom (inc @row-index-atom))
+                                  (let [
+                                        _ (reset! row-index-atom (inc @row-index-atom))
                                         avattava? true
                                         nayta-nuoli? (or
                                                        (:taika (first (second rivi)))
-                                                       (:k? (first (second rivi))))
-                                        lapsi-rivit (if (and
-                                                          (= (get-in app [:valittu-rivi]) (first rivi))
-                                                          (not (nil? (:tot (first (second rivi))))))
-                                                      (second rivi)
-                                                      nil)
+                                                       (:kasin_lisattava_maara (first (second rivi))))
                                         toteutunut-maara (reduce big/plus (big/->big 0)
-                                                                 (keep #(big/->big (:tot %)) (second rivi)))
-                                        suunniteltu-maara (big/->big (:skpl (first (second rivi))))
+                                                                 (keep #(big/->big (or (:materiaalimaara %) (:maara %) 0)) (second rivi)))
+                                        suunniteltu-maara (big/->big (or (:suunniteltu_maara (first (second rivi))) 0))
                                         {:keys [tyyppi]} (first (second rivi))]
                                     (concat
                                       [^{:key (hash rivi)}
                                        [:tr (merge
                                               (when avattava?
-                                                {:on-click #(e! (maarien-toteumat/->AvaaRivi (first rivi)))})
+                                                {:on-click #(e! (maarien-toteumat/->HaeTehtavanToteumat (first (second rivi))))})
                                               {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when avattava? "klikattava"))})
-                                        [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi)]
+                                        [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi) (when (:haetut-toteuma-lataa app) [:span [yleiset/ajax-loader-pieni]])]
                                         [:td {:style {:width (:caret leveydet)}} (if
                                                                                    (= (get-in app [:valittu-rivi]) (first rivi))
                                                                                    (when nayta-nuoli?
                                                                                      [ikonit/livicon-chevron-up])
                                                                                    (when nayta-nuoli?
                                                                                      [ikonit/livicon-chevron-down]))]
-                                        [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
+                                        [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (:yk (first (second rivi))) #_ (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)}} (if (big/eq (big/->big -1) suunniteltu-maara)
                                                                                          (case tyyppi
                                                                                            "kokonaishintainen" [:span.tila-virhe "---"]
@@ -131,14 +129,12 @@
                                                                                        (case tyyppi
                                                                                          "kokonaishintainen" [:span.tila-virhe (ikonit/exclamation-sign)]
                                                                                          "---")
-                                                                                       (str (laske-prosentti
-                                                                                              (big/->big (:skpl (first (second rivi))))
-                                                                                              toteutunut-maara) " %"))]]]
+                                                                                       (str (laske-prosentti toteutunut-maara suunniteltu-maara) " %"))]]]
 
                                       ;; "+ Lisää toteuma" rivi - jos rivi on auki ja jos tehtävämäärän/toimenpiteen tehtävälle on tietokantaan sallittu käsin lisäys
                                       (when (and
-                                              (= (get-in app [:valittu-rivi]) (first rivi))
-                                              (= true (:k? (first (second rivi)))))
+                                              (= (:tehtava (first (second rivi))) (:avattu-tehtava app))
+                                              (= true (:kasin_lisattava_maara (first (second rivi)))))
                                         [^{:key (str "lisää-toteuma-" (hash rivi))}
                                          [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                           [:td {:style {:width (:tehtava leveydet)}} [lisaa-toteuma-linkki e! app (first rivi) (:tryh (first (second rivi)))]]
@@ -147,35 +143,26 @@
                                           [:td {:style {:width (:suunniteltu leveydet)}} ""]
                                           [:td {:style {:width (:prosentti leveydet)}} ""]]])
 
-                                      (if lapsi-rivit
-                                        ;; Lisätään toteutuneet määrät lapsi-riveinä
+                                      (when (and toteumat
+                                                 (= (:tehtava (first (second rivi))) (:avattu-tehtava app)))
                                         (mapcat
-                                          (fn [lapsi]
-                                            (let [_ (reset! row-index-atom (inc @row-index-atom))]
-                                              [^{:key (hash lapsi)}
-                                               [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
-                                                [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:taika lapsi) (:tid lapsi)]]
-                                                [:td {:style {:width (:caret leveydet)}} ""]
-                                                [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (:tot lapsi)) 2) " " (maarita-yksikko lapsi))]
-                                                [:td {:style {:width (:suunniteltu leveydet)}} "---"]
-                                                [:td {:style {:width (:prosentti leveydet)}} "---"]]]))
-                                          lapsi-rivit)
-                                        ;; Jos lapsi-rivejä ei ole, mutta toteuma löytyy, niin lisätään se
-                                        (when (and
-                                                (= (get-in app [:valittu-rivi]) (first rivi))
-                                                (big/gt toteutunut-maara (big/->big 0)))
-                                          [^{:key (str "toteuma-" (hash rivi))}
-                                           (do
-                                             (reset! row-index-atom (inc @row-index-atom))
-                                             [:tr {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
-                                              [:td {:style {:width (:tehtava leveydet)}} [muokkaa-toteumaa-linkki e! (:taika (first (second rivi))) (:tid (first (second rivi)))]]
-                                              [:td {:style {:width (:caret leveydet)}} ""]
-                                              [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (:tot (first (second rivi)))) 2) " " (maarita-yksikko (first (second rivi))))]
-                                              [:td {:style {:width (:suunniteltu leveydet)}} "---"]
-                                              [:td {:style {:width (:prosentti leveydet)}} "---"]])])))))
+                                          (fn [toteuma]
+                                            [^{:key (str "toteuma-" (hash toteuma))}
+                                             (do
+                                               (reset! row-index-atom (inc @row-index-atom))
+                                               [:tr {:key (str "tr-toteuma" - (hash toteuma))
+                                                     :class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
+                                                [:td {:style {:width (:tehtava leveydet)}} (if (= "muu" (:tyyppi toteuma))
+                                                                                             [muokkaa-toteumaa-linkki e! (:alkanut toteuma) (:id toteuma)]
+                                                                                             "Järjestelmästä lisätty")]
+                                                [:td {:style {:width (:caret leveydet)}}]
+                                                [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi))))]
+                                                [:td {:style {:width (:suunniteltu leveydet)}}]
+                                                [:td {:style {:width (:prosentti leveydet)}}]])])
+
+                                          toteumat)))))
                                 rivit)]
-              (concat [
-                       ^{:key (str "otsikko-" (hash tehtavaryhma))}
+              (concat [^{:key (str "otsikko-" (hash tehtavaryhma))}
                        [:tr.header
                         [:td {:colSpan "5"} tehtavaryhma]]]
                       muodostetut)))
@@ -189,7 +176,7 @@
         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
-      (if (:ajax-loader app)
+      (if (::haetut-tehtavat-lataa app) #_ (:ajax-loader app)
         [yleiset/ajax-loader "Haetaan..."]
         [:tbody
          (doall
@@ -209,6 +196,7 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         ryhmitellyt-maarat (get-in app [:toteutuneet-maarat-grouped])
+        toteumat (get-in app [:haetut-toteumat])
         toimenpiteet (get-in app [:toimenpiteet])
         valittu-toimenpide (if (nil? (:valittu-toimenpide app))
                              {:otsikko "Kaikki" :id 0}
@@ -219,7 +207,7 @@
         syottomoodi (get-in app [:syottomoodi])
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
-     #_[debug/debug app]
+     [debug/debug app]
      [:div {:style {:padding-top "1rem"}} [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
                                            "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
      [:div.row
@@ -259,7 +247,7 @@
                                           (polku tila)))}
        (r/wrap filtterit
                (constantly true))]]
-     [ryhmitellyt-taulukko e! app ryhmitellyt-maarat]]))
+     [ryhmitellyt-taulukko e! app ryhmitellyt-maarat toteumat]]))
 
 (defn maarien-toteumat* [e! app]
   (komp/luo
@@ -268,10 +256,7 @@
                       (do
                         (e! (maarien-toteumat/->HaeKaikkiTehtavat))
                         (e! (maarien-toteumat/->HaeToimenpiteet))
-                        (e! (maarien-toteumat/->HaeToteutuneetMaarat
-                              (:id @nav/valittu-urakka)
-                              (:valittu-toimenpide app)
-                              (get-in app [:hoitokauden-alkuvuosi]) nil nil)))))
+                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0 :otsikko "Kaikki"})))))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
@@ -283,4 +268,4 @@
             [maarien-toteumalistaus e! app]])]))))
 
 (defn maarien-toteumat []
-  (tuck/tuck tila/toteumat-maarat maarien-toteumat*))
+  (tuck/tuck tila/maarien-toteumat maarien-toteumat*))

@@ -220,7 +220,7 @@
                      :toteumat    toteumat-default-arvot}))
 
 
-(defonce toteumat-maarat (cursor tila [:toteumat :maarien-toteumat]))
+(defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
