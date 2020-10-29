@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.tyokalut.lukot :as lukot]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (def sonja-kanava "sonjaping")
 (def lukon-vanhenemisaika 300)

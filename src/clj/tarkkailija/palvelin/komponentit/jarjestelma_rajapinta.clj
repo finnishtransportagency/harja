@@ -1,10 +1,7 @@
-(ns harja.palvelin.komponentit.jarjestelma-rajapinta
+(ns tarkkailija.palvelin.komponentit.jarjestelma-rajapinta
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.jarjestelma-rajapinta :as rajapinta]))
-
-(defprotocol IRajapinta
-  (lisaa [this nimi f])
-  (poista [this nimi]))
+            [harja.palvelin.jarjestelma-rajapinta :as rajapinta]
+            [tarkkailija.palvelin.rajapinta-protokolla :as p]))
 
 (defrecord Rajapintakasittelija []
   component/Lifecycle
@@ -12,7 +9,7 @@
     this)
   (stop [this]
     this)
-  IRajapinta
+  p/IRajapinta
   (lisaa [_ nimi f]
     (when-not (and (keyword? nimi)
                    (ifn? f))

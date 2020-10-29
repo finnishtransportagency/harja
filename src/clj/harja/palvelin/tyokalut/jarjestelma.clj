@@ -4,7 +4,8 @@
   (:import (com.stuartsierra.component SystemMap)))
 
 (defprotocol IRestart
-  (restart [this system-component]))
+  (restart [this system-component])
+  (reload [this component]))
 
 (defn- restart-komp [komp]
   (component/stop komp)

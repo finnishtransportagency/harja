@@ -5,7 +5,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
             [harja.palvelin.palvelut.status :as status]
             [harja.kyselyt.jarjestelman-tila :as j-t]

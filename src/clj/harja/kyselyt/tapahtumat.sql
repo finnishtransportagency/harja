@@ -20,10 +20,11 @@ FROM tapahtuma
 WHERE nimi = :nimi;
 
 -- name: uusin-arvo-per-palvelin
--- single?: true
-SELECT palvelimien_uusimmat_arvot::TEXT
-FROM tapahtuma
-WHERE nimi = :nimi;
+SELECT key AS palvelin,
+       value AS data
+FROM jsonb_each_text((SELECT palvelimien_uusimmat_arvot
+                      FROM tapahtuma
+                      WHERE nimi = :nimi));
 
 -- name: tapahtuman-arvot
 SELECT arvo::TEXT

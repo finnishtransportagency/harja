@@ -1,12 +1,16 @@
 (ns harja.palvelin.tyokalut.tapahtuma-apurit
   (:require [clojure.core.async :as async]
-            [harja.palvelin.jarjestelma-rajapinta :as jr]))
+            [harja.palvelin.jarjestelma-rajapinta :as jr]
+            [harja.fmt :as fmt]
+            [certifiable.log :as log])
+  (:import [java.net InetAddress]))
 
 (def ^{:private true
        :dynamic true}
   *log-error* false)
 
-(def host-nimi (jr/kutsu :host-nimi))
+(def host-nimi (fmt/leikkaa-merkkijono 512
+                                       (.toString (InetAddress/getLocalHost))))
 
 (defn tapahtuman-julkaisia!
   ([tapahtuma]
@@ -20,7 +24,8 @@
 
 (defn julkaise-tapahtuma
   [tapahtuma data]
-  (jr/kutsu :julkaise-tapahtuma tapahtuma data))
+  (log/debug (str "[KOMPONENTTI-EVENT] julkaise-tapahtuma - tapahtuma: " tapahtuma " data: " data))
+  (jr/kutsu :julkaise-tapahtuma tapahtuma data host-nimi))
 
 (defn tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
   (async/go
@@ -48,10 +53,10 @@
    Palautettu kanava palauttaa toisen kanavan, jonka sisällön lukeminen blokkaa siksi aikaa, että jokin annetuista
    tapahtumista on tapahtunut.
 
-   tapahtuma      pitää olla :harja.palvelin.komponentit.tapahtumat/tapahtuma specin mukainen
+   tapahtuma      pitää olla :tarkkailija.palvelin.komponentit.tapahtumat/tapahtuma specin mukainen
    kasittelija-fn voi olla joko funktio tai sitten map, jossa avaimet :f ja :tyyppi.
                   :f on funktio
-                  :tyyppi on joku :harja.palvelin.komponentit.tapahtumat/tyyppi specin mukainen keyword.
+                  :tyyppi on joku :tarkkailija.palvelin.komponentit.tapahtumat/tyyppi specin mukainen keyword.
                           Jos :tyyppi avainta ei ole annettu, annetaan sille arvoksi :perus
 
    Esimerkki: (kuuntele-useampaa-tapahtumaa :foo (fn [val ch])
@@ -70,7 +75,10 @@
                           (partition 2 tapahtumakasittelijat))]
     `(async/thread (let [ryhmanimi# (str (gensym "useampi"))
                          kuuntelijat# (mapv (fn [[~'tapahtuma ~'tyyppi]]
-                                              (jr/kutsu :yhta-aikaa-tapahtuman-julkaisia! ryhmanimi# ~'tapahtuma ~'tyyppi))
+                                              (jr/kutsu :yhta-aikaa-tapahtuman-julkaisia! {:tunnistin ryhmanimi#
+                                                                                           :lkm ~(count tapahtumat#)}
+                                                        ~'tapahtuma
+                                                        ~'tyyppi))
                                             ~(mapv #(vec (take 2 %)) tapahtumat#))
                          ~(mapv #(get % 3) tapahtumat#) (mapv (fn [~'kuuntelija]
                                                                 (async/<!! ~'kuuntelija))
@@ -84,7 +92,7 @@
 
 (defn tapahtuma-julkaisija
   [tapahtuma]
-  (jr/kutsu :tapahtuma-julkaisija tapahtuma))
+  (jr/kutsu :tapahtuma-julkaisija tapahtuma host-nimi))
 
 (defn tapahtuma-datan-spec
   [tapahtuma-julkaisija spec]

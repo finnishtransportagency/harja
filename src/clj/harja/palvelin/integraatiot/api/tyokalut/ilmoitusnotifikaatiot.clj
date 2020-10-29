@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot
   (:require [clojure.core.async :refer [thread]]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [taoensso.timbre :as log]))
 

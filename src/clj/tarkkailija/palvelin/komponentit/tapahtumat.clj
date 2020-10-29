@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.tapahtumat
+(ns tarkkailija.palvelin.komponentit.tapahtumat
   "Klusteritason tapahtumien kuuntelu
 
   Tätä käytetään mm TLOIK-komponentissa, Sonja-yhteysvarmistuksessa, ja ilmoitukset-APIssa.
@@ -6,7 +6,6 @@
   ja ilmoittaa urakkakohtaisista ilmoitukset-tapahtumista"
 
   (:require [com.stuartsierra.component :as component]
-            [cognitect.transit :as t]
             [clojure.core.async :refer [thread] :as async]
             [clojure.spec.alpha :as s]
             [clojure.string :as clj-str]
@@ -109,6 +108,7 @@
         (when dev-tyokalut/dev-environment?
           (log/info (str "[KOMPONENTTI-EVENT] Saatu payload: " payload))
           (log/info (str "[KOMPONENTTI-EVENT] palvelin: " palvelin))
+          (log/info (str "[KOMPONENTTI-EVENT] hash: " hash))
           (log/info (str "[KOMPONENTTI-EVENT] Lahetetyn datan tiedot: " lahetetty-data))
           (log/info (str "[KOMPONENTTI-EVENT] Saadun datan tiedot: " (dev-tyokalut/datan-tiedot payload {:type-string? true})))
           #_(dev-tyokalut/etsi-epakohta-datasta payload lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})))
@@ -120,10 +120,25 @@
                     :viimeisin (q-tapahtumat/uusin-arvo db {:nimi tapahtuma})
                     :viimeisin-per-palvelin (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
                     nil)]
-    (when json-data
-      (let [data (transit/lue-transit-string json-data transit-read-handler)]
-        (when (tapahtuman-data-ok?! data tapahtuma)
-          data)))))
+    ;(log/debug "[KOMPONENTTI-EVENT] paluuarvo - tapahtuma: " tapahtuma " palautettava-arvo: " palautettava-arvo " json-data nil? " (nil? json-data))
+    (when-not (nil? json-data)
+      (case palautettava-arvo
+        :viimeisin (let [data (transit/lue-transit-string json-data transit-read-handler)]
+                     ;(log/debug (str "[KOMPONENTTI-EVENT] Data: " data))
+                     (when (tapahtuman-data-ok?! data tapahtuma)
+                       data))
+        :viimeisin-per-palvelin (let [data (mapv #(update % :data transit/lue-transit-string transit-read-handler)
+                                                 json-data)]
+                                  ;(log/debug (str "[KOMPONENTTI-EVENT] Data: " json-data))
+                                  (when (every? (fn [{data :data}]
+                                                  ;(log/debug (str "[KOMPONENTTI-EVENT] Data every lopissa: " data))
+                                                  (tapahtuman-data-ok?! data tapahtuma)
+                                                  #_(tapahtuman-data-ok?! (transit/lue-transit-string (transit/clj->transit data
+                                                                                                                            {})
+                                                                                                      {})
+                                                                          tapahtuma))
+                                                data)
+                                    data))))))
 
 (defn- kuuntele-klusterin-tapahtumaa!
   [{:keys [db tapahtuma-loopin-ajot kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-kuittaus
@@ -131,10 +146,13 @@
   {:pre [(not (nil? db))
          (not (nil? tapahtuma))]}
   (thread (let [possukanava (kaytettava-kanava! db tapahtuma)]
+            ;(log/debug "[KOMPONENTTI-EVENT] kuuntele-klusterin-tapahtumaa! tapahtuma: " tapahtuma)
+            ;(log/debug "[KOMPONENTTI-EVENT] kuuntele-klusterin-tapahtumaa! possukanava: " possukanava)
             (if (= ::virhe possukanava)
               [::virhe nil]
               (let [kuuntelu-aloitettu-tunnistin (str (gensym "kuuntelu"))
                     kuuntelu-aloitettu-huomauttaja (async/chan)]
+                ;(log/debug "[KOMPONENTTI-EVENT] kuuntele-klusterin-tapahtumaa! tunnistin: " kuuntelu-aloitettu-tunnistin)
                 (async/sub kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-tunnistin kuuntelu-aloitettu-huomauttaja)
                 (async/put! tapahtuma-loopin-ajot {:f (fn [db]
                                                         (jdbc/with-db-transaction [db db]
@@ -145,6 +163,7 @@
                                                    :yhta-aikaa? (boolean ryhmatunnistin)
                                                    :lkm lkm})
                 (let [{::keys [paluuarvo]} (async/<!! kuuntelu-aloitettu-huomauttaja)]
+                  ;(log/debug "[KOMPONENTTI-EVENT] AJETAAN JÄLKEEN FN TAPAHTUMALLE: " tapahtuma)
                   (kuuntelun-jalkeen possukanava paluuarvo)
                   (async/put! kuuntelu-aloitettu-kuittaus true)
                   [possukanava paluuarvo]))))))
@@ -184,10 +203,12 @@
                   (-> @yhta-aikaa-ajettavat (get ryhmatunnistin) count (= (dec lkm))))
              (jdbc/with-db-transaction [db db]
                                        (doseq [{:keys [f tunnistin]} (get @yhta-aikaa-ajettavat ryhmatunnistin)]
+                                         ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
                                          (let [paluuarvo (f db)]
                                            (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
                                                                            ::paluuarvo paluuarvo})
                                            (vswap! ajojen-lkm inc)))
+                                       ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
                                        (let [paluuarvo (f db)]
                                          (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
                                                                          ::paluuarvo paluuarvo})
@@ -197,6 +218,7 @@
              (swap! yhta-aikaa-ajettavat update ryhmatunnistin conj {:f f :tunnistin tunnistin})
              :else
              (when f
+               ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
                (let [paluuarvo (f db)]
                  (when tunnistin
                    (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
@@ -207,7 +229,8 @@
          (async/<!! (async/go-loop [kuittaukset []]
                       (when-not (= @ajojen-lkm (count kuittaukset))
                         (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
-                          (recur (conj kuittaukset kuittaus)))))))
+                          (recur (conj kuittaukset kuittaus))))))
+         #_(log/debug (str "[KOMPONENTTI-EVENT] pura-tapahtuma-loopin-ajot! finito")))
        (catch Throwable t
          (log/error (str "Tapahtuma loopin ajot kaatui virheeseen: " (.getMessage t) "\nStack trace: " (.printStackTrace t))))))
 
@@ -238,11 +261,12 @@
 
 (defn- tarkkailija-kuuntelun-jalkeen [tyyppi kuuntelija-kanava broadcast tarkkailijat]
   (fn [possu-kanava paluu-arvo]
+    ;(log/debug "[KOMPONENTTI-EVENT]tarkkailija-kuuntelun-jalkeen: " tyyppi)
     (when-not (nil? paluu-arvo)
       (case tyyppi
         :perus nil
         :viimeisin (async/put! kuuntelija-kanava {::data paluu-arvo})
-        :viimeisin-per-palvelin (doseq [[_ arvo] paluu-arvo]
+        :viimeisin-per-palvelin (doseq [{arvo :data} paluu-arvo]
                                   (async/put! kuuntelija-kanava {::data arvo}))))
     (async/sub broadcast possu-kanava kuuntelija-kanava)
     (swap! tarkkailijat update possu-kanava conj kuuntelija-kanava)))
@@ -363,7 +387,9 @@
                  (or (not (string? tunnistin))
                      (not (integer? lkm))))
         (throw (IllegalArgumentException. (str "Yhtäaikaa alkavien tarkkailujen pitää antaa string tunnistin "
-                                               "ja lukumäärä, että moniko on aloittamassa yhtäaikaa"))))
+                                               "ja lukumäärä, että moniko on aloittamassa yhtäaikaa. "
+                                               "Nyt saatiin tyypeiksi - tunnistin: " (type tunnistin)
+                                               " lkm: " (type lkm)))))
       (thread (let [kuuntelija-kanava (async/chan 1000
                                                   (map (fn [v]
                                                          (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
@@ -406,6 +432,7 @@
                                        :hash (konv/sha256 muunnettu-payload)}
                                       (when dev-tyokalut/dev-environment?
                                         {:lahetetty-data (dev-tyokalut/datan-tiedot muunnettu-payload {:type-string? true})}))
+              ;_ (log/debug (str "[KOMPONENTTI-EVENT] julkaise! " julkaistava-data))
               julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (transit/clj->transit julkaistava-data
                                                                                                                  transit-write-handler)})]
           (when-not julkaisu-onnistui?

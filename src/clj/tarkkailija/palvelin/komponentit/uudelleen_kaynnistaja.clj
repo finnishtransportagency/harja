@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.uudelleen-kaynnistaja
+(ns tarkkailija.palvelin.komponentit.uudelleen-kaynnistaja
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :as async]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]

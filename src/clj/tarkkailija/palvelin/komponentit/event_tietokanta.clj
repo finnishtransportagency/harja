@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.event-tietokanta
+(ns tarkkailija.palvelin.komponentit.event-tietokanta
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]))

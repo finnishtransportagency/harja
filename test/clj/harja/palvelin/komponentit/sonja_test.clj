@@ -24,7 +24,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""

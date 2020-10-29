@@ -1,22 +1,17 @@
-(ns harja.palvelin.palvelut.tarkastelija.tapahtuma
+(ns tarkkailija.palvelin.palvelut.tapahtuma
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
-            [harja.fmt :as fmt]
             [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.tyokalut.predikaatti :as p]
-            [harja.palvelin.komponentit.jarjestelma-rajapinta :as rajapinta]
+            [tarkkailija.palvelin.rajapinta-protokolla :as rajapinta]
             [taoensso.timbre :as log])
-  (:import [java.net InetAddress]
-           [java.lang Math]))
+  (:import [java.lang Math]))
 
 (def ^{:private true
        :dynamic true}
   *log-error* false)
-
-(def host-nimi (fmt/leikkaa-merkkijono 512
-                                       (.toString (InetAddress/getLocalHost))))
 
 (defn tapahtuman-julkaisia!
   ([klusterin-tapahtumat tapahtuma]
@@ -28,8 +23,8 @@
    (tapahtumat-p/tarkkaile! klusterin-tapahtumat tapahtuma tyyppi)))
 
 (defn yhta-aikaa-tapahtuman-julkaisia!
-  [klusterin-tapahtumat ryhmanimi & args]
-  (binding [tapahtumat/*tarkkaile-yhta-aikaa* ryhmanimi]
+  [klusterin-tapahtumat ryhmakutsuntiedot & args]
+  (binding [tapahtumat/*tarkkaile-yhta-aikaa* ryhmakutsuntiedot]
     (apply tapahtuman-julkaisia! klusterin-tapahtumat args)))
 
 (defn tapahtuman-kuuntelija!
@@ -41,7 +36,7 @@
   (tapahtumat-p/kuuntele! klusterin-tapahtumat tapahtuma f))
 
 (defn julkaise-tapahtuma
-  [klusterin-tapahtumat tapahtuma data]
+  [klusterin-tapahtumat tapahtuma data host-nimi]
   {:pre [(s/valid? ::tapahtumat/tapahtuma tapahtuma)
          (not (nil? data))]
    :post [(boolean? %)]}
@@ -109,11 +104,11 @@
 
 (defn tapahtuma-julkaisija
   "Palauttaa funktion, jolle annettava data julkaistaan aina tässä määritetylle eventille."
-  [klusterin-tapahtumat tapahtuma]
+  [klusterin-tapahtumat tapahtuma host-nimi]
   (fn [data]
     (when *log-error*
       (log/error (str "Event: " tapahtuma " sai dataksi: " data)))
-    (julkaise-tapahtuma klusterin-tapahtumat tapahtuma data)))
+    (julkaise-tapahtuma klusterin-tapahtumat tapahtuma data host-nimi)))
 
 (defn tapahtuma-datan-spec
   "Tarkoitettu wrapperiksi tapahtuma-julkaisija:lle. Julkaistavaksi tarkoitettu data ensin validoidaan tälle annettua spekkiä vasten.
@@ -134,7 +129,6 @@
     (rajapinta/lisaa rajapinta :tapahtuman-julkaisia! (partial tapahtuman-julkaisia! klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :yhta-aikaa-tapahtuman-julkaisia! (partial yhta-aikaa-tapahtuman-julkaisia! klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :tapahtuman-kuuntelija! (partial tapahtuman-kuuntelija! klusterin-tapahtumat))
-    (rajapinta/lisaa rajapinta :host-nimi (constantly host-nimi))
     (rajapinta/lisaa rajapinta :julkaise-tapahtuma (partial julkaise-tapahtuma klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :tarkkaile-tapahtumaa (partial tarkkaile-tapahtumaa klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :tarkkaile-tapahtumia (partial tarkkaile-tapahtumia klusterin-tapahtumat))
@@ -146,7 +140,6 @@
     (rajapinta/poista rajapinta :yhta-aikaa-tapahtuman-julkaisia!)
     (rajapinta/poista rajapinta :tapahtuman-julkaisia!)
     (rajapinta/poista rajapinta :tapahtuman-kuuntelija!)
-    (rajapinta/poista rajapinta :host-nimi)
     (rajapinta/poista rajapinta :julkaise-tapahtuma)
     (rajapinta/poista rajapinta :tarkkaile-tapahtumaa)
     (rajapinta/poista rajapinta :tarkkaile-tapahtumia)

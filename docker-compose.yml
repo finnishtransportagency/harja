@@ -166,7 +166,7 @@ services:
       #lein trampoline with-profile +dev-container run -m figwheel.main -fw false -bo figwheel_conf/luodut/dev-container > /var/log/harja_frontend.log 2>&1
 
       echo 'Käynnistetään frontin repl'
-      screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES} run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl
+      screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES},+dev-cljs run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl
 
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
       #lein trampoline with-profile +dev-container run -m figwheel.main -H 0.0.0.0 -p ${FRONTEND_REPL_PORT} -b figwheel_conf/luodut/dev-container --repl >> /var/log/harja_frontend.log 2>&1 &

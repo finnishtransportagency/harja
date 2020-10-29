@@ -3,7 +3,7 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as a :refer [<! go timeout]]
     [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
-    [harja.palvelin.tarkkailija :as tarkkailija]
+    [tarkkailija.palvelin.tarkkailija :as tarkkailija]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]

@@ -12,7 +12,7 @@
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.data.hoito.kustannussuunnitelma :as ks-data]
             [harja.pvm :as pvm]))

@@ -1,8 +1,8 @@
 (ns harja.palvelin.komponentit.tapahtumat-test
-  (:require [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+  (:require [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
+            [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
             [harja.kyselyt.konversio :as konv]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]

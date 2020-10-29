@@ -1,10 +1,11 @@
-(ns harja.palvelin.tarkkailija
+(ns tarkkailija.palvelin.tarkkailija
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.palvelut.tarkastelija.tapahtuma :as tapahtuma]
-            [harja.palvelin.komponentit.jarjestelma-rajapinta :as rajapinta]
-            [harja.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]))
+            [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [
+             tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
+            [tarkkailija.palvelin.komponentit.jarjestelma-rajapinta :as rajapinta]
+            [tarkkailija.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]))
 
 (defonce harja-tarkkailija nil)
 

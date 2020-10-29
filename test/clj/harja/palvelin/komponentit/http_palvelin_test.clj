@@ -9,8 +9,8 @@
             [harja.kyselyt.anti-csrf :as anti-csrf-q]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.event-tietokanta :as event-tietokanta]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [clj-time.core :as t]))
 
 (def kayttaja +kayttaja-jvh+)
