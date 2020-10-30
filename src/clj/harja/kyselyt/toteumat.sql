@@ -421,12 +421,13 @@ WHERE urakka = :urakka
 -- haetaan erikseen ja ilman suunnittelua olevat toteumat erikseen, käyttäen unionia.
 -- Haetaan tarpeeksi tietoa, jotta tehtävän sisältämät erilliset toteumat voidaan hakea erikseen.
 WITH osa_toteumat AS
-         (SELECT tt.toimenpidekoodi AS toimenpidekoodi,
-                 SUM(tt.maara)      AS maara,
-                 SUM(tm.maara)      AS materiaalimaara,
-                 :urakka            AS urakka, -- Hakuehtojen perusteella tiedetään urakka, joten käytetään sitä
-                 MAX(t.id)          AS toteuma_id, -- Kaikilla on sama toimenpidekoodi, joten on sama mitä toteumaa tietojen yhdistämisessä käytetään
-                 MAX(tt.id)         AS toteuma_tehtava_id
+         (SELECT tt.toimenpidekoodi  AS toimenpidekoodi,
+                 SUM(tt.maara)       AS maara,
+                 SUM(tm.maara)       AS materiaalimaara,
+                 :urakka             AS urakka,     -- Hakuehtojen perusteella tiedetään urakka, joten käytetään sitä
+                 MAX(t.id)           AS toteuma_id, -- Kaikilla on sama toimenpidekoodi, joten on sama mitä toteumaa tietojen yhdistämisessä käytetään
+                 MAX(tt.id)          AS toteuma_tehtava_id,
+                 MAX(t.tyyppi::TEXT) AS tyyppi      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
           FROM toteuma t
                    JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
                    LEFT JOIN toteuma_materiaali tm
@@ -439,10 +440,11 @@ SELECT ot.toimenpidekoodi       AS toimenpidekoodi_id,
        tr.otsikko               AS toimenpide,
        tk.nimi                  AS tehtava,
        sum(ot.maara)            AS maara,
-       sum(ot.materiaalimaara)  as materiaalimaara,
+       sum(ot.materiaalimaara)  AS materiaalimaara,
        sum(ut.maara)            AS suunniteltu_maara,
        tk.kasin_lisattava_maara AS kasin_lisattava_maara,
-       tk.suunnitteluyksikko    AS yk
+       tk.suunnitteluyksikko    AS yk,
+       ot.tyyppi                AS tyyppi
 FROM osa_toteumat ot
          LEFT JOIN urakka_tehtavamaara ut
                    ON ot.urakka = ut.urakka
@@ -450,17 +452,18 @@ FROM osa_toteumat ot
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
-GROUP BY ot.toimenpidekoodi, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko
+GROUP BY ot.toimenpidekoodi, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 UNION
 -- Pelkästään suunnitellut tehtavat pitää hakea erikseen, koska niitä ei voida hakea toteuman kautta
-SELECT ut.tehtava            AS toimenpidekoodi_id,
-       tr.otsikko            AS toimenpide,
-       tk.nimi               AS tehtava,
-       0                     AS maara,
-       0                     AS materiaalimaara,
-       sum(ut.maara)         AS suunniteltu_maara,
-       tk.kasin_lisattava_maara,
-       tk.suunnitteluyksikko as yk
+SELECT ut.tehtava               AS toimenpidekoodi_id,
+       tr.otsikko               AS toimenpide,
+       tk.nimi                  AS tehtava,
+       0                        AS maara,
+       0                        AS materiaalimaara,
+       sum(ut.maara)            AS suunniteltu_maara,
+       tk.kasin_lisattava_maara AS kasin_lisattava_maara,
+       tk.suunnitteluyksikko    AS yk,
+       'tyyppi'                 AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
