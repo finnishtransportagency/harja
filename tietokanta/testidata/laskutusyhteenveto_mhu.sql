@@ -99,9 +99,9 @@ $$
         INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, urakka_id)
             VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(), 1369, 2, kayttaja_id, urakka_id);
 
-        INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja)
+        INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
             VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(),
-                    (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300, kayttaja_id);
+                    (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300, kayttaja_id, urakka_id);
 
 
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)

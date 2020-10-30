@@ -45,11 +45,11 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) VALUES
 ((SELECT id FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'), '2005-10-01 00:00.00', (SELECT id FROM toimenpidekoodi WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), 15, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 1, 7);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 2, 4);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (2, '2005-10-01 00:00.00', 3, 3);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (3, '2005-10-01 00:00.00', 4, 9);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 5, 25);
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES (1, '2005-10-01 00:00.00', 1, 7, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES (1, '2005-10-01 00:00.00', 2, 4, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES (2, '2005-10-01 00:00.00', 3, 3, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES (3, '2005-10-01 00:00.00', 4, 9, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 5, 25, (SELECT urakka FROM toteuma WHERE lisatieto = 'Yksikköhintainen marraskuun toteuma'));
 
 INSERT INTO toteuma (lahde, urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, reitti) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012') LIMIT 1), '2005-11-01 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma', '8765432-1', 'Tehotekijät Oy', ST_ForceCollection(ST_COLLECT(ARRAY['POINT(442588 7227977)'])));
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, sijainti) VALUES (('HARJ000000000000000' || (SELECT nextval('livitunnisteet'))), (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'), 'lisatty', 'tl506', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, '2016-01-01', null, '111 2     01011                                                                                                                                                                         HARJ00000000000000012100   426939 7212766       ', null, st_geometryfromtext('POINT(442588 7227977)'));
@@ -98,11 +98,11 @@ INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisati
   'kokonaishintainen',
   (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE LIMIT 1),
   'Tämä on käyttäjän UI:lta luoma materiaalitoteuma');
-INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
+INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
   (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  500);
-  INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
+  500, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
   'harja-ui'::lahde,
   (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') and paasopimus is null),
@@ -110,15 +110,15 @@ INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
   'kokonaishintainen',
   (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE LIMIT 1),
   'Tämä on järjestelmän luoma materiaalitoteuma');
-INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
+INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
   (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  500);
-  INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
+  500, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
   (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  555);
-  INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
+  555, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
   'harja-ui'::lahde,
   (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') and paasopimus is null),
@@ -126,10 +126,10 @@ INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
   'kokonaishintainen',
   (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE LIMIT 1),
   'Tämä on niin ikään järjestelmän luoma materiaalitoteuma');
-INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
+INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
   (SELECT MAX(id) FROM toteuma),
   (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
-  666);
+  666, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
 
 -- Pudasjärven alueurakka 2007-2012
 
