@@ -220,7 +220,8 @@
                            (if massa-id
                              {:pot2-massa/id massa-id
                               ::muokkaustiedot/muokattu (pvm/nyt)
-                              ::muokkaustiedot/muokkaaja-id (:id user)}
+                              ::muokkaustiedot/muokkaaja-id (:id user)
+                              ::pot2-domain/poistettu? (boolean (::pot2-domain/poistettu? tiedot))}
                              {::muokkaustiedot/luotu (pvm/nyt)
                               ::muokkaustiedot/luoja-id (:id user)})
                            (select-keys tiedot [::pot2-domain/urakka-id

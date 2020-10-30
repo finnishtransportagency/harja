@@ -15,6 +15,7 @@
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.validointi :as v]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.pot2 :as pot2-domain]
@@ -137,7 +138,10 @@
         jo-valitut-sideainetyypit (into #{} (map :sideaine/tyyppi (vals aineet)))]
     [:div
      (map-indexed (fn [idx [_ sideaine]]
+                    ;; Tässä tarjotaan käyttäjälle mahdollisena sideainetyyppinä kaikki sellaiset, joita ei ole vielä ko. massalle
+                    ;; valittu.
                     (let [sideainetyyppivalinnat (vec (remove #(and (jo-valitut-sideainetyypit (::pot2-domain/koodi %))
+                                                                    ;;  Jotta nykyinen valinta näkyy, se pitää jättää poistamatta
                                                                     (not= (::pot2-domain/koodi %)
                                                                           (:sideaine/tyyppi sideaine)))
                                                               sideainetyypit))]
@@ -225,9 +229,24 @@
                         :luokka "suuri"
                         :disabled (or (not (ui-lomake/voi-tallentaa? data))
                                       (not (empty? muut-validointivirheet)))}]
-                      [napit/peruuta
-                       "Peruuta"
+                      [napit/yleinen
+                       "Peruuta" :toissijainen
                        #(e! (tiedot-massa/->TyhjennaLomake data))
+                       {:vayla-tyyli? true
+                        :luokka "suuri"}]]
+                     [:div.flex-row.alkuun {:style {:margin-top "1rem"
+                                                    :float "right"
+                                                    :justify-content "center"}}
+                      [napit/poista
+                       "Poista"
+                       (fn []
+                         (varmista-kayttajalta/varmista-kayttajalta
+                           {:otsikko "Massan poistaminen"
+                            :sisalto
+                            [:div "Haluatko ihan varmasti poistaa tämän massan?"]
+                            :toiminto-fn #(e! (tiedot-massa/->TallennaLomake (merge data
+                                                                                    {::pot2-domain/poistettu? true})))
+                            :hyvaksy "Kyllä"}))
                        {:vayla-tyyli? true
                         :luokka "suuri"}]]])
        :vayla-tyyli? true}

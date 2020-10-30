@@ -184,10 +184,13 @@
   TallennaLomake
   (process-event [{data :data} app]
     (let [massa (:pot2-massa-lomake app)
+          poistettu? {::harja.domain.pot2/poistettu? (boolean
+                                                      (:harja.domain.pot2/poistettu? data))}
           _ (js/console.log "TallennaLomake data" (pr-str data))
           _ (js/console.log "TallennaLomake massa" (pr-str massa))]
       (tuck-apurit/post! :tallenna-urakan-pot2-massa
-                         (-> massa
+                         (-> (merge massa
+                                    poistettu?)
                              (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id)))
                          {:onnistui ->TallennaMassaOnnistui
                           :epaonnistui ->TallennaMassaEpaonnistui}))
@@ -195,7 +198,9 @@
 
   TallennaMassaOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Massa tallennettu!")
+    (if (::pot2-domain/poistettu? vastaus)
+      (viesti/nayta! "Massa poistettu!")
+      (viesti/nayta! "Massa tallennettu!"))
     (hae-massat nil)
     (assoc app :avaa-massa-lomake? false))
 

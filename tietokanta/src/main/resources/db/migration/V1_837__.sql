@@ -154,7 +154,7 @@ CREATE TABLE pot2_murske
     DoP_nro           TEXT, -- ei ole kaikentyyppisillä murskeilla, täten nullable
 
     -- muokkausmetatiedot
-    poistettu         BOOLEAN   DEFAULT FALSE,
+    poistettu         BOOLEAN NOT NULL DEFAULT FALSE,
     muokkaaja         INTEGER REFERENCES kayttaja (id),
     muokattu          TIMESTAMP,
     luoja             INTEGER REFERENCES kayttaja (id),
