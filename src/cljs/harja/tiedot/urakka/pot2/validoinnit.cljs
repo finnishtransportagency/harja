@@ -14,8 +14,9 @@
     #{:runkoaine/fillerityyppi
       :runkoaine/massaprosentti}
 
-    7 #{:runkoaine/kuvaus
-        :runkoaine/massaprosentti}))
+    7
+    #{:runkoaine/kuvaus
+      :runkoaine/massaprosentti}))
 
 (def pakolliset-sideaineen-kentat
   #{:sideaine/tyyppi :sideaine/pitoisuus})
@@ -111,7 +112,7 @@
         puutteet-luettavaksi))))
 
 (defn runko-side-ja-lisaaineen-validointivirheet
-  [{::pot2-domain/keys [runkoaineet sideaineet lisaaineet] :as lomake}
+  [{::pot2-domain/keys [runkoaineet sideaineet lisaaineet]}
    {:keys [runkoainetyypit sideainetyypit lisaainetyypit]}]
   (let [runkoaineiden-puutteet (runkoaineiden-validointipuutteet runkoaineet runkoainetyypit)
         sideaineiden-puutteet (sideaineiden-validointipuutteet sideaineet sideainetyypit)

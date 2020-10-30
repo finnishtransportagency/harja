@@ -1,11 +1,9 @@
 (ns harja.views.urakka.pot2.massalistaus
   "POT2 massalistaukset"
-  (:require [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck]
+  (:require [clojure.string :as str]
             [cljs.core.async :refer [<! chan]]
-            [cljs.spec.alpha :as s]
-            [cljs-time.core :as t]
-            [goog.events.EventType :as event-type]
+            [reagent.core :refer [atom] :as r]
+            [tuck.core :as tuck]
 
             [harja.ui.grid :as grid]
             [harja.ui.debug :refer [debug]]
@@ -13,45 +11,21 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
+            [harja.ui.lomake :as ui-lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.validointi :as v]
-            [harja.ui.valinnat :as valinnat]
-            [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
-
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.pot2 :as pot2-domain]
             [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-
-            [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.yhatuonti :as yha]
-            [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.urakka.pot2.massat :as tiedot-massa]
             [harja.tiedot.urakka.urakka :as tila]
-
-            [harja.fmt :as fmt]
-            [harja.loki :refer [log logt tarkkaile!]]
-
-
-            [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.vkm :as vkm]
-            [harja.ui.lomake :as ui-lomake]
-            [clojure.string :as str])
+            [harja.loki :refer [log logt tarkkaile!]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
-
-(def sideaineen-kayttotavat
-  [{::pot2-domain/nimi "Lopputuotteen sideaine"
-    ::pot2-domain/koodi :lopputuote}
-   {::pot2-domain/nimi "Lisätty sideaine"
-    ::pot2-domain/koodi :lisatty}])
 
 (defn- aineen-otsikko-checkbox
   [e! {:keys [otsikko arvo label-luokka polku]}]
@@ -148,7 +122,7 @@
       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))
       :polku (conj polun-avaimet :lisaaine/pitoisuus)}]))
 
-(defn- tyypin-kentat [tyyppi tiedot polun-avaimet]
+(defn- tyypin-kentat [{:keys [tyyppi tiedot polun-avaimet]}]
   (case tyyppi
     :runkoaineet (runkoaineiden-kentat tiedot polun-avaimet)
     :sideaineet (sideaineiden-kentat tiedot polun-avaimet 0)
@@ -159,19 +133,24 @@
 
 (defn- sideaineet-komponentti [e! rivi kayttotapa polun-avaimet sideainetyypit]
   (let [aineet (or (get-in rivi (cons :data [::pot2-domain/sideaineet kayttotapa :aineet]))
-                   {0 tiedot-massa/tyhja-sideaine})]
+                   {0 tiedot-massa/tyhja-sideaine})
+        jo-valitut-sideainetyypit (into #{} (map :sideaine/tyyppi (vals aineet)))]
     [:div
      (map-indexed (fn [idx [_ sideaine]]
-                    ^{:key (str idx)}
-                    [:div
-                     (for [sak (sideaineiden-kentat (merge
-                                                      sideaine
-                                                      {:sideainetyypit (vec sideainetyypit)})
-                                                    polun-avaimet idx)]
+                    (let [sideainetyyppivalinnat (vec (remove #(and (jo-valitut-sideainetyypit (::pot2-domain/koodi %))
+                                                                    (not= (::pot2-domain/koodi %)
+                                                                          (:sideaine/tyyppi sideaine)))
+                                                              sideainetyypit))]
+                      ^{:key (str idx)}
+                      [:div
+                       (for [sak (sideaineiden-kentat (merge
+                                                        sideaine
+                                                        {:sideainetyypit sideainetyyppivalinnat})
+                                                      polun-avaimet idx)]
 
-                       ^{:key (str idx (:otsikko sak))}
-                       [:div.inline-block {:style {:margin-right "6px"}}
-                        [otsikko-ja-kentta e! sak]])])
+                         ^{:key (str idx (:otsikko sak))}
+                         [:div.inline-block {:style {:margin-right "6px"}}
+                          [otsikko-ja-kentta e! sak]])]))
                   aineet)
      (when (= :lisatty kayttotapa)
        [:div
@@ -184,7 +163,7 @@
 
 (defn- ainevalintalaatikot [tyyppi aineet]
   (if (= tyyppi :sideaineet)
-    sideaineen-kayttotavat
+    tiedot-massa/sideaineen-kayttotavat
     aineet))
 
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
@@ -204,7 +183,9 @@
            [:div.kentat-haitari
             (case tyyppi
               (:runkoaineet :lisaaineet)
-              (for [k (tyypin-kentat tyyppi tiedot polun-avaimet)]
+              (for [k (tyypin-kentat {:tyyppi tyyppi
+                                      :tiedot tiedot
+                                      :polun-avaimet polun-avaimet})]
                 ^{:key (:otsikko k)}
                 [:div.inline-block {:style {:margin-right "6px"}}
                  [otsikko-ja-kentta e! k]])

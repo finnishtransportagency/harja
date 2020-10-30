@@ -40,6 +40,12 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
+(def sideaineen-kayttotavat
+  [{::pot2-domain/nimi "Lopputuotteen sideaine"
+    ::pot2-domain/koodi :lopputuote}
+   {::pot2-domain/nimi "Lisätty sideaine"
+    ::pot2-domain/koodi :lisatty}])
+
 (defn lisatty-sideaine-mahdollinen?
   [rivi]
   (let [asfalttirouhetta? ((set (keys (::pot2-domain/runkoaineet rivi))) 2)
