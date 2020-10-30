@@ -7,6 +7,7 @@
              [kustannusarvioidut-tyot :as kust-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.domain.lasku :as lasku]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tyokalut.big :as big]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
@@ -308,7 +309,8 @@
                           (hae-laskuerittely db user hakuehdot)))
       (julkaise-palvelu http :tallenna-lasku
                         (fn [user laskuerittely]
-                          (tallenna-lasku db user laskuerittely)))
+                          (tallenna-lasku db user laskuerittely))
+                        {:kysely-spec ::lasku/talenna-lasku})
       (julkaise-palvelu http :poista-lasku
                         (fn [user hakuehdot]
                           (poista-lasku db user hakuehdot)))

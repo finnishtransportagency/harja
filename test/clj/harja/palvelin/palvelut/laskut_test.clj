@@ -54,7 +54,8 @@
                       :liite-tyyppi "image/png"
                       :liite-nimi   "pensas-2021-02.jpg"
                       :liite-koko   nil
-                      :liite-oid    nil}]})
+                      :liite-oid    nil}]
+   :koontilaskun-kuukausi "joulukuu/3-hoitovuosi"})
 
 (def uusi-kohdistus
   {:rivi                3
@@ -80,7 +81,8 @@
                       :suoritus-loppu      #inst "2021-03-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
-                      :tehtava             nil}]})
+                      :tehtava             nil}]
+   :koontilaskun-kuukausi "joulukuu/3-hoitovuosi"})
 
 (def lasku-akillinen-hoitotyo
   {:id              nil
@@ -97,7 +99,8 @@
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Äkillinen hoitotyö (l.ymp.hoito)")
                       :tehtava             nil}]
-   :liitteet        []})
+   :liitteet        []
+   :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
 
 (def lasku-muu
   {:id              nil
@@ -114,7 +117,8 @@
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Talvihoito (T2)Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
                       :tehtava             nil}]
-   :liitteet        []})
+   :liitteet        []
+   :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
 
 
 
@@ -208,7 +212,6 @@
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :laskuerittely uusi-lasku-vaara-erapaiva})]
-
     ;; Tallennus
     (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")))
 

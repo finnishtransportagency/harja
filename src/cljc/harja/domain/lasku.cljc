@@ -63,4 +63,22 @@
        (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi)))
        false))) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
-(s/def ::talenna-lasku (fn [lasku] true))
+(s/def ::koontilaskun-kuukausi-formaatti (fn [txt]
+                                           (let [[kuukausi hoitovuosi & loput] (str/split txt #"/")]
+                                             (and (contains? kuukaudet-strs (keyword kuukausi))
+                                                  (contains? hoitovuodet-strs (keyword hoitovuosi))
+                                                  (empty? loput)))))
+
+(defn validoi-laskudata [data]
+  (let [urakkatiedot #?(:clj (comment kantakutsu)
+                        :cljs @arja.tiedot.navigaatio/valittu-urakka)]
+    (comment validoi-data-urakkatiedon-perusteella urakkatiedot))
+  true)
+
+(s/def ::koontilaskun-kuukausi-arvo validoi-laskudata)
+
+(s/def ::koontilaskun-kuukausi (s/and ::koontilaskun-kuukausi-formaatti ::koontilaskun-kuukausi-arvo) )
+
+(s/def ::laskuerittely (s/keys :req-un [::koontilaskun-kuukausi]))
+
+(s/def ::talenna-lasku (s/keys :req-un [::urakka-id ::laskuerittely]))
