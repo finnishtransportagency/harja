@@ -232,7 +232,7 @@
   (as-> palvelu-fn f
         (if kysely-spec
           (fn [user payload]
-            (heita-jos-ei-ole-validi kysely-spec (str nimi "kysely") payload)
+            (heita-jos-ei-ole-validi kysely-spec (str nimi " kysely") payload)
             (f user payload))
           f)
 
