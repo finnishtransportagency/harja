@@ -70,7 +70,7 @@
                                                   (empty? loput)))))
 
 (defn validoi-laskudata [data]
-  (let [urakkatiedot #?(:clj (comment kantakutsu)
+  (let [urakkatiedot #?(:clj (comment harja.palvelin.palvelut.urakat.urakat-paivamaarat )
                         :cljs @arja.tiedot.navigaatio/valittu-urakka)]
     (comment validoi-data-urakkatiedon-perusteella urakkatiedot))
   true)
