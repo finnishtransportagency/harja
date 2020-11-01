@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laskut-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.laskut :as laskut]))
@@ -206,15 +207,22 @@
     (is (= (:id poistettu-lasku) tallennettu-id) "Laskun poistaminen palauttaa poistetun laskun (poistettu-lasku)")
     (is (empty? poistetun-laskun-haku) "Poistettua laskua ei palaudu (poistetun-laskun-haku).")))
 
-(deftest tallenna-lasku-erapaiva-validointi-petar-testi
-  (let [uusi-lasku-vaara-erapaiva (assoc uusi-lasku :erapaiva #inst "1921-12-15T21:00:00.000-00:00")
-        tallennettu-lasku
-        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely uusi-lasku-vaara-erapaiva})]
-    ;; Tallennus
-    (is (not (nil? (:id tallennettu-lasku))) "Lasku tallentui (tallennettu-lasku).")))
+(defn- feila-tallenna-lasku-validointi [vaara-lasku]
+  (try
+    (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                         {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                          :laskuerittely vaara-lasku})
+    (is false "Ei saa tulla tänne, kutsu pitäisi heittää poikkeuksen")
+    (catch Exception e (is (s/includes? (.getMessage e) "Palvelun :tallenna-lasku kysely ei ole validi")
+                           "Odotamme että tulee validointi poikkeus"))))
 
+(deftest tallenna-lasku-erapaiva-validointi-petar-testi
+  (let [uusi-lasku-vaara-erapaiva (assoc uusi-lasku :erapaiva #inst "1921-12-15T21:00:00.000-00:00")]
+    (feila-tallenna-lasku-validointi uusi-lasku-vaara-erapaiva)))
+
+(deftest tallenna-lasku-koontilaskun-kuukausi-validointi-petar-testi
+  (let [uusi-lasku-vaara-koontilaskun-kuukausi (assoc uusi-lasku :koontilaskun-kuukausi "vaara-muoto")]
+    (feila-tallenna-lasku-validointi uusi-lasku-vaara-koontilaskun-kuukausi)))
 
 (deftest paivita-maksuera-testi
   (let [lasku-kokonaishintainen-tyo
