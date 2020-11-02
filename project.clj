@@ -32,7 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
-                 [http-kit "2.4.0-alpha3"]
+                 [http-kit "2.5.0"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
                  ;[javax.servlet/servlet-api "2.5"]

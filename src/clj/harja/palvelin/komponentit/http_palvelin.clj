@@ -22,6 +22,7 @@
             [harja.domain.roolit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [clj-time.core :as time]
             [harja.fmt :as fmt]
 
@@ -296,7 +297,7 @@
     kutsu))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
-                         lopetus-fn kehitysmoodi
+                         http-server kehitysmoodi
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
@@ -308,7 +309,7 @@
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
                           (route/files "" {:root (:dev-resources-path asetukset)}))]
-      (swap! lopetus-fn
+      (swap! http-server
              (constantly
                (http/run-server
                  (cookies/wrap-cookies
@@ -357,17 +358,23 @@
 
                  {:port (or (:portti asetukset) asetukset)
                   :thread (or (:threads asetukset) 8)
+                  :legacy-return-value? false
                   :max-body (or (:max-body-size asetukset) (* 1024 1024 8))
                   :max-line 40960})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
-    (@lopetus-fn :timeout 100)
+    @(http/server-stop! @http-server {:timeout 100})
     (reset! kasittelijat [])
     (reset! sessiottomat-kasittelijat [])
-    (reset! lopetus-fn nil)
+    (reset! http-server nil)
     (dosync (ref-set mittarit mittarit-alkuarvo))
     this)
+  kp/IStatus
+  (-status [this]
+    (let [status (-> this (get :http-server) deref http/server-status)]
+      {::kp/kaikki-ok? (= status :running)
+       ::kp/tiedot status}))
 
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))

@@ -130,7 +130,7 @@
 
 (def ei-statusta
   #{:metriikka
-    :todennus :http-palvelin
+    :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
     :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
