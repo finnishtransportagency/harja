@@ -348,14 +348,19 @@
 
 (defn- massan-toiminnot [e! rivi]
   [:span.pull-right
-   [napit/nappi ""
-    #(e! (tiedot-massa/->MuokkaaMassaa rivi))
-    {:ikoninappi? true :luokka "klikattava"
-     :ikoni (ikonit/livicon-pen)}]
-   [napit/nappi ""
-    #(log "duplicate painettu")
-    {:ikoninappi? true :luokka "klikattava"
-     :ikoni (ikonit/livicon-duplicate)}]])
+   [yleiset/wrap-if true
+    [yleiset/tooltip {} :% "Muokkaa"]
+    [napit/nappi ""
+     #(e! (tiedot-massa/->MuokkaaMassaa rivi false))
+     {:ikoninappi? true :luokka "klikattava"
+      :ikoni (ikonit/livicon-pen)}]]
+
+   [yleiset/wrap-if true
+    [yleiset/tooltip {} :% "Luo kopio"]
+    [napit/nappi ""
+     #(e! (tiedot-massa/->MuokkaaMassaa rivi true))
+     {:ikoninappi? true :luokka "klikattava"
+      :ikoni (ikonit/livicon-duplicate)}]]])
 
 (defn- paallystysmassat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
@@ -364,7 +369,7 @@
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
-    :rivi-klikattu #(e! (tiedot-massa/->MuokkaaMassaa %))
+    :rivi-klikattu #(e! (tiedot-massa/->MuokkaaMassaa % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Luo uusi massa"

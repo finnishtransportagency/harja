@@ -18,7 +18,7 @@
 
 (defrecord AlustaTila [])
 (defrecord UusiMassa [avaa-massa-lomake?])
-(defrecord MuokkaaMassaa [rivi])
+(defrecord MuokkaaMassaa [rivi klooni?])
 (defrecord NaytaModal [avataanko?])
 (defrecord NaytaListaus [nayta])
 
@@ -135,16 +135,34 @@
                :pot2-massa-lomake nil))
 
   MuokkaaMassaa
-  (process-event [{rivi :rivi} app]
-    (-> app
-        (assoc :avaa-massa-lomake? true
-               :pot2-massa-lomake rivi)
-        (assoc-in [:pot2-massa-lomake :harja.domain.pot2/runkoaineet]
-                  (aine-kayttoliittyman-muotoon (:harja.domain.pot2/runkoaineet rivi) :runkoaine/tyyppi))
-        (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet]
-                  (sideaine-kayttoliittyman-muotoon (:harja.domain.pot2/sideaineet rivi)))
-        (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet]
-                  (aine-kayttoliittyman-muotoon (:harja.domain.pot2/lisaaineet rivi) :lisaaine/tyyppi))))
+  (process-event [{rivi :rivi klooni? :klooni?} app]
+    ;; jos käyttäjä luo uuden massan kloonaamalla vanhan, nollataan id:t
+    (let [massan-id (if klooni?
+                      nil
+                      (:pot2-massa/id rivi))
+          runkoaineet (aine-kayttoliittyman-muotoon (map
+                                                      ;; Koska luodaan uusi massa olemassaolevan tietojen pohjalta, täytyy vanhan massan viittaukset poistaa
+                                                      #(if klooni?
+                                                         (dissoc % :runkoaine/id :pot2-massa/id)
+                                                         (identity %))
+                                                      (:harja.domain.pot2/runkoaineet rivi)) :runkoaine/tyyppi)
+          sideaineet (sideaine-kayttoliittyman-muotoon (map
+                                                         #(if klooni?
+                                                            (dissoc % :sideaine/id :pot2-massa/id)
+                                                            (identity %))
+                                                         (:harja.domain.pot2/sideaineet rivi)))
+          lisaaineet (aine-kayttoliittyman-muotoon (map
+                                                     #(if klooni?
+                                                        (dissoc % :lisaaine/id :pot2-massa/id)
+                                                        (identity %))
+                                                     (:harja.domain.pot2/lisaaineet rivi)) :lisaaine/tyyppi)]
+      (-> app
+          (assoc :avaa-massa-lomake? true
+                 :pot2-massa-lomake rivi)
+          (assoc-in [:pot2-massa-lomake :pot2-massa/id] massan-id)
+          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/runkoaineet] runkoaineet)
+          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet] sideaineet)
+          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet] lisaaineet))))
 
   NaytaListaus
   (process-event [{nayta :nayta} app]
