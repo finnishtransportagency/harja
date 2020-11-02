@@ -209,7 +209,6 @@ pvm-popupin-sulkevat-nappaimet
                                  (when (seq @suora-syotto-sisalto)
                                    (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
                                      (when (valittava?-fn pvm-sisalto)
-                                       (println (str "petar datum=" pvm-sisalto))
                                        (valitse (pvm/->pvm @suora-syotto-sisalto))))
                                    (reset! suora-syotto-sisalto "")))}]
          (when @auki?
