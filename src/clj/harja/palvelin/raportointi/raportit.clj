@@ -11,6 +11,7 @@
   [harja.palvelin.raportointi.raportit.ilmoitus]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu]
+  [harja.palvelin.raportointi.raportit.tehtavamaarat]
   [harja.palvelin.raportointi.raportit.materiaali]
   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
@@ -75,6 +76,13 @@
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu/suorita
     :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi :tehtavamaarat
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :kuvaus "Tehtävämäärät"
+    :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
+    :urakkatyyppi #{:teiden-hoito :hoito}}
 
    {:nimi :laaduntarkastusraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
