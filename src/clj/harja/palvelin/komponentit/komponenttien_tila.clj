@@ -29,7 +29,7 @@
 
 
 (defn- tyhjenna-cache! [komponenttien-tila]
-  (reset! komponenttien-tila nil))
+  (reset! komponenttien-tila {}))
 
 (defrecord KomponentinTila [timeout-asetukset komponenttien-tila]
   component/Lifecycle
@@ -50,7 +50,7 @@
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::db-kuuntelija this))
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::db-replica-kuuntelija this))
     (tyhjenna-cache! komponenttien-tila)
-    this))
+    (dissoc this ::harja-kuuntelija ::sonja-kuuntelija ::db-kuuntelija ::db-replica-kuuntelija)))
 
 (defn komponentin-tila [timeout-asetukset]
   (->KomponentinTila timeout-asetukset (atom {})))

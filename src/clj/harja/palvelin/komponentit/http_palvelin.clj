@@ -40,6 +40,9 @@
     :body (transit/clj->transit data)
     :vastaus data}))
 
+(def mittarit-alkuarvo {:aktiiviset_pyynnot 0
+                        :pyyntoja_palveltu 0})
+
 (defrecord AsyncResponse [channel])
 
 (defn async-response? [res]
@@ -360,6 +363,10 @@
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
     (@lopetus-fn :timeout 100)
+    (reset! kasittelijat [])
+    (reset! sessiottomat-kasittelijat [])
+    (reset! lopetus-fn nil)
+    (dosync (ref-set mittarit mittarit-alkuarvo))
     this)
 
   HttpPalvelut
@@ -404,8 +411,7 @@
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
-                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
-                                              :pyyntoja_palveltu 0})))
+                  (metriikka/luo-mittari-ref mittarit-alkuarvo)))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))

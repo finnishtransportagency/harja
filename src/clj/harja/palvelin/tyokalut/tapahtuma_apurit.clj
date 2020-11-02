@@ -29,13 +29,13 @@
 
 (defn tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
   (async/go
-    (loop [[lopetetaan? _] (async/alts! [lopeta-tarkkailu-kanava]
-                                        :default false)]
-      (when-not lopetetaan?
+    (f)
+    (loop [[_ kanava] (async/alts! [lopeta-tarkkailu-kanava
+                                    (async/timeout timeout-ms)])]
+      (when-not (= kanava lopeta-tarkkailu-kanava)
         (f)
-        (async/<! (async/timeout timeout-ms))
-        (recur (async/alts! [lopeta-tarkkailu-kanava]
-                            :default false))))))
+        (recur (async/alts! [lopeta-tarkkailu-kanava
+                             (async/timeout timeout-ms)]))))))
 
 (defn tarkkaile-tapahtumaa [& args]
   (apply jr/kutsu :tarkkaile-tapahtumaa args))

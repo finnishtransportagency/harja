@@ -1,18 +1,15 @@
 (ns harja.palvelin.tyokalut.jarjestelma
   (:require [com.stuartsierra.component :as component]
-            [com.stuartsierra.dependency :as dep])
+            [com.stuartsierra.dependency :as dep]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp])
   (:import (com.stuartsierra.component SystemMap)))
-
-(defprotocol IRestart
-  (restart [this system-component])
-  (reload [this component]))
 
 (defn- restart-komp [komp]
   (component/stop komp)
   (component/start komp))
 
 (extend-type SystemMap
-  IRestart
+  kp/IRestart
   (restart [system system-component-keys]
     (let [all-component-keys (keys system)
           graph (component/dependency-graph system all-component-keys)
@@ -34,4 +31,4 @@
                    (satisfies? component/Lifecycle (get system component-key)))
                  system-component-keys)]
    :post [(instance? SystemMap %)]}
-  (restart system system-component-keys))
+  (kp/restart system system-component-keys))

@@ -5,6 +5,7 @@
   (:require [harja.palvelin.main :as sut]
             [harja.palvelin.asetukset :as asetukset]
             [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.testi :as testi]
             [com.stuartsierra.component :as component]
             [com.stuartsierra.dependency :as dep]
@@ -12,22 +13,19 @@
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io])
-  (:import (java.io File)))
+  (:import (java.io File)
+           (clojure.lang ExceptionInfo)))
 
 (def ^:dynamic *testiasetukset* nil)
+(def jarjestelma (atom nil))
 
 (defn- muokkaa-asetuksia [asetukset]
-  (testi/pudota-ja-luo-testitietokanta-templatesta)
   (let [asetukset-datana (-> (edn/read-string asetukset)
                              (assoc-in [:http-palvelin :portti] (testi/arvo-vapaa-portti))
                              (assoc-in [:http-palvelin :salli-oletuskayttaja?] false)
                              (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
                              (assoc :tietokanta testi/testitietokanta)
                              (assoc :tietokanta-replica testi/testitietokanta)
-                             #_(assoc-in [:tietokanta :palvelin] "localhost")
-                             #_(assoc-in [:tietokanta :portti] tietokannan-portti)
-                             #_(assoc-in [:tietokanta-replica :palvelin] "localhost")
-                             #_(assoc-in [:tietokanta-replica :portti] tietokannan-portti)
                              (assoc :sonja {:url "tcp://localhost:61617"
                                             :kayttaja ""
                                             :salasana ""
@@ -63,9 +61,14 @@
                       slurp
                       (poista-reader-makrot "\"foo\"")
                       muokkaa-asetuksia)]
+    (testi/pudota-ja-luo-testitietokanta-templatesta)
+    (testi/pystyta-harja-tarkkailija)
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
+    (when @jarjestelma
+      (component/stop @jarjestelma))
+    (testi/lopeta-harja-tarkkailija)
     (.delete file)))
 
 (use-fixtures :once testiasetukset)
@@ -125,9 +128,63 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti})
 
+(def ei-statusta
+  #{:metriikka
+    :todennus :http-palvelin
+    :pdf-vienti :excel-vienti
+    :virustarkistus :liitteiden-hallinta :kehitysmoodi
+    :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
+    :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
+    :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
+    :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
+    :muut-tyot :laskut :aliurakoitsijat :toteumat :yllapitototeumat :paallystys :maaramuutokset
+    :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
+    :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
+    :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
+    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
+    :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
+    :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
+    :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
+    :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
+    :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
+    :vaylien-geometriahaku
+    :kanavasiltojen-geometriahaku
+    :mobiili-laadunseuranta
+    :api-urakan-tyotunnit
+    :sopimukset
+    :urakan-tyotuntimuistutukset
+    :hankkeet
+    :urakan-tyotunnit
+    :vv-toimenpiteet
+    :vv-vaylat
+    :vv-kiintiot
+    :vv-hinnoittelut
+    :vv-materiaalit
+    :reimari
+    :vkm
+    :vv-turvalaitteet
+    :hairioilmoitukset
+    :ais-data
+    :vv-alukset
+    :kan-kohteet
+    :kan-liikennetapahtumat
+    :komponenttien-tila
+    :kan-hairio
+    :kan-toimenpiteet
+    :api-tieluvat
+    :api-paikkaukset
+    :koordinaatit
+    :tiedostopesula
+    :tieluvat
+    :paikkaukset
+    :jarjestelman-tila
+    :yha-paikkauskomponentti})
+
 (deftest main-komponentit-loytyy
-  (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
-        komponentit (set (keys jarjestelma))]
+  (reset! jarjestelma (component/start (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))))
+  (let [komponentit (set (keys @jarjestelma))]
     (testing "Kaikki halutut komponentit löytyy!"
       (doseq [k halutut-komponentit]
         (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!"))))
@@ -135,24 +192,31 @@
       (doseq [k komponentit]
         (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!"))))
     (testing "Kaikkien komponenttien uudelleen käynnistys toimii"
-      (let [jarjestelma (component/start jarjestelma)
-            graph (component/dependency-graph jarjestelma komponentit)
-            komponentit-jarjestettyna (reverse (sort (dep/topo-comparator graph) komponentit))]
-        (println komponentit-jarjestettyna)
-        (doseq [k komponentit-jarjestettyna]
-          (when (= :ping k)
-            (println (get jarjestelma k)))
-          (try (@#'jarjestelma/restart-komp (get jarjestelma k))
-               (catch Throwable t
-                 (is false (str "Komponentin " k " uudelleen käynnistys ei toimi"))
-                 (println "----- MAIN TEST ERROR -----")
-                 (println "error: " (.getMessage t))
-                 (.printStackTrace t))))
-        (try (component/stop jarjestelma)
-             (catch Throwable t
-               (is false "Järjestelmän uudelleen käynnistys ei toimi")
-               (println "error: " (.getMessage t))
-               (.printStackTrace t)))))))
-
-#_(deftest restart-toimii
-    (is (= :ok (sut/dev-restart))))
+      (try (let [sammutettu-jarjestelma (component/update-system-reverse @jarjestelma komponentit (fn [k]
+                                                                                                    (component/stop k)))]
+             (reset! jarjestelma sammutettu-jarjestelma))
+           (catch ExceptionInfo e
+             (is false (str "Komponenttien pysäyttäminen epäonnistui!\n"
+                            "Viesti: " (ex-message e) "\n"
+                            "Data: " (ex-data e) "\n"
+                            "Cause: " (ex-cause e))))
+           (catch Throwable t
+             (is false (str "Komponentin pysäyttäminen epäonnistui!\n"
+                            "Viesti: " (.getMessage t)))))
+      (try (let [kaynnistetty-jarjestelma (component/update-system @jarjestelma komponentit (fn [k]
+                                                                                              (component/start k)))]
+             (reset! jarjestelma kaynnistetty-jarjestelma))
+           (catch ExceptionInfo e
+             (is false (str "Komponenttien käynnistäminen epäonnistui!\n"
+                            "Viesti: " (ex-message e) "\n"
+                            "Data: " (ex-data e) "\n"
+                            "Cause: " (ex-cause e))))
+           (catch Throwable t
+             (is false (str "Komponentin käynnistäminen epäonnistui!\n"
+                            "Viesti: " (.getMessage t)))))
+      (doseq [komponentti komponentit]
+        (or (contains? ei-statusta komponentti)
+            (is (try (kp/status-ok? (get @jarjestelma komponentti))
+                     (catch Throwable t
+                       false))
+                (str "Komponentin " komponentti " status ei ole ok uudelleen käynnistämisen jälkeen.")))))))

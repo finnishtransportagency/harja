@@ -2,8 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
             [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [
-             tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
+            [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
             [tarkkailija.palvelin.komponentit.jarjestelma-rajapinta :as rajapinta]
             [tarkkailija.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]))
 

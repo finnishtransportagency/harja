@@ -47,12 +47,14 @@
                                                                           (not (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload)))))
                                                              (kaynnista-sonja-uusiksi! this))))}))
 
-(defrecord UudelleenKaynnistaja [timeout-asetukset tapahtumien-kuuntelijat]
+(defrecord UudelleenKaynnistaja [timeout-asetukset tapahtumien-tarkkailijat]
   component/Lifecycle
   (start [this]
     (let [varoaika (* 5 1000)]
-      (reset! tapahtumien-kuuntelijat (varmista-sonjan-toimivuus! this (+ (get-in timeout-asetukset [:sonja :paivitystiheys-ms]) varoaika)))
+      (reset! tapahtumien-tarkkailijat (varmista-sonjan-toimivuus! this (+ (get-in timeout-asetukset [:sonja :paivitystiheys-ms]) varoaika)))
       this))
   (stop [this]
-    (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(:sonjatilan-kuuntelija this))
+    (doseq [[_ tarkkailija] @(:tapahtumien-tarkkailijat this)]
+      (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @tarkkailija))
+    (reset! tapahtumien-tarkkailijat nil)
     this))

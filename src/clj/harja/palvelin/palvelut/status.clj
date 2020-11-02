@@ -132,6 +132,7 @@
            db :db
            komponenttien-tila :komponenttien-tila
            :as this}]
+    (reset! status {:viesti "Harja käynnistyy"})
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
@@ -159,7 +160,9 @@
 
   (stop [{http :http-palvelin :as this}]
     (http-palvelin/poista-palvelu http :status)
+    (http-palvelin/poista-palvelu http :app-status)
+    (reset! status {:viesti "Harja sammutetaan"})
     this))
 
 (defn luo-status [kehitysmoodi?]
-  (->Status (atom {:viesti "Harja käynnistyy"}) kehitysmoodi?))
+  (->Status (atom nil) kehitysmoodi?))

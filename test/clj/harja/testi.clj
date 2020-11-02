@@ -5,14 +5,18 @@
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
-    [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
     [harja.palvelin.komponentit.todennus :as todennus]
-    [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.liitteet :as liitteet]
+    [tarkkailija.palvelin.komponentit
+     [event-tietokanta :as event-tietokanta]
+     [tapahtumat :as tapahtumat]
+     [jarjestelma-rajapinta :as rajapinta]
+     [uudelleen-kaynnistaja :as uudelleen-kaynnistaja]]
+    [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
@@ -86,10 +90,10 @@
    @atom))
 
 (defn luo-testitietokanta []
-  (tietokanta/luo-tietokanta testitietokanta))
+  {:datasource (tietokanta/luo-yhteyspool testitietokanta)})
 
 (defn luo-temppitietokanta []
-  (tietokanta/luo-tietokanta temppitietokanta))
+  {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
   (liitteet/->Liitteet nil))
@@ -1191,6 +1195,24 @@
                                         [:http-palvelin]))
 
 (def harja-tarkkailija)
+
+(defn pystyta-harja-tarkkailija []
+  (alter-var-root #'harja-tarkkailija
+                  (constantly
+                    (component/start
+                      (component/system-map
+                        :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+                        :klusterin-tapahtumat (component/using
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
+                                                {:db :db-event})
+                        :tapahtuma (component/using
+                                     (tapahtuma/->Tapahtuma)
+                                     [:klusterin-tapahtumat :rajapinta])
+                        :rajapinta (rajapinta/->Rajapintakasittelija)
+                        :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 5000}} (atom nil)))))))
+(defn lopeta-harja-tarkkailija []
+  (alter-var-root #'harja-tarkkailija component/stop))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -1198,14 +1220,7 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
-     (alter-var-root #'harja-tarkkailija
-                     (constantly
-                       (component/start
-                         (component/system-map
-                           :db-event (event-tietokanta/luo-tietokanta testitietokanta)
-                           :klusterin-tapahtumat (component/using
-                                                   (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                   {:db :db-event})))))
+     (pystyta-harja-tarkkailija)
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1238,7 +1253,7 @@
                                        " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
      (testit#)
      (alter-var-root #'jarjestelma component/stop)
-     (alter-var-root #'harja-tarkkailija component/stop)))
+     (lopeta-harja-tarkkailija)))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan

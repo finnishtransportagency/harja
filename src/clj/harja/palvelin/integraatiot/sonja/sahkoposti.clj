@@ -62,7 +62,9 @@
     ((:saapuva this))
     ((:lahteva this))
     ((:lahteva-sahkoposti-ja-liite-kuittauskuuntelija this))
-    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija))
+    (reset! kuuntelijat #{})
+    (reset! kuittaus-kuuntelijat {})
+    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija :jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite))
 
   Sahkoposti
   (rekisteroi-kuuntelija! [this kuuntelija-fn]

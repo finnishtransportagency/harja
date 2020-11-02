@@ -16,6 +16,7 @@
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
+    [harja.palvelin.komponentit.liitteet :as liitteet-komp]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -209,7 +210,7 @@
       :tiedostopesula (tiedostopesula/luo-tiedostopesula (:tiedostopesula asetukset))
 
       :liitteiden-hallinta (component/using
-                             (harja.palvelin.komponentit.liitteet/->Liitteet
+                             (liitteet-komp/->Liitteet
                                (get-in asetukset [:liitteet :fileyard-url]))
                              [:db :virustarkistus :tiedostopesula :pois-kytketyt-ominaisuudet])
 
