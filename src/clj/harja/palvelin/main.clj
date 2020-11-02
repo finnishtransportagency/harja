@@ -766,7 +766,11 @@
                                            (kaynnista-pelkastaan-jarjestelma)
                                            (when (nil? (alter-var-root #'harja-jarjestelma
                                                                        (fn [harja-jarjestelma]
-                                                                         (try (jarjestelma/system-restart harja-jarjestelma payload)
+                                                                         (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
+                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
+                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui nil)
+                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil))
+                                                                                uudelleen-kaynnistetty-jarjestelma)
                                                                               (catch Throwable t
                                                                                 (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
                                                                                 (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil)

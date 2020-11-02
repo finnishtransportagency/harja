@@ -11,18 +11,18 @@
 (extend-type SystemMap
   kp/IRestart
   (restart [system system-component-keys]
-    (let [all-component-keys (keys system)
-          graph (component/dependency-graph system all-component-keys)
-          all-keys-sorted (sort (dep/topo-comparator graph) all-component-keys)]
+    (let [kaikki-komponentit (keys system)
+          graph (component/dependency-graph system kaikki-komponentit)
+          all-keys-sorted (sort (dep/topo-comparator graph) kaikki-komponentit)]
       (loop [system system
              [component-key & component-keys] system-component-keys]
         (if (nil? component-key)
           system
-          (let [[uudelleen-kaynnistettava-komponentti-avain & paivitettavat-komponentti-avaimet :as pk] (drop-while #(not= % component-key) all-keys-sorted)]
-            (let [osittain-pysaytetty-systeemi (component/stop-system system pk)
-                  komponentti-uudelleen-kaynnistetty (component/update-system osittain-pysaytetty-systeemi uudelleen-kaynnistettava-komponentti-avain restart-komp)]
-              (recur (component/update-system komponentti-uudelleen-kaynnistetty paivitettavat-komponentti-avaimet component/start)
-                     component-keys))))))))
+          (let [uudelleen-kaynnistettavat-komponentit (drop-while #(not= % component-key) all-keys-sorted)
+                sammutettu-jarjestelma (component/update-system-reverse system uudelleen-kaynnistettavat-komponentit component/stop)
+                uudelleen-kaynnistetty-jarjestelma (component/update-system sammutettu-jarjestelma uudelleen-kaynnistettavat-komponentit component/start)]
+            (recur uudelleen-kaynnistetty-jarjestelma
+                   component-keys)))))))
 
 (defn system-restart
   [system system-component-keys]
@@ -32,3 +32,15 @@
                  system-component-keys)]
    :post [(instance? SystemMap %)]}
   (kp/restart system system-component-keys))
+
+(defn kaikki-ok? [system]
+  (let [kaikki-komponentit (keys system)]
+    (loop [[komponentin-nimi & loput-komponentit] kaikki-komponentit
+           jarjestelma-ok? true]
+      (if (or (nil? komponentin-nimi)
+              (false? jarjestelma-ok?))
+        jarjestelma-ok?
+        (recur loput-komponentit
+               (let [komponentti (get system komponentin-nimi)]
+                 (or (not (satisfies? kp/IStatus komponentti))
+                     (kp/status-ok? komponentti))))))))
