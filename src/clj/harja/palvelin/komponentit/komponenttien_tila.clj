@@ -12,6 +12,13 @@
                (assoc-in [palvelin :sonja] payload)
                (assoc-in [palvelin :sonja :kaikki-ok?] (if timeout? false (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload))))))))
 
+(defn- tallenna-sonjan-uudelleen-kaynnistamisen-tila-cacheen [komponenttien-tila {:keys [palvelin payload]}]
+  (swap! komponenttien-tila
+         (fn [kt]
+           (-> kt
+               (assoc-in [palvelin :sonja] payload)
+               (assoc-in [palvelin :sonja :kaikki-ok?] false)))))
+
 (defn- tallenna-dbn-tila-cacheen [komponenttien-tila {:keys [palvelin payload]} timeout?]
   (swap! komponenttien-tila
          (fn [kt]
@@ -42,6 +49,7 @@
              (zipmap [::harja-kuuntelija ::sonja-kuuntelija ::db-kuuntelija ::db-replica-kuuntelija]
                      (tapahtuma-apurit/tarkkaile-tapahtumia :harja-tila {:tyyppi :viimeisin-per-palvelin} (partial tallenna-harjan-tila-cacheen komponenttien-tila)
                                                             :sonja-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (:paivitystiheys-ms sonja-asetukset) varoaika)} (partial tallenna-sonjan-tila-cacheen komponenttien-tila)
+                                                            :sonjan-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-sonjan-uudelleen-kaynnistamisen-tila-cacheen komponenttien-tila)
                                                             :db-tila {:tyyppi :viimeisin :timeout (+ (:paivitystiheys-ms db-asetukset) varoaika)} (partial tallenna-dbn-tila-cacheen komponenttien-tila)
                                                             :db-replica-tila {:tyyppi :viimeisin :timeout (+ (:paivitystiheys-ms db-replica-asetukset) varoaika)} (partial tallenna-db-replikan-tila-cacheen komponenttien-tila))))))
   (stop [this]
