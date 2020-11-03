@@ -370,21 +370,28 @@
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn hae-urakan-maarien-toteumat [db user {:keys [urakka-id tehtavaryhma alkupvm loppupvm] :as tiedot}]
+(defn hae-tehtavan-toteumat [db user {:keys [urakka-id toimenpidekoodi-id hoitokauden-alkuvuosi] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [t (if (= "Kaikki" tehtavaryhma) nil tehtavaryhma)
-          urakan-alkuvuosi (urakat-q/hae-urakan-alkuvuosi db urakka-id)
-          alkupvm (if (nil? alkupvm)
-                    (str  urakan-alkuvuosi "-10-01")
-                    alkupvm)
-          loppupvm (if (nil? loppupvm)
-                    (str (inc urakan-alkuvuosi) "-09-30")
-                    loppupvm)
+    (let [alkupvm (str hoitokauden-alkuvuosi "-10-01")
+          loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
+          res (toteumat-q/listaa-tehtavan-toteumat db {:urakka urakka-id
+                                                              :toimenpidekoodi-id toimenpidekoodi-id
+                                                              :alkupvm alkupvm
+                                                              :loppupvm loppupvm
+                                                              :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
+      res)
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
+(defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id toimenpide hoitokauden-alkuvuosi] :as tiedot}]
+  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
+    (let [t (if (= "Kaikki" toimenpide) nil toimenpide)
+          alkupvm (str hoitokauden-alkuvuosi "-10-01")
+          loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
           res (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
-                                                             :tehtavaryhma t
-                                                             :alkupvm alkupvm
-                                                             :loppupvm loppupvm
-                                                             :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/iso-8601->pvm alkupvm))})]
+                                                              :tehtavaryhma t
+                                                              :alkupvm alkupvm
+                                                              :loppupvm loppupvm
+                                                              :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
       res)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
@@ -1095,9 +1102,6 @@
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
-      :urakan-maarien-toteumat
-      (fn [user tiedot]
-        (hae-urakan-maarien-toteumat db-replica user tiedot))
       :urakan-toteumien-toimenpiteet
       (fn [user tiedot]
         (hae-urakan-toimenpiteet db-replica user tiedot))
@@ -1116,6 +1120,12 @@
       :poista-toteuma
       (fn [user tiedot]
         (poista-maarien-toteuma! db user tiedot))
+      :hae-toimenpiteen-tehtava-yhteenveto
+      (fn [user tiedot]
+        (hae-toimenpiteen-maarien-toteumat db-replica user tiedot))
+      :hae-tehtavan-toteumat
+      (fn [user tiedot]
+        (hae-tehtavan-toteumat db-replica user tiedot))
       :urakan-toteutuneet-muut-tyot
       (fn [user tiedot]
         (hae-urakan-muut-tyot db-replica user tiedot))
@@ -1169,7 +1179,6 @@
       :paivita-yk-hint-toteumien-tehtavat
       :urakan-erilliskustannukset
       :tallenna-erilliskustannus
-      :urakan-maarien-toteumat
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma

@@ -306,14 +306,15 @@ SELECT
                  THEN tm.id
             ELSE -1 -- ei tarvita koneellisille päivitystä
            END                                  AS tmid
-FROM toteuma_materiaali tm
-       JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
-       JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+FROM toteuma t
+    JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
+    JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
        LEFT JOIN kayttaja k ON tm.luoja = k.id
 WHERE t.urakka = :urakka
+  AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+  AND t.poistettu = FALSE
   AND t.tyyppi = 'kokonaishintainen'
   AND tm.poistettu IS NOT TRUE
-  AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
   AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
 group by mk.id, pvm, k.jarjestelma, t.lisatieto, tid, tmid
 ORDER BY pvm DESC;

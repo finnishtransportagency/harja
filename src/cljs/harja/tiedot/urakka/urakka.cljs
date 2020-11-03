@@ -228,8 +228,9 @@
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
 
-(defonce toteumat-maarat (cursor tila [:toteumat :maarien-toteumat]))
+
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
+(defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 

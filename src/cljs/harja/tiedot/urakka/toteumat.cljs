@@ -61,14 +61,6 @@
             :alkupvm alkupvm
             :loppupvm loppupvm}))
 
-(defn hae-urakan-maarien-toteumat [urakka-id tehtavaryhma-idt]
-  (k/post! :urakan-maarien-toteumat
-           {:urakka-id urakka-id
-            :tehtavaryhma-idt tehtavaryhma-idt}))
-
-(defn hae-maarien-toteumat-sivun-toimenpiteet []
-  (k/get! :tehtavat))
-
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))
 
