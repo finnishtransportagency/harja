@@ -1,17 +1,28 @@
--- Vain osa toimenpidekoodeista on sellaisia tehtäviä, että niitä voidaan lisätä
--- käyttöliittymän kautta käsin suunnitelluille tehtäville.
--- Määritellään kaikki toimenpidekoodit aluksi käsin lisättävien joukosta.
--- Ja koska ympäristöt ovat erilaisia (tehtävien nimet ja id;t vaihtelevat ympäristön mukaan)
--- , niin etukäteen ei voida määritellä, että mitkä laitetana käsin lisättävien listalle ja mitä ei.
--- Niinpä ne on tehtävä jokaiseen ympäristöön erikseen. Siihen on oma käyttöliittymä hallintapuolella.
-ALTER TABLE toimenpidekoodi
-    ADD kasin_lisattava_maara BOOLEAN DEFAULT FALSE;
+CREATE OR REPLACE FUNCTION tarkista_t_tr_ti_yhteensopivuus(tehtava_ INTEGER, tehtavaryhma_ INTEGER, toimenpideinstanssi_ INTEGER)
+    RETURNS boolean AS
+$$
+DECLARE
+    kaikki_ok BOOLEAN;
+BEGIN
+    SELECT exists(SELECT 1
+                  FROM toimenpidekoodi tk3
+                           JOIN toimenpidekoodi tk4 ON tk4.emo = tk3.id
+                           JOIN toimenpideinstanssi ti ON tk3.id = ti.toimenpide
+                           JOIN tehtavaryhma tr ON tk4.tehtavaryhma = tr.id
+                  WHERE (tk4.id = tehtava_ OR tehtava_ IS NULL)
+                    AND tr.tyyppi = 'alataso'::tehtavaryhmatyyppi
+                    AND tk4.taso = 4
+                    AND (tr.id = tehtavaryhma_ OR tehtavaryhma_ IS NULL)
+                    AND (ti.id = toimenpideinstanssi_ OR toimenpideinstanssi_ IS NULL))
+    INTO kaikki_ok;
+    RETURN kaikki_ok;
+END;
+$$ LANGUAGE plpgsql;
 
--- Lisätään uuid tehtäväryhmän muutamalle lisätyöhön liittyvälle ryhmälle, jotta nimen vaihto
--- ei sotke tehtäväryhmän käyttöä hakulausekkeissa.
-UPDATE tehtavaryhma SET yksiloiva_tunniste = '91896f23-1d4a-4385-8e1f-28a8f0c8ba80'
-    WHERE nimi = 'Lisätyöt' AND otsikko = '7.0 LISÄTYÖT';
-UPDATE tehtavaryhma SET yksiloiva_tunniste = '0b65b36d-e84e-40b6-a0ad-e4f539f05227'
-    WHERE nimi = 'Välitaso Lisätyöt' AND otsikko = '7.0 LISÄTYÖT';
-UPDATE tehtavaryhma SET yksiloiva_tunniste = '6a2f1000-bb92-48d7-af80-7510c532115a'
-    WHERE nimi = 'Alataso Lisätyöt' AND otsikko = '7.0 LISÄTYÖT';
+ALTER TABLE toimenpidekoodi
+    ALTER COLUMN tehtavaryhma TYPE INTEGER,
+    ADD CONSTRAINT toimenpidekoodi_tehtavaryhma_fkey FOREIGN KEY (tehtavaryhma) REFERENCES tehtavaryhma (id);
+
+ALTER TABLE lasku_kohdistus
+    ADD CONSTRAINT lasku_kohdistus_tehtava_tehtavaryhma_toimenpideinstanssi_oikein CHECK (tarkista_t_tr_ti_yhteensopivuus(
+            tehtava, tehtavaryhma, toimenpideinstanssi));
