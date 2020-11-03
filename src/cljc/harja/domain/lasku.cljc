@@ -1,10 +1,7 @@
 (ns harja.domain.lasku
   (:require [clojure.string :as str]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [clojure.spec.alpha :as s]
-            [harja.domain.roolit :as roolit]
-            [harja.pvm :as pvm]
-    #?(:cljs [harja.tiedot.istunto :as istunto])))
+            [harja.pvm :as pvm]))
 
 (defonce kuukaudet-strs {:tammikuu  "Tammikuu"
                          :helmikuu  "Helmikuu"
@@ -69,15 +66,7 @@
                                                   (contains? hoitovuodet-strs (keyword hoitovuosi))
                                                   (empty? loput)))))
 
-(defn validoi-laskudata [data]
-  (let [urakkatiedot #?(:clj (comment harja.palvelin.palvelut.urakat.urakat-paivamaarat )
-                        :cljs @arja.tiedot.navigaatio/valittu-urakka)]
-    (comment validoi-data-urakkatiedon-perusteella urakkatiedot))
-  true)
-
-(s/def ::koontilaskun-kuukausi-arvo validoi-laskudata)
-
-(s/def ::koontilaskun-kuukausi (s/and ::koontilaskun-kuukausi-formaatti ::koontilaskun-kuukausi-arvo) )
+(s/def ::koontilaskun-kuukausi ::koontilaskun-kuukausi-formaatti)
 
 (s/def ::laskuerittely (s/keys :req-un [::koontilaskun-kuukausi]))
 

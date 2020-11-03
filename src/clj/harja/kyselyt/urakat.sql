@@ -906,7 +906,6 @@ FROM urakka
 WHERE id = :urakka;
 
 -- name: urakan-paivamaarat
--- single?: true
 SELECT
   alkupvm,
   loppupvm
