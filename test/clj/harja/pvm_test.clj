@@ -218,3 +218,7 @@
     (is (t/equal? (t/date-time 2018 1 2) (second paivat)) "Välissä oleva päivä on oikein")
     (is (t/equal? (t/date-time 2018 1 3) (nth paivat 2)) "Välissä oleva päivä on oikein")
     (is (t/equal? loppu (last paivat)) "Loppupäivämäärä on viimeinen")))
+
+(deftest konversiot
+  (let [d (pvm/->pvm "1.1.2010")]
+    (is (instance? org.joda.time.DateTime d))))
