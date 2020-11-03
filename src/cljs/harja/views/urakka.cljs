@@ -61,7 +61,7 @@
                         (u-domain/vesivaylaurakkatyyppi? tyyppi)
                         (istunto/ominaisuus-kaytossa? :vesivayla))
     :paikkaukset (and (oikeudet/urakat-paikkaukset id)
-                      (#{:hoito :paallystys} tyyppi))
+                      (#{:hoito :teiden-hoito :paallystys} tyyppi))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
