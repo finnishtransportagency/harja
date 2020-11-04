@@ -87,6 +87,7 @@
       "jarjestelyt": [
         {
           "jarjestely": {
+            "liikennemerkki": "Nopeusrajoitusmerkki",
             "alkuperainen-nopeusrajoitus": "60",
             "alennettu-nopeusrajoitus": "30",
             "nopeusrajoituksen-pituus": "250",

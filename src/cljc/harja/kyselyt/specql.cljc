@@ -59,9 +59,11 @@
 (defrecord NumberTransform []
   tx/Transform
   (from-sql [_ num]
-    (float num))
+    (when num
+      (float num)))
   (to-sql [_ num]
-    #?(:clj (bigdec num)
+    #?(:clj (when num
+              (bigdec num))
        :cljs num))
   (transform-spec [_ input-spec]
     number?))

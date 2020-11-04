@@ -609,9 +609,9 @@ yllapitoluokkanimi->numero
 
 (def muoto-virhetekstit
   {:tr-numero        {:ei-arvoa "Anna tienumero"}
-   :tr-ajorata       {:ei-arvoa          "Anna ajorata"
+   :tr-ajorata       {:ei-arvoa          "Tarkista ajorata"
                       :ei-saa-olla-arvoa "Ei saa olla ajorataa"}
-   :tr-kaista        {:ei-arvoa          "Anna kaista"
+   :tr-kaista        {:ei-arvoa          "Tarkista kaista"
                       :ei-saa-olla-arvoa "Ei saa olla kaistaa"}
    :tr-alkuosa       {:ei-arvoa    #?(:clj  "Anna alkuosa"
                                       :cljs "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
