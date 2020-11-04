@@ -240,23 +240,27 @@
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
-      app))
+      (assoc app :toimenpiteet-lataa true)))
 
   HaeToimenpiteenTehtavaYhteenvetoOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus nil)))
+    (-> app
+        (assoc :toimenpiteet-lataa false)
+        (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus nil))))
 
   HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    app)
+    (assoc app :toimenpiteet-lataa false))
 
   HaeTehtavanToteumat
   (process-event [{tehtava :tehtava} app]
     ;; Avataan tai suljetaan rivi
     (do
       (if (= (:avattu-tehtava app) (:tehtava tehtava))
-        (dissoc app :haetut-toteumat)
+        (-> app
+          (dissoc :haetut-toteumat)
+          (dissoc :avattu-tehtava))
         (do
           (tuck-apurit/post! :hae-tehtavan-toteumat
                              {:urakka-id (-> @tila/yleiset :urakka :id)
@@ -316,6 +320,7 @@
                             :epaonnistui ->TallennaToteumaEpaonnistui})
         (viesti/nayta! "Puuttuvia tai virheellisiä kenttiä, tarkista kentät!" :danger))
       (-> app
+          (dissoc :avattu-tehtava)
           (assoc-in [:lomake ::tila/validius] validius)
           (assoc-in [:lomake ::tila/validi?] validi?))))
 
@@ -472,6 +477,7 @@
                               (:aikavali-loppupvm app))
       (hae-tehtavat toimenpide)
       (-> app
+          (assoc :toimenpiteet-lataa true)
           (assoc :ajax-loader true)
           (assoc :valittu-toimenpide toimenpide)
           (assoc :haetut-toteumat nil)
