@@ -1184,8 +1184,7 @@
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
-    (komp/sisaan #(do
-                    (nav/vaihda-kartan-koko! :M)))
+    (komp/sisaan #(nav/vaihda-kartan-koko! :M))
     (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
