@@ -79,15 +79,13 @@
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                 {:urakka-id urakka-id
-                                                 :alkupvm "2020-10-01"
-                                                 :loppupvm "2021-09-30"})
+                                                 :hoitokauden-alkuvuosi 2020})
                                 true)
         maarien-toteumat-2021 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                 {:urakka-id urakka-id
-                                                 :alkupvm "2021-10-01"
-                                                 :loppupvm "2022-09-30"})
+                                                 :hoitokauden-alkuvuosi 2021})
                                 true)
 
         oulun-mhu-urakan-maarien-toteuma-2019 (ffirst (q
