@@ -148,15 +148,13 @@
   (let [;; Varmista, että urakka on tallennettu
         _ (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         _ (lisaa-toteuma default-toteuma-maara)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :urakan-maarien-toteumat +kayttaja-jvh+
+                                         :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                           :tehtavaryhma "Kaikki"
-                                          :alkupvm alkupvm
-                                          :loppupvm loppupvm})
+                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         tallennettu-toteuma (keep #(when (= "Pysäkkikatoksen uusiminen" (:tehtava %))
                                      %)
                                   toteumat-vastaus)
@@ -207,15 +205,13 @@
 
 (deftest lisaa-akillinen-hoitotyo-test
   (let [_ (lisaa-toteuma default-akillinen-hoitotyo)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         akillinen-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :urakan-maarien-toteumat +kayttaja-jvh+
+                                          :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                            :tehtavaryhma "Kaikki"
-                                           :alkupvm alkupvm
-                                           :loppupvm loppupvm})
+                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-hoitotyo (keep #(when (= "Äkillinen hoitotyö (talvihoito)" (:tehtava %))
                                       %)
@@ -259,15 +255,13 @@
 
 (deftest lisaa-lisatyo-test
   (let [t (lisaa-toteuma default-lisatyo)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         lisatyo-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :urakan-maarien-toteumat +kayttaja-jvh+
+                                        :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                         {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                          :tehtavaryhma "Kaikki"
-                                         :alkupvm alkupvm
-                                         :loppupvm loppupvm})
+                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-lisatyo (keep #(when (= "Lisätyö (talvihoito)" (:tehtava %))
                                      %)

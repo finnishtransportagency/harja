@@ -387,12 +387,12 @@
     (let [t (if (= "Kaikki" toimenpide) nil toimenpide)
           alkupvm (str hoitokauden-alkuvuosi "-10-01")
           loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
-          res (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
+          vastaus (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
                                                               :tehtavaryhma t
                                                               :alkupvm alkupvm
                                                               :loppupvm loppupvm
                                                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
-      res)
+      vastaus)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn hae-urakan-toimenpiteet [db user {:keys [urakka-id]}]
