@@ -8,15 +8,23 @@
 (defn- tallenna-sonjan-tila-cacheen [komponenttien-tila {:keys [palvelin payload]} timeout?]
   (swap! komponenttien-tila
          (fn [kt]
-           (-> kt
-               (assoc-in [palvelin :sonja] payload)
-               (assoc-in [palvelin :sonja :kaikki-ok?] (if timeout? false (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload))))))))
+           (println (str "----> kt: " kt))
+           (println (str "----> palvelin: " palvelin))
+           (println (str "----> payload: " payload))
+           (if (and (map? payload)
+                    (contains? payload :olioiden-tilat))
+             (-> kt
+                 (assoc-in [palvelin :sonja] payload)
+                 (assoc-in [palvelin :sonja :kaikki-ok?] (if timeout? false (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload)))))
+             (-> kt
+                 (assoc-in [palvelin :sonja] {:payload payload})
+                 (assoc-in [palvelin :sonja :kaikki-ok?] (if timeout? false (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload)))))))))
 
 (defn- tallenna-sonjan-uudelleen-kaynnistamisen-tila-cacheen [komponenttien-tila {:keys [palvelin payload]}]
   (swap! komponenttien-tila
          (fn [kt]
            (-> kt
-               (assoc-in [palvelin :sonja] payload)
+               (assoc-in [palvelin :sonja] {:payload payload})
                (assoc-in [palvelin :sonja :kaikki-ok?] false)))))
 
 (defn- tallenna-dbn-tila-cacheen [komponenttien-tila {:keys [palvelin payload]} timeout?]

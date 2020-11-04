@@ -6,6 +6,7 @@
   ja ilmoittaa urakkakohtaisista ilmoitukset-tapahtumista"
 
   (:require [com.stuartsierra.component :as component]
+            [cognitect.transit :as t]
             [clojure.core.async :refer [thread] :as async]
             [clojure.spec.alpha :as s]
             [clojure.string :as clj-str]
@@ -20,9 +21,11 @@
             [harja.transit :as transit]
 
             [harja.kyselyt.tapahtumat :as q-tapahtumat]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm])
   (:import [org.postgresql PGNotification]
            [org.postgresql.util PSQLException]
+           [org.joda.time DateTime]
            [java.util UUID]
            (clojure.lang ArityException)))
 
@@ -39,14 +42,29 @@
                  Tälle tulee antaa arvoksi map, jossa avaimet :tunnistin ja :lkm"}
          *tarkkaile-yhta-aikaa* nil)
 
-(def transit-write-handler {})
+(def transit-write-optiot {:handlers {DateTime (t/write-handler (constantly "dt")
+                                                                #(pvm/suomen-aika->iso8601-basic %))}})
 
-(def transit-read-handler {})
+(def transit-read-optiot {:handlers {"dt" (t/read-handler #(pvm/iso8601-basic->suomen-aika %))}})
+
+(def tama-namespace (namespace ::this))
 
 
 (s/def ::tapahtuma (s/or :keyword keyword?
                          :string string?))
-(s/def ::tyyppi #{:perus :viimeisin :viimeisin-per-palvelin})
+
+(s/def ::palvelimet-perus-asetukset (s/and set?
+                                           #(every? string? %)))
+(s/def ::palvelimet-viimeisin-asetukset (s/and set?
+                                               #(every? string? %)))
+
+(s/def ::tyyppien-nimet #{:perus :viimeisin :viimeisin-per-palvelin :palvelimet-perus :palvelimet-viimeisin})
+(s/def ::tyyppi-asetuksilla (s/and map?
+                                   #(= (count %) 1)
+                                   #(s/valid? ::tyyppien-nimet (key (first %)))
+                                   #(s/valid? (keyword tama-namespace (str (name (key (first %))) "-asetukset")) (val (first %)))))
+(s/def ::tyyppi (s/or :keyword ::tyyppien-nimet
+                      :map ::tyyppi-asetuksilla))
 
 (defn- uusi-tapahtuman-kanava []
   (str "k_" (clj-str/replace (str (UUID/randomUUID)) #"-" "_")))
@@ -115,34 +133,34 @@
         false)
     true))
 
-(defn paluuarvo [palautettava-arvo tapahtuma db]
-  (let [json-data (case palautettava-arvo
+(defn paluuarvo [tyyppi tapahtuma db]
+  (let [json-data (case tyyppi
                     :viimeisin (q-tapahtumat/uusin-arvo db {:nimi tapahtuma})
-                    :viimeisin-per-palvelin (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
+                    (:palvelimet-viimeisin :viimeisin-per-palvelin) (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
                     nil)]
-    ;(log/debug "[KOMPONENTTI-EVENT] paluuarvo - tapahtuma: " tapahtuma " palautettava-arvo: " palautettava-arvo " json-data nil? " (nil? json-data))
+    ;(log/debug "[KOMPONENTTI-EVENT] paluuarvo - tapahtuma: " tapahtuma " tyyppi: " tyyppi " json-data nil? " (nil? json-data))
     (when-not (nil? json-data)
-      (case palautettava-arvo
-        :viimeisin (let [data (transit/lue-transit-string json-data transit-read-handler)]
+      (case tyyppi
+        :viimeisin (let [data (transit/lue-transit-string json-data transit-read-optiot)]
                      ;(log/debug (str "[KOMPONENTTI-EVENT] Data: " data))
                      (when (tapahtuman-data-ok?! data tapahtuma)
                        data))
-        :viimeisin-per-palvelin (let [data (mapv #(update % :data transit/lue-transit-string transit-read-handler)
-                                                 json-data)]
-                                  ;(log/debug (str "[KOMPONENTTI-EVENT] Data: " json-data))
-                                  (when (every? (fn [{data :data}]
-                                                  ;(log/debug (str "[KOMPONENTTI-EVENT] Data every lopissa: " data))
-                                                  (tapahtuman-data-ok?! data tapahtuma)
-                                                  #_(tapahtuman-data-ok?! (transit/lue-transit-string (transit/clj->transit data
-                                                                                                                            {})
-                                                                                                      {})
-                                                                          tapahtuma))
-                                                data)
-                                    data))))))
+        (:palvelimet-viimeisin :viimeisin-per-palvelin) (let [data (mapv #(update % :data transit/lue-transit-string transit-read-optiot)
+                                                                         json-data)]
+                                                          ;(log/debug (str "[KOMPONENTTI-EVENT] Data: " json-data))
+                                                          (when (every? (fn [{data :data}]
+                                                                          ;(log/debug (str "[KOMPONENTTI-EVENT] Data every lopissa: " data))
+                                                                          (tapahtuman-data-ok?! data tapahtuma)
+                                                                          #_(tapahtuman-data-ok?! (transit/lue-transit-string (transit/clj->transit data
+                                                                                                                                                    {})
+                                                                                                                              {})
+                                                                                                  tapahtuma))
+                                                                        data)
+                                                            data))))))
 
 (defn- kuuntele-klusterin-tapahtumaa!
   [{:keys [db tapahtuma-loopin-ajot kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-kuittaus
-           tapahtuma palautettava-arvo kuuntelun-jalkeen ryhmatunnistin lkm]}]
+           tapahtuma tyyppi kuuntelun-jalkeen ryhmatunnistin lkm]}]
   {:pre [(not (nil? db))
          (not (nil? tapahtuma))]}
   (thread (let [possukanava (kaytettava-kanava! db tapahtuma)]
@@ -157,7 +175,7 @@
                 (async/put! tapahtuma-loopin-ajot {:f (fn [db]
                                                         (jdbc/with-db-transaction [db db]
                                                                                   (kuuntelu-fn possukanava (jdbc/get-connection db))
-                                                                                  (paluuarvo palautettava-arvo tapahtuma db)))
+                                                                                  (paluuarvo tyyppi tapahtuma db)))
                                                    :tunnistin kuuntelu-aloitettu-tunnistin
                                                    :ryhmatunnistin ryhmatunnistin
                                                    :yhta-aikaa? (boolean ryhmatunnistin)
@@ -243,7 +261,7 @@
                                        (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
                                              tapahtuman-nimi (.getName notification)
                                              json-data (-> (q-tapahtumat/tapahtuman-arvot db {:idt #{tapahtumadatan-id}}) first :arvo)
-                                             data (transit/lue-transit-string json-data transit-read-handler)]
+                                             data (transit/lue-transit-string json-data transit-read-optiot)]
                                          (when (tapahtuman-data-ok?! data tapahtuman-nimi)
                                            (doseq [kasittelija (get @kuuntelijat tapahtuman-nimi)]
                                              ;; Käsittelijä ei sitten saa blockata
@@ -264,10 +282,10 @@
     ;(log/debug "[KOMPONENTTI-EVENT]tarkkailija-kuuntelun-jalkeen: " tyyppi)
     (when-not (nil? paluu-arvo)
       (case tyyppi
-        :perus nil
+        (:palvelimet-perus :perus) nil
         :viimeisin (async/put! kuuntelija-kanava {::data paluu-arvo})
-        :viimeisin-per-palvelin (doseq [{arvo :data} paluu-arvo]
-                                  (async/put! kuuntelija-kanava {::data arvo}))))
+        (:viimeisin-per-palvelin :palvelimet-viimeisin) (doseq [{arvo :data} paluu-arvo]
+                                                          (async/put! kuuntelija-kanava {::data arvo}))))
     (async/sub broadcast possu-kanava kuuntelija-kanava)
     (swap! tarkkailijat update possu-kanava conj kuuntelija-kanava)))
 
@@ -314,7 +332,7 @@
                                                                          (loop []
                                                                            (if (or (not @ajossa)
                                                                                    (tapahtuma-loop-sisalto {:ajossa ajossa :db db :connection connection :tapahtuma-loopin-ajot tapahtuma-loopin-ajot
-                                                                                                            :loop-odotus (:loop-odotus asetukset)
+                                                                                                            :loop-odotus (get-in asetukset [:tarkkailija :loop-odotus])
                                                                                                             :kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
                                                                                                             :kuuntelu-aloitettu kuuntelu-aloitettu :yhta-aikaa-ajettavat yhta-aikaa-ajettavat
                                                                                                             :kuuntelijat kuuntelijat :tarkkailu-kanava tarkkailu-kanava}))
@@ -390,12 +408,22 @@
                                                "ja lukumäärä, että moniko on aloittamassa yhtäaikaa. "
                                                "Nyt saatiin tyypeiksi - tunnistin: " (type tunnistin)
                                                " lkm: " (type lkm)))))
-      (thread (let [kuuntelija-kanava (async/chan 1000
-                                                  (map (fn [v]
-                                                         (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
-                                                                         "  event: " tapahtuma "\n"
-                                                                         "  tiedot: " v))
-                                                         (select-keys (::data v) #{:payload :palvelin})))
+      (thread (let [normalisoitu-tyyppi (if (keyword? tyyppi)
+                                          {tyyppi nil}
+                                          tyyppi)
+                    [tyyppi tyypin-asetukset] (first normalisoitu-tyyppi)
+                    kuuntelijakanava-xf (cond-> (map (fn [v]
+                                                       (select-keys (::data v) #{:payload :palvelin :aika})))
+                                                (or (= tyyppi :palvelimet-perus)
+                                                    (= tyyppi :palvelimet-viimeisin)) (comp (filter (fn [{palvelin :palvelin}]
+                                                                                             (contains? tyypin-asetukset palvelin))))
+                                                (:kehitysmoodi asetukset) (comp (map (fn [v]
+                                                                                       (log/debug (str "[KOMPONENTTI-EVENT] Saatiin tiedot\n"
+                                                                                                       "  event: " tapahtuma "\n"
+                                                                                                       "  tiedot: " v))
+                                                                                       v))))
+                    kuuntelija-kanava (async/chan 1000
+                                                  kuuntelijakanava-xf
                                                   (fn [t]
                                                     (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
                     tapahtuma (tapahtuman-nimi tapahtuma)
@@ -405,9 +433,7 @@
                                                                         :tapahtuma-loopin-ajot (::tapahtuma-loopin-ajot this)
                                                                         :kuuntelu-aloitettu-kuittaus (::kuuntelu-aloitettu-kuittaus this)
                                                                         :tapahtuma tapahtuma
-                                                                        :palautettava-arvo (if (= :perus tyyppi)
-                                                                                             nil
-                                                                                             tyyppi)
+                                                                        :tyyppi tyyppi
                                                                         :kuuntelun-jalkeen kuuntelun-jalkeen
                                                                         :ryhmatunnistin tunnistin
                                                                         :lkm lkm})
@@ -429,12 +455,13 @@
         false
         (let [julkaistava-data (merge {:payload muunnettu-payload
                                        :palvelin host-name
+                                       :aika (pvm/nyt-suomessa)
                                        :hash (konv/sha256 muunnettu-payload)}
                                       (when dev-tyokalut/dev-environment?
                                         {:lahetetty-data (dev-tyokalut/datan-tiedot muunnettu-payload {:type-string? true})}))
               ;_ (log/debug (str "[KOMPONENTTI-EVENT] julkaise! " julkaistava-data))
               julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data (transit/clj->transit julkaistava-data
-                                                                                                                 transit-write-handler)})]
+                                                                                                                 transit-write-optiot)})]
           (when-not julkaisu-onnistui?
             (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" muunnettu-payload)))
           julkaisu-onnistui?)))))

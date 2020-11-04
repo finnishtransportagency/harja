@@ -8,14 +8,15 @@
 
 (defonce harja-tarkkailija nil)
 
-(defn kaynnista! [{:keys [tietokanta tarkkailija komponenttien-tila]}]
+(defn kaynnista! [{:keys [tietokanta tarkkailija komponenttien-tila kehitysmoodi]}]
   (alter-var-root #'harja-tarkkailija
                   (constantly
                     (component/start
                       (component/system-map
                         :db-event (event-tietokanta/luo-tietokanta tietokanta)
                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat tarkkailija)
+                                                (tapahtumat/luo-tapahtumat {:tarkkailija tarkkailija
+                                                                            :kehitysmoodi kehitysmoodi})
                                                 {:db :db-event})
                         :tapahtuma (component/using
                                      (tapahtuma/->Tapahtuma)

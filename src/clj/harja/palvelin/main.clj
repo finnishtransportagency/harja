@@ -3,6 +3,7 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as a :refer [<! go timeout]]
     [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
+    [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtumien-tulkkaus]
     [tarkkailija.palvelin.tarkkailija :as tarkkailija]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -752,28 +753,36 @@
      (kaynnista-pelkastaan-jarjestelma asetukset)))
   ([asetukset]
    (alter-var-root #'harja-jarjestelma
-                   (constantly
-                     (-> asetukset
-                         luo-jarjestelma
-                         component/start)))))
+                   (fn [_]
+                     (let [jarjestelma (-> asetukset
+                                           luo-jarjestelma
+                                           component/start)]
+                       (aloita-sonja jarjestelma)
+                       jarjestelma)))))
 
 (defn- kuuntele-tapahtumia! []
   (event-apurit/tarkkaile-tapahtumaa :harjajarjestelman-restart
                                      {}
                                      (fn [{:keys [palvelin payload]}]
-                                       (when (= palvelin (event-apurit/host-nimi))
+                                       (when (= palvelin event-apurit/host-nimi)
+
                                          (if (= payload :all)
                                            (kaynnista-pelkastaan-jarjestelma)
                                            (when (nil? (alter-var-root #'harja-jarjestelma
                                                                        (fn [harja-jarjestelma]
+                                                                         (println "----- :harjajarjestelman-restart ----")
+                                                                         (println "payload: " payload)
                                                                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
+                                                                                (println "----- UUDELLEEN KÄYNNISTYS ----")
+                                                                                (println (str (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)))
                                                                                 (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
-                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui nil)
-                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil))
+                                                                                  (do (aloita-sonja uudelleen-kaynnistetty-jarjestelma)
+                                                                                      (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo))
+                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                 uudelleen-kaynnistetty-jarjestelma)
                                                                               (catch Throwable t
                                                                                 (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
-                                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui nil)
+                                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                 nil)))))
                                              (kaynnista-pelkastaan-jarjestelma)))))))
 
