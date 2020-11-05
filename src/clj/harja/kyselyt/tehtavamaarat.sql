@@ -11,17 +11,35 @@ WHERE ut.urakka = :urakka
 
 -- name: hae-kaikki-tehtavamaarat-ja-toteumat-aikavalilla
 -- Raportille haetaan kaikki tehtävämäärät
-select ut.id    as "tehtavamaara",
-       tpk.nimi,
-       ut.maara,
-       tpk.yksikko,
-       tpk.id   as "toimenpidekoodi",
-       tt.maara as "toteuma"
+with toteumat as (select tt.maara,
+                         tt.toimenpidekoodi,
+                         tt.poistettu,
+                         tm.maara as "materiaali",
+                         mk.yksikko
+                  from toteuma t
+                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu is not true
+                         left join toteuma_materiaali tm on tm.toteuma = t.id
+                         left join materiaalikoodi mk on mk.id = tm.materiaalikoodi
+                  where --t.lahde = 'harja-ui'
+                      :alkupvm <= t.paattynyt
+                    and :loppupvm >= t.alkanut
+                    and t.poistettu is not true)
+select tpk.nimi            as "nimi",
+       tpk.jarjestys       as "jarjestys",
+       sum(ut.maara)       as "suunniteltu",
+       ut."hoitokauden-alkuvuosi",
+       tpk.yksikko         as "yksikko",
+       tpk.id              as "toimenpidekoodi",
+       tr.nimi             as "tehtavaryhma",
+       sum(toteumat.maara) as "toteuma"
 from urakka_tehtavamaara ut
        join toimenpidekoodi tpk on ut.tehtava = tpk.id
-       left join toteuma_tehtava tt on tpk.id = tt.toimenpidekoodi
-  and tt.poistettu is not true
-where ut.poistettu is not true;
+       left outer join toteumat on toteumat.toimenpidekoodi = ut.tehtava
+       join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
+where ut.poistettu is not true
+  and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi
+order by tpk.id;
 
 -- name: hae-hallintayksikon-tehtavamaarat-ja-toteumat-aikavalilla
 with toteumat as (select tt.maara,

@@ -86,33 +86,53 @@
   [db user parametrit]
   (let [suunnitellut (->> parametrit
                           (hae-tehtavamaarat db)
-                          (sort-by :jarjestys)
-                          (group-by :tehtavaryhma))
+                          (sort-by :jarjestys))
+        suunnitellut (keep identity
+                           (loop [rivit suunnitellut
+                                  tehtavaryhma nil
+                                  kaikki []]
+                             (if (empty? rivit)
+                               kaikki
+                               (let [rivi (first rivit)
+                                     uusi-tehtavaryhma? (not= tehtavaryhma (:tehtavaryhma rivi))
+                                     tehtavaryhma (if uusi-tehtavaryhma?
+                                                    (:tehtavaryhma rivi)
+                                                    tehtavaryhma  )]
+                                 (recur (rest rivit)
+                                        tehtavaryhma
+                                        (conj kaikki
+                                              (when uusi-tehtavaryhma?
+                                                {:nimi tehtavaryhma})
+                                              rivi))))))
         muodosta-rivi (comp
-                        cat
-                        (map string->valiotsikkorivi)
-                        cat
                         (map valitse-materiaali-vai-ei)
                         (map null-arvot-nollaksi-rivilla)
-                        (map #(select-keys % [:nimi :yksikko :suunniteltu :toteuma]))
-                        (map vals)
-                        (map laske-toteuma-%))]
-    {:rivit   (into [] muodosta-rivi suunnitellut)
+                        (map #(vals
+                                (select-keys %
+                                             [:nimi :yksikko :suunniteltu :toteuma])))
+                        (map laske-toteuma-%)
+                        (map #(if (= 1 (count (keys %)))
+                                {:rivi (conj (vec %) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
+                                (vec %))))
+        rivit (into [] muodosta-rivi suunnitellut)]
+    {:rivit   rivit
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
-               {:otsikko "Suunniteltu määrä" :leveys 2}
-               {:otsikko "Toteuma" :leveys 2}
+               {:otsikko "Suunniteltu määrä" :leveys 2 :fmt :numero}
+               {:otsikko "Toteuma" :leveys 2 :fmt :numero}
                {:otsikko "Toteuma-%" :leveys 2}]}))
 
 (defn suorita
   [db user params]
   (println params)
-  (let [{:keys [otsikot rivit]} (muodosta-taulukko db user params)]
+  (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user params)]
     [:raportti
      {:nimi "Tehtävämäärät"}
-     [:teksti (str "helou" (pr-str rivit))]
-     [:teksti (str "helou" (pr-str otsikot))]
+     #_[:teksti (str "helou" (pr-str rivit))]
+     #_[:teksti (str "helou" (pr-str otsikot))]
+     #_[:teksti (str "helou" (pr-str debug))]
      [:taulukko
-      {:otsikko "Tehtävämäärät ajalta "}
+      {:otsikko    "Tehtävämäärät ajalta "
+       :sheet-nimi "löl"}
       otsikot
       rivit]]))
