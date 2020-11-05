@@ -57,6 +57,15 @@
          (instance? org.joda.time.LocalDateTime pvm))))
 
 #?(:clj
+   (defn joda-date-timeksi [ldt]
+     (t/date-time (t/year ldt)
+                  (t/month ldt)
+                  (t/day ldt)
+                  (t/hour ldt)
+                  (t/minute ldt)
+                  (t/second ldt))))
+
+#?(:clj
    (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
 
 #?(:clj
@@ -69,7 +78,10 @@
    (defn suomen-aikavyohykkeeseen
      "Palauttaa uuden Joda-ajan Suomen aikavyöhykkeessä niin, että aika on absoluuttisesti paikallisessa Suomeen ajassa."
      [joda-time]
-     (t/to-time-zone joda-time suomen-aikavyohyke)))
+     (let [jt (if (instance? org.joda.time.LocalDateTime joda-time)
+                (joda-date-timeksi joda-time)
+                joda-time)]
+       (t/to-time-zone jt suomen-aikavyohyke))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -129,9 +141,15 @@
        dt
 
        (instance? java.util.Date dt)
-       (do (println "petar pre konverzije 2 je " dt) (let [dt (tc/to-local-date-time dt)]
-                                                       (println "petar posle konverzije tip je " (type dt))
-                                                       dt))
+       (let [dt (tc/from-date dt)
+             sdt (suomen-aikavyohykkeeseen dt)
+             ldt (t/local-date-time (t/year sdt)
+                                    (t/month sdt)
+                                    (t/day sdt)
+                                    (t/hour sdt)
+                                    (t/minute sdt)
+                                    (t/second sdt))]
+         ldt)
 
        (instance? java.sql.Date dt)
        (tc/from-sql-date dt)
@@ -181,7 +199,6 @@
     false
     (let [eka (joda-timeksi eka)
           toka (joda-timeksi toka)]
-      (println "petar treba da su isti " eka toka)
       (and (= (t/year eka) (t/year toka))
            (= (t/month eka) (t/month toka))
            (= (t/day eka) (t/day toka))))))
@@ -197,8 +214,6 @@
      (if (and eka toka)
        (let [eka (joda-timeksi eka)
              toka (joda-timeksi toka)]
-         (println "petar vrednosti 4 " eka toka)
-         (println "petar tipovi 4 " (type eka) (type toka))
          (t/before? eka toka))
        false)))
 
@@ -207,13 +222,9 @@
   Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
-   (println "petar vrednosti 2 " eka toka)
-   (println "petar tipovi 2 " (type eka) (type toka))
    (if (and eka toka)
      (let [eka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
            toka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
-       (println "petar vrednosti 3 " eka toka)
-       (println "petar tipovi 3 " (type eka) (type toka))
        (or (t/before? eka toka)
            (t/equal? eka toka)))
      false)))
@@ -229,8 +240,6 @@
      (if (and eka toka)
        (let [eka (joda-timeksi eka)
              toka (joda-timeksi toka)]
-         (println "petar vrednosti 5 " eka toka)
-         (println "petar tipovi 5 " (type eka) (type toka))
          (t/after? eka toka))
        false)))
 
@@ -445,9 +454,7 @@
   "Jäsentää tekstistä dd.MM.yyyy muodossa olevan päivämäärän. Jos teksti ei ole oikeaa muotoa, palauta nil."
   [teksti]
   (try
-    (let [a (parsi fi-pvm-parse teksti)]
-      (println "petar konvertovao iz stringa " teksti " u " a)
-      a)
+    (parsi fi-pvm-parse teksti)
     (catch #?(:cljs js/Error
               :clj  Exception) e
       nil)))
@@ -808,7 +815,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 #?(:clj
    (defn aikavali-paivina [alku loppu]
-     (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
+     (let [alku (-> alku joda-timeksi joda-date-timeksi)
+           loppu (-> loppu joda-timeksi joda-date-timeksi)]
+       (t/in-days (t/interval alku loppu)))))
 
 #?(:clj
    (defn aikavali-sekuntteina [alku loppu]

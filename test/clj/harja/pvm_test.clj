@@ -12,9 +12,8 @@
                         12)))
 
 (deftest luominen
-  (println "petar test luominen")
   (is (pvm/sama-pvm? (pvm/->pvm "1.1.2020") (t/local-date 2020 1 1)))
-  (println "petar direktno " (pvm/joda-timeksi (pvm/->pvm "1.1.2020")) (type (pvm/joda-timeksi (pvm/->pvm "1.1.2020")))))
+  (is (pvm/sama-pvm? (t/local-date-time 2020 12 1 13 30 59) (pvm/->pvm "1.12.2020"))))
 
 (deftest ennen?
   (is (false? (pvm/ennen? nil nil)))
@@ -52,7 +51,7 @@
   (is (false? (pvm/jalkeen? nil nil)))
   (is (false? (pvm/jalkeen? nyt nil)))
   (is (false? (pvm/jalkeen? nil nyt)))
-  (is (false? (pvm/jalkeen? (t/local-date-time 2005 10 10)
+  (is (true? (pvm/jalkeen? (t/local-date-time 2005 10 10)
                             (pvm/->pvm "30.12.2004"))))
   (is (false? (pvm/jalkeen? nyt nyt)))
   (is (false? (pvm/jalkeen? nyt
@@ -242,3 +241,6 @@
     (is (t/equal? (t/date-time 2018 1 2) (second paivat)) "Välissä oleva päivä on oikein")
     (is (t/equal? (t/date-time 2018 1 3) (nth paivat 2)) "Välissä oleva päivä on oikein")
     (is (t/equal? loppu (last paivat)) "Loppupäivämäärä on viimeinen")))
+
+(deftest aikavali-paivina-eri-input-tyyppeja
+  (is (= 1 (pvm/aikavali-paivina (pvm/->pvm "31.12.2019") (pvm/->pvm "1.1.2020")))))
