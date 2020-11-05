@@ -13,6 +13,7 @@
             [taoensso.timbre :as log]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
+            [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
@@ -41,7 +42,10 @@
                                           [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri]))))))
+                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                          :tehtavamaarat (component/using
+                                           (tehtavamaarat/->Tehtavamaarat)
+                                           [:http-palvelin :db]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

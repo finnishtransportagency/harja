@@ -319,6 +319,9 @@
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
 
+(def iso8601-format
+  (luo-format "yyyy-MM-dd"))
+
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
 
@@ -395,6 +398,10 @@
 (defn aika-iso8601
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
+
+(defn iso8601
+  [pvm]
+  (formatoi iso8601-format pvm))
 
 (defn aika-yha-format
   [pvm]
@@ -562,6 +569,15 @@
        (hoitokauden-loppupvm vuosi)]
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
+
+(defn hoitokauden-alkuvuosi
+  "Odottaa saavansa org.joda.time.DateTime objektin"
+  [^org.joda.time.DateTime pvm]
+  (let [vuosi (.getYear pvm)
+        kuukausi (.getMonthOfYear pvm)]
+    (if (>= 10 kuukausi)
+      vuosi
+      (dec vuosi))))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
@@ -828,7 +844,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (paivia-valissa eka toka)))
 
 (defn iso-8601->pvm
-  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon joda-time päivämääräksi."
   [teksti]
   (df/parse (df/formatter "yyyy-MM-dd") teksti))
 

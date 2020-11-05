@@ -92,13 +92,16 @@ $$
             VALUES (3.0, 2019, 6, 'MAKU 2015', urakka_id, 800, kayttaja_id, NOW());
         -- Suolauksen toteuma (materiaalitoteuma)
         INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi,
-                             suorittajan_ytunnus, lisatieto)
+                             suorittajan_ytunnus, lisatieto, luoja)
             VALUES ('harja-ui'::LAHDE, urakka_id, sopimus_id, NOW(), '2019-10-01 13:00:00+02', '2020-04-30 13:00:00+02',
-                    'kokonaishintainen'::TOTEUMATYYPPI, 'Sami Suolaaja', '4153724-6', 'Sami-Suolaaja-2020');
+                    'kokonaishintainen'::TOTEUMATYYPPI, 'Sami Suolaaja', '4153724-6', 'Sami-Suolaaja-2020', kayttaja_id);
 
-        INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+        INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, urakka_id)
+            VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(), 1369, 2, kayttaja_id, urakka_id);
+
+        INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
             VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(),
-                    (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300);
+                    (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300, kayttaja_id, urakka_id);
 
 
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
