@@ -700,3 +700,17 @@ jatkon."
 (defn str-suluissa-opt [s]
   (when s
     (str " (" s ")")))
+
+(defn- tooltip-kentta [avain arvo]
+  [:div {:style {:margin-bottom "8px"}}
+   [:div.tooltip-otsikko avain]
+   [:span arvo]])
+
+(defn avain-arvo-tooltip [otsikko {:keys [container-style]}
+                          & avaimet-ja-arvot]
+  [:div {:style container-style}
+   [:div.bold {:style {:margin-bottom "8px"}} otsikko]
+   (keep-indexed (fn [i [avain arvo]]
+                   ^{:key i}
+                   [tooltip-kentta avain arvo])
+                 (partition 2 avaimet-ja-arvot))])

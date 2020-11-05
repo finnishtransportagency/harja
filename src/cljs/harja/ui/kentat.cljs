@@ -178,7 +178,6 @@
   [:input {:class       (cond-> nil
                                 lomake? (str "form-control ")
                                 disabled? (str "disabled"))
-           :style {:width (when leveys leveys)}
            :placeholder (placeholder kentta data)
            :on-change   #(let [v (-> % .-target .-value)]
                            (when (or (not regex) (re-matches regex v))

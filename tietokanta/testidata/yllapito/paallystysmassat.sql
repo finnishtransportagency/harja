@@ -18,7 +18,7 @@ VALUES ((SELECT id FROM pot2_massa WHERE dop_nro = '1234567' AND urakka_id = (SE
     'Sammalkallio',  NULL, 'Jämäkkä runkoaine.', 9.2, 6.5, 85),
        ((SELECT id FROM pot2_massa WHERE dop_nro = '987654331-2' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
         (SELECT koodi FROM pot2_runkoainetyyppi WHERE nimi = 'Erikseen lisättävä fillerikiviaines'),
-        'Sammalkallio',  'Kalkkifilleri (KF)', 'Oiva Filleri.', 8.2, 6.5, 3),
+        'Sammalkallio',  'Kalkkifilleri (KF)', 'Oiva Filleri.', null, null, 3),
        ((SELECT id FROM pot2_massa WHERE dop_nro = '987654331-2' AND urakka_id = (SELECT id from urakka WHERE nimi = 'Utajärven päällystysurakka')),
         (SELECT koodi FROM pot2_runkoainetyyppi WHERE nimi = 'Asfalttirouhe'),
         'Sammalkallio',  NULL, 'Rouhea aine.', 11.2, 4.5, 5);
