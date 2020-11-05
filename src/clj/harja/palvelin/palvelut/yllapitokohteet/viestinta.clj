@@ -311,7 +311,7 @@
                          ;; Tiemerkintäpvm päivitetään
                          (and (some? tiemerkinta-loppupvm-kannassa)
                               (some? uusi-tiemerkinta-loppupvm)
-                              (not (pvm/sama-tyyppiriippumaton-pvm?
+                              (not (pvm/sama-pvm?
                                      tiemerkinta-loppupvm-kannassa
                                      uusi-tiemerkinta-loppupvm)))))))
           uudet-kohdetiedot)]
@@ -322,7 +322,7 @@
                     (some? nykyinen-tiemerkintapvm))
                (and (some? vanha-tiemerkintapvm)
                     (some? nykyinen-tiemerkintapvm)
-                    (not (pvm/sama-tyyppiriippumaton-pvm? vanha-tiemerkintapvm nykyinen-tiemerkintapvm))))))
+                    (not (pvm/sama-pvm? vanha-tiemerkintapvm nykyinen-tiemerkintapvm))))))
 
 (defn valita-tieto-peru-valmius-tiemerkintaan? [vanha-tiemerkintapvm nykyinen-tiemerkintapvm]
   (boolean (and (some? vanha-tiemerkintapvm)

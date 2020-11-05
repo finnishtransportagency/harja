@@ -22,8 +22,7 @@
      :clj
            (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat)
-                    (org.joda.time DateTime DateTimeZone)
-                    (org.joda.time.format DateTimeFormat))))
+                    (org.joda.time DateTimeZone))))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
@@ -166,6 +165,15 @@
   #?(:cljs (instance? DateTime pvm)
      :clj  (joda-time? pvm)))
 
+(defn luo-pvm
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten
+
+  Vuosi 1-index, kuukausi on 0-index ja pv on 1-index"
+  [vuosi kk pv]
+  #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
+     :clj  (Date. (- vuosi 1900) kk pv)))
+
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
     false
@@ -244,8 +252,7 @@
   [eka toka]
   (if-not (and eka toka)
     false
-    (and (= (t/year eka)
-            (t/year toka))
+    (and (= (t/year eka) (t/year toka))
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
@@ -273,13 +280,13 @@
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
-     :clj  (df/formatter str)))
+     :clj  (SimpleDateFormat. str)))
 (defn- formatoi [format date]
   #?(:cljs (df/unparse format date)
      :clj  (.format format date)))
-(defn parsi [formatter teksti]
-  #?(:cljs (df/parse-local formatter teksti)
-     :clj  (df/parse formatter teksti)))
+(defn parsi [format teksti]
+  #?(:cljs (df/parse-local format teksti)
+     :clj  (.parse format teksti)))
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
@@ -437,21 +444,10 @@
   "Jäsentää tekstistä dd.MM.yyyy muodossa olevan päivämäärän. Jos teksti ei ole oikeaa muotoa, palauta nil."
   [teksti]
   (try
-    (let [paivamaara (parsi fi-pvm-parse teksti)]
-      #?(:cljs paivamaara
-         :clj (DateTime. paivamaara)))
+    (parsi fi-pvm-parse teksti)
     (catch #?(:cljs js/Error
               :clj  Exception) e
       nil)))
-
-(defn luo-pvm
-  "Frontissa palauttaa goog.date.Datetimen
-  Backendissä palauttaa org.joda.DateTimen
-
-  Vuosi 1-index, kuukausi on 0-index ja pv on 1-index"
-  [vuosi kk pv]
-  #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
-     :clj  (->pvm (str pv "." (inc kk) "." vuosi))))
 
 (defn kuukauden-nimi [kk]
   (case kk
