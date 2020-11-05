@@ -163,6 +163,12 @@
        dt
        (tc/to-date dt))))
 
+(defn- oikaise-tyyppi [d]
+  #?(:clj
+     (joda-timeksi d)
+     :cljs
+     d))
+
 (defn nyt
   "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
@@ -197,25 +203,18 @@
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
     false
-    (let [eka (joda-timeksi eka)
-          toka (joda-timeksi toka)]
+    (let [eka (oikaise-tyyppi eka)
+          toka (oikaise-tyyppi toka)]
       (and (= (t/year eka) (t/year toka))
            (= (t/month eka) (t/month toka))
            (= (t/day eka) (t/day toka))))))
 
-#?(:cljs
-   (defn ennen? [eka toka]
-     (if (and eka toka)
-       (t/before? eka toka)
-       false))
-
-   :clj
-   (defn ennen? [eka toka]
-     (if (and eka toka)
-       (let [eka (joda-timeksi eka)
-             toka (joda-timeksi toka)]
-         (t/before? eka toka))
-       false)))
+(defn ennen? [eka toka]
+  (if (and eka toka)
+    (let [eka (oikaise-tyyppi eka)
+          toka (oikaise-tyyppi toka)]
+      (t/before? eka toka))
+    false))
 
 (defn sama-tai-ennen?
   "Tarkistaa, onko ensimmäisenä annettu pvm sama tai ennen toista annettua pvm:ää.
@@ -223,25 +222,18 @@
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
    (if (and eka toka)
-     (let [eka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
-           toka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
+     (let [eka (oikaise-tyyppi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
+           toka (oikaise-tyyppi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
        (or (t/before? eka toka)
            (t/equal? eka toka)))
      false)))
 
-#?(:cljs
-   (defn jalkeen? [eka toka]
-     (if (and eka toka)
-       (t/after? eka toka)
-       false))
-
-   :clj
-   (defn jalkeen? [eka toka]
-     (if (and eka toka)
-       (let [eka (joda-timeksi eka)
-             toka (joda-timeksi toka)]
-         (t/after? eka toka))
-       false)))
+(defn jalkeen? [eka toka]
+  (if (and eka toka)
+    (let [eka (oikaise-tyyppi eka)
+          toka (oikaise-tyyppi toka)]
+      (t/after? eka toka))
+    false))
 
 (defn sama-tai-jalkeen?
   "Tarkistaa, onko ensimmäisenä annettu pvm sama tai toisena annettun pvm:n jälkeen.
@@ -249,8 +241,8 @@
   ([eka toka] (sama-tai-jalkeen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
    (if (and eka toka)
-     (let [eka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
-           toka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
+     (let [eka (oikaise-tyyppi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
+           toka (oikaise-tyyppi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
        (or (t/after? eka toka)
            (t/equal? eka toka)))
      false)))
@@ -260,8 +252,8 @@
   [eka toka]
   (if-not (and eka toka)
     false
-    (let [eka (joda-timeksi eka)
-          toka (joda-timeksi toka)]
+    (let [eka (oikaise-tyyppi eka)
+          toka (oikaise-tyyppi toka)]
       (and (= (t/year eka) (t/year toka))
          (= (t/month eka) (t/month toka))))))
 
@@ -898,10 +890,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (-> tuntia t/hours t/ago)))
 
 (defn sekunttia-sitten [sekunttia]
-  #?(:cljs
-     (t/minus (nyt) (t/seconds sekunttia))
-     :clj
-     (t/minus (joda-timeksi (nyt)) (t/seconds sekunttia))))
+  (t/minus (oikaise-tyyppi (nyt)) (t/seconds sekunttia)))
 
 (def kayttoonottto (t/local-date 2016 10 1))
 
@@ -956,8 +945,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                      (range 1 (t/in-days (t/interval alku loppu))))))))
 
 (defn aikavali-nyt-miinus [paivia]
-  (let [nyt #?(:clj (joda-timeksi (nyt))
-               :cljs (nyt))]
+  (let [nyt (oikaise-tyyppi (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
 
 (defn ajan-muokkaus
