@@ -13,6 +13,15 @@
             [harja.ui.ikonit :as ikonit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
+; kokoelma palstoja jota käytetään lomakkeen muodostamiseen
+(defrecord Palstat [optiot skeemat])
+
+; yksittäinen palsta, joka piirretään
+(defrecord Palsta ^:private [optiot skeemat])
+
+(defn- palsta? [x]
+  (instance? Palsta x))
+
 (defrecord Ryhma [otsikko optiot skeemat])
 
 (defn ryhma [otsikko-tai-optiot & skeemat]
@@ -24,6 +33,15 @@
              skeemat)
     (->Ryhma otsikko-tai-optiot
              {:ulkoasu :oletus} skeemat)))
+
+(defn palstat
+  "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
+  [{:keys [lukumaara puolikas]} & palstan-optiot-ja-skeemat]
+  (->Palstat {:lukumaara lukumaara
+              :puolikas puolikas} (remove nil? palstan-optiot-ja-skeemat)))
+
+(defn palstoja? [x]
+  (instance? Palstat x))
 
 (defn rivi
   "Asettaa annetut skeemat vierekkäin samalle riville"
@@ -81,6 +99,7 @@ ja kaikki pakolliset kentät on täytetty"
           ::puuttuvat-pakolliset-kentat
           ::ensimmainen-muokkaus
           ::viimeisin-muokkaus
+          ::viimeksi-muokattu-kentta
           ::skeema))
 
 (defn lomake-lukittu-huomautus
@@ -116,6 +135,18 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         (recur (conj acc s)
                skeemat)))))
 
+(defn- palstoita
+  "Ottaa sisään ryhmiä ja muodostaa jokaisesta ryhmästä palstan vertikaalisesti"
+  [rivit {:keys [puolikas]} skeemat]
+  (let [lukumaara (/ (count skeemat) 2)
+        partitioidut-skeemat (partition 2 (remove nil? skeemat))]
+    (conj rivit (with-meta
+                  (vec (map (fn [[optiot palstan-skeemat]]
+                              (->Palsta (assoc optiot :lukumaara lukumaara) palstan-skeemat))
+                            partitioidut-skeemat))
+                  {:palsta? true
+                   :rivi?   true}))))
+
 (defn- rivita
   "Rivittää kentät siten, että kaikki palstat tulee täyteen.
   Uusi rivi alkaa kun palstat ovat täynnä, :uusi-rivi? true on annettu tai tulee uusi ryhmän otsikko."
@@ -140,6 +171,18 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                (with-meta
                                  (remove nil? (:skeemat s))
                                  {:rivi? true})]))
+                 []
+                 0
+                 skeemat)
+
+          ;; Jos palstoja, palstat alkavat tyhjältä riviltä, joten lisätään työn alla ollut rivi settiin
+          ;; ja luodaan palstat, jotka tulevat omalle rivilleen.
+          (palstoja? s)
+          (recur (palstoita (if (not (empty? rivi))
+                              (conj rivit rivi)
+                              rivit)
+                            (:optiot s)
+                            (:skeemat s))
                  []
                  0
                  skeemat)
@@ -200,9 +243,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?]
+  [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? {:keys [vayla-tyyli?] :as kentta-opts}]
   (let [{:keys [nimi hae aseta]} s
-        hae (or hae #(get % nimi))
+        hae (or hae #(if (vector? nimi)
+                       (get-in % nimi)
+                       (get % nimi)))
         init-arvo (atom (hae data))
         arvo (atom (hae data))
         seurannan-muuttujat (atom {:vaihda! (muokkaa-kenttaa-fn nimi)
@@ -214,26 +259,38 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  ;; Resetoi data, jos uusi data annettu
                  (if (not= uusi-arvo vanha-arvo)
                    (let [{:keys [s data vaihda!]} @seurannan-muuttujat
-                         {:keys [aseta nimi]} s]
+                         {:keys [aseta nimi]} s
+                         assoc-fn (if (vector? nimi)
+                                    assoc-in
+                                    assoc)]
                      (if aseta
                        (vaihda! (aseta data uusi-arvo))
-                       (vaihda! (assoc data nimi uusi-arvo))))
+                       (vaihda! (assoc-fn data nimi uusi-arvo))))
                    (when (and (= uusi-arvo vanha-arvo) aseta-vaikka-sama?)
                      (let [{:keys [s data vaihda!]} @seurannan-muuttujat
-                           {:keys [aseta nimi]} s]
+                           {:keys [aseta nimi]} s
+                           assoc-fn (if (vector? nimi)
+                                      assoc-in
+                                      assoc)]
                        (if aseta
                          (vaihda! (aseta data uusi-arvo))
-                         (vaihda! (assoc data nimi uusi-arvo))))))))
+                         (vaihda! (assoc-fn data nimi uusi-arvo))))))))
     (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
-         data muokattava? muokkaa muokkaa-kenttaa-fn _ tarkkaile-ulkopuolisia-muutoksia?]
+         data muokattava? muokkaa muokkaa-kenttaa-fn _ opts]
       (reset! seurannan-muuttujat
               {:vaihda! (muokkaa-kenttaa-fn nimi)
                :data    data
                :s       s})
       ; jos ulkopuolelta data on päivitetty esim. rajapinnasta saadun päivitetyn tiedon myötä, pitää resetoida arvo ja tila
-      (when tarkkaile-ulkopuolisia-muutoksia?
-        (let [data-arvo (if hae
+      (when (:tarkkaile-ulkopuolisia-muutoksia? opts)
+        (let [data-arvo (cond
+                          hae
                           (hae data)
+
+                          (vector? nimi)
+                          (get-in data nimi)
+
+                          :else
                           (get data nimi))]
           (when (not= @arvo
                       data-arvo)
@@ -259,10 +316,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     (nayta-arvo s arvo)])
 
                                (do (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (assoc s :lomake? true) arvo]))
+                                   [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
                              [:div.form-control-static
                               (if fmt
-                                (fmt ((or hae #(get % nimi)) data))
+                                (fmt ((or hae #(let [get-fn (if (vector? nimi)
+                                                              get-in
+                                                              get)]
+                                                 (get-fn % nimi))) data))
                                 (nayta-arvo s arvo))]))
             kentta (if yksikko-kentalle
                      [:div.kentta-ja-yksikko
@@ -279,7 +339,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia?] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
-   muokattu? virheet varoitukset huomautukset]
+   muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli?] :as opts}]
   [:div.form-group {:class (str (or
                                   ;; salli skeeman ylikirjoittaa ns-avaimella
                                   (::col-luokka s)
@@ -304,7 +364,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
        [:span
         [:span.kentan-label otsikko]
         (when yksikko [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia?]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
 
     (when (and muokattu?
                (not (empty? virheet)))
@@ -327,32 +387,70 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
    4 "col-xs-3"
    5 "col-xs-1"})
 
+(defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
+                                    muokkaa muokkaa-kenttaa-fn
+                                    varoitukset muokatut virheet huomautukset rivi-opts]}]
+  [:div {:key (str "div-nayta-palsta" (first (:skeemat palsta)))
+         :class (str "lomakepalsta col-xs-12 col-md-5 " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
+   (when (-> palsta :optiot :otsikko)
+     [:h3 (-> palsta :optiot :otsikko)])
+   (for [{:keys [nimi muokattava?] :as p} (remove nil? (:skeemat palsta))]
+     (let [muokattava? (and voi-muokata?
+                            (or (nil? muokattava?)
+                                (muokattava? data)))]
+       ^{:key (str "palsta-kentta-" nimi)}
+       [kentta (assoc p
+                 :focus (= nimi nykyinen-fokus)
+                 :on-focus (r/partial aseta-fokus! nimi))
+        data muokkaa-kenttaa-fn muokattava? muokkaa
+        (get muokatut nimi)
+        (get virheet nimi)
+        (get varoitukset nimi)
+        (get huomautukset nimi)
+        rivi-opts]))])
+
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
-   muokatut virheet varoitukset huomautukset muokkaa tarkkaile-ulkopuolisia-muutoksia?]
+   muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia?] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
+        palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
-    [:div.row.lomakerivi
+    [(if palstoitettu?
+       :div.row.lomakepalstat
+       :div.row.lomakerivi)
      (doall
        (for [{:keys [nimi muokattava?] :as s} skeemat
              :let [muokattava? (and voi-muokata?
                                     (or (nil? muokattava?)
                                         (muokattava? data)))]]
-         ^{:key nimi}
-         [kentta (cond-> s
-                         true (assoc
-                                :col-luokka col-luokka
-                                :focus (= nimi nykyinen-fokus)
-                                :on-focus (r/partial aseta-fokus! nimi))
-                         tarkkaile-ulkopuolisia-muutoksia? (assoc
-                                                             :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?))
-          data muokkaa-kenttaa-fn muokattava? muokkaa
-          (get muokatut nimi)
-          (get virheet nimi)
-          (get varoitukset nimi)
-          (get huomautukset nimi)]))]))
+         (if (palsta? s)
+           (nayta-palsta s {:voi-muokata?       voi-muokata?
+                            :data               data
+                            :aseta-fokus!       aseta-fokus!
+                            :nykyinen-fokus     nykyinen-fokus
+                            :muokkaa            muokkaa
+                            :muokkaa-kenttaa-fn muokkaa-kenttaa-fn
+                            :muokatut           muokatut
+                            :varoitukset        varoitukset
+                            :virheet            virheet
+                            :huomautukset       huomautukset
+                            :rivi-opts          rivi-opts})
+           ^{:key (str "rivi-kentta-" nimi)}
+           [kentta (cond-> s
+                           true (assoc
+                                  :col-luokka col-luokka
+                                  :focus (= nimi nykyinen-fokus)
+                                  :on-focus (r/partial aseta-fokus! nimi))
+                           tarkkaile-ulkopuolisia-muutoksia? (assoc
+                                                               :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?))
+            data muokkaa-kenttaa-fn muokattava? muokkaa
+            (get muokatut nimi)
+            (get virheet nimi)
+            (get varoitukset nimi)
+            (get huomautukset nimi)
+            rivi-opts])))]))
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
@@ -389,6 +487,10 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   ja tekee sille jotain (oletettavasti swap! tai reset! atomille,
                   joka sisältää lomakkeen tiedot)
 
+  :header         Komponentti, joka asetetaan lomakkeen header sijaintiin, ennen otsikkoa
+
+  :header-fn      Sama kuin footer-fn, mutta headerille
+
   :footer         Komponentti, joka asetetaan lomakkeen footer sijaintiin, yleensä
                   submit nappi tms.
 
@@ -414,8 +516,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                            (atom (validoi-avaimet skeema)))]
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
-    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
+    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -443,6 +545,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                            (validoi skeema)
                                            (assoc ::muokatut (conj (or (::muokatut uudet-tiedot)
                                                                        #{}) nimi))
+                                           (assoc ::viimeksi-muokattu-kentta nimi)
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
@@ -451,6 +554,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                             luokka)}
                (when data-cy
                  {:data-cy data-cy}))
+             (when-let [header (if header-fn
+                                 (header-fn (assoc validoitu-data
+                                              ::skeema skeema))
+                                 header)]
+               [:div.row header])
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall
@@ -472,13 +580,15 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                   varoitukset
                                   huomautukset
                                   #(muokkaa-kenttaa-fn (:nimi %))
-                                  tarkkaile-ulkopuolisia-muutoksia?]]
+                                  {:vayla-tyyli? vayla-tyyli?
+                                   :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
                      (if otsikko
-                       ^{:key i}
+                       ^{:key (str otsikko "-" i)}
                        [:span
                         [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
                         rivi-ui]
-                       (with-meta rivi-ui {:key i}))))
+                       ^{:key (str "rivi-ui-with-meta-" i)}
+                       (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
