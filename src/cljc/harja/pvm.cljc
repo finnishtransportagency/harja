@@ -51,7 +51,7 @@
        (hash (tc/to-long o)))))
 
 #?(:clj
-   (defn joda-time? [pvm]
+   (defn- joda-time? [pvm]
      (or (instance? org.joda.time.DateTime pvm)
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
@@ -129,7 +129,9 @@
        dt
 
        (instance? java.util.Date dt)
-       (tc/from-date dt)
+       (do (println "petar pre konverzije 2 je " dt) (let [dt (tc/to-local-date-time dt)]
+                                                       (println "petar posle konverzije tip je " (type dt))
+                                                       dt))
 
        (instance? java.sql.Date dt)
        (tc/from-sql-date dt)
@@ -177,14 +179,12 @@
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
     false
-    (and (= (t/year eka) (t/year toka))
-         (= (t/month eka) (t/month toka))
-         (= (t/day eka) (t/day toka)))))
-
-#?(:clj
-   (defn sama-tyyppiriippumaton-pvm? [eka toka]
-     (sama-pvm? (joda-timeksi eka) (joda-timeksi toka))))
-
+    (let [eka (joda-timeksi eka)
+          toka (joda-timeksi toka)]
+      (println "petar treba da su isti " eka toka)
+      (and (= (t/year eka) (t/year toka))
+           (= (t/month eka) (t/month toka))
+           (= (t/day eka) (t/day toka))))))
 
 #?(:cljs
    (defn ennen? [eka toka]
@@ -195,26 +195,27 @@
    :clj
    (defn ennen? [eka toka]
      (if (and eka toka)
-       (cond
-         (or (instance? java.util.Date eka)
-             (instance? java.util.Date toka))
-         (.before eka toka)
-         (or (joda-time? eka)
-             (joda-time? toka))
+       (let [eka (joda-timeksi eka)
+             toka (joda-timeksi toka)]
+         (println "petar vrednosti 4 " eka toka)
+         (println "petar tipovi 4 " (type eka) (type toka))
          (t/before? eka toka))
        false)))
-
 
 (defn sama-tai-ennen?
   "Tarkistaa, onko ensimmäisenä annettu pvm sama tai ennen toista annettua pvm:ää.
   Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
+   (println "petar vrednosti 2 " eka toka)
+   (println "petar tipovi 2 " (type eka) (type toka))
    (if (and eka toka)
-     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
-           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-       (or (ennen? eka toka)
-           (= (millisekunteina eka) (millisekunteina toka))))
+     (let [eka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
+           toka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
+       (println "petar vrednosti 3 " eka toka)
+       (println "petar tipovi 3 " (type eka) (type toka))
+       (or (t/before? eka toka)
+           (t/equal? eka toka)))
      false)))
 
 #?(:cljs
@@ -226,12 +227,10 @@
    :clj
    (defn jalkeen? [eka toka]
      (if (and eka toka)
-       (cond
-         (or (instance? java.util.Date eka)
-             (instance? java.util.Date toka))
-         (.after eka toka)
-         (or (joda-time? eka)
-             (joda-time? toka))
+       (let [eka (joda-timeksi eka)
+             toka (joda-timeksi toka)]
+         (println "petar vrednosti 5 " eka toka)
+         (println "petar tipovi 5 " (type eka) (type toka))
          (t/after? eka toka))
        false)))
 
@@ -241,10 +240,10 @@
   ([eka toka] (sama-tai-jalkeen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
    (if (and eka toka)
-     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
-           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-       (or (jalkeen? eka toka)
-           (= (millisekunteina eka) (millisekunteina toka))))
+     (let [eka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa eka) eka))
+           toka (joda-timeksi (if ilman-kellonaikaa? (paivan-alussa toka) toka))]
+       (or (t/after? eka toka)
+           (t/equal? eka toka)))
      false)))
 
 (defn sama-kuukausi?
@@ -252,8 +251,10 @@
   [eka toka]
   (if-not (and eka toka)
     false
-    (and (= (t/year eka) (t/year toka))
-         (= (t/month eka) (t/month toka)))))
+    (let [eka (joda-timeksi eka)
+          toka (joda-timeksi toka)]
+      (and (= (t/year eka) (t/year toka))
+         (= (t/month eka) (t/month toka))))))
 
 (defn valissa?
   "Tarkistaa, onko annettu pvm alkupvm:n ja loppupvm:n välissä.
@@ -444,7 +445,9 @@
   "Jäsentää tekstistä dd.MM.yyyy muodossa olevan päivämäärän. Jos teksti ei ole oikeaa muotoa, palauta nil."
   [teksti]
   (try
-    (parsi fi-pvm-parse teksti)
+    (let [a (parsi fi-pvm-parse teksti)]
+      (println "petar konvertovao iz stringa " teksti " u " a)
+      a)
     (catch #?(:cljs js/Error
               :clj  Exception) e
       nil)))
