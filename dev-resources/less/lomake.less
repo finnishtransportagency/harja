@@ -56,6 +56,26 @@
     margin-left: 0.5rem;
   }
 
+  .sisainen-label {
+    position: absolute;
+    margin-left: -20px;
+    margin-top: 12px;
+    min-width: 40px;
+    font-size: @fontin-koko-leipateksti
+  }
+
+  .sisainen-kentta {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .iso-input {
+    input {
+      width: 100%;
+      height: 38px;
+    }
+  }
+
   .kentta-ja-yksikko {
     display: flex;
     justify-content: left;
@@ -234,4 +254,49 @@ fieldset.lomake-osa {
 
 .puuttuvat-pakolliset-kentat {
   color: @vaara;
+}
+
+.lomakepalsta {
+  &:first-child {
+    margin-right:20px;
+  }
+  &:not(:first-child) {
+    &:not(:last-child) {
+      margin-right:20px;
+    }
+  }
+  &:only-child {
+    margin:0px;
+    &.puolikas {
+      max-width: ~"calc(50% - 20px)";
+    }
+  }
+  flex-grow: 1;
+  flex-basis:0;
+  min-width: 100px;
+
+  /* Keskikokoinen näyttö */
+  @media all and (max-width: 800px) {
+    /* Laitetaan elementit alekain ja hieman tyhjää kaikkien ympärille
+    justify-content: space-around;
+    flex-direction: column;*/
+  }
+
+  /* Pienet näytöt */
+  @media all and (max-width: 500px) {
+    /* Pakota elementit alekain
+    flex-direction: column;*/
+
+  }
+}
+
+.lomakepalstat {
+  /* Flex muutos mahdollinen. Koodit jätetty tarkoituksella
+   Flexin kanssa lähinnä ongelmana alasvetovalikkojen laajeneminen liian suuriksi.*/
+
+  display:flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+
 }

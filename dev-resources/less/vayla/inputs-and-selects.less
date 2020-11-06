@@ -16,6 +16,8 @@
   align-items: center;
   height: 100%;
   border: none;
+  width: 100%;
+  background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
   list-style: none;
@@ -26,6 +28,7 @@
 }
 .select-li-yhteiset-arvot () {
   height: 40px;
+  line-height: 1rem;
 }
 .font-yhteiset-arvot() {
   font-family: "Open Sans", sans-serif;
@@ -123,25 +126,58 @@ label {
     .input-yhteiset-arvot();
     > button {
       .select-button-yhteiset-arvot();
+      height: 40px;
+      > .livicon-chevron-down {
+        color: @sininen5;
+      }
+      > .livicon-chevron-up {
+        color: @sininen5;
+      }
+      > .valittu {
+        display: inline-block;
+        overflow-x: hidden;
+        padding-right: 15px;
+        text-align: left;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: 100%;
+      }
     }
     > ul {
       .select-ul-yhteiset-arvot();
+      border: solid 1px black;
       > .harja-alasvetolista-ryhma {
          .harja-alasvetolista-ryhman-otsikko {
           color: @gray125;
           padding: 10px;
         }
+
+
         > li {
-        .select-li-yhteiset-arvot();
-        display: flex;
+          .select-li-yhteiset-arvot();
+          display: flex;
+          justify-content: space-between;
+          span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-right:10px;
+          }
         > * {
           align-self: center;
           padding-left: 10px;
           flex: 1;
-          line-height: 40px;
+          display: flex;
+          height: 30px;
+          line-height: 1rem;
+          border-bottom: 1px solid @gray230;
+          justify-content: space-between;
         }
+
         a {
           color: inherit;
+          display: flex;
+          align-items: center;
+          width: 100%;
           &:hover {
             color:inherit;
             text-decoration: none;
@@ -160,14 +196,25 @@ label {
       > li {
         .select-li-yhteiset-arvot();
         display: flex;
+        border-bottom: 1px solid @gray230;
+        span.listan-arvo-valittu {
+          display: flex;
+          align-items: center;
+          padding-right:10px;
+        }
         > * {
           align-self: center;
           padding-left: 10px;
           flex: 1;
-          line-height: 40px;
+          display: flex;
+          height: 30px;
+          justify-content: space-between;
         }
         a {
           color: inherit;
+          display: flex;
+          align-items: center;
+          width: 100%;
           &:hover {
             color:inherit;
             text-decoration: none;
@@ -190,7 +237,7 @@ label {
     }
 
     &:focus {
-      .outlinet-ja-borderit(@focus-color, 3px, -3px);
+      .outlinet-ja-borderit(@focus-color, 2px, -2px);
     }
 
     &:disabled {
@@ -206,21 +253,50 @@ label {
       .input-yhteiset-arvot();
       > button {
         .select-button-yhteiset-arvot();
+        > .livicon-chevron-down {
+          color: @sininen5;
+        }
+        > .livicon-chevron-up {
+          color: @sininen5;
+        }
+        > .valittu {
+          display: inline-block;
+          overflow-x: hidden;
+          padding-right: 15px;
+          text-align: left;
+          vertical-align: middle;
+          white-space: nowrap;
+          width: 100%;
+        }
       }
       > ul {
         .select-ul-yhteiset-arvot();
-
+        z-index: 201;
+        margin-left: -1px;
+        margin-right: -1px;
+        border: solid 1px black;
         > li {
           .select-li-yhteiset-arvot();
           display: flex;
+          border-bottom: 1px solid @gray230;
+          span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-right:10px;
+          }
           > * {
             align-self: center;
             padding-left: 10px;
             flex: 1;
-            line-height: 40px;
+            height: 30px;
+            line-height: 1rem;
+            justify-content: space-between;
           }
           a {
             color: inherit;
+            display: flex;
+            align-items: center;
+            width: 100%;
             &:hover {
               color:inherit;
               text-decoration: none;
@@ -243,9 +319,9 @@ label {
         border-width: 2px;
       }
       &:focus {
-        outline-width: 3px;
-        outline-offset: -3px;
-        border-width: 3px;
+        outline-width: 2px;
+        outline-offset: -2px;
+        border-width: 2px;
       }
     }
   }

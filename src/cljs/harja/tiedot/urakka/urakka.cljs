@@ -3,9 +3,11 @@
   (:require [reagent.core :refer [atom cursor]]
             [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.toteuma :as t]
             [harja.loki :as loki]
             [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [reagent.core :as r]))
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
@@ -22,6 +24,12 @@
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}
                                 :kustannussuunnitelma kustannussuunnitelma-default})
+
+(defn silloin-kun [pred v-fn]
+  (fn [arvo]
+    (if (pred)
+      (v-fn arvo)
+      true)))
 
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
@@ -64,37 +72,43 @@
                   :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
                   :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]})
 
+(defn validoi!
+  [{:keys [validius validi?] :as lomake-meta} lomake]
+  ;(loki/log "valids" validius)
+  (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
+            (as-> kaikki kaikki
+                  (update kaikki :validius
+                          (fn [vs]
+                            (update vs polku
+                                    (fn [kentta]
+                                      #_(.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi)
+                                              "validi?" (pr-str (validointi (get-in lomake polku)))
+                                              "get-in lomake polku" (pr-str (get-in lomake polku))
+                                              "lomake: " (pr-str lomake))
+                                      (assoc kentta
+                                        :tarkistettu? true
+                                        :validointi validointi
+                                        :validi? (validointi
+                                                   (get-in lomake polku)))))))
+                  (update kaikki :validi?
+                          (fn [v?]
+                            (every? (fn [[_ {validi? :validi?}]]
+                                      (true? validi?))
+                                    (:validius kaikki))))))
+          lomake-meta
+          validius))
+
 (defn validoi-fn
   "Kutsuu vain lomakkeen kaikki validointifunktiot ja päivittää koko lomakkeen validiuden"
-  [lomake]
-  (if (nil? (meta lomake))
-    lomake
-    (vary-meta
-      lomake
-      (fn [{:keys [validius validi?] :as lomake-meta} lomake]
-        (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
-                  (as-> kaikki kaikki
-                        (update kaikki :validius
-                                (fn [vs]
-                                  (update vs polku
-                                          (fn [kentta]
-                                            #_ (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi)
-                                                  "validi?" (pr-str (validointi (get-in lomake polku)))
-                                                  "get-in lomake polku" (pr-str (get-in lomake polku))
-                                                  "lomake: " (pr-str lomake))
-                                            (assoc kentta
-                                              :tarkistettu? true
-                                              :validointi validointi
-                                              :validi? (validointi
-                                                         (get-in lomake polku)))))))
-                        (update kaikki :validi?
-                                (fn [v?]
-                                  (not
-                                    (some (fn [[avain {validi? :validi?}]]
-                                            (false? validi?)) (:validius kaikki)))))))
-                lomake-meta
-                validius))
-      lomake)))
+  ([skeema lomake]
+   (validoi! skeema lomake))
+  ([lomake]
+   (if (nil? (meta lomake))
+     lomake
+     (vary-meta
+       lomake
+       validoi!
+       lomake))))
 
 (defonce urakan-vaihto-triggerit (cljs.core/atom []))
 
@@ -113,7 +127,7 @@
         (nil?
           (validointi-fn arvo))))))
 
-(defn luo-validius-meta
+(defn luo-validius-tarkistukset
   "Ajatus, että lomake tietää itse, miten se validoidaan"
   [& kentat-ja-validaatiot]
   (assoc {} :validius
@@ -132,19 +146,22 @@
    [:erapaiva] (:kulut/erapaiva validoinnit)
    [:laskun-numero] (:kulut/laskun-numero validoinnit)])
 
-(defn kulun-validointi-meta [{:keys [kohdistukset] :as _kulu}]
-  (apply luo-validius-meta
-         (concat kulun-oletus-validoinnit
-                 (mapcat (fn [i]
-                           (if (= "lisatyo"
-                                  (:maksueratyyppi
-                                    (get kohdistukset i)))
-                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
-                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
-                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
-                         (range (count kohdistukset))))))
+(defn kulun-validointi-meta
+  ([kulu]
+   (kulun-validointi-meta kulu {}))
+  ([{:keys [kohdistukset] :as _kulu} opts]
+   (apply luo-validius-tarkistukset
+          (concat kulun-oletus-validoinnit
+                  (mapcat (fn [i]
+                            (if (= "lisatyo"
+                                   (:maksueratyyppi
+                                     (get kohdistukset i)))
+                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                               [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
+                               [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
+                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                               [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
+                          (range (count kohdistukset)))))))
 
 (def kulut-kohdistus-default {:tehtavaryhma        nil
                               :toimenpideinstanssi nil
@@ -164,6 +181,31 @@
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
 
+(def toteumat-default-arvot {:maarien-toteumat {:syottomoodi           false
+                                                :toimenpiteet          nil
+                                                :toteutuneet-maarat    nil
+                                                :valittu-toimenpide    {:otsikko "Kaikki" :id 0}
+                                                :hakufiltteri          {:maaramitattavat true
+                                                                        :rahavaraukset   true
+                                                                        :lisatyot        true}
+                                                :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                         (pvm/vuosi (pvm/nyt))
+                                                                         (dec (pvm/vuosi (pvm/nyt))))
+                                                :aikavali-alkupvm      nil
+                                                :aikavali-loppupvm     nil
+                                                :lomake                {::t/toimenpide nil
+                                                                        ::t/tyyppi     nil
+                                                                        ::t/pvm        (pvm/nyt)
+                                                                        ::t/toteumat   [{::t/tehtava            nil
+                                                                                         ::t/toteuma-id         nil
+                                                                                         ::t/ei-sijaintia       true
+                                                                                         ::t/toteuma-tehtava-id nil
+                                                                                         ::t/lisatieto          nil
+                                                                                         ::t/maara              nil}]}}})
+
+(defonce toteumanakyma (atom toteumat-default-arvot))
+
+
 (def kulut-default {:parametrit  {:haetaan 0}
                     :taulukko    nil
                     :lomake      kulut-lomake-default
@@ -177,10 +219,13 @@
 
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default
+                     :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
-                     :pot2 pot2-default-arvot}))
+                     :toteumat    toteumat-default-arvot}))
 
 (defonce pot2 (atom pot2-default-arvot))
+
+(defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
@@ -189,6 +234,22 @@
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+
+(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
+                                                             :toteutuneet-maarat    nil
+                                                             :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                                      (pvm/vuosi (pvm/nyt))
+                                                                                      (dec (pvm/vuosi (pvm/nyt))))
+                                                             :aikavali-alkupvm      nil
+                                                             :aikavali-loppupvm     nil
+                                                             :toteuma               {:toimenpide         nil
+                                                                                     :tehtava            nil
+                                                                                     :toteuma-id         nil
+                                                                                     :toteuma-tehtava-id nil
+                                                                                     :lisatieto          nil
+                                                                                     :maara              nil
+                                                                                     :loppupvm           (pvm/nyt)}
+                                                             :syottomoodi           false}}))
 
 (add-watch nav/valittu-urakka :urakan-id-watch
            (fn [_ _ _ uusi-urakka]
