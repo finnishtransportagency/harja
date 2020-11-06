@@ -155,7 +155,7 @@
                     (if (nil? a)
                       "Ei valittu"
                       (let [[kk hv] (str/split a #"/")]
-                        (str (get lasku/kuukaudet-strs (keyword kk)) " - "
+                        (str (if (pvm/kuukauden-numero kk) (str/capitalize kk) (str "VÄÄRÄ KUUKAUSI " kk)) " - "
                              (get lasku/hoitovuodet-strs (keyword hv))))))}
    (for [hv (range 1 6)
          kk kuukaudet]

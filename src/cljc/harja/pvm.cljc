@@ -451,21 +451,40 @@
               :clj  Exception) e
       nil)))
 
-(defn kuukauden-nimi [kk]
-  (case kk
-    1 "tammikuu"
-    2 "helmikuu"
-    3 "maaliskuu"
-    4 "huhtikuu"
-    5 "toukokuu"
-    6 "kesäkuu"
-    7 "heinäkuu"
-    8 "elokuu"
-    9 "syyskuu"
-    10 "lokakuu"
-    11 "marraskuu"
-    12 "joulukuu"
-    "kk ei välillä 1-12"))
+(defn kuukauden-numero [kk-nimi]
+  (case (str/lower-case kk-nimi)
+    "tammikuu" 1
+    "helmikuu" 2
+    "maaliskuu" 3
+    "huhtikuu" 4
+    "toukokuu" 5
+    "kesäkuu" 6
+    "heinäkuu" 7
+    "elokuu" 8
+    "syyskuu" 9
+    "lokakuu" 10
+    "marraskuu" 11
+    "joulukuu" 12
+    nil))
+
+(defn kuukauden-nimi
+  ([kk] (kuukauden-nimi kk false))
+  ([kk isolla-kirjaimella?]
+   (let [nimi (case kk
+                1 "tammikuu"
+                2 "helmikuu"
+                3 "maaliskuu"
+                4 "huhtikuu"
+                5 "toukokuu"
+                6 "kesäkuu"
+                7 "heinäkuu"
+                8 "elokuu"
+                9 "syyskuu"
+                10 "lokakuu"
+                11 "marraskuu"
+                12 "joulukuu"
+                "kk ei välillä 1-12")]
+     (if isolla-kirjaimella? (str/capitalize nimi) nimi))))
 
 (defn kuukauden-lyhyt-nimi [kk]
   (case kk
