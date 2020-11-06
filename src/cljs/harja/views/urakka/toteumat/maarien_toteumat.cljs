@@ -96,12 +96,8 @@
             (let [_ (reset! row-index-atom (inc @row-index-atom))
                   muodostetut (mapcat
                                 (fn [rivi]
-                                  (let [
-                                        _ (reset! row-index-atom (inc @row-index-atom))
-                                        avattava? true
-                                        nayta-nuoli? (or
-                                                       (:taika (first (second rivi)))
-                                                       (:kasin_lisattava_maara (first (second rivi))))
+                                  (let [_ (reset! row-index-atom (inc @row-index-atom))
+                                        kasin-lisattava? (:kasin_lisattava_maara (first (second rivi)))
                                         toteutunut-maara (reduce big/plus (big/->big 0)
                                                                  (keep #(big/->big (or (:materiaalimaara %) (:maara %) 0)) (second rivi)))
                                         suunniteltu-maara (big/->big (or (:suunniteltu_maara (first (second rivi))) 0))
@@ -116,15 +112,17 @@
                                     (concat
                                       [^{:key (hash rivi)}
                                        [:tr (merge
-                                              (when avattava?
+                                              (when kasin-lisattava?
                                                 {:on-click #(e! (maarien-toteumat/->HaeTehtavanToteumat (first (second rivi))))})
-                                              {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when avattava? "klikattava"))})
-                                        [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi) (when (:haetut-toteuma-lataa app) [:span [yleiset/ajax-loader-pieni]])]
+                                              {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when kasin-lisattava? "klikattava"))})
+                                        [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi) (when (and (:haetut-toteumat-lataa app)
+                                                                                                                  (= (:avattu-tehtava app) (first rivi)))
+                                                                                                         [:span {:style {:padding-left "10px"}} [yleiset/ajax-loader-pieni]])]
                                         [:td {:style {:width (:caret leveydet)}} (if
-                                                                                   (= (get-in app [:valittu-rivi]) (first rivi))
-                                                                                   (when nayta-nuoli?
+                                                                                   (= (:avattu-tehtava app) (first rivi))
+                                                                                   (when kasin-lisattava?
                                                                                      [ikonit/livicon-chevron-up])
-                                                                                   (when nayta-nuoli?
+                                                                                   (when kasin-lisattava?
                                                                                      [ikonit/livicon-chevron-down]))]
                                         [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (:yk (first (second rivi))) #_ (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
@@ -187,7 +185,7 @@
         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
-      (if (:haetut-tehtavat-lataa app)
+      (if (:toimenpiteet-lataa app)
         [yleiset/ajax-loader "Haetaan..."]
         [:tbody
          (doall
@@ -218,6 +216,7 @@
         syottomoodi (get-in app [:syottomoodi])
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
+
      [debug/debug app]
      [:div {:style {:padding-top "1rem"}} [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
                                            "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]

@@ -51,9 +51,9 @@
 
 (defn vain-suunnitellut-maarat [maarien-toteumat ilman-suunnitelmaa?]
   (keep (fn [t]
-          (if (and (:skpl t) (if ilman-suunnitelmaa?
-                               (> (:skpl t) 0)
-                               (> 0 (:skpl t))))
+          (if (and (:suunniteltu_maara t) (if ilman-suunnitelmaa?
+                                            (> (:suunniteltu_maara t) 0)
+                                            (> 0 (:suunniteltu_maara t))))
             t
             nil))
         maarien-toteumat))
@@ -71,24 +71,21 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         maarien-toteumat-ilman-suunnitelmaa-2019 (vain-suunnitellut-maarat
                                                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                   :urakan-maarien-toteumat +kayttaja-jvh+
+                                                                   :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                                    {:urakka-id urakka-id
-                                                                    :alkupvm "2019-10-01"
-                                                                    :loppupvm "2020-09-30"})
+                                                                    :hoitokauden-alkuvuosi 2019})
                                                    true)
         maarien-toteumat-2020 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :urakan-maarien-toteumat +kayttaja-jvh+
+                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                 {:urakka-id urakka-id
-                                                 :alkupvm "2020-10-01"
-                                                 :loppupvm "2021-09-30"})
+                                                 :hoitokauden-alkuvuosi 2020})
                                 true)
         maarien-toteumat-2021 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :urakan-maarien-toteumat +kayttaja-jvh+
+                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                 {:urakka-id urakka-id
-                                                 :alkupvm "2021-10-01"
-                                                 :loppupvm "2022-09-30"})
+                                                 :hoitokauden-alkuvuosi 2021})
                                 true)
 
         oulun-mhu-urakan-maarien-toteuma-2019 (ffirst (q
@@ -123,43 +120,38 @@
 (deftest maarien-toteumat-listaus-tehtavaryhmalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         maarien-toteumat-21 (vain-suunnitellut-maarat
-                                      (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                      :urakan-maarien-toteumat +kayttaja-jvh+
-                                                      {:urakka-id urakka-id
-                                                       :tehtavaryhma "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
-                                                       :alkupvm "2020-10-01"
-                                                       :loppupvm "2021-09-30"})
-                                      true)
+                              (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :toimenpide "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+                                               :hoitokauden-alkuvuosi 2020})
+                              true)
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :urakan-maarien-toteumat +kayttaja-jvh+
+                                               :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                {:urakka-id urakka-id
-                                                :tehtavaryhma "6 MUUTA"})
-        oulun-mhu-urakan-maarien-toteuma-21 (q
-                                                      (str "SELECT *
-                                                             FROM
-                                                                  urakka_tehtavamaara ut,
-                                                                  toimenpidekoodi tk,
-                                                                  tehtavaryhma tr
-                                                                    JOIN tehtavaryhma tr2 ON tr2.id = tr.emo
-                                                                    JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-                                                             WHERE tk.id = ut.tehtava
-                                                               AND tr.id = tk.tehtavaryhma
-                                                               AND ut.\"hoitokauden-alkuvuosi\" = 2020
-                                                               AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
-                                                               AND ut.urakka = " urakka-id))
-        oulun-mhu-urakan-maarien-toteuma-muuta (q
-                                                 (str "SELECT *
-                                                             FROM
-                                                                  urakka_tehtavamaara ut,
-                                                                  toimenpidekoodi tk,
-                                                                  tehtavaryhma tr
-                                                                    JOIN tehtavaryhma tr2 ON tr2.id = tr.emo
-                                                                    JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
-                                                             WHERE tk.id = ut.tehtava
-                                                               AND tr.id = tk.tehtavaryhma
-                                                               AND tr.otsikko = '6 MUUTA'
-                                                               AND ut.\"hoitokauden-alkuvuosi\" = 2020
-                                                               AND ut.urakka = " urakka-id))
-        ]
+                                                :toimenpide "6 MUUTA"
+                                                :hoitokauden-alkuvuosi 2020})
+        oulun-mhu-urakan-maarien-toteuma-21 (q (str "SELECT *
+                                                       FROM
+                                                            urakka_tehtavamaara ut,
+                                                            toimenpidekoodi tk,
+                                                            tehtavaryhma tr
+                                                       WHERE tk.id = ut.tehtava
+                                                         AND tr.id = tk.tehtavaryhma
+                                                         AND ut.\"hoitokauden-alkuvuosi\" = 2020
+                                                         AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
+                                                         AND ut.urakka = " urakka-id))
+        oulun-mhu-urakan-maarien-toteuma-muuta (q (str "SELECT *
+                                                         FROM
+                                                              urakka_tehtavamaara ut,
+                                                              toimenpidekoodi tk,
+                                                              tehtavaryhma tr
+                                                                JOIN tehtavaryhma tr2 ON tr2.id = tr.emo
+                                                                JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
+                                                         WHERE tk.id = ut.tehtava
+                                                           AND tr.id = tk.tehtavaryhma
+                                                           AND tr.otsikko = '6 MUUTA'
+                                                           AND ut.\"hoitokauden-alkuvuosi\" = 2020
+                                                           AND ut.urakka = " urakka-id))]
     (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")
     (is (= (count maarien-toteumat-muuta) (count oulun-mhu-urakan-maarien-toteuma-muuta)) "Määrien toteumien määrä")))
