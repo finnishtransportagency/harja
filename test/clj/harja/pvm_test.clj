@@ -12,16 +12,16 @@
                         12)))
 
 (deftest luominen
-  (is (pvm/sama-pvm? (pvm/->pvm "1.1.2020") (t/local-date 2020 1 1)))
-  (is (pvm/sama-pvm? (t/local-date-time 2020 12 1 13 30 59) (pvm/->pvm "1.12.2020"))))
+  (is (pvm/sama-pvm? (pvm/->pvm-date-timeksi "1.1.2020") (t/local-date 2020 1 1)))
+  (is (pvm/sama-pvm? (t/local-date-time 2020 12 1 13 30 59) (pvm/->pvm-date-timeksi "1.12.2020"))))
 
 (deftest ennen?
   (is (false? (pvm/ennen? nil nil)))
   (is (false? (pvm/ennen? nyt nil)))
   (is (false? (pvm/ennen? nil nyt)))
   (is (false? (pvm/ennen? nyt nyt)))
-  (is (false? (pvm/ennen? (t/local-date-time 2005 10 10)
-                          (pvm/->pvm "30.12.2004"))))
+  (is (false? (pvm/ennen? (t/date-time 2005 10 10)
+                          (pvm/->pvm-date-timeksi "30.12.2004"))))
   (is (false? (pvm/ennen? (t/plus nyt (t/hours 4))
                           nyt)))
   (is (true? (pvm/ennen? nyt
@@ -31,7 +31,7 @@
   (is (false? (pvm/sama-tai-ennen? nil nil)))
   (is (false? (pvm/sama-tai-ennen? nyt nil)))
   (is (false? (pvm/sama-tai-ennen? nil nyt)))
-  (is (false? (pvm/sama-tai-ennen? (t/local-date-time 2005 10 10) (pvm/->pvm "25.12.2004"))))
+  (is (false? (pvm/sama-tai-ennen? (t/local-date-time 2005 10 10) (pvm/->pvm-date-timeksi "25.12.2004"))))
   (is (false? (pvm/sama-tai-ennen? (t/plus nyt (t/hours 4))
                                    nyt
                                    false)))
@@ -51,8 +51,8 @@
   (is (false? (pvm/jalkeen? nil nil)))
   (is (false? (pvm/jalkeen? nyt nil)))
   (is (false? (pvm/jalkeen? nil nyt)))
-  (is (true? (pvm/jalkeen? (t/local-date-time 2005 10 10)
-                            (pvm/->pvm "30.12.2004"))))
+  (is (true? (pvm/jalkeen? (t/date-time 2005 10 10)
+                            (pvm/joda-timeksi (pvm/->pvm "30.12.2004")))))
   (is (false? (pvm/jalkeen? nyt nyt)))
   (is (false? (pvm/jalkeen? nyt
                             (t/plus nyt (t/hours 4)))))
@@ -68,7 +68,7 @@
                                      false)))
   (is (true? (pvm/sama-tai-jalkeen? (t/local-date 2005 10 10)
                                     (t/local-date 2005 10 10))))
-  (is (true? (pvm/sama-tai-jalkeen? (pvm/->pvm "20.10.2005")
+  (is (true? (pvm/sama-tai-jalkeen? (pvm/->pvm-date-timeksi "20.10.2005")
                                     (t/local-date 2005 10 20))))
   (is (true? (pvm/sama-tai-jalkeen? (t/local-date-time 2005 10 10 11 11 11)
                                     (t/local-date-time 2005 10 10 11 11 11)
@@ -84,13 +84,13 @@
 (deftest sama-pvm?
   (is (true? (pvm/sama-pvm? (t/local-date 2005 2 3)
                             (t/local-date 2005 2 3))))
-  (is (true? (pvm/sama-pvm? (pvm/->pvm "25.11.2020")
+  (is (true? (pvm/sama-pvm? (pvm/->pvm-date-timeksi "25.11.2020")
                             (t/local-date 2020 11 25)))))
 
 (deftest sama-kuukausi?
   (is (true? (pvm/sama-kuukausi? (t/local-date 2005 2 3)
                                  (t/local-date 2005 2 25))))
-  (is (true? (pvm/sama-kuukausi? (pvm/->pvm "3.4.2020")
+  (is (true? (pvm/sama-kuukausi? (pvm/->pvm-date-timeksi "3.4.2020")
                                  (t/local-date 2020 4 25)))))
 
 (deftest valissa?
