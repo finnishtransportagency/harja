@@ -905,6 +905,13 @@ SELECT EXTRACT(YEAR FROM alkupvm) :: INTEGER
 FROM urakka
 WHERE id = :urakka;
 
+-- name: urakan-paivamaarat
+SELECT
+  alkupvm,
+  loppupvm
+FROM urakka
+WHERE id = :id;
+
 -- name: hae-urakan-ely
 SELECT
   o.id,
