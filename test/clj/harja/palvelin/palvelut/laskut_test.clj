@@ -35,7 +35,7 @@
                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Viheralueiden hoito")
                       :tehtava             nil}
                      {:kohdistus-id        nil
                       :rivi                2
@@ -43,7 +43,7 @@
                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakon raivaus ja runkopuun poisto")
                       :tehtava             nil}]
    :liitteet        [{:liite-id     1
                       :liite-tyyppi "image/png"
@@ -62,7 +62,7 @@
    :suoritus-alku       #inst "2021-11-23T22:00:00.000000000-00:00"
    :suoritus-loppu      #inst "2021-11-24T22:00:00.000000000-00:00"
    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-   :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+   :tehtavaryhma        (hae-tehtavaryhman-id "Vesakon raivaus ja runkopuun poisto")
    :tehtava             nil})
 
 
@@ -79,7 +79,7 @@
                       :suoritus-alku       #inst "2021-03-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-03-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Viheralueiden hoito")
                       :tehtava             nil}]})
 
 (def lasku-akillinen-hoitotyo
@@ -95,7 +95,7 @@
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkillinen hoitotyö (l.ymp.hoito)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkillinen hoitotyö")
                       :tehtava             nil}]
    :liitteet        []})
 
@@ -112,7 +112,7 @@
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Talvihoito (T2)Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Kolmannen osapuolen vahinkojen korjaukset")
                       :tehtava             nil}]
    :liitteet        []})
 

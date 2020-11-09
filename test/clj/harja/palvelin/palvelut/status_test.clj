@@ -1,80 +1,45 @@
-(ns ^:integraatio harja.palvelin.palvelut.status-test
+(ns harja.palvelin.palvelut.status-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
             [harja.palvelin.palvelut.status :as status]
             [harja.kyselyt.jarjestelman-tila :as j-t]
             [harja.pvm :as pvm]))
 
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (component/using
-                              (tietokanta/luo-tietokanta (assoc testitietokanta
-                                                                :tarkkailun-timeout-arvot {:paivitystiheys-ms 10000
-                                                                                           :kyselyn-timeout-ms 20000}
-                                                                :tarkkailun-nimi :db))
-                              [:komponentti-event])
-                        :db-replica (component/using
-                                      (tietokanta/luo-tietokanta (assoc testitietokanta
-                                                                        :tarkkailun-timeout-arvot {:paivitystiheys-ms 10000
-                                                                                                   :replikoinnin-max-viive-ms 100000}
-                                                                        :tarkkailun-nimi :db-replica))
-                                      [:komponentti-event])
-                        :komponentti-event (komponentti-event/komponentti-event)
-                        :komponenttien-tila (component/using
-                                              (komponenttien-tila/komponentin-tila)
-                                              [:komponentti-event])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                [:db])
-
-                        :todennus (component/using
-                                    (todennus/http-todennus)
-                                    [:db :klusterin-tapahtumat])
-                        :http-palvelin (component/using
-                                         (http/luo-http-palvelin portti true)
-                                         [:todennus])
-                        :pois-kytketyt-ominaisuudet
-                        :status (component/using
-                                  (status/luo-status true)
-                                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
-                        :sonja (component/using
-                                 (sonja/luo-oikea-sonja {:url "tcp://localhost:61617"
-                                                         :kayttaja ""
-                                                         :salasana ""
-                                                         :tyyppi :activemq})
-                                 [:db])))))
-
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
+(def jarjestelma-fixture
+  (laajenna-integraatiojarjestelmafixturea
+    "ei-ole-kayttajalle-tarvestsa"
+    :status (component/using
+              (status/luo-status true)
+              ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
+              ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
+              ;; ennen kuin sen statusta aletaan seuraamaan
+              [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
+    :sonja (component/using
+             (sonja/luo-oikea-sonja {:url "tcp://localhost:61617"
+                                     :kayttaja ""
+                                     :salasana ""
+                                     :tyyppi :activemq})
+             [:db])))
 
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest toimiiko-dbn-testaus
   (let [db (:db jarjestelma)
-        status-komponentti (:status jarjestelma)
-        komponenttien-tila (:komponenttien-tila jarjestelma)]
+        status-komponentti (:status jarjestelma)]
     (testing "Kaikki hienosti"
-      (is (:ok? (status/tietokannan-tila komponenttien-tila)))
-      #_(is (true? (get (status/tietokannan-tila komponenttien-tila) :yhteys-master-kantaan-ok?)))
-      #_(is (= (get-in @(:status status-komponentti) [:db :status]) 200)))
-    #_(testing "Kanta ei ole ok"
+      (is (true? (get (status/tietokannan-tila! status-komponentti db) :yhteys-master-kantaan-ok?)))
+      (is (= (get-in @(:status status-komponentti) [:db :status]) 200)))
+    (testing "Kanta ei ole ok"
       (is (false? (with-redefs [status/dbn-tila-ok? (constantly false)]
                     (get (status/tietokannan-tila! status-komponentti db) :yhteys-master-kantaan-ok?))))
       (is (= (get-in @(:status status-komponentti) [:db :status]) 503)))
-    #_(testing "Kanta palautuu"
+    (testing "Kanta palautuu"
       (status/tietokannan-tila! status-komponentti db)
       (is (= (get-in @(:status status-komponentti) [:db :status]) 200)))))
 
-#_(deftest toimiiko-replikoinnin-testaus
+(deftest toimiiko-replikoinnin-testaus
   (let [db-replica (:db-replica jarjestelma)
         status-komponentti (:status jarjestelma)]
     (testing "Kaikki hienosti"
@@ -88,7 +53,7 @@
       (status/replikoinnin-tila! status-komponentti db-replica)
       (is (= (get-in @(:status status-komponentti) [:db-replica :status]) 200)))))
 
-#_(deftest toimiiko-sonjan-testaus
+(deftest toimiiko-sonjan-testaus
   (let [db (:db jarjestelma)
         status-komponentti (:status jarjestelma)
         ok-palautus-kannasta (constantly [{:tila (doto (org.postgresql.util.PGobject.)
