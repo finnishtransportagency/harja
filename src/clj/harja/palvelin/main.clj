@@ -142,7 +142,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto!]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -172,6 +172,7 @@
     (konfiguroi-lokitus asetukset)
 
     (if-let [virheet (tarkista-asetukset asetukset)]
+      (tarkista-ymparisto!)
       (log/error "Validointivirhe asetuksissa:" virheet))
 
     (component/system-map
