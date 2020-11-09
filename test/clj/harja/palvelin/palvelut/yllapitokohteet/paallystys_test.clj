@@ -144,7 +144,90 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                :hae-urakan-pot2-massat
                                +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
-        oletettu-vastaus '({:harja.domain.pot2/runkoaineet [{:runkoaine/esiintyma "Kaiskakallio", :runkoaine/kuulamyllyarvo 10.0M, :runkoaine/kuvaus "Kelpo runkoaine tämä.", :runkoaine/massaprosentti 52, :runkoaine/litteysluku 9.5M, :pot2-massa/id 1, :runkoaine/tyyppi 1, :runkoaine/id 1}], :harja.domain.pot2/lisaaineet ({:lisaaine/pitoisuus 0.5M, :lisaaine/id 1, :lisaaine/tyyppi 2, :pot2-massa/id 1}), :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/litteyslukuluokka 1, :harja.domain.pot2/tyyppi 12, :pot2-massa/id 1, :harja.domain.pot2/kuulamyllyluokka "AN14", :harja.domain.pot2/dop-nro "1234567", :harja.domain.pot2/sideaineet ({:sideaine/tyyppi 6, :sideaine/lopputuote? true, :sideaine/pitoisuus 4.8M, :pot2-massa/id 1, :sideaine/id 1})} {:harja.domain.pot2/runkoaineet [{:runkoaine/esiintyma "Sammalkallio", :runkoaine/kuulamyllyarvo 9.2M, :runkoaine/kuvaus "Jämäkkä runkoaine.", :runkoaine/massaprosentti 85, :runkoaine/litteysluku 6.5M, :pot2-massa/id 2, :runkoaine/tyyppi 1, :runkoaine/id 2} {:runkoaine/id 3, :runkoaine/tyyppi 3, :runkoaine/kuvaus "Oiva Filleri.", :pot2-massa/id 2, :runkoaine/esiintyma "Sammalkallio", :runkoaine/litteysluku 6.5M, :runkoaine/fillerityyppi "Kalkkifilleri (KF)", :runkoaine/kuulamyllyarvo 8.2M, :runkoaine/massaprosentti 3} {:runkoaine/esiintyma "Sammalkallio", :runkoaine/kuulamyllyarvo 11.2M, :runkoaine/kuvaus "Oiva Filleri.", :runkoaine/massaprosentti 5, :runkoaine/litteysluku 4.5M, :pot2-massa/id 2, :runkoaine/tyyppi 2, :runkoaine/id 4}], :harja.domain.pot2/lisaaineet ({:lisaaine/pitoisuus 0.5M, :lisaaine/id 2, :lisaaine/tyyppi 1, :pot2-massa/id 2}), :harja.domain.pot2/max-raekoko 16, :harja.domain.pot2/litteyslukuluokka 2, :harja.domain.pot2/tyyppi 14, :pot2-massa/id 2, :harja.domain.pot2/kuulamyllyluokka "AN7", :harja.domain.pot2/dop-nro "987654331-2", :harja.domain.pot2/sideaineet ({:sideaine/tyyppi 5, :sideaine/lopputuote? true, :sideaine/pitoisuus 5.5M, :pot2-massa/id 2, :sideaine/id 2})} {:harja.domain.pot2/runkoaineet [{:runkoaine/esiintyma "Zatelliitti", :runkoaine/kuulamyllyarvo 12.1M, :runkoaine/massaprosentti 34, :runkoaine/litteysluku 4.1M, :pot2-massa/id 3, :runkoaine/tyyppi 1, :runkoaine/id 5}], :harja.domain.pot2/lisaaineet ({:lisaaine/pitoisuus 1.5M, :lisaaine/id 3, :lisaaine/tyyppi 1, :pot2-massa/id 3}), :harja.domain.pot2/nimen-tarkenne "Tarkenne", :harja.domain.pot2/max-raekoko 5, :harja.domain.pot2/litteyslukuluokka 1, :harja.domain.pot2/tyyppi 1, :pot2-massa/id 3, :harja.domain.pot2/kuulamyllyluokka "AN5", :harja.domain.pot2/dop-nro "12345abc", :harja.domain.pot2/sideaineet ({:sideaine/tyyppi 1, :sideaine/lopputuote? true, :sideaine/pitoisuus 10.6M, :pot2-massa/id 3, :sideaine/id 3})})]
+        oletettu-vastaus '({:harja.domain.pot2/dop-nro "1234567"
+                            :harja.domain.pot2/kuulamyllyluokka "AN14"
+                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
+                                                            :lisaaine/pitoisuus 0.5M
+                                                            :lisaaine/tyyppi 2
+                                                            :pot2-massa/id 1})
+                            :harja.domain.pot2/litteyslukuluokka 1
+                            :harja.domain.pot2/max-raekoko 16
+                            :harja.domain.pot2/runkoaineet [{:pot2-massa/id 1
+                                                             :runkoaine/esiintyma "Kaiskakallio"
+                                                             :runkoaine/id 1
+                                                             :runkoaine/kuulamyllyarvo 10.0M
+                                                             :runkoaine/kuvaus "Kelpo runkoaine tämä."
+                                                             :runkoaine/litteysluku 9.5M
+                                                             :runkoaine/massaprosentti 52
+                                                             :runkoaine/tyyppi 1}]
+                            :harja.domain.pot2/sideaineet ({:pot2-massa/id 1
+                                                            :sideaine/id 1
+                                                            :sideaine/lopputuote? true
+                                                            :sideaine/pitoisuus 4.8M
+                                                            :sideaine/tyyppi 6})
+                            :harja.domain.pot2/tyyppi 12
+                            :pot2-massa/id 1}
+                           {:harja.domain.pot2/dop-nro "987654331-2"
+                            :harja.domain.pot2/kuulamyllyluokka "AN7"
+                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
+                                                            :lisaaine/pitoisuus 0.5M
+                                                            :lisaaine/tyyppi 1
+                                                            :pot2-massa/id 2})
+                            :harja.domain.pot2/litteyslukuluokka 2
+                            :harja.domain.pot2/max-raekoko 16
+                            :harja.domain.pot2/runkoaineet [{:pot2-massa/id 2
+                                                             :runkoaine/esiintyma "Sammalkallio"
+                                                             :runkoaine/id 2
+                                                             :runkoaine/kuulamyllyarvo 9.2M
+                                                             :runkoaine/kuvaus "Jämäkkä runkoaine."
+                                                             :runkoaine/litteysluku 6.5M
+                                                             :runkoaine/massaprosentti 85
+                                                             :runkoaine/tyyppi 1}
+                                                            {:pot2-massa/id 2
+                                                             :runkoaine/esiintyma "Sammalkallio"
+                                                             :runkoaine/fillerityyppi "Kalkkifilleri (KF)"
+                                                             :runkoaine/id 3
+                                                             :runkoaine/kuvaus "Oiva Filleri."
+                                                             :runkoaine/massaprosentti 3
+                                                             :runkoaine/tyyppi 3}
+                                                            {:pot2-massa/id 2
+                                                             :runkoaine/esiintyma "Sammalkallio"
+                                                             :runkoaine/id 4
+                                                             :runkoaine/kuulamyllyarvo 11.2M
+                                                             :runkoaine/kuvaus "Rouhea aine."
+                                                             :runkoaine/litteysluku 4.5M
+                                                             :runkoaine/massaprosentti 5
+                                                             :runkoaine/tyyppi 2}]
+                            :harja.domain.pot2/sideaineet ({:pot2-massa/id 2
+                                                            :sideaine/id 2
+                                                            :sideaine/lopputuote? true
+                                                            :sideaine/pitoisuus 5.5M
+                                                            :sideaine/tyyppi 5})
+                            :harja.domain.pot2/tyyppi 14
+                            :pot2-massa/id 2}
+                           {:harja.domain.pot2/dop-nro "12345abc"
+                            :harja.domain.pot2/kuulamyllyluokka "AN5"
+                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 3
+                                                            :lisaaine/pitoisuus 1.5M
+                                                            :lisaaine/tyyppi 1
+                                                            :pot2-massa/id 3})
+                            :harja.domain.pot2/litteyslukuluokka 1
+                            :harja.domain.pot2/max-raekoko 5
+                            :harja.domain.pot2/nimen-tarkenne "Tarkenne"
+                            :harja.domain.pot2/runkoaineet [{:pot2-massa/id 3
+                                                             :runkoaine/esiintyma "Zatelliitti"
+                                                             :runkoaine/id 5
+                                                             :runkoaine/kuulamyllyarvo 12.1M
+                                                             :runkoaine/litteysluku 4.1M
+                                                             :runkoaine/massaprosentti 34
+                                                             :runkoaine/tyyppi 1}]
+                            :harja.domain.pot2/sideaineet ({:pot2-massa/id 3
+                                                            :sideaine/id 3
+                                                            :sideaine/lopputuote? true
+                                                            :sideaine/pitoisuus 10.6M
+                                                            :sideaine/tyyppi 1})
+                            :harja.domain.pot2/tyyppi 1
+                            :pot2-massa/id 3})]
     (is (= vastaus oletettu-vastaus))))
 
 (def pot-testidata
