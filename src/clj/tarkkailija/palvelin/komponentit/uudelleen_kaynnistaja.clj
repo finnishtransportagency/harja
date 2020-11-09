@@ -66,15 +66,22 @@
     (if (> @uudelleen-kaynnistyksia 0)
       (sonjan-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja)
       (let [_ (swap! uudelleen-kaynnistyksia inc)
+            _ (println "===========> 1")
             tapahtuman-odottaja (async/<!! (tapahtuma-apurit/kuuntele-tapahtumia :harjajarjestelman-restart-onnistui {:f (partial sonjan-uudelleen-kaynnistys-onnistui! uudelleen-kaynnistaja)
                                                                                                                       :tyyppi {:palvelimet-perus #{tapahtuma-apurit/host-nimi}}}
                                                                                  :harjajarjestelman-restart-epaonnistui {:f (partial sonjan-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja)
                                                                                                                          :tyyppi {:palvelimet-perus #{tapahtuma-apurit/host-nimi}}}))]
+        (println "===========> 2")
         (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref ::sonja-yhteys-aloitettu))
+        (println "===========> 3")
         (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref ::sonja-tila))
+        (println "===========> 4")
         (reset! (::uudelleen-kaynnistys-aika uudelleen-kaynnistaja) (pvm/nyt-suomessa))
+        (println "===========> 5")
         (tapahtuma-apurit/julkaise-tapahtuma :harjajarjestelman-restart #{:sonja})
-        (async/<!! tapahtuman-odottaja)))))
+        (println "===========> 6")
+        (async/<!! tapahtuman-odottaja)
+        (println "===========> 7")))))
 
 (defrecord UudelleenKaynnistaja [timeout-asetukset tapahtumien-tarkkailijat]
   component/Lifecycle

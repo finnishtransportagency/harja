@@ -146,16 +146,16 @@
 
 (defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
   (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
-                          paivitystiheys-ms
-                          (fn []
-                            (try
-                              (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
-                                    jms-tila (:vastaus vastaus)]
-                                (tallenna-sonjan-tila-kantaan db jms-tila)
-                                (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
-                              (catch Throwable t
-                                (tapahtuma-julkaisija :tilan-lukemisvirhe)
-                                (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
+                              paivitystiheys-ms
+                              (fn []
+                                (try
+                                  (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
+                                        jms-tila (:vastaus vastaus)]
+                                    (tallenna-sonjan-tila-kantaan db jms-tila)
+                                    (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
+                                  (catch Throwable t
+                                    (tapahtuma-julkaisija :tilan-lukemisvirhe)
+                                    (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %

@@ -8,6 +8,8 @@
   (component/stop komp)
   (component/start komp))
 
+(defonce ^:private uudelleen-kaynnistajan-lukko (Object.))
+
 (extend-type SystemMap
   kp/IRestart
   (restart [system system-component-keys]
@@ -31,7 +33,8 @@
                    (satisfies? component/Lifecycle (get system component-key)))
                  system-component-keys)]
    :post [(instance? SystemMap %)]}
-  (kp/restart system system-component-keys))
+  (locking uudelleen-kaynnistajan-lukko
+    (kp/restart system system-component-keys)))
 
 (defn kaikki-ok? [system]
   (let [kaikki-komponentit (keys system)]

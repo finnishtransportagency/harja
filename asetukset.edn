@@ -50,12 +50,12 @@
        :testidata? true
        :ei-logiteta #{"http-palvelin"
                       "ajastettu-geometriapaivitys"
-                      "komponentti-event"
+                      ;"komponentti-event"
                       "sillat"}
        }
 
  :sonja
- {:url  #=(eval (str "tcp://" (System/getenv "HARJA_SONJA_BROKER_HOST") ":" (System/getenv "HARJA_SONJA_BROKER_PORT")))
+ {:url #=(eval (str "tcp://" (System/getenv "HARJA_SONJA_BROKER_HOST") ":" (System/getenv "HARJA_SONJA_BROKER_PORT")))
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq}

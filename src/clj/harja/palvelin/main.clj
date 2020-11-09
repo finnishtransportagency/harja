@@ -765,7 +765,6 @@
                                      {}
                                      (fn [{:keys [palvelin payload]}]
                                        (when (= palvelin event-apurit/host-nimi)
-
                                          (if (= payload :all)
                                            (kaynnista-pelkastaan-jarjestelma)
                                            (when (nil? (alter-var-root #'harja-jarjestelma
