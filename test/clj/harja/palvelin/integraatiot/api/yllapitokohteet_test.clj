@@ -735,7 +735,7 @@
                                         kayttaja-paallystys portti
                                         payload)]
     (is (not= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Ouluntien kohdeosa\\\" kanssa\\nKohteenosa on päällekkäin toisen osan kanssa\\n\"}}]}"))))
+    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Puolangantien kohdeosa\\\" kanssa\\nKohteenosa on päällekkäin toisen osan kanssa\\n\"}}]}"))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimii
   (let [urakka (hae-utajarven-paallystysurakan-id)
