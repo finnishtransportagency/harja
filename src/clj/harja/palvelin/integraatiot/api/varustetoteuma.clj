@@ -296,7 +296,7 @@
                             :reitti nil)
                   toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
               (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
-              (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+              (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
               (tallenna-varustetoteuman-geometria db varustetoteuma toteuma-id)
               (let [paivitetyt-toimenpiteet (tallenna-varustetoteuman-toimenpiteet
                                               db

@@ -1,15 +1,18 @@
 (ns harja.palvelin.palvelut.laskut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
   (:require [com.stuartsierra.component :as component]
+            [clj-time.coerce :as c]
             [harja.kyselyt
              [laskut :as q]
              [aliurakoitsijat :as ali-q]
              [kustannusarvioidut-tyot :as kust-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.domain.lasku :as lasku]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tyokalut.big :as big]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
+            [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.excel :as excel]
@@ -136,6 +139,16 @@
       false
       (first erapaivat))))
 
+(defn- varmista-erapaiva-on-koontilaskun-kuukauden-sisalla [db koontilaskun-kuukausi erapaiva urakka-id]
+  (let [{alkupvm :alkupvm loppupvm :loppupvm} (urakat/urakan-paivamaarat db urakka-id)
+        sisalla?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn koontilaskun-kuukausi
+                                                              (pvm/joda-timeksi alkupvm)
+                                                              (pvm/joda-timeksi loppupvm))]
+    (when-not (sisalla?-fn (pvm/joda-timeksi erapaiva))
+      (throw (IllegalArgumentException.
+               (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
+                    " sisällä. Urakka id = " urakka-id))))))
+
 (defn luo-tai-paivita-laskuerittely
   "Tallentaa uuden laskun ja siihen liittyvät kohdistustiedot (laskuerittelyn).
   Päivittää laskun tai kohdistuksen tiedot, jos rivi on jo kannassa.
@@ -143,6 +156,7 @@
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as _laskuerittely}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
   (let [tarkistettu-erapaiva (tarkista-laskun-numeron-paivamaara db user {:urakka urakka :laskun-numero laskun-numero})
         erapaiva (if (false? tarkistettu-erapaiva)
                    erapaiva
@@ -308,7 +322,8 @@
                           (hae-laskuerittely db user hakuehdot)))
       (julkaise-palvelu http :tallenna-lasku
                         (fn [user laskuerittely]
-                          (tallenna-lasku db user laskuerittely)))
+                          (tallenna-lasku db user laskuerittely))
+                        {:kysely-spec ::lasku/talenna-lasku})
       (julkaise-palvelu http :poista-lasku
                         (fn [user hakuehdot]
                           (poista-lasku db user hakuehdot)))

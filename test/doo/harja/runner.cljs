@@ -11,6 +11,7 @@
             [harja.views.urakka.yllapitokohteet-test]
             [harja.views.urakka.valitavoitteet-test]
             [harja.views.urakka.yleiset-test]
+            [harja.views.urakka.kulut-test]
             [harja.ui.historia-test]
             [harja.ui.kentat-test]
             [harja.ui.grid-test]
@@ -62,6 +63,7 @@
            'harja.views.urakka.yllapitokohteet-test
            'harja.views.urakka.valitavoitteet-test
            'harja.views.urakka.yleiset-test
+           'harja.views.urakka.kulut-test
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test

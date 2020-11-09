@@ -38,7 +38,8 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.kan-toimenpiteet-kartalla :as kan-toimenpiteet]
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot]
             [harja.tiedot.urakka.paikkaukset-toteumat :as paikkaukset-toteumat]
-            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat])
+            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
+            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
@@ -76,7 +77,8 @@
     :kan-toimenpiteet
     :kan-hairiot
     :paikkaukset-toteumat
-    :tieluvat})
+    :tieluvat
+    :maarien-toteumat})
 
 (def
   ^{:doc
@@ -245,7 +247,8 @@
    :kan-hairiot kan-hairiot/hairiot-kartalla
    :suolatoteumat suolatoteumat/suolatoteumat-kartalla
    :paikkaukset-toteumat paikkaukset-toteumat/toteumat-kartalla
-   :tieluvat tieluvat/tieluvat-kartalla})
+   :tieluvat tieluvat/tieluvat-kartalla
+   :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -313,6 +316,7 @@
        :kan-hairiot (taso :kan-hairiot)
        :suolatoteumat (taso :suolatoteumat)
        :paikkaukset-toteumat (taso :paikkaukset-toteumat)
+       :maarien-toteumat (taso :maarien-toteumat)
        :tieluvat (taso :tieluvat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
@@ -355,6 +359,7 @@
    :kan-hairiot kan-hairiot/karttataso-hairiotilanteet-vapaassa-sijainnissa
    :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :paikkaukset-toteumat paikkaukset-toteumat/taso-nakyvissa?
+   :maarien-toteumat maarien-toteumat-kartalla/karttataso-nakyvissa?
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})

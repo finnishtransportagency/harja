@@ -25,7 +25,7 @@
     (log/debug "Aloitetaan sijainnin tallennus")
     (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
     (log/debug "Aloitetaan toteuman tehtävien tallennus")
-    (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)))
+    (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)))
 
 (defn tallenna-kaikki-pyynnon-pistetoteumat [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [db db]

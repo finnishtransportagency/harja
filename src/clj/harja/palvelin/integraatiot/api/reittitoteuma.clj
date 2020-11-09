@@ -151,7 +151,7 @@ maksimi-linnuntien-etaisyys 200)
       (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)]
         (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
         (log/debug "Aloitetaan toteuman tehtävien tallennus")
-        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
         (log/debug "Aloitetaan toteuman materiaalien tallennus")
         (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id urakka-id)
         (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")

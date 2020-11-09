@@ -387,7 +387,8 @@
               :muut-liikennemerkit ""
               :jarjestelyt
               [{:jarjestely
-                {:alkuperainen-nopeusrajoitus "60"
+                {:liikennemerkki "Nopeusrajoitusmerkki"
+                 :alkuperainen-nopeusrajoitus "60"
                  :alennettu-nopeusrajoitus "30"
                  :nopeusrajoituksen-pituus "250"
                  :sijainti
@@ -415,7 +416,8 @@
                     :harja.domain.tielupa/losa nil
                     :harja.domain.tielupa/alennettu-nopeusrajoitus "30"
                     :harja.domain.tielupa/nopeusrajoituksen-pituus "250"
-                    :harja.domain.tielupa/kaista 1}]}]
+                    :harja.domain.tielupa/kaista 1
+                    :harja.domain.tielupa/liikennemerkki "Nopeusrajoitusmerkki"}]}]
     (is (= (tielupa-sanoma/tilapaiset-liikennemerkkijarjestelyt data) odotettu))))
 
 (deftest vesihuoltolupa

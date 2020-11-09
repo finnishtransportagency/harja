@@ -44,22 +44,23 @@ Harja repon hakemistorakenne:
 1. Asenna Leiningen: http://leiningen.org/ tai brew install leiningen
 2. Asenna Docker: www.docker.com/
 3. Laita docker käyntiin sanomalla /harja/tietokanta kansiossa
-<code>
-sh devdb_up.sh
-</code>
+
+    `sh devdb_up.sh`
+
 4. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
-5. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:<br/>
-<code>
-lein do clean, compile, repl
-</code>
+5. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
-6. Käännä frontend ja käynnistä Figwheel:<br/>
-<code>
-sh kaynnista_harja_front_dev.sh
-</code>
+    `lein do clean, compile, repl`
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:3000
-Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit
+6. Käännä frontend ja käynnistä Figwheel:
+
+    `sh kaynnista_harja_front_dev.sh`
+
+Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
+Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
+Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa asetukset.edn filussa 
+`[:http-palvelin :salli-oletuskayttaja?]` poluussa olevan arvon true:ksi, ja restartoida backend, 
+tekemällä `lein repl` uudestaan.
 
 #### Docker compose
 
@@ -98,22 +99,23 @@ jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja
 ## Docker - paikallinen kehitysympäristö
 
 Kannan restart 
-<code>
+
+```bash
 sh devdb_restart.sh
-</code>
+```
 
 Kanta alas 
-<code>
-sh devdb_down.sh
-</code>
 
+```bash
+sh devdb_down.sh
+```
 
 Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
-Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita, mutta sovellus
-logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
+Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita. Jos ActiveMQ
+ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK. 
 
-* Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
-* ActiveMQ: docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
+* Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
+* ActiveMQ: `docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
@@ -178,8 +180,14 @@ e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä
 
 ### Fronttitestit
 
-Fronttitestit ajetaan komennolla: lein doo phantom test
-Laadunseurantatyökalun testit ajetaan komennolla: lein doo phantom laadunseuranta-test
+Fronttitestit ajetaan komennolla: `lein doo phantom test`
+Taikka näin:  `lein with-profile +test doo phantom test once`
+
+Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew cask install phantomjs` 
+
+Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
+Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
 testi.

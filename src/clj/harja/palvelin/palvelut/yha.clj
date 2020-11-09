@@ -185,30 +185,30 @@
   "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
    Jos ei ole, heittää poikkeuksen. Vuotta 2020 edeltäviä kohteita ei alkuvuoden kaistauudistuksen jälkeen
    voi enää lähettää."
-  [db kohde-idt]
-  (doseq [kohde-id kohde-idt]
-    (let [paallystysilmoitus (first (into []
-                                          (comp (map konv/alaviiva->rakenne)
-                                                (map #(konv/pgarray->vector (:vuodet %)))
-                                                (map #(konv/string-poluista->keyword %
-                                                                                     [[:tekninen-osa :paatos]
-                                                                                      [:tila]])))
-                                          (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
-                                            db
-                                            {:paallystyskohde kohde-id})))]
-      (when-not (and (not (empty? (:vuodet paallystysilmoitus)))
-                     (every? #(> % 2019) (:vuodet paallystysilmoitus))
-                     (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
-                     (or (= :valmis (:tila paallystysilmoitus))
-                         (= :lukittu (:tila paallystysilmoitus))))
-        (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
+       [db kohde-idt]
+       (doseq [kohde-id kohde-idt]
+              (let [paallystysilmoitus  (-> (first (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
+                                                                     db
+                                                                     {:paallystyskohde kohde-id}))
+                                                                (konv/alaviiva->rakenne)
+                                                                (konv/string-poluista->keyword [[:tekninen-osa :paatos]
+                                                                                                [:tila]])
+                                                                (update :vuodet konv/pgarray->vector)
+
+                                                                )]
+                   (when-not (and (not (empty? (:vuodet paallystysilmoitus)))
+                                  (every? #(> % 2019) (:vuodet paallystysilmoitus))
+                                  (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
+                                  (or (= :valmis (:tila paallystysilmoitus))
+                                      (= :lukittu (:tila paallystysilmoitus))))
+                             (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHAan."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
-  (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
+      (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
   (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id kohde-idt)
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
