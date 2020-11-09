@@ -378,7 +378,7 @@
      {:ikoninappi? true :luokka "klikattava"
       :ikoni (ikonit/livicon-duplicate)}]]])
 
-(defn- paallystysmassat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
+(defn- massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Massat"
     :tunniste :pot2-massa/id
@@ -410,12 +410,12 @@
                     [massan-toiminnot e! rivi])}]
    massat])
 
-(defn- kantavan-kerroksen-materiaalit-taulukko [e! {:keys [murskeet] :as app}])
+(defn- murskeet-taulukko [e! {:keys [murskeet] :as app}])
 
 (defn- materiaalikirjasto [e! app]
   [:span
-   [paallystysmassat-taulukko e! app]
-   [kantavan-kerroksen-materiaalit-taulukko e! app]
+   [massat-taulukko e! app]
+   [murskeet-taulukko e! app]
    ;; spacer, jotta alimpien rivien pop up ei piiloudu. Voi olla että voidaan poistaa kunhan murskeiden hallionta on tehty
    [:div {:style {:height "100px"}}]
    [napit/sulje #(swap! tiedot-massa/nayta-materiaalikirjasto? not)]])
