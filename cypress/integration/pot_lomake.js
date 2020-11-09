@@ -516,14 +516,14 @@ describe('Aloita päällystysilmoitus uusi', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
-            cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
-                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
+            cy.wrap($gridOtsikot.grid.find('tbody')).contains('Nakkilan ramppi').parentsUntil('tbody').then(($rivi) => {
+                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('Valmis käsiteltäväksi')
             })
         })
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
-            .contains('E2E-Testi')
+            .contains('Nakkilan ramppi')
             .parentsUntil('tbody')
-            .contains('button', 'Aloita päällystysilmoitus').click()
+            .contains('button', 'Päällystysilmoitus').click()
     })
     it('Oikeat aloitustiedot', function () {
         // Tierekisteritaulukon tienumeroa, ajorataa ja kaistaa ei pitäisi pystyä muutamaan
