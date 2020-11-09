@@ -60,7 +60,7 @@
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) [(str vuosi-nyt "-05-19")]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) [(str vuosi-nyt "-05-21")]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str vuosi-nyt "-05-24")]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) [(str vuosi-nyt "-12-20")]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2022-12-20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5043.95"]))
 
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["22"]))
