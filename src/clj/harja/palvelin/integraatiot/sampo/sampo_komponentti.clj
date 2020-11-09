@@ -55,7 +55,7 @@
         (poista-viestikuuntelija)
         (poista-kuittauskuuntelija)
         (poista-paivittainen-lahetys-tehtava)))
-    (dissoc this :sonja-viestikuuntelija :sonja-kuittauskuuntelija :paivittainen-lahetys-tehtava))
+    this)
 
   Maksueralahetys
   (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]

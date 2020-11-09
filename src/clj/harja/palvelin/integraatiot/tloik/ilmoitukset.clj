@@ -112,7 +112,7 @@
 
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
-  [sonja ilmoitusasetukset lokittaja db kuittausjono urakka
+  [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
    ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
    vastaanotettu]
   (jdbc/with-db-transaction [db db]
@@ -142,7 +142,7 @@
                         (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
           tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
-      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
+      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
       (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
         (when (not uudelleen-lahetys?)
@@ -161,7 +161,7 @@
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset db kuittausjono jms-lahettaja kehitysmoodi? viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja kehitysmoodi? viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [vastaanotettu (pvm/nyt)
         jms-viesti-id (.getJMSMessageID viesti)
@@ -173,7 +173,7 @@
       (let [{:keys [viesti-id ilmoitus-id] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)]
         (try+
           (if-let [urakka (hae-urakka db ilmoitus)]
-            (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db kuittausjono urakka
+            (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
                                 ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
                                 vastaanotettu)
             (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id

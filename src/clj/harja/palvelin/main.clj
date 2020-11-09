@@ -2,22 +2,18 @@
   (:require
     [taoensso.timbre :as log]
     [clojure.core.async :as a :refer [<! go timeout]]
-    [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
-    [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtumien-tulkkaus]
-    [tarkkailija.palvelin.tarkkailija :as tarkkailija]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.fim :as fim]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
-    [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
-    [harja.palvelin.komponentit.liitteet :as liitteet-komp]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -146,7 +142,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto!]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -166,34 +162,29 @@
     [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
     [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
     [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
-
-    [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit])
+    )
 
   (:gen-class))
-
-(def asetukset-tiedosto "asetukset.edn")
 
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
+    (konfiguroi-lokitus asetukset)
+
+    (if-let [virheet (tarkista-asetukset asetukset)]
+      (log/error "Validointivirhe asetuksissa:" virheet))
+
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
-      :db (tietokanta/luo-tietokanta (assoc tietokanta
-                                       :tarkkailun-timeout-arvot
-                                       (select-keys (get-in asetukset [:komponenttien-tila :db])
-                                                    #{:paivitystiheys-ms :kyselyn-timeout-ms})
-                                       :tarkkailun-nimi :db)
-                                     kehitysmoodi)
-      :db-replica (tietokanta/luo-tietokanta (assoc tietokanta-replica
-                                               :tarkkailun-timeout-arvot
-                                               (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
-                                                            #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
-                                               :tarkkailun-nimi :db-replica)
-                                             kehitysmoodi)
+      :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
+      :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
+      :klusterin-tapahtumat (component/using
+                              (tapahtumat/luo-tapahtumat)
+                              [:db])
 
       :todennus (component/using
                   (todennus/http-todennus (:sahke-headerit asetukset))
-                  [:db])
+                  [:db :klusterin-tapahtumat])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
@@ -211,7 +202,7 @@
       :tiedostopesula (tiedostopesula/luo-tiedostopesula (:tiedostopesula asetukset))
 
       :liitteiden-hallinta (component/using
-                             (liitteet-komp/->Liitteet
+                             (harja.palvelin.komponentit.liitteet/->Liitteet
                                (get-in asetukset [:liitteet :fileyard-url]))
                              [:db :virustarkistus :tiedostopesula :pois-kytketyt-ominaisuudet])
 
@@ -228,9 +219,7 @@
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (component/using
-               (sonja/luo-sonja (merge (:sonja asetukset)
-                                       (select-keys (get-in asetukset [:komponenttien-tila :sonja])
-                                                    #{:paivitystiheys-ms})))
+               (sonja/luo-sonja (:sonja asetukset))
                [:db])
       :sonja-sahkoposti
       (component/using
@@ -266,7 +255,7 @@
       ;; T-LOIK
       :tloik (component/using
                (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
-               [:sonja :db :integraatioloki
+               [:sonja :db :integraatioloki :klusterin-tapahtumat
                 :sonja-sahkoposti :labyrintti])
 
       ;; Tierekisteri
@@ -305,8 +294,6 @@
                       :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
-
-      :komponenttien-tila (komponenttien-tila/komponentin-tila (:komponenttien-tila asetukset))
 
       ;; Tarkastustehtävät
 
@@ -516,7 +503,7 @@
       :sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
-                                   [:db :pois-kytketyt-ominaisuudet :integraatioloki :sonja])
+                                   [:db :pois-kytketyt-ominaisuudet :integraatioloki :sonja :klusterin-tapahtumat])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
@@ -647,7 +634,7 @@
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :tierekisteri :vkm])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :klusterin-tapahtumat
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
@@ -688,7 +675,10 @@
 
       :status (component/using
                 (status/luo-status (:kehitysmoodi asetukset))
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
+                ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
+                ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
+                ;; ennen kuin sen statusta aletaan seuraamaan
+                [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
 
       :vaylien-geometriahaku
       (component/using
@@ -725,7 +715,7 @@
   (go
     (log/info "Aloitaetaan Sonjayhteys")
     (loop []
-      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/kasky (:sonja jarjestelma) {:aloita-yhteys nil}))]
+      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
         (when vastaus
           (log/info "Sonja yhteys aloitettu"))
         (when kaskytysvirhe
@@ -735,97 +725,35 @@
           (recur)
           vastaus)))))
 
-(defn- merkkaa-kaynnistyminen! []
-  (log/debug "Merkataan HARJAn käynnistyminen")
-  (event-apurit/julkaise-tapahtuma :harja-tila
-                                   {:viesti "Harja käynnistyy"
-                                    :kaikki-ok? false}))
-
-(defn- merkkaa-kaynnistetyksi! []
-  (log/debug "Merkataan HARJA käynnistetyksi")
-  (event-apurit/julkaise-tapahtuma :harja-tila
-                                   {:viesti "Harja käynnistetty"
-                                    :kaikki-ok? true}))
-
-(defn- kaynnista-pelkastaan-jarjestelma
-  ([]
-   (let [asetukset (lue-asetukset asetukset-tiedosto)]
-     (kaynnista-pelkastaan-jarjestelma asetukset)))
-  ([asetukset]
-   (alter-var-root #'harja-jarjestelma
-                   (fn [_]
-                     (let [jarjestelma (-> asetukset
-                                           luo-jarjestelma
-                                           component/start)]
-                       (aloita-sonja jarjestelma)
-                       jarjestelma)))))
-
-(defn- kuuntele-tapahtumia! []
-  (event-apurit/tarkkaile-tapahtumaa :harjajarjestelman-restart
-                                     {}
-                                     (fn [{:keys [palvelin payload]}]
-                                       (when (= palvelin event-apurit/host-nimi)
-                                         (if (= payload :all)
-                                           (kaynnista-pelkastaan-jarjestelma)
-                                           (when (nil? (alter-var-root #'harja-jarjestelma
-                                                                       (fn [harja-jarjestelma]
-                                                                         (println "----- :harjajarjestelman-restart ----")
-                                                                         (println "payload: " payload)
-                                                                         (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                (println "----- UUDELLEEN KÄYNNISTYS ----")
-                                                                                (println (str (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)))
-                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
-                                                                                  (do (aloita-sonja uudelleen-kaynnistetty-jarjestelma)
-                                                                                      (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo))
-                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
-                                                                                uudelleen-kaynnistetty-jarjestelma)
-                                                                              (catch Throwable t
-                                                                                (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
-                                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo)
-                                                                                nil)))))
-                                             (kaynnista-pelkastaan-jarjestelma)))))))
-
-(defn- kaynnista-harja-tarkkailija! [asetukset]
-  (tarkkailija/kaynnista! asetukset))
-
-(defn- sammuta-harja-tarkkailija! []
-  (tarkkailija/sammuta!))
-
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
-    (let [asetukset (lue-asetukset asetusfile)]
-      ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
-      ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
-      (Thread/setDefaultUncaughtExceptionHandler
-        (reify Thread$UncaughtExceptionHandler
-          (uncaughtException [_ thread e]
-            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-            (log/error "Virhe: " e))))
-
-      (konfiguroi-lokitus asetukset)
-      (if-let [virheet (tarkista-asetukset asetukset)]
-        (log/error "Validointivirhe asetuksissa:" virheet))
-      (tarkista-ymparisto!)
-      (kaynnista-harja-tarkkailija! asetukset)
-      (kuuntele-tapahtumia!)
-      (merkkaa-kaynnistyminen!)
-      (kaynnista-pelkastaan-jarjestelma asetukset)
-      (aloita-sonja harja-jarjestelma)
-      (merkkaa-kaynnistetyksi!))
+    ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
+    ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
+    (Thread/setDefaultUncaughtExceptionHandler
+      (reify Thread$UncaughtExceptionHandler
+        (uncaughtException [_ thread e]
+          (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
+          (log/error "Virhe: " e))))
+    (alter-var-root #'harja-jarjestelma
+                    (constantly
+                      (-> (lue-asetukset asetusfile)
+                          luo-jarjestelma
+                          component/start)))
+    (aloita-sonja harja-jarjestelma)
+    (status/aseta-status! :harja (:status harja-jarjestelma) 200 "Harja käynnistetty")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
-  (sammuta-harja-tarkkailija!)
   (when harja-jarjestelma
     (alter-var-root #'harja-jarjestelma (fn [s]
                                           (component/stop s)
                                           nil))))
 
 (defn -main [& argumentit]
-  (kaynnista-jarjestelma (or (first argumentit) asetukset-tiedosto) true)
+  (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
 (defn dev-start []

@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elyt
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [harja.tyokalut.elyt :as ely-tyokalut]
             [harja.domain.ely :as ely]
             [harja.kyselyt.organisaatiot :as o]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))

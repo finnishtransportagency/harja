@@ -457,7 +457,6 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-ilmoitukset
-                     :hae-ilmoitus
                      :tallenna-ilmoitustoimenpiteet
                      :hae-ilmoituksia-idlla
                      :tallenna-ilmoituksen-toimenpiteiden-aloitus

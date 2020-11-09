@@ -21,8 +21,6 @@
             [harja.transit :as transit]
             [harja.domain.roolit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
-            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [clj-time.core :as time]
             [harja.fmt :as fmt]
 
@@ -40,9 +38,6 @@
     :headers {"Content-Type" "application/transit+json"}
     :body (transit/clj->transit data)
     :vastaus data}))
-
-(def mittarit-alkuarvo {:aktiiviset_pyynnot 0
-                        :pyyntoja_palveltu 0})
 
 (defrecord AsyncResponse [channel])
 
@@ -212,6 +207,13 @@
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän."))
 
+(defn- arityt
+  "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
+  [f]
+  (->> f class .getDeclaredMethods
+       (map #(-> % .getParameterTypes alength))
+       (into #{})))
+
 (defn index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)]
     (when (or (= uri "/")
@@ -297,7 +299,7 @@
     kutsu))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
-                         http-server kehitysmoodi
+                         lopetus-fn kehitysmoodi
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
@@ -308,8 +310,8 @@
           anti-csrf-token-secret-key (:anti-csrf-token asetukset)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
-                          (route/files "" {:root (:dev-resources-path asetukset)}))]
-      (swap! http-server
+                          (route/files "" {:root "dev-resources"}))]
+      (swap! lopetus-fn
              (constantly
                (http/run-server
                  (cookies/wrap-cookies
@@ -358,28 +360,18 @@
 
                  {:port (or (:portti asetukset) asetukset)
                   :thread (or (:threads asetukset) 8)
-                  :legacy-return-value? false
                   :max-body (or (:max-body-size asetukset) (* 1024 1024 8))
                   :max-line 40960})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
-    @(http/server-stop! @http-server {:timeout 100})
-    (reset! kasittelijat [])
-    (reset! sessiottomat-kasittelijat [])
-    (reset! http-server nil)
-    (dosync (ref-set mittarit mittarit-alkuarvo))
+    (@lopetus-fn :timeout 100)
     this)
-  kp/IStatus
-  (-status [this]
-    (let [status (-> this (get :http-server) deref http/server-status)]
-      {::kp/kaikki-ok? (= status :running)
-       ::kp/tiedot status}))
 
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
-    (let [ar (tyokalut/arityt palvelu-fn)
+    (let [ar (arityt palvelu-fn)
           transaktio-fn (if (get optiot :trace true)
                           (fn [& args]
                             (nr/with-newrelic-transaction
@@ -418,12 +410,13 @@
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
-                  (metriikka/luo-mittari-ref mittarit-alkuarvo)))
+                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
+                                              :pyyntoja_palveltu 0})))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
-   (log/debug (str "[HTTP-PALVELIN] ei-todennettava? " ei-todennettava?))
+   #_ (println "ei-todennettava? " ei-todennettava?)
    (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true
                       :tarkista-polku? false

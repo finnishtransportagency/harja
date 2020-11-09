@@ -31,7 +31,7 @@
 (defn tee-lokittaja [this integraatio]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
 
-(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja] :as this}
+(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja klusterin-tapahtumat] :as this}
                                     ilmoitusviestijono ilmoituskuittausjono ilmoitusasetukset
                                     jms-lahettaja kehitysmoodi?]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
@@ -40,7 +40,7 @@
       sonja ilmoitusviestijono
       (partial ilmoitukset/vastaanota-ilmoitus
                sonja (tee-lokittaja this "ilmoituksen-kirjaus")
-               ilmoitusasetukset db ilmoituskuittausjono
+               ilmoitusasetukset klusterin-tapahtumat db ilmoituskuittausjono
                jms-lahettaja kehitysmoodi?))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]

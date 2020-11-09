@@ -83,7 +83,6 @@
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :vastaanota-tekstiviesti)
-    (reset! kuuntelijat #{})
     this)
 
   Sms
