@@ -25,6 +25,10 @@
 
 (def ^{:const true} oletus-toleranssi 50)
 
+(defn urakan-paivamaarat
+  [db id]
+  (first (q/urakan-paivamaarat db id)))
+
 (defn urakoiden-alueet
   [db user oikeus-fn urakka-idt]
   (when-not (empty? urakka-idt)
