@@ -65,7 +65,7 @@ tekemällä `lein repl` uudestaan.
 #### Docker compose
 
 1. Asenna docker ja docker compose
-2. aja `bash sh/aja-harja-dokkerissa.sh`
+2. aja `bash sh/dc/aja-harja-dokkerissa.sh`
 
 ## Kirjautuminen ja ModHeader
 

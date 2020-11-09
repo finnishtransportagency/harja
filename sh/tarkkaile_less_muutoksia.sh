@@ -16,7 +16,7 @@ while true; do
     then
       lein less once;
     else
-      lein with-profile +${LEIN_PROFILE} less once;
+      lein with-profile "${LEIN_PROFILE}" less once;
     fi
   fi;
   LESS_TIEDOSTOT=$LESS_TIEDOSTOT_UUSI;

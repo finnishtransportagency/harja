@@ -172,8 +172,8 @@
     (konfiguroi-lokitus asetukset)
 
     (if-let [virheet (tarkista-asetukset asetukset)]
-      (tarkista-ymparisto!)
       (log/error "Validointivirhe asetuksissa:" virheet))
+    (tarkista-ymparisto!)
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)

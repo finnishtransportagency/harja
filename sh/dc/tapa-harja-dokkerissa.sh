@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # shellcheck source=harja_dir.sh
-source "$( dirname "${BASH_SOURCE[0]}" )/harja_dir.sh" || exit
+source "$( dirname "${BASH_SOURCE[0]}" )/../harja_dir.sh" || exit
 
 POISTA_MUUT_BRANCHIT="$([[ -n "$(echo "$@" | grep rob)" ]]; echo $?)"
 POISTA_TRAMPOLIINIT="$([[ -n "$(echo "$@" | grep rt)" ]]; echo $?)"
@@ -31,8 +31,6 @@ fi
 
 if [[ $POISTA_TRAMPOLIINIT -eq 0 ]]
 then
-    # shellcheck source=.dc/muuta_tiedostojen_oikeudet.sh
-    source "${HARJA_DIR}/sh/dc/muuta_tiedostojen_oikeudet.sh"
     # Poistetaan figwheelin trampoliini cachet
     echo "POISTETAAN TRAMPOLIINI CACHET"
     if [[ -d "${HARJA_DIR}/target/trampolines" ]]

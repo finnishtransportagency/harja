@@ -13,4 +13,4 @@ then
 fi
 
 echo "Generoidaan less -> CSS taustalla..."
-bash tarkkaile_less_muutoksia.sh ${1:-""} &
+bash tarkkaile_less_muutoksia.sh "${1:-''}" &

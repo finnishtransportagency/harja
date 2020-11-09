@@ -42,6 +42,7 @@ services:
        fi;
       } 200>${DC_JAETTU_KANSIO}/compile.lock
       cd ${DC_HARJA_KANSIO}
+      if [[ -z \"$$(grep 'defproject harja' project.clj)\" ]]; then exit; fi;
       if [[ -d /opt/.harja ]]
       then
         mv /opt/.harja ../.harja
@@ -57,6 +58,10 @@ services:
       do
         sleep 5
       done
+      if [[ -n '${HOST_USER_ID}' ]]
+      then
+        find -P ${DC_HARJA_KANSIO} -user 'root' -exec chown ${HOST_USER_ID}:${HOST_USER_ID} {} \; ;
+      fi;
       touch ${DC_JAETTU_KANSIO}/repl_1.done
       echo 'REPL käynnistetty'
       fg
@@ -93,6 +98,7 @@ services:
        fi;
       } 200>${DC_JAETTU_KANSIO}/compile.lock
       cd ${DC_HARJA_KANSIO}
+      if [[ -z \"$$(grep 'defproject harja' project.clj)\" ]]; then exit; fi;
       if [[ -d /opt/.harja ]]
       then
         mv /opt/.harja ../.harja
@@ -111,6 +117,10 @@ services:
       do
         sleep 5
       done
+      if [[ -n '${HOST_USER_ID}' ]]
+      then
+        find -P ${DC_HARJA_KANSIO} -user 'root' -exec chown ${HOST_USER_ID}:${HOST_USER_ID} {} \; ;
+      fi;
       touch ${DC_JAETTU_KANSIO}/repl_2.done
       echo 'REPL käynnistetty'
       fg
@@ -147,39 +157,38 @@ services:
        fi;
       } 200>${DC_JAETTU_KANSIO}/compile.lock
       cd ${DC_HARJA_KANSIO}
+      if [[ -z \"$$(grep 'defproject harja' project.clj)\" ]]; then exit; fi;
       if [[ -d /opt/.harja ]]
       then
         mv /opt/.harja ../.harja
       fi
-      # Enable job control
-      # set -m
 
       echo 'Aloitetaan LESS kääntäminen'
-      sh/tarkkaile_less.sh dev-container > /var/log/harja_less.log 2>&1 &
+      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1 &
       disown
       lein with-profile $${LEIN_PROFILES} less once
       echo 'Luodaan .edn filut figwheeliä varten'
       mkdir -p figwheel_conf/luodut
       rm figwheel_conf/luodut/*
       lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
-      #echo 'Aloitetaan frontin kääntäminen'
-      #lein trampoline with-profile +dev-container run -m figwheel.main -fw false -bo figwheel_conf/luodut/dev-container > /var/log/harja_frontend.log 2>&1
 
       echo 'Käynnistetään frontin repl'
       screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES},+dev-cljs run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl
 
       THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
-      #lein trampoline with-profile +dev-container run -m figwheel.main -H 0.0.0.0 -p ${FRONTEND_REPL_PORT} -b figwheel_conf/luodut/dev-container --repl >> /var/log/harja_frontend.log 2>&1 &
-      #FRONT_REPL_JOB_NUMBER=$$(jobs | awk 'match($$1, /^\[[[:digit:]]\]\+/) { print substr($$1, RSTART + 1, RLENGTH - 3) }')
 
       while [[ $$(curl -s -o /dev/null -w '%{http_code}' $${THIS_IP}:${FRONTEND_REPL_PORT} 2>&1) != '200' ]]
       do
         sleep 5
       done
       echo 'Front repl käynnistetty'
-      touch ${DC_JAETTU_KANSIO}/front.done
 
-      #fg %$${FRONT_REPL_JOB_NUMBER}
+      if [[ -n '${HOST_USER_ID}' ]]
+      then
+        find -P ${DC_HARJA_KANSIO} -user 'root' -exec chown ${HOST_USER_ID}:${HOST_USER_ID} {} \; ;
+      fi;
+
+      touch ${DC_JAETTU_KANSIO}/front.done
 
       # Ei tuoda figwheel.mainia eteen, koska se tuppaa feilaamaan aika herkästi,
       # jolloinka joudutaan ajamaan tämä kontti uusiksi (hidasta puuhaa)
