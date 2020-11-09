@@ -222,10 +222,7 @@
                                   (conj tulos (str/trim rivi)))
                                 []
                                 (line-seq rdr)))]
-    (println env-muuttujat)
     (doseq [env-muuttuja env-muuttujat]
-      (println (str "env-muuttuja:" env-muuttuja))
-      (println (System/getenv env-muuttuja))
       (when (nil? (System/getenv env-muuttuja))
         (log/error (str "Ympäristömuuttujaa " env-muuttuja " ei ole asetettu!"))))))
 
@@ -237,7 +234,7 @@
        read-string
        (yhdista-asetukset oletusasetukset)))
 
-(defn crlf-filter [{:keys [testidata?]} msg]
+(defn crlf-filter [msg]
   (assoc msg :vargs (mapv (fn [s]
                             (if (string? s)
                               (str/replace s #"[\n\r]" "")
