@@ -3,16 +3,18 @@ set -euo pipefail
 
 if [[ ! $(whoami) = 'postgres' ]]
 then
-  su postgres
+  cd ~;
+else
+  # shellcheck disable=SC2016
+  POSTGRES_HOME="$(runuser -c 'echo $HOME' -l postgres)";
+  cd "$POSTGRES_HOME"
 fi
-
-cd ~
 
 echo "Haetaan tietokannan tiedostot"
 git clone https://github.com/finnishtransportagency/harja.git;
 cd harja
-git checkout ${BRANCH:-develop}
+git checkout "${BRANCH:-develop}"
 if [ "$COMMIT" != "_" ]
 then
-  git checkout $COMMIT .;
+  git checkout "$COMMIT" .;
 fi;

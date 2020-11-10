@@ -36,9 +36,9 @@ function cmd_uberjar
     echo "--> aot compile done"
     lein less once
     echo "--> less compile done"
-    lein with-profile +prod compile-prod
+    lein with-profile prod compile-prod
     echo "--> cljs main compile done"
-    lein with-profile +laadunseuranta-prod compile-laadunseuranta-prod
+    lein with-profile laadunseuranta-prod compile-laadunseuranta-prod
     echo "--> cljs laadunseuranta compile done"
     lein uberjar
     echo "--> uberjar done"
@@ -68,14 +68,4 @@ git checkout asetukset.edn
 
 sed -i -e 's/:jvm-opts \^:replace \["-Xms256m" "-Xmx2g"\]/:jvm-opts \^:replace \["-Xms256m" "-Xmx900m"\]/g' project.clj
 
-mkdir -p ../.harja
-echo aaaa > ../.harja/anti-csrf-token
-touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
-# todo: kokeile lein trampoline "$@"
-cd tietokanta
-mvn flyway:migrate
-psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
-psql -h localhost -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"
-psql -h localhost -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"
-cd ..
 eval "cmd_$SUBCMD"

@@ -1,0 +1,12 @@
+FROM solita/harjadb:centos-12-dev
+
+RUN yum install -y git
+
+WORKDIR /var/lib/pgsql
+
+COPY dbn-kaynnistys.sh ./dbn-kaynnistys.sh
+COPY julkaise-tapahtuma.sh ./julkaise-tapahtuma.sh
+RUN chmod +x dbn-kaynnistys.sh
+RUN chmod +x julkaise-tapahtuma.sh
+
+USER postgres

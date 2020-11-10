@@ -245,8 +245,8 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
-                               "with-profile" "+prod" "compile-prod,"
-                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               "with-profile" "prod" "compile-prod,"
+                               "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors { ;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
