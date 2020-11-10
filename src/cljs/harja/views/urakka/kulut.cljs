@@ -3,6 +3,7 @@
             [reagent.core :as r]
             [goog.string :as gstring]
             [goog.string.format]
+            [harja.domain.lasku :as lasku]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.mhu-laskutus :as tiedot]
             [harja.ui.debug :as debug]
@@ -24,38 +25,6 @@
             [harja.pvm :as pvm]
             [clojure.string :as string])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
-
-(defonce kuukaudet-strs {:tammikuu  "Tammikuu"
-                         :helmikuu  "Helmikuu"
-                         :maaliskuu "Maaliskuu"
-                         :huhtikuu  "Huhtikuu"
-                         :toukokuu  "Toukokuu"
-                         :kesakuu   "Kesäkuu"
-                         :heinakuu  "Heinäkuu"
-                         :elokuu    "Elokuu"
-                         :syyskuu   "Syyskuu"
-                         :lokakuu   "Lokakuu"
-                         :marraskuu "Marraskuu"
-                         :joulukuu  "Joulukuu"})
-
-(defonce kuukaudet-keyword->number {:tammikuu  1
-                                    :helmikuu  2
-                                    :maaliskuu 3
-                                    :huhtikuu  4
-                                    :toukokuu  5
-                                    :kesakuu   6
-                                    :heinakuu  7
-                                    :elokuu    8
-                                    :syyskuu   9
-                                    :lokakuu   10
-                                    :marraskuu 11
-                                    :joulukuu  12})
-
-(defonce hoitovuodet-strs {:1-hoitovuosi "1. hoitovuosi"
-                           :2-hoitovuosi "2. hoitovuosi"
-                           :3-hoitovuosi "3. hoitovuosi"
-                           :4-hoitovuosi "4. hoitovuosi"
-                           :5-hoitovuosi "5. hoitovuosi"})
 
 (defn- hallinnollisen-otsikointi [ryhma]
   (case ryhma
@@ -159,30 +128,17 @@
 
 (defn paivamaaran-valinta
   [{:keys [paivitys-fn erapaiva erapaiva-meta disabled koontilaskun-kuukausi]}]
-  (let [hoitovuosi->vuosiluku (into {} (map-indexed (fn [indeksi vuosi]
-                                                      [(keyword (str (inc indeksi) "-hoitovuosi")) vuosi])
-                                                    (range (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
-                                                           (-> @tila/yleiset :urakka :loppupvm pvm/vuosi))))
-        kk (when-not (nil? koontilaskun-kuukausi)
-             (-> koontilaskun-kuukausi (string/split #"/") first keyword kuukaudet-keyword->number))
-        vuosi (when-not (nil? koontilaskun-kuukausi)
-                (-> koontilaskun-kuukausi
-                    (string/split #"/")
-                    second
-                    keyword
-                    hoitovuosi->vuosiluku))
-        vuosi (when-not (nil? vuosi)
-                (if (< kk 10)
-                  (inc vuosi)
-                  vuosi))]
-    [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
-                                                 :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default") "komponentin-input"}
-                                                 :pvm           erapaiva
-                                                 :pakota-suunta false
-                                                 :disabled      disabled
-                                                 :valittava?-fn #(if-not (nil? koontilaskun-kuukausi)
-                                                                   (pvm/sama-kuukausi? % (pvm/->pvm (str "1." kk "." vuosi)))
-                                                                   false)}])) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
+  [pvm-valinta/pvm-valintakalenteri-inputilla
+   {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
+    :luokat        #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta) "" "-error") "-default")
+                     "komponentin-input"}
+    :pvm           erapaiva
+    :pakota-suunta false
+    :disabled      disabled
+    :valittava?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn
+                     koontilaskun-kuukausi
+                     (-> @tila/yleiset :urakka :alkupvm)
+                     (-> @tila/yleiset :urakka :loppupvm))}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
 
 
 (defn koontilaskun-kk-droppari
@@ -192,15 +148,15 @@
     :disabled      disabled
     :vayla-tyyli?  true
     :skrollattava? true
-    :valinta       koontilaskun-kuukausi
-    :valitse-fn    #(paivitys-fn {:validoitava? true}
-                                 :koontilaskun-kuukausi %)
-    :format-fn     (fn [a]
-                     (if (nil? a)
-                       "Ei valittu"
-                       (let [[kk hv] (str/split a #"/")]
-                         (str (get kuukaudet-strs (keyword kk)) " - "
-                              (get hoitovuodet-strs (keyword hv))))))}
+    :valinta      koontilaskun-kuukausi
+    :valitse-fn   #(paivitys-fn {:validoitava? true}
+                                :koontilaskun-kuukausi %)
+    :format-fn    (fn [a]
+                    (if (nil? a)
+                      "Ei valittu"
+                      (let [[kk hv] (str/split a #"/")]
+                        (str (if (pvm/kuukauden-numero kk) (str/capitalize kk) (str "VÄÄRÄ KUUKAUSI " kk)) " - "
+                             (get lasku/hoitovuodet-strs (keyword hv))))))}
    (for [hv (range 1 6)
          kk kuukaudet]
      (str (name kk) "/" hv "-hoitovuosi"))])
@@ -507,8 +463,8 @@
                           (:summa k))]])
    [:div.flex-row (str "Koontilaskun kuukausi: "
                        (let [[kk hv] (str/split koontilaskun-kuukausi #"/")]
-                         (str (get kuukaudet-strs (keyword kk)) " - "
-                              (get hoitovuodet-strs (keyword hv)))))]
+                         (str (if (pvm/kuukauden-numero kk) (str/capitalize kk) (str "VÄÄRÄ KUUKAUSI " kk)) " - "
+                              (get lasku/hoitovuodet-strs (keyword hv)))))]
    [:div.flex-row (str "Laskun päivämäärä: "
                        laskun-pvm)]
    [:div.flex-row (str "Kokonaissumma: "
