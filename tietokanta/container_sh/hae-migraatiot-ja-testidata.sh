@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ ! $(whoami) = 'postgres' ]]
+if [[ $(whoami) = 'postgres' ]]
 then
   cd ~;
 else

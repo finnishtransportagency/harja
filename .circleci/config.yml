@@ -18,14 +18,16 @@ commands:
           TIMEOUT=60
           ODOTETTU=0
           NUKU=5
-          while [[ "$(curl -s -o /dev/null -w '%{http_code}' "<< parameters.palvelin >>:<< parameters.portti >>/${TAPAHTUMA}" 2>&1)" != '200' ]]
+          touch tapahtuman_arvot
+          while [[ "$(curl -s -o tapahtuman_arvot -w '%{http_code}' "<< parameters.palvelin >>:<< parameters.portti >>/${TAPAHTUMA}" 2>&1)" != '200' ]]
           do
             echo "Odotetaan tapahtumaa << parameters.tapahtuma >>..."
             sleep ${NUKU}
             ODOTETTU=$((ODOTETTU+${NUKU}))
             if [[ $ODOTETTU -eq $TIMEOUT ]]
-               then
+            then
                echo "Tapahtuma ${ALKUPERAINEN_TAPAHTUMA} ei tapahtunut ${TIMEOUT} sekunnin sisällä. Lopetetaan kuuntelu"
+               rm tapahtuman_arvot
                exit 1
             fi
           done
@@ -33,6 +35,8 @@ commands:
     description: "Julkaisee tapahtuman"
     parameters:
       tapahtuma:
+        type: string
+      args:
         type: string
       palvelin:
         type: string
@@ -42,11 +46,16 @@ commands:
         default: "80"
     steps:
       - run: |
-          TAPAHTUMA="$(echo "<< parameters.tapahtuma >>" | sed 's/\./_/g')"
+          TAPAHTUMA="tapahtuma=$(echo "<< parameters.tapahtuma >>" | sed 's/\./_/g')"
+          ARGS="<< parameters.args >>"
+          if [[ -n "$ARGS" ]]
+          then
+            ARGS="&${ARGS}"
+          fi
 
           touch tmp_vastaus_tiedosto__
 
-          LUONTI_KOODI="$(curl -s -o tmp_vastaus_tiedosto__ -w '%{http_code}' "<< parameters.palvelin >>:<< parameters.portti >>/luo-tapahtuma?${TAPAHTUMA}")"
+          LUONTI_KOODI="$(curl -s -o tmp_vastaus_tiedosto__ -w '%{http_code}' "<< parameters.palvelin >>:<< parameters.portti >>/luo-tapahtuma?${TAPAHTUMA}${ARGS}")"
 
           if [[ 200 -ne "${LUONTI_KOODI}" ]]
           then
@@ -60,13 +69,6 @@ commands:
           else
             rm tmp_vastaus_tiedosto__
           fi
-  aseta-ymparistomuuttujat:
-    description: "Aseta konteissa käytettävät ympäristömuuttujat"
-    steps:
-      - run:
-          command: |
-            echo "export BRANCH=${CIRCLE_BRANCH}" >> $BASH_ENV
-            echo "export COMMIT=${CIRCLE_SHA1}" >> $BASH_ENV
 jobs:
   front-testit:
     docker:
@@ -75,15 +77,17 @@ jobs:
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
-          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash odota-tapahtumaa.sh env.git localhost 80;
+          bash lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
 
     steps:
-      - aseta-ymparistomuuttujat
+      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
-          tapahtuma: "env.asetettu"
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
       - odota-tapahtumaa:
           tapahtuma: "db.valmis"
       - run: |
@@ -97,15 +101,17 @@ jobs:
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
-          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash odota-tapahtumaa.sh env.git localhost 80;
+          bash lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
 
     steps:
-      - aseta-ymparistomuuttujat
+      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
-          tapahtuma: "env.asetettu"
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
       - odota-tapahtumaa:
           tapahtuma: "db.valmis"
       - run: |
@@ -119,7 +125,8 @@ jobs:
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
-          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash odota-tapahtumaa.sh env.git localhost 80;
+          bash lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
@@ -132,9 +139,10 @@ jobs:
           password: $DOCKER_HUB_SALASANA
 
     steps:
-      - aseta-ymparistomuuttujat
+      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
-          tapahtuma: "env.asetettu"
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
       - odota-tapahtumaa:
           tapahtuma: "db.valmis"
       - run: |
@@ -148,15 +156,17 @@ jobs:
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
-          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash odota-tapahtumaa.sh env.git localhost 80;
+          bash lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
 
     steps:
-      - aseta-ymparistomuuttujat
+      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
-          tapahtuma: "env.asetettu"
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
       - odota-tapahtumaa:
           tapahtuma: "db.valmis"
       - run:
@@ -184,15 +194,17 @@ jobs:
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
-          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash odota-tapahtumaa.sh env.git localhost 80;
+          bash lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
     parallelism: 1
     steps:
-      - aseta-ymparistomuuttujat
+      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
-          tapahtuma: "env.asetettu"
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
       - odota-tapahtumaa:
           tapahtuma: "db.valmis"
       - checkout

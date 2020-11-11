@@ -19,7 +19,9 @@ PORTTI="$3"
 TIMEOUT=60
 ODOTETTU=0
 
-while [[ "$(curl -s -o /dev/null -w '%{http_code}' "${PALVELIN}:${PORTTI}/${TAPAHTUMA}" 2>&1)" != '200' ]]
+touch tapahtuman_arvot
+
+while [[ "$(curl -s -o tapahtuman_arvot -w '%{http_code}' "${PALVELIN}:${PORTTI}/${TAPAHTUMA}" 2>&1)" != '200' ]]
 do
    echo "Odotetaan tapahtumaa ${ALKUPERAINEN_TAPAHTUMA}..."
    sleep 1
@@ -27,6 +29,7 @@ do
    if [[ $ODOTETTU -eq $TIMEOUT ]]
    then
      echo "Tapahtuma ${ALKUPERAINEN_TAPAHTUMA} ei tapahtunut ${TIMEOUT} sekunnin sisällä. Lopetetaan kuuntelu"
+     rm tapahtuman_arvot
      exit 1
    fi
 done

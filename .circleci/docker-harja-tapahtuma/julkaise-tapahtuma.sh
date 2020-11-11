@@ -2,7 +2,16 @@
 set -euo pipefail
 
 ALKUPERAINEN_TAPAHTUMA="$1"
-TAPAHTUMA="$(echo "${ALKUPERAINEN_TAPAHTUMA}" | sed 's/\./_/g')"
+TAPAHTUMA="tapahtuma=$(echo "${ALKUPERAINEN_TAPAHTUMA}" | sed 's/\./_/g')"
+shift;
+
+if [[ $# -ne 0 ]]
+then
+  ARGS="&$1"
+else
+  ARGS=""
+fi
+
 shift;
 
 if [[ $# -ne 0 ]]
@@ -11,6 +20,8 @@ then
 else
   PALVELIN="localhost"
 fi
+
+shift;
 
 if [[ $# -ne 0 ]]
 then
@@ -21,7 +32,7 @@ fi
 
 touch tmp_vastaus_tiedosto__
 
-LUONTI_KOODI="$(curl -s -o tmp_vastaus_tiedosto__ -w '%{http_code}' "${PALVELIN}:${PORTTI}/luo-tapahtuma?${TAPAHTUMA}")"
+LUONTI_KOODI="$(curl -s -o tmp_vastaus_tiedosto__ -w '%{http_code}' "${PALVELIN}:${PORTTI}/luo-tapahtuma?${TAPAHTUMA}${ARGS}")"
 
 if [[ 200 -ne "${LUONTI_KOODI}" ]]
 then
