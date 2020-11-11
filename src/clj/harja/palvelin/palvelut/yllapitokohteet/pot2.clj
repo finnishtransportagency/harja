@@ -41,7 +41,6 @@
             [specql.core :as specql]
             [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/pot2.sql")
 
 (defn hae-urakan-pot2-massat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)

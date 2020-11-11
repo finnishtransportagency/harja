@@ -126,6 +126,7 @@
 
   HaeKoodistotEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Materiaalikoodistojen haku epäonnistui!" :danger)
     app)
 
   UusiMassa
