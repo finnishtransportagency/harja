@@ -14,7 +14,6 @@
 
             [harja.kyselyt
              [kommentit :as kommentit-q]
-             [yllapitokohteet :as yllapito-q]
              [paallystys :as q]
              [urakat :as urakat-q]
              [konversio :as konversio]
@@ -595,7 +594,6 @@
       (log/warn "Aseta päällystysilmoituksen tila kutsuttiin odottamattomilla parametreilla kohde-id: " kohde-id " uusi tila: " tila))
     (hae-urakan-paallystysilmoitus-paallystyskohteella db user {:urakka-id urakka-id
                                                                 :paallystyskohde-id kohde-id})))
-
 
 (defrecord Paallystys []
   component/Lifecycle

@@ -702,7 +702,6 @@
        :yhteyshenkilot (vec yhteyshenkilot)})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
     (do
@@ -781,6 +780,7 @@
                      :hae-yllapitourakan-aikataulu
                      :tallenna-yllapitokohteiden-aikataulu
                      :sahkopostin-lahetys)
+
     (when sahkopostin-lahetys
       (sahkopostin-lahetys))
     (dissoc this ::sahkopostin-lahetys)))

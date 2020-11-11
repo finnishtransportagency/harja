@@ -3,9 +3,7 @@
             [harja.geo :as geo]
             [jeesql.postgres :as postgres]
             [harja.kyselyt.konversio :as konv]
-            [clojure.set :as set]
-            [specql.core :refer [fetch update! insert! upsert! delete!]]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus]))
+            [clojure.set :as set]))
 
 (defqueries "harja/kyselyt/yllapitokohteet.sql"
   ;; PENDING: ylläpitokohteen poiston päättely on edelleen melko hidas.
