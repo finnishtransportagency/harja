@@ -321,7 +321,7 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
             .contains('E2E-Testi')
             .parentsUntil('tbody')
-            .contains('button', 'Päällystysilmoitus').click()
+            .contains('button', 'Päällystysilmoitus').click({force: true})
 
     })
     it('Tarkasta lomakkeen alkutila ja virheet', function () {
@@ -430,7 +430,7 @@ describe('Korjaa virhedata', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
             .contains('E2E-Testi')
             .parentsUntil('tbody')
-            .contains('button', 'Päällystysilmoitus').click()
+            .contains('button', 'Päällystysilmoitus').click({force: true})
     })
     it('Testaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
         cy.server()
