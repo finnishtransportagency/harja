@@ -1,39 +1,16 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.pot2
   "Tässä namespacessa on esitelty palvelut, jotka liittyvät erityisesti pot2"
   (:require [com.stuartsierra.component :as component]
-            [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-
-            [clojure.set :as clj-set]
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
-            [harja.kyselyt
-             [kommentit :as kommentit-q]
-             [yllapitokohteet :as yllapito-q]
-             [paallystys :as q]
-             [urakat :as urakat-q]
-             [konversio :as konversio]
-             [tieverkko :as tieverkko-q]
-             [pot2 :as pot2-q]]
+
             [harja.domain
-             [paallystysilmoitus :as pot-domain]
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
-             [urakka :as urakka-domain]
-             [sopimus :as sopimus-domain]
              [oikeudet :as oikeudet]
-             [paallystyksen-maksuerat :as paallystyksen-maksuerat]
-             [yllapitokohde :as yllapitokohteet-domain]
-             [tierekisteri :as tr-domain]
              [muokkaustiedot :as muokkaustiedot]]
-            [harja.palvelin.palvelut
-             [yha-apurit :as yha-apurit]
-             [yllapitokohteet :as yllapitokohteet]
-             [viestinta :as viestinta]]
-            [harja.palvelin.palvelut.yllapitokohteet
-             [maaramuutokset :as maaramuutokset]
-             [yleiset :as yy]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
 

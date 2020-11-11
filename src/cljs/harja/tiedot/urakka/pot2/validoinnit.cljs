@@ -67,12 +67,11 @@
 (defn- hae-sideaineen-puutteet [aineet]
   (into {}
         (map (fn [[_ aine]]
-               (do
-                 {(:sideaine/tyyppi aine)
-                  (keep (fn [kentta]
-                          (when (nil? (aine kentta))
-                            (name kentta)))
-                        pakolliset-sideaineen-kentat)}))
+               {(:sideaine/tyyppi aine)
+                (keep (fn [kentta]
+                        (when (nil? (aine kentta))
+                          (name kentta)))
+                      pakolliset-sideaineen-kentat)})
              aineet)))
 
 

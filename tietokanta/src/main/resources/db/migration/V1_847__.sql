@@ -1,18 +1,3 @@
--- Vähä inserttejä helpottavaa settia
---DROP TABLE pot2;
---DROP TABLE pot2_massa;
---DROP TABLE pot2_massatyyppi;
---DROP TABLE pot2_runkoainetyyppi;
---DROP TABLE pot2_sideainetyyppi;
---DROP TABLE pot2_lisaainetyyppi;
---DROP TABLE pot2_murske;
---DROP TABLE pot2_kulutuskerros_toimenpide;
---DROP TABLE pot2_paallystekerros;
---DROP TABLE pot2_massa_runkoaine;
---DROP TABLE pot2_massa_lisaaine;
---DROP TABLE pot2_massa_sideaine;
-
-
 CREATE TABLE pot2_kulutuskerros_toimenpide
 (
     koodi   INTEGER PRIMARY KEY,
@@ -111,7 +96,7 @@ CREATE TABLE pot2_massa
     DoP_nro           TEXT, -- DoP_nroa ei ole aina saatavilla heti? Siksi ei NOT NULL
 
     -- muokkausmetatiedot
-    poistettu         BOOLEAN   DEFAULT FALSE,
+    poistettu         BOOLEAN NOT NULL DEFAULT FALSE,
     muokkaaja         INTEGER REFERENCES kayttaja (id),
     muokattu          TIMESTAMP,
     luoja             INTEGER REFERENCES kayttaja (id),
@@ -238,7 +223,7 @@ CREATE TABLE pot2_massa_sideaine
 (
     id            SERIAL PRIMARY KEY,
     pot2_massa_id INTEGER NOT NULL REFERENCES pot2_massa (id),
-    "lopputuote?" BOOLEAN DEFAULT TRUE, -- FALSE = lisätty sideaine
+    "lopputuote?" BOOLEAN NOT NULL DEFAULT TRUE, -- FALSE = lisätty sideaine
     tyyppi        INTEGER NOT NULL REFERENCES  pot2_sideainetyyppi(koodi),
     pitoisuus     NUMERIC(3,1)
 );
