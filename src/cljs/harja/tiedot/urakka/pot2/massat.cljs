@@ -20,7 +20,6 @@
 (defrecord UusiMassa [avaa-massa-lomake?])
 (defrecord MuokkaaMassaa [rivi klooni?])
 (defrecord NaytaModal [avataanko?])
-(defrecord NaytaListaus [nayta])
 
 (defrecord TallennaLomake [data])
 (defrecord TallennaMassaOnnistui [vastaus])
@@ -108,6 +107,7 @@
 
   HaePot2MassatEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Massojen haku epäonnistui!" :danger)
     app)
 
   HaeKoodistot
@@ -165,23 +165,14 @@
           (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet] sideaineet)
           (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet] lisaaineet))))
 
-  NaytaListaus
-  (process-event [{nayta :nayta} app]
-    (js/console.log "NaytaListaus" nayta)
-    (assoc app :pot2-massat? nayta))
-
   PaivitaLomake
   (process-event [{data :data} app]
-    (let [uusiapp (-> app
-                      (update :pot2-massa-lomake merge data))]
-      uusiapp))
+    (update app :pot2-massa-lomake merge data))
 
   PaivitaAineenTieto
   (process-event [{polku :polku arvo :arvo} app]
-    (log "PaivitaAineenTieto polku " (pr-str polku), " arvo:" (pr-str arvo))
-    (let [uusiapp (assoc-in app
-                    (vec (cons :pot2-massa-lomake polku)) arvo)]
-    uusiapp))
+    (assoc-in app
+              (vec (cons :pot2-massa-lomake polku)) arvo))
 
   LisaaSideaine
   (process-event [{sideaineen-kayttotapa :sideaineen-kayttotapa} app]
