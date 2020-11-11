@@ -84,6 +84,16 @@
     :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
+   {:nimi :vemtr
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    ;; fixme: takrkista konteksti
+    :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :kuvaus "Valtakunnallinen ja ELY-kohtainen määrätoteumaraportti (testiversio)"
+    :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
+    ;; fixme: tarkista urakkatyyyppi
+    :urakkatyyppi #{:teiden-hoito}}
+   
+   
    {:nimi :laaduntarkastusraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                  {:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}
