@@ -4,6 +4,7 @@ set -euo pipefail
 if [[ $# -ne 3 ]]
 then
   echo "Väärä määrä argumenttejä."
+  echo "Saatiin ${#} määrä argumentteja (${*})"
   echo "Ensimmäisen pitäisi olla TAPAHTUMA"
   echo "Toisen pitäisi olla PALVELIN"
   echo "Kolmannen pitäisi olla PORTTI"
@@ -15,8 +16,17 @@ TAPAHTUMA="$(echo "${ALKUPERAINEN_TAPAHTUMA}" | sed 's/\./_/g')"
 PALVELIN="$2"
 PORTTI="$3"
 
+TIMEOUT=60
+ODOTETTU=0
+
 while [[ "$(curl -s -o /dev/null -w '%{http_code}' "${PALVELIN}:${PORTTI}/${TAPAHTUMA}" 2>&1)" != '200' ]]
 do
    echo "Odotetaan tapahtumaa ${ALKUPERAINEN_TAPAHTUMA}..."
    sleep 1
+   ODOTETTU=$((ODOTETTU+1))
+   if [[ $ODOTETTU -eq $TIMEOUT ]]
+   then
+     echo "Tapahtuma ${ALKUPERAINEN_TAPAHTUMA} ei tapahtunut ${TIMEOUT} sekunnin sisällä. Lopetetaan kuuntelu"
+     exit 1
+   fi
 done
