@@ -73,11 +73,12 @@ jobs:
       - image: solita/harja-testit:dev # eka image = "primary container"
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
-        command: |
+        command: >
+          bash -c "
           bash odota-tapahtumaa.sh env.asetettu localhost 80;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;
+          /bin/bash;"
 
     steps:
       - aseta-ymparistomuuttujat
@@ -94,11 +95,12 @@ jobs:
       - image: solita/harja-testit:dev # eka image = "primary container"
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
-        command: |
+        command: >
+          bash -c "
           bash odota-tapahtumaa.sh env.asetettu localhost 80;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;
+          /bin/bash;"
 
     steps:
       - aseta-ymparistomuuttujat
@@ -115,11 +117,12 @@ jobs:
       - image: solita/harja-testit:dev # eka image = "primary container"
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
-        command: |
+        command: >
+          bash -c "
           bash odota-tapahtumaa.sh env.asetettu localhost 80;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;
+          /bin/bash;"
       - image: solita/harja-activemq:5.15.9
         environment:
           TCP_PORT: 61617
@@ -143,11 +146,12 @@ jobs:
       - image: solita/harja-testit:dev # eka image = "primary container"
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
-        command: |
+        command: >
+          bash -c "
           bash odota-tapahtumaa.sh env.asetettu localhost 80;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;
+          /bin/bash;"
 
     steps:
       - aseta-ymparistomuuttujat
@@ -178,11 +182,12 @@ jobs:
 
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
-        command: |
+        command: >
+          bash -c "
           bash odota-tapahtumaa.sh env.asetettu localhost 80;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;
+          /bin/bash;"
     parallelism: 1
     steps:
       - aseta-ymparistomuuttujat
