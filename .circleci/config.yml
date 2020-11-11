@@ -84,7 +84,7 @@ jobs:
           /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -108,7 +108,7 @@ jobs:
           /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -139,7 +139,7 @@ jobs:
           password: $DOCKER_HUB_SALASANA
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -163,7 +163,7 @@ jobs:
           /bin/bash;"
 
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
@@ -201,7 +201,7 @@ jobs:
           /bin/bash;"
     parallelism: 1
     steps:
-      - run: if [[ "${CIRCLE_BRANCH}" =~ & ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
           tapahtuma: "env.git"
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
