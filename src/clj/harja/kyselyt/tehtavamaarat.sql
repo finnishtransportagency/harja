@@ -11,13 +11,19 @@ WHERE ut.urakka = :urakka
 
 -- name: hae-kaikki-tehtavamaarat-ja-toteumat-aikavalilla
 -- Raportille haetaan kaikki tehtävämäärät
-with toteumat as (select tt.maara,
+with urakat as (select u.id
+                from urakka u
+                where u.tyyppi = 'teiden-hoito'
+                  and (:alkupvm between u.alkupvm and u.loppupvm
+                  or :loppupvm between u.alkupvm and u.loppupvm)),
+     toteumat as (select tt.maara,
                          tt.toimenpidekoodi,
                          tt.poistettu,
                          tm.maara as "materiaali",
                          mk.yksikko
                   from toteuma t
-                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu is not true
+                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
+                              and tt.urakka_id in (select id from urakat)
                          left join toteuma_materiaali tm on tm.toteuma = t.id
                          left join materiaalikoodi mk on mk.id = tm.materiaalikoodi
                   where --t.lahde = 'harja-ui'
@@ -38,28 +44,31 @@ from urakka_tehtavamaara ut
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+  and ut.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi
 order by tpk.id;
 
 -- name: hae-hallintayksikon-tehtavamaarat-ja-toteumat-aikavalilla
-with toteumat as (select tt.maara,
+with urakat as (select u.id
+                from urakka u
+                where u.hallintayksikko = :hallintayksikko
+                  and u.tyyppi = 'teiden-hoito'
+                  and (:alkupvm between u.alkupvm and u.loppupvm
+                  or :loppupvm between u.alkupvm and u.loppupvm)),
+     toteumat as (select tt.maara,
                          tt.toimenpidekoodi,
                          tt.poistettu,
                          tm.maara as "materiaali",
                          mk.yksikko
                   from toteuma t
-                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu is not true
+                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
+                          and tt.urakka_id in (select id from urakat)
                          left join toteuma_materiaali tm on tm.toteuma = t.id
                          left join materiaalikoodi mk on mk.id = tm.materiaalikoodi
                   where --t.lahde = 'harja-ui'
                     :alkupvm <= t.paattynyt
                     and :loppupvm >= t.alkanut
-                    and t.poistettu is not true),
-     urakat as (select u.id
-                from urakka u
-                where u.hallintayksikko = :hallintayksikko
-                  and (:alkupvm between u.alkupvm and u.loppupvm
-                  or :loppupvm between u.alkupvm and u.loppupvm))
+                    and t.poistettu is not true)
 select tpk.nimi            as "nimi",
        tpk.jarjestys       as "jarjestys",
        sum(ut.maara)       as "suunniteltu",
