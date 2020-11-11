@@ -8,24 +8,23 @@ shift;
 if [[ $# -ne 0 ]]
 then
   ARGS="&$1"
+  shift;
 else
   ARGS=""
 fi
 
-shift;
-
 if [[ $# -ne 0 ]]
 then
   PALVELIN="$1"
+  shift;
 else
   PALVELIN="localhost"
 fi
 
-shift;
-
 if [[ $# -ne 0 ]]
 then
   PORTTI="$1"
+  shift;
 else
   PORTTI=80
 fi
