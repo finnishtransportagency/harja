@@ -74,9 +74,9 @@ jobs:
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
         command: |
-          bash odota-tapahtumaa.sh env.asetettu localhost 80
-          bash dbn-kaynnistys.sh
-          bash julkaise-tapahtuma.sh db.valmis
+          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash dbn-kaynnistys.sh;
+          bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;
 
     steps:
@@ -95,9 +95,9 @@ jobs:
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
         command: |
-          bash odota-tapahtumaa.sh env.asetettu localhost 80
-          bash dbn-kaynnistys.sh
-          bash julkaise-tapahtuma.sh db.valmis
+          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash dbn-kaynnistys.sh;
+          bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;
 
     steps:
@@ -116,9 +116,9 @@ jobs:
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
         command: |
-          bash odota-tapahtumaa.sh env.asetettu localhost 80
-          bash dbn-kaynnistys.sh
-          bash julkaise-tapahtuma.sh db.valmis
+          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash dbn-kaynnistys.sh;
+          bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;
       - image: solita/harja-activemq:5.15.9
         environment:
@@ -144,9 +144,9 @@ jobs:
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
         command: |
-          bash odota-tapahtumaa.sh env.asetettu localhost 80
-          bash dbn-kaynnistys.sh
-          bash julkaise-tapahtuma.sh db.valmis
+          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash dbn-kaynnistys.sh;
+          bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;
 
     steps:
@@ -179,9 +179,9 @@ jobs:
       - image: solita/harja-tapahtuma:dev
       - image: solita/harjadb:centos-12-circle
         command: |
-          bash odota-tapahtumaa.sh env.asetettu localhost 80
-          bash dbn-kaynnistys.sh
-          bash julkaise-tapahtuma.sh db.valmis
+          bash odota-tapahtumaa.sh env.asetettu localhost 80;
+          bash dbn-kaynnistys.sh;
+          bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;
     parallelism: 1
     steps:
