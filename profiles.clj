@@ -5,7 +5,6 @@
                       [org.apache.pdfbox/pdfbox "2.0.8"]
                       [data-frisk-reagent "0.4.5"]
 
-                      [com.bhauman/figwheel-main "0.2.11"]
                       [com.bhauman/rebel-readline-cljs "0.1.4"]]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
@@ -59,7 +58,7 @@
                        [cljs-react-test "0.1.4-SNAPSHOT"]]
         :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]
         :notify-command ["./run-karma.sh"]}
- :prod {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
+ :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
  :laadunseuranta-dev {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}
  :laadunseuranta-test {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"

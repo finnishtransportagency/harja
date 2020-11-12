@@ -36,9 +36,9 @@ function cmd_uberjar
     echo "--> aot compile done"
     lein less once
     echo "--> less compile done"
-    lein with-profile +prod compile-prod
+    lein with-profile prod-cljs compile-prod
     echo "--> cljs main compile done"
-    lein with-profile +laadunseuranta-prod compile-laadunseuranta-prod
+    lein with-profile laadunseuranta-prod compile-laadunseuranta-prod
     echo "--> cljs laadunseuranta compile done"
     lein uberjar
     echo "--> uberjar done"

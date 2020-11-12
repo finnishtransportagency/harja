@@ -138,7 +138,9 @@
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
-                 [clj-gatling "0.13.0" :exclusions [[clj-time]]]]
+                 [clj-gatling "0.13.0" :exclusions [[clj-time]]]
+                 ;; Tarvitaan käännöksessä
+                 [com.bhauman/figwheel-main "0.2.11"]]
 
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
@@ -224,7 +226,7 @@
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "prod" "compile-prod,"
+                        "with-profile" "prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
                         "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
@@ -245,7 +247,7 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
-                               "with-profile" "prod" "compile-prod,"
+                               "with-profile" "prod-cljs" "compile-prod,"
                                "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors { ;; lein test :perf

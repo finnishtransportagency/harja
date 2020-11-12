@@ -1,7 +1,7 @@
 version: '2.4'
 services:
   app:
-    image: solita/harja-app:latest
+    image: solita/harja-app:dev
     mem_reservation: 2g
     mem_limit: 4g
     cpu_shares: 10000
