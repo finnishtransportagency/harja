@@ -207,7 +207,6 @@ jobs:
           args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
       - odota-tapahtumaa:
           tapahtuma: "db.valmis"
-      - checkout
       - attach_workspace:
           at: /tmp/harja
 
