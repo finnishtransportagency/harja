@@ -4,7 +4,7 @@
             [clojure.test :refer :all]
             [harja.palvelin.komponentit.http-palvelin :as palvelin]))
 
-(use-fixtures :each op/jarjestelma-fixture)
+(use-fixtures :each (op/luo-fixture))
 
 (defn- julkaise-ja-testaa [nimi get? palvelu-fn odotettu-status odotettu-body]
   (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) nimi palvelu-fn)

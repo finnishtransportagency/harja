@@ -18,25 +18,32 @@
 
 (def csrf-token (index/muodosta-csrf-token random-avain
                                            csrf-token-secret))
-(defn jarjestelma-fixture [testit]
-  (let [nyt (t/now)]
-    (pudota-ja-luo-testitietokanta-templatesta)
-    (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
-    (alter-var-root #'jarjestelma
-                    (fn [_]
-                      (component/start
-                        (component/system-map
-                          :todennus (component/using
-                                      (todennus/http-todennus {})
-                                      [:db])
-                          :db (tietokanta/luo-tietokanta testitietokanta)
-                          :http-palvelin (component/using
-                                           (http-palvelin/luo-http-palvelin {:portti portti
-                                                                             :anti-csrf-token csrf-token-secret} true)
-                                           [:todennus :db])))))
-    (anti-csrf-q/poista-ja-luo-csrf-sessio (:db jarjestelma) (:kayttajanimi kayttaja) csrf-token nyt)
-    (testit)
-    (alter-var-root #'jarjestelma component/stop)))
+
+(defn luo-fixture
+  "'komponentit' on vector joka sisältää key/value parit, jotka lisätään 'component/system-map' kutsuun"
+  ([]
+   (luo-fixture []))
+  ([komponentit]
+   (fn [testit]
+     (pudota-ja-luo-testitietokanta-templatesta)
+     (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
+     (let [nyt (t/now)
+           oletus-komponentit [:todennus (component/using
+                                           (todennus/http-todennus {})
+                                           [:db])
+                               :db (tietokanta/luo-tietokanta testitietokanta)
+                               :http-palvelin (component/using
+                                                (http-palvelin/luo-http-palvelin {:portti          portti
+                                                                                  :anti-csrf-token csrf-token-secret} true)
+                                                [:todennus :db])]
+           kaikki-komponentit (vec (concat oletus-komponentit komponentit))]
+       (alter-var-root #'jarjestelma
+                       (fn [_]
+                         (component/start
+                           (apply component/system-map kaikki-komponentit))))
+       (anti-csrf-q/poista-ja-luo-csrf-sessio (:db jarjestelma) (:kayttajanimi kayttaja) csrf-token nyt)
+       (testit)
+       (alter-var-root #'jarjestelma component/stop)))))
 
 (def headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
               "OAM_GROUPS" (interpose "," (:roolit kayttaja))
