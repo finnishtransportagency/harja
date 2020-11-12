@@ -463,7 +463,7 @@
                           (:summa k))]])
    [:div.flex-row (str "Koontilaskun kuukausi: "
                        (let [[kk hv] (str/split koontilaskun-kuukausi #"/")]
-                         (str (get lasku/kuukaudet-strs (keyword kk)) " - "
+                         (str (if (pvm/kuukauden-numero kk) (str/capitalize kk) (str "VÄÄRÄ KUUKAUSI " kk)) " - "
                               (get lasku/hoitovuodet-strs (keyword hv)))))]
    [:div.flex-row (str "Laskun päivämäärä: "
                        laskun-pvm)]
