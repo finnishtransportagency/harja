@@ -470,7 +470,7 @@ FROM urakka_tehtavamaara ut
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
   -- Rajataan edellisessä haussa löydetyt toteumat, joilla on suunnitelma ja määrä olemassa, pois tästä
-  AND tr.id NOT IN (SELECT tk.tehtavaryhma
+  AND tk.id NOT IN (SELECT tk.id
                     FROM osa_toteumat ot
                              JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
                              JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma)
