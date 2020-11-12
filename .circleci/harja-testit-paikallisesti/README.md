@@ -1,5 +1,7 @@
 # CIRCLE-CI:n testaaminen paikallisesti #
 
+## Vanhentunut EI TOIMI
+
 Tässä pistetään paikallisesti pyörimään Harja yhdessä kontissa ja kanta toisessa kontissa <code>docker-compose</code>:n
 avulla, jotta ympäristö olisi hyvin saman lainen kuin se on Circlessä.
 
