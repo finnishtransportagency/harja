@@ -300,7 +300,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     })
 })
 
-describe('Käsittele päälystysilmoitus', function () {
+describe('Käsittele päällystysilmoitus', function () {
     it('Palaa lomakkeelle', function () {
         // TODO: Tässä on sellainen bugi, että joskus 2017 jää valituksi ja toisinaan oletusvuosi on otettu takaisin
         cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
@@ -419,7 +419,7 @@ describe('Korjaa virhedata', function () {
         })
     })
     it('Palaa lomakkeelle', function () {
-        //valitseVuosi(2017);
+        valitseVuosi(2017);
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
