@@ -463,7 +463,7 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        sum(ut.maara)            AS suunniteltu_maara,
        tk.kasin_lisattava_maara AS kasin_lisattava_maara,
        tk.suunnitteluyksikko    AS yk,
-       'tyyppi'                 AS tyyppi
+       'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)

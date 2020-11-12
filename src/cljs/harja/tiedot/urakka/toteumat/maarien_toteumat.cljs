@@ -183,8 +183,7 @@
                    (map
                      (fn [[tehtavaryhma tehtavat]]
                        [tehtavaryhma (sort-by first
-                                              (group-by :tehtava
-                                                        tehtavat))])
+                                              (group-by :tehtava tehtavat))])
                      ryhmitelty-tr)))))
 
 (defn- aseta-akillisen-tyyppi
@@ -246,7 +245,8 @@
   (process-event [{vastaus :vastaus} app]
     (-> app
         (assoc :toimenpiteet-lataa false)
-        (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus nil))))
+        (assoc :toteutuneet-maarat vastaus)
+        (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus (:hakufiltteri app)))))
 
   HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
   (process-event [{vastaus :vastaus} app]
