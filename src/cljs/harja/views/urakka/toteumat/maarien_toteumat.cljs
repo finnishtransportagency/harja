@@ -156,18 +156,23 @@
                                                  (= (:tehtava (first (second rivi))) (:avattu-tehtava app)))
                                         (mapcat
                                           (fn [toteuma]
-                                            [^{:key (str "toteuma-" (hash toteuma))}
-                                             (do
-                                               (reset! row-index-atom (inc @row-index-atom))
-                                               [:tr {:key (str "tr-toteuma" - (hash toteuma))
-                                                     :class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
-                                                [:td {:style {:width (:tehtava leveydet)}} (if (= "muu" (:tyyppi toteuma))
-                                                                                             [muokkaa-toteumaa-linkki e! (:alkanut toteuma) (:id toteuma)]
-                                                                                             "Järjestelmästä lisätty")]
-                                                [:td {:style {:width (:caret leveydet)}}]
-                                                [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi))))]
-                                                [:td {:style {:width (:suunniteltu leveydet)}}]
-                                                [:td {:style {:width (:prosentti leveydet)}}]])])
+                                            (let [toteuma-linkki (if (= "muu" (:tyyppi toteuma))
+                                                                   [muokkaa-toteumaa-linkki e! (:alkanut toteuma) (:id toteuma)]
+                                                                   (if (or (> (:materiaalimaara toteuma) 0) (> (:maara toteuma) 0))
+                                                                     "Järjestelmästä lisätty"
+                                                                     nil))]
+                                              (when toteuma-linkki
+                                                [^{:key (str "toteuma-" (hash toteuma))}
+                                                 (do
+                                                   (reset! row-index-atom (inc @row-index-atom))
+                                                   [:tr {:key (str "tr-toteuma" - (hash toteuma))
+                                                         :class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
+                                                    [:td {:style {:width (:tehtava leveydet)}} toteuma-linkki]
+                                                    [:td {:style {:width (:caret leveydet)}}]
+                                                    [:td {:style {:width (:toteuma leveydet)}} (when toteuma-linkki
+                                                                                                 (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi)))))]
+                                                    [:td {:style {:width (:suunniteltu leveydet)}}]
+                                                    [:td {:style {:width (:prosentti leveydet)}}]])])))
 
                                           toteumat)))))
                                 rivit)]
