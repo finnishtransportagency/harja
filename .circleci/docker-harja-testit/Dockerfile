@@ -9,6 +9,7 @@ RUN tar -C /usr/local/ -zxf openjdk-11.0.2_linux-x64_bin.tar.gz
 
 ENV JAVA_HOME="/usr/local/jdk-11.0.2"
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
+ENV OPENSSL_CONF=/etc/ssl/
 
 USER circleci
 

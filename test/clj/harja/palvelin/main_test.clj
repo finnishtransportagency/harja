@@ -4,17 +4,57 @@
   Kun lisäät komponentin, lisää se myös testin keysettiin."
   (:require [harja.palvelin.main :as sut]
             [harja.palvelin.asetukset :as asetukset]
+            [harja.testi :as testi]
             [clojure.test :as t :refer [deftest is]]
             [clojure.string :as str]
+            [clojure.edn :as edn]
             [clojure.java.io :as io])
   (:import (java.io File)))
 
 (def ^:dynamic *testiasetukset* nil)
+
+(defn- muokkaa-asetuksia [asetukset]
+  (let [asetukset-datana (-> (edn/read-string asetukset)
+                             (assoc-in [:http-palvelin :portti] (testi/arvo-vapaa-portti))
+                             (assoc-in [:http-palvelin :salli-oletuskayttaja?] false)
+                             (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
+                             (assoc :tietokanta testi/testitietokanta)
+                             (assoc :tietokanta-replica testi/testitietokanta)
+                             (assoc :sonja {:url "tcp://localhost:61617"
+                                            :kayttaja ""
+                                            :salasana ""
+                                            :tyyppi :activemq})
+                             (assoc :sampo {})
+                             (assoc :tloik {})
+                             (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
+                             (assoc-in [:turi :urakan-tyotunnit-url] ""))]
+    (str asetukset-datana)))
+
+(defn- poista-sisimmat-sulut-reader-makrosta [s]
+  (str/replace s #"\#=\(.*(\([^\(\)]*\))" (fn [args]
+                                            (case (count args)
+                                              0 ""
+                                              1 (first args)
+                                              2 (apply str (let [lopputulos (first args)
+                                                                 pudotettavien-maara (count (second args))]
+                                                             (drop-last pudotettavien-maara lopputulos)))))))
+
+(defn- poista-reader-makrot [teksti korvaava-teksti]
+  (loop [teksti teksti
+         sisaltaa-readermakroja? (re-find #"\#=" teksti)]
+    (if sisaltaa-readermakroja?
+      (recur (-> teksti
+                 poista-sisimmat-sulut-reader-makrosta
+                 (str/replace #"\#=\([^\(\)]*\)" korvaava-teksti))
+             (re-find #"\#=" teksti))
+      teksti)))
+
 (defn- testiasetukset [testit]
   (let [file (File/createTempFile "asetukset" ".edn")
         asetukset (-> "asetukset.edn"
                       slurp
-                      (str/replace #"\#=\(.*?\)" "\"foo\""))]
+                      (poista-reader-makrot "\"foo\"")
+                      muokkaa-asetuksia)]
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
