@@ -244,7 +244,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn kentan-input
   "Määritellään kentän input"
   [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? {:keys [vayla-tyyli?] :as kentta-opts}]
-  (let [{:keys [nimi hae aseta]} s
+  (let [{:keys [nimi hae aseta kentan-arvon-luokka]} s
         hae (or hae #(if (vector? nimi)
                        (get-in % nimi)
                        (get % nimi)))
@@ -275,7 +275,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                        (if aseta
                          (vaihda! (aseta data uusi-arvo))
                          (vaihda! (assoc-fn data nimi uusi-arvo))))))))
-    (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
+    (fn [{:keys [tyyppi komponentti komponentti-args fmt hae nimi kentan-arvon-luokka
+                 yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
          data muokattava? muokkaa muokkaa-kenttaa-fn _ opts]
       (reset! seurannan-muuttujat
               {:vaihda! (muokkaa-kenttaa-fn nimi)
@@ -317,7 +318,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
                                (do (have #(contains? % :tyyppi) s)
                                    [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
-                             [:div.form-control-static
+                             [:div {:class (str "form-control-static "
+                                                (or kentan-arvon-luokka ""))}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
                                                               get-in

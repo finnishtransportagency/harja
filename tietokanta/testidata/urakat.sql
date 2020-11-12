@@ -38,7 +38,7 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
   VALUES ('4242523-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                               FROM organisaatio
                                                               WHERE lyhenne = 'POP'), 'Muhoksen päällystysurakka',
-          '2014-10-01', '2018-09-30', 'paallystys', 'muho1', (SELECT id
+          '2014-10-01', '2021-09-30', 'paallystys', 'muho1', (SELECT id
                                                               FROM organisaatio
                                                               WHERE ytunnus = '0651792-4')),
          ('1337133-TES3', 'kokonaisurakka' :: sopimustyyppi, (SELECT id

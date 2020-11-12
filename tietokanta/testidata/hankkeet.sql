@@ -9,7 +9,7 @@ INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Vantaan alueurakka
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Espoon alueurakka', '2014-10-01', '2019-09-30', 'esp1');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Lapin MHU urakka', '2018-10-01', '2023-09-30', 'lapMHU1');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
-VALUES ('Muhoksen päällystysurakka', '2014-10-01', '2018-09-30', '666');
+VALUES ('Muhoksen päällystysurakka', '2014-10-01', '2021-09-30', '666');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
 VALUES ('Pirkanmaan tiemerkinnän palvelusopimus 2013-2018', '2013-01-01', '2018-12-31', '667');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
