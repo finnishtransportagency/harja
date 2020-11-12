@@ -158,8 +158,8 @@
     ;; tehtävämäärä
     (is (= (count tehtavamaarat) tehtavamaarat-kannassa) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
     (is (= (:maara (first (filter #(and (= id-K2 (:tehtava-id %))
-                                        (= 2020 (:hoitokauden-alkuvuosi %))
-                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 55.5M) "Hoitokauden tehtävämäärä palautuu oikein.")
+                                       (= 2020 (:hoitokauden-alkuvuosi %))
+                                       (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat))) 55.5M) "Hoitokauden tehtävämäärä palautuu oikein.")
 
     ;; hoitokauden tietojen päivitys
     (is (= (count tehtavamaarat-ennen-paivitysta) (count tehtavamaarat-paivityksen-jalkeen)) "Rivejä ei lisätty, kun tietoja päivitettiin.")
@@ -178,8 +178,8 @@
     #_(is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
     (is (= (:maara (first (filter #(and (= id-ib-rampit (:tehtava-id %))
-                                        (= 2022 (:hoitokauden-alkuvuosi %))
-                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
+                                       (= 2022 (:hoitokauden-alkuvuosi %))
+                                       (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
     (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
     (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
 
@@ -198,9 +198,9 @@
 
 (deftest tehtavahierarkian-haku-maarineen-testi
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                                          :hoitokauden-alkuvuosi 2022
-                                                          :tehtavamaarat         uuden-hoitokauden-tehtavat})
+    :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                            :hoitokauden-alkuvuosi 2022
+                                            :tehtavamaarat         uuden-hoitokauden-tehtavat})
   (let [tehtavat-ja-maarat (kutsu-palvelua
                              (:http-palvelin jarjestelma)
                              :tehtavamaarat-hierarkiassa

@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laskut-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.laskut :as laskut]))
@@ -35,7 +36,7 @@
                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Viheralueiden hoito")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
                       :tehtava             nil}
                      {:kohdistus-id        nil
                       :rivi                2
@@ -43,7 +44,7 @@
                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakon raivaus ja runkopuun poisto")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
                       :tehtava             nil}]
    :liitteet        [{:liite-id     1
                       :liite-tyyppi "image/png"
@@ -54,7 +55,8 @@
                       :liite-tyyppi "image/png"
                       :liite-nimi   "pensas-2021-02.jpg"
                       :liite-koko   nil
-                      :liite-oid    nil}]})
+                      :liite-oid    nil}]
+   :koontilaskun-kuukausi "joulukuu/3-hoitovuosi"})
 
 (def uusi-kohdistus
   {:rivi                3
@@ -62,7 +64,7 @@
    :suoritus-alku       #inst "2021-11-23T22:00:00.000000000-00:00"
    :suoritus-loppu      #inst "2021-11-24T22:00:00.000000000-00:00"
    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-   :tehtavaryhma        (hae-tehtavaryhman-id "Vesakon raivaus ja runkopuun poisto")
+   :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
    :tehtava             nil})
 
 
@@ -79,8 +81,9 @@
                       :suoritus-alku       #inst "2021-03-14T22:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-03-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Viheralueiden hoito")
-                      :tehtava             nil}]})
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
+                      :tehtava             nil}]
+   :koontilaskun-kuukausi "joulukuu/3-hoitovuosi"})
 
 (def lasku-akillinen-hoitotyo
   {:id              nil
@@ -95,9 +98,10 @@
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkillinen hoitotyö")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkillinen hoitotyö (l.ymp.hoito)")
                       :tehtava             nil}]
-   :liitteet        []})
+   :liitteet        []
+   :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
 
 (def lasku-muu
   {:id              nil
@@ -112,9 +116,10 @@
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Kolmannen osapuolen vahinkojen korjaukset")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Talvihoito (T2)Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
                       :tehtava             nil}]
-   :liitteet        []})
+   :liitteet        []
+   :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
 
 
 
@@ -202,6 +207,24 @@
     (is (= (:id poistettu-lasku) tallennettu-id) "Laskun poistaminen palauttaa poistetun laskun (poistettu-lasku)")
     (is (empty? poistetun-laskun-haku) "Poistettua laskua ei palaudu (poistetun-laskun-haku).")))
 
+(defn- feila-tallenna-lasku-validointi [vaara-lasku odotettu-poikkeus]
+  (try
+    (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                         {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                          :laskuerittely vaara-lasku})
+    (is false "Ei saa tulla tänne, kutsu pitäisi heittää poikkeuksen")
+    (catch Exception e (is (s/includes? (.getMessage e) odotettu-poikkeus)
+                           "Odotamme että tulee validointi poikkeus"))))
+
+(deftest tallenna-lasku-erapaiva-validointi-testi
+  (let [uusi-lasku-vaara-erapaiva (assoc uusi-lasku :erapaiva #inst "1921-12-15T21:00:00.000-00:00")]
+    (feila-tallenna-lasku-validointi uusi-lasku-vaara-erapaiva
+                                     "Eräpäivä Thu Dec 15 23:00:00 EET 1921 ei ole koontilaskun-kuukauden joulukuu/3-hoitovuosi sisällä")))
+
+(deftest tallenna-lasku-koontilaskun-kuukausi-validointi-testi
+  (let [uusi-lasku-vaara-koontilaskun-kuukausi (assoc uusi-lasku :koontilaskun-kuukausi "vaara-muoto")]
+    (feila-tallenna-lasku-validointi uusi-lasku-vaara-koontilaskun-kuukausi
+                                     "Palvelun :tallenna-lasku kysely ei ole validi")))
 
 (deftest paivita-maksuera-testi
   (let [lasku-kokonaishintainen-tyo
