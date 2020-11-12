@@ -74,7 +74,8 @@
     :tieluvat
     :paikkaukset
     :jarjestelman-tila
-    :yha-paikkauskomponentti})
+    :yha-paikkauskomponentti
+    :pot2})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
