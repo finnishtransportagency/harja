@@ -1,4 +1,4 @@
-{:kehitysmoodi true
+{:kehitysmoodi #=(eval (System/getenv "HARJA_DEV_YMPARISTO"))
 
  :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
