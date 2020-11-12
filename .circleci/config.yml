@@ -15,7 +15,7 @@ commands:
     steps:
       - run: |
           TAPAHTUMA="$(echo "<< parameters.tapahtuma >>" | sed 's/\./_/g')"
-          TIMEOUT=60
+          TIMEOUT=120
           ODOTETTU=0
           NUKU=5
           touch tapahtuman_arvot

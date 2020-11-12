@@ -16,7 +16,7 @@ TAPAHTUMA="$(echo "${ALKUPERAINEN_TAPAHTUMA}" | sed 's/\./_/g')"
 PALVELIN="$2"
 PORTTI="$3"
 
-TIMEOUT=60
+TIMEOUT=120
 ODOTETTU=0
 
 touch tapahtuman_arvot
