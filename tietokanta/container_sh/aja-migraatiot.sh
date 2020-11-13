@@ -1,11 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ ! $(whoami) = 'postgres' ]]
+if [[ $(whoami) = 'postgres' ]]
 then
-  su postgres
+  cd ~;
+else
+  # shellcheck disable=SC2016
+  POSTGRES_HOME="$(runuser -c 'echo $HOME' -l postgres)";
+  cd "$POSTGRES_HOME"
 fi
 
-cd ~/harja/tietokanta/
+cd harja/tietokanta/
 echo "Ajetaan migraatiot"
-mvn -Dharja.tietokanta.port=${POSTGRESQL_PORTTI:-5432} flyway:migrate
+mvn -Dharja.tietokanta.port="${POSTGRESQL_PORTTI:-5432}" -Dharja.tietokanta.host="${POSTGRESQL_NAME:-localhost}" flyway:migrate
