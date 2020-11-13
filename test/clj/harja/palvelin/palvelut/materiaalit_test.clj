@@ -289,11 +289,12 @@
                                    (u "INSERT INTO toteuma_materiaali (toteuma,
                                                                        materiaalikoodi,
                                                                        maara,
-                                                                       luoja)
+                                                                       luoja, urakka_id)
                                        VALUES ((SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id "),
                                                (SELECT id FROM materiaalikoodi WHERE nimi = '" materiaalinimi "'),
                                                " maara ",
-                                               (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));"))]
+                                               (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'),
+                                               (SELECT id FROM urakka WHERE sampoid = '1242141-OULU2'));"))]
     (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuola" (t/date-time 2015 2 18 22) testidatasta))))
         "Testidatasta haettu määrä vastaa odotettua")
 

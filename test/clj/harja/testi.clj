@@ -221,13 +221,18 @@
 (defn- post-kutsu? [f]
   (= 2 (arg-count f)))
 
+(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload]
+  (when-not (s/valid? spec payload)
+    (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
+    Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
+    Payload: " payload "
+    Spec selitys: " (s/explain-str spec payload))))))
+
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
         (if kysely-spec
           (fn [user payload]
-            (testing (str "Palvelun " nimi " kysely on validi")
-              (is (s/valid? kysely-spec payload)
-                  (s/explain-str kysely-spec payload)))
+            (heita-jos-ei-ole-validi kysely-spec (str nimi " kysely") payload)
             (f user payload))
           f)
 
@@ -235,16 +240,12 @@
           (if (post-kutsu? f)
             (fn [user payload]
               (let [v (f user payload)]
-                (testing (str "Palvelun " nimi " vastaus on validi")
-                  (is (s/valid? vastaus-spec v)
-                      (s/explain-str vastaus-spec v)))
+                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
                 v))
 
             (fn [user]
               (let [v (f user)]
-                (testing (str "Palvelun " nimi " vastaus on validi")
-                  (is (s/valid? vastaus-spec v)
-                      (s/explain-str vastaus-spec v)))
+                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
                 v)))
           f)))
 

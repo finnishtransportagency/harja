@@ -41,7 +41,7 @@
    (is (some? (u/sel1 :div.dropdown.open)))
 
    "Valitaan kissa kävelee"
-   (u/click ".harja-alasvetolistaitemi:nth-child(2) > a")
+   (u/click ".harja-alasvetolistaitemi:nth-child(2) > span > a")
    --
    (is (= "kissa kävelee" (u/text :.valittu)))
    (is (= @data "kissa kävelee"))
@@ -264,7 +264,6 @@
         hae-tr-viivaksi (fake-palvelukutsu
                          :hae-tr-viivaksi
                          (fn [payload]
-                           (.log js/console ":hae-tr-viivaksi => " payload)
                            (get +tr-vastaukset+ payload)))]
     (komponenttitesti
      [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]

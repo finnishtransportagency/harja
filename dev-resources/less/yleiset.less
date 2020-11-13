@@ -400,6 +400,26 @@ button > .ajax-loader {
   justify-content: space-between;
   align-items:center;
   width:100%;
+  &.alkuun {
+    justify-content: flex-start;
+    & > * {
+      &:first-child:not(:last-child) {
+        margin-right:20px;
+      }
+      &:last-child:not(:first-child) {
+        margin-left:20px;
+      }
+      &:first-child:last-child {
+        margin:0;
+      }
+    }
+    &.venyta {
+      align-items: stretch;
+    }
+  }
+  &.venyta {
+    align-items: stretch;
+  }
 }
 .map-lista {
   display: flex;
@@ -419,4 +439,7 @@ button > .ajax-loader {
       flex: 1;
     }
   }
+}
+.placeholder {
+  color: @harmaa5;
 }

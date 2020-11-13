@@ -28,6 +28,7 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
+            [harja.domain.pot2 :as pot2]
 
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka :as urakka]
@@ -35,6 +36,10 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
+            [harja.tiedot.urakka.pot2.massat :as tiedot-massat]
+
+            [harja.views.urakka.pot2.massalistaus :as massat-view]
+
 
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -92,7 +97,8 @@
                                                (:id urakka))
                       (not= tila :lukittu)
                       (false? lukittu?))
-        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
+        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)
+        _ (js/console.log "asiatarkastus " (pr-str asiatarkastus))]
 
     [:div.pot-asiatarkastus
      [:h3 "Asiatarkastus"]
@@ -961,6 +967,7 @@
       ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
       (komp/lukko lukon-id)
       (komp/sisaan #(do
+                      (nav/vaihda-kartan-koko! :S)
                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
                       (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                       (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))
@@ -1180,21 +1187,41 @@
          :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
        paallystysilmoitukset])))
 
+(defn nayta-massakirjasto-modal!
+  [e! urakka app]
+
+  (modal/nayta!
+    {:otsikko "Massakirjasto"
+     :footer [napit/sulje #(modal/piilota!)]}
+      [:div "Urakka: " (:id urakka)]
+  ))
+
+
+
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
+    (komp/sisaan #(nav/vaihda-kartan-koko! :M))
     (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
-         [:h3 "Päällystysilmoitukset"]
+         [:div
+          [:h3 {:style {:display "inline-block"}}
+           "Päällystysilmoitukset"]
+          ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
+          #_[napit/nappi "Muokkaa urakan materiaaleja"
+           #(e! (tiedot-massat/->NaytaModal true))
+           {:ikoni (ikonit/livicon-pen)
+            :luokka "napiton-nappi"
+            :style {:background-color "#fafafa"
+                    :margin-left "2rem"}}]]
+
+
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         #_[yha/yha-lahetysnappi {:oikeus       oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
-                                  :vuosi        valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
-                                  :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-virhe #(e! (paallystys/->YHAVientiEpaonnistui %)) :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
          [yha-lahetykset-taulukko e! (select-keys app #{:urakka :urakka-tila :paallystysilmoitukset :kohteet-yha-lahetyksessa})]]))))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
@@ -1235,7 +1262,7 @@
         (e! (paallystys/->HaePaallystysilmoitukset)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
-    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]
+    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-massat? avaa-massa-lomake?] :as app}]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
@@ -1243,4 +1270,5 @@
          [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
-          [ilmoitusluettelo e! app]])])))
+          [ilmoitusluettelo e! app]])
+       [massat-view/materiaalikirjasto-modal e! app]])))

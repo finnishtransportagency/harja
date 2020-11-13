@@ -115,6 +115,7 @@
 /** INPUT */
 @input-korkeus: 28px;
 @input-korkeus-matalampi: calc(@input-korkeus * 0.85);
+@input-korkeus-korkea: 38px;
 @valintakontrollin-korkeus: @input-korkeus;
 
 /** TEKSTIT */
@@ -295,7 +296,7 @@ table.table-striped {
         border: 1px solid @sininen4;
     }
 }
-.livi-alasveto (@leveys: 200px, @min-leveys: 160px, @input-korkeus: @input-korkeus) {
+.livi-alasveto (@leveys: 200px, @min-leveys: 160px, @i-korkeus: @input-korkeus) {
     min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
     max-width: 100%;
     width: @leveys;
@@ -306,10 +307,10 @@ table.table-striped {
     }
 
     .nappi-alasveto {
-        height: @input-korkeus;
+        height: @i-korkeus;
         .valittu {
             display: inline-block;
-            line-height: @input-korkeus - 6;
+            line-height: @i-korkeus - 6;
             overflow-x: hidden;
             padding-right: 15px;
             text-align: left;
@@ -325,7 +326,7 @@ table.table-striped {
             }
             color: @sininen4;
             position: absolute;
-            top: (@input-korkeus / 2) - 5;
+            top: (@i-korkeus / 2) - 5;
             right: 5px;
 	    width: 25px;
 	    padding-left: 10px;
