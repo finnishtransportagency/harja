@@ -10,7 +10,7 @@ else
   cd "$POSTGRES_HOME"
 fi
 
-cd tietokanta/
+cd harja/tietokanta/
 
 echo "Ajetaan testidata harja-kantaan";
 psql -h "localhost" -p "${POSTGRESQL_PORTTI:-5432}" -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null;
