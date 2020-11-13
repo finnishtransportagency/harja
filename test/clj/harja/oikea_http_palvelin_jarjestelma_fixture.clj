@@ -8,6 +8,7 @@
             [harja.kyselyt.anti-csrf :as anti-csrf-q]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+            [harja.transit :as tr]
             [clj-time.core :as t]))
 
 (def kayttaja +kayttaja-jvh+)
@@ -20,10 +21,8 @@
                                            csrf-token-secret))
 
 (defn luo-fixture
-  "'komponentit' on vector joka sisältää key/value parit, jotka lisätään 'component/system-map' kutsuun"
-  ([]
-   (luo-fixture []))
-  ([komponentit]
+  "'komponentit' ovat key/value parit, jotka lisätään 'component/system-map' kutsuun"
+  [& komponentit]
    (fn [testit]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
@@ -43,7 +42,7 @@
                            (apply component/system-map kaikki-komponentit))))
        (anti-csrf-q/poista-ja-luo-csrf-sessio (:db jarjestelma) (:kayttajanimi kayttaja) csrf-token nyt)
        (testit)
-       (alter-var-root #'jarjestelma component/stop)))))
+       (alter-var-root #'jarjestelma component/stop))))
 
 (def headers {"OAM_REMOTE_USER" (:kayttajanimi kayttaja)
               "OAM_GROUPS" (interpose "," (:roolit kayttaja))
@@ -55,6 +54,7 @@
              {:headers headers}))
 
 (defn post-kutsu [palvelu body]
+  (println "petar zovem post " palvelu body portti)
   @(http/post (str "http://localhost:" portti "/_/" (name palvelu))
               {:headers headers
-               :body body}))
+               :body (tr/clj->transit body)}))
