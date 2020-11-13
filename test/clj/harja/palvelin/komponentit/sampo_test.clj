@@ -12,7 +12,7 @@
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.data.hoito.kustannussuunnitelma :as ks-data]
             [harja.pvm :as pvm]))
@@ -50,7 +50,7 @@
                                                                  (:paivittainen-lahetysaika sampo)))
                                                 [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
                                                 [:db])))))
   ;; aloita-sonja palauttaa kanavan.
   (<!! (sut/aloita-sonja jarjestelma))

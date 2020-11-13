@@ -22,7 +22,7 @@
      :clj
            (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat)
-                    (org.joda.time DateTimeZone))))
+                    (org.joda.time DateTime DateTimeZone))))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
@@ -159,6 +159,20 @@
 #?(:clj
    (defn nyt-suomessa []
      (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
+
+#?(:clj
+   (defn suomen-aika->iso8601-basic
+     [pvm]
+     {:pre [(instance? DateTime pvm)]
+      :post [(string? %)]}
+     (l/format-local-time pvm :basic-date-time)))
+
+#?(:clj
+   (defn iso8601-basic->suomen-aika
+     [iso8601-basic]
+     {:pre [(string? iso8601-basic)]
+      :post [(instance? DateTime %)]}
+     (l/to-local-date-time iso8601-basic)))
 
 (defn pvm?
   [pvm]

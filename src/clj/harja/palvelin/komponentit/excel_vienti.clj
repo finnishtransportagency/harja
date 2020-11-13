@@ -34,7 +34,10 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
 
   (stop [{http :http-palvelin :as this}]
     (log/info "Excel-vientikomponentti lopetettu")
-    (poista-palvelu http :excel))
+    (doseq [[kasittelijan-nimi _] @excel-kasittelijat]
+      (poista-excel-kasittelija! this kasittelijan-nimi))
+    (poista-palvelu http :excel)
+    this)
 
   ExcelKasittelijat
   (rekisteroi-excel-kasittelija! [_ nimi kasittely-fn]

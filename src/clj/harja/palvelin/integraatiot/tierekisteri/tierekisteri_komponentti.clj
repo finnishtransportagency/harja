@@ -148,8 +148,8 @@
       this))
   (stop [this]
     (when (ominaisuus-kaytossa? :tierekisteri)
-      (:uudelleenlahetys-tehtava this))
-    this)
+      ((:uudelleenlahetys-tehtava this)))
+    (dissoc this :uudelleenlahetys-tehtava))
 
   TierekisteriPalvelut
   (hae-tietolaji
