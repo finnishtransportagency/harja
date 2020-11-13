@@ -598,7 +598,8 @@ WHERE
 -- Rajaa ajalla
 (t.lahetysaika BETWEEN :alku AND :loppu) AND
 -- Vain pisteet yhdistetään viivaksi, viivoja ei yhdistetä toisiinsa
-st_geometrytype(sijainti) = 'ST_Point'
+(st_geometrytype(sijainti) = 'ST_Point' OR
+(st_geometrytype(sijainti) = 'ST_LineString' AND st_numpoints(sijainti) = 1))
 GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi
 UNION
 SELECT
@@ -619,7 +620,7 @@ WHERE
 -- Rajaa ajalla
     (t.lahetysaika BETWEEN :alku AND :loppu) AND
 -- Vain pisteet yhdistetään viivaksi, viivoja ei yhdistetä toisiinsa
-        st_geometrytype(sijainti) = 'ST_LineString';
+    st_geometrytype(sijainti) = 'ST_LineString' AND st_numpoints(sijainti) > 1;
 
 -- name: hae-toimenpidekoodit
 SELECT
