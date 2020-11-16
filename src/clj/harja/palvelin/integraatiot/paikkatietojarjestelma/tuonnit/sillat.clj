@@ -49,7 +49,7 @@
                                 :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                 :valittu-jarjestelma "ptj"
                                 :valittu-integraatio "sillat-haku"}]
-    (log/error "[SILLAT]"
+    (log/error :ei-logiteta_
                {:fields [{:title "Linkit"
                           :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
                                       "<|||glogglog||||Graylog> | "
@@ -103,7 +103,7 @@
                                 (some #(= % alueurakka) kunnan-numerot))
                     (q-urakka/hae-urakka-id-alueurakkanumerolla db {:alueurakka alueurakka}))
         _ (when (and (nil? urakka-id) (not (some #(= % alueurakka) kunnan-numerot)) (= aineistovirhe "NO ERROR"))
-            (log/debug "[SILLAT]" "---> e: " silta-floateilla)
+            (log/debug :ei-logiteta_ "---> e: " silta-floateilla)
             (logita-virhe-sillan-tuonnissa db "Virhe shapefilessä: Sillalle ei ole merkattu urakkaa"
                                            (str "Sillalle " (:siltanimi silta)
                                                 " (" siltanumero ") "
