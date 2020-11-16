@@ -60,7 +60,7 @@
       "Muokkausnapin painaminen tekee muokattavaksi"
       (u/click :.grid-muokkaa)
       --
-      (is (= "2004" (.-value (solu 1 2))))
+      (is (= "2004" (.-value (solu 1 2 "input"))))
       "Alkutilanteessa tallenna-nappi on disabled"
       (is (u/disabled? :.grid-tallenna) "ei voi tallentaa ilman muokkauksia")
 
@@ -70,7 +70,7 @@
       (is (u/enabled? :.grid-tallenna) "Muokkauksen jälkeen voi tallentaa")
       (is (= "" (.-value (solu 3 0))))
       (is (= "" (.-value (solu 3 1))))
-      (is (= "" (.-value (solu 3 2))))
+      (is (= "" (.-value (solu 3 2 "input"))))
 
       "Lisää rivi, jossa ei-validi pvm"
       (u/change (solu 3 0 "input") "Max Syöttöpaine")
@@ -83,9 +83,9 @@
       "Vuoden korjaaminen sallii tallentamisen"
       (u/change (solu 3 2 "input") "2016")
       --
-      (println (.-innerHTML (solu 3 2)))
+      ;(println (.-innerHTML (solu 3 2 "input")))
       (is (nil? (u/sel1 (solu 3 2 "div.virheet"))))
-      (println (u/sel1 :.grid-tallenna))
+      ;(println (u/sel1 :.grid-tallenna))
       (is (not (u/disabled? :.grid-tallenna)))
 
       "Tallennus muuttaa atomin arvon"
@@ -156,12 +156,12 @@
       "Ensimmäisellä rivillä sarakkeet ovat muokattavia"
       (is (u/input? (u/grid-solu "g3" 0 0)))
       (is (u/input? (u/grid-solu "g3" 0 1)))
-      (is (u/input? (u/grid-solu "g3" 0 2)))
+      (is (u/input? (u/grid-solu "g3" 0 2 "input")))
 
       "Toisella rivillä sarakkeet ovat muokattavia"
       (is (u/input? (u/grid-solu "g3" 1 0)))
       (is (u/input? (u/grid-solu "g3" 1 1)))
-      (is (u/input? (u/grid-solu "g3" 1 2)))
+      (is (u/input? (u/grid-solu "g3" 1 2 "input")))
 
       "Kolmannella rivillä sarakkeisiin ei voi syöttää arvoja"
       (is (not (u/input? (u/grid-solu "g3" 2 0 ""))))

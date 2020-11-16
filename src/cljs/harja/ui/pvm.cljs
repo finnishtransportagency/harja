@@ -168,7 +168,9 @@
                   [:a {:on-click #(do
                                     (.preventDefault %)
                                     (.stopPropagation %)
-                                    (valitse (pvm/nyt)))}
+                                    (when (or (not (some? valittava?-fn))
+                                              (valittava?-fn (pvm/nyt)))
+                                      (valitse (pvm/nyt))))}
                    "Tänään"]]]]])))))
 
 (def ^:const
@@ -205,7 +207,9 @@ pvm-popupin-sulkevat-nappaimet
                                  #_(loki/log "blur" @auki?)
                                  (when sumeutus-fn (sumeutus-fn))
                                  (when (seq @suora-syotto-sisalto)
-                                   (valitse (pvm/->pvm @suora-syotto-sisalto))
+                                   (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
+                                     (when (valittava?-fn pvm-sisalto)
+                                       (valitse (pvm/->pvm @suora-syotto-sisalto))))
                                    (reset! suora-syotto-sisalto "")))}]
          (when @auki?
            [pvm-valintakalenteri {:vayla-tyyli?  (if-not (nil? vayla-tyyli?)

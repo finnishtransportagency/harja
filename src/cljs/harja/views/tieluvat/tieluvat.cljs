@@ -507,7 +507,10 @@
    {:tyhja "Ei liikennemerkkijärjestelyitä"
     :tunniste identity}
    (concat
-     [{:otsikko "Al\u00ADku\u00ADpe\u00ADräi\u00ADnen no\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtus"
+     [{:otsikko "Lii\u00ADken\u00ADne\u00ADmerk\u00ADki"
+       :leveys 3
+       :nimi ::tielupa/liikennemerkki}
+      {:otsikko "Al\u00ADku\u00ADpe\u00ADräi\u00ADnen no\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtus"
        :leveys 3
        :nimi ::tielupa/alkuperainen-nopeusrajoitus}
       {:otsikko "A\u00ADlen\u00ADnet\u00ADtu no\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtus"

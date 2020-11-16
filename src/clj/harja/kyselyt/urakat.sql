@@ -867,11 +867,13 @@ WHERE urakkanro = :urakkanro
       AND alkupvm <= current_date
       AND loppupvm >= current_date;
 
--- name: onko-olemassa-urakkanro?
+-- name: onko-kaynnissa-urakkanro?
 -- single?: true
 SELECT exists(SELECT id
               FROM urakka
-              WHERE urakkanro = :urakkanro);
+              WHERE urakkanro = :urakkanro
+                AND alkupvm <= current_date
+                AND loppupvm >= current_date);
 
 -- name: tuhoa-tekniset-laitteet-urakkadata!
 DELETE
@@ -904,6 +906,13 @@ VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 SELECT EXTRACT(YEAR FROM alkupvm) :: INTEGER
 FROM urakka
 WHERE id = :urakka;
+
+-- name: urakan-paivamaarat
+SELECT
+  alkupvm,
+  loppupvm
+FROM urakka
+WHERE id = :id;
 
 -- name: hae-urakan-ely
 SELECT
