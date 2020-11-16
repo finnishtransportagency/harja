@@ -14,8 +14,7 @@
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
      [tapahtumat :as tapahtumat]
-     [jarjestelma-rajapinta :as rajapinta]
-     [uudelleen-kaynnistaja :as uudelleen-kaynnistaja]]
+     [jarjestelma-rajapinta :as rajapinta]]
     [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
@@ -90,10 +89,10 @@
    @atom))
 
 (defn luo-testitietokanta []
-  {:datasource (tietokanta/luo-yhteyspool testitietokanta)})
+  (tietokanta/luo-tietokanta testitietokanta))
 
 (defn luo-temppitietokanta []
-  {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
+  (tietokanta/luo-tietokanta temppitietokanta))
 
 (defn luo-liitteidenhallinta []
   (liitteet/->Liitteet nil))
@@ -1209,8 +1208,7 @@
                         :tapahtuma (component/using
                                      (tapahtuma/->Tapahtuma)
                                      [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija)
-                        :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 5000}} (atom nil)))))))
+                        :rajapinta (rajapinta/->Rajapintakasittelija))))))
 (defn lopeta-harja-tarkkailija []
   (alter-var-root #'harja-tarkkailija component/stop))
 

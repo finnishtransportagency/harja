@@ -3,8 +3,7 @@
             [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
             [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
-            [tarkkailija.palvelin.komponentit.jarjestelma-rajapinta :as rajapinta]
-            [tarkkailija.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]))
+            [tarkkailija.palvelin.komponentit.jarjestelma-rajapinta :as rajapinta]))
 
 (defonce harja-tarkkailija nil)
 
@@ -21,8 +20,7 @@
                         :tapahtuma (component/using
                                      (tapahtuma/->Tapahtuma)
                                      [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija)
-                        :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja komponenttien-tila (atom nil)))))))
+                        :rajapinta (rajapinta/->Rajapintakasittelija))))))
 
 (defn sammuta! []
   (alter-var-root #'harja-tarkkailija (fn [s]

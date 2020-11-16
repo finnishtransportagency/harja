@@ -50,7 +50,6 @@
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat-urakkatietoineen)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat)
-    (poista-palvelu (:http-palvelin this) :yllapidon-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :vesivaylaurakoitsijat)
     (poista-palvelu (:http-palvelin this) :tallenna-urakoitsija)
     this))

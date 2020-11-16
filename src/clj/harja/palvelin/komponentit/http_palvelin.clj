@@ -22,7 +22,6 @@
             [harja.domain.roolit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
-            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [clj-time.core :as time]
             [harja.fmt :as fmt]
 
@@ -307,7 +306,7 @@
     kutsu))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
-                         http-server kehitysmoodi
+                         lopetus-fn kehitysmoodi
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
@@ -319,7 +318,8 @@
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
                           (route/files "" {:root (:dev-resources-path asetukset)}))]
-      (swap! http-server
+      (log/info "HttpPalvelin käynnistetään portissa " portti)
+      (swap! lopetus-fn
              (constantly
                (http/run-server
                  (cookies/wrap-cookies
@@ -368,23 +368,13 @@
 
                  {:port portti
                   :thread (or (:threads asetukset) 8)
-                  :legacy-return-value? false
                   :max-body (or (:max-body-size asetukset) (* 1024 1024 8))
                   :max-line 40960})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
-    @(http/server-stop! @http-server {:timeout 100})
-    (reset! kasittelijat [])
-    (reset! sessiottomat-kasittelijat [])
-    (reset! http-server nil)
-    (dosync (ref-set mittarit mittarit-alkuarvo))
+    (@lopetus-fn :timeout 100)
     this)
-  kp/IStatus
-  (-status [this]
-    (let [status (-> this (get :http-server) deref http/server-status)]
-      {::kp/kaikki-ok? (= status :running)
-       ::kp/tiedot status}))
 
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
@@ -428,12 +418,13 @@
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
-                  (metriikka/luo-mittari-ref mittarit-alkuarvo)))
+                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
+                                              :pyyntoja_palveltu 0})))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
-   (log/debug (str "[HTTP-PALVELIN] ei-todennettava? " ei-todennettava?))
+   #_ (println "ei-todennettava? " ei-todennettava?)
    (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true
                       :tarkista-polku? false

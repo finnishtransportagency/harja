@@ -39,5 +39,4 @@
     (poista-palvelut
       (:http-palvelin this)
       :hae-tieluvat
-      :hae-tielupien-hakijat)
-    this))
+      :hae-tielupien-hakijat)))
