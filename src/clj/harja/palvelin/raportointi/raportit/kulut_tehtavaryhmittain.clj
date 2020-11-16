@@ -196,11 +196,11 @@
     :default 0))
 
 (defn suorita
-  [db user {:keys [alkupvm loppupvm] :as parametrit}]
+  [db user {:keys [alkupvm loppupvm testiversio?] :as parametrit}]
   (let [{:keys [otsikot rivit yhteensa debug]} (kulut-tehtavaryhmittain db parametrit)
         tavoitehinta (hae-tavoitehinta db parametrit)
         yhteensa-hoitokauden-alusta (second yhteensa)]
-    [:raportti {:nimi "Kulut tehtäväryhmittäin - TESTIVERSIO"}
+    [:raportti {:nimi (str "Kulut tehtäväryhmittäin" (when testiversio? " - TESTIVERSIO"))}
      [:taulukko
       {:viimeinen-rivi-yhteenveto? true
        :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}

@@ -603,7 +603,9 @@
                                 @parametri-arvot))
         arvot-nyt (merge arvot-nyt
                          (get @muistetut-parametrit (:nimi raporttityyppi))
-                         {:urakkatyyppi (:arvo @nav/urakkatyyppi)})
+                         {:urakkatyyppi (:arvo @nav/urakkatyyppi)}
+                         (when (some? (:testiversio? raporttityyppi))
+                           {:testiversio? (:testiversio? raporttityyppi)}))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]
