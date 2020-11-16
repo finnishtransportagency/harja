@@ -66,6 +66,7 @@
 #?(:clj
    (defn formatoi-arvo-raportille [arvo]
      (as-> arvo arvo
+           (clojure.core/bigdec arvo)
            (format "%.2f" arvo)
            (clojure.string/replace arvo "," ".")
            (clojure.core/bigdec arvo))))
