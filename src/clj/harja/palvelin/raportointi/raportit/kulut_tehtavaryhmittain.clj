@@ -200,7 +200,7 @@
   (let [{:keys [otsikot rivit yhteensa debug]} (kulut-tehtavaryhmittain db parametrit)
         tavoitehinta (hae-tavoitehinta db parametrit)
         yhteensa-hoitokauden-alusta (second yhteensa)]
-    [:raportti {:nimi "Kulut tehtäväryhmittäin"}
+    [:raportti {:nimi "Kulut tehtäväryhmittäin - TESTIVERSIO"}
      [:taulukko
       {:viimeinen-rivi-yhteenveto? true
        :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}

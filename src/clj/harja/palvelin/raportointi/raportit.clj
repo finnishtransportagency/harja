@@ -351,6 +351,7 @@
                    {:tyyppi "checkbox", :konteksti "koko maa", :pakollinen true, :nimi "Hallintayksiköittäin eroteltuna?"}]
     :konteksti    #{"urakka"}
     :kuvaus       "Kulut tehtäväryhmittäin"
+    :testiversio? true
     :suorita      #'harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}])
 
