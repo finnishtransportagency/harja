@@ -54,7 +54,6 @@
              {:headers headers}))
 
 (defn post-kutsu [palvelu body]
-  (println "petar zovem post " palvelu body portti)
   @(http/post (str "http://localhost:" portti "/_/" (name palvelu))
               {:headers headers
                :body (tr/clj->transit body)}))

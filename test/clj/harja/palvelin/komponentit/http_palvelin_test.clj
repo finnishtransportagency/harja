@@ -9,7 +9,6 @@
 (defn- julkaise-ja-testaa [nimi get? palvelu-fn odotettu-status odotettu-body]
   (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) nimi palvelu-fn)
   (let [vastaus (if get? (op/get-kutsu nimi) (op/post-kutsu nimi {}))]
-    (comment clojure.pprint/pprint vastaus)
     (is (= odotettu-status (:status vastaus)))
     (is (.contains (:body vastaus) odotettu-body))))
 

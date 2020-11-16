@@ -58,6 +58,5 @@
                    :parametrit {:urakkatyyppi :teiden-hoito
                                 :alkupvm      (c/to-date (t/local-date 2014 10 1))
                                 :loppupvm     (c/to-date (t/local-date 2015 9 30))}})]
-    (println "petar vastaus ")
-    (clojure.pprint/pprint vastaus)))
+    (is (= 200 (:status vastaus)))))
 

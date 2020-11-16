@@ -26,7 +26,6 @@
 
     (julkaise-palvelu http :suorita-raportti
                       (fn [user raportti]
-                        (println "petar sad ce " user raportti)
                         (suorita-raportti raportointi user raportti))
                       {:trace false})
 

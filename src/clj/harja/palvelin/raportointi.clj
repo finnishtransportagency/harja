@@ -201,7 +201,6 @@
                       db-replica :db-replica
                       :as this} kayttaja {:keys [nimi konteksti parametrit]
                                           :as suorituksen-tiedot}]
-    (println "petar evo kobajagi suoritan raport " nimi suorituksen-tiedot)
     (max-n-samaan-aikaan
      5 ajossa-olevien-raporttien-lkm :raportoinnissa-ruuhkaa
      (nr/with-newrelic-transaction
@@ -217,8 +216,6 @@
           (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                      " parametreilla " parametrit)
 
-         (println "petar SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                    " parametreilla " parametrit)
           (binding [*raportin-suoritus* this]
             ((:suorita suoritettava-raportti)
              (if (or (nil? db-replica)
