@@ -471,7 +471,9 @@
     "huhtikuu" 4
     "toukokuu" 5
     "kesäkuu" 6
+    "kesakuu" 6
     "heinäkuu" 7
+    "heinakuu" 7
     "elokuu" 8
     "syyskuu" 9
     "lokakuu" 10
