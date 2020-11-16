@@ -215,7 +215,6 @@
                                                 (:urakka-id suorituksen-tiedot)))
           (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                      " parametreilla " parametrit)
-
           (binding [*raportin-suoritus* this]
             ((:suorita suoritettava-raportti)
              (if (or (nil? db-replica)

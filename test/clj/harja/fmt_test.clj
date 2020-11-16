@@ -85,7 +85,7 @@
   (is (thrown? Exception (fmt/desimaaliluku-opt "5")))
   (is (= (fmt/desimaaliluku-opt 5) "5,00")))
 
-(deftest formatoi-arvo-raportille-
+(deftest formatoi-arvo-raportille-tapaukset
   (is (= (fmt/formatoi-arvo-raportille 5.0012M) 5M))
   (is (= (fmt/formatoi-arvo-raportille 5.1251M) 5.13M))
   (is (= (fmt/formatoi-arvo-raportille 5.125M) 5.13M))
