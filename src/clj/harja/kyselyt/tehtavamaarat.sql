@@ -18,14 +18,10 @@ with urakat as (select u.id
                   or :loppupvm between u.alkupvm and u.loppupvm)),
      toteumat as (select tt.maara,
                          tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tm.maara as "materiaali",
-                         mk.yksikko
+                         tt.poistettu
                   from toteuma t
                          join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
                               and tt.urakka_id in (select id from urakat)
-                         left join toteuma_materiaali tm on tm.toteuma = t.id
-                         left join materiaalikoodi mk on mk.id = tm.materiaalikoodi
                   where --t.lahde = 'harja-ui'
                       :alkupvm <= t.paattynyt
                     and :loppupvm >= t.alkanut
@@ -34,6 +30,7 @@ select tpk.nimi            as "nimi",
        tpk.jarjestys       as "jarjestys",
        sum(ut.maara)       as "suunniteltu",
        ut."hoitokauden-alkuvuosi",
+       tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
        tr.nimi             as "tehtavaryhma",
@@ -45,7 +42,7 @@ from urakka_tehtavamaara ut
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
   and ut.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi
+group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi, tpk.suunnitteluyksikko
 order by tpk.id;
 
 -- name: hae-hallintayksikon-tehtavamaarat-ja-toteumat-aikavalilla
@@ -57,14 +54,10 @@ with urakat as (select u.id
                   or :loppupvm between u.alkupvm and u.loppupvm)),
      toteumat as (select tt.maara,
                          tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tm.maara as "materiaali",
-                         mk.yksikko
+                         tt.poistettu
                   from toteuma t
                          join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
                           and tt.urakka_id in (select id from urakat)
-                         left join toteuma_materiaali tm on tm.toteuma = t.id
-                         left join materiaalikoodi mk on mk.id = tm.materiaalikoodi
                   where --t.lahde = 'harja-ui'
                     :alkupvm <= t.paattynyt
                     and :loppupvm >= t.alkanut
@@ -73,6 +66,7 @@ select tpk.nimi            as "nimi",
        tpk.jarjestys       as "jarjestys",
        sum(ut.maara)       as "suunniteltu",
        ut."hoitokauden-alkuvuosi",
+       tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
        tr.nimi             as "tehtavaryhma",
@@ -84,19 +78,15 @@ from urakka_tehtavamaara ut
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
   and ut.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi
+group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi, tpk.suunnitteluyksikko
 order by tpk.id;
 
 -- name: hae-urakan-tehtavamaarat-ja-toteumat-aikavalilla
 with toteumat as (select tt.maara,
                          tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tm.maara as "materiaali",
-                         mk.yksikko
+                         tt.poistettu
                   from toteuma t
                          join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu is not true
-                         left join toteuma_materiaali tm on tm.toteuma = t.id
-                         left join materiaalikoodi mk on mk.id = tm.materiaalikoodi
                   where --t.lahde = 'harja-ui'
                     t.urakka = :urakka
                     and :alkupvm <= t.paattynyt
@@ -105,12 +95,10 @@ with toteumat as (select tt.maara,
 select tpk.nimi            as "nimi",
        tpk.jarjestys       as "jarjestys",
        sum(ut.maara)       as "suunniteltu",
-       ut."hoitokauden-alkuvuosi",
+       tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
        tr.nimi             as "tehtavaryhma",
-       toteumat.materiaali as "materiaali",
-       toteumat.yksikko    as "materiaali-yksikko",
        sum(toteumat.maara) as "toteuma"
 from urakka_tehtavamaara ut
        join toimenpidekoodi tpk on ut.tehtava = tpk.id
@@ -119,7 +107,7 @@ from urakka_tehtavamaara ut
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
   and ut.urakka = :urakka
-group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tr.nimi, toteumat.materiaali, toteumat.yksikko
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tr.nimi, tpk.suunnitteluyksikko
 order by tpk.id;
 
 -- name: lisaa-tehtavamaara<!

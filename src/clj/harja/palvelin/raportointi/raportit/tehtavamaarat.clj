@@ -50,7 +50,7 @@
                             count
                             (> 1))
                     (cond
-                      (zero? toteuma) "?"
+                      (zero? toteuma) ""
                       (zero? suunniteltu) "!"
                       :oletus (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))]
     (keep identity
@@ -65,17 +65,13 @@
   [rivi]
   (into {} (map null->0 rivi)))
 
-(defn- valitse-materiaali-vai-ei
-  [{:keys [toteuma materiaali yksikko materiaali-yksikko] :as rivi}]
+(defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
+  [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
   (if (not= 1 (count (keys rivi)))
-    (let [rivi (select-keys rivi [:nimi :suunniteltu])]
-      (assoc rivi
-        :yksikko (if materiaali
-                   materiaali-yksikko
-                   yksikko)
-        :toteuma (if materiaali
-                   materiaali
-                   toteuma)))
+    (let [rivi (select-keys rivi [:nimi :toteuma :yksikko])]
+      (if (= yksikko suunnitteluyksikko)
+        (assoc rivi :suunniteltu suunniteltu)
+        (assoc rivi :suunniteltu 0)))
     rivi))
 
 (defn- string->valiotsikkorivi
@@ -105,7 +101,7 @@
                                                 {:nimi tehtavaryhma})
                                               rivi))))))
         muodosta-rivi (comp
-                        (map valitse-materiaali-vai-ei)
+                        (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
                         (map null-arvot-nollaksi-rivilla)
                         (map #(vals
                                 (select-keys %
