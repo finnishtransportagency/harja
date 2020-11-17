@@ -87,7 +87,7 @@
 
 (deftest formatoi-arvo-raportille-tapaukset
   (is (= (fmt/formatoi-arvo-raportille 5.0012M) 5M))
-  (is (= (fmt/formatoi-arvo-raportille 5.1251M) 5.13M))
+  (is (= (fmt/formatoi-arvo-raportille 1235.1251M) 1235.13M))
   (is (= (fmt/formatoi-arvo-raportille 5.125M) 5.13M))
   (is (= (fmt/formatoi-arvo-raportille 5.135M) 5.14M))
   (is (= (fmt/formatoi-arvo-raportille (java.lang.Long/valueOf 33)) 33.00M)))
