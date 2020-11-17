@@ -70,13 +70,13 @@
                                 (mapcat
                                   (fn [rivi]
                                     (let [_ (reset! row-index-atom (inc @row-index-atom))
-                                          toteutunut-summa (big/->big (:toteutunut_summa rivi))
-                                          budjetoitu-summa (big/->big (:budjetoitu_summa rivi))
+                                          toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
+                                          budjetoitu-summa (big/->big (or (:budjetoitu_summa rivi) 0))
                                           erotus (big/->big (big/minus budjetoitu-summa toteutunut-summa))]
                                       (concat
                                         [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
                                          [:tr
-                                          [:td.strong {:style {:width (:tehtava leveydet)}} (str (:tehtava_nimi rivi) " " (:tehtavaryhma rivi) " " (:maksutyyppi rivi) " " (:luotu rivi))]
+                                          [:td.strong {:style {:width (:tehtava leveydet)}} (str "Nimi:" (:tehtava_nimi rivi) "/KustannusT:" (:toteutunut rivi) "/MaksuT:" (:maksutyyppi rivi) "/ToimenpKoodi:" (:toimenpidekoodi_nimi rivi) "/ryhmä:" (:toimenpideryhma rivi))]
                                           [:td {:style {:width (:caret leveydet)}}]
                                           [:td {:style {:width (:budjetoitu leveydet)}} (str (formatoi-naytolle->big budjetoitu-summa false) " ")]
                                           [:td {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
@@ -178,7 +178,6 @@
                       (do
                         (e! (kustannusten-seuranta-tiedot/->HaeToimenpiteet))
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset
-                              (:id @nav/valittu-urakka)
                               (:valittu-toimenpide app)
                               (:hoitokauden-alkuvuosi app)
                               nil nil)))))
