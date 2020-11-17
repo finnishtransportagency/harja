@@ -175,7 +175,7 @@
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
             (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
-                                        (:maara tm) (:id user))))
+                                        (:maara tm) (:id user) urakka-id)))
 
         ;; Päivitä toteuman päivän mukainen materiaalin käyttö
         (doseq [sopimus-id sopimus-idt]
@@ -271,9 +271,11 @@
                                                   :tyokonetyyppi nil
                                                   :tyokonetunniste nil
                                                   :tyokoneen-lisatieto nil})]
-    (toteumat-q/luo-toteuma-materiaali<!
-      db toteuman-id (:id (:materiaali toteuma))
-      (:maara toteuma) (:id user))))
+    (toteumat-q/luo-toteuma-materiaali<! db toteuman-id
+                                         (:id (:materiaali toteuma))
+                                         (:maara toteuma)
+                                         (:id user)
+                                         urakka-id)))
 
 (defn tallenna-kasinsyotetty-toteuma [db user {:keys [urakka-id sopimus-id toteuma]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
@@ -297,6 +299,7 @@
                                      :id (:tid toteuma)
                                      :urakka urakka-id}))))
 
+;;(defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -331,10 +334,11 @@
                 (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reitti! db
                                                                              {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
                                                                               :id (:tid toteuma)}))
-                (toteumat-q/paivita-toteuma-materiaali!
-                  db (:id (:materiaali toteuma))
-                  (:maara toteuma) (:id user)
-                  (:tmid toteuma) urakka-id)))))
+                (toteumat-q/paivita-toteuma-materiaali! db (:id (:materiaali toteuma))
+                                                        (:maara toteuma)
+                                                        (:id user)
+                                                        (:tmid toteuma)
+                                                        urakka-id)))))
         (doseq [sopimus-id urakan-sopimus-idt]
           (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
                                                                  :alkupvm (:pvm toteuma)}))))

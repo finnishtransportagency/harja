@@ -717,8 +717,8 @@ WHERE toteuma = :id;
 
 -- name: luo-toteuma-materiaali<!
 -- Luo uuden toteuman materiaalin
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja)
-VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
+VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja, :urakka);
 
 -- name: poista-toteuma-materiaali-toteuma-idlla!
 -- Poistaa toteuman materiaalit
