@@ -4,14 +4,19 @@
   Kun lisäät komponentin, lisää se myös testin keysettiin."
   (:require [harja.palvelin.main :as sut]
             [harja.palvelin.asetukset :as asetukset]
+
             [harja.testi :as testi]
-            [clojure.test :as t :refer [deftest is]]
+            [com.stuartsierra.component :as component]
+            [com.stuartsierra.dependency :as dep]
+            [clojure.test :refer [is deftest testing use-fixtures]]
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io])
-  (:import (java.io File)))
+  (:import (java.io File)
+           (clojure.lang ExceptionInfo)))
 
 (def ^:dynamic *testiasetukset* nil)
+(def jarjestelma (atom nil))
 
 (defn- muokkaa-asetuksia [asetukset]
   (let [asetukset-datana (-> (edn/read-string asetukset)
@@ -55,16 +60,21 @@
                       slurp
                       (poista-reader-makrot "\"foo\"")
                       muokkaa-asetuksia)]
+    (testi/pudota-ja-luo-testitietokanta-templatesta)
+    (testi/pystyta-harja-tarkkailija)
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
+    (when @jarjestelma
+      (component/stop @jarjestelma))
+    (testi/lopeta-harja-tarkkailija)
     (.delete file)))
 
-(t/use-fixtures :once testiasetukset)
+(use-fixtures :once testiasetukset)
 
 (def halutut-komponentit
   #{:metriikka
-    :db :db-replica :klusterin-tapahtumat
+    :db :db-replica
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
@@ -105,6 +115,7 @@
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
+    :komponenttien-tila
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat
@@ -118,12 +129,11 @@
     :pot2})
 
 (deftest main-komponentit-loytyy
-  (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
-        komponentit (set (keys jarjestelma))]
-    (doseq [k halutut-komponentit]
-      (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!")))
-    (doseq [k komponentit]
-      (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
-
-#_(deftest restart-toimii
-  (is (= :ok (sut/dev-restart))))
+  (reset! jarjestelma (component/start (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))))
+  (let [komponentit (set (keys @jarjestelma))]
+    (testing "Kaikki halutut komponentit löytyy!"
+      (doseq [k halutut-komponentit]
+        (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!"))))
+    (testing "Ei löydy ylimääräisiä komponentteja"
+      (doseq [k komponentit]
+        (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!"))))))

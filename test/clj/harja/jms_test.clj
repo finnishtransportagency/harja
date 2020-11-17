@@ -56,8 +56,8 @@
   (laheta [this nimi viesti]
     (sonja/laheta this nimi viesti nil))
 
-  (aloita-yhteys [this]
-    (log/debug "Feikki Sonja, aloita muka yhteys")))
+  (kasky [this komento]
+    (log/debug "Feikki Sonja, sai kaskyn")))
 
 
 (defn feikki-sonja []

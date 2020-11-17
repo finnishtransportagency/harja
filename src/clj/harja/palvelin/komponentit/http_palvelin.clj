@@ -21,6 +21,7 @@
             [harja.transit :as transit]
             [harja.domain.roolit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [clj-time.core :as time]
             [harja.fmt :as fmt]
 
@@ -217,13 +218,6 @@
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän."))
 
-(defn- arityt
-  "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
-  [f]
-  (->> f class .getDeclaredMethods
-       (map #(-> % .getParameterTypes alength))
-       (into #{})))
-
 (defn index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)]
     (when (or (= uri "/")
@@ -382,7 +376,7 @@
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
-    (let [ar (arityt palvelu-fn)
+    (let [ar (tyokalut/arityt palvelu-fn)
           transaktio-fn (if (get optiot :trace true)
                           (fn [& args]
                             (nr/with-newrelic-transaction

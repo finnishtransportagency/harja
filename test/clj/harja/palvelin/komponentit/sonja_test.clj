@@ -24,7 +24,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""
@@ -115,7 +115,7 @@
                                  (tloik-tk/luo-tloik-komponentti)
                                  [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
                                                 [:db])))))
   ;; aloita-sonja palauttaa kanavan.
   (binding [*sonja-yhteys* (go
@@ -131,7 +131,7 @@
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
         {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
-         db :db kaskytyskanava :kaskytyskanava yhteyden-tiedot :yhteyden-tiedot} (:sonja jarjestelma)
+         db :db kaskytyskanava :kaskytyskanava} (:sonja jarjestelma)
         {:keys [yhteys qcf istunnot jms-saije]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (= (:sonja asetukset) sonja-asetukset))
