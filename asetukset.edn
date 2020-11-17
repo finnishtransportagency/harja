@@ -47,6 +47,10 @@
        ;;         :vastaanottaja [;;"sinunmailisi@example.org"
        ;;                         ]}
        :testidata? true
+       :ei-logiteta #{"http-palvelin"
+                      "ajastettu-geometriapaivitys"
+                      ;"komponentti-event"
+                      "sillat"}
        }
 
  :sonja
