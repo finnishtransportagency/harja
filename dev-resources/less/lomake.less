@@ -119,9 +119,15 @@
       text-align: center;
       .checkbox {
         padding-top: 0;
+        input[type="checkbox"] {
+          margin-top: 2px;
+        }
       }
       label {
         font-size: @fontin-koko-leipateksti;
+        &.bold {
+          font-weight: bold;
+        }
       }
       padding-right: 2em;
     }

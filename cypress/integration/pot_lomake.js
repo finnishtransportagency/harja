@@ -301,13 +301,13 @@ describe('Aloita päällystysilmoitus vanha', function () {
     })
 })
 
-describe('Käsittele päälystysilmoitus', function () {
+describe('Käsittele päällystysilmoitus', function () {
     it('Palaa lomakkeelle', function () {
         // TODO: Tässä on sellainen bugi, että joskus 2017 jää valituksi ja toisinaan oletusvuosi on otettu takaisin
         cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
-            if ($valinta.find('.valittu').text().trim() === '2018') {
-                cy.get('[data-cy=piilota-kartta]').click()
+            if ($valinta.find('.valittu').text().trim() === '2020') {
+                cy.get('[data-cy=piilota-kartta]').click({force: true})
                 cy.get('img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
                 valitseVuosi(2017)
             }
@@ -323,7 +323,7 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
             .contains('E2E-Testi')
             .parentsUntil('tbody')
-            .contains('button', 'Päällystysilmoitus').click()
+            .contains('button', 'Päällystysilmoitus').click({force: true})
 
     })
     it('Tarkasta lomakkeen alkutila ja virheet', function () {
@@ -421,7 +421,7 @@ describe('Korjaa virhedata', function () {
         })
     })
     it('Palaa lomakkeelle', function () {
-        //valitseVuosi(2017);
+        valitseVuosi(2017);
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
@@ -432,7 +432,7 @@ describe('Korjaa virhedata', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
             .contains('E2E-Testi')
             .parentsUntil('tbody')
-            .contains('button', 'Päällystysilmoitus').click()
+            .contains('button', 'Päällystysilmoitus').click({force: true})
     })
     it('Testaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
         cy.server()
@@ -516,14 +516,14 @@ describe('Aloita päällystysilmoitus uusi', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
-            cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
-                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
+            cy.wrap($gridOtsikot.grid.find('tbody')).contains('Nakkilan ramppi').parentsUntil('tbody').then(($rivi) => {
+                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('Valmis käsiteltäväksi')
             })
         })
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
-            .contains('E2E-Testi')
+            .contains('Nakkilan ramppi')
             .parentsUntil('tbody')
-            .contains('button', 'Aloita päällystysilmoitus').click()
+            .contains('button', 'Päällystysilmoitus').click({force: true})
     })
     it('Oikeat aloitustiedot', function () {
         // Tierekisteritaulukon tienumeroa, ajorataa ja kaistaa ei pitäisi pystyä muutamaan

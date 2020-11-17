@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet-test
   (:require [clojure.test :refer :all]
+
             [clojure.core.match :refer [match]]
             [clojure.core.async :refer [<!! timeout]]
             [clojure.java.io :as io]
@@ -308,7 +309,7 @@
                                   {:urakka-id (hae-oulun-tiemerkintaurakan-id)
                                    :sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
                                    :vuosi 2017})]
-    (is (= (count aikataulu) 3) "Löytyi kaikki tiemerkintäurakalle osoitetut ylläpitokohteet")
+    (is (= (count aikataulu) 2) "Löytyi kaikki tiemerkintäurakalle osoitetut ylläpitokohteet")
     (is (not-any? #(contains? % :suorittava-tiemerkintaurakka) aikataulu)
         "Tiemerkinnän aikataulu ei sisällä päällystysurakkaan liittyvää tietoa")))
 
@@ -1552,3 +1553,5 @@
         (is (map? yhteyshenkilot) "Yhteyshenkilöt palautuivat")
         (is (= 3 (count (:fim-kayttajat yhteyshenkilot))) "FIM käyttäjäin lkm")
         (is (= 2 (count (:yhteyshenkilot yhteyshenkilot))) "Yhteyshenkilöiden lkm")))))
+
+
