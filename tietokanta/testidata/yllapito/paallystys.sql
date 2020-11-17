@@ -854,7 +854,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    112, 'L12', 'Kirkkotie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13372,
-   18642, 1, 13, 1, 493, NULL, NULL, NULL, ARRAY[(SELECT date_part('year', now()))::INTEGER], FALSE),
+   18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2021}', FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),

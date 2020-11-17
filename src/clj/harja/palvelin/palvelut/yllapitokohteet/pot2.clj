@@ -222,6 +222,27 @@
                    :harja.domain.pot2/lisaaineet lisaaineet))))
 
 
+(defn hae-kohteen-pot2-tiedot [db user {::pot2-domain/keys [yllapitokohde-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user yllapitokohde-id)
+  (let [_ (println "hae-kohteen-pot2-tiedot" (pr-str yllapitokohde-id))
+        tiedot
+        (fetch db
+               ::pot2-domain/pot2
+               #{::pot2-domain/id
+                 ::pot2-domain/yllapitokohde-id
+                 ::pot2-domain/paatos-tekninen-osa
+                 ::pot2-domain/takuupvm}
+               {::pot2-domain/yllapitokohde-id yllapitokohde-id
+                ::pot2-domain/poistettu? false})
+
+        ;; TODO: LEFT JOIN pot2_paallystekerros
+        ;; TODO: LEFT JOIN pot2_alusta
+        ;; HUOM: SPECQL ei tue kuin 1 join kunnolla --> erillisiä kyselyitä jos monta joinia
+        ;; Ehkä tehdään VIEW?
+        _ (println "hae-urakan-pot2-massat :: massat" (pr-str tiedot))]
+    tiedot))
+
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
@@ -239,6 +260,11 @@
       (julkaise-palvelu http :tallenna-urakan-pot2-massa
                         (fn [user tiedot]
                           (tallenna-urakan-paallystysmassa db user tiedot)))
+
+      ;; POT2 palvelut tänne
+      (julkaise-palvelu http :hae-kohteen-pot2-tiedot
+                        (fn [user tiedot]
+                          (hae-kohteen-pot2-tiedot db user tiedot)))
       this))
 
   (stop [this]
