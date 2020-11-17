@@ -251,3 +251,10 @@
     (is (some? (validi-data? :ytunnus "123456789")))
     (is (some? (validi-data? :ytunnus "123456-78")))
     (is (some? (validi-data? :ytunnus "1234567-Y")))))
+
+(deftest numeron-validointi
+  (testing "testaa numeron validointia"
+    (is (true? (val/validoi-numero "3,6" 2 4 2)))
+    (is (true? (val/validoi-numero "3" 2 4 2)))
+    (is (false? (val/validoi-numero "3,61231233" 2 4 2)))
+    (is (false? (val/validoi-numero "13,6" 1 10 2)))))

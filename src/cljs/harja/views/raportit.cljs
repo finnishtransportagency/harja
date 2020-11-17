@@ -603,7 +603,9 @@
                                 @parametri-arvot))
         arvot-nyt (merge arvot-nyt
                          (get @muistetut-parametrit (:nimi raporttityyppi))
-                         {:urakkatyyppi (:arvo @nav/urakkatyyppi)})
+                         {:urakkatyyppi (:arvo @nav/urakkatyyppi)}
+                         (when (some? (:testiversio? raporttityyppi))
+                           {:testiversio? (:testiversio? raporttityyppi)}))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]
@@ -763,7 +765,11 @@
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
-                                                :format-fn #(if % (:kuvaus %) "Valitse")
+                                                :format-fn #(if % (str
+                                                                    (:kuvaus %)
+                                                                    (if (:testiversio? %)
+                                                                      " - TESTIVERSIO"
+                                                                      "")) "Valitse")
                                                 :valitse-fn #(valitse-raporttityyppi! (:nimi %))
                                                 :class "raportti-alasveto"
                                                 :li-luokka-fn #(if (= "Työmaakokousraportti" (:kuvaus %))
