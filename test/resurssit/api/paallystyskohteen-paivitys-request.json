@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-04-12T23:20+02:00"
+    "lahetysaika": "2020-04-12T23:20+02:00"
   },
   "yllapitokohde": {
     "sijainti": {
@@ -18,9 +18,7 @@
       "aosa": 10,
       "aet": 10,
       "losa": 12,
-      "let": 1,
-      "ajr": 0,
-      "kaista": 11
+      "let": 1
     },
     "alikohteet": [
       {
