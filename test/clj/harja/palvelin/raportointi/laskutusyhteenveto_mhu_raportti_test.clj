@@ -42,9 +42,6 @@
                       urakkatieto-fixture
                       jarjestelma-fixture))
 
-(defn- arvo-raportin-nnesta-elementista [vastaus n]
-  (second (first (second (second (last (nth (nth (last vastaus) n) 3)))))))
-
 (deftest raportti-toimii
   (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :suorita-raportti
                              (fn [user raportti]
