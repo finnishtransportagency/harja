@@ -85,20 +85,20 @@
                           (sort-by :jarjestys))
         suunnitellut (keep identity
                            (loop [rivit suunnitellut
-                                  tehtavaryhma nil
+                                  toimenpide nil
                                   kaikki []]
                              (if (empty? rivit)
                                kaikki
                                (let [rivi (first rivit)
-                                     uusi-tehtavaryhma? (not= tehtavaryhma (:tehtavaryhma rivi))
-                                     tehtavaryhma (if uusi-tehtavaryhma?
-                                                    (:tehtavaryhma rivi)
-                                                    tehtavaryhma  )]
+                                     uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
+                                     toimenpide (if uusi-toimenpide?
+                                                    (:toimenpide rivi)
+                                                    toimenpide  )]
                                  (recur (rest rivit)
-                                        tehtavaryhma
+                                        toimenpide
                                         (conj kaikki
-                                              (when uusi-tehtavaryhma?
-                                                {:nimi tehtavaryhma})
+                                              (when uusi-toimenpide?
+                                                {:nimi toimenpide})
                                               rivi))))))
         muodosta-rivi (comp
                         (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)

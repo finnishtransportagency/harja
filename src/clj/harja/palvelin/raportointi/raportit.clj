@@ -82,8 +82,9 @@
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Tehtävämäärät"
+    :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
-    :urakkatyyppi #{:teiden-hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :laaduntarkastusraportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
