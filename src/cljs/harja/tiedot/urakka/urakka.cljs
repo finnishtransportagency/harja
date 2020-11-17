@@ -215,7 +215,8 @@
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 
 (def pot2-default-arvot {:massat nil
-                         :pot2-massa-lomake nil})
+                         :pot2-massa-lomake nil
+                         :pot2-lomake nil})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    laskutus-default

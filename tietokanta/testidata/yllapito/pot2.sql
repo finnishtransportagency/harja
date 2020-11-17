@@ -14,12 +14,13 @@ INSERT INTO pot2(
     luoja,
     luotu)
 VALUES
-((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'),
+((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'),
  '2022-12-31',
  'aloitettu' ::paallystystila,
  NULL,
- FALSE,
+ NULL,
  FALSE,
  NULL,
  NULL,
- (SELECT id FROM kayttaja WHERE nimi = 'Skanska Asfaltti Oy'));
+ (SELECT id FROM kayttaja WHERE kayttajanimi = 'skanska'),
+ NOW());

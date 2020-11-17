@@ -422,7 +422,7 @@
 
 (defn massat* [e! app]
   (komp/luo
-    (komp/lippu tiedot-massa/pot2-nakymassa?)
+    (komp/lippu tiedot-massa/materiaalikirjastossa?)
     (komp/piirretty (fn [this]
                       (e! (tiedot-massa/->AlustaTila))
                       (e! (tiedot-massa/->HaePot2Massat))

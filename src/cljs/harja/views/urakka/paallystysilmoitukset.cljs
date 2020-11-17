@@ -29,9 +29,11 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.pot2 :as pot2]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
 
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
@@ -39,6 +41,7 @@
             [harja.tiedot.urakka.pot2.massat :as tiedot-massat]
 
             [harja.views.urakka.pot2.massalistaus :as massat-view]
+            [harja.views.urakka.pot2.pot2-lomake :as pot2-lomake]
 
 
             [harja.fmt :as fmt]
@@ -1098,7 +1101,11 @@
     tama-rivi))
 
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
-  (let [urakka-id (:id urakka)]
+  (let [urakka-id (:id urakka)
+        avaa-paallystysilmoitus-handler (fn [e! rivi]
+                                          (if true ;; FIXME: valittu vuosi > 2020
+                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
+                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
     [grid/grid
      {:otsikko      ""
       :tunniste     :paallystyskohde-id
@@ -1132,14 +1139,14 @@
        :leveys      20
        :komponentti (fn [rivi]
                       [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-      {:otsikko     "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
-       :tyyppi      :komponentti
+      {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+       :tyyppi :komponentti
        :komponentti (fn [rivi]
                       (if (:tila rivi)
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))}
+                         {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
                          [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                        [:button.nappi-toissijainen.nappi-grid {:on-click #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))}
+                        [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
                          [:span "Aloita päällystysilmoitus"]]))}]
      paallystysilmoitukset]))
 
@@ -1211,7 +1218,7 @@
           [:h3 {:style {:display "inline-block"}}
            "Päällystysilmoitukset"]
           ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
-          #_[napit/nappi "Muokkaa urakan materiaaleja"
+          [napit/nappi "Muokkaa urakan materiaaleja"
            #(e! (tiedot-massat/->NaytaModal true))
            {:ikoni (ikonit/livicon-pen)
             :luokka "napiton-nappi"
@@ -1262,12 +1269,15 @@
         (e! (paallystys/->HaePaallystysilmoitukset)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
-    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-massat? avaa-massa-lomake?] :as app}]
+    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-lomake pot2-massat? avaa-massa-lomake?] :as app}]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
-       (if paallystysilmoitus-lomakedata
-         [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+       (if (or paallystysilmoitus-lomakedata pot2-lomake)
+         ;; TODO: päättely, jos valittu vuosi > 2020, näytä pot2
+         (if true
+           [pot2-lomake/pot2-lomake e! pot2-lomake]
+           [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
           [ilmoitusluettelo e! app]])
