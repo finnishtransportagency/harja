@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.laskutusyhteenveto-mhu-raportti-test
+(ns harja.palvelin.raportointi.laskutusyhteenveto-mhu-raportti-syva-test
   (:require [clojure.test :refer :all]
             [org.httpkit.client :as http]
             [harja.testi :refer :all]
