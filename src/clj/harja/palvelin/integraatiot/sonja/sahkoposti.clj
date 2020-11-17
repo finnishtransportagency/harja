@@ -6,7 +6,7 @@
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
-            [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
+            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:import (java.util UUID)))

@@ -4,12 +4,11 @@
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
             [taoensso.timbre :as log]
-            [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.tyokalut.lukot :as lukot]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (def sonja-kanava "sonjaping")
 (def lukon-vanhenemisaika 300)
@@ -25,7 +24,7 @@
         true
         (recur max-ts)))))
 
-(defn tarkista-jms-yhteys [db integraatioloki sonja jono]
+(defn tarkista-jms-yhteys [db klusterin-tapahtumat integraatioloki sonja jono]
   (lukot/yrita-ajaa-lukon-kanssa
     db
     "sonja-jms-yhteysvarmistus"
@@ -33,9 +32,9 @@
       (let [lahteva-viesti "ping"
             lokiviesti (integraatioloki/tee-jms-lokiviesti "ulos" lahteva-viesti nil jono)
             tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sonja" "ping" nil lokiviesti)
-            viestit (atom [])
-            lopeta-kuuntelu-fn! (tapahtuma-apurit/tapahtuman-kuuntelija! sonja-kanava (fn [viesti] (swap! viestit conj viesti)))]
+            viestit (atom [])]
 
+        (tapahtumat/kuuntele! klusterin-tapahtumat sonja-kanava (fn [viesti] (swap! viestit conj viesti)))
         (sonja/laheta sonja jono lahteva-viesti)
 
         (when (odota-viestin-saapumista integraatioloki tapahtuma-id #(= 1 (count @viestit)) 100000)
@@ -46,17 +45,17 @@
               (let [virheviesti (format "Yhteyskokeilu Sonjan JMS-jonoon (%s) ei palauttanut oletettua vastausta. Vastaus: %s." jono saapunut-viesti)]
                 (log/error virheviesti)
                 (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti virheviesti tapahtuma-id nil)))))
-        (when lopeta-kuuntelu-fn!
-          (lopeta-kuuntelu-fn!))))
+
+        (tapahtumat/kuuroudu! klusterin-tapahtumat sonja-kanava)))
     lukon-vanhenemisaika))
 
-(defn tee-jms-yhteysvarmistus-tehtava [{:keys [db integraatioloki sonja]} minuutit jono]
+(defn tee-jms-yhteysvarmistus-tehtava [{:keys [klusterin-tapahtumat db integraatioloki sonja]} minuutit jono]
   (when (and minuutit jono)
     (log/debug (format "Varmistetaan Sonjan JMS jonoihin yhteys %s minuutin välein." minuutit))
-    (sonja/kuuntele! sonja jono #(tapahtuma-apurit/julkaise-tapahtuma sonja-kanava (.getText %)))
+    (sonja/kuuntele! sonja jono #(tapahtumat/julkaise! klusterin-tapahtumat sonja-kanava (.getText %)))
     (ajastettu-tehtava/ajasta-minuutin-valein
       minuutit 34 ;; ajastus alkaa pyöriä 34 sekunnin kuluttua käynnistyksestä
-      (fn [_] (tarkista-jms-yhteys db integraatioloki sonja jono)))))
+      (fn [_] (tarkista-jms-yhteys db klusterin-tapahtumat integraatioloki sonja jono)))))
 
 (defrecord SonjaJmsYhteysvarmistus [ajovali-minuutteina jono]
   component/Lifecycle
