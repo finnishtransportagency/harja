@@ -235,14 +235,12 @@
        (yhdista-asetukset oletusasetukset)))
 
 
-(defn crlf-filter [{:keys [testidata?]} msg]
-  (if testidata?
-    msg
-    (assoc msg :vargs (mapv (fn [s]
-                              (if (string? s)
-                                (str/replace s #"[\n\r]" "")
-                                s))
-                            (:vargs msg)))))
+(defn crlf-filter [msg]
+  (assoc msg :vargs (mapv (fn [s]
+                            (if (string? s)
+                              (str/replace s #"[\n\r]" "")
+                              s))
+                          (:vargs msg))))
 
 (defn- logituksen-tunnus [msg]
   (let [ensimmainen-arg (-> msg :vargs first)
@@ -267,7 +265,7 @@
 
 (defn konfiguroi-lokitus [asetukset]
   (log/merge-config! {:middleware [(logitetaanko (:log asetukset))
-                                   (partial crlf-filter (:log asetukset))]})
+                                   crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
     (log/merge-config! {:appenders {:println {:min-level :info}}}))
