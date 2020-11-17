@@ -764,7 +764,7 @@
                                     (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm)
                                                ", " (:maara tm) ") toteumalle " (:id toteuma))
                                     (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
-                                                                            (:maara tm) (:id user)))))
+                                                                            (:maara tm) (:id user) (:urakka toteuma)))))
 
                               (doseq [sopimus-id urakan-sopimus-idt]
                                 (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
