@@ -3,12 +3,14 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
+            [clojure.spec.alpha :as s]
             [cheshire.core :as cheshire]
             [clojure.core.async :refer [thread >!! <!! timeout chan] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as clj-str]
             [harja.pvm :as pvm]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
@@ -87,8 +89,8 @@
     Jos 'jarjestelma' on annettu, niin tässä määritetyn jonon viestit käsitellään samassa sessiossa kuin muut
     kuuntelijat ja lähettäjät samalla 'jarjestelma' nimellä.")
 
-  (aloita-yhteys [this]
-    "Aloita sonja yhteys"))
+  (kasky [this kasky]
+    "Lähettää käskyn sonja komponentille"))
 
 (def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
@@ -129,22 +131,31 @@
          laheta-viesti-kaskytyskanavaan!
          jms-toiminto!)
 
-(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava lopeta-tarkkailu-kanava tyyppi db]
-  (thread
-    (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
-                                         :default false)]
-      (when-not lopetetaan?
-        (try
-          (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
-            (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
-                                          :palvelin (fmt/leikkaa-merkkijono 512
-                                                                            (.toString (InetAddress/getLocalHost)))
-                                          :osa-alue "sonja"}))
-          (catch Throwable t
-            (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t)))))
-        (<!! (timeout 10000))
-        (recur (async/alts!! [lopeta-tarkkailu-kanava]
-                             :default false))))))
+(defn- tallenna-sonjan-tila-kantaan [db jms-tila]
+  (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
+                                :palvelin (fmt/leikkaa-merkkijono 512
+                                                                  (.toString (InetAddress/getLocalHost)))
+                                :osa-alue "sonja"}))
+
+(s/def ::virhe any?)
+(s/def ::yhteyden-tila any?)
+(s/def ::istunnot any?)
+(s/def ::olioiden-tilat (s/keys :req-un [::yhteyden-tila ::istunnot]))
+(s/def ::sonja-tila (s/or :virhe (s/keys :req-un [::virhe])
+                          :onnistunut (s/keys :req-un [::olioiden-tilat])))
+
+(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
+  (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
+                              paivitystiheys-ms
+                              (fn []
+                                (try
+                                  (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
+                                        jms-tila (:vastaus vastaus)]
+                                    (tallenna-sonjan-tila-kantaan db jms-tila)
+                                    (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
+                                  (catch Throwable t
+                                    (tapahtuma-julkaisija :tilan-lukemisvirhe)
+                                    (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -362,7 +373,7 @@
     (-> kasky keys first)))
 
 (defmethod jms-toiminto! :aloita-yhteys
-  [{:keys [tila yhteys-ok?] :as sonja} _]
+  [{:keys [tila yhteys-aloitettu?] :as sonja} _]
   (try (let [{:keys [istunnot yhteys]} @tila
              poikkeuskuuntelija (tee-jms-poikkeuskuuntelija sonja)]
          ;; Alustetaan vastaanottaja jvm oliot
@@ -375,19 +386,20 @@
          (log/debug "Aloitetaan yhteys")
          (.start yhteys)
          (reset! jms-connection-tila "ACTIVE")
-         (reset! yhteys-ok? true)
+         (reset! yhteys-aloitettu? true)
+         (tapahtuma-apurit/julkaise-tapahtuma :sonja-yhteys-aloitettu true)
          true)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :aloita-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defmethod jms-toiminto! :lopeta-yhteys
-  [{:keys [tila yhteys-ok?] :as sonja} _]
+  [{:keys [tila yhteys-aloitettu?] :as sonja} _]
   (try (let [{:keys [yhteys]} @tila]
          (log/debug "Lopetetaan yhteys")
          (.close yhteys)
          (reset! jms-connection-tila "CLOSED")
-         (reset! yhteys-ok? false)
+         (reset! yhteys-aloitettu? false)
          true)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :lopeta-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
@@ -509,6 +521,7 @@
       (loop []
         (async/alt!!
           kaskytyskanava ([kasky _]
+                          (log/debug (str "[SONJA] Saatiin käsky: " kasky))
                            (if (nil? kasky)
                              (do (log/info "Yritettiin antaa sammutetulle käskytyskanavalle käsky")
                                  (<!! (timeout 2000))
@@ -551,10 +564,11 @@
                ;; siinä mielessä harmia, että jms-saikeen täytyy kysyä tältä säikeeltä, onko timeout kerennyt jo tapahuta siinä vaiheessa,
                ;; kun jms-saie olisi valmis käsittelemään tämän viestin.
                (timeout (if (and (map? kasky)
-                                 (= (first (keys kasky)) :aloita-yhteys))
-                          60000 viestin-kasittely-timeout)) (do (async/put! kaskyn-kasittely-jms-saikeelle
-                                                                            :aikakatkaisu)
-                                                                {:kaskytysvirhe :aikakatkaisu})
+                                 (contains? kasky :aloita-yhteys))
+                          60000
+                          viestin-kasittely-timeout)) (do (async/put! kaskyn-kasittely-jms-saikeelle
+                                                                      :aikakatkaisu)
+                                                          {:kaskytysvirhe :aikakatkaisu})
                kaskyn-kasittely-kaskytys-saikeelle ([tulos _]
                                                      (case tulos
                                                        :valmis-kasiteltavaksi (do
@@ -567,25 +581,25 @@
         ;; Käskytyskanava on täynnä
         nil {:kaskytysvirhe :kasykytyskanava-taynna}))))
 
-(defrecord SonjaYhteys [asetukset tila yhteys-ok?]
+(defrecord SonjaYhteys [asetukset tila yhteys-aloitettu?]
   component/Lifecycle
-  (start [{db :db
-           :as this}]
+  (start [{:keys [db] :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
-          ;; yhteys-ok? ei kaiketi käytetä missään?
-          yhteys-ok? (atom false)
+          yhteys-aloitettu? (atom false)
           ;; HUOM! käskytyskanavaan ei tulisi laittaa viestejä muuten kuin laheta-viesti-kaskytyskanavaan!
           ;; funktion kautta.
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
+          tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija :sonja-tila)
+                                                              ::sonja-tila)
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
                           (aloita-yhdistaminen asetukset))
           this (assoc this
                  :tila JMS-oliot
-                 :yhteys-ok? yhteys-ok?
+                 :yhteys-aloitettu? yhteys-aloitettu?
                  :yhteys-future yhteys-future
                  :kaskytyskanava kaskytyskanava
                  :lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava
@@ -593,10 +607,12 @@
           jms-saije (luo-jms-saije this saikeen-sammutus-kanava)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
       (assoc this
-        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava lopeta-tarkkailu-kanava (:tyyppi asetukset) db))))
+             :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db))))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
+    (tapahtuma-apurit/julkaise-tapahtuma :sonja-tila :suljetaan)
     (>!! lopeta-tarkkailu-kanava true)
+    (async/close! lopeta-tarkkailu-kanava)
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
     (when-not @jms-saije-sammutettu?
       (>!! saikeen-sammutus-kanava true))
@@ -605,21 +621,12 @@
            (when (not @jms-saije-sammutettu?)
              (< (timeout 1000))
              (recur))))
-    (loop [[jms-saije-sammutettu? _] (async/alts!! [(:jms-saije @tila) (timeout 5000)])
-           kierroksia 1]
-      (if jms-saije-sammutettu?
-        (log/info "Sonja säije sammutettu")
-        (do
-          (log/info "Ei saatu sammutettua Sonja säijettä " (* kierroksia 5) " sekunnin sisällä.")
-          (when (< kierroksia 5)
-            (recur (async/alts!! [(:jms-saije @tila) (timeout 5000)])
-                   (inc kierroksia))))))
     (assoc this :tila nil
+                :yhteys-aloitettu? nil
                 :yhteys-future nil
                 :kaskytyskanava nil
                 :lopeta-tarkkailu-kanava nil
-                :saikeen-sammutus-kanava nil
-                :yhteyden-tiedot nil))
+                :saikeen-sammutus-kanava nil))
 
   Sonja
   (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]
@@ -651,8 +658,8 @@
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil (str "istunto-" jonon-nimi)))
 
-  (aloita-yhteys [{kaskytyskanava :kaskytyskanava :as this}]
-    (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:aloita-yhteys nil})))
+  (kasky [{kaskytyskanava :kaskytyskanava} kaskyn-tiedot]
+    (laheta-viesti-kaskytyskanavaan! kaskytyskanava kaskyn-tiedot)))
 
 (defn luo-oikea-sonja [asetukset]
   (->SonjaYhteys asetukset nil nil))
@@ -676,8 +683,8 @@
       (laheta this jonon-nimi viesti otsikot nil))
     (laheta [this jonon-nimi viesti]
       (laheta this jonon-nimi viesti nil nil))
-    (aloita-yhteys [this]
-      (log/debug "Feikki Sonja, aloita muka yhteys"))))
+    (kasky [this kaskyn-tiedot]
+      (log/debug "Feikki Sonja sai käskyn"))))
 
 (defn luo-sonja [asetukset]
   (if (and asetukset (not (clj-str/blank? (:url asetukset))))

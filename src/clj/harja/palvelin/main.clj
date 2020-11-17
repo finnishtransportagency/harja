@@ -2,6 +2,7 @@
   (:require
     [taoensso.timbre :as log]
     [clojure.core.async :as a :refer [<! go timeout]]
+    [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtumien-tulkkaus]
     [tarkkailija.palvelin.tarkkailija :as tarkkailija]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -14,6 +15,7 @@
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
     [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
+    [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
     [harja.palvelin.komponentit.liitteet :as liitteet-komp]
 
     ;; Integraatiokomponentit
@@ -176,8 +178,18 @@
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
-      :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
-      :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
+      :db (tietokanta/luo-tietokanta (assoc tietokanta
+                                       :tarkkailun-timeout-arvot
+                                       (select-keys (get-in asetukset [:komponenttien-tila :db])
+                                                    #{:paivitystiheys-ms :kyselyn-timeout-ms})
+                                       :tarkkailun-nimi :db)
+                                     kehitysmoodi)
+      :db-replica (tietokanta/luo-tietokanta (assoc tietokanta-replica
+                                               :tarkkailun-timeout-arvot
+                                               (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
+                                                            #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
+                                               :tarkkailun-nimi :db-replica)
+                                             kehitysmoodi)
 
       :todennus (component/using
                   (todennus/http-todennus (:sahke-headerit asetukset))
@@ -216,7 +228,9 @@
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (component/using
-               (sonja/luo-sonja (:sonja asetukset))
+               (sonja/luo-sonja (merge (:sonja asetukset)
+                                       (select-keys (get-in asetukset [:komponenttien-tila :sonja])
+                                                    #{:paivitystiheys-ms})))
                [:db])
       :sonja-sahkoposti
       (component/using
@@ -291,6 +305,8 @@
                       :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
+
+      :komponenttien-tila (komponenttien-tila/komponentin-tila (:komponenttien-tila asetukset))
 
       ;; Tarkastustehtävät
 
@@ -675,7 +691,7 @@
 
       :status (component/using
                 (status/luo-status (:kehitysmoodi asetukset))
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
+                [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
 
       :vaylien-geometriahaku
       (component/using
@@ -712,7 +728,7 @@
   (go
     (log/info "Aloitaetaan Sonjayhteys")
     (loop []
-      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
+      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/kasky (:sonja jarjestelma) {:aloita-yhteys nil}))]
         (when vastaus
           (log/info "Sonja yhteys aloitettu"))
         (when kaskytysvirhe
@@ -722,7 +738,17 @@
           (recur)
           vastaus)))))
 
+(defn- merkkaa-kaynnistyminen! []
+  (log/debug "Merkataan HARJAn käynnistyminen")
+  (event-apurit/julkaise-tapahtuma :harja-tila
+                                   {:viesti "Harja käynnistyy"
+                                    :kaikki-ok? false}))
 
+(defn- merkkaa-kaynnistetyksi! []
+  (log/debug "Merkataan HARJA käynnistetyksi")
+  (event-apurit/julkaise-tapahtuma :harja-tila
+                                   {:viesti "Harja käynnistetty"
+                                    :kaikki-ok? true}))
 
 (defn- kaynnista-pelkastaan-jarjestelma
   ([]
@@ -759,9 +785,10 @@
         (log/error "Validointivirhe asetuksissa:" virheet))
       (tarkista-ymparisto!)
       (kaynnista-harja-tarkkailija! asetukset)
+      (merkkaa-kaynnistyminen!)
       (kaynnista-pelkastaan-jarjestelma asetukset)
       (aloita-sonja harja-jarjestelma)
-      (status/aseta-status! :harja (:status harja-jarjestelma) 200 "Harja käynnistetty"))
+      (merkkaa-kaynnistetyksi!))
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
