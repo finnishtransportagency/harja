@@ -40,6 +40,9 @@
     :body (transit/clj->transit data)
     :vastaus data}))
 
+(def mittarit-alkuarvo {:aktiiviset_pyynnot 0
+                        :pyyntoja_palveltu 0})
+
 (defrecord AsyncResponse [channel])
 
 (defn async-response? [res]
