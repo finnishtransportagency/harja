@@ -24,13 +24,13 @@
             [specql.core :as specql]))
 
 
-(defn- hae-urakan-kustannusten-seuranta-toimenpideittain [db user {:keys [urakka-id tehtavaryhma alkupvm loppupvm] :as tiedot}]
+(defn- hae-urakan-kustannusten-seuranta-toimenpideittain [db user {:keys [urakka-id toimenpidekoodi alkupvm loppupvm] :as tiedot}]
   ;; TODO tarkista käyttöoikeudet
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (let [_ (println "hae-urakan-kustannusten-seuranta-toimenpideittain :: tiedot " (pr-str tiedot))
-          t (if (= "Kaikki" tehtavaryhma) nil tehtavaryhma)
+          t (if (= "Kaikki" toimenpidekoodi) nil toimenpidekoodi)
           res (kustannusten-seuranta-q/listaa-tehtavat-ja-toimenpiteet-kustannusten-seurantaan db {:urakka urakka-id
-                                                                                                   ;:tehtavaryhma t
+                                                                                                   :toimenpidekoodi t
                                                                                                    :alkupvm alkupvm
                                                                                                    :loppupvm loppupvm
                                                                                                    })
