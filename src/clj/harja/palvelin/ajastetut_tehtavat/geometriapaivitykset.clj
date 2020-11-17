@@ -418,5 +418,8 @@
                      :kanavien-hakutehtava
                      :kanavien-paivitystehtava]
             :let [lopeta-fn (get this tehtava)]]
-      (when lopeta-fn (lopeta-fn)))
+      (cond
+        (fn? lopeta-fn) (lopeta-fn)
+        (nil? lopeta-fn) nil
+        :else (async/close! lopeta-fn)))
     this))
