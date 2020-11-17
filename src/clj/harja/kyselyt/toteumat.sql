@@ -449,6 +449,7 @@ FROM osa_toteumat ot
          LEFT JOIN urakka_tehtavamaara ut
                    ON ot.urakka = ut.urakka
                        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+                       AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
@@ -469,6 +470,7 @@ FROM urakka_tehtavamaara ut
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+  AND ut.poistettu IS NOT TRUE
   -- Rajataan edellisessä haussa löydetyt toteumat, joilla on suunnitelma ja määrä olemassa, pois tästä
   AND tk.id NOT IN (SELECT tk.id
                     FROM osa_toteumat ot

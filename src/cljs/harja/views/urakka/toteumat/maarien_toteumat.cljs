@@ -169,8 +169,7 @@
                                                          :class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
                                                     [:td {:style {:width (:tehtava leveydet)}} toteuma-linkki]
                                                     [:td {:style {:width (:caret leveydet)}}]
-                                                    [:td {:style {:width (:toteuma leveydet)}} (when toteuma-linkki
-                                                                                                 (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi)))))]
+                                                    [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi))))]
                                                     [:td {:style {:width (:suunniteltu leveydet)}}]
                                                     [:td {:style {:width (:prosentti leveydet)}}]])])))
 
@@ -271,7 +270,7 @@
                       (do
                         (e! (maarien-toteumat/->HaeKaikkiTehtavat))
                         (e! (maarien-toteumat/->HaeToimenpiteet))
-                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0 :otsikko "Kaikki"})))))
+                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:otsikko "Kaikki"})))))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
