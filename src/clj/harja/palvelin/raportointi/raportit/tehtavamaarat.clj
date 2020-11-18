@@ -93,7 +93,7 @@
                                      uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
                                      toimenpide (if uusi-toimenpide?
                                                     (:toimenpide rivi)
-                                                    toimenpide  )]
+                                                    toimenpide)]
                                  (recur (rest rivit)
                                         toimenpide
                                         (conj kaikki
@@ -119,7 +119,7 @@
                {:otsikko "Toteuma-%" :leveys 2}]}))
 
 (defn suorita
-  [db user params]
+  [db user {:keys [alkupvm loppupvm] :as params}]
   (println params)
   (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user params)]
     [:raportti
@@ -128,7 +128,7 @@
      #_[:teksti (str "helou" (pr-str otsikot))]
      #_[:teksti (str "helou" (pr-str debug))]
      [:taulukko
-      {:otsikko    "Tehtävämäärät ajalta "
-       :sheet-nimi "löl"}
+      {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+       :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]]))
