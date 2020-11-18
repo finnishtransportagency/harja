@@ -178,20 +178,20 @@ UNION ALL
 -- Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta, koska muut kulut on toimistotarvikemateriaaleja
 -- ja ne tallentuu sinne.
 -- Nämä on budjetoituja kustannuksia.
-SELECT 0                                           AS toimenpideinstanssi_id,
-       jjht.toimenkuva                             AS toimenpidekoodi_nimi,
-       (hjh.tunnit * hjh.tuntipalkka)              AS budjetoitu_summa,
-       0                                           AS toteutunut_summa,
-       '0'                                         AS koodi,
-       'kiinteahintainen'                          AS maksutyyppi,
-       'hankinta'                                  AS toimenpideryhma,
-       jjht.toimenkuva                             AS tehtava_nimi,
-       'MHU Hoidonjohto'                           AS toimenpide,
-       hjh.luotu                                   AS luotu,
-       concat(hjh.vuosi, '-', hjh.kuukausi, '-01') AS ajankohta,
-       'hjh'                                       AS toteutunut,
-       160                                         AS jarjestys,
-       'johto-ja-hallintakorvaus'                  AS paaryhma
+SELECT tpi.id                                    AS toimenpideinstanssi_id,
+       tk.nimi                                   AS toimenpidekoodi_nimi,
+       kt.summa                                  AS budjetoitu_summa,
+       0                                         AS toteutunut_summa,
+       '0'                                       AS koodi,
+       'kiinteahintainen'                        AS maksutyyppi,
+       'hankinta'                                AS toimenpideryhma,
+       'Muut kulut'                              AS tehtava_nimi,
+       'MHU Hoidonjohto'                         AS toimenpide,
+       kt.luotu                                  AS luotu,
+       concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
+       'hjh'                                     AS toteutunut,
+       160                                       AS jarjestys,
+       'johto-ja-hallintakorvaus'                AS paaryhma
 FROM toimenpidekoodi tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
