@@ -61,6 +61,13 @@ Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit as
 `[:http-palvelin :salli-oletuskayttaja?]` poluussa olevan arvon true:ksi, ja restartoida backend, 
 tekemällä `lein repl` uudestaan.
 
+7. Käynnistä Cypress e2e testi ympäristö
+
+Kun backend ja frontend ovat päällä, 5. ja 6. askeleiden mukaan, voit käynnistä cypress e2e interaktiivinen 
+ympäristö: 
+
+    `sh kaynnista_cypress.sh`  
+
 ## Kirjautuminen ja ModHeader
 
 Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
