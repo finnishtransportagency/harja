@@ -221,22 +221,21 @@
                                        muut-validointivirheet)]
                            ^{:key (name puute)}
                            [:li (name puute)])]])
-                     [:div.flex-row.alkuun
-                      [napit/tallenna
-                       "Tallenna"
-                       #(e! (tiedot-massa/->TallennaLomake data))
-                       {:vayla-tyyli? true
-                        :luokka "suuri"
-                        :disabled (or (not (ui-lomake/voi-tallentaa? data))
-                                      (not (empty? muut-validointivirheet)))}]
-                      [napit/yleinen
-                       "Peruuta" :toissijainen
-                       #(e! (tiedot-massa/->TyhjennaLomake data))
-                       {:vayla-tyyli? true
-                        :luokka "suuri"}]]
-                     [:div.flex-row.alkuun {:style {:margin-top "1rem"
-                                                    :float "right"
-                                                    :justify-content "center"}}
+                     [:div.flex-row
+                      [:div.tallenna-peruuta
+                       [napit/tallenna
+                        "Tallenna"
+                        #(e! (tiedot-massa/->TallennaLomake data))
+                        {:vayla-tyyli? true
+                         :luokka "suuri"
+                         :disabled (or (not (ui-lomake/voi-tallentaa? data))
+                                       (not (empty? muut-validointivirheet)))}]
+                       [napit/yleinen
+                        "Peruuta" :toissijainen
+                        #(e! (tiedot-massa/->TyhjennaLomake data))
+                        {:vayla-tyyli? true
+                         :luokka "suuri"}]]
+
                       [napit/poista
                        "Poista"
                        (fn []
@@ -244,8 +243,7 @@
                            {:otsikko "Massan poistaminen"
                             :sisalto
                             [:div "Haluatko ihan varmasti poistaa tämän massan?"]
-                            :toiminto-fn #(e! (tiedot-massa/->TallennaLomake (merge data
-                                                                                    {::pot2-domain/poistettu? true})))
+                            :toiminto-fn #(e! (tiedot-massa/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                             :hyvaksy "Kyllä"}))
                        {:vayla-tyyli? true
                         :luokka "suuri"}]]])
