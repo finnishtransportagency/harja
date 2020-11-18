@@ -14,8 +14,8 @@ INSERT INTO pot2(
     luoja,
     luotu)
 VALUES
-((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'),
- '2022-12-31',
+((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'),
+ '2024-12-31',
  'aloitettu' ::paallystystila,
  NULL,
  NULL,
