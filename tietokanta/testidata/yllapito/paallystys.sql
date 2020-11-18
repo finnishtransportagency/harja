@@ -971,7 +971,7 @@ VALUES
    (SELECT id
       FROM kayttaja
      WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date(2021, 6, 21), make_date(2021, 7, 4));
+   NULL, NULL);
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
