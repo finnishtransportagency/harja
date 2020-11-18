@@ -35,6 +35,7 @@ select tpk.nimi            as "nimi",
        tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
+       ut.urakka as "urakka",
        tpi.nimi             as "toimenpide",
        sum(toteumat.maara) as "toteuma"
 from urakka_tehtavamaara ut
@@ -45,7 +46,7 @@ from urakka_tehtavamaara ut
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
   and ut.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko
+group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
 order by tpk.id;
 
 -- name: hae-hallintayksikon-tehtavamaarat-ja-toteumat-aikavalilla
@@ -73,6 +74,7 @@ select tpk.nimi            as "nimi",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
        tpi.nimi            as "toimenpide",
+       ut.urakka as "urakka",
        sum(toteumat.maara) as "toteuma"
 from urakka_tehtavamaara ut
        join toimenpidekoodi tpk on ut.tehtava = tpk.id
@@ -82,7 +84,7 @@ from urakka_tehtavamaara ut
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
   and ut.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
 order by tpk.id;
 
 -- name: hae-urakan-tehtavamaarat-ja-toteumat-aikavalilla
@@ -104,6 +106,7 @@ select tpk.nimi            as "nimi",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
        tpi.nimi            as "toimenpide",
+       ut.urakka as "urakka",
        sum(toteumat.maara) as "toteuma"
 from urakka_tehtavamaara ut
        join toimenpidekoodi tpk on ut.tehtava = tpk.id
@@ -113,7 +116,7 @@ from urakka_tehtavamaara ut
 where ut.poistettu is not true
   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
   and ut.urakka = :urakka
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
 order by tpk.id;
 
 -- name: lisaa-tehtavamaara<!

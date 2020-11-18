@@ -39,10 +39,6 @@
                  :loppupvm   loppupvm
                  :hoitokausi hoitokaudet}))))
 
-(defn- hae-toteumat
-  []
-  nil)
-
 (defn- laske-toteuma-%
   [rivi]
   (let [[_ _ suunniteltu toteuma] rivi
@@ -74,43 +70,59 @@
         (assoc rivi :suunniteltu 0)))
     rivi))
 
-(defn- string->valiotsikkorivi
-  [asia]
-  (if (string? asia) [{:nimi asia}] asia))
+(defn- ota-tarvittavat-arvot
+  [m]
+  (vals
+    (select-keys m
+                 [:nimi :yksikko :suunniteltu :toteuma])))
+
+(defn- muodosta-otsikot
+  [m]
+  (if (= 1 (count (keys m)))
+    {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
+    (vec m)))
 
 (defn- muodosta-taulukko
   [db user parametrit]
-  (let [suunnitellut (->> parametrit
-                          (hae-tehtavamaarat db)
-                          (sort-by :jarjestys))
-        suunnitellut (keep identity
-                           (loop [rivit suunnitellut
-                                  toimenpide nil
-                                  kaikki []]
-                             (if (empty? rivit)
-                               kaikki
-                               (let [rivi (first rivit)
-                                     uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
-                                     toimenpide (if uusi-toimenpide?
-                                                    (:toimenpide rivi)
-                                                    toimenpide)]
-                                 (recur (rest rivit)
-                                        toimenpide
-                                        (conj kaikki
-                                              (when uusi-toimenpide?
-                                                {:nimi toimenpide})
-                                              rivi))))))
+  (let [xform (map (fn [[_ rivit]]
+                     [[(:urakka (first rivit)) (:jarjestys (first rivit))] rivit]))
+        suunnitellut-ryhmissa (->> parametrit
+                                   (hae-tehtavamaarat db)
+                                   (sort-by :jarjestys)
+                                   (group-by :toimenpide))
+        suunnitellut-ryhmissa-muunnetut-avaimet (into {}
+                                                      xform
+                                                      suunnitellut-ryhmissa)
+        suunnitellut-sortattu (into
+                                (sorted-map-by
+                                  (fn [a b]
+                                    (compare a b)))
+                                suunnitellut-ryhmissa-muunnetut-avaimet)
+        suunnitellut-flattina (mapcat second suunnitellut-sortattu)
+        suunnitellut-valiotsikoineen (keep identity
+                                           (loop [rivit suunnitellut-flattina
+                                                  toimenpide nil
+                                                  kaikki []]
+                                             (if (empty? rivit)
+                                               kaikki
+                                               (let [rivi (first rivit)
+                                                     uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
+                                                     toimenpide (if uusi-toimenpide?
+                                                                  (:toimenpide rivi)
+                                                                  toimenpide)]
+                                                 (recur (rest rivit)
+                                                        toimenpide
+                                                        (conj kaikki
+                                                              (when uusi-toimenpide?
+                                                                {:nimi toimenpide})
+                                                              rivi))))))
         muodosta-rivi (comp
                         (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
                         (map null-arvot-nollaksi-rivilla)
-                        (map #(vals
-                                (select-keys %
-                                             [:nimi :yksikko :suunniteltu :toteuma])))
+                        (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
-                        (map #(if (= 1 (count (keys %)))
-                                {:rivi (conj (vec %) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
-                                (vec %))))
-        rivit (into [] muodosta-rivi suunnitellut)]
+                        (map muodosta-otsikot))
+        rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
