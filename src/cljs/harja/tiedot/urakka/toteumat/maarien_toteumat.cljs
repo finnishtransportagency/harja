@@ -183,8 +183,7 @@
                    (map
                      (fn [[tehtavaryhma tehtavat]]
                        [tehtavaryhma (sort-by first
-                                              (group-by :tehtava
-                                                        tehtavat))])
+                                              (group-by :tehtava tehtavat))])
                      ryhmitelty-tr)))))
 
 (defn- aseta-akillisen-tyyppi
@@ -246,7 +245,8 @@
   (process-event [{vastaus :vastaus} app]
     (-> app
         (assoc :toimenpiteet-lataa false)
-        (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus nil))))
+        (assoc :toteutuneet-maarat vastaus)
+        (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus (:hakufiltteri app)))))
 
   HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -539,12 +539,14 @@
 
   ToimenpiteetHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc-in app [:toimenpiteet] vastaus))
+    (-> app
+        (assoc :toimenpiteet-lataa false)
+        (assoc-in [:toimenpiteet] vastaus)))
 
   ToimenpiteetHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-    app)
+    (assoc app :toimenpiteet-lataa false))
 
   ValitseHoitokausi
   (process-event [{urakka :urakka vuosi :vuosi} app]
@@ -552,6 +554,7 @@
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi nil nil)
       (-> app
           (assoc :ajax-loader true)
+          (assoc :toimenpiteet-lataa true)
           (assoc-in [:hoitokauden-alkuvuosi] vuosi)
           (assoc-in [:toteuma :aikavali-alkupvm] nil)
           (assoc-in [:toteuma :aikavali-loppupvm] nil))))
