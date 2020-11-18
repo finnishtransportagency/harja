@@ -12,6 +12,7 @@
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu]
   [harja.palvelin.raportointi.raportit.tehtavamaarat]
+  [harja.palvelin.raportointi.raportit.vemtr]
   [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
   [harja.palvelin.raportointi.raportit.materiaali]
   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
@@ -90,10 +91,11 @@
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     ;; fixme: takrkista konteksti
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
-    :kuvaus "Valtakunnallinen ja ELY-kohtainen määrätoteumaraportti (testiversio)"
+    :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
+    :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
     ;; fixme: tarkista urakkatyyyppi
-    :urakkatyyppi #{:teiden-hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :laaduntarkastusraportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
