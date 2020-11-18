@@ -174,7 +174,34 @@ FROM johto_ja_hallintokorvaus hjh
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht on hjh."toimenkuva-id" = jjht.id
 WHERE hjh."urakka-id" = :urakka
   AND (concat(hjh.vuosi, '-', hjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-  -- '23151' vain hoidon johto koodilliset haetaan
+UNION ALL
+-- Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta, koska muut kulut on toimistotarvikemateriaaleja
+-- ja ne tallentuu sinne.
+-- Nämä on budjetoituja kustannuksia.
+SELECT 0                                           AS toimenpideinstanssi_id,
+       jjht.toimenkuva                             AS toimenpidekoodi_nimi,
+       (hjh.tunnit * hjh.tuntipalkka)              AS budjetoitu_summa,
+       0                                           AS toteutunut_summa,
+       '0'                                         AS koodi,
+       'kiinteahintainen'                          AS maksutyyppi,
+       'hankinta'                                  AS toimenpideryhma,
+       jjht.toimenkuva                             AS tehtava_nimi,
+       'MHU Hoidonjohto'                           AS toimenpide,
+       hjh.luotu                                   AS luotu,
+       concat(hjh.vuosi, '-', hjh.kuukausi, '-01') AS ajankohta,
+       'hjh'                                       AS toteutunut,
+       160                                         AS jarjestys,
+       'johto-ja-hallintakorvaus'                  AS paaryhma
+FROM toimenpidekoodi tk,
+     kustannusarvioitu_tyo kt
+         JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
+     sopimus s
+WHERE s.urakka = :urakka
+  AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+  AND kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+  AND kt.sopimus = s.id
+  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND tpi.toimenpide = tk.id
 UNION ALL
 -- Toteutuneet kustannukset
 SELECT tpi.id                  AS toimenpideinstanssi_id,

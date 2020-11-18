@@ -18,8 +18,8 @@
                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :kustannusten-seuranta (component/using
-                                             (kustannusten-seuranta/->KustannustenSeuranta)
-                                             [:http-palvelin :db :db-replica])))))
+                                                 (kustannusten-seuranta/->KustannustenSeuranta)
+                                                 [:http-palvelin :db :db-replica])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -29,7 +29,16 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(defn erilliskustannukset-sql-haku [urakka]
+(defn- hae-kustannukset [urakka-id alkupvm loppupvm]
+  (kutsu-palvelua
+    (:http-palvelin jarjestelma)
+    :urakan-kustannusten-seuranta-toimenpideittain
+    +kayttaja-tero+
+    {:urakka-id urakka-id
+     :alkupvm alkupvm
+     :loppupvm loppupvm}))
+
+(defn- erilliskustannukset-sql-haku [urakka]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
@@ -44,7 +53,7 @@
         WHERE kat.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND kat.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');"))
 
-(defn hoidonjohdonpalkkio-sql-haku [urakka]
+(defn- hoidonjohdonpalkkio-sql-haku [urakka]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
@@ -61,6 +70,23 @@
                OR kat.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
                );"))
 
+(defn- johto-ja-hallintokorvaukset-sql-haku [urakka]
+  (str "WITH urakan_toimenpideinstanssi_23150 AS
+         (SELECT tpi.id AS id
+          FROM toimenpideinstanssi tpi
+                   JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                   JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+               maksuera m
+          WHERE tpi.urakka = " urakka "
+            AND m.toimenpideinstanssi = tpi.id
+            AND tpk2.koodi = '23150')
+        SELECT kat.summa as summa
+        FROM kustannusarvioitu_tyo kat
+        WHERE kat.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+          AND (kat.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)')
+               OR kat.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+               );"))
+
 
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu
@@ -71,22 +97,16 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (kutsu-palvelua
-                  (:http-palvelin jarjestelma)
-                  :urakan-kustannusten-seuranta-toimenpideittain
-                  +kayttaja-tero+
-                  {:urakka-id urakka-id
-                   :alkupvm alkupvm
-                   :loppupvm loppupvm})
+        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
         erillishankinnat (filter
-                               #(when (= "erillishankinnat" (:paaryhma %))
-                                  true)
-                               vastaus)
+                           #(when (= "erillishankinnat" (:paaryhma %))
+                              true)
+                           vastaus)
         eh-summa (apply + (map #(:budjetoitu_summa %) erillishankinnat))
         erillishankinnat-sql (q (erilliskustannukset-sql-haku urakka-id))
         sql-summa (apply + (map #(first %) erillishankinnat-sql))
         _ (println "erillishankinnat-sql" eh-summa (pr-str erillishankinnat-sql))
-        _ (println "erillishankinnat"  sql-summa (pr-str erillishankinnat))]
+        _ (println "erillishankinnat" sql-summa (pr-str erillishankinnat))]
     (is (= eh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hoidonjohdonpalkkioiden budjetoituja summia
@@ -94,20 +114,33 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (kutsu-palvelua
-                  (:http-palvelin jarjestelma)
-                  :urakan-kustannusten-seuranta-toimenpideittain
-                  +kayttaja-tero+
-                  {:urakka-id urakka-id
-                   :alkupvm alkupvm
-                   :loppupvm loppupvm})
+        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
         hj_palkkiot (filter
-                           #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
-                              true)
-                           vastaus)
+                      #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
+                         true)
+                      vastaus)
         hj-summa (apply + (map #(:budjetoitu_summa %) hj_palkkiot))
         hj-sql (q (hoidonjohdonpalkkio-sql-haku urakka-id))
         sql-summa (apply + (map #(first %) hj-sql))
         _ (println "hj-sql" sql-summa (pr-str hj-sql))
-        _ (println "hj"  hj-summa (pr-str hj_palkkiot))]
+        _ (println "hj" hj-summa (pr-str hj_palkkiot))]
+    (is (= hj-summa sql-summa))))
+
+
+;; Testataan/vertaillaan Johto- ja hallintokorvauksen budjetoituja summia
+;; Johto- ja hallintokorvaukset kuuluu palkat ja muut kulut, kuten toimistokulut yms.
+(deftest budjetoidut-hoidonjohdonpalkkiot-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        johto_ja_h_korvaukset (filter
+                                #(when (= "johto_ja_hallintokorvaukset" (:paaryhma %))
+                                   true)
+                                vastaus)
+        jjh-summa (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset))
+        jjh-sql (q (johto-ja-hallintokorvaukset-sql-haku urakka-id))
+        sql-summa (apply + (map #(first %) hj-sql))
+        _ (println "hj-sql" sql-summa (pr-str hj-sql))
+        _ (println "hj" hj-summa (pr-str hj_palkkiot))]
     (is (= hj-summa sql-summa))))
