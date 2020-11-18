@@ -167,7 +167,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (def valinta-ul-max-korkeus-px "420px")
 
-(defn- linkki-jossa-valittu-checked
+(defn linkki-jossa-valittu-checked
   [otsikko toiminto valittu?]
   [:a.inline-block {:href "#"
                     :on-click #(do (.preventDefault %) (toiminto))}
