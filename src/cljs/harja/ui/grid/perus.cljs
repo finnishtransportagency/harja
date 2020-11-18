@@ -278,6 +278,7 @@
 
 (defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
+                                custom-toiminto
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
@@ -351,11 +352,15 @@
                                            (aloita-muokkaus! tiedot))}
                            [:span.grid-muokkaa
                             [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
-        (when (and tallenna (not (nil? tiedot)))
-          (if (and (= :ei-mahdollinen tallenna)
-                   tallennus-ei-mahdollinen-tooltip)
-            [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
-            muokkaa-nappi)))]
+        (if custom-toiminto
+          [napit/nappi (:teksti custom-toiminto)
+           (:toiminto custom-toiminto)
+           (:opts custom-toiminto)]
+          (when (and tallenna (not (nil? tiedot)))
+            (if (and (= :ei-mahdollinen tallenna)
+                     tallennus-ei-mahdollinen-tooltip)
+              [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
+              muokkaa-nappi))))]
      [:span.pull-right.muokkaustoiminnot
       (when voi-kumota?
         [:button.nappi-toissijainen
@@ -669,6 +674,7 @@
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :voi-kumota?                          Jos false, ei näytetä kumoa-nappia. Oletus: true.
+  :custom-toiminto                      Muokkauspaneeliin vietävä custom-toiminto
   :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
                                         Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
@@ -725,7 +731,7 @@
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota?
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota? custom-toiminto
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
            raporttivienti raporttiparametrit virhe-viesti aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
@@ -1014,7 +1020,7 @@
        :component-will-unmount
        (fn []
          (nollaa-muokkaustiedot!))}
-      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
+      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
@@ -1062,7 +1068,7 @@
                              :tallenna-vain-muokatut tallenna-vain-muokatut
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
-                             :peruuta peruuta :otsikko otsikko
+                             :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
                              :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
@@ -1150,7 +1156,7 @@
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
-                                :peruuta peruuta :otsikko otsikko
+                                :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
                                 :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn

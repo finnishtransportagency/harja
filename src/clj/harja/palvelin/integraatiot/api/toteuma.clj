@@ -174,4 +174,5 @@
         toteuma-id
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])
-        (:id kirjaaja)))))
+        (:id kirjaaja)
+        urakka-id))))

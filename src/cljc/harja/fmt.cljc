@@ -10,7 +10,8 @@
     #?(:cljs [harja.ui.ikonit :as ikonit]))
   #?(:clj
      (:import (java.text NumberFormat)
-              (java.util Locale))))
+              (java.util Locale)
+              (java.math RoundingMode BigDecimal))))
 
 #?(:cljs (def frontin-formatointivirheviestit #{"epäluku"}))
 
@@ -66,9 +67,8 @@
 #?(:clj
    (defn formatoi-arvo-raportille [arvo]
      (as-> arvo arvo
-           (format "%.2f" arvo)
-           (clojure.string/replace arvo "," ".")
-           (clojure.core/bigdec arvo))))
+           (clojure.core/bigdec arvo)
+           (. arvo setScale 2 RoundingMode/HALF_UP))))
 
 (defn yksikolla
   "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"

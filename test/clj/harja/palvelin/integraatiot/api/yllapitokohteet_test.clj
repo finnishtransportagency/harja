@@ -690,13 +690,14 @@
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                         kayttaja-paallystys portti
                                         payload)]
+    (println "vastaus " vastaus)
     (is (= 200 (:status vastaus)))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
           oletettu-tr-osoite {:aet 10
-                              :ajorata 0
+                              :ajorata nil
                               :aosa 10
-                              :kaista 11
+                              :kaista nil
                               :loppuet 1
                               :losa 12
                               :numero 20}
@@ -734,7 +735,7 @@
                                         kayttaja-paallystys portti
                                         payload)]
     (is (not= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Ouluntien kohdeosa\\\" kanssa\\nKohteenosa on päällekkäin toisen osan kanssa\\n\"}}]}"))))
+    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Puolangantien kohdeosa\\\" kanssa\\nKohteenosa on päällekkäin toisen osan kanssa\\n\"}}]}"))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimii
   (let [urakka (hae-utajarven-paallystysurakan-id)

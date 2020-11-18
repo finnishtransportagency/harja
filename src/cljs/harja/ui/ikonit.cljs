@@ -545,6 +545,8 @@
   [:span.livicon-minus])
 (defn livicon-pen []
   [:span.livicon-pen])
+(defn livicon-duplicate []
+  [:span.livicon-duplicate])
 (defn livicon-warning-sign []
   [:span.livicon-exclamation-triangle])
 (defn livicon-trash []
@@ -588,6 +590,8 @@
   [:span.livicon-rotate-left])
 (defn peru []
   [:span.livicon-rotate-left])
+(defn sulje []
+  [:span.livicon-delete])
 (defn tee-sittenkin []
   [:span.livicon-rotate-right])
 (defn tallenna []

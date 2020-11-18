@@ -50,7 +50,7 @@
                             count
                             (> 1))
                     (cond
-                      (zero? toteuma) "?"
+                      (zero? toteuma) ""
                       (zero? suunniteltu) "!"
                       :oletus (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))]
     (keep identity
@@ -65,17 +65,13 @@
   [rivi]
   (into {} (map null->0 rivi)))
 
-(defn- valitse-materiaali-vai-ei
-  [{:keys [toteuma materiaali yksikko materiaali-yksikko] :as rivi}]
+(defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
+  [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
   (if (not= 1 (count (keys rivi)))
-    (let [rivi (select-keys rivi [:nimi :suunniteltu])]
-      (assoc rivi
-        :yksikko (if materiaali
-                   materiaali-yksikko
-                   yksikko)
-        :toteuma (if materiaali
-                   materiaali
-                   toteuma)))
+    (let [rivi (select-keys rivi [:nimi :toteuma :yksikko])]
+      (if (= yksikko suunnitteluyksikko)
+        (assoc rivi :suunniteltu suunniteltu)
+        (assoc rivi :suunniteltu 0)))
     rivi))
 
 (defn- string->valiotsikkorivi
@@ -89,23 +85,23 @@
                           (sort-by :jarjestys))
         suunnitellut (keep identity
                            (loop [rivit suunnitellut
-                                  tehtavaryhma nil
+                                  toimenpide nil
                                   kaikki []]
                              (if (empty? rivit)
                                kaikki
                                (let [rivi (first rivit)
-                                     uusi-tehtavaryhma? (not= tehtavaryhma (:tehtavaryhma rivi))
-                                     tehtavaryhma (if uusi-tehtavaryhma?
-                                                    (:tehtavaryhma rivi)
-                                                    tehtavaryhma  )]
+                                     uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
+                                     toimenpide (if uusi-toimenpide?
+                                                    (:toimenpide rivi)
+                                                    toimenpide  )]
                                  (recur (rest rivit)
-                                        tehtavaryhma
+                                        toimenpide
                                         (conj kaikki
-                                              (when uusi-tehtavaryhma?
-                                                {:nimi tehtavaryhma})
+                                              (when uusi-toimenpide?
+                                                {:nimi toimenpide})
                                               rivi))))))
         muodosta-rivi (comp
-                        (map valitse-materiaali-vai-ei)
+                        (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
                         (map null-arvot-nollaksi-rivilla)
                         (map #(vals
                                 (select-keys %
