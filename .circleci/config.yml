@@ -78,6 +78,7 @@ jobs:
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
+          # Luetaan käsiteltävä branch
           source lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
@@ -186,7 +187,7 @@ jobs:
 
   e2e-testit:
     docker:
-      - image: solita/harja-cypress
+      - image: solita/harja-cypress:latest
         environment:
           HARJA_SALLI_OLETUSKAYTTAJA: 'true'
           HARJA_DEV_YMPARISTO: 'false'
