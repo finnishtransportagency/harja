@@ -234,11 +234,11 @@
   (let [sisalto (turvallisuuspoikkeamaviesti turvallisuuspoikkeama)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
-      (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
-                                 Validointivirheet: %s\n
+      (let [lokitettava-virhe (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
+      Validointivirheet: %s" virheet)
+            virheviesti (format (str lokitettava-virhe "\n
                                  Muodostettu sanoma:\n
-                                 %s"
-                                virheet
+                                 %s")
                                 (xml/tee-xml-sanoma
                                   ;; Poistetaan tiedoston logitus sen takia, kun sen logitus voi jumittaa koko prosessin
                                   (walk/prewalk (fn [osa]
@@ -247,7 +247,7 @@
                                                     [:tiedosto "<<EI LOKITETA TIEDOSTOA>>"]
                                                     osa))
                                                 sisalto)))]
-        (log/error virheviesti)
+        (log/error lokitettava-virhe)
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
                  :error virheviesti}))
       xml)))
