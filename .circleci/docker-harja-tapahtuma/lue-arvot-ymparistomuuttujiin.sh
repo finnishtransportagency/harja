@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+echo "Luetaan arvot ympäristömuuttujiin"
 readarray -t muuttujat < tapahtuman_arvot
 
 for e in "${muuttujat[@]}"

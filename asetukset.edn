@@ -19,13 +19,13 @@
 
  :tietokanta {:palvelin #=(eval (System/getenv "HARJA_TIETOKANTA_HOST"))
               :tietokanta "harja"
-              :portti 5432
+              :portti #=(eval (System/getenv "HARJA_TIETOKANTA_PORTTI"))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
               :salasana "harja"}
  :tietokanta-replica {:palvelin #=(eval (System/getenv "HARJA_TIETOKANTA_HOST"))
                       :tietokanta "harja"
-                      :portti 5432
+                      :portti #=(eval (System/getenv "HARJA_TIETOKANTA_PORTTI"))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
                       :salasana "harja"}

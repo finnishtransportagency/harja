@@ -21,6 +21,7 @@ services:
       - "HARJA_DEV_YMPARISTO=true"
       - "HARJA_TIETOKANTA_HOST=${POSTGRESQL_NAME}"
       - "HARJA_TIETOKANTA_HOST_KAANNOS=${POSTGRESQL_NAME}"
+      - "HARJA_TIETOKANTA_PORTTI=${HARJA_TIETOKANTA_PORTTI}"
       - "HARJA_SALLI_OLETUSKAYTTAJA=false"
       - "HARJA_AJA_GATLING_RAPORTTI=false"
       - "HARJA_NOLOG=false"
@@ -33,7 +34,7 @@ services:
       - type: bind
         source: .
         target: "${DC_HARJA_KANSIO}"
-        consistency: ${DC_VOLUME_CONSISTENCY}
+        consistency: "${DC_VOLUME_CONSISTENCY}"
       - type: volume
         source: yhteiset_tiedostot
         target: "${DC_JAETTU_KANSIO}"
