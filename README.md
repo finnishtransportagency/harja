@@ -40,18 +40,19 @@ Harja repon hakemistorakenne:
 ## Kehitysympäristön pystyttäminen
 
 
-1. Asenna Leiningen: http://leiningen.org/ tai brew install leiningen
+1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
 2. Asenna Docker: www.docker.com/
 3. Laita docker käyntiin sanomalla /harja/tietokanta kansiossa
 
     `sh devdb_up.sh`
 
-4. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
-5. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
+4. Asenna tarvittavat työkalut `npm install`
+5. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
     `lein do clean, compile, repl`
 
-6. Käännä frontend ja käynnistä Figwheel:
+7. Käännä frontend ja käynnistä Figwheel:
 
     `sh kaynnista_harja_front_dev.sh`
 
@@ -60,6 +61,11 @@ Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon mä
 Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa asetukset.edn filussa 
 `[:http-palvelin :salli-oletuskayttaja?]` poluussa olevan arvon true:ksi, ja restartoida backend, 
 tekemällä `lein repl` uudestaan.
+
+8. Käynnistä Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7. 
+askeleiden mukaan, voit käynnistä cypress e2e interaktiivinen ympäristö: 
+
+    `sh kaynnista_cypress.sh`  
 
 ## Kirjautuminen ja ModHeader
 
