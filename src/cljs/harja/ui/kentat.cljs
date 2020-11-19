@@ -602,6 +602,7 @@
                                                             (= valittu vaihtoehto))
                                              :ryhma     group-id
                                              :id        (gensym (str "radio-group-" (name vaihtoehto)))}]
+                               ^{:key (str "radio-group-" (name vaihtoehto))}
                                [:div.radio
                                 [:label
                                  [:input {:type      "radio"
@@ -652,7 +653,6 @@
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
                             :vayla-tyyli?          vayla-tyyli?
-                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
                             :elementin-id elementin-id}
        valinnat]))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
@@ -684,7 +684,6 @@
                                 :disabled              disabled?
                                 :data-cy               data-cy
                                 :vayla-tyyli?          vayla-tyyli?
-                                :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
                                 :elementin-id elementin-id}
            valinnat])))))
 
