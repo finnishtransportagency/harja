@@ -294,7 +294,11 @@
         ;; Indeksinä käytetään hoitokautta edeltävän syyskuun arvoa, mikäli se on olemassa.
         indeksi-puuttuu (:indeksi_puuttuu (first (val (first (first tiedot-tuotteittain)))))
         raportin-indeksiarvo (when-not indeksi-puuttuu
-                               (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (dec (pvm/vuosi alkupvm)) 9))
+                               (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id
+                                                                                (if (> (pvm/kuukausi alkupvm) 9)
+                                                                                  (pvm/vuosi alkupvm)
+                                                                                  (dec (pvm/vuosi alkupvm)))
+                                                                                9))
 
         ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, lämpötila, suolasakko, jne) voivat aiheuttaa nillejä,
         ;; joiden yli ratsastetaan (fnil + 0 0):lla. Tämä vuoksi pidetään käsin kirjaa mm. indeksipuuteiden sotkemista kentistä
@@ -311,7 +315,7 @@
         koostettu-yhteenveto (conj [] yhteenveto tavoite)]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
-     [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
+     [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
      (when perusluku
        (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
 

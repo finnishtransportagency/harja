@@ -175,7 +175,7 @@
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
             (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
-                                        (:maara tm) (:id user))))
+                                        (:maara tm) (:id user) urakka-id)))
 
         ;; Päivitä toteuman päivän mukainen materiaalin käyttö
         (doseq [sopimus-id sopimus-idt]
@@ -271,9 +271,11 @@
                                                   :tyokonetyyppi nil
                                                   :tyokonetunniste nil
                                                   :tyokoneen-lisatieto nil})]
-    (toteumat-q/luo-toteuma-materiaali<!
-      db toteuman-id (:id (:materiaali toteuma))
-      (:maara toteuma) (:id user))))
+    (toteumat-q/luo-toteuma-materiaali<! db toteuman-id
+                                         (:id (:materiaali toteuma))
+                                         (:maara toteuma)
+                                         (:id user)
+                                         urakka-id)))
 
 (defn tallenna-kasinsyotetty-toteuma [db user {:keys [urakka-id sopimus-id toteuma]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
