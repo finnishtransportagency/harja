@@ -20,35 +20,25 @@
 (defn- hae-tehtavamaarat
   [db {:keys [urakka-id hallintayksikko-id alkupvm loppupvm]}]
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)]
-    (cond
-      hallintayksikko-id (tm-q/hae-hallintayksikon-tehtavamaarat-ja-toteumat-aikavalilla
-                           db
-                           {:alkupvm         alkupvm
-                            :loppupvm        loppupvm
-                            :hoitokausi      hoitokaudet
-                            :hallintayksikko hallintayksikko-id})
-      urakka-id (tm-q/hae-urakan-tehtavamaarat-ja-toteumat-aikavalilla
-                  db
-                  {:urakka     urakka-id
-                   :alkupvm    alkupvm
-                   :loppupvm   loppupvm
-                   :hoitokausi hoitokaudet})
-      :oletus (tm-q/hae-kaikki-tehtavamaarat-ja-toteumat-aikavalilla
-                db
-                {:alkupvm    alkupvm
-                 :loppupvm   loppupvm
-                 :hoitokausi hoitokaudet}))))
+    (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla
+      db
+      {:alkupvm         alkupvm
+       :loppupvm        loppupvm
+       :hoitokausi      hoitokaudet
+       :urakka          urakka-id
+       :hallintayksikko hallintayksikko-id})))
 
-(defn- laske-toteuma-%
+(defn- laske-toteuma-%                                      ;:TODO voisko olla sql:ssä?
   [rivi]
   (let [[_ _ suunniteltu toteuma] rivi
-        toteuma-% (when (-> rivi
-                            count
-                            (> 1))
+        valiotsikko? (-> rivi
+                         count
+                         (> 1))
+        toteuma-% (when valiotsikko?
                     (cond
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
-                      :oletus (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))]
+                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))]
     (keep identity
           (conj (into [] rivi) toteuma-%))))
 
@@ -63,12 +53,12 @@
 
 (defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
   [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
-  (if (not= 1 (count (keys rivi)))
+  (if-let [valiotsikkorivi? (= 1 (count (keys rivi)))]
+    rivi
     (let [rivi (select-keys rivi [:nimi :toteuma :yksikko])]
       (if (= yksikko suunnitteluyksikko)
         (assoc rivi :suunniteltu suunniteltu)
-        (assoc rivi :suunniteltu 0)))
-    rivi))
+        (assoc rivi :suunniteltu 0)))))
 
 (defn- ota-tarvittavat-arvot
   [m]
@@ -118,7 +108,7 @@
                                                               rivi))))))
         muodosta-rivi (comp
                         (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
-                        (map null-arvot-nollaksi-rivilla)
+                        (map null-arvot-nollaksi-rivilla)   ;:TODO Sql?
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
                         (map muodosta-otsikot))
@@ -132,7 +122,6 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm] :as params}]
-  (println params)
   (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user params)]
     [:raportti
      {:nimi "Tehtävämäärät"}
