@@ -180,7 +180,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
+  [{:keys [auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
   (let [auki? (atom false)
         lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo]
                      (let [disabled? (and disabled-vaihtoehdot
@@ -286,7 +286,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (komp/klikattu-ulkopuolelle #(when @auki?
                                      (reset! auki? false)
                                      (when kiinni-fn! (kiinni-fn!)))
-                                  klikattu-ulkopuolelle-params)
+                                  {:tarkista-komponentti? true})
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
