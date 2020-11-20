@@ -78,7 +78,6 @@ jobs:
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
-          # Luetaan käsiteltävä branch
           source lue-arvot-ymparistomuuttujiin.sh;
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;

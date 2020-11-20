@@ -31,7 +31,7 @@
 (Locale/setDefault (Locale. "fi" "FI"))
 
 (defn circleci? []
-  (not (str/blank? (env/env "CIRCLE_BRANCH"))))
+  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
@@ -40,22 +40,22 @@
    {:println
     {:min-level
      (cond
-       (env/env "HARJA_NOLOG")
+       (env/env "HARJA_NOLOG" false)
        :fatal
 
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST")
-                      :portti (env/env "HARJA_TIETOKANTA_PORTTI")
+(def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                      :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
                       :salasana nil})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST")
-                       :portti (env/env "HARJA_TIETOKANTA_PORTTI")
+(def temppitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                       :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                        :tietokanta "temp"
                        :kayttaja "harjatest"
                        :salasana nil})
@@ -1240,7 +1240,7 @@
             {:timeout-in-ms 10
              :concurrency (count kutsut)
              :requests (count kutsut)}
-            (when (env/env "HARJA_AJA_GATLING_RAPORTTI")
+            (when (env/env "HARJA_AJA_GATLING_RAPORTTI" false)
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
               ;; eli luodaan oma raportteri, joka ei tee mitään
               {:reporter {:writer (fn [_ _ _])
