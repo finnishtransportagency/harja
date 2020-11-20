@@ -322,7 +322,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (hash vaihtoehdot))
                                          :class (when disabled "disabled")}]
               ^{:key :kiinni}
-              [:span.livicon-chevron-down {:id (str "chevron-down-btn-" (hash vaihtoehdot))
+              [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (hash vaihtoehdot))
                                            :class (when disabled "disabled")}])]
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})

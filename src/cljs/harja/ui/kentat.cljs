@@ -464,7 +464,7 @@
         [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] "Tyhjennä kaikki"]])
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
-        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
+        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Valitse kaikki"]])
      (let [vaihtoehdot-palstoissa (partition-all
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
