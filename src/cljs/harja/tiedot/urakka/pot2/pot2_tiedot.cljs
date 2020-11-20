@@ -13,11 +13,20 @@
 
 (defonce pot2-nakymassa? (atom false))
 
+(defrecord MuutaTila [polku arvo])
+(defrecord PaivitaTila [polku f])
 (defrecord HaePot2Tiedot [paallystyskohde-id])
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
+
+  MuutaTila
+  (process-event [{:keys [polku arvo]} app]
+    (assoc-in app polku arvo))
+  PaivitaTila
+  (process-event [{:keys [polku f]} app]
+    (update-in app polku f))
 
   HaePot2Tiedot
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
@@ -30,11 +39,10 @@
                           :epaonnistui ->HaePot2TiedotEpaonnistui})))
 
   HaePot2TiedotOnnistui
-  ;; fixme implement
   (process-event [{vastaus :vastaus} app]
     (println "HaePot2TiedotOnnistui " (pr-str vastaus))
     (-> app
-        (assoc :pot2-tiedot vastaus)))
+        (assoc-in [:paallystysilmoitus-lomakedata :perustiedot] (:perustiedot vastaus))))
 
   HaePot2TiedotEpaonnistui
   ;; fixme implement

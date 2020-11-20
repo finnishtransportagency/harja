@@ -6,6 +6,7 @@
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
 
+            [harja.kyselyt.pot2 :as pot2-q]
             [harja.domain
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
@@ -17,7 +18,6 @@
             [harja.pvm :as pvm]
             [specql.core :as specql]
             [jeesql.core :refer [defqueries]]))
-
 
 (defn hae-urakan-pot2-massat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -225,22 +225,13 @@
 (defn hae-kohteen-pot2-tiedot [db user {::pot2-domain/keys [yllapitokohde-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user yllapitokohde-id)
   (let [_ (println "hae-kohteen-pot2-tiedot" (pr-str yllapitokohde-id))
-        tiedot
-        (fetch db
-               ::pot2-domain/pot2
-               #{::pot2-domain/id
-                 ::pot2-domain/yllapitokohde-id
-                 ::pot2-domain/paatos-tekninen-osa
-                 ::pot2-domain/takuupvm}
-               {::pot2-domain/yllapitokohde-id yllapitokohde-id
-                ::pot2-domain/poistettu? false})
+        perustiedot (first (pot2-q/hae-kohteen-pot2-tiedot db {:kohde_id yllapitokohde-id}))
 
-        ;; TODO: LEFT JOIN pot2_paallystekerros
-        ;; TODO: LEFT JOIN pot2_alusta
-        ;; HUOM: SPECQL ei tue kuin 1 join kunnolla --> erillisiä kyselyitä jos monta joinia
-        ;; Ehkä tehdään VIEW?
-        _ (println "hae-urakan-pot2-massat :: massat" (pr-str tiedot))]
-    tiedot))
+        ;; TODO: Tähän tulee myöh. erilliset kyselyt:
+        ;; 1. Kkulutuskerroksen rivit
+        ;; 2. Alustan rivit
+        _ (println "hae-urakan-pot2-massat :: massat" (pr-str perustiedot))]
+    {:perustiedot perustiedot}))
 
 
 (defrecord POT2 []

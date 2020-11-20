@@ -37,6 +37,8 @@
 
 ;;;; PAALLYSTYSILMOITUKSET-LISTAUS ;;;;;;;;
 
+;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
+(def pot2-vuodesta-eteenpain 2021)
 
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
@@ -44,10 +46,11 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
+(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
   (let [urakka-id (:id urakka)
+        valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
         avaa-paallystysilmoitus-handler (fn [e! rivi]
-                                          (if false ;; FIXME: valittu vuosi > 2020
+                                          (if (>= valittu-vuosi pot2-vuodesta-eteenpain)
                                             (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
                                             (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
     [grid/grid
@@ -207,10 +210,12 @@
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
-       (if (or paallystysilmoitus-lomakedata pot2-lomake)
-         ;; TODO: päättely, jos valittu vuosi > 2020, näytä pot2
+       ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
+       ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
+       ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
+       (if paallystysilmoitus-lomakedata
          (if (> (:valittu-urakan-vuosi urakka-tila) 2020)
-           [pot2-lomake/pot2-lomake e! pot2-lomake]
+           [pot2-lomake/pot2-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
