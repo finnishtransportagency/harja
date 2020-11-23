@@ -28,8 +28,8 @@ docker images | head -n1
 docker images | grep "$(echo "$IMAGE" | sed "s/:.*//")" | grep "$(echo "$IMAGE" | sed "s/.*://")"
 
 echo ""
-echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa ${HARJA_TIETOKANTA_PORTTI}"
-while ! nc -z localhost "${HARJA_TIETOKANTA_PORTTI}"; do
+echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa ${HARJA_TIETOKANTA_PORTTI:-5432}"
+while ! nc -z localhost "${HARJA_TIETOKANTA_PORTTI:-5432}"; do
     echo "nukutaan..."
     sleep 0.5;
 done;

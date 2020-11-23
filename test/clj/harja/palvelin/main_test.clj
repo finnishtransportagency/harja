@@ -30,24 +30,21 @@
                              (assoc-in [:turi :urakan-tyotunnit-url] ""))]
     (str asetukset-datana)))
 
-(defn- poista-sisimmat-sulut-reader-makrosta [s]
-  (str/replace s #"\#=\(.*(\([^\(\)]*\))" (fn [args]
-                                            (case (count args)
-                                              0 ""
-                                              1 (first args)
-                                              2 (apply str (let [lopputulos (first args)
-                                                                 pudotettavien-maara (count (second args))]
-                                                             (drop-last pudotettavien-maara lopputulos)))))))
+(defn- poista-reader-makro [s korvaava-teksti]
+  (str/replace s
+               #"#=\([^\;\#]*(?<!\;|(?:[\#][\=\_]))[^\;]*\)"
+               korvaava-teksti))
 
 (defn- poista-reader-makrot [teksti korvaava-teksti]
   (loop [teksti teksti
-         sisaltaa-readermakroja? (re-find #"\#=" teksti)]
-    (if sisaltaa-readermakroja?
-      (recur (-> teksti
-                 poista-sisimmat-sulut-reader-makrosta
-                 (str/replace #"\#=\([^\(\)]*\)" korvaava-teksti))
-             (re-find #"\#=" teksti))
-      teksti)))
+         sisaltaa-readermakroja? (re-find #"\#=" teksti)
+         loop-n 0]
+    (cond
+      (> loop-n 1000) (do (println teksti) (throw (Exception. "liikaa looppeja")))
+      sisaltaa-readermakroja? (recur (poista-reader-makro teksti korvaava-teksti)
+                                     (re-find #"\#=" teksti)
+                                     (inc loop-n))
+      :default teksti)))
 
 (defn- testiasetukset [testit]
   (let [file (File/createTempFile "asetukset" ".edn")
