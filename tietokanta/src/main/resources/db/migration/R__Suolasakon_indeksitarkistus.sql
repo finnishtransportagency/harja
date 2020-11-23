@@ -40,9 +40,10 @@ BEGIN
   -- Kerroin on talvikauden alkuvuoden loka,marras,joulu kuukausien sekä
   -- seuraavan vuoden tammi,helmi,maalis kuukausien prosenttiarvojen
   -- keskiarvo kertoimena.
+  -- Kerroin pyöristetään yhteen desimaaliin.
   SELECT
     INTO kerroin
-    AVG(arvo)/perusluku
+    round(AVG(arvo)/perusluku,1)
   FROM indeksi
   WHERE nimi = indeksinimi
         AND ((vuosi = alkuv  AND kuukausi = 10) OR
