@@ -14,4 +14,4 @@
        (= "false" (clj-str/lower-case ym)) false
        (re-find #"^-?\d+$" ym) (Long/parseLong ym)
        (re-find #"^-?\d+(\.\d+)?$" ym) (Double/parseDouble ym)
-       :else ym))))
+       :default ym))))
