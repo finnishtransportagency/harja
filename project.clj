@@ -20,7 +20,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki
-                 [com.stuartsierra/component "0.4.0"]
+                 [com.stuartsierra/component "1.0.0"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "4.10.0"]
@@ -138,7 +138,9 @@
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
-                 [clj-gatling "0.13.0" :exclusions [[clj-time]]]]
+                 [clj-gatling "0.13.0" :exclusions [[clj-time]]]
+                 ;; Tarvitaan käännöksessä
+                 [com.bhauman/figwheel-main "0.2.11"]]
 
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
@@ -192,9 +194,11 @@
                                      :provides ["epsg3067"]}]}}]}
 
 
-  :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
-                                     "resources/public/js/harja.js"
-                                     "resource/public/js/harja"]
+  :clean-targets ^{:protect false} ["dev-resources/js/out"
+                                    "dev-resources/tmp"
+                                    "target"
+                                    "resources/public/js/harja.js"
+                                    "resource/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less/application"
@@ -209,28 +213,23 @@
   :auto-clean false ;; for uberjar
 
   :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
-
-  ;; REPL kehitys
-  :repl-options {:init-ns harja.palvelin.main
-                 :init (harja.palvelin.main/-main)
-                 :port 4005
-                 :timeout 120000}
-
   
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
-            "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
-            "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
-            "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-dev"]
-            "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
+  :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
+            "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
+            "compile-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "compile"]
+            "repl-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "repl"]
+            "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/prod"]
+            "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-dev"]
+            "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "+prod" "compile-prod,"
+                        "with-profile" "prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                        "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
@@ -248,8 +247,8 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
-                               "with-profile" "+prod" "compile-prod,"
-                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               "with-profile" "prod-cljs" "compile-prod,"
+                               "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors { ;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)

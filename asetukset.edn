@@ -1,4 +1,4 @@
-{:kehitysmoodi true
+{:kehitysmoodi #=(eval (if-some [e (System/getenv "HARJA_DEV_YMPARISTO")] e true))
 
  :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
@@ -6,8 +6,8 @@
 
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
-                 ;:salli-oletuskayttaja? false
-                 }
+                 :salli-oletuskayttaja? #=(eval (if-some [e (System/getenv "HARJA_SALLI_OLETUSKAYTTAJA")] e false))
+                 :dev-resources-path #=(eval (if-some [e (System/getenv "HARJA_DEV_RESOURCES_PATH")] e "dev-resources"))}
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
  :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"
@@ -17,15 +17,15 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
- :tietokanta {:palvelin "localhost"
+ :tietokanta {:palvelin #=(eval (if-some [e (System/getenv "HARJA_TIETOKANTA_HOST")] e "localhost"))
               :tietokanta "harja"
-              :portti 5432
+              :portti #=(eval (if-some [e (System/getenv "HARJA_TIETOKANTA_PORTTI")] e 5432))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
               :salasana "harja"}
- :tietokanta-replica {:palvelin "localhost"
+ :tietokanta-replica {:palvelin #=(eval (if-some [e (System/getenv "HARJA_TIETOKANTA_HOST")] e "localhost"))
                       :tietokanta "harja"
-                      :portti 5432
+                      :portti #=(eval (if-some [e (System/getenv "HARJA_TIETOKANTA_PORTTI")] e 5432))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
                       :salasana "harja"}
@@ -50,7 +50,10 @@
        }
 
  :sonja
- {:url "tcp://localhost:61617"
+ {:url #=(eval (str "tcp://"
+                 (if-some [e (System/getenv "HARJA_SONJA_BROKER_HOST")] e "localhost")
+                 ":"
+                 (if-some [e (System/getenv "HARJA_SONJA_BROKER_PORT")] e 61616)))
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq}
