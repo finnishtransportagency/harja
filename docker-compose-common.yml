@@ -1,0 +1,40 @@
+version: '2.4'
+services:
+  app:
+    image: solita/harja-app:latest
+    mem_reservation: 2g
+    mem_limit: 4g
+    cpu_shares: 10000
+    cpuset: 0-3
+    blkio_config:
+      weight: 1000
+    stdin_open: true
+    tty: true
+    environment:
+      - "TZ=Europe/Helsinki"
+      - "POSTGRESQL_NAME=${POSTGRESQL_NAME}" # Tämä kuuluu oikeastaan .docker_compose_container_env tiedostoon, mutta asetetaan tässä, että varmasti tulee oikea nimi
+      - "FRONTEND_REPL_PORT=${FRONTEND_REPL_PORT}"
+      - "HOST_USER_ID=${HOST_USER_ID}"
+      - "DC_JAETTU_KANSIO=${DC_JAETTU_KANSIO}"
+      - "BRANCH=${BRANCH}"
+      - "HARJA_DIR=${DC_HARJA_KANSIO}"
+      - "HARJA_DEV_YMPARISTO=true"
+      - "HARJA_TIETOKANTA_HOST=${POSTGRESQL_NAME}"
+      - "HARJA_TIETOKANTA_HOST_KAANNOS=${POSTGRESQL_NAME}"
+      - "HARJA_TIETOKANTA_PORTTI=${HARJA_TIETOKANTA_PORTTI}"
+      - "HARJA_SALLI_OLETUSKAYTTAJA=false"
+      - "HARJA_AJA_GATLING_RAPORTTI=false"
+      - "HARJA_NOLOG=false"
+      - "HARJA_DEV_RESOURCES_PATH=${DC_JAETTU_KANSIO}/${BRANCH}/dev-resources"
+      - "HARJA_SONJA_BROKER_PORT=${HARJA_SONJA_BROKER_PORT}"
+      - "HARJA_SONJA_BROKER_HOST=${HARJA_SONJA_BROKER_HOST}"
+    env_file:
+      - .docker_compose_container_env
+    volumes:
+      - type: bind
+        source: .
+        target: "${DC_HARJA_KANSIO}"
+        consistency: "${DC_VOLUME_CONSISTENCY}"
+      - type: volume
+        source: yhteiset_tiedostot
+        target: "${DC_JAETTU_KANSIO}"

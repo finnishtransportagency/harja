@@ -39,6 +39,7 @@ Harja repon hakemistorakenne:
 
 ## Kehitysympäristön pystyttäminen
 
+#### Paikallisesti
 
 1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
 2. Asenna Docker: www.docker.com/
@@ -62,10 +63,15 @@ Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit as
 `[:http-palvelin :salli-oletuskayttaja?]` poluussa olevan arvon true:ksi, ja restartoida backend, 
 tekemällä `lein repl` uudestaan.
 
-8. Käynnistä Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7. 
-askeleiden mukaan, voit käynnistä cypress e2e interaktiivinen ympäristö: 
+8. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7.
+askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
 
-    `sh kaynnista_cypress.sh`  
+`sh kaynnista_cypress.sh`
+
+#### Docker compose
+
+1. Asenna docker ja docker compose
+2. aja `bash sh/dc/aja-harja-dokkerissa.sh`
 
 ## Kirjautuminen ja ModHeader
 
@@ -96,7 +102,7 @@ Seuraavat headerit tuettuna:
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
 
-### Docker - paikallinen kehitysympäristö
+## Docker - paikallinen kehitysympäristö
 
 Kannan restart 
 
@@ -120,6 +126,32 @@ ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteytt
 Kantaimagen päivitys: docker pull solita/harjadb
 
 Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up. (käytä mieluummin ym. sh devdb_* skriptejä.)
+
+## Docker compose - paikallinen kehitysympäristö
+
+Docker compose:n konfiguroimisessa on käytetty versiota kaksi kolmosen sijasta, koska kakkonen sopii paikalliseen devaukseen
+paremmin. 
+
+- https://github.com/docker/compose/issues/4513
+- https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/#_cpu
+
+MAC käyttäjillä saattaa olla hieman hankaluuksia Docker composen hitauden kanssa, koska datan siirtäminen hostin (Macin) ja
+konttien välillä on melkoisen hidasta, mutta tämä ongelma saatetaan korjata joskus
+ 
+- https://www.amazee.io/blog/post/docker-on-mac-performance-docker-machine-vs-docker-for-mac
+- https://docs.docker.com/docker-for-mac/osxfs-caching/
+
+
+Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC käyttäjille tämän hitauden takia.
+
+- Käytetään `delegated` voluumia docker composessa
+- Kakutetaan leiningenin trampoliinit käyttämällä `LEIN_FAST_TRAMPOLINE` env muuttujaa
+  - https://github.com/technomancy/leiningen/wiki/Faster
+
+#### Ongelmia
+
+- Uudet konfiguraatiot ei heijastu konteissa.
+  - Kokeile poistaa trampoliini cachet. Ovat kansiossa `target/trampolines`
 
 ## Dokumentaatio
 
