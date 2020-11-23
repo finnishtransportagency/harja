@@ -72,8 +72,8 @@ commands:
 jobs:
   front-testit:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -96,8 +96,8 @@ jobs:
 
   back-testit:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -120,8 +120,8 @@ jobs:
   # Tänne voisi alkaa siirtelemään integraatiotestejä
   integraatio-testit:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -151,8 +151,8 @@ jobs:
 
   prod-build:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -191,7 +191,7 @@ jobs:
           HARJA_SALLI_OLETUSKAYTTAJA: 'true'
           HARJA_DEV_YMPARISTO: 'false'
 
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "

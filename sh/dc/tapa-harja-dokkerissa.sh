@@ -14,7 +14,7 @@ aja-yhteisessa-voluumissa() {
   then
     sudo docker exec -e BRANCH harja_harja-app_1 /bin/bash -c "cd \$\{DC_JAETTU_KANSIO\}; $1"
   else
-    sudo docker run -e BRANCH --rm --volume=harja_yhteiset_tiedostot:/yt solita/harja-app:dev /bin/bash -c "cd /yt; $1"
+    sudo docker run -e BRANCH --rm --volume=harja_yhteiset_tiedostot:/yt solita/harja-app:latest /bin/bash -c "cd /yt; $1"
   fi
 }
 
