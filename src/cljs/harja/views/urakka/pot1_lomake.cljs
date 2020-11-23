@@ -768,7 +768,7 @@
            (when lukittu?
              [lomake/lomake-lukittu-huomautus lukko])
 
-           [:h2 "Päällystysilmoitus"]
+           [:h1 "Päällystysilmoitus"]
            (when (= :lukittu tila)
              [poista-lukitus e! urakka])
 

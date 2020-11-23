@@ -199,23 +199,19 @@
           :huomauta perustelu})]
       tekninen-osa]]))
 
+(defn paallystyskohteen-fmt
+  [{:keys [kohdenumero tunnus kohdenimi]}]
+  (str "#" kohdenumero " " tunnus " " kohdenimi))
+
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka
                                       lukittu?
                                       muokkaa!
                                       validoinnit huomautukset]
-  (println "PERUSTIEDOT 1 " (pr-str paallystysilmoituksen-osa))
-  (println "PERUSTIEDOT 2 " (pr-str urakka))
-  (println "PERUSTIEDOT 3 lukittu? " (pr-str lukittu?))
-  (println "PERUSTIEDOT 4 " (pr-str muokkaa!))
-  (println "PERUSTIEDOT 5 " (pr-str validoinnit))
-  (println "PERUSTIEDOT 6 huomautukset" (pr-str huomautukset))
   (let [false-fn (constantly false)
         muokkaa-fn (fn [uusi]
                      (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                      (muokkaa! update :perustiedot (fn [vanha]
                                                      (merge vanha uusi))))
-        kohde-hae-fn (fn [{:keys [kohdenumero tunnus kohdenimi]}]
-                       (str "#" kohdenumero " " tunnus " " kohdenimi))
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)
         kommentit-komponentti (fn [lomakedata]
                                 (let [uusi-kommentti-atom (atom (get-in lomakedata [:data :uusi-kommentti]))]
@@ -246,16 +242,16 @@
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
                                       kirjoitusoikeus?))]
-        [:div.row
+        [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
-          [:h3 "Perustiedot"]
+          [:h2 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
                           :muokkaa! muokkaa-fn
                           :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}
            [{:otsikko "Kohde" :nimi :kohde
-             :hae kohde-hae-fn
+             :hae paallystyskohteen-fmt
              :muokattava? false-fn
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
             (merge
@@ -263,7 +259,7 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
               (if muokattava?
                 {:tyyppi :reagent-komponentti
-                 :piilota-label? true
+                 :otsikko "Tierekisteriosoite"
                  :komponentti tr-kentta
                  :komponentti-args [e! paallystysilmoituksen-osa]
                  :validoi (get-in validoinnit [:perustiedot :tr-osoite])
