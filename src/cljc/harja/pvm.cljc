@@ -9,14 +9,14 @@
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
     #?(:clj
-            [clj-time.core :as t])
+       [clj-time.core :as t])
     #?(:clj
-            [clj-time.coerce :as tc])
+       [clj-time.coerce :as tc])
     #?(:clj
-            [clj-time.local :as l])
+       [clj-time.local :as l])
 
-            [taoensso.timbre :as log]
-            [clojure.string :as str])
+    [taoensso.timbre :as log]
+    [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
@@ -279,14 +279,14 @@
         (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
 (defn tiukin-aikavali
- [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
- (let [alkupvm (if (jalkeen? alkupvm v-alkupvm)
-                 alkupvm
-                 v-alkupvm)
-       loppupvm (if (ennen? loppupvm v-loppupvm)
-                  loppupvm
-                  v-loppupvm)]
-   [alkupvm loppupvm]))
+  [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
+  (let [alkupvm (if (jalkeen? alkupvm v-alkupvm)
+                  alkupvm
+                  v-alkupvm)
+        loppupvm (if (ennen? loppupvm v-loppupvm)
+                   loppupvm
+                   v-loppupvm)]
+    [alkupvm loppupvm]))
 
 #?(:clj
    (defn tanaan? [pvm]
@@ -485,7 +485,9 @@
     "huhtikuu" 4
     "toukokuu" 5
     "kesäkuu" 6
+    "kesakuu" 6
     "heinäkuu" 7
+    "heinakuu" 7
     "elokuu" 8
     "syyskuu" 9
     "lokakuu" 10
@@ -991,7 +993,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                      (range 1 (t/in-days (t/interval alku loppu))))))))
 
 (defn aikavali-nyt-miinus [paivia]
-  (let [nyt #?(:clj (joda-timeksi (nyt))
+  (let [nyt #?(:clj  (joda-timeksi (nyt))
                :cljs (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
 
@@ -1023,7 +1025,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
             ajat)))
 
 #?(:clj
-   (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm[pvm kk-maara]
-       (tc/to-date-time
-         (t/last-day-of-the-month
-           (t/plus (tc/to-date-time (aika-iso8601 pvm))(t/months kk-maara))))))
+   (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm [pvm kk-maara]
+     (tc/to-date-time
+       (t/last-day-of-the-month
+         (t/plus (tc/to-date-time (aika-iso8601 pvm)) (t/months kk-maara))))))
+
+#?(:clj
+   (defn kuukauden-ensimmainen-paiva
+     [pvm]
+     (dateksi (t/first-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
+
+#?(:clj
+   (defn kuukauden-viimeinen-paiva
+     [pvm]
+     (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))

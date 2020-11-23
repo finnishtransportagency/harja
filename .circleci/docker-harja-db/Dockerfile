@@ -1,4 +1,4 @@
-FROM solita/harjadb:centos-12-dev
+FROM solita/harjadb:centos-12
 
 RUN yum install -y git
 

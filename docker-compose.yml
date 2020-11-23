@@ -64,6 +64,7 @@ services:
       fi;
       touch ${DC_JAETTU_KANSIO}/repl_1.done
       echo 'REPL käynnistetty'
+      # Tuodaan harja repl pyörimään etualalle
       fg
       "
   harja-app-2:

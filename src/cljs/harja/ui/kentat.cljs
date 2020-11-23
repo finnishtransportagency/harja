@@ -464,7 +464,7 @@
         [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] "Tyhjennä kaikki"]])
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
-        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
+        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Valitse kaikki"]])
      (let [vaihtoehdot-palstoissa (partition-all
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
@@ -602,6 +602,7 @@
                                                             (= valittu vaihtoehto))
                                              :ryhma     group-id
                                              :id        (gensym (str "radio-group-" (name vaihtoehto)))}]
+                               ^{:key (str "radio-group-" (name vaihtoehto))}
                                [:div.radio
                                 [:label
                                  [:input {:type      "radio"
@@ -652,7 +653,6 @@
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
                             :vayla-tyyli?          vayla-tyyli?
-                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
                             :elementin-id elementin-id}
        valinnat]))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
@@ -684,7 +684,6 @@
                                 :disabled              disabled?
                                 :data-cy               data-cy
                                 :vayla-tyyli?          vayla-tyyli?
-                                :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
                                 :elementin-id elementin-id}
            valinnat])))))
 

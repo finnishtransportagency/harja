@@ -1,4 +1,4 @@
-{:kehitysmoodi #=(eval (System/getenv "HARJA_DEV_YMPARISTO"))
+{:kehitysmoodi #=(eval (harja.tyokalut.env/env "HARJA_DEV_YMPARISTO" true))
 
  :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
@@ -6,8 +6,8 @@
 
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
-                 :salli-oletuskayttaja? #=(eval (System/getenv "HARJA_SALLI_OLETUSKAYTTAJA"))
-                 :dev-resources-path #=(eval (System/getenv "HARJA_DEV_RESOURCES_PATH"))}
+                 :salli-oletuskayttaja? #=(eval (harja.tyokalut.env/env "HARJA_SALLI_OLETUSKAYTTAJA" false))
+                 :dev-resources-path #=(eval (harja.tyokalut.env/env "HARJA_DEV_RESOURCES_PATH" "dev-resources"))}
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
  :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"
@@ -17,15 +17,15 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
- :tietokanta {:palvelin #=(eval (System/getenv "HARJA_TIETOKANTA_HOST"))
+ :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
               :tietokanta "harja"
-              :portti 5432
+              :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
               :salasana "harja"}
- :tietokanta-replica {:palvelin #=(eval (System/getenv "HARJA_TIETOKANTA_HOST"))
+ :tietokanta-replica {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
                       :tietokanta "harja"
-                      :portti 5432
+                      :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
                       :salasana "harja"}
@@ -55,7 +55,10 @@
        }
 
  :sonja
- {:url #=(eval (str "tcp://" (System/getenv "HARJA_SONJA_BROKER_HOST") ":" (System/getenv "HARJA_SONJA_BROKER_PORT")))
+ {:url #=(eval (str "tcp://"
+                 (harja.tyokalut.env/env "HARJA_SONJA_BROKER_HOST" "localhost")
+                 ":"
+                 (harja.tyokalut.env/env "HARJA_SONJA_BROKER_PORT" 61616)))
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq}

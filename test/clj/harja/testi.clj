@@ -26,7 +26,8 @@
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
-    [clojure.java.jdbc :as jdbc])
+    [clojure.java.jdbc :as jdbc]
+    [harja.tyokalut.env :as env])
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
@@ -36,12 +37,8 @@
 
 (Locale/setDefault (Locale. "fi" "FI"))
 
-(defn ollaanko-jenkinsissa? []
-  (= "harja-jenkins.solitaservices.fi"
-     (.getHostName (java.net.InetAddress/getLocalHost))))
-
 (defn circleci? []
-  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
@@ -50,22 +47,22 @@
    {:println
     {:min-level
      (cond
-       (= "true" (System/getenv "HARJA_NOLOG"))
+       (env/env "HARJA_NOLOG" false)
        :fatal
 
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (System/getenv "HARJA_TIETOKANTA_HOST")
-                      :portti 5432
+(def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                      :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
                       :salasana nil})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (System/getenv "HARJA_TIETOKANTA_HOST")
-                       :portti 5432
+(def temppitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                       :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                        :tietokanta "temp"
                        :kayttaja "harjatest"
                        :salasana nil})
@@ -1367,7 +1364,7 @@
             {:timeout-in-ms 10
              :concurrency (count kutsut)
              :requests (count kutsut)}
-            (when (= "true" (System/getenv "HARJA_AJA_GATLING_RAPORTTI"))
+            (when (env/env "HARJA_AJA_GATLING_RAPORTTI" false)
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
               ;; eli luodaan oma raportteri, joka ei tee mitään
               {:reporter {:writer (fn [_ _ _])

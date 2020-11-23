@@ -195,6 +195,7 @@
 
 
   :clean-targets ^{:protect false} ["dev-resources/js/out"
+                                    "dev-resources/js/harja.js"
                                     "dev-resources/tmp"
                                     "target"
                                     "resources/public/js/harja.js"
