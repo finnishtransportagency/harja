@@ -87,6 +87,7 @@ $$ LANGUAGE plpgsql;
 
 -- Laske kuukauden indeksikorotus
 -- indeksikorotus lasketaan yleensä (aina?) (vertailuluku/perusluku) * summa
+-- laskennassa vertailuluku/perusluku-välitulos pyöristetään yhteen desimaaliin
 -- esim. indeksin arvo 105.0, perusluku 103.2, summa 1000e:
 -- summa indeksillä korotettuna 1 000 € * (105/103.2) = 1 017,44 €
 CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
@@ -124,7 +125,7 @@ BEGIN
         AND vuosi = v AND kuukausi = kk;
   -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
   -- tämä lasku palauttaa NULL.
-  kerroin := (vertailuluku / perusluku);
+  kerroin := round ((vertailuluku / perusluku), 1);
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;
@@ -144,7 +145,7 @@ BEGIN
   INTO vertailuluku;
   -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
   -- tämä lasku palauttaa NULL.
-  RETURN (vertailuluku / perusluku) * summa;
+  RETURN round((vertailuluku / perusluku),1) * summa;
 END;
 $$ LANGUAGE plpgsql;
 
