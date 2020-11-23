@@ -93,6 +93,13 @@
   (is (true? (pvm/sama-kuukausi? (pvm/->pvm-date-timeksi "3.4.2020")
                                  (t/local-date 2020 4 25)))))
 
+(deftest kuukauden-numero-toimii-myos-umlautilla
+  (is (= 6 (pvm/kuukauden-numero "kesäkuu")))
+  (is (= 6 (pvm/kuukauden-numero "kesakuu")))
+  (is (= 7 (pvm/kuukauden-numero "heinäkuu")))
+  (is (= 7 (pvm/kuukauden-numero "heinakuu")))
+  (is (nil? (pvm/kuukauden-numero "täyskuu"))))
+
 (deftest valissa?
   (is (true? (pvm/valissa? nyt nyt nyt)))
   (is (true? (pvm/valissa? nyt

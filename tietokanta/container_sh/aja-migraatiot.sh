@@ -12,4 +12,4 @@ fi
 
 cd harja/tietokanta/
 echo "Ajetaan migraatiot"
-mvn -Dharja.tietokanta.port="${POSTGRESQL_PORTTI:-5432}" -Dharja.tietokanta.host="${POSTGRESQL_NAME:-localhost}" flyway:migrate
+mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" flyway:migrate

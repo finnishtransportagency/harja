@@ -293,7 +293,7 @@ table.table-striped {
 
 .livi-alasveto.open {
     .nappi-alasveto {
-        border: 1px solid @sininen4;
+        border: 1px solid @black;
     }
 }
 .livi-alasveto (@leveys: 200px, @min-leveys: 160px, @i-korkeus: @input-korkeus) {
@@ -318,7 +318,9 @@ table.table-striped {
             white-space: nowrap;
             width: 100%;
         }
-        .livicon-chevron-down {
+        .livicon-chevron-down,
+        .livicon-chevron-up
+        {
             &.disabled {
                 background: none;
                 background-color: @harmaa10;
@@ -345,7 +347,7 @@ table.table-striped {
 }
 
 .livi-alasvetolista {
-    border: 1px solid @sininen5;
+    border: 1px solid @black;
     padding: 0;
 
     li:first-child .checkbox-label-valikko {
@@ -360,14 +362,14 @@ table.table-striped {
     & > a {
         background-color: @valkoinen;
         border-color: @harmaa7;
-        color: @sininen4;
+        color: @harmaa1;
         padding: 3px 6px;
         &:hover,
         &:focus,
         &.focus,
         &:active {
-            background-color: @sininen5;
-            color: @valkoinen;
+            background-color: @table-bg-hover;
+            color: @harmaa1;
         }
     }
     & > span {

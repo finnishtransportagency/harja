@@ -156,18 +156,22 @@
                                                  (= (:tehtava (first (second rivi))) (:avattu-tehtava app)))
                                         (mapcat
                                           (fn [toteuma]
-                                            [^{:key (str "toteuma-" (hash toteuma))}
-                                             (do
-                                               (reset! row-index-atom (inc @row-index-atom))
-                                               [:tr {:key (str "tr-toteuma" - (hash toteuma))
-                                                     :class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
-                                                [:td {:style {:width (:tehtava leveydet)}} (if (= "muu" (:tyyppi toteuma))
-                                                                                             [muokkaa-toteumaa-linkki e! (:alkanut toteuma) (:id toteuma)]
-                                                                                             "Järjestelmästä lisätty")]
-                                                [:td {:style {:width (:caret leveydet)}}]
-                                                [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi))))]
-                                                [:td {:style {:width (:suunniteltu leveydet)}}]
-                                                [:td {:style {:width (:prosentti leveydet)}}]])])
+                                            (let [toteuma-linkki (if (= "muu" (:tyyppi toteuma))
+                                                                   [muokkaa-toteumaa-linkki e! (:alkanut toteuma) (:id toteuma)]
+                                                                   (if (or (> (:materiaalimaara toteuma) 0) (> (:maara toteuma) 0))
+                                                                     "Järjestelmästä lisätty"
+                                                                     nil))]
+                                              (when toteuma-linkki
+                                                [^{:key (str "toteuma-" (hash toteuma))}
+                                                 (do
+                                                   (reset! row-index-atom (inc @row-index-atom))
+                                                   [:tr {:key (str "tr-toteuma" - (hash toteuma))
+                                                         :class (str "table-default-" (if (odd? @row-index-atom) "even" "odd"))}
+                                                    [:td {:style {:width (:tehtava leveydet)}} toteuma-linkki]
+                                                    [:td {:style {:width (:caret leveydet)}}]
+                                                    [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt (big/->big (or (:materiaalimaara toteuma) (:maara toteuma) 0)) 2) " " (:yk (first (second rivi))))]
+                                                    [:td {:style {:width (:suunniteltu leveydet)}}]
+                                                    [:td {:style {:width (:prosentti leveydet)}}]])])))
 
                                           toteumat)))))
                                 rivit)]
@@ -226,16 +230,14 @@
        [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
-                                     :format-fn #(:otsikko %)
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+                                     :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
        [:span.alasvedon-otsikko "Hoitokausi"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                     :format-fn #(str "1.10." % "-30.9." (inc %))
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+                                     :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
       [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
@@ -266,7 +268,7 @@
                       (do
                         (e! (maarien-toteumat/->HaeKaikkiTehtavat))
                         (e! (maarien-toteumat/->HaeToimenpiteet))
-                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0 :otsikko "Kaikki"})))))
+                        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:otsikko "Kaikki"})))))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
