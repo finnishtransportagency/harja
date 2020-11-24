@@ -23,8 +23,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""
@@ -113,10 +112,7 @@
                                             [:sonja])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                [:db])))))
+                                 [:db :sonja :integraatioloki :sonja-sahkoposti])))))
   ;; aloita-sonja palauttaa kanavan.
   (binding [*sonja-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun

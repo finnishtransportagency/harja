@@ -12,7 +12,6 @@
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.data.hoito.kustannussuunnitelma :as ks-data]
             [harja.pvm :as pvm]))
@@ -48,10 +47,7 @@
                                                                  (:lahetysjono-ulos sampo)
                                                                  (:kuittausjono-ulos sampo)
                                                                  (:paivittainen-lahetysaika sampo)))
-                                                [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                [:db])))))
+                                                [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])))))
   ;; aloita-sonja palauttaa kanavan.
   (<!! (sut/aloita-sonja jarjestelma))
   ;; Merkataan kaikki kannassa oleva testidata lähetetyksi ennen testien ajoa ja purgetaan jono.
@@ -64,7 +60,7 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(deftest merkataan-budjettitavotteita-likaiseksi-ja-lähetetään-ne-Sampoon
+(deftest merkataan-budjettitavotteita-likaiseksi-ja-lahetetaan-ne-Sampoon
   (let [{urakka-id :id alkupvm :alkupvm} (first (q-map (str "SELECT id, alkupvm
                                             FROM   urakka
                                             WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))

@@ -8,8 +8,7 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.tyokalut.lukot :as lukot]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [harja.palvelin.tyokalut.lukot :as lukot]))
 
 (def sonja-kanava "sonjaping")
 (def lukon-vanhenemisaika 300)

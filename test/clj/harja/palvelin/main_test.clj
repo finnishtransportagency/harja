@@ -112,7 +112,6 @@
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
-    :komponenttien-tila
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat

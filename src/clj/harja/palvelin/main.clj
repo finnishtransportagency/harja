@@ -760,7 +760,6 @@
       (tarkista-ymparisto!)
       (kaynnista-harja-tarkkailija! asetukset)
       (kaynnista-pelkastaan-jarjestelma asetukset)
-      (aloita-sonja harja-jarjestelma)
       (status/aseta-status! :harja (:status harja-jarjestelma) 200 "Harja käynnistetty"))
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
