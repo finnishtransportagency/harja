@@ -230,16 +230,14 @@
        [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
-                                     :format-fn #(:otsikko %)
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+                                     :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
        [:span.alasvedon-otsikko "Hoitokausi"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                     :format-fn #(str "1.10." % "-30.9." (inc %))
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+                                     :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
       [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi

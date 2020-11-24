@@ -532,7 +532,6 @@
                                                        (= valittujen-valintojen-maara 1) (str "1" (first teksti))
                                                        :else (str valittujen-valintojen-maara (second teksti)))]
                                naytettava-teksti)
-            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
             :itemit-komponentteja? true}
            (when kaikki-valinta-fn
              {:class "pudotusvalikko"}))
