@@ -1,0 +1,1 @@
+Täällä on Dockerfile docker-compose:a varten. Lähinnä eroaa 
