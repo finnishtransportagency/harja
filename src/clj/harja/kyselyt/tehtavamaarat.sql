@@ -16,12 +16,12 @@ with urakat as (select u.id
                 where (:alkupvm between u.alkupvm and u.loppupvm
                   or :loppupvm between u.alkupvm and u.loppupvm)
                   and case
-                    when :urakka::integer is not null then
-                      u.id = :urakka
-                    when :hallintayksikko::integer is not null then
-                      u.hallintayksikko = :hallintayksikko
-                    else true
-                    end
+                        when :urakka::integer is not null then
+                          u.id = :urakka
+                        when :hallintayksikko::integer is not null then
+                          u.hallintayksikko = :hallintayksikko
+                        else true
+                  end
                   and u.tyyppi = 'teiden-hoito'),
      toteumat as (select tt.maara,
                          tt.toimenpidekoodi,
@@ -44,126 +44,20 @@ select tpk.nimi               as "nimi",
        ut.urakka              as "urakka",
        tpi.nimi               as "toimenpide",
        sum(toteumat.maara)    as "toteuma"
-from urakka_tehtavamaara ut
-       join toimenpidekoodi tpk on ut.tehtava = tpk.id
-       join toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = ut.urakka
-       left outer join toteumat on toteumat.toimenpidekoodi = ut.tehtava and toteumat.urakka_id = ut.urakka
+from toimenpideinstanssi tpi
+       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
+       left join urakka_tehtavamaara ut
+                 on ut.tehtava = tpk.id
+                   and ut.urakka = tpi.urakka
+                   and ut.poistettu is not true
+                   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+       left join toteumat
+                 on toteumat.toimenpidekoodi = tpk.id
+                   and toteumat.urakka_id = tpi.urakka
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
-where ut.poistettu is not true
-  and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
-  and ut.urakka in (select id from urakat)
+where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
-order by tpk.id;
-
-
--- name: hae-kaikki-tehtavamaarat-ja-toteumat-aikavalilla
--- Raportille haetaan kaikki tehtävämäärät
-with urakat as (select u.id
-                from urakka u
-                where (:alkupvm between u.alkupvm and u.loppupvm
-                  or :loppupvm between u.alkupvm and u.loppupvm)
-                  and u.tyyppi = 'teiden-hoito'
-),
-     toteumat as (select tt.maara,
-                         tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tt.urakka_id
-                  from toteuma t
-                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
-                    and tt.urakka_id in (select id from urakat)
-                  where --t.lahde = 'harja-ui'
-                    :alkupvm <= t.paattynyt
-                    and :loppupvm >= t.alkanut
-                    and t.poistettu = false)
-select tpk.nimi               as "nimi",
-       tpk.jarjestys          as "jarjestys",
-       sum(ut.maara)          as "suunniteltu",
-       tpk.suunnitteluyksikko as "suunnitteluyksikko",
-       tpk.yksikko            as "yksikko",
-       tpk.id                 as "toimenpidekoodi",
-       ut.urakka              as "urakka",
-       tpi.nimi               as "toimenpide",
-       sum(toteumat.maara)    as "toteuma"
-from urakka_tehtavamaara ut
-       join toimenpidekoodi tpk on ut.tehtava = tpk.id
-       join toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = ut.urakka
-       left outer join toteumat on toteumat.toimenpidekoodi = ut.tehtava and toteumat.urakka_id = ut.urakka
-       join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
-where ut.poistettu is not true
-  and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
-  and ut.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko,
-         ut.urakka
-order by tpk.id;
-
--- name: hae-hallintayksikon-tehtavamaarat-ja-toteumat-aikavalilla
-with urakat as (select u.id
-                from urakka u
-                where u.hallintayksikko = :hallintayksikko
-                  and u.tyyppi = 'teiden-hoito'
-                  and (:alkupvm between u.alkupvm and u.loppupvm
-                  or :loppupvm between u.alkupvm and u.loppupvm)),
-     toteumat as (select tt.maara,
-                         tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tt.urakka_id
-                  from toteuma t
-                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
-                    and tt.urakka_id in (select id from urakat)
-                  where --t.lahde = 'harja-ui'
-                    :alkupvm <= t.paattynyt
-                    and :loppupvm >= t.alkanut
-                    and t.poistettu = false)
-select tpk.nimi               as "nimi",
-       tpk.jarjestys          as "jarjestys",
-       sum(ut.maara)          as "suunniteltu",
-       tpk.suunnitteluyksikko as "suunnitteluyksikko",
-       tpk.yksikko            as "yksikko",
-       tpk.id                 as "toimenpidekoodi",
-       tpi.nimi               as "toimenpide",
-       ut.urakka              as "urakka",
-       sum(toteumat.maara)    as "toteuma"
-from urakka_tehtavamaara ut
-       join toimenpidekoodi tpk on ut.tehtava = tpk.id
-       join toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = ut.urakka
-       left outer join toteumat on toteumat.toimenpidekoodi = ut.tehtava and toteumat.urakka_id = ut.urakka
-       join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
-where ut.poistettu is not true
-  and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
-  and ut.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
-order by tpk.id;
-
--- name: hae-urakan-tehtavamaarat-ja-toteumat-aikavalilla
-with toteumat as (select tt.maara,
-                         tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tt.urakka_id
-                  from toteuma t
-                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
-                  where --t.lahde = 'harja-ui'
-                    t.urakka = :urakka
-                    and :alkupvm <= t.paattynyt
-                    and :loppupvm >= t.alkanut
-                    and t.poistettu = false)
-select tpk.nimi               as "nimi",
-       tpk.jarjestys          as "jarjestys",
-       sum(ut.maara)          as "suunniteltu",
-       tpk.suunnitteluyksikko as "suunnitteluyksikko",
-       tpk.yksikko            as "yksikko",
-       tpk.id                 as "toimenpidekoodi",
-       tpi.nimi               as "toimenpide",
-       ut.urakka              as "urakka",
-       sum(toteumat.maara)    as "toteuma"
-from urakka_tehtavamaara ut
-       join toimenpidekoodi tpk on ut.tehtava = tpk.id
-       join toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = ut.urakka
-       left outer join toteumat on toteumat.toimenpidekoodi = ut.tehtava and toteumat.urakka_id = ut.urakka
-     --join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
-where ut.poistettu is not true
-  and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
-  and ut.urakka = :urakka
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
+having coalesce(sum(ut.maara), sum(toteumat.maara)) >= 0
 order by tpk.id;
 
 -- name: lisaa-tehtavamaara<!
