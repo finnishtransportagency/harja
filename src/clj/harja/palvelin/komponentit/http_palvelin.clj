@@ -320,7 +320,7 @@
           anti-csrf-token-secret-key (:anti-csrf-token asetukset)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
-                          (route/files "" {:root "dev-resources"}))]
+                          (route/files "" {:root (:dev-resources-path asetukset)}))]
       (log/info "HttpPalvelin käynnistetään portissa " portti)
       (swap! lopetus-fn
              (constantly

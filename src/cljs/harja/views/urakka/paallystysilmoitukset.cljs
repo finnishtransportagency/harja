@@ -638,12 +638,12 @@
                              (if rivi
                                 (:nimi rivi)
                                 "- Valitse Ajorata -"))
-            :pituus-max    256
+            :pituus-max    256 :elementin-id "alustan-ajorata"
             :validoi       (:tr-ajorata alustatoimien-validointi)
             :tasaa         :oikea
             :kokonaisluku? true}
            {:otsikko       "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys 10
-            :pituus-max    256
+            :pituus-max    256 :elementin-id "alustan-kaista"
             :valinnat      pot/+kaistat+
             :valinta-arvo  :koodi
             :valinta-nayta (fn [rivi]

@@ -144,7 +144,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto!]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -175,6 +175,7 @@
 
     (if-let [virheet (tarkista-asetukset asetukset)]
       (log/error "Validointivirhe asetuksissa:" virheet))
+    (tarkista-ymparisto!)
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)

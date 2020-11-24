@@ -8,6 +8,7 @@ target
 .repl/
 dev-resources/js/harja.js
 dev-resources/js/out/
+dev-resources/tmp/*
 logs/
 doc/
 dev/
@@ -60,8 +61,10 @@ resources/public/laadunseuranta/css/
 testi.pdf
 checkouts/
 package-lock.json
-package.json
 src/cljs-dev/harja/repl.cljs
 .rebel_readline_history
 *.log
 /.clj-kondo/.cache/
+figwheel_conf/luodut/
+.local_env
+yhdistetty_dc_env

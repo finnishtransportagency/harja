@@ -48,11 +48,11 @@
   (let [sisalto (tyojakso urakka vuosi vuosikolmannes tunnit)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml "xsd/turi/" "tyotunnit-rest.xsd" xml)]
-      (let [virheviesti (format "Työtuntien TURI-lähetyksen XML ei ole validia.\n
-                                 Validointivirheet: %s\n
-                                 Muodostettu sanoma:\n
-                                 %s" virheet xml)]
-        (log/error virheviesti)
+      (let [lokitettava-virhe (format "Työtuntien TURI-lähetyksen XML ei ole validia.\n
+                                 Validointivirheet: %s" virheet)
+            virheviesti (format (str lokitettava-virhe " Muodostettu sanoma: \n
+                                 %s") xml)]
+        (log/error lokitettava-virhe)
         (throw+ {:type :invalidi-tyotunti-xml
                  :error virheviesti}))
       xml)))
