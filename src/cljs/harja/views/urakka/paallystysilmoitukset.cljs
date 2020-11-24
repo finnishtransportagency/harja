@@ -1202,7 +1202,7 @@
           [:h3 {:style {:display "inline-block"}}
            "Päällystysilmoitukset"]
           ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
-          [napit/nappi "Muokkaa urakan materiaaleja"
+          #_[napit/nappi "Muokkaa urakan materiaaleja"
            #(e! (tiedot-massat/->NaytaModal true))
            {:ikoni (ikonit/livicon-pen)
             :luokka "napiton-nappi"
