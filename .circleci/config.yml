@@ -187,10 +187,6 @@ jobs:
   e2e-testit:
     docker:
       - image: solita/harja-cypress:latest
-        environment:
-          HARJA_SALLI_OLETUSKAYTTAJA: 'true'
-          HARJA_DEV_YMPARISTO: 'false'
-
       - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
@@ -200,6 +196,9 @@ jobs:
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
+    environment:
+      HARJA_SALLI_OLETUSKAYTTAJA: 'true'
+      HARJA_DEV_YMPARISTO: 'false'
     parallelism: 1
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
