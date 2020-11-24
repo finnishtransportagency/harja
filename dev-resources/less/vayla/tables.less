@@ -30,6 +30,10 @@
         color: black;
         font-weight: bold;
       }
+      &-valkoinen {
+        background-color: @white;
+        text-transform: uppercase;
+      }
     }
     &-strong {
       font-weight: bold;
@@ -113,4 +117,29 @@
       background-color: @gray220;
     }
   }
+}
+
+/* Taulukossa käytössä oleva pääryhmien väri-indikaattori */
+.circle {
+  border-radius: 50%;
+  //box-shadow: 0.375em 0.375em 0 0 rgba(15, 28, 63, 0.125);
+  height: 5px;
+  width: 5px;
+  display: inline-block;
+}
+.hankintakustannukset {
+  background: #00B0CC;
+  border: 0.1875em solid #00B0CC;
+}
+.jjh-korvaukset {
+  background: #A050A0;
+  border: 0.1875em solid #A050A0;
+}
+.hj-palkkiot {
+  background: #FFC300;
+  border: 0.1875em solid #FFC300;
+}
+.erillishankinnat {
+  background: #8DCB6D;
+  border: 0.1875em solid #8DCB6D;
 }
