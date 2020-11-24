@@ -41,7 +41,7 @@ select tpk.nimi               as "nimi",
        tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko            as "yksikko",
        tpk.id                 as "toimenpidekoodi",
-       ut.urakka              as "urakka",
+       tpi.urakka             as "urakka",
        tpi.nimi               as "toimenpide",
        sum(toteumat.maara)    as "toteuma"
 from toimenpideinstanssi tpi
@@ -56,7 +56,7 @@ from toimenpideinstanssi tpi
                    and toteumat.urakka_id = tpi.urakka
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, tpi.urakka
 having coalesce(sum(ut.maara), sum(toteumat.maara)) >= 0
 order by tpk.id;
 
