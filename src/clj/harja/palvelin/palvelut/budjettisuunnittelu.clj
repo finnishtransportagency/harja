@@ -108,7 +108,7 @@
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
                                                                             {:vuosi vuosi
-                                                                             :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
+                                                                             :indeksikerroin (pyorista (/ arvo perusluku) 1)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
                               (if (= 5 urakan-indeksien-maara)
