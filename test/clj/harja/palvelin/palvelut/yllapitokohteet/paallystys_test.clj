@@ -452,6 +452,23 @@
                                                :vuosi 2017})]
     (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
 
+(deftest hae-paallystysilmoitukset-utajarvi-2021-pot2
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        pot2-aloitusvuosi 2021
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi pot2-aloitusvuosi})
+        tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
+    (is (= (count paallystysilmoitukset) 2) "Päällystysilmoituksia löytyi vuodelle 2021")
+    (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
+    (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
+    (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
+    (is (nil? (:paatos-tekninen-osa tarkea-kohde)) "Päätös")
+    (is (= 2 (count (:kohdeosat tarkea-kohde))) "Kohdeosien lkm")))
+
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
   ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa
   ;; silti minimaalisen päällystysilmoituksen, jota käyttäjä voi frontissa lähteä täyttämään

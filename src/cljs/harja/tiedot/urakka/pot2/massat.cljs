@@ -13,7 +13,7 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def pot2-nakymassa? (atom false))
+(def materiaalikirjastossa? (atom false))
 (def nayta-materiaalikirjasto? (atom false))
 
 (defrecord AlustaTila [])
