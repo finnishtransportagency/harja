@@ -9,6 +9,7 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
+            [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
