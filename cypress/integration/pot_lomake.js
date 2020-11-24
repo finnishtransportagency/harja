@@ -9,7 +9,7 @@ let valitseVuosi = function (vuosi) {
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
-let avaaPaallystysIlmoitus = function (vuosi, urakka, kohdenNimi, kohdenTila) {
+let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila) {
     cy.visit("/")
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
     cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
@@ -22,12 +22,12 @@ let avaaPaallystysIlmoitus = function (vuosi, urakka, kohdenNimi, kohdenTila) {
     valitseVuosi(vuosi)
     cy.get('[data-cy=paallystysilmoitukset-grid]')
         .gridOtsikot().then(($gridOtsikot) => {
-        cy.wrap($gridOtsikot.grid.find('tbody')).contains(kohdenNimi).parentsUntil('tbody').then(($rivi) => {
-            expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain(kohdenTila)
+        cy.wrap($gridOtsikot.grid.find('tbody')).contains(kohteenNimi).parentsUntil('tbody').then(($rivi) => {
+            expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain(kohteenTila)
         })
     })
     cy.get('[data-cy=paallystysilmoitukset-grid] tr')
-        .contains(kohdenNimi)
+        .contains(kohteenNimi)
         .parentsUntil('tbody')
         .contains('button', 'Päällystysilmoitus').click({force: true})
     cy.get('div.paallystysilmoitukset')
