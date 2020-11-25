@@ -62,7 +62,7 @@
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
-    (when @jarjestelma
+    #_(when @jarjestelma
       (component/stop @jarjestelma))
     (testi/lopeta-harja-tarkkailija)
     (.delete file)))
