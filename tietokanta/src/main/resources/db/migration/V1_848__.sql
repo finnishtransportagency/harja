@@ -80,7 +80,7 @@ CREATE TRIGGER tg_resetoi_id_tapahtumien_tiedot_taulukosta
     FOR EACH STATEMENT
 EXECUTE PROCEDURE resetoi_tapahtuman_tiedot_id_serial();
 
-CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data JSONB, data_text TEXT, _hash TEXT) RETURNS bool AS
+CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data_text TEXT, _hash TEXT) RETURNS bool AS
 $$
 DECLARE
     _sqlstate TEXT;
@@ -90,7 +90,8 @@ DECLARE
     palvelin TEXT;
     _id INTEGER;
 
-    palvelin_index INT = 0;
+    data JSONB := data_text::JSONB;
+    palvelin_index INT := 0;
     el JSONB;
 BEGIN
 

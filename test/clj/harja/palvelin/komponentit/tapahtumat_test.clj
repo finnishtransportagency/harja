@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.tapahtumat-test
+(ns ^:hidas harja.palvelin.komponentit.tapahtumat-test
   (:require [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -21,6 +21,7 @@
 (def tarkkailija-asetukset {:loop-odotus 100})
 (def default-odottelu (+ (:loop-odotus tarkkailija-asetukset) 600))
 (def default-odottelu-pidennetty (+ default-odottelu 1000))
+(def pitka-odottelu (+ default-odottelu-pidennetty 5000))
 
 (defn luo-jarjestelma [_]
   (component/start
@@ -373,7 +374,7 @@
                 (when-not (= i 10)
                   (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-b {:b i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
-              (is (thrown? TimeoutException (<!!-timeout loop-ajettu default-odottelu-pidennetty))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu pitka-odottelu))
                   "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
               (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
               (is (<!!-timeout loop-ajettu default-odottelu-pidennetty)

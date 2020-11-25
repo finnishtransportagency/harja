@@ -11,7 +11,7 @@ RETURNING kanava;
 
 -- name: julkaise-tapahtuma
 -- single?: true
-SELECT julkaise_tapahtuma(:kanava::TEXT, :data::JSONB, :data::TEXT, :hash::TEXT);
+SELECT julkaise_tapahtuma(:kanava::TEXT, :data::TEXT, :hash::TEXT);
 
 -- name: uusin-arvo
 SELECT arvo, hash, luotu
