@@ -29,7 +29,8 @@
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
     [clojure.java.jdbc :as jdbc]
-    [harja.tyokalut.env :as env])
+    [harja.tyokalut.env :as env]
+    [slingshot.slingshot :refer [throw+ try+]])
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
@@ -200,7 +201,8 @@
         (when-not (and (instance? Boolean
                                   tulos)
                        (= "true" (.toString tulos)))
-          (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
+          (throw+ {:type :virhe-kannan-tappamisessa
+                  :viesti (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))})))
       #_(throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään")))))
 
 (defn odota-etta-kanta-pystyssa [db]
@@ -243,10 +245,14 @@
   ([f n log?] (yrita-querya f n log? nil))
   ([f n log? param?]
    (dotimes [n-kierros n]
-     (try
+     (try+
        (if param?
          (f n-kierros)
          (f))
+       (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+         (Thread/sleep 500)
+         (when log?
+           (log/warn viesti)))
        (catch PSQLException e
          (Thread/sleep 500)
          (when log?
