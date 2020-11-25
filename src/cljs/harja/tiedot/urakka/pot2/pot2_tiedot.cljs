@@ -44,11 +44,14 @@
 
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
-    (-> app
-        (assoc-in [:paallystysilmoitus-lomakedata :perustiedot] (:perustiedot vastaus))
-        (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
-                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                            (:id urakka)))))
+    (let [perustiedot (select-keys (:perustiedot vastaus) paallystys/perustiedot-avaimet)]
+      (-> app
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot] perustiedot)
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
+                    (select-keys perustiedot paallystys/tr-osoite-avaimet))
+          (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
+                    (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                              (:id urakka))))))
 
   HaePot2TiedotEpaonnistui
   ;; fixme implement

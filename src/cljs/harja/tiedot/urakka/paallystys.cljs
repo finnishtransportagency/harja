@@ -39,6 +39,43 @@
 ;; Näitä ei pitäisi tarvita refaktoroinnin päätteeksi
 (defonce yllapitokohde-id (r/cursor tila [:paallystysilmoitus-lomakedata :yllapitokohde-id]))
 
+(def perustiedot-avaimet
+  #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
+    :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
+    :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
+    :valmispvm-kohde :takuupvm :valmispvm-paallystys})
+
+(def tr-osoite-avaimet
+  #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
+    :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista})
+
+(defn paakohteen-validointi
+  [_ rivi _]
+  (let [{:keys [vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @tila)
+        paakohde (select-keys (:tr-osoite rivi) #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+        vuosi (first vuodet)
+        ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
+        ;; myös toisilla riveillä olevat validoinnit.
+        validoitu (yllapitokohde-domain/validoi-kohde paakohde (get tr-osien-tiedot (get-in rivi [:tr-osoite :tr-numero])) {:vuosi vuosi})]
+    (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu true))))))
+
+(def perustietojen-validointi
+  {:tr-osoite [{:fn paakohteen-validointi}]})
+
+(defn perustietojen-huomautukset [tekninen-osa valmispvm-kohde]
+  {:perustiedot {:tekninen-osa {:kasittelyaika (if (:paatos tekninen-osa)
+                                                 [[:ei-tyhja "Anna käsittelypvm"]
+                                                  [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                   "Käsittely ei voi olla ennen valmistumista"]]
+                                                 [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                   "Käsittely ei voi olla ennen valmistumista"]])
+                                :paatos [[:ei-tyhja "Anna päätös"]]
+                                :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
+                 :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                                                 [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                  "Tarkastus ei voi olla ennen valmistumista"]]
+                                 :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}})
+
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                           :sopimus-id sopimus-id
@@ -316,11 +353,6 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
           vastaus (muotoile-osoitteet-ja-alustatoimet vastaus)
-          perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
-                                :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
-                                :valmispvm-kohde :takuupvm :valmispvm-paallystys
-                                }
           perustiedot (select-keys vastaus perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
       (-> app
@@ -333,9 +365,7 @@
           ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
           ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
-                    (select-keys perustiedot
-                                 #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                   :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista}))
+                    (select-keys perustiedot tr-osoite-avaimet))
           (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]
