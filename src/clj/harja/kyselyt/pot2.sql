@@ -14,6 +14,6 @@ select ypk.tr_numero                 AS "tr-numero",
        pot2.takuupvm,
        pot2.tila
 from yllapitokohde ypk
-         left join pot2 pot2 ON pot2.yllapitokohde = ypk.id
+         left join pot2 pot2 ON (pot2.yllapitokohde = ypk.id AND pot2.poistettu IS FALSE)
          left join yllapitokohteen_aikataulu ypka ON pot2.yllapitokohde = ypka.yllapitokohde
- WHERE pot2.poistettu IS FALSE AND ypk.id = :kohde_id;
+ WHERE ypk.id = :kohde_id;
