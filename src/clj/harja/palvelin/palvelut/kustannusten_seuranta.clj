@@ -24,26 +24,17 @@
             [specql.core :as specql]))
 
 
-(defn- hae-urakan-kustannusten-seuranta-toimenpideittain [db user {:keys [urakka-id toimenpidekoodi alkupvm loppupvm] :as tiedot}]
+(defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
   ;; TODO tarkista käyttöoikeudet
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (let [_ (println "hae-urakan-kustannusten-seuranta-toimenpideittain :: tiedot " (pr-str tiedot))
-          t (if (= "Kaikki" toimenpidekoodi) nil toimenpidekoodi)
-          res (kustannusten-seuranta-q/listaa-tehtavat-ja-toimenpiteet-kustannusten-seurantaan db {:urakka urakka-id
-                                                                                                   :toimenpidekoodi t
-                                                                                                   :alkupvm alkupvm
-                                                                                                   :loppupvm loppupvm
-                                                                                                   })
+          res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
+                                                                             :alkupvm alkupvm
+                                                                             :loppupvm loppupvm
+                                                                             })
           _ (println "Rivit kustannusten seurantaan " (pr-str res))]
       res)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
-(defn hae-urakan-kustannusten-toimenpiteet [db user {:keys [urakka-id]}]
-  (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (kustannusten-seuranta-q/hae-kustannusten-seurannan-toimenpiteet db)
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
-
 
 (defrecord KustannustenSeuranta []
   component/Lifecycle
@@ -55,12 +46,9 @@
 
     (julkaise-palvelut
       http
-      :urakan-kustannusten-seuranta-toimenpideittain
+      :urakan-kustannusten-seuranta-paaryhmittain
       (fn [user tiedot]
-        (hae-urakan-kustannusten-seuranta-toimenpideittain db-replica user tiedot))
-      :urakan-kustannusten-toimenpiteet
-      (fn [user tiedot]
-        (hae-urakan-kustannusten-toimenpiteet db-replica user tiedot))
+        (hae-urakan-kustannusten-seuranta-paaryhmittain db-replica user tiedot))
       )
 
 
@@ -69,5 +57,5 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-kustannusten-seuranta-toimenpideittain)
+      :urakan-kustannusten-seuranta-paaryhmittain)
     this))
