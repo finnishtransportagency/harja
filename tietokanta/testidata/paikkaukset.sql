@@ -351,7 +351,7 @@ BEGIN
          (2359, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
           'Liikennejärjestelyt', 1300, 'UREM', NOW()::DATE, ROW (22, 1, 151, 1, 250, NULL)),
          (2356, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-          'Liikennejärjestelyt', 1800, 'remix-pintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
+          'Liikennejärjestelyt', 1800, 'SIPU', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
   (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-      'Liikennejärjestelyt', 1900, 'kuumennuspintaus', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
+      'Liikennejärjestelyt', 1900, 'KIVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;

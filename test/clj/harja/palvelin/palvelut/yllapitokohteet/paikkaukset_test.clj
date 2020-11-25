@@ -314,20 +314,18 @@
                                                :hae-paikkausurakan-kustannukset
                                                +kayttaja-jvh+
                                                {::paikkaus/urakka-id urakka-id}))
-        _ (println "kaikki-tyomenetelmat " kaikki-tyomenetelmat)
         ura-remixerit (:kustannukset
                           (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-paikkausurakan-kustannukset
                                           +kayttaja-jvh+
                                           {::paikkaus/urakka-id urakka-id
                                            :tyomenetelmat #{"UREM"}}))
-        sirotepuhallukset (:kustannukset
+        siput (:kustannukset
                           (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-paikkausurakan-kustannukset
                                           +kayttaja-jvh+
                                           {::paikkaus/urakka-id urakka-id
                                            :tyomenetelmat #{"SIPU"}}))
-        _ (println "sirotepuhallukset " sirotepuhallukset)
         kivat (:kustannukset
                           (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-paikkausurakan-kustannukset
@@ -336,13 +334,13 @@
                                            :tyomenetelmat #{"KIVA"}}))]
     (is (= (count kaikki-tyomenetelmat) 4))
     (is (= (count ura-remixerit) 2))
-    (is (= (count sirotepuhallukset) 2))
+    (is (= (count siput) 1))
     (is (= (count kivat) 1))
 
     (is (= (reduce + (keep :hinta kaikki-tyomenetelmat)) 6700M))
     (is (= (reduce + (keep :hinta ura-remixerit)) 3000M))
-    (is (= (reduce + (keep :hinta sirotepuhallukset)) 1900M))
-    (is (= (reduce + (keep :hinta kivat)) 1800M))))
+    (is (= (reduce + (keep :hinta siput)) 1800M))
+    (is (= (reduce + (keep :hinta kivat)) 1900M))))
 
 
 (defn- paikkauskustannus-rivit [{:keys [paikkauskohde-id hinta tyomenetelma valmistumispvm]}]
@@ -391,21 +389,20 @@
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 1, :tie 22, :let 150, :losa 1, :aet 40
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "KIVA", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :tyomenetelma "SIPU", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
                                   :paikkaustoteuma-id 6, :hinta 1800M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 1, :tie 22, :let 150, :losa 1, :aet 40,
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
-                                  :tyomenetelma "SIPU", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
+                                  :tyomenetelma "KIVA", :kirjattu #inst "2020-04-13T03:32:56.827713000-00:00",
                                   :paikkaustoteuma-id 7, :hinta 1900M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
                                   :paikkaustoteuma-poistettu nil}
                                  {:aosa 19, :tie 20, :let 301, :losa 19, :aet 1
                                   :paikkauskohde {:id 6, :nimi "Testikohde Muhoksen paallystysurakassa"},
                                   :tyomenetelma "SIPU", :kirjattu #inst "2020-04-13T07:24:38.083264000-00:00",
                                   :paikkaustoteuma-id 8, :hinta 1234.56M, :valmistumispvm #inst "2020-04-12T21:00:00.000-00:00",
-                                  :paikkaustoteuma-poistettu nil}]}
-        _ (println "ODOTE " odotettu)
-        ]
+                                  :paikkaustoteuma-poistettu nil}]}]
+
     (is (= (count vastaus) (count odotettu)))
     (is (not-empty (:kustannukset vastaus)))
     (is (not-empty (:kustannukset odotettu)))
