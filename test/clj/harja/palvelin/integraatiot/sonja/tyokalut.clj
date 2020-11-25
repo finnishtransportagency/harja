@@ -6,7 +6,7 @@
             [cheshire.core :as cheshire]
             [org.httpkit.client :as http]))
 
-(defonce ai-port 8162)
+(defonce ai-port 8161)
 
 (defn sonja-laheta [jonon-nimi sanoma]
   (let [options {:timeout 5000

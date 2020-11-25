@@ -155,12 +155,11 @@ jobs:
           /bin/bash;"
       - image: solita/harja-activemq:5.15.9
         environment:
-          TCP_PORT: 61617
-          UI_PORT: 8162
+          TCP_PORT: 61616
+          UI_PORT: 8161
         auth:
           username: solitaharja
           password: $DOCKER_HUB_SALASANA
-
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:

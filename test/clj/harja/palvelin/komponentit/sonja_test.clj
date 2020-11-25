@@ -1,6 +1,7 @@
 (ns ^:integraatio harja.palvelin.komponentit.sonja-test
   (:require [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.kyselyt.konversio :as konv]
@@ -25,15 +26,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61617"
-                            :kayttaja ""
-                            :salasana ""
-                            :tyyppi :activemq}
-                    :tloik {:ilmoitusviestijono tloik-tk/+tloik-ilmoitusviestijono+
-                            :ilmoituskuittausjono tloik-tk/+tloik-ilmoituskuittausjono+
-                            :toimenpideviestijono tloik-tk/+tloik-ilmoitustoimenpideviestijono+
-                            :toimenpidekuittausjono tloik-tk/+tloik-ilmoitustoimenpidekuittausjono+
-                            :uudelleenlahetysvali-minuuteissa 30}})
+(defonce asetukset {:sonja integraatio/sonja-asetukset})
 
 (def ^:dynamic *sonja-yhteys* nil)
 

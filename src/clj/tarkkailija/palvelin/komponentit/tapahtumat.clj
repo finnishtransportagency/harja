@@ -251,6 +251,7 @@
                                        (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
                                              tapahtuman-nimi (.getName notification)
                                              tapahtuman-tiedot (-> (q-tapahtumat/tapahtuman-tiedot db {:idt #{tapahtumadatan-id}}) first)]
+                                         (log/debug (str "TAPAHTUMA LOOP - TAPAHTUMAN NIMI: " tapahtuman-nimi))
                                          (when (tapahtuman-data-ok?! tapahtuman-tiedot tapahtuman-nimi)
                                            (let [data (tapahtuman-tiedot-clj-dataksi tapahtuman-tiedot)]
                                              (doseq [kasittelija (get @kuuntelijat tapahtuman-nimi)]
@@ -289,11 +290,11 @@
           kuuntelu-aloitettu-kuittaus (async/chan buffer-koko)
           tarkkailu-kanava (async/chan (async/sliding-buffer 1000)
                                        (map (fn [arvo]
-                                              (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot perus-broadcast jonosta\n"
+                                              (log/debug (str "[KOMPONENTTI-EVENT] Lähetetään tiedot broadcast jonosta\n"
                                                               "  tiedot: " arvo))
                                               arvo))
                                        (fn [t]
-                                         (log/error t "perus-broadcast jonossa tapahtui virhe")))
+                                         (log/error t "broadcast jonossa tapahtui virhe")))
           broadcast (async/pub tarkkailu-kanava ::tapahtuma (fn [topic] (async/sliding-buffer 1000)))
           this (assoc this ::tarkkailu-kanava tarkkailu-kanava
                       ::broadcast broadcast
@@ -368,6 +369,7 @@
     (let [arityjen-maara (tyokalut/arityt callback)]
       (when-not (contains? arityjen-maara 1)
         (throw (ArityException. (first arityjen-maara) "Callback funktio tapahtumalle pitää sisältää ainakin arity 1"))))
+    (log/debug (str "KUUNTELE TAPAHTUMAA: " tapahtuma))
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           fn-tunnistin (str (gensym "callback"))
           kuuntelun-jalkeen (fn [possukanava _]

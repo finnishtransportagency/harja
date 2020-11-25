@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sampo
              [tyokalut :as sampo-tk]
@@ -16,15 +17,8 @@
             [harja.data.hoito.kustannussuunnitelma :as ks-data]
             [harja.pvm :as pvm]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61617"
-                            :kayttaja ""
-                            :salasana ""
-                            :tyyppi :activemq}
-                    :sampo {:lahetysjono-sisaan sampo-tk/+lahetysjono-sisaan+
-                            :kuittausjono-sisaan sampo-tk/+kuittausjono-sisaan+
-                            :lahetysjono-ulos sampo-tk/+lahetysjono-ulos+
-                            :kuittausjono-ulos sampo-tk/+kuittausjono-ulos+
-                            :paivittainen-lahetysaika nil}})
+(defonce asetukset {:sonja integraatio/sonja-asetukset
+                    :sampo integraatio/integraatio-sampo-asetukset})
 
 (defonce ai-port 8162)
 

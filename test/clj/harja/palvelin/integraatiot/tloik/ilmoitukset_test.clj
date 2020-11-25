@@ -1,10 +1,11 @@
-(ns harja.palvelin.integraatiot.tloik.ilmoitukset-test
+(ns ^:integraatio harja.palvelin.integraatiot.tloik.ilmoitukset-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.sonja :as sonja]
@@ -18,6 +19,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.pvm :as pvm]
             [clj-time
@@ -27,13 +29,17 @@
 
 (def kayttaja "yit-rakennus")
 
+(defonce asetukset {:sonja integraatio/sonja-asetukset})
+
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki])
-    :sonja (feikki-sonja)
+    :sonja (component/using
+             (sonja/luo-oikea-sonja (:sonja asetukset))
+             [:db])
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"
@@ -47,16 +53,22 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :labyrintti])))
+             [:db :sonja :integraatioloki :labyrintti :sonja-sahkoposti])))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each (fn [testit]
+                      (binding [*aloita-sonja?* true
+                                *lisattavia-kuuntelijoita?* true
+                                *sonja-kaynnistetty-fn* (fn []
+                                                          (s-tk/sonja-jolokia-jono +tloik-ilmoitusviestijono+ nil :purge)
+                                                          (s-tk/sonja-jolokia-jono +tloik-ilmoituskuittausjono+ nil :purge))]
+                        (jarjestelma-fixture testit))))
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
+  (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)
         urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
-    (def ilmoitusasdf ilmoitus)
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
     (is (= (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss")
                        (tc/from-date (:ilmoitettu ilmoitus)))
@@ -86,6 +98,7 @@
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
+  (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus)
   (is (= 1 (count (hae-testi-ilmoitukset)))
       "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
@@ -95,6 +108,7 @@
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-urakan-paattely
+  (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus)
   (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
@@ -124,8 +138,7 @@
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
-    (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
-                    #(swap! viestit conj (.getText %)))
+    (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
     (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
@@ -134,7 +147,7 @@
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
 
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 20000)
-      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 200000)
+      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 20000)
 
       (let [xml (first @viestit)
             data (xml/lue xml)]
@@ -158,8 +171,7 @@
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
         viestit (atom [])]
-    (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
-                    #(swap! viestit conj (.getText %)))
+    (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
@@ -178,27 +190,26 @@
 
 (deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
   (try
-    (with-fake-http []
-      (let [kuittausviestit (atom [])]
-        (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
-                        #(swap! kuittausviestit conj (.getText %)))
+    (let [kuittausviestit (atom [])]
+      (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit conj (.getText %))})
 
-        (sonja/laheta (:sonja jarjestelma)
-                      +tloik-ilmoitusviestijono+
-                      (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
+      (sonja/laheta (:sonja jarjestelma)
+                    +tloik-ilmoitusviestijono+
+                    (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
 
-        (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
+      (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
 
-        (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-        (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto") "Viesti on käsitelty ja merkitty vastaanotetuksi")
+      (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
+      (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto") "Viesti on käsitelty ja merkitty vastaanotetuksi")
 
-        (poista-ilmoitus)))
+      (poista-ilmoitus))
     (catch IllegalArgumentException e
       (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
 
 
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
+  (ei-lisattavia-kuuntelijoita!)
   (tuo-valaistusilmoitus)
   (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2050';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
@@ -209,8 +220,7 @@
   "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
   (let [sanoma +ilmoitus-hailuodon-jaatiella+
         viestit (atom [])]
-    (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
-                    #(swap! viestit conj (.getText %)))
+    (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
@@ -221,6 +231,7 @@
     (poista-ilmoitus)))
 
 (deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
+  (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus-ilman-tienumeroa)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)]

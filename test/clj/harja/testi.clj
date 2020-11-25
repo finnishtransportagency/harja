@@ -10,6 +10,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.liitteet :as liitteet]
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
@@ -23,6 +24,7 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+    [harja.palvelin.main :as sut]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
@@ -36,6 +38,35 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
+
+(def ^{:dynamic true
+       :doc "Jos käytössä on oikea Sonja komponentti, pitää se aloittaa ennen testien ajoa"} *aloita-sonja?* false)
+(def ^{:dynamic true
+       :doc "Jos halutaan testissä lisätä kuuntelijoita, pitää ne lisätä ennen kunntelun aloitusta."} *lisattavia-kuuntelijoita?* false)
+(def ^{:dynamic true
+       :doc "Callback sen jälkeen kun on sonja käynnistetty. Hyvä paikka purgeta jonoja."} *sonja-kaynnistetty-fn* nil)
+(def ^{:dynamic true
+       :doc "Tänne mapissa kanavan nimi funktio pareja, joiden pitäs olla testissä käytössä.
+             Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
+(def sonja-aloitus-go (atom nil))
+
+(defn lisaa-kuuntelijoita!
+  "Helpperi funktio, jolla voi lisätä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
+   on lisätty oikea sonja"
+  [kuuntelijat]
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))
+         (not (nil? @sonja-aloitus-go))
+         (map? kuuntelijat)]}
+  (async/>!! *lisattavat-kuuntelijat* kuuntelijat)
+  (async/<!! @sonja-aloitus-go))
+
+(defn ei-lisattavia-kuuntelijoita! []
+  "Helpperi funktio, jolla voi ilmoittaa, ettei ole lisättäviä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
+   on lisätty oikea sonja"
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))
+         (not (nil? @sonja-aloitus-go))]}
+  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa)
+  (async/<!! @sonja-aloitus-go))
 
 (defn circleci? []
   (not (nil? (env/env "CIRCLE_BRANCH"))))
@@ -1227,6 +1258,22 @@
 (defn lopeta-harja-tarkkailija []
   (alter-var-root #'harja-tarkkailija component/stop))
 
+(defn sonja-kasittely [kuuntelijoiden-lopettajat]
+  (when *aloita-sonja?*
+    (let [sonja-kaynnistaminen! (fn []
+                                  (<!! (sut/aloita-sonja jarjestelma))
+                                  (when *sonja-kaynnistetty-fn*
+                                    (*sonja-kaynnistetty-fn*)))]
+      (if *lisattavia-kuuntelijoita?*
+        (reset! sonja-aloitus-go
+                (go (let [[kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
+                                                  (timeout 5000)])]
+                      (when (and kuuntelijat (map? kuuntelijat))
+                        (doseq [[kanava f] kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (sonja/kuuntele! (:sonja jarjestelma) kanava f))))
+                      (sonja-kaynnistaminen!))))
+        (sonja-kaynnistaminen!)))))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -1265,7 +1312,14 @@
                      (fn [_#]
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
                                        " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
-     (testit#)
+     ;; aloita-sonja palauttaa kanavan.
+     (binding [~'*lisattavat-kuuntelijat* (chan)]
+       (let [kuuntelijoiden-lopettajat# (atom [])]
+         (sonja-kasittely kuuntelijoiden-lopettajat#)
+         (testit#)
+         (when (not (empty? @kuuntelijoiden-lopettajat#))
+           (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]
+             (lopetus-fn#)))))
      (alter-var-root #'jarjestelma component/stop)
      (lopeta-harja-tarkkailija)))
 

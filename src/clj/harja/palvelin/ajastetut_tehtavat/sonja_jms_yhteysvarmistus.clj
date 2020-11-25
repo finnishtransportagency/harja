@@ -33,7 +33,7 @@
             lokiviesti (integraatioloki/tee-jms-lokiviesti "ulos" lahteva-viesti nil jono)
             tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sonja" "ping" nil lokiviesti)
             viestit (atom [])
-            lopeta-kuuntelu-fn! (tapahtuma-apurit/tapahtuman-kuuntelija! sonja-kanava (fn [viesti] (swap! viestit conj viesti)))]
+            lopeta-kuuntelu-fn! (tapahtuma-apurit/tapahtuman-kuuntelija! sonja-kanava (fn [{viesti :payload}] (swap! viestit conj viesti)))]
 
         (sonja/laheta sonja jono lahteva-viesti)
 
@@ -52,16 +52,17 @@
 (defn tee-jms-yhteysvarmistus-tehtava [{:keys [db integraatioloki sonja]} minuutit jono]
   (when (and minuutit jono)
     (log/debug (format "Varmistetaan Sonjan JMS jonoihin yhteys %s minuutin välein." minuutit))
-    (sonja/kuuntele! sonja jono #(tapahtuma-apurit/julkaise-tapahtuma sonja-kanava (.getText %)))
-    (ajastettu-tehtava/ajasta-minuutin-valein
-      minuutit 34 ;; ajastus alkaa pyöriä 34 sekunnin kuluttua käynnistyksestä
-      (fn [_] (tarkista-jms-yhteys db integraatioloki sonja jono)))))
+    {:sonja-lopeta! (sonja/kuuntele! sonja jono #(tapahtuma-apurit/julkaise-tapahtuma sonja-kanava (.getText %)))
+     :ajastus-lopeta! (ajastettu-tehtava/ajasta-minuutin-valein
+                        minuutit 34                         ;; ajastus alkaa pyöriä 34 sekunnin kuluttua käynnistyksestä
+                        (fn [_] (tarkista-jms-yhteys db integraatioloki sonja jono)))}))
 
 (defrecord SonjaJmsYhteysvarmistus [ajovali-minuutteina jono]
   component/Lifecycle
   (start [this]
-    (assoc this :jms-varmistus (tee-jms-yhteysvarmistus-tehtava this ajovali-minuutteina jono)))
+    (assoc this ::lopetus-fns (tee-jms-yhteysvarmistus-tehtava this ajovali-minuutteina jono)))
   (stop [this]
-    (let [lopeta (get this :jms-varmistus)]
-      (when lopeta (lopeta)))
+    (let [{:keys [sonja-lopeta! ajastus-lopeta!]} (get this ::lopetus-fns)]
+      (when sonja-lopeta! (sonja-lopeta!))
+      (when ajastus-lopeta! (ajastus-lopeta!)))
     this))
