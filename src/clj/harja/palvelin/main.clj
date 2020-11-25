@@ -56,6 +56,7 @@
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+    [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
@@ -142,7 +143,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto!]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -173,6 +174,7 @@
 
     (if-let [virheet (tarkista-asetukset asetukset)]
       (log/error "Validointivirhe asetuksissa:" virheet))
+    (tarkista-ymparisto!)
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
@@ -395,6 +397,9 @@
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paallystys (component/using
                     (paallystys/->Paallystys)
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+      :pot2 (component/using
+                    (pot2/->POT2)
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)

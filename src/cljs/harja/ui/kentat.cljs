@@ -260,7 +260,7 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [{:keys [oletusarvo] :as kentta} data]
+(defmethod tee-kentta :numero [{:keys [oletusarvo validoi-kentta-fn]   :as kentta} data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
@@ -270,7 +270,8 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled? vayla-tyyli? virhe? yksikko] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?
+                   vayla-tyyli? virhe? yksikko validoi-kentta-fn] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -297,11 +298,14 @@
                                       v (if vaadi-ei-negatiivinen?
                                           (str/replace v #"-" "")
                                           v)]
-                                  (when (or (= v "")
-                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                            ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
-                                            ;; mutta tätä välivaihetta ei tallenneta dataan
-                                            (re-matches #"[0-9,.-]+" v))
+                                  (when (and
+                                          (or (nil? validoi-kentta-fn)
+                                              (validoi-kentta-fn v))
+                                          (or (= v "")
+                                              (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                              ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
+                                              ;; mutta tätä välivaihetta ei tallenneta dataan
+                                              (re-matches #"[0-9,.-]+" v)))
                                     (reset! teksti v)
 
                                     (let [numero (if kokonaisluku?
@@ -460,7 +464,7 @@
         [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] "Tyhjennä kaikki"]])
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
-        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
+        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Valitse kaikki"]])
      (let [vaihtoehdot-palstoissa (partition-all
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
@@ -518,7 +522,7 @@
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli?]} data]
   (let [input-id (str "harja-checkbox-" (gensym))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
@@ -526,11 +530,17 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina? vayla-tyyli? disabled?]} data]
+      (fn [{:keys [teksti nayta-rivina? label-luokka vayla-tyyli? disabled?
+                   iso-clickalue?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
-          [:div.boolean
+          [:div.boolean {:style {:padding (when iso-clickalue?
+                                            "14px")}
+                         :on-click (when iso-clickalue?
+                                     #(do
+                                        (.stopPropagation %)
+                                        (swap! data not)))}
            (let [checkbox (if vayla-tyyli?
                             (vayla-checkbox {:data      data
                                              :input-id  input-id
@@ -538,7 +548,8 @@
                                              :disabled? disabled?
                                              :arvo      arvo})
                             [:div.checkbox
-                             [:label {:on-click #(.stopPropagation %)}
+                             [:label {:class label-luokka
+                                      :on-click #(.stopPropagation %)}
                               [:input {:id        input-id
                                        :type      "checkbox"
                                        :disabled  disabled?
@@ -591,6 +602,7 @@
                                                             (= valittu vaihtoehto))
                                              :ryhma     group-id
                                              :id        (gensym (str "radio-group-" (name vaihtoehto)))}]
+                               ^{:key (str "radio-group-" (name vaihtoehto))}
                                [:div.radio
                                 [:label
                                  [:input {:type      "radio"
@@ -641,7 +653,6 @@
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
                             :vayla-tyyli?          vayla-tyyli?
-                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
                             :elementin-id elementin-id}
        valinnat]))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
@@ -673,7 +684,6 @@
                                 :disabled              disabled?
                                 :data-cy               data-cy
                                 :vayla-tyyli?          vayla-tyyli?
-                                :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
                                 :elementin-id elementin-id}
            valinnat])))))
 

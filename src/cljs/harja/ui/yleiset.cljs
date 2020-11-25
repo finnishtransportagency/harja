@@ -167,25 +167,43 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (def valinta-ul-max-korkeus-px "420px")
 
+(defn linkki-jossa-valittu-checked
+  [otsikko toiminto valittu?]
+  [:a.inline-block {:href "#"
+                    :on-click #(do (.preventDefault %) (toiminto))}
+   (when valittu?
+     [:span.listan-arvo-valittu {:style {:float "right"
+                                         :padding-right "4px"}}
+      (ikonit/ok)])
+   otsikko])
+
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{:keys [klikattu-ulkopuolelle-params auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
+  [{:keys [auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
   (let [auki? (atom false)
         lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto disabled-vaihtoehdot valittu-arvo]
                      (let [disabled? (and disabled-vaihtoehdot
-                                          (contains? disabled-vaihtoehdot vaihtoehto))]
+                                          (contains? disabled-vaihtoehdot vaihtoehto))
+                           linkin-cond (cond
+                                          itemit-komponentteja? vaihtoehto
+                                          disabled? [:span.disabled (format-fn vaihtoehto)]
+                                          :else (let [teksti (format-fn vaihtoehto)
+                                                      toiminto #(do (valitse-fn vaihtoehto)
+                                                                    (reset! auki? false)
+                                                                    nil)]
+                                                  (if vayla-tyyli?
+                                                    [linkki teksti toiminto]
+                                                    [linkki-jossa-valittu-checked
+                                                     teksti toiminto
+                                                     (= valittu-arvo vaihtoehto)])))]
                        [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                        [:span (cond
-                                 itemit-komponentteja? vaihtoehto
-                                 disabled? [:span.disabled (format-fn vaihtoehto)]
-                                 :else [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                           (reset! auki? false)
-                                                                           nil)])
-                         (when (and vayla-tyyli?
-                                    (= valittu-arvo vaihtoehto))
-                           [:span.listan-arvo-valittu (ikonit/ok)])
-                                                            ]]))
+                        (if-not vayla-tyyli?
+                          linkin-cond
+                         [:span
+                          linkin-cond
+                          (when (= valittu-arvo vaihtoehto)
+                            [:span.listan-arvo-valittu (ikonit/ok)])])]))
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
@@ -268,7 +286,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (komp/klikattu-ulkopuolelle #(when @auki?
                                      (reset! auki? false)
                                      (when kiinni-fn! (kiinni-fn!)))
-                                  klikattu-ulkopuolelle-params)
+                                  {:tarkista-komponentti? true})
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
@@ -299,12 +317,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
-            (if (and @auki? vayla-tyyli?)
+            (if @auki?
               ^{:key :auki}
-              [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (hash vaihtoehdot))
+              [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
                                          :class (when disabled "disabled")}]
               ^{:key :kiinni}
-              [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (hash vaihtoehdot))
+              [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
                                            :class (when disabled "disabled")}])]
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
@@ -706,3 +724,21 @@ jatkon."
               (map
                 #(str/trim %)
                 (str/split osoitteet #",")))))
+
+(defn str-suluissa-opt [s]
+  (when s
+    (str " (" s ")")))
+
+(defn- tooltip-kentta [avain arvo]
+  [:div {:style {:margin-bottom "8px"}}
+   [:div.tooltip-otsikko avain]
+   [:span arvo]])
+
+(defn avain-arvo-tooltip [otsikko {:keys [container-style]}
+                          & avaimet-ja-arvot]
+  [:div {:style container-style}
+   [:div.bold {:style {:margin-bottom "8px"}} otsikko]
+   (keep-indexed (fn [i [avain arvo]]
+                   ^{:key i}
+                   [tooltip-kentta avain arvo])
+                 (partition 2 avaimet-ja-arvot))])

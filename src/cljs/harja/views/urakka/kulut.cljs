@@ -155,7 +155,7 @@
                     (if (nil? a)
                       "Ei valittu"
                       (let [[kk hv] (str/split a #"/")]
-                        (str (if (pvm/kuukauden-numero kk) (str/capitalize kk) (str "VÄÄRÄ KUUKAUSI " kk)) " - "
+                        (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
                              (get lasku/hoitovuodet-strs (keyword hv))))))}
    (for [hv (range 1 6)
          kk kuukaudet]
@@ -463,7 +463,7 @@
                           (:summa k))]])
    [:div.flex-row (str "Koontilaskun kuukausi: "
                        (let [[kk hv] (str/split koontilaskun-kuukausi #"/")]
-                         (str (get lasku/kuukaudet-strs (keyword kk)) " - "
+                         (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
                               (get lasku/hoitovuodet-strs (keyword hv)))))]
    [:div.flex-row (str "Laskun päivämäärä: "
                        laskun-pvm)]

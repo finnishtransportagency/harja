@@ -12,6 +12,72 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-kulut-raporttiin-aikavalilla
+-- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
+with kohdistukset_ajalla as (select summa, tehtavaryhma from lasku_kohdistus lk
+                                join lasku l on lk.lasku = l.id and l.urakka = :urakka and l.erapaiva >= :alkupvm ::date and l.erapaiva <= :loppupvm ::date
+                             where l.id = lk.lasku and lk.poistettu is not true)
+select tr3.id as "tehtavaryhma",
+       sum(kohd.summa) as "summa",
+       tr3.jarjestys as "jarjestys",
+       tr3.nimi as "nimi"
+from tehtavaryhma tr1
+       join tehtavaryhma tr2 on tr1.id = tr2.emo
+       join tehtavaryhma tr3 on tr2.id = tr3.emo
+       left join kohdistukset_ajalla kohd on tr3.id = kohd.tehtavaryhma
+where tr1.emo is null
+group by tr3.nimi, tr3.id, tr3.jarjestys
+order by tr3.jarjestys;
+
+--name: hae-hallintayksikon-kulut-raporttiin-aikavalilla
+-- Annetulla aikavälillä haetaan hallintayksikon kaikki kulut tehtäväryhmittäin
+select tr.id as "tehtavaryhma",
+       sum(lk.summa) as "summa",
+       tr.jarjestys as "jarjestys",
+       tr.nimi as "nimi"
+from lasku_kohdistus lk
+       join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+  join lasku l on l.id = lk.lasku
+  join urakka u on u.id = l.urakka
+where l.erapaiva <= :loppupvm ::date
+  and l.erapaiva >= :alkupvm ::date
+  and u.hallintayksikko = :hallintayksikko
+  and lk.poistettu is not true
+group by tr.nimi, tr.id, tr.jarjestys
+order by tr.jarjestys;
+
+-- name: hae-koko-maan-kulut-raporttiin-aikavalilla-hallintayksikoittain
+-- Annetulla aikavälillä haetaan kaikki kulut tehtäväryhmittäin ryhmiteltynä koko maasta
+select tr.id as "tehtavaryhma",
+       o.id as "hallintayksikko",
+       sum(lk.summa) as "summa",
+       tr.jarjestys as "jarjestys",
+       tr.nimi as "nimi"
+from lasku_kohdistus lk
+       join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+  join lasku l on l.id = lk.lasku
+  join urakka u on u.id = l.urakka
+join organisaatio o on o.id = u.hallintayksikko
+where l.erapaiva <= :loppupvm ::date
+  and l.erapaiva >= :alkupvm ::date
+  and lk.poistettu is not true
+group by tr.nimi, o.id, tr.id, tr.jarjestys
+order by tr.jarjestys;;
+
+-- name: hae-koko-maan-kulut-raporttiin-aikavalilla
+-- Annetulla aikavälillä haetaan kaikki kulut tehtäväryhmittäin ryhmiteltynä koko maasta
+select tr.id as "tehtavaryhma",
+       sum(lk.summa) as "summa",
+       tr.jarjestys as "jarjestys",
+       tr.nimi as "nimi"
+from lasku_kohdistus lk
+join tehtavaryhma tr on lk.tehtavaryhma = tr.id
+where lk.erapaiva <= :loppupvm ::date
+  and lk.erapaiva >= :alkupvm ::date
+  and lk.poistettu is not true
+group by tr.nimi, tr.id, tr.jarjestys
+order by tr.jarjestys;;
+
 -- name: hae-liitteet
 -- Haetaan liitteet laskulle
 select liite.id               AS "liite-id",

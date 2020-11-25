@@ -216,6 +216,16 @@
 (defn tarkista-asetukset [asetukset]
   (s/check Asetukset asetukset))
 
+(defn tarkista-ymparisto! []
+  (let [env-muuttujat (with-open [rdr (io/reader ".harja_env")]
+                        (reduce (fn [tulos rivi]
+                                  (conj tulos (str/trim rivi)))
+                                []
+                                (line-seq rdr)))]
+    (doseq [env-muuttuja env-muuttujat]
+      (when (nil? (System/getenv env-muuttuja))
+        (log/error (str "Ympäristömuuttujaa " env-muuttuja " ei ole asetettu!"))))))
+
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
   [tiedosto]

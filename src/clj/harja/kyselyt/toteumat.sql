@@ -449,6 +449,7 @@ FROM osa_toteumat ot
          LEFT JOIN urakka_tehtavamaara ut
                    ON ot.urakka = ut.urakka
                        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+                       AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
@@ -463,14 +464,15 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        sum(ut.maara)            AS suunniteltu_maara,
        tk.kasin_lisattava_maara AS kasin_lisattava_maara,
        tk.suunnitteluyksikko    AS yk,
-       'tyyppi'                 AS tyyppi
+       'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+  AND ut.poistettu IS NOT TRUE
   -- Rajataan edellisessä haussa löydetyt toteumat, joilla on suunnitelma ja määrä olemassa, pois tästä
-  AND tr.id NOT IN (SELECT tk.tehtavaryhma
+  AND tk.id NOT IN (SELECT tk.id
                     FROM osa_toteumat ot
                              JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
                              JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma)
@@ -717,8 +719,8 @@ WHERE toteuma = :id;
 
 -- name: luo-toteuma-materiaali<!
 -- Luo uuden toteuman materiaalin
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja)
-VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
+VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja, :urakka);
 
 -- name: poista-toteuma-materiaali-toteuma-idlla!
 -- Poistaa toteuman materiaalit
