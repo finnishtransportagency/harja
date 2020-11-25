@@ -345,3 +345,6 @@
 
 (s/def ::tallenna-paallystysilmoitus-kysely
   (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))
+
+;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
+(def pot2-vuodesta-eteenpain 2021)

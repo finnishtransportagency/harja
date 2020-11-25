@@ -1,5 +1,6 @@
 (ns harja.kyselyt.paallystys
   (:require [jeesql.core :refer [defqueries]]
+            [harja.domain.paallystysilmoitus :as pot]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.geo :as geo]))
@@ -12,7 +13,7 @@
                     {:yllapitokohde yllapitokohde-id}))))
 
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi]
-  (let [hae-paallystysilmoitukset-sql (if (> vuosi 2020)
+  (let [hae-paallystysilmoitukset-sql (if (>= vuosi pot/pot2-vuodesta-eteenpain)
                                         hae-urakan-pot2-paallystysilmoitukset
                                         hae-urakan-paallystysilmoitukset)
         paallytysilmoitukset (into []
