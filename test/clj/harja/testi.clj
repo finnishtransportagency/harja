@@ -1313,7 +1313,7 @@
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
                                        " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
      ;; aloita-sonja palauttaa kanavan.
-     (binding [~'*lisattavat-kuuntelijat* (chan)]
+     (binding [*lisattavat-kuuntelijat* (chan)]
        (let [kuuntelijoiden-lopettajat# (atom [])]
          (sonja-kasittely kuuntelijoiden-lopettajat#)
          (testit#)
