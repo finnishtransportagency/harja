@@ -7,203 +7,214 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
             pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
 
 node {
-    // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja muuten paitsi otetaan vain Jenkins kansion sisältö.
-    // Tämä pitää tehdä ennen, kuin groovy filejä voi ladata workspacesta
-    checkout([poll: true,
-              scm : [$class                           : 'GitSCM',
-                     branches                         : [[name: '*/develop']],
-                     doGenerateSubmoduleConfigurations: false,
-                     extensions                       : [[$class: 'CheckoutOption', timeout: 15],
-                                                         [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15],
-                                                         [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'Jenkins/*']]]],
-                     submoduleCfg                     : [],
-                     userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
+    withEnv(["HARJA_DEV_YMPARISTO=${params.HARJA_DEV_YMPARISTO}",
+             "HARJA_TIETOKANTA_HOST=${params.HARJA_TIETOKANTA_HOST}",
+             "HARJA_TIETOKANTA_HOST_KAANNOS=${params.HARJA_TIETOKANTA_HOST_KAANNOS}",
+             "HARJA_TIETOKANTA_PORTTI=${params.HARJA_TIETOKANTA_PORTTI}",
+             "HARJA_SALLI_OLETUSKAYTTAJA=${params.HARJA_SALLI_OLETUSKAYTTAJA}",
+             "HARJA_AJA_GATLING_RAPORTTI=${params.HARJA_AJA_GATLING_RAPORTTI}",
+             "HARJA_NOLOG=${params.HARJA_NOLOG}",
+             "HARJA_DEV_RESOURCES_PATH=${params.HARJA_DEV_RESOURCES_PATH}",
+             "HARJA_SONJA_BROKER_PORT=${params.HARJA_SONJA_BROKER_PORT}",
+             "HARJA_SONJA_BROKER_HOST=${params.HARJA_SONJA_BROKER_HOST}"]) {
+        // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja muuten paitsi otetaan vain Jenkins kansion sisältö.
+        // Tämä pitää tehdä ennen, kuin groovy filejä voi ladata workspacesta
+        checkout([poll: true,
+                  scm : [$class                           : 'GitSCM',
+                         branches                         : [[name: '*/develop']],
+                         doGenerateSubmoduleConfigurations: false,
+                         extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                             [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15],
+                                                             [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'Jenkins/*']]]],
+                         submoduleCfg                     : [],
+                         userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 
-    def omatFunktiot = load "Jenkins/skriptit/Tyokalut.groovy"
-    def omatVarit = load "Jenkins/skriptit/Vars.groovy"
+        def omatFunktiot = load "Jenkins/skriptit/Tyokalut.groovy"
+        def omatVarit = load "Jenkins/skriptit/Vars.groovy"
 
-    println "develop branch"
+        println "develop branch"
 
-    // ei anneta tälle vielä arvoa, koska nykyinen arvo ei näy vaikka tällä kieroksella luotaisiinkin jarri
-    def jenkinsinBuildNumber
-    // Käynnistäjä
-    def kaynnistaja
-    // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
-    wrap([$class: 'BuildUser']) {
-        kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
-                          returnStdout: true])
-    }
-    Boolean muutosTapahtui = omatFunktiot.muutosTapahtuiHarjaan(kaynnistaja.trim())
+        // ei anneta tälle vielä arvoa, koska nykyinen arvo ei näy vaikka tällä kieroksella luotaisiinkin jarri
+        def jenkinsinBuildNumber
+        // Käynnistäjä
+        def kaynnistaja
+        // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
+        wrap([$class: 'BuildUser']) {
+            kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
+                              returnStdout: true])
+        }
+        Boolean muutosTapahtui = omatFunktiot.muutosTapahtuiHarjaan(kaynnistaja.trim())
 
-    // Lisää mvn pathiin
-    env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
+        // Lisää mvn pathiin
+        env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-    if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
-        if (params.ARCHIVE_BUILD_NUMBER) {
-            slackSend([color  : '#3232ff',
-                       message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
-            jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
-           // if (!omatFunktiot.onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
-           //     slackSend([color  : 'warning',
-           //                message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
-           //     error([message: "JAR:ia ei löytynyt halutulla numerolla"])
-           // }
-        } else {
-            // Jos build numberia ei ole annettu, niin etsitään se build number, joka on viimeksi mennyt onnistuneesti putken läpi.
-            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, true)
-            if (jenkinsinBuildNumber) {
-                sh([script: "echo \"Käytetään buildin " + jenkinsinBuildNumber + " JAR:ia tuotanto deploymenttiin\""])
+        if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
+            if (params.ARCHIVE_BUILD_NUMBER) {
+                slackSend([color  : '#3232ff',
+                           message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
+                jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
+               // if (!omatFunktiot.onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+               //     slackSend([color  : 'warning',
+               //                message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
+               //     error([message: "JAR:ia ei löytynyt halutulla numerolla"])
+               // }
             } else {
-                sh([script: "echo \"Yhtään jarria ei löytynyt Jenkinsistä!\""])
+                // Jos build numberia ei ole annettu, niin etsitään se build number, joka on viimeksi mennyt onnistuneesti putken läpi.
+                jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, true)
+                if (jenkinsinBuildNumber) {
+                    sh([script: "echo \"Käytetään buildin " + jenkinsinBuildNumber + " JAR:ia tuotanto deploymenttiin\""])
+                } else {
+                    sh([script: "echo \"Yhtään jarria ei löytynyt Jenkinsistä!\""])
+                }
+            }
+
+            //Jos JAR:ia ei löytynyt, niin se saattaa johtua siitä, että ei olla laitettu mitään uutta develop branchiin
+            //vähään aikaan.
+            if (jenkinsinBuildNumber) {
+                 // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
+                 if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+                     /*
+                      * TESTISERVERIKANNAN LUOMINEN
+                      */
+
+                     dir('Harja') {
+                         omatFunktiot.checkoutHarja('*/develop')
+                         stage(omatVarit.testiserverinKannanLuonti) {
+                             omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
+                         }
+                     }
+
+                     dir('CI') {
+                         omatFunktiot.checkoutCI()
+                         /*
+                          * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+                          */
+
+                         stage(omatVarit.testiserverinAppLuonti) {
+                             omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
+                         }
+                     }
+
+                     dir('E2E') {
+                         omatFunktiot.checkoutE2E()
+                         /*
+                          * E2E TESTIT
+                          */
+                         stage(omatVarit.e2eTestit) {
+                             omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+                         }
+                     }
+                 }
+
+                dir('Harja') {
+                    omatFunktiot.checkoutHarja('*/develop')
+
+                    /*
+                     * TUOTANTOSERVERIKANNAN LUOMINEN
+                     */
+                    stage(omatVarit.tuotantoserverinKannanLuonti) {
+                        omatFunktiot.ajaTuotantoserverinKanta(omatVarit.tuotantoserverinKannanLuonti)
+                    }
+                }
+
+                dir('CI') {
+                    /*
+                     * TUOTANTO SERVERIAPPIKSEN DEPLOYAAMINEN
+                     */
+                    omatFunktiot.checkoutCI()
+
+                    stage(omatVarit.tuotantoserverinAppLuonti) {
+                        omatFunktiot.ajaTuotantoerverinApp(omatVarit.tuotantoserverinAppLuonti, jenkinsinBuildNumber)
+                    }
+                }
             }
         }
+        if (muutosTapahtui) {
+            dir('Harja') {
+                omatFunktiot.checkoutHarja('*/develop')
 
-        //Jos JAR:ia ei löytynyt, niin se saattaa johtua siitä, että ei olla laitettu mitään uutta develop branchiin
-        //vähään aikaan.
-        if (jenkinsinBuildNumber) {
-             // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-             if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+                /*
+                 * TESTIKANNAN LUOMINEN
+                 */
+
+                stage(omatVarit.testikannanLuonti) {
+                    if (omatVarit.testikannanLuontiAjetaan) {
+                        omatFunktiot.ajaTestikannanLuonti(omatVarit.testikannanLuonti)
+                    }
+                }
+
+                /*
+                 * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
+                 */
+
+                stage(omatVarit.jarJaTestit) {
+                    if (omatVarit.jarJaTestitAjetaan) {
+                        omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
+                    }
+                }
+                jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, false)
+
+                /*
+                 * TESTISERVERIKANNAN LUOMINEN
+                 */
+
+                stage(omatVarit.testiserverinKannanLuonti) {
+                    if (omatVarit.testiserverinKannanLuontiAjetaan) {
+                        omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
+                    }
+                }
+            }
+
+            dir('CI') {
+                omatFunktiot.checkoutCI()
+                /*
+                 * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+                 */
+
+                stage(omatVarit.testiserverinAppLuonti) {
+                    if (omatVarit.testiserverinAppLuontiAjetaan) {
+                        omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
+                    }
+                }
+            }
+
+            // Selenium E2E testit on hyvä ajaa vaikka Cypress testit joskus kattaisivatkin kaikki tilanteet.
+            // Tämä siksi, että tämän avulla varmistetaan testiserverin varmasti olevan toimiva.
+            // Kerran käynyt niin, että lokaalisiti ja Cypressissä kaikki toimii kivasti, mutta testi ja stageing
+            // servereillä Harjaan jää näkyviin vain latauspallo eikä se siitä etene.
+             dir('E2E') {
+                 omatFunktiot.checkoutE2E()
                  /*
-                  * TESTISERVERIKANNAN LUOMINEN
+                  * E2E TESTIT
                   */
-
-                 dir('Harja') {
-                     omatFunktiot.checkoutHarja('*/develop')
-                     stage(omatVarit.testiserverinKannanLuonti) {
-                         omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
-                     }
-                 }
-
-                 dir('CI') {
-                     omatFunktiot.checkoutCI()
-                     /*
-                      * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-                      */
-
-                     stage(omatVarit.testiserverinAppLuonti) {
-                         omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
-                     }
-                 }
-
-                 dir('E2E') {
-                     omatFunktiot.checkoutE2E()
-                     /*
-                      * E2E TESTIT
-                      */
-                     stage(omatVarit.e2eTestit) {
+                 stage(omatVarit.e2eTestit) {
+                     if (omatVarit.e2eTestitAjetaan) {
                          omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
                      }
                  }
              }
 
             dir('Harja') {
-                omatFunktiot.checkoutHarja('*/develop')
-
                 /*
-                 * TUOTANTOSERVERIKANNAN LUOMINEN
+                 * STAGESERVERIKANNAN LUOMINEN
                  */
-                stage(omatVarit.tuotantoserverinKannanLuonti) {
-                    omatFunktiot.ajaTuotantoserverinKanta(omatVarit.tuotantoserverinKannanLuonti)
+
+                stage(omatVarit.stagingserverinKannanLuonti) {
+                    if (omatVarit.stagingserverinKannanLuontiAjetaan) {
+                        omatFunktiot.ajaStagingserverinKanta(omatVarit.stagingserverinKannanLuonti)
+                    }
                 }
             }
 
             dir('CI') {
                 /*
-                 * TUOTANTO SERVERIAPPIKSEN DEPLOYAAMINEN
+                 * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
                  */
-                omatFunktiot.checkoutCI()
 
-                stage(omatVarit.tuotantoserverinAppLuonti) {
-                    omatFunktiot.ajaTuotantoerverinApp(omatVarit.tuotantoserverinAppLuonti, jenkinsinBuildNumber)
-                }
-            }
-        }
-    }
-    if (muutosTapahtui) {
-        dir('Harja') {
-            omatFunktiot.checkoutHarja('*/develop')
-
-            /*
-             * TESTIKANNAN LUOMINEN
-             */
-
-            stage(omatVarit.testikannanLuonti) {
-                if (omatVarit.testikannanLuontiAjetaan) {
-                    omatFunktiot.ajaTestikannanLuonti(omatVarit.testikannanLuonti)
-                }
-            }
-
-            /*
-             * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
-             */
-
-            stage(omatVarit.jarJaTestit) {
-                if (omatVarit.jarJaTestitAjetaan) {
-                    omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
-                }
-            }
-            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, false)
-
-            /*
-             * TESTISERVERIKANNAN LUOMINEN
-             */
-
-            stage(omatVarit.testiserverinKannanLuonti) {
-                if (omatVarit.testiserverinKannanLuontiAjetaan) {
-                    omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
-                }
-            }
-        }
-
-        dir('CI') {
-            omatFunktiot.checkoutCI()
-            /*
-             * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-             */
-
-            stage(omatVarit.testiserverinAppLuonti) {
-                if (omatVarit.testiserverinAppLuontiAjetaan) {
-                    omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
-                }
-            }
-        }
-
-        // Selenium E2E testit on hyvä ajaa vaikka Cypress testit joskus kattaisivatkin kaikki tilanteet.
-        // Tämä siksi, että tämän avulla varmistetaan testiserverin varmasti olevan toimiva.
-        // Kerran käynyt niin, että lokaalisiti ja Cypressissä kaikki toimii kivasti, mutta testi ja stageing
-        // servereillä Harjaan jää näkyviin vain latauspallo eikä se siitä etene.
-         dir('E2E') {
-             omatFunktiot.checkoutE2E()
-             /*
-              * E2E TESTIT
-              */
-             stage(omatVarit.e2eTestit) {
-                 if (omatVarit.e2eTestitAjetaan) {
-                     omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-                 }
-             }
-         }
-
-        dir('Harja') {
-            /*
-             * STAGESERVERIKANNAN LUOMINEN
-             */
-
-            stage(omatVarit.stagingserverinKannanLuonti) {
-                if (omatVarit.stagingserverinKannanLuontiAjetaan) {
-                    omatFunktiot.ajaStagingserverinKanta(omatVarit.stagingserverinKannanLuonti)
-                }
-            }
-        }
-
-        dir('CI') {
-            /*
-             * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
-             */
-
-            stage(omatVarit.stagingserverinAppLuonti) {
-                if (omatVarit.stagingserverinAppLuontiAjetaan) {
-                    omatFunktiot.ajaStagingserverinApp(omatVarit.stagingserverinAppLuonti, jenkinsinBuildNumber)
+                stage(omatVarit.stagingserverinAppLuonti) {
+                    if (omatVarit.stagingserverinAppLuontiAjetaan) {
+                        omatFunktiot.ajaStagingserverinApp(omatVarit.stagingserverinAppLuonti, jenkinsinBuildNumber)
+                    }
                 }
             }
         }

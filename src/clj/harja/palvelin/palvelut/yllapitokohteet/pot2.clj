@@ -6,6 +6,7 @@
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
 
+            [harja.kyselyt.pot2 :as pot2-q]
             [harja.domain
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
@@ -17,7 +18,6 @@
             [harja.pvm :as pvm]
             [specql.core :as specql]
             [jeesql.core :refer [defqueries]]))
-
 
 (defn hae-urakan-pot2-massat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -222,6 +222,18 @@
                    :harja.domain.pot2/lisaaineet lisaaineet))))
 
 
+(defn hae-kohteen-pot2-tiedot [db user {::pot2-domain/keys [yllapitokohde-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user yllapitokohde-id)
+  (let [_ (println "hae-kohteen-pot2-tiedot" (pr-str yllapitokohde-id))
+        perustiedot (first (pot2-q/hae-kohteen-pot2-tiedot db {:kohde_id yllapitokohde-id}))
+
+        ;; TODO: Tähän tulee myöh. erilliset kyselyt:
+        ;; 1. Kkulutuskerroksen rivit
+        ;; 2. Alustan rivit
+        _ (println "hae-urakan-pot2-massat :: massat" (pr-str perustiedot))]
+    {:perustiedot perustiedot}))
+
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
@@ -239,6 +251,11 @@
       (julkaise-palvelu http :tallenna-urakan-pot2-massa
                         (fn [user tiedot]
                           (tallenna-urakan-paallystysmassa db user tiedot)))
+
+      ;; POT2 palvelut tänne
+      (julkaise-palvelu http :hae-kohteen-pot2-tiedot
+                        (fn [user tiedot]
+                          (hae-kohteen-pot2-tiedot db user tiedot)))
       this))
 
   (stop [this]

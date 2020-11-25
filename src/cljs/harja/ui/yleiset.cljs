@@ -319,10 +319,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             (if @auki?
               ^{:key :auki}
-              [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (hash vaihtoehdot))
+              [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
                                          :class (when disabled "disabled")}]
               ^{:key :kiinni}
-              [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (hash vaihtoehdot))
+              [:span.livicon-chevron-down {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
                                            :class (when disabled "disabled")}])]
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
