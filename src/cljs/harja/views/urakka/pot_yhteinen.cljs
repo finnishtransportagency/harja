@@ -47,10 +47,11 @@
                                                                 arvo tr-alkuosa)
                                                               (if (= :tr-loppuosa kentta)
                                                                 arvo tr-loppuosa)))
-                           ;; TODO: POT2 ei halua tehdä Tierekisteriosoitteiden ja
-                           ;; Alustalle tehtyjen toimien validointeja tässä! Testattava voiko poistaa
-                           (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat))
-                           (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat)))))))]
+                           ;; when-kääreet koska kyseessä POT1-spesifiset validoinnit
+                           (when (:tierekisteriosoitteet ohjauskahvat)
+                             (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))
+                           (when (:alustalle-tehdyt-toimet ohjauskahvat)
+                             (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat))))))))]
     [:table
      [:thead
       [:tr
