@@ -73,8 +73,9 @@
     (vec m)))
 
 (defn- muodosta-taulukko
-  [db user parametrit]
-  (let [xform (map (fn [[_ rivit]]
+  [db user {:keys [alkupvm loppupvm] :as parametrit}]
+  (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
+        xform (map (fn [[_ rivit]]
                      [[(:urakka (first rivit)) (:jarjestys (first rivit))] rivit]))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db)
@@ -108,7 +109,7 @@
                                                               rivi))))))
         muodosta-rivi (comp
                         (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
-                        (map null-arvot-nollaksi-rivilla)   ;:TODO Sql?
+                        (map null-arvot-nollaksi-rivilla)
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
                         (map muodosta-otsikot))
@@ -116,20 +117,21 @@
     {:rivit   rivit
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
-               {:otsikko "Suunniteltu määrä" :leveys 2 :fmt :numero}
+               {:otsikko (str "Suunniteltu määrä "
+                              (if (> (count hoitokaudet) 1)
+                                (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
+                                (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
+                :leveys  2 :fmt :numero}
                {:otsikko "Toteuma" :leveys 2 :fmt :numero}
                {:otsikko "Toteuma-%" :leveys 2}]}))
 
 (defn suorita
-  [db user {:keys [alkupvm loppupvm] :as params}]
+  [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
   (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user params)]
     [:raportti
-     {:nimi "Tehtävämäärät"}
-     #_[:teksti (str "helou" (pr-str rivit))]
-     #_[:teksti (str "helou" (pr-str otsikot))]
-     #_[:teksti (str "helou" (pr-str debug))]
+     {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
      [:taulukko
-      {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+      {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
        :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]]))
