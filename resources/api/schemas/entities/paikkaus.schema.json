@@ -70,9 +70,6 @@
       "id": "urn:harja/paikkaukset/0/paikkaus/massatyyppi",
       "required": true,
       "enum": [
-        "asfalttibetoni",
-        "kivimastiks",
-        "pehmeät ab / bitumi",
         "AB, Asfalttibetoni",
         "SMA, Kivimastiksiasfaltti",
         "PAB-B, Pehmeät asfalttibetonit",
