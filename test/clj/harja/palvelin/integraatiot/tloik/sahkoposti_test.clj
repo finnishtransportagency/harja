@@ -28,7 +28,7 @@
     :labyrintti (feikki-labyrintti)
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])))
+             [:db :sonja :integraatioloki :sonja-sahkoposti])))
 
 (use-fixtures :each jarjestelma-fixture)
 

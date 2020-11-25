@@ -142,12 +142,14 @@
   (let [tapahtuman-tiedot (case tyyppi
                             :viimeisin (q-tapahtumat/uusin-arvo db {:nimi tapahtuma})
                             (:palvelimet-viimeisin :viimeisin-per-palvelin) (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
-                            nil)]
+                            nil)
+        uusin-arvo-loytynyt? (and (not (nil? tapahtuman-tiedot))
+                                  (not (empty? tapahtuman-tiedot)))]
     ;(log/debug "[KOMPONENTTI-EVENT] paluuarvo - tapahtuma: " tapahtuma " tyyppi: " tyyppi " json-data nil? " (nil? json-data))
-    (when-not (nil? tapahtuman-tiedot)
+    (when uusin-arvo-loytynyt?
       (case tyyppi
-        :viimeisin (when (tapahtuman-data-ok?! tapahtuman-tiedot tapahtuma)
-                     (tapahtuman-tiedot-clj-dataksi tapahtuman-tiedot))
+        :viimeisin (when (tapahtuman-data-ok?! (first tapahtuman-tiedot) tapahtuma)
+                     (tapahtuman-tiedot-clj-dataksi (first tapahtuman-tiedot)))
         (:palvelimet-viimeisin :viimeisin-per-palvelin) (when (every? (fn [tapahtuman-tiedot]
                                                                         (tapahtuman-data-ok?! tapahtuman-tiedot tapahtuma))
                                                                       tapahtuman-tiedot)
@@ -234,7 +236,11 @@
                           (recur (conj kuittaukset kuittaus))))))
          #_(log/debug (str "[KOMPONENTTI-EVENT] pura-tapahtuma-loopin-ajot! finito")))
        (catch Throwable t
-         (log/error (str "Tapahtuma loopin ajot kaatui virheeseen: " (.getMessage t) "\nStack trace: " (.printStackTrace t))))))
+         (log/error (str "Tapahtuma loopin ajot kaatui virheeseen: " (.getMessage t)))
+         (binding [*out* *err*]
+           (println "Stack trace:"))
+         (.printStackTrace t)
+         (throw t))))
 
 (defn- tapahtuma-loop-sisalto [{:keys [ajossa db connection tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus
                                        kuuntelu-aloitettu yhta-aikaa-ajettavat kuuntelijat tarkkailu-kanava
@@ -440,8 +446,7 @@
                                       (when dev-tyokalut/dev-environment?
                                         {:lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})}))
               data-transitina (transit/clj->transit julkaistava-data transit-write-optiot)
-              transit-hash (konv/sha256 data-transitina)
-              ;_ (log/debug (str "[KOMPONENTTI-EVENT] julkaise! " julkaistava-data))
+              transit-hash (konv/sha256 (str data-transitina))
               julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data data-transitina :hash transit-hash})]
           (when-not julkaisu-onnistui?
             (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" payload)))

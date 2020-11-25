@@ -11,7 +11,7 @@ RETURNING kanava;
 
 -- name: julkaise-tapahtuma
 -- single?: true
-SELECT julkaise_tapahtuma(:kanava::TEXT, :data::JSONB, :hash::TEXT);
+SELECT julkaise_tapahtuma(:kanava::TEXT, :data::JSONB, :data::TEXT, :hash::TEXT);
 
 -- name: uusin-arvo
 SELECT arvo, hash, luotu
@@ -31,7 +31,7 @@ FROM tapahtuman_tiedot tt
   JOIN palvelimet_viimeisine_arvoineen pva ON pva.id=tt.id;
 
 -- name: tapahtuman-tiedot
-SELECT arvo::TEXT, hash, luotu
+SELECT arvo, hash, luotu
 FROM tapahtuman_tiedot
 WHERE id IN (:idt);
 

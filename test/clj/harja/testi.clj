@@ -172,6 +172,22 @@
           (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
       #_(throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään")))))
 
+(defn odota-etta-kanta-pystyssa [db]
+  (let [timeout-s 10]
+    (jdbc/with-db-connection [db db]
+                             (with-open [c (jdbc/get-connection db)
+                                         stmt (jdbc/prepare-statement c
+                                                                      "SELECT 1;"
+                                                                      {:timeout timeout-s
+                                                                       :result-type :forward-only
+                                                                       :concurrency :read-only})
+                                         rs (.executeQuery stmt)]
+                               (let [kanta-ok? (if (.next rs)
+                                                 (= 1 (.getObject rs 1))
+                                                 false)]
+                                 (when-not kanta-ok?
+                                   (log/error (str "Ei saatu kantaan yhteyttä " timeout-s " sekunnin kuluessa"))))))))
+
 (defn- luo-kannat-uudelleen []
   (alter-var-root #'db (fn [_]
                          (com.mchange.v2.c3p0.DataSources/destroy db)
@@ -215,7 +231,9 @@
     (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
     (yrita-querya (fn [] (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")) 5)
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-  (luo-kannat-uudelleen))
+  (luo-kannat-uudelleen)
+  (odota-etta-kanta-pystyssa {:datasource db})
+  (odota-etta-kanta-pystyssa {:datasource temppidb}))
 
 (defn katkos-testikantaan!
   "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan

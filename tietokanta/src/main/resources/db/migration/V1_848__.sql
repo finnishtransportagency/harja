@@ -7,7 +7,7 @@ CREATE TABLE tapahtuma (
 
 CREATE TABLE tapahtuman_tiedot (
                                    id SERIAL PRIMARY KEY,
-                                   arvo JSONB NOT NULL,
+                                   arvo TEXT NOT NULL,
                                    hash TEXT NOT NULL,
                                    kanava TEXT REFERENCES tapahtuma(kanava),
                                    luotu TIMESTAMP
@@ -80,7 +80,7 @@ CREATE TRIGGER tg_resetoi_id_tapahtumien_tiedot_taulukosta
     FOR EACH STATEMENT
 EXECUTE PROCEDURE resetoi_tapahtuman_tiedot_id_serial();
 
-CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data JSONB, _hash TEXT) RETURNS bool AS
+CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data JSONB, data_text TEXT, _hash TEXT) RETURNS bool AS
 $$
 DECLARE
     _sqlstate TEXT;
@@ -110,7 +110,7 @@ BEGIN
     END IF;
 
     INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu, hash)
-    VALUES(data, _kanava, NOW(), _hash)
+    VALUES(data_text, _kanava, NOW(), _hash)
     RETURNING id
         INTO _id;
 
@@ -126,7 +126,7 @@ BEGIN
                                                               ELSE palvelimien_uusimmat_arvot
                                                              END,
                                                          ARRAY[palvelin]::TEXT[],
-                                                         _id)
+                                                         to_jsonb(_id))
                                         FROM tapahtuma
                                         WHERE kanava=_kanava)
         WHERE kanava=_kanava;
