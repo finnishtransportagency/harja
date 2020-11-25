@@ -1,0 +1,74 @@
+.materiaalikirjasto-modal {
+    ul.runkoaineen-tiedot {
+        list-style-position: inside;
+        list-style-type: disc;
+        padding-inline-start: 0;
+
+    }
+    .lomake {
+        border: none;
+        .ainevalinta {
+            background-color: @gray240;
+            border-bottom: solid 4px @white;
+            .checkbox {
+                margin: 0;
+            }
+            &.valittu, .lisaa-sideaine, .poista-sideaine {
+                background-color: @gray225;
+            }
+            .kentat-haitari {
+                margin-top: -12px;
+                margin-left: 35px;
+                margin-bottom: 5px;
+            }
+
+        }
+    }
+    .livi-grid {
+        .panel-heading, .panel-body {
+            background-color: @white;
+        }
+        table {
+            border: none;
+
+            thead {
+                background-color: @table-bg-hover;
+                color: @black;
+                tr {
+                    background-color: @table-bg-hover;
+                    color: @black;
+                }
+            }
+            tr {
+                background-color: @white;
+                border: none;
+                > th {
+                    border: none;
+                    font-weight: normal;
+                    text-transform: uppercase;
+                    &:not(:first-child) {
+                        padding-left: 1rem;
+                    }
+
+                }
+                > td {
+                    border: none;
+                    vertical-align: top;
+                    &:not(:first-child) {
+                        padding-left: 1rem;
+                    }
+                }
+            }
+        }
+    }
+    .tooltip {
+        // ei anneta tooltipin (joka ei näy) ottaa hiirieventtejä
+        pointer-events: none;
+        text-align: left;
+        .tooltip-inner {
+            .tooltip-otsikko {
+                color: @harmaa-tumma;
+            }
+        }
+    }
+}
