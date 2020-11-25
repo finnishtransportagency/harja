@@ -169,8 +169,8 @@
                                     (.preventDefault %)
                                     (.stopPropagation %)
                                     (when (or (not (some? valittava?-fn))
-                                              (valittava?-fn pvm/nyt))
-                                      (valitse pvm/nyt)))}
+                                              (valittava?-fn (pvm/nyt)))
+                                      (valitse (pvm/nyt))))}
                    "Tänään"]]]]])))))
 
 (def ^:const

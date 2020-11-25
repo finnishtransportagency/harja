@@ -430,7 +430,8 @@
          ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
          ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit ja blokkaa siksi aikaa.
          ;; Tämän jälkeen luodaan uusi vastaanottaja.
-         (.close vastaanottaja)
+         (when vastaanottaja
+           (.close vastaanottaja))
          (if (empty? kuuntelijat)
            (swap! tila assoc-in [:istunnot jarjestelma :jonot jonon-nimi] nil)
            (let [vastaanottaja (.createReceiver istunto jono)]
@@ -441,7 +442,10 @@
                                           :kuuntelijat kuuntelijat)))))
          true)
        (catch Exception e
-         (log/error "VIRHE TAPAHTUI :poista-kuuntelija " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
+         (log/error "VIRHE TAPAHTUI :poista-kuuntelija " (.getMessage e))
+         (binding [*out* *err*]
+           (println "Stack Trace:"))
+         (.printStackTrace e)
          {:virhe e})))
 
 (defmethod jms-toiminto! :jms-tilanne

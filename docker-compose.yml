@@ -64,6 +64,7 @@ services:
       fi;
       touch ${DC_JAETTU_KANSIO}/repl_1.done
       echo 'REPL käynnistetty'
+      # Tuodaan harja repl pyörimään etualalle
       fg
       "
   harja-app-2:
@@ -170,7 +171,7 @@ services:
       echo 'Luodaan .edn filut figwheeliä varten'
       mkdir -p figwheel_conf/luodut
       rm figwheel_conf/luodut/*
-      lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
+      lein with-profile $${LEIN_PROFILES} run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
 
       echo 'Käynnistetään frontin repl'
       screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES},+dev-cljs run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl

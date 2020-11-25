@@ -195,6 +195,7 @@
 
 
   :clean-targets ^{:protect false} ["dev-resources/js/out"
+                                    "dev-resources/js/harja.js"
                                     "dev-resources/tmp"
                                     "target"
                                     "resources/public/js/harja.js"
@@ -250,12 +251,15 @@
                                "with-profile" "prod-cljs" "compile-prod,"
                                "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
-  :test-selectors { ;; lein test :perf
+  :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
                    :perf :perf
                    :integraatio :integraatio
-                   :default (complement :integraatio)
+                   :hidas :hidas
+                   :default (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas}]
+                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
                    }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

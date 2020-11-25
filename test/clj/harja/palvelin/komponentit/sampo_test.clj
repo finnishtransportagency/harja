@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sampo
              [tyokalut :as sampo-tk]
@@ -12,20 +13,12 @@
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.data.hoito.kustannussuunnitelma :as ks-data]
             [harja.pvm :as pvm]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61617"
-                            :kayttaja ""
-                            :salasana ""
-                            :tyyppi :activemq}
-                    :sampo {:lahetysjono-sisaan sampo-tk/+lahetysjono-sisaan+
-                            :kuittausjono-sisaan sampo-tk/+kuittausjono-sisaan+
-                            :lahetysjono-ulos sampo-tk/+lahetysjono-ulos+
-                            :kuittausjono-ulos sampo-tk/+kuittausjono-ulos+
-                            :paivittainen-lahetysaika nil}})
+(defonce asetukset {:sonja integraatio/sonja-asetukset
+                    :sampo integraatio/integraatio-sampo-asetukset})
 
 (defonce ai-port 8162)
 
@@ -48,10 +41,7 @@
                                                                  (:lahetysjono-ulos sampo)
                                                                  (:kuittausjono-ulos sampo)
                                                                  (:paivittainen-lahetysaika sampo)))
-                                                [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                [:db])))))
+                                                [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])))))
   ;; aloita-sonja palauttaa kanavan.
   (<!! (sut/aloita-sonja jarjestelma))
   ;; Merkataan kaikki kannassa oleva testidata lähetetyksi ennen testien ajoa ja purgetaan jono.
@@ -64,7 +54,7 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(deftest merkataan-budjettitavotteita-likaiseksi-ja-lähetetään-ne-Sampoon
+(deftest merkataan-budjettitavotteita-likaiseksi-ja-lahetetaan-ne-Sampoon
   (let [{urakka-id :id alkupvm :alkupvm} (first (q-map (str "SELECT id, alkupvm
                                             FROM   urakka
                                             WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))

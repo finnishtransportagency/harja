@@ -10,6 +10,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.liitteet :as liitteet]
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
@@ -24,10 +25,12 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+    [harja.palvelin.main :as sut]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
-    [clojure.java.jdbc :as jdbc])
+    [clojure.java.jdbc :as jdbc]
+    [harja.tyokalut.env :as env])
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
@@ -37,12 +40,37 @@
 
 (Locale/setDefault (Locale. "fi" "FI"))
 
-(defn ollaanko-jenkinsissa? []
-  (= "harja-jenkins.solitaservices.fi"
-     (.getHostName (java.net.InetAddress/getLocalHost))))
+(def ^{:dynamic true
+       :doc "Jos käytössä on oikea Sonja komponentti, pitää se aloittaa ennen testien ajoa"} *aloita-sonja?* false)
+(def ^{:dynamic true
+       :doc "Jos halutaan testissä lisätä kuuntelijoita, pitää ne lisätä ennen kunntelun aloitusta."} *lisattavia-kuuntelijoita?* false)
+(def ^{:dynamic true
+       :doc "Callback sen jälkeen kun on sonja käynnistetty. Hyvä paikka purgeta jonoja."} *sonja-kaynnistetty-fn* nil)
+(def ^{:dynamic true
+       :doc "Tänne mapissa kanavan nimi funktio pareja, joiden pitäs olla testissä käytössä.
+             Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
+(def sonja-aloitus-go (atom nil))
+
+(defn lisaa-kuuntelijoita!
+  "Helpperi funktio, jolla voi lisätä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
+   on lisätty oikea sonja"
+  [kuuntelijat]
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))
+         (not (nil? @sonja-aloitus-go))
+         (map? kuuntelijat)]}
+  (async/>!! *lisattavat-kuuntelijat* kuuntelijat)
+  (async/<!! @sonja-aloitus-go))
+
+(defn ei-lisattavia-kuuntelijoita! []
+  "Helpperi funktio, jolla voi ilmoittaa, ettei ole lisättäviä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
+   on lisätty oikea sonja"
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))
+         (not (nil? @sonja-aloitus-go))]}
+  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa)
+  (async/<!! @sonja-aloitus-go))
 
 (defn circleci? []
-  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
@@ -51,22 +79,22 @@
    {:println
     {:min-level
      (cond
-       (= "true" (System/getenv "HARJA_NOLOG"))
+       (env/env "HARJA_NOLOG" false)
        :fatal
 
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (System/getenv "HARJA_TIETOKANTA_HOST")
-                      :portti 5432
+(def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                      :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
                       :salasana nil})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (System/getenv "HARJA_TIETOKANTA_HOST")
-                       :portti 5432
+(def temppitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                       :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                        :tietokanta "temp"
                        :kayttaja "harjatest"
                        :salasana nil})
@@ -176,6 +204,22 @@
           (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
       #_(throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään")))))
 
+(defn odota-etta-kanta-pystyssa [db]
+  (let [timeout-s 10]
+    (jdbc/with-db-connection [db db]
+                             (with-open [c (jdbc/get-connection db)
+                                         stmt (jdbc/prepare-statement c
+                                                                      "SELECT 1;"
+                                                                      {:timeout timeout-s
+                                                                       :result-type :forward-only
+                                                                       :concurrency :read-only})
+                                         rs (.executeQuery stmt)]
+                               (let [kanta-ok? (if (.next rs)
+                                                 (= 1 (.getObject rs 1))
+                                                 false)]
+                                 (when-not kanta-ok?
+                                   (log/error (str "Ei saatu kantaan yhteyttä " timeout-s " sekunnin kuluessa"))))))))
+
 (defn- luo-kannat-uudelleen []
   (alter-var-root #'db (fn [_]
                          (com.mchange.v2.c3p0.DataSources/destroy db)
@@ -219,7 +263,9 @@
     (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
     (yrita-querya (fn [] (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")) 5)
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-  (luo-kannat-uudelleen))
+  (luo-kannat-uudelleen)
+  (odota-etta-kanta-pystyssa {:datasource db})
+  (odota-etta-kanta-pystyssa {:datasource temppidb}))
 
 (defn katkos-testikantaan!
   "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan
@@ -1214,6 +1260,22 @@
 (defn lopeta-harja-tarkkailija []
   (alter-var-root #'harja-tarkkailija component/stop))
 
+(defn sonja-kasittely [kuuntelijoiden-lopettajat]
+  (when *aloita-sonja?*
+    (let [sonja-kaynnistaminen! (fn []
+                                  (<!! (sut/aloita-sonja jarjestelma))
+                                  (when *sonja-kaynnistetty-fn*
+                                    (*sonja-kaynnistetty-fn*)))]
+      (if *lisattavia-kuuntelijoita?*
+        (reset! sonja-aloitus-go
+                (go (let [[kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
+                                                  (timeout 5000)])]
+                      (when (and kuuntelijat (map? kuuntelijat))
+                        (doseq [[kanava f] kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (sonja/kuuntele! (:sonja jarjestelma) kanava f))))
+                      (sonja-kaynnistaminen!))))
+        (sonja-kaynnistaminen!)))))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -1252,7 +1314,14 @@
                      (fn [_#]
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
                                        " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
-     (testit#)
+     ;; aloita-sonja palauttaa kanavan.
+     (binding [*lisattavat-kuuntelijat* (chan)]
+       (let [kuuntelijoiden-lopettajat# (atom [])]
+         (sonja-kasittely kuuntelijoiden-lopettajat#)
+         (testit#)
+         (when (not (empty? @kuuntelijoiden-lopettajat#))
+           (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]
+             (lopetus-fn#)))))
      (alter-var-root #'jarjestelma component/stop)
      (lopeta-harja-tarkkailija)))
 
@@ -1369,7 +1438,7 @@
             {:timeout-in-ms 10
              :concurrency (count kutsut)
              :requests (count kutsut)}
-            (when (= "true" (System/getenv "HARJA_AJA_GATLING_RAPORTTI"))
+            (when (env/env "HARJA_AJA_GATLING_RAPORTTI" false)
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
               ;; eli luodaan oma raportteri, joka ei tee mitään
               {:reporter {:writer (fn [_ _ _])

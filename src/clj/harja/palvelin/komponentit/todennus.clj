@@ -10,7 +10,6 @@
              [oikeudet :as oikeudet]]
             [harja.kyselyt
              [kayttajat :as q]]
-            [harja.palvelin.tapahtuma-protokollat :refer [kuuntele!]]
             [slingshot.slingshot :refer [throw+ try+]]
             [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.net BCodec)))

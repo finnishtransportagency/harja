@@ -1,6 +1,7 @@
 (ns ^:integraatio harja.palvelin.komponentit.sonja-test
   (:require [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.kyselyt.konversio :as konv]
@@ -23,18 +24,9 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61617"
-                            :kayttaja ""
-                            :salasana ""
-                            :tyyppi :activemq}
-                    :tloik {:ilmoitusviestijono tloik-tk/+tloik-ilmoitusviestijono+
-                            :ilmoituskuittausjono tloik-tk/+tloik-ilmoituskuittausjono+
-                            :toimenpideviestijono tloik-tk/+tloik-ilmoitustoimenpideviestijono+
-                            :toimenpidekuittausjono tloik-tk/+tloik-ilmoitustoimenpidekuittausjono+
-                            :uudelleenlahetysvali-minuuteissa 30}})
+(defonce asetukset {:sonja integraatio/sonja-asetukset})
 
 (def ^:dynamic *sonja-yhteys* nil)
 
@@ -113,10 +105,7 @@
                                             [:sonja])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                [:db])))))
+                                 [:db :sonja :integraatioloki :sonja-sahkoposti])))))
   ;; aloita-sonja palauttaa kanavan.
   (binding [*sonja-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun

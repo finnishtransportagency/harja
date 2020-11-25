@@ -1,13 +1,14 @@
 CREATE TABLE tapahtuma (
                            kanava TEXT PRIMARY KEY,
                            nimi TEXT UNIQUE NOT NULL,
-                           uusin_arvo JSONB,
+                           uusin_arvo INT,
                            palvelimien_uusimmat_arvot JSONB
 );
 
 CREATE TABLE tapahtuman_tiedot (
                                    id SERIAL PRIMARY KEY,
-                                   arvo JSONB,
+                                   arvo TEXT NOT NULL,
+                                   hash TEXT NOT NULL,
                                    kanava TEXT REFERENCES tapahtuma(kanava),
                                    luotu TIMESTAMP
 );
@@ -32,8 +33,20 @@ EXECUTE PROCEDURE esta_nimen_ja_kanavan_paivitys();
 CREATE OR REPLACE FUNCTION poista_vanhat_tapahtumat() RETURNS trigger AS $$
 BEGIN
     DELETE FROM tapahtuman_tiedot
-    WHERE luotu < NOW() - interval '2 minutes';
+    WHERE luotu < NOW() - interval '10 minutes';
     RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION esta_tapahtumien_muokkaus_ja_ennenaikainen_poisto() RETURNS trigger AS $$
+BEGIN
+    IF (TG_OP = 'DELETE' AND NOW() - interval '10 minutes' >= OLD.luotu::TIMESTAMP) OR
+       (TG_OP = 'UPDATE')
+    THEN
+        RETURN NULL;
+    ELSE
+        RETURN OLD;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -55,13 +68,19 @@ CREATE TRIGGER tg_poista_vanhat_tapahtumat
     FOR EACH STATEMENT
 EXECUTE PROCEDURE poista_vanhat_tapahtumat();
 
+CREATE TRIGGER tg_esta_tapahtumien_muokkaus_ja_poisto
+    BEFORE UPDATE OR DELETE
+    ON tapahtuman_tiedot
+    FOR EACH ROW
+EXECUTE PROCEDURE esta_tapahtumien_muokkaus_ja_ennenaikainen_poisto();
+
 CREATE TRIGGER tg_resetoi_id_tapahtumien_tiedot_taulukosta
     AFTER INSERT
     ON tapahtuman_tiedot
     FOR EACH STATEMENT
 EXECUTE PROCEDURE resetoi_tapahtuman_tiedot_id_serial();
 
-CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data JSONB) RETURNS bool AS
+CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data_text TEXT, _hash TEXT) RETURNS bool AS
 $$
 DECLARE
     _sqlstate TEXT;
@@ -71,7 +90,8 @@ DECLARE
     palvelin TEXT;
     _id INTEGER;
 
-    palvelin_index INT = 0;
+    data JSONB := data_text::JSONB;
+    palvelin_index INT := 0;
     el JSONB;
 BEGIN
 
@@ -90,8 +110,13 @@ BEGIN
         INTO palvelin;
     END IF;
 
+    INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu, hash)
+    VALUES(data_text, _kanava, NOW(), _hash)
+    RETURNING id
+        INTO _id;
+
     UPDATE tapahtuma
-    SET uusin_arvo=data
+    SET uusin_arvo=_id
     WHERE kanava=_kanava;
 
     IF palvelin IS NOT NULL
@@ -102,16 +127,11 @@ BEGIN
                                                               ELSE palvelimien_uusimmat_arvot
                                                              END,
                                                          ARRAY[palvelin]::TEXT[],
-                                                         data)
+                                                         to_jsonb(_id))
                                         FROM tapahtuma
                                         WHERE kanava=_kanava)
         WHERE kanava=_kanava;
     END IF;
-
-    INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu)
-    VALUES(data, _kanava, NOW())
-    RETURNING id
-        INTO _id;
 
     PERFORM pg_notify(_kanava, _id::TEXT);
 

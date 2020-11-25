@@ -7,8 +7,8 @@
   #?(:clj (:import (clojure.core.async.impl.channels ManyToManyChannel))))
 
 (defn chan?
-  "Tarkastaa onko annettu parametry async kirjaston chan. Tämän funktion toimiminen
-   riippuu async kirjaston sisäisestä toiminnasta, joten tuon kirjaston päivittäminen
+  "Tarkastaa onko annettu parametri async kirjaston chan. Tämän funktion toimiminen
+   riippuu async kirjaston toteutuksesta, joten tuon kirjaston päivittäminen
    mahdollisesti hajoittaa tämän funktion."
   [c]
   #?(:clj (instance? ManyToManyChannel c)
@@ -16,6 +16,6 @@
 
 (defn chan-closed?
   "Tarkastaa onko annettu kanava sammutettu. Tämän funktion toimiminen riippuu async kirjaston
-   sisäisestä toiminnasta, joten tuon kirjaston päivittäminen mahdollisesti hajoittaa tämän funktion."
+   toteutuksesta, joten tuon kirjaston päivittäminen mahdollisesti hajoittaa tämän funktion."
   [c]
   (protocols-impl/closed? c))

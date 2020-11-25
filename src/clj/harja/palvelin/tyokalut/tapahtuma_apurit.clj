@@ -65,14 +65,14 @@
   [& tapahtumakasittelijat]
   (assert (even? (count tapahtumakasittelijat)) "kuuntele-useampaa-tapahtumaa makrolle pitää antaa parillinen määrä argumenttejä")
   (let [tapahtumat# (map (fn [[tapahtuma opts]]
-                            (let [f (if (map? opts)
-                                      (:f opts)
-                                      opts)
-                                  tyyppi (if (map? opts)
-                                           (get opts :tyyppi :perus)
-                                           :perus)]
-                              [tapahtuma tyyppi f (gensym "kanava")]))
-                          (partition 2 tapahtumakasittelijat))]
+                           (let [f (if (map? opts)
+                                     (:f opts)
+                                     opts)
+                                 tyyppi (if (map? opts)
+                                          (get opts :tyyppi :perus)
+                                          :perus)]
+                             [tapahtuma tyyppi f (gensym "kanava")]))
+                         (partition 2 tapahtumakasittelijat))]
     `(async/thread (let [ryhmanimi# (str (gensym "useampi"))
                          kuuntelijat# (mapv (fn [[~'tapahtuma ~'tyyppi]]
                                               (jr/kutsu :yhta-aikaa-tapahtuman-julkaisia! {:tunnistin ryhmanimi#
@@ -83,9 +83,9 @@
                          ~(mapv #(get % 3) tapahtumat#) (mapv (fn [~'kuuntelija]
                                                                 (async/<!! ~'kuuntelija))
                                                               kuuntelijat#)]
-                     (async/go (async/alt!! ~@(mapcat (fn [[_ _ f s]]
-                                                        [s (list ['val 'ch] (list f 'val 'ch))])
-                                                      tapahtumat#)))))))
+                     (async/go (async/alt! ~@(mapcat (fn [[_ _ f s]]
+                                                       [s (list ['val 'ch] (list f 'val 'ch))])
+                                                     tapahtumat#)))))))
 
 (defn lopeta-tapahtuman-kuuntelu [kuuntelija]
   (jr/kutsu :lopeta-tapahtuman-kuuntelu kuuntelija))

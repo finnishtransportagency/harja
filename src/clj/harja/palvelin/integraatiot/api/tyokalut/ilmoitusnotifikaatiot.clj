@@ -21,4 +21,5 @@
   "Ilmoita tietyn ilmoituksen onnistuneesta välittämisestä. Kanava on keyword, joka kertoo millä mekanismilla
 välitys tehtiin: :api, :sms tai :email."
   [ilmoitus-id valitystapa]
+  (log/debug (str "ilmoita-lahetetysta-ilmoituksesta " ilmoitus-id))
   (tapahtuma-apurit/julkaise-tapahtuma (valityskanavan-nimi ilmoitus-id) (name valitystapa)))

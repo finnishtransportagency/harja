@@ -72,8 +72,8 @@ commands:
 jobs:
   front-testit:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -96,8 +96,8 @@ jobs:
 
   back-testit:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -117,11 +117,34 @@ jobs:
       - run: |
           cd /tmp
           bash sisus.bash test $CIRCLE_BRANCH
+  hitaat-testit:
+    docker:
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
+      - image: solita/harjadb:centos-12-circle
+        command: >
+          bash -c "
+          bash odota-tapahtumaa.sh env.git localhost 80;
+          source lue-arvot-ymparistomuuttujiin.sh;
+          bash dbn-kaynnistys.sh;
+          bash julkaise-tapahtuma.sh db.valmis;
+          /bin/bash;"
+
+    steps:
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - julkaise-tapahtuma:
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
+      - odota-tapahtumaa:
+          tapahtuma: "db.valmis"
+      - run: |
+          cd /tmp
+          bash sisus.bash hidas $CIRCLE_BRANCH
   # Tänne voisi alkaa siirtelemään integraatiotestejä
   integraatio-testit:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -132,12 +155,11 @@ jobs:
           /bin/bash;"
       - image: solita/harja-activemq:5.15.9
         environment:
-          TCP_PORT: 61617
-          UI_PORT: 8162
+          TCP_PORT: 61616
+          UI_PORT: 8161
         auth:
           username: solitaharja
           password: $DOCKER_HUB_SALASANA
-
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
       - julkaise-tapahtuma:
@@ -151,8 +173,8 @@ jobs:
 
   prod-build:
     docker:
-      - image: solita/harja-testit:dev # eka image = "primary container"
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -186,12 +208,8 @@ jobs:
 
   e2e-testit:
     docker:
-      - image: solita/harja-cypress
-        environment:
-          HARJA_SALLI_OLETUSKAYTTAJA: 'true'
-          HARJA_DEV_YMPARISTO: 'false'
-
-      - image: solita/harja-tapahtuma:dev
+      - image: solita/harja-cypress:latest
+      - image: solita/harja-tapahtuma:latest
       - image: solita/harjadb:centos-12-circle
         command: >
           bash -c "
@@ -200,6 +218,9 @@ jobs:
           bash dbn-kaynnistys.sh;
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
+    environment:
+      HARJA_SALLI_OLETUSKAYTTAJA: 'true'
+      HARJA_DEV_YMPARISTO: 'false'
     parallelism: 1
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
@@ -242,6 +263,7 @@ workflows:
     jobs:
       - prod-build
       - back-testit
+      - hitaat-testit
       - integraatio-testit
       - front-testit
       - e2e-testit:

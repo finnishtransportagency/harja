@@ -411,4 +411,6 @@
     (.toByteArray out)))
 
 (defn sha256 [x]
-  (digest/sha-256 (to-byte-array x)))
+  (if (string? x)
+    (digest/sha-256 x)
+    (digest/sha-256 (to-byte-array x))))

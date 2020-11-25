@@ -116,9 +116,9 @@
     {:urakka-id (when urakka-id (Integer/parseInt urakka-id))
      :muuttunut-jalkeen (when muuttunut-jalkeen (parametrit/pvm-aika muuttunut-jalkeen))
      :odota-uusia? odota-uusia?
-     :sulje-vastauksen-jalkeen? (if odota-uusia?
-                                  false
-                                  (Boolean/valueOf sulje-vastauksen-jalkeen))}))
+     :sulje-vastauksen-jalkeen? (if sulje-vastauksen-jalkeen
+                                  (and odota-uusia? (not (Boolean/valueOf sulje-vastauksen-jalkeen)))
+                                  true)}))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki request]
   (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)]
@@ -146,8 +146,8 @@
                          (when odota-uusia?
                            (let [kuuntelun-lopetus-fn (notifikaatiot/kuuntele-urakan-ilmoituksia
                                                         urakka-id
-                                                        (fn [ilmoitus-id]
-                                                          (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-ilmoitusidlla db [(Integer/parseInt ilmoitus-id)]))))]
+                                                        (fn [{ilmoitus-id :payload :as foo}]
+                                                          (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-ilmoitusidlla db [ilmoitus-id]))))]
                              (on-close kanava
                                        (fn [_]
                                          (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
