@@ -196,14 +196,12 @@
 
 (defn- tapa-backend-kannasta [ps kanta]
   (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
-    (if (.next rs)
-      (let [tulos (.getObject rs 1)]
-        (when-not (and (instance? Boolean
-                                  tulos)
-                       (= "true" (.toString tulos)))
+    ;; Jos rs ei sisällä rivejä, kanta on jo tapettu
+    (when (.next rs)
+      (let [kanta-tapettu-onnistuneesti? (.getBoolean rs 1)]
+        (when-not kanta-tapettu-onnistuneesti?
           (throw+ {:type :virhe-kannan-tappamisessa
-                  :viesti (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))})))
-      #_(throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään")))))
+                   :viesti (str "Kantaa " kanta " ei saatu kiinni.")}))))))
 
 (defn odota-etta-kanta-pystyssa [db]
   (let [timeout-s 10]

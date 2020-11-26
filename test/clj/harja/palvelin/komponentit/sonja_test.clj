@@ -84,6 +84,7 @@
                 :tila nil)))
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -115,7 +116,7 @@
     (testit))
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
