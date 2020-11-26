@@ -2,6 +2,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.pot2 :as pot2-q]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.geo :as geo]))
 
@@ -14,7 +15,7 @@
 
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi]
   (let [hae-paallystysilmoitukset-sql (if (>= vuosi pot/pot2-vuodesta-eteenpain)
-                                        hae-urakan-pot2-paallystysilmoitukset
+                                        pot2-q/hae-urakan-pot2-paallystysilmoitukset
                                         hae-urakan-paallystysilmoitukset)
         paallytysilmoitukset (into []
                                    (comp

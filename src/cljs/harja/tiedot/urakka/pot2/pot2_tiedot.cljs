@@ -75,7 +75,7 @@
                            )]
       (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str paallystysilmoitus-lomakedata))
       (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
-      (tuck-apurit/post! app :tallenna-paallystysilmoitus
+      (tuck-apurit/post! app :tallenna-pot2-tiedot
                          {:urakka-id urakka-id
                           :sopimus-id (first valittu-sopimusnumero)
                           :vuosi valittu-urakan-vuosi

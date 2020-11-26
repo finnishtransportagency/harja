@@ -20,7 +20,8 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.id :as id])
+            [harja.id :as id]
+            [clojure.set :as clj-set])
   (:use org.httpkit.fake))
 
 (defn tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
@@ -290,3 +291,9 @@
     (apply concat virheet)))
 
 
+(defn yllapitokohde-pot-perustiedoista
+  "Kasaa tallennettavan ylläpitokohteen tiedot POT 1 ja 2 ilmoituksen perustiedoista"
+  [perustiedot]
+  (-> perustiedot
+      (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
+      (clj-set/rename-keys {:kohdenimi :nimi})))

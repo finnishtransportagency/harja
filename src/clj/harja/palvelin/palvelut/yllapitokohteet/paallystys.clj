@@ -15,6 +15,7 @@
             [harja.kyselyt
              [kommentit :as kommentit-q]
              [paallystys :as q]
+             [pot2 :as pot2-q]
              [urakat :as urakat-q]
              [konversio :as konversio]
              [yllapitokohteet :as yllapitokohteet-q]
@@ -134,6 +135,20 @@
       (hae-urakan-maksuerat db user {::urakka-domain/id urakka-id
                                      ::sopimus-domain/id sopimus-id
                                      ::urakka-domain/vuosi vuosi}))))
+
+(defn hae-ja-muunna-paallystysilmoitus
+  [db paallystyskohde-id pot2?]
+  (let [hae-paallystysilmoitus-sql (if pot2?
+                                     pot2-q/hae-pot2-paallystyskohteella
+                                     q/hae-paallystysilmoitus-paallystyskohteella)]
+    (first (into []
+                 (comp (if pot2?
+                         identity
+                         (map #(konversio/jsonb->clojuremap % :ilmoitustiedot)))
+                       (map #(konversio/string-poluista->keyword %
+                                                                 [[:tila]])))
+                 (hae-paallystysilmoitus-sql db
+                                             {:paallystyskohde paallystyskohde-id})))))
 
 (defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
   "Ottaa päällystysilmoituksen, jolla on siihen liittyvän ylläpitokohteen kohdeosien tiedot.
@@ -274,28 +289,35 @@
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
     paallystysilmoitus))
 
-(defn- luo-paallystysilmoitus [db user urakka-id
+(defn luo-paallystysilmoitus [db user urakka-id
                                {:keys [paallystyskohde-id ilmoitustiedot perustiedot]
-                                :as paallystysilmoitus}]
+                                :as paallystysilmoitus} pot2?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [{:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
         tila (pot-domain/paattele-ilmoituksen-tila
                valmis-kasiteltavaksi
                (= (:paatos tekninen-osa) :hyvaksytty))
-        ilmoitustiedot (-> ilmoitustiedot
-                           (poista-ilmoitustiedoista-alikohteen-tiedot)
-                           (muunna-ilmoitustiedot-tallennusmuotoon))
-        _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
-        encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
+        ilmoitustiedot (when-not pot2?
+                         (-> ilmoitustiedot
+                            (poista-ilmoitustiedoista-alikohteen-tiedot)
+                            (muunna-ilmoitustiedot-tallennusmuotoon)))
+        _ (when-not pot2?
+            (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
+        encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)
+        luo-paallystysilmoitus-sql (if pot2?
+                                     pot2-q/luo-paallystysilmoitus<!
+                                     q/luo-paallystysilmoitus<!)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (:id (q/luo-paallystysilmoitus<!
+    (:id (luo-paallystysilmoitus-sql
            db
-           {:paallystyskohde paallystyskohde-id
-            :tila tila
-            :ilmoitustiedot encoodattu-ilmoitustiedot
-            :takuupvm (konversio/sql-date takuupvm)
-            :kayttaja (:id user)}))))
+           (merge
+             {:paallystyskohde paallystyskohde-id
+             :tila tila
+             :takuupvm (konversio/sql-date takuupvm)
+             :kayttaja (:id user)}
+             (when-not pot2?
+               {:ilmoitustiedot encoodattu-ilmoitustiedot}))))))
 
 (defn- tarkista-paallystysilmoituksen-lukinta [paallystysilmoitus-kannassa]
   (log/debug "Tarkistetaan onko POT lukittu...")
@@ -307,15 +329,19 @@
 (defn- paivita-kasittelytiedot [db user urakka-id
                                 {paallystyskohde-id :paallystyskohde-id
                                  {tekninen-osa :tekninen-osa} :perustiedot}
-                                paallystysilmoitus-kannassa]
+                                paallystysilmoitus-kannassa
+                                pot2?]
   (let [tallennettava-data {:tekninen-osa_paatos (some-> tekninen-osa :paatos name)
                             :tekninen-osa_perustelu (:perustelu tekninen-osa)
-                            :tekninen-osa_kasittelyaika (konversio/sql-date (:kasittelyaika tekninen-osa))}]
+                            :tekninen-osa_kasittelyaika (konversio/sql-date (:kasittelyaika tekninen-osa))}
+        paivita-kasittelytiedot-sql (if pot2?
+                      pot2-q/paivita-paallystysilmoituksen-kasittelytiedot<!
+                      q/paivita-paallystysilmoituksen-kasittelytiedot<!)]
     (if (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                  urakka-id user)
       (do
         (log/debug "Päivitetään päällystysilmoituksen käsittelytiedot")
-        (q/paivita-paallystysilmoituksen-kasittelytiedot<!
+        (paivita-kasittelytiedot-sql
           db
           (merge
             tallennettava-data
@@ -332,12 +358,15 @@
 
 (defn- paivita-asiatarkastus [db user urakka-id
                               {paallystyskohde-id :paallystyskohde-id
-                               {asiatarkastus :asiatarkastus} :perustiedot}]
-  (let [{:keys [tarkastusaika tarkastaja hyvaksytty lisatiedot]} asiatarkastus]
+                               {asiatarkastus :asiatarkastus} :perustiedot} pot2?]
+  (let [{:keys [tarkastusaika tarkastaja hyvaksytty lisatiedot]} asiatarkastus
+        paivita-asiatarkastus-sql (if pot2?
+                                    pot2-q/paivita-paallystysilmoituksen-asiatarkastus<!
+                                    q/paivita-paallystysilmoituksen-asiatarkastus<!)]
     (if (oikeudet/on-muu-oikeus? "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                  urakka-id user)
       (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus: " asiatarkastus)
-          (q/paivita-paallystysilmoituksen-asiatarkastus<!
+          (paivita-asiatarkastus-sql
             db
             {:asiatarkastus_pvm (konversio/sql-date tarkastusaika)
              :asiatarkastus_tarkastaja tarkastaja
@@ -350,7 +379,7 @@
 
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id
-   {:keys [paallystyskohde-id ilmoitustiedot perustiedot] :as paallystysilmoitus}]
+   {:keys [paallystyskohde-id ilmoitustiedot perustiedot] :as paallystysilmoitus} pot2?]
   (if (oikeudet/voi-kirjoittaa?
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
         urakka-id
@@ -360,35 +389,44 @@
               tila (pot-domain/paattele-ilmoituksen-tila
                      valmis-kasiteltavaksi
                      (= (:paatos tekninen-osa) :hyvaksytty))
-              ilmoitustiedot (-> ilmoitustiedot
-                                 (poista-ilmoitustiedoista-alikohteen-tiedot)
-                                 (muunna-ilmoitustiedot-tallennusmuotoon))
+              ilmoitustiedot (when-not pot2?
+                               (-> ilmoitustiedot
+                                   (poista-ilmoitustiedoista-alikohteen-tiedot)
+                                   (muunna-ilmoitustiedot-tallennusmuotoon)))
               _ (log/debug "PÄIVITETTÄVÄT ILMOITUSTIEDOT: " (pr-str ilmoitustiedot))
-              _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
-              encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-          (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
+              _ (when-not pot2?
+                  (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
+              encoodattu-ilmoitustiedot (when-not pot2?
+                                          (cheshire/encode ilmoitustiedot))
+              paivita-perustiedot-sql (if pot2?
+                                        pot2-q/paivita-paallystysilmoitus<!
+                                        q/paivita-paallystysilmoitus<!)]
+          (when-not pot2? (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot)))
           (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-          (q/paivita-paallystysilmoitus<!
+          (paivita-perustiedot-sql
             db
-            {:tila tila
-             :ilmoitustiedot encoodattu-ilmoitustiedot
-             :takuupvm (konversio/sql-date takuupvm)
-             :muokkaaja (:id user)
-             :id paallystyskohde-id
-             :urakka urakka-id})))
+            (merge
+              {:tila tila
+               :takuupvm (konversio/sql-date takuupvm)
+               :muokkaaja (:id user)
+               :id paallystyskohde-id
+               :urakka urakka-id}
+              (when-not pot2?
+                {:ilmoitustiedot encoodattu-ilmoitustiedot})))))
     (log/debug "Ei oikeutta päivittää perustietoja.")))
 
-(defn- paivita-paallystysilmoitus [db user urakka-id
-                                   uusi-paallystysilmoitus paallystysilmoitus-kannassa]
+(defn paivita-paallystysilmoitus [db user urakka-id
+                                  uusi-paallystysilmoitus paallystysilmoitus-kannassa
+                                  pot2?]
   ;; Ilmoituksen kaikki tiedot lähetetään aina tallennettavaksi, vaikka käyttäjällä olisi oikeus
   ;; muokata vain tiettyä osaa ilmoituksesta. Frontissa on estettyä muokkaamasta sellaisia asioita, joita
   ;; käyttäjä ei saa muokata. Täällä ilmoitus päivitetään osa kerrallaan niin, että jokaista
   ;; osaa vasten tarkistetaan tallennusoikeus.
   (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
   (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
-  (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus paallystysilmoitus-kannassa)
-  (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
-  (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus)
+  (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus paallystysilmoitus-kannassa pot2?)
+  (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus pot2?)
+  (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus pot2?)
   (log/debug "Päällystysilmoitus päivitetty!")
   (:id paallystysilmoitus-kannassa))
 
@@ -490,16 +528,7 @@
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
-                                       (first (into []
-                                                    (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
-                                                          (map #(konversio/string-poluista->keyword %
-                                                                                                    [[:tila]])))
-                                                    (q/hae-paallystysilmoitus-paallystyskohteella
-                                                     db
-                                                     {:paallystyskohde paallystyskohde-id}))))
-
-          tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
+    (let [tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
           ali-ja-muut-kohteet (remove :poistettu (-> paallystysilmoitus :ilmoitustiedot :osoitteet))
           alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
           kohde-id (:paallystyskohde-id paallystysilmoitus)
@@ -518,15 +547,13 @@
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
             (:validointivirheet paivitetyt-kohdeosat) (clj-set/rename-keys paivitetyt-kohdeosat {:validointivirheet :virhe})
-            :else (let [tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
-                                      (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
-                                      (clj-set/rename-keys {:kohdenimi :nimi}))
+            :else (let [tallennettava-kohde (yy/yllapitokohde-pot-perustiedoista (:perustiedot paallystysilmoitus))
                         paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
-                        vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
+                        vanha-paallystysilmoitus (hae-ja-muunna-paallystysilmoitus db paallystyskohde-id false)
                         paallystysilmoitus-id (if vanha-paallystysilmoitus
                                                 (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
-                                                                            vanha-paallystysilmoitus)
-                                                (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
+                                                                            vanha-paallystysilmoitus false)
+                                                (luo-paallystysilmoitus db user urakka-id paallystysilmoitus false))
                         _ (q/paivita-yllapitokohde! db
                                                     {:tr-alkuosa (:tr-alkuosa tallennettava-kohde)
                                                      :tr-alkuetaisyys (:tr-alkuetaisyys tallennettava-kohde)
@@ -535,7 +562,7 @@
                                                      :id paallystyskohde-id
                                                      :urakka urakka-id
                                                      :muokkaaja (:id user)})
-                        tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
+                        tuore-paallystysilmoitus (hae-ja-muunna-paallystysilmoitus db paallystyskohde-id false)]
 
 
                     (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
