@@ -249,7 +249,7 @@ WHERE l.urakka = :urakka
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
 UNION ALL
--- Toteutuneet erillishankinnat ja johto- ja hallintakorvaukset lasku_kohdistus taulusta.
+-- Toteutuneet erillishankinnat, hoidonjohdonpalkkio ja johto- ja hallintakorvaukset lasku_kohdistus taulusta.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT tpi.id                  AS toimenpideinstanssi_id,
        tk.nimi                 AS toimenpidekoodi_nimi,

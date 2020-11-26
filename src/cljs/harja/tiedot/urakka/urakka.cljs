@@ -204,8 +204,7 @@
                                                                                          ::t/maara              nil}]}}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
-                                          {:valittu-toimenpide {:nimi "Kaikki" :id 0}
-                                           :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                          {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                                   (pvm/vuosi (pvm/nyt))
                                                                                   (dec (pvm/vuosi (pvm/nyt))))}})
 
