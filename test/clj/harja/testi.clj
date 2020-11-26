@@ -256,19 +256,24 @@
          (when log?
            (log/warn e "- yritetään uudelleen, yritys" n-kierros)))))))
 
+(defonce ^:private testikannan-luonti-lukko (Object.))
+
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
-  (with-open [c (.getConnection temppidb)
-              ps (.createStatement c)]
+  (locking testikannan-luonti-lukko
+    (with-open [c (.getConnection temppidb)
+                ps (.createStatement c)]
 
-    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
-    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
-    (yrita-querya (fn [] (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")) 5)
-    (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-  (luo-kannat-uudelleen)
-  (odota-etta-kanta-pystyssa {:datasource db})
-  (odota-etta-kanta-pystyssa {:datasource temppidb}))
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+      (yrita-querya (fn [] 
+                      (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
+                    5))
+    (luo-kannat-uudelleen)
+    (odota-etta-kanta-pystyssa {:datasource db})
+    (odota-etta-kanta-pystyssa {:datasource temppidb})))
 
 (defn katkos-testikantaan!
   "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan
