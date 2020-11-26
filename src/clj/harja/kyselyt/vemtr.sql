@@ -18,7 +18,7 @@ CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_toteutuneet AS
                    LEFT JOIN toteuma_materiaali tm
                              ON t.id = tm.toteuma AND tm.poistettu = FALSE,
   toimenpidekoodi tpk4, urakka u
-  WHERE u.tyyppi = 'hoito' and (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi AND (not tpk4.poistettu) AND t.alkanut > '2020-11-01' GROUP BY tpk4.id;
+  WHERE u.tyyppi = 'hoito' and (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi AND (not tpk4.poistettu) GROUP BY tpk4.id;  -- AND t.alkanut > '2020-11-01' GROUP BY tpk4.id; -- rajoitus nopeuttaa devkäytössä
   
 DROP VIEW IF EXISTS yh_vemtr_suunnitellut;
 CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_suunnitellut AS
@@ -41,7 +41,7 @@ DROP VIEW IF EXISTS mhu_vemtr;
 CREATE OR REPLACE TEMPORARY VIEW mhu_vemtr AS
   WITH urakat AS (SELECT u.id
                 FROM urakka u
-                WHERE ('2020-01-01' between u.alkupvm and u.loppupvm
+                WHERE ('2020-01-01' between u.alkupvm and u.loppupvm -- fixme: parametrit
                   or '2020-12-31' between u.alkupvm and u.loppupvm)
   ),
      toteumat as (SELECT tt.maara,
@@ -54,24 +54,31 @@ CREATE OR REPLACE TEMPORARY VIEW mhu_vemtr AS
                   WHERE t.poistettu is not true)
 SELECT tpk.nimi            as "nimi",
        tpk.jarjestys       as "jarjestys",
-       sum(ut.maara)       as "suunniteltu", -- ut = urakka_tehtavamaara
+       sum(ut.maara)       as "suunniteltu",
        ut."hoitokauden-alkuvuosi"::smallint as "hoitokauden-alkuvuosi",
        tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko         as "yksikko",
        tpk.id              as "toimenpidekoodi",
-       ut.urakka as "urakka",
-       tpi.nimi             as "toimenpide",
+       tpi.urakka          as "urakka",
+       tpi.nimi            as "toimenpide",
        sum(toteumat.maara) as "toteuma",
        0 as "toteutunut-materiaalimaara"
-FROM urakka_tehtavamaara ut
-       join toimenpidekoodi tpk on ut.tehtava = tpk.id
-       join toimenpideinstanssi tpi on tpi.toimenpide = tpk.emo and tpi.urakka = ut.urakka
-       left outer join toteumat on toteumat.toimenpidekoodi = ut.tehtava and toteumat.urakka_id = ut.urakka
+from toimenpideinstanssi tpi
+       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
+       left join urakka_tehtavamaara ut
+                 on ut.tehtava = tpk.id
+                   and ut.urakka = tpi.urakka
+                   and ut.poistettu is not true
+                   and ut."hoitokauden-alkuvuosi" in (2020) -- fixme: parametri
+       left join toteumat
+                 on toteumat.toimenpidekoodi = tpk.id
+                   and toteumat.urakka_id = tpi.urakka
+
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 WHERE ut.poistettu is not true
-  and ut."hoitokauden-alkuvuosi" in (2020)
+  and ut."hoitokauden-alkuvuosi" in (2020) -- fixme: parametri
   and ut.urakka in (SELECT id FROM urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, ut.urakka;
+group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, tpi.urakka;
 
 SELECT * FROM mhu_vemtr UNION SELECT * FROM yh_vemtr_suunnitellut UNION SELECT * FROM yh_vemtr_toteutuneet;
 
