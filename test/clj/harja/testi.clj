@@ -30,7 +30,8 @@
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
     [clojure.java.jdbc :as jdbc]
-    [harja.tyokalut.env :as env])
+    [harja.tyokalut.env :as env]
+    [slingshot.slingshot :refer [throw+ try+]])
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
@@ -196,13 +197,12 @@
 
 (defn- tapa-backend-kannasta [ps kanta]
   (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
-    (if (.next rs)
-      (let [tulos (.getObject rs 1)]
-        (when-not (and (instance? Boolean
-                                  tulos)
-                       (= "true" (.toString tulos)))
-          (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
-      #_(throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään")))))
+    ;; Jos rs ei sisällä rivejä, kanta on jo tapettu
+    (when (.next rs)
+      (let [kanta-tapettu-onnistuneesti? (.getBoolean rs 1)]
+        (when-not kanta-tapettu-onnistuneesti?
+          (throw+ {:type :virhe-kannan-tappamisessa
+                   :viesti (str "Kantaa " kanta " ei saatu kiinni.")}))))))
 
 (defn odota-etta-kanta-pystyssa [db]
   (let [timeout-s 10]
@@ -244,10 +244,14 @@
   ([f n log?] (yrita-querya f n log? nil))
   ([f n log? param?]
    (dotimes [n-kierros n]
-     (try
+     (try+
        (if param?
          (f n-kierros)
          (f))
+       (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+         (Thread/sleep 500)
+         (when log?
+           (log/warn viesti)))
        (catch PSQLException e
          (Thread/sleep 500)
          (when log?
