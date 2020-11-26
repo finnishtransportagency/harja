@@ -30,6 +30,38 @@ WHERE urakka = :urakka
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
       AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-pot2-paallystysilmoitukset
+-- Hakee urakan kaikki päällystysilmoitukset vuodelta 2021 ja siitä eteenpäin (POT2)
+SELECT
+    ypk.id                        AS "paallystyskohde-id",
+    pot2.id,
+    ypk.tr_numero                 AS "tr-numero",
+    pot2.tila,
+    nimi,
+    kohdenumero,
+    yhaid,
+    tunnus,
+    pot2.paatos_tekninen_osa        AS "paatos-tekninen-osa",
+    ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+    ypkk.arvonvahennykset,
+    ypkk.bitumi_indeksi           AS "bitumi-indeksi",
+    ypkk.kaasuindeksi,
+    lahetetty,
+    lahetys_onnistunut            AS "lahetys-onnistunut",
+    takuupvm,
+    pot2.muokattu
+  FROM yllapitokohde ypk
+           LEFT JOIN pot2 pot2 ON pot2.yllapitokohde = ypk.id
+      AND pot2.poistettu IS NOT TRUE
+           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+
+ WHERE urakka = :urakka
+   AND sopimus = :sopimus
+   AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
+   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+     OR vuodet @> ARRAY [:vuosi] :: INT []))
+   AND ypk.poistettu IS NOT TRUE;
+
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
 SELECT id
 FROM paallystysilmoitus

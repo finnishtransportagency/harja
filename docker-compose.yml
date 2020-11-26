@@ -1,49 +1,219 @@
-version: '3'
+version: '2.4'
 services:
   activemq:
-    image: rmohr/activemq:5.10.0
+    image: solita/harja-activemq:5.15.9
+    mem_limit: 500m
+    environment:
+      - "TZ=Europe/Helsinki"
     container_name: activemq
-    environment:
-      - "TZ=Europe/Helsinki"
-    volumes:
-      - "./activemq/activemq.xml:/conf/activemq.xml"
     ports:
-      - "61616:61616" # broker (admin:adminactivemq)(amq:amq)
-      - "8161:8161"   # web    http://boot2docker:8161/admin (admin:admin)
-  harjadb:
-    image: solita/harjadb
-    container_name: harja-db
-    environment:
-      - "TZ=Europe/Helsinki"
+      - "127.0.0.1:${HARJA_SONJA_BROKER_PORT}:61616" # broker (admin:adminactivemq)(amq:amq)
+      - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+  harja-app-1:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    depends_on:
+      - "${POSTGRESQL_NAME}"
     ports:
-      - 5432:5432
-    volumes:
-        - ./tietokanta:/tietokanta
+      - "127.0.0.1:3000:3000" # web port
+      - "127.0.0.1:${BACKEND_REPL_PORT_1}:${BACKEND_REPL_PORT_1}" # REPL port
     command: |
-         /bin/bash -c "
-              echo Käynnistetään PostgreSQL
-              service postgresql start
+      /bin/bash -c "
+      echo 'ALOITELLAAN KOMENTOA'
+      touch /var/log/harja.log
 
-              cd tietokanta
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
 
-              echo Odotetaan että PostgreSQL on käynnissä
+      # Ei haluta, että useampi käännös pyörii yhtä aikaa
+      {
+       flock -x 200
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' \"with-profile $${LEIN_PROFILES} compile\"
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      cd ${DC_HARJA_KANSIO}
+      if [[ -z \"$$(grep 'defproject harja' project.clj)\" ]]; then exit; fi;
+      if [[ -d /opt/.harja ]]
+      then
+        mv /opt/.harja ../.harja
+      fi
+      # Enable job control
+      set -m
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+      echo 'ALOITETAAN REPL'
+      # < dev/null koska https://github.com/technomancy/leiningen/issues/1173
+      lein trampoline with-profile $${LEIN_PROFILES} repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_1} > /var/log/harja.log 2>&1 </dev/null &
+      # Odotetaan, että back repl saadaan pystyyn
+      while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_1} 2>&1 | grep 'Empty reply from server')\" ]]
+      do
+        sleep 5
+      done
+      if [[ -n '${HOST_USER_ID}' ]]
+      then
+        find -P ${DC_HARJA_KANSIO} -user 'root' -exec chown ${HOST_USER_ID}:${HOST_USER_ID} {} \; ;
+      fi;
+      touch ${DC_JAETTU_KANSIO}/repl_1.done
+      echo 'REPL käynnistetty'
+      # Tuodaan harja repl pyörimään etualalle
+      fg
+      "
+  harja-app-2:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    depends_on:
+      - "${POSTGRESQL_NAME}"
+    ports:
+      - "127.0.0.1:${BACKEND_REPL_PORT_2}:${BACKEND_REPL_PORT_2}" # Backend REPL port
+    command: |
+      /bin/bash -c "
+      echo 'ALOITELLAAN KOMENTOA'
+      touch /var/log/harja.log
 
-              until mvn flyway:info &>/dev/null; do
-                  echo Odotetaan että Flyway saa yhteyden kantaan...
-                  sleep 0.5
-              done
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
 
-              echo Ajetaan migraatiot
-              mvn flyway:migrate
+      # Ei haluta, että useampi käännös pyörii yhtä aikaa
+      {
+       flock -x 200
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' \"with-profile $${LEIN_PROFILES} compile\"
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      cd ${DC_HARJA_KANSIO}
+      if [[ -z \"$$(grep 'defproject harja' project.clj)\" ]]; then exit; fi;
+      if [[ -d /opt/.harja ]]
+      then
+        mv /opt/.harja ../.harja
+      fi
+      # Enable job control
+      set -m
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+      while [[ ! -e  ${DC_JAETTU_KANSIO}/repl_1.done ]]
+      do
+        sleep 1
+      done
+      echo 'ALOITETAAN REPL'
+      lein trampoline with-profile $${LEIN_PROFILES} repl :headless :host 0.0.0.0 :port ${BACKEND_REPL_PORT_2} > /var/log/harja.log 2>&1 </dev/null &
+      # Odotetaan, että back repl saadaan pystyyn
+      while [[ -z \"$$(curl -sS $${THIS_IP}:${BACKEND_REPL_PORT_2} 2>&1 | grep 'Empty reply from server')\" ]]
+      do
+        sleep 5
+      done
+      if [[ -n '${HOST_USER_ID}' ]]
+      then
+        find -P ${DC_HARJA_KANSIO} -user 'root' -exec chown ${HOST_USER_ID}:${HOST_USER_ID} {} \; ;
+      fi;
+      touch ${DC_JAETTU_KANSIO}/repl_2.done
+      echo 'REPL käynnistetty'
+      fg
+      "
+  harja-frontend:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    depends_on:
+      - "${POSTGRESQL_NAME}"
+    ports:
+      - "127.0.0.1:${FRONTEND_REPL_PORT}:${FRONTEND_REPL_PORT}" # Frontend REPL port
+    command: |
+      /bin/bash -c "
+      echo 'ALOITELLAAN KOMENTOA'
+      touch /var/log/harja.log
+      apt-get install -y screen
 
-              echo Ajetaan testidata harja-kantaan
-              psql -h \"$POSTGRES_PORT_5432_TCP_ADDR\" -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
+      if [[ -n '${LEININGEN_EMACS_PROFILE}' ]]
+      then
+        LEIN_PROFILES=+dev-container,+${LEININGEN_EMACS_PROFILE}
+      else
+        LEIN_PROFILES=+dev-container
+      fi
 
-              echo Luodaan harjatest_template tietokanta
-              psql -h \"$POSTGRES_PORT_5432_TCP_ADDR\" -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U harja harja -c \"CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;\"
+      {
+       flock -x 200
+       if [[ ! -e ${DC_JAETTU_KANSIO}/compile.done ]]
+       then
+         echo 'ALOITETAAN KÄÄNNÖSHOMMAT'
+         /opt/odota-possu-ja-kaynnista-harja.sh '${LEININGEN_CLEAN}' \"with-profile $${LEIN_PROFILES} compile\"
+         echo 'KÄÄNNÖS DONE'
+         touch ${DC_JAETTU_KANSIO}/compile.done
+       fi;
+      } 200>${DC_JAETTU_KANSIO}/compile.lock
+      cd ${DC_HARJA_KANSIO}
+      if [[ -z \"$$(grep 'defproject harja' project.clj)\" ]]; then exit; fi;
+      if [[ -d /opt/.harja ]]
+      then
+        mv /opt/.harja ../.harja
+      fi
 
-              echo Luodaan harjatest tietokantakanta
-              psql -h \"$POSTGRES_PORT_5432_TCP_ADDR\" -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U harja harja -c \"CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;\"
+      echo 'Aloitetaan LESS kääntäminen'
+      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1 &
+      disown
+      lein with-profile $${LEIN_PROFILES} less once
+      echo 'Luodaan .edn filut figwheeliä varten'
+      mkdir -p figwheel_conf/luodut
+      rm figwheel_conf/luodut/*
+      lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
 
-              echo Tietokanta valmis käyttöön
-              sleep 10000"
+      echo 'Käynnistetään frontin repl'
+      screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES},+dev-cljs run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl
+
+      THIS_IP=$$(ip addr | grep global | awk '{ print $$2 }' | grep -o -E ^[^/]*)
+
+      while [[ $$(curl -s -o /dev/null -w '%{http_code}' $${THIS_IP}:${FRONTEND_REPL_PORT} 2>&1) != '200' ]]
+      do
+        sleep 5
+      done
+      echo 'Front repl käynnistetty'
+
+      if [[ -n '${HOST_USER_ID}' ]]
+      then
+        find -P ${DC_HARJA_KANSIO} -user 'root' -exec chown ${HOST_USER_ID}:${HOST_USER_ID} {} \; ;
+      fi;
+
+      touch ${DC_JAETTU_KANSIO}/front.done
+
+      # Ei tuoda figwheel.mainia eteen, koska se tuppaa feilaamaan aika herkästi,
+      # jolloinka joudutaan ajamaan tämä kontti uusiksi (hidasta puuhaa)
+      # Sen sijaan annetaan käyttäjän itse mennä konttiin sisälle ja pyöräyttää
+      # prosessi uudestaan käyntiin
+      while true
+      do
+        sleep 100
+      done
+
+      "
+
+  harjadb:
+    image: solita/harjadb:centos-12-compose
+    mem_limit: 1g
+    stdin_open: true
+    tty: true
+    environment:
+      - "TZ=Europe/Helsinki"
+    env_file:
+      - .docker_compose_container_env
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+        - "./tietokanta:/var/lib/pgsql/harja/tietokanta"
+volumes:
+  yhteiset_tiedostot:
