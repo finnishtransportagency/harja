@@ -407,8 +407,6 @@
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
 
-(defn indeksoi-kohdeosat [kohdeosat]
-  (into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) kohdeosat))))
 
 (defn kohdeosien-tallennusvirheet [virheet]
   [:div
@@ -424,7 +422,7 @@
       (do (viesti/nayta! "Kohdeosat tallennettu!" :success)
           (tallennettu-fn vastaus)
           (reset! kohdeosat-atom
-                  (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet yllapitokohteet))))
+                  (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet yllapitokohteet))))
       (do (viesti/nayta! "Kohdeosien tallennuksessa virheitä!" :danger)
           (modal/nayta!
             {:otsikko "Kohdeosien tallennus epäonnistui!"
@@ -864,9 +862,9 @@
                                             kohde))
                                         @kohteet-atom))))
         kohdeosat (:kohdeosat rivi)
-        kohteen-osat (atom (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+        kohteen-osat (atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                  (filter #(= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
-        muut-osat (atom (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+        muut-osat (atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                               (filter #(not= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
         osa-kohteen-ulkopuolella (fn [_ kohteen-osan-rivi _]
                                    (when (= (:tr-numero rivi) (:tr-numero kohteen-osan-rivi))
@@ -885,7 +883,7 @@
         (fn [{:keys [rivi]}]
           ;; Jos pääkohde päivittyy, palvelin saattaa tehdä automaattisia korjauksia kohdeosiin.
           ;; Täten kohteen osat -atomi tulee resetoida vastaamaan päivitettyjä osia.
-          (reset! kohteen-osat (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+          (reset! kohteen-osat (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                      (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
 
       (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]

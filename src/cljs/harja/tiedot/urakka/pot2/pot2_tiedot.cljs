@@ -45,11 +45,13 @@
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
+          kohdeosat (get-in vastaus [:ilmoitustiedot :osoitteet])
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
                       :perustiedot (merge perustiedot
                                           {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)})
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                                                  (:id urakka))}]
+                                                                  (:id urakka))
+                      :kohdeosat kohdeosat}]
       (-> app
           (assoc :paallystysilmoitus-lomakedata lomakedata))))
 

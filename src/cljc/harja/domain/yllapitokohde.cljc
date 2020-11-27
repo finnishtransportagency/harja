@@ -1164,3 +1164,7 @@ yllapitoluokkanimi->numero
    :sekoitusjyrsinta "Sekoitusjyrsintä"
    :murskeenlisays   "Murskeenlisäys"
    :muu              "Muu"})
+
+
+(defn indeksoi-kohdeosat [kohdeosat]
+  (into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) kohdeosat))))

@@ -3,14 +3,18 @@
   (:require
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.loki :refer [log]]
+    [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
     [harja.ui.lomake :as lomake]
     [harja.ui.napit :as napit]
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.ikonit :as ikonit]
+    [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka.paallystys :as paallystys])
+    [harja.tiedot.urakka.paallystys :as paallystys]
+    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -19,8 +23,42 @@
 (defn- alusta [e! app]
   [:div "Alustatiedot"])
 
-(defn- kulutuskerros [e! app]
-  [:div "Kulutuskerroksen tiedot"])
+(defn- kulutuskerros [e! {:keys [kohdeosat kirjoitusoikeus?] :as app}]
+  (log "KULUTUS " (pr-str kohdeosat))
+  (let [kohdeosat-atom (atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet kohdeosat)))
+        _ (log "KULUTUS kohdeosat-atom" (pr-str @kohdeosat-atom))
+        voi-muokata? true ;; TODO?
+        ]
+    [grid/muokkaus-grid
+     {:otsikko "Kulutuskerros"
+      :tunniste :kohdeosa-id
+      :uusi-rivi (fn [rivi]
+                   ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
+                   (assoc rivi
+                     :tr-numero (:tr-numero yllapitokohde)
+                     :tr-ajorata (:tr-ajorata yllapitokohde)
+                     :tr-kaista (:tr-kaista yllapitokohde)))
+      :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
+                                        [:div
+                                         [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
+                                         (when (and kirjoitusoikeus? voi-muokata?)
+                                           [:div {:style {:display "inline-block"
+                                                          :float "right"}}
+                                            [napit/yleinen-ensisijainen "Lisää osa"
+                                             #(reset! kohdeosat-atom (yllapitokohteet/lisaa-uusi-kohdeosa @kohdeosat-atom 1 (get-in app [:perustiedot :tr-osoite])))
+                                             {:ikoni (ikonit/livicon-arrow-down)
+                                              :luokka "btn-xs"}]])])
+      :rivi-klikattu #(log "click")}
+     [{:otsikko "Tie" :tyyppi :string :hae :tr-numero}
+      {:otsikko "Ajor." :tyyppi :string :hae :tr-ajorata}
+      {:otsikko "Kaista" :tyyppi :string :hae :tr-kaista}
+      {:otsikko "Aosa" :tyyppi :string :hae :tr-alkuosa}
+      {:otsikko "Aet" :tyyppi :string :hae :tr-alkuetaisyys}
+      {:otsikko "Losa" :tyyppi :string :hae :tr-loppuosa}
+      {:otsikko "Let" :tyyppi :string :hae :tr-loppuetaisyys}
+     {:otsikko "Pituus (m)" :tyyppi :string :hae :tr-pituus}
+     ]
+    kohdeosat]))
 
 
 (defn- otsikkotiedot [{:keys [tila] :as perustiedot}]
@@ -93,6 +131,8 @@
            [:hr]
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
+           [:hr]
+           [kulutuskerros e! (select-keys app #{:kohdeosat :kirjoitusoikeus?})]
            [tallenna e! app {:kayttaja kayttaja
                              :urakka-id (:id urakka)
                              :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
