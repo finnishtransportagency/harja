@@ -32,7 +32,8 @@
      (if-not tila "Aloittamatta" tila)]]])
 
 (defn tallenna
-  [e! {:keys [tekninen-osa tila]} kayttaja {urakka-id :id :as urakka} valmis-tallennettavaksi?]
+  [e! {:keys [tekninen-osa tila]}
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         huomautusteksti
         (cond (and (not= :lukittu tila)
@@ -77,11 +78,19 @@
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [perustiedot] :as app}]
         (let [perustiedot-app (select-keys app #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              {:keys [tila]} perustiedot
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot-app)
-                                                                  (:valmispvm-kohde perustiedot-app))]
+                                                                  (:valmispvm-kohde perustiedot-app))
+              valmis-tallennettavaksi? (and
+                                         (not= tila :lukittu)
+                                         ;; todo: tähän mahd. tallennusta estävät validointivirheet
+                                         )]
           [:div.pot2-lomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
            [otsikkotiedot perustiedot]
            [:hr]
            [pot-yhteinen/paallystysilmoitus-perustiedot
-            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]])))))
+            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
+           [tallenna e! app {:kayttaja kayttaja
+                             :urakka-id (:id urakka)
+                             :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))

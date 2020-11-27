@@ -21,6 +21,7 @@
              [tieverkko :as tieverkko-q]]
             [harja.domain
              [paallystysilmoitus :as pot-domain]
+             [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
              [urakka :as urakka-domain]
              [sopimus :as sopimus-domain]
@@ -279,21 +280,22 @@
                                 :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
-  (let [{:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
+  (let [pot2? (onko-pot2? paallystysilmoitus)
+        {:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
         tila (pot-domain/paattele-ilmoituksen-tila
                valmis-kasiteltavaksi
                (= (:paatos tekninen-osa) :hyvaksytty))
-        ilmoitustiedot (-> ilmoitustiedot
-                           (poista-ilmoitustiedoista-alikohteen-tiedot)
-                           (muunna-ilmoitustiedot-tallennusmuotoon))
-        _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
-        encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-    (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+        ilmoitustiedot (when-not pot2?
+                         (->> ilmoitustiedot
+                              (poista-ilmoitustiedoista-alikohteen-tiedot)
+                              (muunna-ilmoitustiedot-tallennusmuotoon)
+                              (skeema/validoi pot-domain/+paallystysilmoitus+)
+                              (cheshire/encode)))]
     (:id (q/luo-paallystysilmoitus<!
            db
            {:paallystyskohde paallystyskohde-id
             :tila tila
-            :ilmoitustiedot encoodattu-ilmoitustiedot
+            :ilmoitustiedot ilmoitustiedot
             :takuupvm (konversio/sql-date takuupvm)
             :kayttaja (:id user)}))))
 
@@ -348,6 +350,11 @@
              :urakka urakka-id}))
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
 
+(defn onko-pot2?
+  "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
+  [paallystysilmoitus]
+  (nil? (:ilmoitustiedot paallystysilmoitus)))
+
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id
    {:keys [paallystyskohde-id ilmoitustiedot perustiedot] :as paallystysilmoitus}]
@@ -356,23 +363,22 @@
         urakka-id
         user)
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
-        (let [{:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
+        (let [pot2? (onko-pot2? paallystysilmoitus)
+              {:keys [takuupvm tekninen-osa valmis-kasiteltavaksi]} perustiedot
               tila (pot-domain/paattele-ilmoituksen-tila
                      valmis-kasiteltavaksi
                      (= (:paatos tekninen-osa) :hyvaksytty))
-              ilmoitustiedot (-> ilmoitustiedot
-                                 (poista-ilmoitustiedoista-alikohteen-tiedot)
-                                 (muunna-ilmoitustiedot-tallennusmuotoon))
-              _ (log/debug "PÄIVITETTÄVÄT ILMOITUSTIEDOT: " (pr-str ilmoitustiedot))
-              _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
-              encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-          (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
-          (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+              ilmoitustiedot (when-not pot2?
+                               (->> ilmoitustiedot
+                                    (poista-ilmoitustiedoista-alikohteen-tiedot)
+                                    (muunna-ilmoitustiedot-tallennusmuotoon)
+                                    (skeema/validoi pot-domain/+paallystysilmoitus+)
+                                    (cheshire/encode)))]
           (q/paivita-paallystysilmoitus<!
             db
             {:tila tila
-             :ilmoitustiedot encoodattu-ilmoitustiedot
              :takuupvm (konversio/sql-date takuupvm)
+             :ilmoitustiedot ilmoitustiedot
              :muokkaaja (:id user)
              :id paallystyskohde-id
              :urakka urakka-id})))
@@ -490,7 +496,8 @@
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
+    (let [pot2? (onko-pot2? paallystysilmoitus)
+          hae-paallystysilmoitus (fn [paallystyskohde-id]
                                        (first (into []
                                                     (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
                                                           (map #(konversio/string-poluista->keyword %
@@ -521,7 +528,9 @@
             :else (let [tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
                                       (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
                                       (clj-set/rename-keys {:kohdenimi :nimi}))
-                        paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
+                        paallystysilmoitus (if pot2?
+                                             paallystysilmoitus
+                                             (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat))
                         vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
                         paallystysilmoitus-id (if vanha-paallystysilmoitus
                                                 (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
