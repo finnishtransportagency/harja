@@ -18,7 +18,9 @@ CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_toteutuneet AS
      tpi.urakka as urakka,
      tpi.nimi as toimenpide,
      ROUND(SUM(tt.maara), 2) as toteuma,
-     ROUND(SUM(tm.maara), 2) as "toteutunut-materiaalimaara"     
+     ROUND(SUM(tm.maara), 2) as "toteutunut-materiaalimaara", -- usein tyhjä
+     'yh-toteutuneet' as rivityyppi
+
           FROM toteuma t
                    JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.poistettu = FALSE
                    LEFT JOIN toteuma_materiaali tm
@@ -31,17 +33,19 @@ CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_suunnitellut AS
   select tpk4.nimi as nimi,
          NULL ::integer as jarjestys,
 	 SUM(tyo.maara) as "suunniteltu",
-         NULL ::smallint as "hoitokauden-alkuvuosi", --  xxx as "hoitokauden-alkuvuosi", -- XXX miten hanskata? pitääkö kyselystä tehdä semmoinen että se partitioi hoitokausittain rivit? onko meillä joku taulu, tai gen_hoitokausi sproc joka antaa mahdolliset hoitokaudet?
+  	 (select extract(year from alkupvm) from urakka where id = tyo.urakka) as "hoitokauden-alkuvuosi",
 	 tpk4.suunnitteluyksikko,
 	 tpk4.yksikko,
 	 tpk4.id as toimenpidekoodi,
-	 tyo.urakka as urakka, -- u.id as urakka,
-	 '' as toimenpide, -- mistä tpi (josta tpi.nimi as toimenpide)?
-	 0 as "toteuma", 0 as "toteutunut-materiaalimaara"
+	 tyo.urakka as urakka,
+	 tpi.nimi as toimenpide, -- mistä tpi (josta tpi.nimi as toimenpide)?
+	 null::numeric as "toteuma",
+	 null ::numeric as "toteutunut-materiaalimaara",
+	 'yh-suunnitellut' as rivityyppi
 FROM yksikkohintainen_tyo tyo
   JOIN toimenpidekoodi tpk4 ON tpk4.id = tyo.tehtava	,
-  urakka u
-  WHERE u.id = tyo.urakka AND u.tyyppi = 'hoito' GROUP BY tpk4.id, tyo.urakka;
+  urakka u, toimenpideinstanssi tpi
+  WHERE tpi.toimenpide = tpk4.emo and tpi.urakka = u.id and u.id = tyo.urakka AND u.tyyppi = 'hoito' GROUP BY tpk4.id, tyo.urakka, tpi.nimi;
 
 DROP VIEW IF EXISTS mhu_vemtr;
 CREATE OR REPLACE TEMPORARY VIEW mhu_vemtr AS
@@ -68,7 +72,9 @@ SELECT tpk.nimi            as "nimi",
        tpi.urakka          as "urakka",
        tpi.nimi            as "toimenpide",
        sum(toteumat.maara) as "toteuma",
-       0 as "toteutunut-materiaalimaara"
+       null ::numeric       as "toteutunut-materiaalimaara",
+       'mh-toteutuneet' as rivityyppi
+
 from toimenpideinstanssi tpi
        join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo -- linkitys, ks meneeö samalla muissa vieweissä.
        left join urakka_tehtavamaara ut
