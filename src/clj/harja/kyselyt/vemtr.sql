@@ -1,41 +1,47 @@
 -- name: kysely
 
+-- 
+
+-- mh-urakoiden toteuma_tehtava -taulun linkitystietoja vastaa vanhoissa
+-- yh-urakoissa toimenpidekoodi: taso = 3 -> toimenpiteet, taso = 4 -> tehtävät
+
 DROP VIEW IF EXISTS yh_vemtr_toteutuneet;
 CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_toteutuneet AS
-     SELECT MIN(tpk4.nimi) as nimi,
-     0 as jarjestys,
-     0 as "suunniteltu",
-     0::smallint as "hoitokauden-alkuvuosi",
+     SELECT tpk4.nimi as nimi, -- todo: tulee random nimi palautuneiden joukosta, elleivät satu olemaan samoja?
+     NULL ::integer as jarjestys,
+     NULL ::numeric as "suunniteltu",
+     -- NULL ::smallint "hoitokauden-alkuvuosi",
+     (select extract(year from alkupvm) from urakka where id = tpi.urakka) as "hoitokauden-alkuvuosi",
      tpk4.suunnitteluyksikko,
      tpk4.yksikko,
      tpk4.id as toimenpidekoodi,
-     0 as urakka,
-     '' as toimenpide,
+     tpi.urakka as urakka,
+     tpi.nimi as toimenpide,
      ROUND(SUM(tt.maara), 2) as toteuma,
-     ROUND(SUM(tm.maara), 2) as "toteutunut-materiaalimaara"
+     ROUND(SUM(tm.maara), 2) as "toteutunut-materiaalimaara"     
           FROM toteuma t
                    JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.poistettu = FALSE
                    LEFT JOIN toteuma_materiaali tm
                              ON t.id = tm.toteuma AND tm.poistettu = FALSE,
-  toimenpidekoodi tpk4, urakka u
-  WHERE u.tyyppi = 'hoito' and (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi AND (not tpk4.poistettu) GROUP BY tpk4.id;  -- AND t.alkanut > '2020-11-01' GROUP BY tpk4.id; -- rajoitus nopeuttaa devkäytössä
-  
+  toimenpidekoodi tpk4, urakka u, toimenpideinstanssi tpi
+  WHERE tpi.toimenpide = tpk4.emo and tpi.urakka = u.id and u.tyyppi = 'hoito' and (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi AND (not tpk4.poistettu) AND t.alkanut > '2020-11-01' GROUP BY tpk4.id, tpk4.nimi, tpk4.yksikko, tpi.urakka, tpi.nimi; -- t.alkanut-rajaus nopeuttaa devkäytössä, muutetaan parametriksi
+
 DROP VIEW IF EXISTS yh_vemtr_suunnitellut;
 CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_suunnitellut AS
-  select LEFT(tpk4.nimi, 10) as nimi,
-         0 as jarjestys,
+  select tpk4.nimi as nimi,
+         NULL ::integer as jarjestys,
 	 SUM(tyo.maara) as "suunniteltu",
-         0::smallint as "hoitokauden-alkuvuosi", --  xxx as "hoitokauden-alkuvuosi", -- XXX miten hanskata? pitääkö kyselystä tehdä semmoinen että se partitioi hoitokausittain rivit? onko meillä joku taulu, tai gen_hoitokausi sproc joka antaa mahdolliset hoitokaudet?
+         NULL ::smallint as "hoitokauden-alkuvuosi", --  xxx as "hoitokauden-alkuvuosi", -- XXX miten hanskata? pitääkö kyselystä tehdä semmoinen että se partitioi hoitokausittain rivit? onko meillä joku taulu, tai gen_hoitokausi sproc joka antaa mahdolliset hoitokaudet?
 	 tpk4.suunnitteluyksikko,
-	 tpk4.suunnitteluyksikko as yksikko,
+	 tpk4.yksikko,
 	 tpk4.id as toimenpidekoodi,
-	 0 as urakka, -- u.id as urakka,
+	 tyo.urakka as urakka, -- u.id as urakka,
 	 '' as toimenpide, -- mistä tpi (josta tpi.nimi as toimenpide)?
 	 0 as "toteuma", 0 as "toteutunut-materiaalimaara"
 FROM yksikkohintainen_tyo tyo
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tyo.tehtava,
+  JOIN toimenpidekoodi tpk4 ON tpk4.id = tyo.tehtava	,
   urakka u
-  WHERE u.id = tyo.urakka AND u.tyyppi = 'hoito' GROUP BY tpk4.id;
+  WHERE u.id = tyo.urakka AND u.tyyppi = 'hoito' GROUP BY tpk4.id, tyo.urakka;
 
 DROP VIEW IF EXISTS mhu_vemtr;
 CREATE OR REPLACE TEMPORARY VIEW mhu_vemtr AS
@@ -64,7 +70,7 @@ SELECT tpk.nimi            as "nimi",
        sum(toteumat.maara) as "toteuma",
        0 as "toteutunut-materiaalimaara"
 from toimenpideinstanssi tpi
-       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
+       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo -- linkitys, ks meneeö samalla muissa vieweissä.
        left join urakka_tehtavamaara ut
                  on ut.tehtava = tpk.id
                    and ut.urakka = tpi.urakka
@@ -83,3 +89,5 @@ group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjesty
 SELECT * FROM mhu_vemtr UNION SELECT * FROM yh_vemtr_suunnitellut UNION SELECT * FROM yh_vemtr_toteutuneet;
 
 -- mistä hoitokauden alkuvuosi yh-caseen?
+
+
