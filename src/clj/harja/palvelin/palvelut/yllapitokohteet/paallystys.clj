@@ -39,6 +39,11 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]))
 
+(defn onko-pot2?
+  "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
+  [paallystysilmoitus]
+  (nil? (:ilmoitustiedot paallystysilmoitus)))
+
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -349,11 +354,6 @@
              :id paallystyskohde-id
              :urakka urakka-id}))
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
-
-(defn onko-pot2?
-  "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
-  [paallystysilmoitus]
-  (nil? (:ilmoitustiedot paallystysilmoitus)))
 
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id
