@@ -305,6 +305,7 @@
     (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
     (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
     (is (nil? (:paatos-tekninen-osa tarkea-kohde)) "Päätös")
+    (is (nil? (:ilmoitustiedot tarkea-kohde)))
     (is (= 2 (count (:kohdeosat tarkea-kohde))) "Kohdeosien lkm")))
 
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
