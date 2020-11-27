@@ -2,12 +2,11 @@
 -- Kenties päästään tekemään niiden pohjalta aikanaan myös
 -- hyviä testejä, esim. että YHA:an lähtevä hyötykuorma on identtinen jne.
 
-INSERT INTO pot2(
-    yllapitokohde,
+INSERT INTO paallystysilmoitus(
+    paallystyskohde,
     takuupvm,
     tila,
     paatos_tekninen_osa,
-    lahetetty_yhaan,
     poistettu,
     muokkaaja,
     muokattu,
@@ -17,7 +16,6 @@ VALUES
 ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'),
  '2024-12-31',
  'aloitettu' ::paallystystila,
- NULL,
  NULL,
  FALSE,
  NULL,

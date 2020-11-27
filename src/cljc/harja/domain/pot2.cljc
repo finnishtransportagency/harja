@@ -173,13 +173,6 @@
   (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
 
 (define-tables
-  ["pot2" ::pot2
-   {"id" ::id
-    "yllapitokohde" ::yllapitokohde-id
-    "paatos_tekninen_osa" ::paatos-tekninen-osa
-    "luoja" ::m/luoja-id
-    "muokkaaja" ::m/muokkaaja-id
-    "poistettu" ::poistettu?}]
   ["pot2_kulutuskerros_toimenpide" ::pot2-kulutuskerros-toimenpide
    {"koodi" ::koodi
     "nimi" ::nimi

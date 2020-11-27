@@ -13,17 +13,14 @@
                     {:yllapitokohde yllapitokohde-id}))))
 
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi]
-  (let [hae-paallystysilmoitukset-sql (if (>= vuosi pot/pot2-vuodesta-eteenpain)
-                                        hae-urakan-pot2-paallystysilmoitukset
-                                        hae-urakan-paallystysilmoitukset)
-        paallytysilmoitukset (into []
+  (let [paallytysilmoitukset (into []
                                    (comp
                                      (map #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]
                                                                              [:tila]])))
 
-                                   (hae-paallystysilmoitukset-sql db {:urakka urakka-id
-                                                                              :sopimus sopimus-id
-                                                                              :vuosi vuosi}))
+                                   (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
+                                                                         :sopimus sopimus-id
+                                                                         :vuosi vuosi}))
         paallytysilmoitukset (yllapitokohteet-q/liita-kohdeosat-kohteisiin
                                db paallytysilmoitukset :paallystyskohde-id)]
     paallytysilmoitukset))

@@ -35,9 +35,9 @@
   HaePot2Tiedot
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
     (let [parametrit {:urakka-id (:id urakka)
-                      ::pot2-domain/yllapitokohde-id paallystyskohde-id}]
+                      :paallystyskohde paallystyskohde-id}]
       (tuck-apurit/post! app
-                         :hae-kohteen-pot2-tiedot
+                         :urakan-paallystysilmoitus-paallystyskohteella
                          parametrit
                          {:onnistui ->HaePot2TiedotOnnistui
                           :epaonnistui ->HaePot2TiedotEpaonnistui})))
