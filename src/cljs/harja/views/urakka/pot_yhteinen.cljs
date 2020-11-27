@@ -19,7 +19,29 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.kentat :as kentat]
-            [harja.ui.grid :as grid]))
+            [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit])
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]
+                   [harja.atom :refer [reaction<!]]))
+
+
+(defn poista-lukitus [e! urakka]
+  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id urakka))]
+    [:div
+     [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
+     [napit/palvelinkutsu-nappi
+      "Avaa lukitus"
+      #(when paatosoikeus?
+         (go
+           (e! (paallystys/->AvaaPaallystysilmoituksenLukitus))))
+      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
+       :id "poista-paallystysilmoituksen-lukitus"
+       :disabled (not paatosoikeus?)
+       :ikoni (ikonit/livicon-wrench)
+       :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys

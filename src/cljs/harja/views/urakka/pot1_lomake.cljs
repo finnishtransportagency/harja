@@ -81,22 +81,6 @@
        :virheviesti "Tallentaminen epäonnistui"}]]))
 
 
-(defn poista-lukitus [e! urakka]
-  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))]
-    [:div
-     [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
-     [napit/palvelinkutsu-nappi
-      "Avaa lukitus"
-      #(go
-         (e! (paallystys/->AvaaPaallystysilmoituksenLukitus)))
-      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
-       :id "poista-paallystysilmoituksen-lukitus"
-       :disabled (not paatosoikeus?)
-       :ikoni (ikonit/livicon-wrench)
-       :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
-
 (defn tayta-fn [avain]
   (fn [toistettava-rivi tama-rivi]
     (assoc tama-rivi avain (avain toistettava-rivi))))
@@ -748,7 +732,7 @@
 
            [:h1 "Päällystysilmoitus"]
            (when (= :lukittu tila)
-             [poista-lukitus e! urakka])
+             [pot-yhteinen/poista-lukitus e! urakka])
 
            [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
 

@@ -88,6 +88,8 @@
           [:div.pot2-lomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
            [otsikkotiedot perustiedot]
+           (when (= :lukittu tila)
+             [pot-yhteinen/poista-lukitus e! urakka])
            [:hr]
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
