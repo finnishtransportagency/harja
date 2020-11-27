@@ -1,6 +1,7 @@
 (ns harja.views.urakka.pot2.pot2-lomake
 "POT2-lomake"
   (:require
+    [reagent.core :refer [atom]]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.loki :refer [log]]
     [harja.ui.grid :as grid]
@@ -23,21 +24,18 @@
 (defn- alusta [e! app]
   [:div "Alustatiedot"])
 
-(defn- kulutuskerros [e! {:keys [kohdeosat kirjoitusoikeus?] :as app}]
-  (log "KULUTUS " (pr-str kohdeosat))
-  (let [kohdeosat-atom (atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet kohdeosat)))
-        _ (log "KULUTUS kohdeosat-atom" (pr-str @kohdeosat-atom))
-        voi-muokata? true ;; TODO?
-        ]
+(def kohdeosat-atom (atom nil))
+
+(defn- kulutuskerros [e! {:keys [kohdeosat perustiedot kirjoitusoikeus?] :as app}]
+  (log "kulutuskerros kohdeosat-atom" (pr-str @kohdeosat-atom))
+  (let [voi-muokata? true]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros"
       :tunniste :kohdeosa-id
       :uusi-rivi (fn [rivi]
                    ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
                    (assoc rivi
-                     :tr-numero (:tr-numero yllapitokohde)
-                     :tr-ajorata (:tr-ajorata yllapitokohde)
-                     :tr-kaista (:tr-kaista yllapitokohde)))
+                     :tr-numero (:tr-numero perustiedot)))
       :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                         [:div
                                          [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
@@ -56,9 +54,8 @@
       {:otsikko "Aet" :tyyppi :string :hae :tr-alkuetaisyys}
       {:otsikko "Losa" :tyyppi :string :hae :tr-loppuosa}
       {:otsikko "Let" :tyyppi :string :hae :tr-loppuetaisyys}
-     {:otsikko "Pituus (m)" :tyyppi :string :hae :tr-pituus}
-     ]
-    kohdeosat]))
+      {:otsikko "Pituus (m)" :tyyppi :string :hae :tr-pituus}]
+     kohdeosat-atom]))
 
 
 (defn- otsikkotiedot [{:keys [tila] :as perustiedot}]
@@ -113,7 +110,9 @@
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
+                     (reset! kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat app))))
                      (nav/vaihda-kartan-koko! :S)))
+
       (fn [e! {:keys [perustiedot] :as app}]
         (let [perustiedot-app (select-keys app #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               {:keys [tila]} perustiedot
