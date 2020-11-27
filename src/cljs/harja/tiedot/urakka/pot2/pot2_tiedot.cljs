@@ -44,7 +44,7 @@
 
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
-    (let [perustiedot (select-keys (:perustiedot vastaus) paallystys/perustiedot-avaimet)]
+    (let [perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)]
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot] perustiedot)
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
