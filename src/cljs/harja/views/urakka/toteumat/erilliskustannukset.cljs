@@ -91,7 +91,7 @@
             (= :hoito urakkatyyppi)
             [:asiakastyytyvaisyysbonus :muu]
             (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:asiakastyytyvaisyysbonus :alihankintabonus :tavoitepalkkio :lupausbonus]
+            [:asiakastyytyvaisyysbonus :alihankintabonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
             (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
             [:muu]
             :default
