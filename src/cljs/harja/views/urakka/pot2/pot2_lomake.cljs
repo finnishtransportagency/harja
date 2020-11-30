@@ -2,20 +2,23 @@
 "POT2-lomake"
   (:require
     [reagent.core :refer [atom]]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.domain.pot2 :as pot2-domain]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [harja.loki :refer [log]]
+    [harja.ui.debug :refer [debug]]
     [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
     [harja.ui.lomake :as lomake]
     [harja.ui.napit :as napit]
-    [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
-    [harja.domain.oikeudet :as oikeudet]
     [harja.ui.ikonit :as ikonit]
     [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
+    [harja.tiedot.urakka.pot2.massat :as tiedot-massa]
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.views.urakka.pot-yhteinen :as pot-yhteinen])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -24,16 +27,15 @@
 (defn- alusta [e! app]
   [:div "Alustatiedot"])
 
-(def kohdeosat-atom (atom nil))
-
-(defn- kulutuskerros [e! {:keys [kohdeosat perustiedot kirjoitusoikeus?] :as app}]
-  (log "kulutuskerros kohdeosat-atom" (pr-str @kohdeosat-atom))
+(defn- kulutuskerros
+  "Alikohteiden päällysteiden kulutuskerroksen rivien muokkaus"
+  [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
+   {:keys [massat massatyypit]} kohdeosat-atom]
   (let [voi-muokata? true]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros"
       :tunniste :kohdeosa-id
       :uusi-rivi (fn [rivi]
-                   ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))
       :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
@@ -47,14 +49,18 @@
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
-     [{:otsikko "Tie" :tyyppi :string :hae :tr-numero}
-      {:otsikko "Ajor." :tyyppi :string :hae :tr-ajorata}
-      {:otsikko "Kaista" :tyyppi :string :hae :tr-kaista}
-      {:otsikko "Aosa" :tyyppi :string :hae :tr-alkuosa}
-      {:otsikko "Aet" :tyyppi :string :hae :tr-alkuetaisyys}
-      {:otsikko "Losa" :tyyppi :string :hae :tr-loppuosa}
-      {:otsikko "Let" :tyyppi :string :hae :tr-loppuetaisyys}
-      {:otsikko "Pituus (m)" :tyyppi :string :hae :tr-pituus}]
+     [{:otsikko "Tie" :tyyppi :string :nimi :tr-numero}
+      {:otsikko "Ajor." :tyyppi :string :nimi :tr-ajorata}
+      {:otsikko "Kaista" :tyyppi :string :nimi :tr-kaista}
+      {:otsikko "Aosa" :tyyppi :string :nimi :tr-alkuosa}
+      {:otsikko "Aet" :tyyppi :string :nimi :tr-alkuetaisyys}
+      {:otsikko "Losa" :tyyppi :string :nimi :tr-loppuosa}
+      {:otsikko "Let" :tyyppi :string :nimi :tr-loppuetaisyys}
+      {:otsikko "Pituus (m)" :tyyppi :string :nimi :tr-pituus}
+      (when massat
+        {:otsikko "Päällyste" :nimi :paallyste :tyyppi :valinta :valinnat massat
+         :valinta-nayta (fn [rivi]
+                          (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))})]
      kohdeosat-atom]))
 
 
@@ -98,23 +104,30 @@
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi})
 
+
 (defn pot2-lomake
   [e! {yllapitokohde-id :yllapitokohde-id
-       perustiedot      :perustiedot
+       paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
+       massat :massat
+       materiaalikoodistot :materiaalikoodistot
        :as              app}
    lukko urakka kayttaja]
   ;; Toistaiseksi ei käytetä lukkoa POT2-näkymässä
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
-                                                                                     (apply f vanha-arvo args)))))]
+                                                                                     (apply f vanha-arvo args)))))
+        kohdeosat-atom (atom nil)]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
-                     (reset! kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat app))))
+                     (reset! kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat paallystysilmoitus-lomakedata))))
                      (nav/vaihda-kartan-koko! :S)))
-
-      (fn [e! {:keys [perustiedot] :as app}]
-        (let [perustiedot-app (select-keys app #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+      (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
+        (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+              perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot})
+              tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
+                                        #{:tekninen-osa :tila})
               {:keys [tila]} perustiedot
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot-app)
                                                                   (:valmispvm-kohde perustiedot-app))
@@ -131,7 +144,9 @@
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
-           [kulutuskerros e! (select-keys app #{:kohdeosat :kirjoitusoikeus?})]
-           [tallenna e! app {:kayttaja kayttaja
-                             :urakka-id (:id urakka)
-                             :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
+           [kulutuskerros e! kulutuskerros-app {:massat massat
+                                                :materiaalikoodistot materiaalikoodistot} kohdeosat-atom]
+           [debug app {:otsikko "TUCK STATE"}]
+           [tallenna e! tallenna-app {:kayttaja kayttaja
+                                      :urakka-id (:id urakka)
+                                      :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))

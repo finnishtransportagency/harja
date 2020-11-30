@@ -76,8 +76,9 @@
                {(avain aine) (assoc aine :valittu? true)})
              (vec aineet))))
 
-(defn- hae-massat [_]
-  (tuck-apurit/post! :hae-urakan-pot2-massat
+(defn- hae-massat [app]
+  (tuck-apurit/post! app
+                     :hae-urakan-pot2-massat
                      {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
                      {:onnistui ->HaePot2MassatOnnistui
                       :epaonnistui ->HaePot2MassatEpaonnistui}))

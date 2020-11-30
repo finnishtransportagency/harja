@@ -418,28 +418,25 @@
    [:div {:style {:height "100px"}}]
    [napit/sulje #(swap! tiedot-massa/nayta-materiaalikirjasto? not)]])
 
-(defn massat* [e! app]
+(defn massat [e! app]
   (komp/luo
     (komp/lippu tiedot-massa/materiaalikirjastossa?)
     (komp/piirretty (fn [this]
-                      (e! (tiedot-massa/->AlustaTila))
-                      (e! (tiedot-massa/->HaePot2Massat))
-                      (e! (tiedot-massa/->HaeKoodistot))))
+                      (e! (tiedot-massa/->AlustaTila))))
     (fn [e! app]
       [:div
        (if (:avaa-massa-lomake? app)
          [massa-lomake e! app]
-         [materiaalikirjasto e! app])])))
+         [materiaalikirjasto e! app])
+       [debug app {:otsikko "TUCK STATE"}]])))
 
-
-
-(defn materiaalikirjasto-modal [_ _]
+(defn materiaalikirjasto-modal [e! app]
   [modal/modal
    {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
     :luokka "materiaalikirjasto-modal"
     :nakyvissa? @tiedot-massa/nayta-materiaalikirjasto?
     :sulje-fn #(swap! tiedot-massa/nayta-materiaalikirjasto? not)}
    [:div
-    [tuck/tuck tila/pot2 massat*]]])
+    [massat e! app]]])
 
 

@@ -1,5 +1,4 @@
 (ns harja.tiedot.urakka.pot2.pot2-tiedot
-
   (:require
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]

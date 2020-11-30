@@ -26,7 +26,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
 
-            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.yhatuonti :as yha]
@@ -34,6 +33,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.urakka.pot2.massat :as tiedot-massat]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
 
             [harja.views.urakka.pot1-lomake :as pot1-lomake]
             [harja.views.urakka.pot2.massalistaus :as massat-view]
@@ -166,7 +166,7 @@
           [:h3 {:style {:display "inline-block"}}
            "Päällystysilmoitukset"]
           ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
-          #_[napit/nappi "Muokkaa urakan materiaaleja"
+          [napit/nappi "Muokkaa urakan materiaaleja"
            #(e! (tiedot-massat/->NaytaModal true))
            {:ikoni (ikonit/livicon-pen)
             :luokka "napiton-nappi"
@@ -214,10 +214,12 @@
     (komp/sisaan-ulos
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] true))
-        (e! (paallystys/->HaePaallystysilmoitukset)))
+        (e! (paallystys/->HaePaallystysilmoitukset))
+        (e! (tiedot-massat/->HaePot2Massat))
+        (e! (tiedot-massat/->HaeKoodistot)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
-    (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-lomake pot2-massat? avaa-massa-lomake?] :as app}]
+    (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
@@ -226,14 +228,12 @@
        ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
        (if paallystysilmoitus-lomakedata
          (if (> (:valittu-urakan-vuosi urakka-tila) 2020)
-           [pot2-lomake/pot2-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+           [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
+                                                          :massat :materiaalikoodistot})
+            lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
           [ilmoitusluettelo e! app]])
-       ;; huom: tässä kohti ei passata e!:tä ja appia, vaan luodaan
-       ;; modalissa uusi tuck state. Asiat menivät aika pahasti rikki,
-       ;; kun koetin passata tämän näkymän e! ja app sisään
-       ;; esimerkiksi :urakka avaimen alta hävisi tietoja
-       ;; Voitanee joskus refaktoroida jos nähdään tarpeelliseksi
-       [massat-view/materiaalikirjasto-modal nil nil]])))
+       [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :materiaalikoodistot
+                                                                   :avaa-massa-lomake? :pot2-massa-lomake})]])))
