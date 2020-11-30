@@ -49,14 +49,14 @@
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
-     [{:otsikko "Tie" :tyyppi :string :nimi :tr-numero}
-      {:otsikko "Ajor." :tyyppi :string :nimi :tr-ajorata}
-      {:otsikko "Kaista" :tyyppi :string :nimi :tr-kaista}
-      {:otsikko "Aosa" :tyyppi :string :nimi :tr-alkuosa}
-      {:otsikko "Aet" :tyyppi :string :nimi :tr-alkuetaisyys}
-      {:otsikko "Losa" :tyyppi :string :nimi :tr-loppuosa}
-      {:otsikko "Let" :tyyppi :string :nimi :tr-loppuetaisyys}
-      {:otsikko "Pituus (m)" :tyyppi :string :nimi :tr-pituus}
+     [{:otsikko "Tie" :tyyppi :positiivinen-numero :nimi :tr-numero}
+      {:otsikko "Ajor." :tyyppi :positiivinen-numero :nimi :tr-ajorata}
+      {:otsikko "Kaista" :tyyppi :positiivinen-numero :nimi :tr-kaista}
+      {:otsikko "Aosa" :tyyppi :positiivinen-numero :nimi :tr-alkuosa}
+      {:otsikko "Aet" :tyyppi :positiivinen-numero :nimi :tr-alkuetaisyys}
+      {:otsikko "Losa" :tyyppi :positiivinen-numero :nimi :tr-loppuosa}
+      {:otsikko "Let" :tyyppi :positiivinen-numero :nimi :tr-loppuetaisyys}
+      {:otsikko "Pituus (m)" :tyyppi :positiivinen-numero :nimi :tr-pituus}
       (when massat
         {:otsikko "Päällyste" :nimi :paallyste :tyyppi :valinta :valinnat massat
          :valinta-nayta (fn [rivi]
@@ -115,12 +115,11 @@
   ;; Toistaiseksi ei käytetä lukkoa POT2-näkymässä
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
-                                                                                     (apply f vanha-arvo args)))))
-        kohdeosat-atom (atom nil)]
+                                                                                     (apply f vanha-arvo args)))))]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
-                     (reset! kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat paallystysilmoitus-lomakedata))))
+                     (reset! pot2-tiedot/kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat paallystysilmoitus-lomakedata))))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
@@ -145,7 +144,7 @@
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
            [kulutuskerros e! kulutuskerros-app {:massat massat
-                                                :materiaalikoodistot materiaalikoodistot} kohdeosat-atom]
+                                                :materiaalikoodistot materiaalikoodistot} pot2-tiedot/kohdeosat-atom]
            [debug app {:otsikko "TUCK STATE"}]
            [tallenna e! tallenna-app {:kayttaja kayttaja
                                       :urakka-id (:id urakka)

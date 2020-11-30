@@ -478,6 +478,17 @@
                                                [:a {:href url} url]]])}]
       (viestinta/laheta-sposti-fim-kayttajarooleille spostin-parametrit))))
 
+(defn- ilmoituksen-kohdeosat
+  [paallystysilmoitus pot2?]
+  (if pot2?
+    (->> paallystysilmoitus
+         :kohdeosat
+         (filter (comp not :poistettu)))
+    (->> paallystysilmoitus
+         :ilmoitustiedot
+         :osoitteet
+         (filter (comp not :poistettu)))))
+
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
 
@@ -518,10 +529,7 @@
                                              :vuosi vuosi
                                              :yllapitokohde-id paallystyskohde-id
                                              :osat (map #(assoc % :id (:kohdeosa-id %))
-                                                        (->> paallystysilmoitus
-                                                             :ilmoitustiedot
-                                                             :osoitteet
-                                                             (filter (comp not :poistettu))))})]
+                                                     (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})]
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
             (:validointivirheet paivitetyt-kohdeosat) (clj-set/rename-keys paivitetyt-kohdeosat {:validointivirheet :virhe})

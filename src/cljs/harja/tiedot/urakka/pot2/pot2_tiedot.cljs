@@ -7,13 +7,15 @@
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
     [harja.tiedot.urakka.paallystys :as paallystys]
-    [harja.domain.oikeudet :as oikeudet])
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
 (defonce pot2-nakymassa? (atom false))
+(defonce kohdeosat-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -64,7 +66,7 @@
   (process-event [_ {{urakka-id :id :as urakka} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
-    (println "Jarno TallennaPot2Tiedot paallystysilmoitus-lomakedata: " (pr-str paallystysilmoitus-lomakedata))
+    (println "TallennaPot2Tiedot paallystysilmoitus-lomakedata: " (pr-str paallystysilmoitus-lomakedata))
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
@@ -72,8 +74,9 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
-
-                           )]
+                               (assoc :kohdeosat (gridin-muokkaus/filteroi-uudet-poistetut
+                                                   (into (sorted-map)
+                                                         @kohdeosat-atom))))]
       (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str paallystysilmoitus-lomakedata))
       (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
