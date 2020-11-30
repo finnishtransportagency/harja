@@ -79,11 +79,14 @@
      {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
       :validoi [[:ei-tyhja "Aseta alkupvm"]
                 (fn [alku rivi]
-                  (let [loppu (:loppu rivi)]
+                  (let [loppu (:loppu rivi)
+                        id (:id rivi)]
                     (when (and alku loppu
                                (t/before? loppu alku))
-                      "Alkupvm ei voi olla lopun jälkeen.")))
-                ]}
+                      "Alkupvm ei voi olla lopun jälkeen.")
+                    (when (and (= id -1)
+                               (t/before? alku (t/today)))
+                      "Alkupvm ei voi menneisyydessä.")))]}
      {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
       :validoi [[:ei-tyhja "Aseta loppupvm"]
                 (fn [loppu rivi]
