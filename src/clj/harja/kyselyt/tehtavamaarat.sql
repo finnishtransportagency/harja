@@ -25,6 +25,7 @@ WHERE urakka = :urakka
   AND tehtava = :tehtava;
 
 -- name: tehtavaryhmat-ja-toimenpiteet-urakalle
+-- Pois jätetyt tehtäväryhmät ovat ainoastaan suunnittelua ja toteumia varten. Niihin ei kohdisteta kuluja.
 SELECT distinct
        tpk3.id       as "toimenpide-id",
        tpk3.nimi     as "toimenpide",
@@ -34,7 +35,7 @@ SELECT distinct
        tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr1
          JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-         JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
+         JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Liikenteen varmistaminen%') and tr3.nimi not like ('%Lisätyöt%')
          LEFT JOIN toimenpidekoodi tpk4
                    ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                       tpk4.poistettu is not true AND tpk4.piilota is not true
