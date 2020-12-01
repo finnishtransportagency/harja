@@ -67,6 +67,7 @@ from toimenpideinstanssi tpi
        join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
                  on suunnitelmat.tehtava = tpk.id
+                   and suunnitelmat.urakka = tpi.urakka
        left join toteumat
                  on toteumat.toimenpidekoodi = tpk.id
                    and toteumat.urakka_id = tpi.urakka
@@ -74,7 +75,7 @@ from toimenpideinstanssi tpi
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk3.koodi, tpk.suunnitteluyksikko, tpi.urakka, suunnitelmat.maara, toteumat.maara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by "toimenpide-jarjestys", tpk.jarjestys;
+order by tpi.urakka, "toimenpide-jarjestys", tpk.jarjestys;
 
 
 -- name: lisaa-tehtavamaara<!

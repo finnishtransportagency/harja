@@ -75,18 +75,10 @@
 (defn- muodosta-taulukko
   [db user {:keys [alkupvm loppupvm] :as parametrit}]
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
-        xform (map (fn [[_ rivit]]
-                     [[(:urakka (first rivit)) (:jarjestys (first rivit))] rivit]))
         suunnitellut-ryhmissa (->> parametrit
-                                   (hae-tehtavamaarat db)
-                                   (sort-by (juxt :toimenpide-jarjestys :jarjestys))
-                                   (group-by :toimenpide))
-        suunnitellut-ryhmissa-muunnetut-avaimet (into {}
-                                                      xform
-                                                      suunnitellut-ryhmissa)
-        suunnitellut-flattina (mapcat second suunnitellut-ryhmissa-muunnetut-avaimet)
+                                   (hae-tehtavamaarat db))
         suunnitellut-valiotsikoineen (keep identity
-                                           (loop [rivit suunnitellut-flattina
+                                           (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil
                                                   kaikki []]
                                              (if (empty? rivit)
