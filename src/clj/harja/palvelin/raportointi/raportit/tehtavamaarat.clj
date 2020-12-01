@@ -79,17 +79,12 @@
                      [[(:urakka (first rivit)) (:jarjestys (first rivit))] rivit]))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db)
-                                   (sort-by :jarjestys)
+                                   (sort-by (juxt :toimenpide-jarjestys :jarjestys))
                                    (group-by :toimenpide))
         suunnitellut-ryhmissa-muunnetut-avaimet (into {}
                                                       xform
                                                       suunnitellut-ryhmissa)
-        suunnitellut-sortattu (into
-                                (sorted-map-by
-                                  (fn [a b]
-                                    (compare a b)))
-                                suunnitellut-ryhmissa-muunnetut-avaimet)
-        suunnitellut-flattina (mapcat second suunnitellut-sortattu)
+        suunnitellut-flattina (mapcat second suunnitellut-ryhmissa-muunnetut-avaimet)
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-flattina
                                                   toimenpide nil

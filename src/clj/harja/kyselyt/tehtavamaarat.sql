@@ -52,9 +52,19 @@ select tpk.nimi               as "nimi",
        tpk.id                 as "toimenpidekoodi",
        tpi.urakka             as "urakka",
        tpi.nimi               as "toimenpide",
-       toteumat.maara         as "toteuma"
+       toteumat.maara         as "toteuma",
+       (CASE
+           WHEN tpk3.koodi = '23104' THEN 1
+           WHEN tpk3.koodi = '23116' THEN 2
+           WHEN tpk3.koodi = '23124' THEN 3
+           WHEN tpk3.koodi = '20107' THEN 4
+           WHEN tpk3.koodi = '20191' THEN 5
+           WHEN tpk3.koodi = '14301' THEN 6
+           WHEN tpk3.koodi = '23151' THEN 7
+           END) AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
        join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
+       join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
                  on suunnitelmat.tehtava = tpk.id
        left join toteumat
@@ -62,9 +72,10 @@ from toimenpideinstanssi tpi
                    and toteumat.urakka_id = tpi.urakka
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, tpi.urakka, suunnitelmat.maara, toteumat.maara
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk3.koodi, tpk.suunnitteluyksikko, tpi.urakka, suunnitelmat.maara, toteumat.maara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by tpk.id;
+order by "toimenpide-jarjestys", tpk.jarjestys;
+
 
 -- name: lisaa-tehtavamaara<!
 INSERT INTO urakka_tehtavamaara
