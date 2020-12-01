@@ -1,7 +1,7 @@
 (ns harja.palvelin.main
   (:require
     [taoensso.timbre :as log]
-    [clojure.core.async :as a :refer [<! go timeout]]
+    [clojure.core.async :refer [<! go timeout]]
     [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
     [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtumien-tulkkaus]
     [tarkkailija.palvelin.tarkkailija :as tarkkailija]
@@ -147,7 +147,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto!]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -831,76 +831,3 @@
 (defn -main [& argumentit]
   (kaynnista-jarjestelma (or (first argumentit) asetukset-tiedosto) true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
-
-(defn dev-start []
-  (if harja-jarjestelma
-    (println "Harja on jo käynnissä!")
-    (kaynnista-jarjestelma "asetukset.edn" false)))
-
-(defn dev-stop []
-  (sammuta-jarjestelma))
-
-(defn dev-restart []
-  (dev-stop)
-  (dev-start)
-  :ok)
-
-
-(defn dev-julkaise
-  "REPL käyttöön: julkaise uusi palvelu (poistaa ensin vanhan samalla nimellä)."
-  [nimi fn]
-  (http-palvelin/poista-palvelu (:http-palvelin harja-jarjestelma) nimi)
-  (http-palvelin/julkaise-palvelu (:http-palvelin harja-jarjestelma) nimi fn))
-
-(defmacro with-db [s & body]
-  `(let [~s (:db harja-jarjestelma)]
-     ~@body))
-
-(defn q
-  "Kysele Harjan kannasta, REPL kehitystä varten"
-  [& sql]
-  (with-open [c (.getConnection (:datasource (:db harja-jarjestelma)))
-              ps (.prepareStatement c (reduce str sql))
-              rs (.executeQuery ps)]
-    (let [cols (-> (.getMetaData rs) .getColumnCount)]
-      (loop [res []
-             more? (.next rs)]
-        (if-not more?
-          res
-          (recur (conj res (loop [row []
-                                  i 1]
-                             (if (<= i cols)
-                               (recur (conj row (.getObject rs i)) (inc i))
-                               row)))
-                 (.next rs)))))))
-
-(defn u
-  "UPDATE Harjan kantaan"
-  [& sql]
-  (with-open [c (.getConnection (:datasource (:db harja-jarjestelma)))
-              ps (.prepareStatement c (reduce str sql))]
-    (.executeUpdate ps)))
-
-(defn explain [sql]
-  (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
-
-(defn log-level-info! []
-  (log/merge-config!
-    {:appenders {:println {:min-level :info}}}))
-
-(def figwheel-repl-options
-  ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten
-  ;; (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel! figwheel-repl-options) (cljs-repl))")
-  ;; M-x cider-jack-in-clojurescript
-  ;;
-  {:figwheel-options {}
-   :build-ids ["dev"]
-   :all-builds
-   [{:id "dev"
-     :figwheel true
-     :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
-     :compiler {:optimizations :none :source-map true
-                :output-to "dev-resources/js/harja.js"
-                :output-dir "dev-resources/js/out"
-                :libs ["src/js/kuvataso.js"]
-                :closure-output-charset "US-ASCII"}}]})
