@@ -20,7 +20,6 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
        tk.nimi                                   AS toimenpidekoodi_nimi,
        kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
-       tk.koodi,
        kt.tyyppi::TEXT                           AS maksutyyppi,
        CASE
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankinta'
@@ -67,7 +66,6 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
        tk.nimi                                   AS toimenpidekoodi_nimi,
        kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
-       tk.koodi,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
        tk_tehtava.nimi                           AS tehtava_nimi,
@@ -101,13 +99,12 @@ WHERE tpi.urakka = :urakka
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
     OR tk.koodi = '23151' -- mhu-johto
     )
--- Budjetoidut Erillishankinnat - toimenpide_koodi = '23150' - haetaan mukaan budjettiin kustannusarvioitu_työ taulusta, kun toimenpidekoodi on 23150
 UNION ALL
+-- Budjetoidut Erillishankinnat - toimenpide_koodi = '23150' - haetaan mukaan budjettiin kustannusarvioitu_työ taulusta, kun toimenpidekoodi on 23150
 SELECT tpi.id                                    AS toimenpideinstanssi_id,
        tk.nimi                                   AS toimenpidekoodi_nimi,
        kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
-       tk.koodi,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
        'Erillishankinnat (W)'                    AS tehtava_nimi,
@@ -133,7 +130,6 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
        tk.nimi                                   AS toimenpidekoodi_nimi,
        kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
-       tk.koodi,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
        'Hoidonjohtopalkkio (G)'                  AS tehtava_nimi,
@@ -155,13 +151,12 @@ WHERE s.urakka = :urakka
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND tpi.toimenpide = tk.id
 UNION ALL
--- Johto- ja hallintokorvaus haetaan johto_ja_hallintokorvaus taulusta
+-- Johto- ja hallintakorvaus haetaan johto_ja_hallintakorvaus taulusta
 -- Nämä on budjetoituja kustannuksia.
 SELECT 0                                           AS toimenpideinstanssi_id,
        jjht.toimenkuva                             AS toimenpidekoodi_nimi,
        (hjh.tunnit * hjh.tuntipalkka)              AS budjetoitu_summa,
        0                                           AS toteutunut_summa,
-       '0'                                         AS koodi,
        'kiinteahintainen'                          AS maksutyyppi,
        'palkat'                                    AS toimenpideryhma,
        jjht.toimenkuva                             AS tehtava_nimi,
@@ -183,7 +178,6 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
        tk.nimi                                   AS toimenpidekoodi_nimi,
        kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
-       '0'                                       AS koodi,
        'kiinteahintainen'                        AS maksutyyppi,
        'toimistokulut'                           AS toimenpideryhma,
        tk_tehtava.nimi                              AS tehtava_nimi,
@@ -212,7 +206,6 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
        tk.nimi                 AS toimenpidekoodi_nimi,
        0                       AS budjetoitu_summa,
        lk.summa                AS toteutunut_summa,
-       tk.koodi,
        lk.maksueratyyppi::TEXT AS maksutyyppi,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' THEN 'hankinta'
@@ -226,7 +219,7 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           --WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
+           WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
            END                 AS toimenpide,
        lk.luotu                AS luotu,
        l.erapaiva::TEXT        AS ajankohta,
@@ -255,7 +248,6 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
        tk.nimi                 AS toimenpidekoodi_nimi,
        0                       AS budjetoitu_summa,
        lk.summa                AS toteutunut_summa,
-       tk.koodi,
        lk.maksueratyyppi::TEXT AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
