@@ -13,9 +13,12 @@
     table {
       width:100%;
     }
+
     tr {
       height:40px;
-
+      &.bottom-border {
+        border-bottom: black solid 1px;
+      }
       td, th {
         padding-left: 25px;
         padding-right: 25px;
@@ -40,6 +43,9 @@
       &-valkoinen {
         background-color: @white;
         text-transform: uppercase;
+      }
+      &.selectable {
+        cursor: pointer;
       }
     }
     &-strong {
@@ -129,8 +135,8 @@
 /* Taulukossa käytössä oleva pääryhmien väri-indikaattori */
 .circle {
   border-radius: 50%;
-  height: 8px;
-  width: 8px;
+  height: 9px;
+  width: 9px;
   display: inline-block;
 }
 .hankintakustannukset {
