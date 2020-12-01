@@ -142,7 +142,8 @@
                   [(:rivi rivi) rivi]
                   [rivi {}])
                 lihavoi-rivi? (:lihavoi? optiot)
-                korosta-rivi? (:korosta? optiot)]]
+                korosta-rivi? (:korosta? optiot)
+                korosta-hennosti? (:korosta-hennosti? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
@@ -153,6 +154,9 @@
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
                          {:background-color "#ff9900"
                           :color "black"})
+              korosta-hennosti? (when korosta-hennosti?
+                                  {:background-color "#dee7fb"
+                                   :color "black"})
               lihavoi? (when lihavoi-rivi?
                          {:font-weight "bold"})]
           [:fo:table-row
@@ -184,6 +188,7 @@
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
                                korosta?
+                               korosta-hennosti?
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
