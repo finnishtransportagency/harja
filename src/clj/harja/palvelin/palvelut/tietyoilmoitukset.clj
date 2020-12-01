@@ -30,7 +30,7 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.tapahtuma-protokollat :as tapahtumat]
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
+    [harja.palvelin.asetukset :as asetukset]
     [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
     [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
     [harja.palvelin.palvelut.viestinta :as viestinta]
@@ -214,7 +214,7 @@
                               ilmoituksen-sahkopostitiedot (hae-ilmoituksen-sahkopostitiedot db user (select-keys tallennettu [::t/urakka-id ::t/id]))]
                           (merge tallennettu {::t/email-lahetykset ilmoituksen-sahkopostitiedot})))]
       (when (and (not (empty? sahkopostitiedot))
-                 (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
+                 (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
         (async/thread
           (let [{pdf-bytet :tiedosto-bytet
                  tiedostonimi :tiedostonimi} (pdf-vienti/luo-pdf pdf :tietyoilmoitus user {:id (::t/id tallennettu)})
@@ -342,7 +342,7 @@
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
-    (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+    (when (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
       (tapahtumat/kuuntele! email
                             (-> email :jonot :sahkoposti-ja-liite-ulos-kuittausjono)
                             (fn [{:keys [viesti-id aika onnistunut]} _ _]

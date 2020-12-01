@@ -4,7 +4,7 @@
   urakoitsijat ovat julkista tietoa."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [taoensso.timbre :as log]
             [harja.domain.organisaatio :as o]
             [namespacefy.core :refer [namespacefy]]

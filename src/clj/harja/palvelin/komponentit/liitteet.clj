@@ -8,7 +8,7 @@
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
             [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
             [fileyard.client :as fileyard-client]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [clojure.java.jdbc :as jdbc])

@@ -1,6 +1,7 @@
 (ns tarkkailija.palvelin.komponentit.uudelleen-kaynnistaja
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :as async]
+            [harja.palvelin.asetukset :as asetukset]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtuma-tulkkaus]
             [harja.pvm :as pvm]))
@@ -62,7 +63,7 @@
 
 (defn- kaynnista-sonja-uusiksi! [uudelleen-kaynnistaja]
   (println "---> KÄYNNISTETÄÄN SONJA UUSIKSI!")
-  (let [uudelleen-kaynnistyksia (::uudelleen-kaynnistyksia uudelleen-kaynnistaja)]
+  #_(let [uudelleen-kaynnistyksia (::uudelleen-kaynnistyksia uudelleen-kaynnistaja)]
     (if (> @uudelleen-kaynnistyksia 0)
       (sonjan-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja)
       (let [_ (swap! uudelleen-kaynnistyksia inc)
@@ -89,7 +90,9 @@
     (let [this (assoc this ::sonja-yhteys-aloitettu? (atom nil)
                            ::uudelleen-kaynnistyksia (atom 0)
                            ::uudelleen-kaynnistys-aika (atom nil))]
-      (sonjatarkkailu! this)
+      (println "SONJA UUDELLEEN KÄYNNISTYS KÄYTÖSSÄ? " (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys))
+      (when (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys)
+        (sonjatarkkailu! this))
       this))
   (stop [this]
     (doseq [[_ tarkkailija] @(:tapahtumien-tarkkailijat this)]

@@ -147,7 +147,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto!]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto! aseta-kaytettavat-ominaisuudet!]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -214,7 +214,7 @@
       :liitteiden-hallinta (component/using
                              (liitteet-komp/->Liitteet
                                (get-in asetukset [:liitteet :fileyard-url]))
-                             [:db :virustarkistus :tiedostopesula :pois-kytketyt-ominaisuudet])
+                             [:db :virustarkistus :tiedostopesula])
 
       :kehitysmoodi (component/using
                       (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
@@ -262,7 +262,7 @@
                                                (:lahetysjono-ulos sampo)
                                                (:kuittausjono-ulos sampo)
                                                (:paivittainen-lahetysaika sampo)))
-                              [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
+                              [:sonja :db :integraatioloki])
 
       ;; T-LOIK
       :tloik (component/using
@@ -275,7 +275,7 @@
                       (component/using
                         (tierekisteri/->Tierekisteri (:url asetukset)
                                                      (:uudelleenlahetys-aikavali-minuutteina asetukset))
-                        [:db :integraatioloki :pois-kytketyt-ominaisuudet]))
+                        [:db :integraatioloki]))
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using
@@ -316,7 +316,7 @@
                                [:http-palvelin :db :fim :sonja-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
-                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                            [:http-palvelin :db])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
@@ -324,185 +324,184 @@
                         [:http-palvelin :db :solita-sahkoposti])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
-                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                      [:http-palvelin :db])
       :hallintayksikot (component/using
                          (hallintayksikot/->Hallintayksikot)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                         [:http-palvelin :db])
       :ping (component/using
               (ping/->Ping)
               [:http-palvelin :db])
       :pois-kytketyt-ominaisuudet (component/using
-                                    (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet (:pois-kytketyt-ominaisuudet asetukset))
+                                    (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet)
                                     [:http-palvelin])
       :haku (component/using
               (haku/->Haku)
-              [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+              [:http-palvelin :db])
       :indeksit (component/using
                   (indeksit/->Indeksit)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                  [:http-palvelin :db])
       :urakat (component/using
                 (urakat/->Urakat)
-                [:http-palvelin :db :sahke :pois-kytketyt-ominaisuudet])
+                [:http-palvelin :db :sahke])
       :urakan-toimenpiteet (component/using
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
-                             [:http-palvelin :db :pois-kytketyt-ominaisuudet
-                              :pois-kytketyt-ominaisuudet])
+                             [:http-palvelin :db])
       :budjettisuunnittelu (component/using
                                (budjettisuunnittelu/->Budjettisuunnittelu)
-                               [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                               [:http-palvelin :db])
       :yksikkohintaiset-tyot (component/using
                                (yksikkohintaiset-tyot/->Yksikkohintaiset-tyot)
-                               [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                               [:http-palvelin :db])
       :kokonaishintaiset-tyot (component/using
                                 (kokonaishintaiset-tyot/->Kokonaishintaiset-tyot)
-                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                                [:http-palvelin :db])
       :muut-tyot (component/using
                    (muut-tyot/->Muut-tyot)
-                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                   [:http-palvelin :db])
       :tehtavamaarat (component/using
                    (tehtavamaarat/->Tehtavamaarat)
-                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                   [:http-palvelin :db])
       :laskut (component/using
                 (laskut/->Laskut)
-                [:http-palvelin :db :pdf-vienti :excel-vienti :pois-kytketyt-ominaisuudet])
+                [:http-palvelin :db :pdf-vienti :excel-vienti])
       :aliurakoitsijat (component/using
                 (aliurakoitsijat/->Aliurakoitsijat)
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
+                  [:http-palvelin :db :db-replica  :karttakuvat :tierekisteri])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                         [:http-palvelin :db])
       :vv-vaylat (component/using
                    (vv-vaylat/->Vaylat)
-                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                   [:http-palvelin :db])
       :vv-hinnoittelut (component/using
                          (vv-hinnoittelut/->Hinnoittelut)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                         [:http-palvelin :db])
       :vv-kiintiot (component/using
                      (vv-kiintiot/->Kiintiot)
-                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                     [:http-palvelin :db])
       :vv-materiaalit (component/using
                         (vv-materiaalit/->Materiaalit)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+                        [:http-palvelin :db  :fim :sonja-sahkoposti])
       :vv-turvalaitteet (component/using
                           (vv-turvalaitteet/->Turvalaitteet)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                          [:http-palvelin :db])
       :vv-alukset (component/using
                     (vv-alukset/->Alukset)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                    [:http-palvelin :db])
       :kan-kohteet (component/using
                      (kan-kohteet/->Kohteet)
-                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                     [:http-palvelin :db])
       :kan-liikennetapahtumat (component/using
                                 (kan-liikennetapahtumat/->Liikennetapahtumat)
-                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                                [:http-palvelin :db])
       :kan-hairio (component/using
                     (kan-hairio/->Hairiotilanteet)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+                    [:http-palvelin :db  :fim :sonja-sahkoposti])
       :kan-toimenpiteet (component/using
                           (kan-toimenpiteet/->Kanavatoimenpiteet)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+                          [:http-palvelin :db  :fim :sonja-sahkoposti])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                          [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+                    [:http-palvelin :db  :fim :sonja-sahkoposti])
       :pot2 (component/using
                     (pot2/->POT2)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+                    [:http-palvelin :db  :fim :sonja-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                        [:http-palvelin :db])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
-                         [:http-palvelin :db :yha-integraatio :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :vkm])
+                         [:http-palvelin :db :yha-integraatio  :fim :sonja-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
-                       [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                       [:http-palvelin :db])
       :yhteyshenkilot (component/using
                         (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim])
+                        [:http-palvelin :db  :fim])
       :toimenpidekoodit (component/using
                           (toimenpidekoodit/->Toimenpidekoodit)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                          [:http-palvelin :db])
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                         [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
-                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                     [:http-palvelin :db])
       :selainvirhe (component/using
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                        [:http-palvelin :db])
       :siltatarkastukset (component/using
                            (siltatarkastukset/->Siltatarkastukset)
-                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                           [:http-palvelin :db])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
                       (:lampotilat-url (:ilmatieteenlaitos asetukset)))
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                    [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
-                   [:http-palvelin :sampo :db :pois-kytketyt-ominaisuudet])
+                   [:http-palvelin :sampo :db])
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
-                  [:http-palvelin :db :liitteiden-hallinta :pois-kytketyt-ominaisuudet])
+                  [:http-palvelin :db :liitteiden-hallinta])
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :labyrintti :pois-kytketyt-ominaisuudet])
+                        [:http-palvelin :db  :fim :sonja-sahkoposti :labyrintti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
-                      [:http-palvelin :db :pois-kytketyt-ominaisuudet :karttakuvat])
+                      [:http-palvelin :db  :karttakuvat])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
-                     [:http-palvelin :db :pois-kytketyt-ominaisuudet :tloik])
+                     [:http-palvelin :db  :tloik])
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
-                           [:tloik :http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim :sonja-sahkoposti])
+                           [:tloik :http-palvelin :db  :pdf-vienti :fim :sonja-sahkoposti])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
-                                [:http-palvelin :db :turi :pois-kytketyt-ominaisuudet])
+                                [:http-palvelin :db :turi])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
-                                 [:http-palvelin :db-replica :pois-kytketyt-ominaisuudet])
+                                 [:http-palvelin :db-replica])
       :raportit (component/using
                   (raportit/->Raportit)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :raportointi :pdf-vienti])
+                  [:http-palvelin :db  :raportointi :pdf-vienti])
 
       :yha (component/using
              (yha/->Yha)
-             [:http-palvelin :db :pois-kytketyt-ominaisuudet :yha-integraatio])
+             [:http-palvelin :db  :yha-integraatio])
 
 
       :velho (component/using
                (velho/->Velho)
-               [:http-palvelin :db :pois-kytketyt-ominaisuudet :velho-integraatio])
+               [:http-palvelin :db  :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
-                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                 [:http-palvelin :db])
 
       :geometriapaivitykset (component/using
                               (geometriapaivitykset/->Geometriapaivitykset
                                 (:geometriapaivitykset asetukset))
-                              [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+                              [:db  :integraatioloki])
 
       :api-yhteysvarmistus (component/using
                              (let [{:keys [ajovali-minuutteina
@@ -514,39 +513,39 @@
                                  url
                                  kayttajatunnus
                                  salasana))
-                             [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+                             [:db  :integraatioloki])
 
 
       :sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
-                                   [:db :pois-kytketyt-ominaisuudet :integraatioloki :sonja])
+                                   [:db  :integraatioloki :sonja])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
                      {:db :db-replica
                       :http-palvelin :http-palvelin
-                      :pois-kytketyt-ominaisuudet :pois-kytketyt-ominaisuudet
+
                       :karttakuvat :karttakuvat
                       :fim :fim})
       :tienakyma (component/using
                    (tienakyma/->Tienakyma)
                    {:db :db-replica
-                    :pois-kytketyt-ominaisuudet :pois-kytketyt-ominaisuudet
+
                     :http-palvelin :http-palvelin})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
-                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                     [:http-palvelin :db])
       :hankkeet (component/using
                   (hankkeet/->Hankkeet)
-                  [:db :pois-kytketyt-ominaisuudet :http-palvelin])
+                  [:db  :http-palvelin])
       :sopimukset (component/using
                     (sopimukset/->Sopimukset)
-                    [:db :pois-kytketyt-ominaisuudet :http-palvelin])
+                    [:db  :http-palvelin])
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
-                          [:db :pois-kytketyt-ominaisuudet :http-palvelin :turi])
+                          [:db  :http-palvelin :turi])
 
       :hairioilmoitukset (component/using
                            (hairioilmoitukset/->Hairioilmoitukset)
@@ -575,21 +574,21 @@
                                       turvalaitekomponenttihakuvali
                                       vikahakuvali
                                       turvalaiteryhmahakuaika))
-                 [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+                 [:db  :integraatioloki])
 
       :ais-data (component/using
                   (let [{:keys [url sekunnin-valein]} (:ais-data asetukset)]
                     (ais-data/->Ais-haku url sekunnin-valein))
-                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+                  [:db  :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
                (vkm/->VKM url))
-             [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+             [:db  :integraatioloki])
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
-                                  [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                                  [:http-palvelin :db])
 
       :geometria-aineistot (component/using
                              (geometria-aineistot/->Geometria-aineistot)
@@ -597,7 +596,7 @@
 
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
-                       [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                       [:http-palvelin :db])
 
       :koordinaatit (component/using
                       (koordinaatit/->Koordinaatit)
@@ -610,29 +609,29 @@
       ;; Harja API
       :api-urakat (component/using
                     (api-urakat/->Urakat)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                    [:http-palvelin :db  :integraatioloki])
       :api-laatupoikkeamat (component/using
                              (api-laatupoikkeamat/->Laatupoikkeamat)
-                             [:http-palvelin :db :pois-kytketyt-ominaisuudet :liitteiden-hallinta
+                             [:http-palvelin :db  :liitteiden-hallinta
                               :integraatioloki])
       :api-paivystajatiedot (component/using
                               (api-paivystajatiedot/->Paivystajatiedot)
-                              [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                              [:http-palvelin :db  :integraatioloki])
       :api-pistetoteuma (component/using
                           (api-pistetoteuma/->Pistetoteuma)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                          [:http-palvelin :db  :integraatioloki])
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
-                           [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :integraatioloki])
+                           [:http-palvelin :db  :db-replica :integraatioloki])
       :api-varustetoteuma (component/using
                             (api-varustetoteuma/->Varustetoteuma)
-                            [:http-palvelin :db :pois-kytketyt-ominaisuudet :tierekisteri :integraatioloki])
+                            [:http-palvelin :db  :tierekisteri :integraatioloki])
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
-                               [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+                               [:http-palvelin :db  :integraatioloki :liitteiden-hallinta])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+                          [:http-palvelin :db  :integraatioloki :liitteiden-hallinta])
       :api-tyokoneenseuranta (component/using
                                (api-tyokoneenseuranta/->Tyokoneenseuranta)
                                [:http-palvelin :db])
@@ -642,43 +641,43 @@
       :api-turvallisuuspoikkeama (component/using
                                    (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
                                    [:http-palvelin :db :integraatioloki
-                                    :liitteiden-hallinta :turi :pois-kytketyt-ominaisuudet])
+                                    :liitteiden-hallinta :turi])
       :api-suolasakkojen-lahetys (component/using
                                    (suolasakkojen-lahetys/->SuolasakkojenLahetys)
-                                   [:db :pois-kytketyt-ominaisuudet])
+                                   [:db])
       :api-varusteet (component/using
                        (api-varusteet/->Varusteet)
-                       [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :tierekisteri :vkm])
+                       [:http-palvelin :db  :integraatioloki :tierekisteri :vkm])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki
+                         [:http-palvelin :db  :integraatioloki
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti :vkm])
+                             [:http-palvelin :db  :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti :vkm])
       :api-ping (component/using
                   (api-ping/->Ping)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                  [:http-palvelin :db  :integraatioloki])
 
       :api-yhteystiedot (component/using
                           (api-yhteystiedot/->Yhteystiedot)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :fim])
+                          [:http-palvelin :db  :integraatioloki :fim])
 
       :api-tiemerkintatoteuma (component/using
                                 (api-tiemerkintatoteuma/->Tiemerkintatoteuma)
-                                [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                                [:http-palvelin :db  :integraatioloki])
 
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
-                              [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :turi])
+                              [:http-palvelin :db  :integraatioloki :turi])
       :api-tieluvat (component/using
                       (api-tieluvat/->Tieluvat)
-                      [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+                      [:http-palvelin :db  :integraatioloki :liitteiden-hallinta])
 
 
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :yha-paikkauskomponentti])
+                         [:http-palvelin :db  :integraatioloki :yha-paikkauskomponentti])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
@@ -688,11 +687,11 @@
       :laskutusyhteenvetojen-muodostus
       (component/using
         (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
-        [:db :pois-kytketyt-ominaisuudet])
+        [:db])
 
       :status (component/using
                 (status/luo-status (:kehitysmoodi asetukset))
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
+                [:http-palvelin :db  :komponenttien-tila])
 
       :vaylien-geometriahaku
       (component/using
@@ -701,7 +700,7 @@
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
-        [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
+        [:db  :http-palvelin :integraatioloki])
 
       :kanavasiltojen-geometriahaku
       (component/using
@@ -710,18 +709,18 @@
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
-        [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
+        [:db  :http-palvelin :integraatioloki])
 
       :mobiili-laadunseuranta
       (component/using
         (harja-laadunseuranta/->Laadunseuranta)
-        [:db :pois-kytketyt-ominaisuudet :http-palvelin])
+        [:db  :http-palvelin])
 
       :urakan-tyotuntimuistutukset
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
-        [:db :pois-kytketyt-ominaisuudet :sonja-sahkoposti :fim]))))
+        [:db  :sonja-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
 
@@ -809,12 +808,12 @@
       (konfiguroi-lokitus asetukset)
       (if-let [virheet (tarkista-asetukset asetukset)]
         (log/error "Validointivirhe asetuksissa:" virheet))
+      (aseta-kaytettavat-ominaisuudet! (:pois-kytketyt-ominaisuudet asetukset))
       (tarkista-ymparisto!)
       (kaynnista-harja-tarkkailija! asetukset)
       (kuuntele-tapahtumia!)
       (merkkaa-kaynnistyminen!)
       (kaynnista-pelkastaan-jarjestelma asetukset)
-      (aloita-sonja harja-jarjestelma)
       (merkkaa-kaynnistetyksi!))
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")

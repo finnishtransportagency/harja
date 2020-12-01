@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]

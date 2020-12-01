@@ -234,6 +234,15 @@
        read-string
        (yhdista-asetukset oletusasetukset)))
 
+(defonce pois-kytketyt-ominaisuudet (atom #{}))
+
+(defn ominaisuus-kaytossa? [k]
+  (let [pko @pois-kytketyt-ominaisuudet]
+    (not (contains? pko k))))
+
+(defn aseta-kaytettavat-ominaisuudet! [pois-kytketyt-ominaisuudet-joukko]
+  (reset! pois-kytketyt-ominaisuudet pois-kytketyt-ominaisuudet-joukko))
+
 
 (defn crlf-filter [msg]
   (assoc msg :vargs (mapv (fn [s]

@@ -6,7 +6,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.vienti :as vienti]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.maksuerat :as q-maksuerat]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]

@@ -198,6 +198,7 @@
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
+                               ; :sonja-uudelleen-kaynnistys
                                :ais-data
                                :reittitarkistukset
                                :tiedostopesula}

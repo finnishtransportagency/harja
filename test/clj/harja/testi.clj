@@ -8,7 +8,6 @@
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.liitteet :as liitteet]
@@ -1241,10 +1240,6 @@
 (def portti nil)
 (def urakka nil)
 
-(def testi-pois-kytketyt-ominaisuudet (component/using
-                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
-                                        [:http-palvelin]))
-
 (def harja-tarkkailija)
 
 (defn pystyta-harja-tarkkailija []
@@ -1308,9 +1303,6 @@
                            :liitteiden-hallinta (component/using
                                                   (liitteet/->Liitteet nil)
                                                   [:db])
-                           :pois-kytketyt-ominaisuudet (component/using
-                                                         (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
-                                                         [:http-palvelin])
 
                            ~@omat))))
 

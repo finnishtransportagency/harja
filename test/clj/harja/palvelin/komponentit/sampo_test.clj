@@ -34,14 +34,13 @@
                                  [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :sampo (component/using (let [sampo (:sampo asetukset)]
                                                   (sampo/->Sampo (:lahetysjono-sisaan sampo)
                                                                  (:kuittausjono-sisaan sampo)
                                                                  (:lahetysjono-ulos sampo)
                                                                  (:kuittausjono-ulos sampo)
                                                                  (:paivittainen-lahetysaika sampo)))
-                                                [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])))))
+                                                [:sonja :db :integraatioloki])))))
   ;; aloita-sonja palauttaa kanavan.
   (<!! (sut/aloita-sonja jarjestelma))
   ;; Merkataan kaikki kannassa oleva testidata lähetetyksi ennen testien ajoa ja purgetaan jono.

@@ -23,7 +23,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki :pois-kytketyt-ominaisuudet])))
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 

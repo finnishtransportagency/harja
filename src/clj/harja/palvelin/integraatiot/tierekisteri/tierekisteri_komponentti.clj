@@ -25,7 +25,7 @@
     [harja.kyselyt.toteumat :as toteumat-q]
     [harja.kyselyt.konversio :as konversio]
     [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+    [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
     [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))

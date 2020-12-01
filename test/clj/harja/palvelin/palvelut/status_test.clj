@@ -42,10 +42,9 @@
                         :http-palvelin (component/using
                                          (http/luo-http-palvelin portti true)
                                          [:todennus])
-                        :pois-kytketyt-ominaisuudet
                         :status (component/using
                                   (status/luo-status true)
-                                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :komponenttien-tila])
+                                  [:http-palvelin :db :komponenttien-tila])
                         :sonja (component/using
                                  (sonja/luo-oikea-sonja {:url "tcp://localhost:61617"
                                                          :kayttaja ""
