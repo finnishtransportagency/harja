@@ -252,11 +252,23 @@
             (filter #(= (::koodi %) koodi)
                     ainetyypit))))
 
+(def asfalttirouheen-tyypin-id 2)
+
+(defn massan-rc-pitoisuus
+  "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
+  [rivi]
+  (when-let [runkoaineet (vals (::runkoaineet rivi))]
+    (when-let [asfalttirouhe (filter #(= (:tyyppi %) asfalttirouheen-tyypin-id)
+                                runkoaineet)]
+      (str "RC" (:runkoaine/massaprosentti (first asfalttirouhe))))))
+
 (defn massatyypin-rikastettu-nimi [massatyypit rivi]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi rivi))
-       (str/join " " (remove nil? (mapv val
-                                        (select-keys rivi [::max-raekoko
-                                                           ::dop-nro
-                                                           ::nimen-tarkenne
-                                                           ::kuulamyllyluokka]))))))
+  (let [rivi (assoc rivi ::rc% (massan-rc-pitoisuus rivi))]
+    (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi rivi))
+         (str/join " " (remove nil? (mapv val
+                                          (select-keys rivi [::max-raekoko
+                                                             ::rc%
+                                                             ::dop-nro
+                                                             ::nimen-tarkenne
+                                                             ::kuulamyllyluokka])))))))

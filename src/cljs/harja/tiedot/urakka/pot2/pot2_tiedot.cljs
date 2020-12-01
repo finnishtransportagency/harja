@@ -74,9 +74,9 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
-                               (assoc :kohdeosat (gridin-muokkaus/filteroi-uudet-poistetut
-                                                   (into (sorted-map)
-                                                         @kohdeosat-atom))))]
+                               (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
+                                                                (into (sorted-map)
+                                                                      @kohdeosat-atom))))]
       (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str paallystysilmoitus-lomakedata))
       (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus

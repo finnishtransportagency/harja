@@ -419,3 +419,10 @@ WHERE id = :id
 SELECT nimi, tunnus, kohdenumero, yhaid
 FROM yllapitokohde
 WHERE yhaid IN (:ulkoiset-idt);
+
+-- name: tallenna-pot2-paallystekerros
+INSERT INTO pot2_paallystekerros
+    (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki,
+     pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id)
+     VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
+             :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id)

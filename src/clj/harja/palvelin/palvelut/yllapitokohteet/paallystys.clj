@@ -482,12 +482,27 @@
   [paallystysilmoitus pot2?]
   (if pot2?
     (->> paallystysilmoitus
-         :kohdeosat
+         :kulutuskerros
          (filter (comp not :poistettu)))
     (->> paallystysilmoitus
          :ilmoitustiedot
          :osoitteet
          (filter (comp not :poistettu)))))
+
+;; TODO: pot2 namespaceen
+(defn- tallenna-pot2-paallystekerros
+  [db paallystysilmoitus]
+  (doseq [rivi (->> paallystysilmoitus
+                    :kulutuskerroksen-rivit
+                    (filter (comp not :poistettu)))]
+    (if (:id rivi)
+      ;; UPDATE
+      (println "Update")
+      ;; HOX: Tämä ao. SQL ei vielä toimi, tai ei ole testattu...
+      (q/tallenna-pot2-paallystekerros db
+                                      {:kohdeosa_id (:kohdeosa_id rivi) :toimenpide (:toimenpide rivi)
+                                       :materiaali (:materiaali rivi) :leveys (:leveys rivi) :massamenekki (:massamenekki rivi)
+                                       :pinta_ala (:pinta_ala rivi) :kokonaismassamaara (:kokonaismassamaara rivi) :piennar (:piennar rivi) :lisatieto (:lisatieto rivi) :pot2_id (:pot2_id rivi)}))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
@@ -529,7 +544,9 @@
                                              :vuosi vuosi
                                              :yllapitokohde-id paallystyskohde-id
                                              :osat (map #(assoc % :id (:kohdeosa-id %))
-                                                     (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})]
+                                                     (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})
+              pot2-paallystekerros (when pot2? (tallenna-pot2-paallystekerros db paallystysilmoitus))
+              _ (println "pot2-paallystekerros " pot2-paallystekerros)]
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
             (:validointivirheet paivitetyt-kohdeosat) (clj-set/rename-keys paivitetyt-kohdeosat {:validointivirheet :virhe})

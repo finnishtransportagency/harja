@@ -392,6 +392,7 @@
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
+                              ;; POT1 ja POT2
                               {:yllapitokohde yllapitokohde-id
                                :nimi nimi
                                :tunnus tunnus
@@ -402,12 +403,16 @@
                                :tr_loppuetaisyys tr-loppuetaisyys
                                :tr_ajorata tr-ajorata
                                :tr_kaista tr-kaista
+
+                               ;; Vain POT1 saa muuttaa näitä YLLÄPITOKOHDEOSA-taulussa!
+                               ;; POT2 ei saa näitä nullata
                                :paallystetyyppi paallystetyyppi
                                :raekoko raekoko
                                :tyomenetelma tyomenetelma
                                :massamaara massamaara
                                :toimenpide toimenpide
-                               :ulkoinen-id nil})))
+                               :ulkoinen-id nil ;; yhteinen
+                               })))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
@@ -416,6 +421,7 @@
                                   :as kohdeosa}]
   (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
+                                ;; POT1 ja POT2
                                 {:nimi nimi
                                  :tr_numero tr-numero
                                  :tr_alkuosa tr-alkuosa
@@ -424,13 +430,16 @@
                                  :tr_loppuetaisyys tr-loppuetaisyys
                                  :tr_ajorata tr-ajorata
                                  :tr_kaista tr-kaista
+
+                                 ;; Vain POT1 saa muuttaa näitä YLLÄPITOKOHDEOSA-taulussa!
+                                 ;; POT2 ei saa näitä nullata
                                  :paallystetyyppi paallystetyyppi
                                  :raekoko raekoko
                                  :tyomenetelma tyomenetelma
                                  :massamaara massamaara
                                  :toimenpide toimenpide
-                                 :id id
-                                 :urakka urakka-id}))
+                                 :id id ;; yhteinen
+                                 :urakka urakka-id ;; yhteinen}))
 
 (defn tallenna-yllapitokohdeosat
   "Tallentaa ylläpitokohdeosat kantaan.
