@@ -98,8 +98,9 @@
             (apply tarkkaile-tapahtumaa klusterin-tapahtumat tarkkaile-tapahtumaa-arg))
           tarkkaile-tapahtumaa-args)))
 
-(defn lopeta-tapahtuman-kuuntelu [kuuntelija]
+(defn lopeta-tapahtuman-kuuntelu [klusterin-tapahtumat kuuntelija]
   (when (p/chan? kuuntelija)
+    (tapahtumat-p/lopeta-tarkkailu! klusterin-tapahtumat kuuntelija)
     (async/close! kuuntelija)))
 
 (defn tapahtuma-julkaisija
@@ -125,7 +126,7 @@
   (start [{:keys [klusterin-tapahtumat rajapinta] :as this}]
     (rajapinta/lisaa-palvelu rajapinta :tapahtuma-julkaisija (partial tapahtuma-julkaisija klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :tapahtuma-datan-spec tapahtuma-datan-spec)
-    (rajapinta/lisaa-palvelu rajapinta :lopeta-tapahtuman-kuuntelu lopeta-tapahtuman-kuuntelu)
+    (rajapinta/lisaa-palvelu rajapinta :lopeta-tapahtuman-kuuntelu (partial lopeta-tapahtuman-kuuntelu klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :tapahtuman-julkaisia! (partial tapahtuman-julkaisia! klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :yhta-aikaa-tapahtuman-julkaisia! (partial yhta-aikaa-tapahtuman-julkaisia! klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :tapahtuman-kuuntelija! (partial tapahtuman-kuuntelija! klusterin-tapahtumat))

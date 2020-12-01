@@ -6,3 +6,6 @@
 
 (defprotocol Julkaise
   (julkaise! [this tapahtuma payload host-name]))
+
+(defprotocol Kuuroudu
+  (lopeta-tarkkailu! [this kuuntelija]))

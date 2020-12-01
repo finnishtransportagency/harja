@@ -301,7 +301,8 @@
                            ::kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-broadcast
                            ::tapahtuma-loopin-ajot tapahtuma-loopin-ajot
                            ::kuuntelu-aloitettu kuuntelu-aloitettu
-                           ::kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus)
+                           ::kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
+                           ::tarkkailija->tapahtuma (atom {}))
           kuuntelu-valmis (async/chan)]
       (log/info "Tapahtumat-komponentti käynnistyy")
       (reset! tarkkailijat {})
@@ -353,6 +354,8 @@
                     (async/close! async-kanava))))
     (reset! tapahtuma-loop-kaynnissa? false)
     (reset! ajossa false)
+    (doseq [[tarkkailija _] @(::tarkkailija->tapahtuma this)]
+      (p/lopeta-tarkkailu! this tarkkailija))
     (async/close! (::tarkkailu-kanava this))
     (async/close! (::tapahtuma-loopin-ajot this))
     (async/close! (::kuuntelu-aloitettu this))
@@ -432,9 +435,16 @@
                     [possukanava _] (async/<!! kuuntelu-sekvenssi)]
                 (if (= ::virhe possukanava)
                   false
-                  kuuntelija-kanava)))))
+                  (do (swap! (::tarkkailija->tapahtuma this) merge {kuuntelija-kanava possukanava})
+                      kuuntelija-kanava))))))
   (tarkkaile! [this tapahtuma]
     (p/tarkkaile! this tapahtuma :perus))
+
+  p/Kuuroudu
+  (lopeta-tarkkailu! [this kuuntelija]
+    (async/unsub (::broadcast this) (get (::tarkkailija->tapahtuma this) kuuntelija) kuuntelija)
+    (swap! (::tarkkailija->tapahtuma this) dissoc kuuntelija)
+    nil)
 
   p/Julkaise
   (julkaise! [this tapahtuma payload host-name]
