@@ -135,6 +135,7 @@
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.kustannusarvoiden-toteumat :as kustannusarvoiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
@@ -706,6 +707,10 @@
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
         [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
+
+      ::kustannusarvoiduntyontoteumien-ajastus
+      (component/using (kustannusarvoiden-toteumat/->KustannusarvoidenToteumat)
+        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
       :mobiili-laadunseuranta
       (component/using
