@@ -257,10 +257,10 @@
 (defn massan-rc-pitoisuus
   "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
   [rivi]
-  (when-let [runkoaineet (vals (::runkoaineet rivi))]
-    (when-let [asfalttirouhe (filter #(= (:tyyppi %) asfalttirouheen-tyypin-id)
-                                runkoaineet)]
-      (str "RC" (:runkoaine/massaprosentti (first asfalttirouhe))))))
+  (when-let [runkoaineet (::runkoaineet rivi)]
+    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
+                                            runkoaineet))]
+      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
 
 (defn massatyypin-rikastettu-nimi [massatyypit rivi]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
