@@ -439,7 +439,8 @@
                                  :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id ;; yhteinen
-                                 :urakka urakka-id ;; yhteinen}))
+                                 :urakka urakka-id ;; yhteinen
+                                 }))
 
 (defn tallenna-yllapitokohdeosat
   "Tallentaa ylläpitokohdeosat kantaan.
