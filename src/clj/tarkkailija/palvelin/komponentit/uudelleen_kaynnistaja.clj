@@ -11,7 +11,7 @@
 
 (defn- varmista-sonjan-toimivuus! [this timeout]
   (let [sonja-yhteys-aloitettu? (::sonja-yhteys-aloitettu? this)
-        uudelleen-kaynnistys-aika @(::uudelleen-kaynnistys-aika this)]
+        uudelleen-kaynnistys-aika (::uudelleen-kaynnistys-aika this)]
     {::sonja-yhteys-aloitettu (tapahtuma-apurit/tarkkaile-tapahtumaa
                                 :sonja-yhteys-aloitettu
                                 {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
@@ -22,16 +22,16 @@
                                   (println (str "---> tämä palvelin " tapahtuma-apurit/host-nimi))
                                   (println (str "---> palvelin " palvelin))
                                   (println (str "---> @sonja-yhteys-aloitettu? " @sonja-yhteys-aloitettu?))
-                                  (println "uudelleen-kaynnistys-aika: " uudelleen-kaynnistys-aika)
+                                  (println "uudelleen-kaynnistys-aika: " @uudelleen-kaynnistys-aika)
                                   (println "aika: " aika)
-                                  (println "(pvm/jalkeen? uudelleen-kaynnistys-aika aika): " (pvm/jalkeen? uudelleen-kaynnistys-aika aika))
+                                  (println "(pvm/jalkeen? @uudelleen-kaynnistys-aika aika): " (pvm/jalkeen? @uudelleen-kaynnistys-aika aika))
                                   (cond
                                     (and timeout?
                                          (not @sonja-yhteys-aloitettu?))
                                     (do (log/error ":sonja-yhteys-aloitettu päättyi timeoutiin eikä Sonjayhteyttä oltu aloitettu")
                                         (kaynnista-sonja-uusiksi! this))
-                                    (or (nil? uudelleen-kaynnistys-aika)
-                                        (pvm/jalkeen? uudelleen-kaynnistys-aika aika)) (reset! sonja-yhteys-aloitettu? true))))
+                                    (or (nil? @uudelleen-kaynnistys-aika)
+                                        (pvm/jalkeen? @uudelleen-kaynnistys-aika aika)) (reset! sonja-yhteys-aloitettu? true))))
      ::sonja-tila (tapahtuma-apurit/tarkkaile-tapahtumaa
                     :sonja-tila
                     {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
