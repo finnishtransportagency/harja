@@ -39,26 +39,38 @@ Harja repon hakemistorakenne:
 
 ## Kehitysympäristön pystyttäminen
 
+#### Paikallisesti
 
-1. Asenna Leiningen: http://leiningen.org/ tai brew install leiningen
+1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
 2. Asenna Docker: www.docker.com/
 3. Laita docker käyntiin sanomalla /harja/tietokanta kansiossa
-<code>
-sh devdb_up.sh
-</code>
-4. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
-5. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:<br/>
-<code>
-lein do clean, compile, repl
-</code>
 
-6. Käännä frontend ja käynnistä Figwheel:<br/>
-<code>
-sh kaynnista_harja_front_dev.sh
-</code>
+    `sh devdb_up.sh`
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:3000
-Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit
+4. Asenna tarvittavat työkalut `npm install`
+5. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
+
+    `lein do clean, compile, repl`
+
+7. Käännä frontend ja käynnistä Figwheel:
+
+    `sh kaynnista_harja_front_dev.sh`
+
+Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
+Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
+Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
+ja restartoida backend `lein repl` kommennolla. 
+
+8. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7.
+askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
+
+    `sh kaynnista_cypress.sh`
+
+#### Docker compose
+
+1. Asenna docker ja docker compose
+2. aja `bash sh/dc/aja-harja-dokkerissa.sh`
 
 ## Kirjautuminen ja ModHeader
 
@@ -89,29 +101,56 @@ Seuraavat headerit tuettuna:
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
 
-### Docker - paikallinen kehitysympäristö
+## Docker - paikallinen kehitysympäristö
 
 Kannan restart 
-<code>
+
+```bash
 sh devdb_restart.sh
-</code>
+```
 
 Kanta alas 
-<code>
-sh devdb_down.sh
-</code>
 
+```bash
+sh devdb_down.sh
+```
 
 Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
-Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita, mutta sovellus
-logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
+Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita. Jos ActiveMQ
+ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK. 
 
-* Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
-* ActiveMQ: docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
+* Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
+* ActiveMQ: `docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
 Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up. (käytä mieluummin ym. sh devdb_* skriptejä.)
+
+## Docker compose - paikallinen kehitysympäristö
+
+Docker compose:n konfiguroimisessa on käytetty versiota kaksi kolmosen sijasta, koska kakkonen sopii paikalliseen devaukseen
+paremmin. 
+
+- https://github.com/docker/compose/issues/4513
+- https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/#_cpu
+
+MAC käyttäjillä saattaa olla hieman hankaluuksia Docker composen hitauden kanssa, koska datan siirtäminen hostin (Macin) ja
+konttien välillä on melkoisen hidasta, mutta tämä ongelma saatetaan korjata joskus
+ 
+- https://www.amazee.io/blog/post/docker-on-mac-performance-docker-machine-vs-docker-for-mac
+- https://docs.docker.com/docker-for-mac/osxfs-caching/
+
+
+Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC käyttäjille tämän hitauden takia.
+
+- Käytetään `delegated` voluumia docker composessa
+- Kakutetaan leiningenin trampoliinit käyttämällä `LEIN_FAST_TRAMPOLINE` env muuttujaa
+  - https://github.com/technomancy/leiningen/wiki/Faster
+
+#### Ongelmia
+
+- Uudet konfiguraatiot ei heijastu konteissa.
+  - Kokeile poistaa trampoliini cachet. Ovat kansiossa `target/trampolines`
 
 ## Dokumentaatio
 
@@ -146,8 +185,14 @@ e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä
 
 ### Fronttitestit
 
-Fronttitestit ajetaan komennolla: lein doo phantom test
-Laadunseurantatyökalun testit ajetaan komennolla: lein doo phantom laadunseuranta-test
+Fronttitestit ajetaan komennolla: `lein doo phantom test`
+Taikka näin:  `lein with-profile +test doo phantom test once`
+
+Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew cask install phantomjs` 
+
+Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
+Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
 testi.

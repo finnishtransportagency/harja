@@ -9,14 +9,14 @@
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
     #?(:clj
-            [clj-time.core :as t])
+       [clj-time.core :as t])
     #?(:clj
-            [clj-time.coerce :as tc])
+       [clj-time.coerce :as tc])
     #?(:clj
-            [clj-time.local :as l])
+       [clj-time.local :as l])
 
-            [taoensso.timbre :as log]
-            [clojure.string :as str])
+    [taoensso.timbre :as log]
+    [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
@@ -51,7 +51,7 @@
        (hash (tc/to-long o)))))
 
 #?(:clj
-   (defn joda-time? [pvm]
+   (defn- joda-time? [pvm]
      (or (instance? org.joda.time.DateTime pvm)
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
@@ -265,14 +265,14 @@
         (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
 (defn tiukin-aikavali
- [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
- (let [alkupvm (if (jalkeen? alkupvm v-alkupvm)
-                 alkupvm
-                 v-alkupvm)
-       loppupvm (if (ennen? loppupvm v-loppupvm)
-                  loppupvm
-                  v-loppupvm)]
-   [alkupvm loppupvm]))
+  [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
+  (let [alkupvm (if (jalkeen? alkupvm v-alkupvm)
+                  alkupvm
+                  v-alkupvm)
+        loppupvm (if (ennen? loppupvm v-loppupvm)
+                   loppupvm
+                   v-loppupvm)]
+    [alkupvm loppupvm]))
 
 #?(:clj
    (defn tanaan? [pvm]
@@ -318,6 +318,9 @@
 
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
+
+(def iso8601-format
+  (luo-format "yyyy-MM-dd"))
 
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
@@ -396,6 +399,10 @@
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
 
+(defn iso8601
+  [pvm]
+  (formatoi iso8601-format pvm))
+
 (defn aika-yha-format
   [pvm]
   (formatoi yha-aikaleimalla pvm))
@@ -442,21 +449,56 @@
               :clj  Exception) e
       nil)))
 
-(defn kuukauden-nimi [kk]
-  (case kk
-    1 "tammikuu"
-    2 "helmikuu"
-    3 "maaliskuu"
-    4 "huhtikuu"
-    5 "toukokuu"
-    6 "kesäkuu"
-    7 "heinäkuu"
-    8 "elokuu"
-    9 "syyskuu"
-    10 "lokakuu"
-    11 "marraskuu"
-    12 "joulukuu"
-    "kk ei välillä 1-12"))
+(defn ->pvm-date-timeksi [teksti]
+  #?(:clj
+     (let [date-timeksi (fn [ldt]
+                          (t/date-time (t/year ldt)
+                                       (t/month ldt)
+                                       (t/day ldt)
+                                       (t/hour ldt)
+                                       (t/minute ldt)
+                                       (t/second ldt)))]
+       (-> teksti ->pvm tc/from-date suomen-aikavyohykkeeseen date-timeksi))
+
+     :cljs
+     (->pvm teksti)))
+
+(defn kuukauden-numero [kk-nimi]
+  (case (str/lower-case kk-nimi)
+    "tammikuu" 1
+    "helmikuu" 2
+    "maaliskuu" 3
+    "huhtikuu" 4
+    "toukokuu" 5
+    "kesäkuu" 6
+    "kesakuu" 6
+    "heinäkuu" 7
+    "heinakuu" 7
+    "elokuu" 8
+    "syyskuu" 9
+    "lokakuu" 10
+    "marraskuu" 11
+    "joulukuu" 12
+    nil))
+
+(defn kuukauden-nimi
+  ([kk] (kuukauden-nimi kk false))
+  ([kk isolla-kirjaimella?]
+   (let [nimi (case kk
+                1 "tammikuu"
+                2 "helmikuu"
+                3 "maaliskuu"
+                4 "huhtikuu"
+                5 "toukokuu"
+                6 "kesäkuu"
+                7 "heinäkuu"
+                8 "elokuu"
+                9 "syyskuu"
+                10 "lokakuu"
+                11 "marraskuu"
+                12 "joulukuu"
+                "kk ei välillä 1-12")]
+     (if isolla-kirjaimella? (str/capitalize nimi) nimi))))
 
 (defn kuukauden-lyhyt-nimi [kk]
   (case kk
@@ -562,6 +604,15 @@
        (hoitokauden-loppupvm vuosi)]
       [(hoitokauden-alkupvm vuosi)
        (hoitokauden-loppupvm (inc vuosi))])))
+
+(defn hoitokauden-alkuvuosi
+  "Odottaa saavansa org.joda.time.DateTime objektin"
+  [^org.joda.time.DateTime pvm]
+  (let [vuosi (.getYear pvm)
+        kuukausi (.getMonthOfYear pvm)]
+    (if (>= 10 kuukausi)
+      vuosi
+      (dec vuosi))))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
@@ -828,7 +879,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (paivia-valissa eka toka)))
 
 (defn iso-8601->pvm
-  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon joda-time päivämääräksi."
   [teksti]
   (df/parse (df/formatter "yyyy-MM-dd") teksti))
 
@@ -928,7 +979,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                      (range 1 (t/in-days (t/interval alku loppu))))))))
 
 (defn aikavali-nyt-miinus [paivia]
-  (let [nyt #?(:clj (joda-timeksi (nyt))
+  (let [nyt #?(:clj  (joda-timeksi (nyt))
                :cljs (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
 
@@ -960,7 +1011,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
             ajat)))
 
 #?(:clj
-   (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm[pvm kk-maara]
-       (tc/to-date-time
-         (t/last-day-of-the-month
-           (t/plus (tc/to-date-time (aika-iso8601 pvm))(t/months kk-maara))))))
+   (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm [pvm kk-maara]
+     (tc/to-date-time
+       (t/last-day-of-the-month
+         (t/plus (tc/to-date-time (aika-iso8601 pvm)) (t/months kk-maara))))))
+
+#?(:clj
+   (defn kuukauden-ensimmainen-paiva
+     [pvm]
+     (dateksi (t/first-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
+
+#?(:clj
+   (defn kuukauden-viimeinen-paiva
+     [pvm]
+     (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))

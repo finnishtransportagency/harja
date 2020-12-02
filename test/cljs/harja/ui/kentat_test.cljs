@@ -264,7 +264,6 @@
         hae-tr-viivaksi (fake-palvelukutsu
                          :hae-tr-viivaksi
                          (fn [payload]
-                           (.log js/console ":hae-tr-viivaksi => " payload)
                            (get +tr-vastaukset+ payload)))]
     (komponenttitesti
      [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]

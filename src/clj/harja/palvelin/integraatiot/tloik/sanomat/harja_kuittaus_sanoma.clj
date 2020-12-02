@@ -58,6 +58,6 @@
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do
-        (log/error (format "Kuittausta T-LOIK:n ei voida lähettää viesti id:lle %s. Kuittaus XML ei ole validi. XML: %s"
-                           viesti-id xml))
+        (log/error (format "Kuittausta T-LOIK:n ei voida lähettää viesti id:lle %s. Kuittaus XML ei ole validi."
+                           viesti-id))
         nil))))

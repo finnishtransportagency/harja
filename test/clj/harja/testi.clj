@@ -21,7 +21,8 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
-    [clj-gatling.core :as gatling])
+    [clj-gatling.core :as gatling]
+    [harja.tyokalut.env :as env])
   (:import (java.util Locale))
   (:import (org.postgresql.util PSQLException)))
 
@@ -29,12 +30,8 @@
 
 (Locale/setDefault (Locale. "fi" "FI"))
 
-(defn ollaanko-jenkinsissa? []
-  (= "harja-jenkins.solitaservices.fi"
-     (.getHostName (java.net.InetAddress/getLocalHost))))
-
 (defn circleci? []
-  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
@@ -43,28 +40,22 @@
    {:println
     {:min-level
      (cond
-       (or (ollaanko-jenkinsissa?)
-           (circleci?)
-           (= "true" (System/getenv "NOLOG")))
+       (env/env "HARJA_NOLOG" false)
        :fatal
 
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                  "172.17.238.100"
-                                  "localhost")
-                      :portti 5432
+(def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                      :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
                       :salasana nil})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                   "172.17.238.100"
-                                   "localhost")
-                       :portti 5432
+(def temppitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                       :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                        :tietokanta "temp"
                        :kayttaja "harjatest"
                        :salasana nil})
@@ -221,13 +212,18 @@
 (defn- post-kutsu? [f]
   (= 2 (arg-count f)))
 
+(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload]
+  (when-not (s/valid? spec payload)
+    (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
+    Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
+    Payload: " payload "
+    Spec selitys: " (s/explain-str spec payload))))))
+
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
         (if kysely-spec
           (fn [user payload]
-            (testing (str "Palvelun " nimi " kysely on validi")
-              (is (s/valid? kysely-spec payload)
-                  (s/explain-str kysely-spec payload)))
+            (heita-jos-ei-ole-validi kysely-spec (str nimi " kysely") payload)
             (f user payload))
           f)
 
@@ -235,16 +231,12 @@
           (if (post-kutsu? f)
             (fn [user payload]
               (let [v (f user payload)]
-                (testing (str "Palvelun " nimi " vastaus on validi")
-                  (is (s/valid? vastaus-spec v)
-                      (s/explain-str vastaus-spec v)))
+                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
                 v))
 
             (fn [user]
               (let [v (f user)]
-                (testing (str "Palvelun " nimi " vastaus on validi")
-                  (is (s/valid? vastaus-spec v)
-                      (s/explain-str vastaus-spec v)))
+                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
                 v)))
           f)))
 
@@ -1248,8 +1240,7 @@
             {:timeout-in-ms 10
              :concurrency (count kutsut)
              :requests (count kutsut)}
-            (when (and (false? aja-raportti?)
-                       (false? (ollaanko-jenkinsissa?)))
+            (when (env/env "HARJA_AJA_GATLING_RAPORTTI" false)
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
               ;; eli luodaan oma raportteri, joka ei tee mitään
               {:reporter {:writer (fn [_ _ _])

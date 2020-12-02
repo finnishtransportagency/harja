@@ -1,5 +1,5 @@
 (ns harja.views.urakka.paallystysilmoitukset
-  "Urakan päällystysilmoitukset"
+  "Urakan päällystysilmoitukset -listaus. Haaroittaa POT1 vs. POT2 valitun vuoden mukaisesti"
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [cljs.core.async :refer [<! chan]]
@@ -12,15 +12,12 @@
             [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
-            [harja.ui.komponentti :as komp]
             [harja.ui.kommentit :as kommentit]
+            [harja.ui.komponentti :as komp]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.lomake :as lomake]
-            [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
-            [harja.ui.validointi :as v]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
 
             [harja.domain.paallystysilmoitus :as pot]
@@ -29,22 +26,24 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
 
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
+            [harja.tiedot.urakka.pot2.massat :as tiedot-massat]
+
+            [harja.views.urakka.pot1-lomake :as pot1-lomake]
+            [harja.views.urakka.pot2.massalistaus :as massat-view]
+            [harja.views.urakka.pot2.pot2-lomake :as pot2-lomake]
 
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
-
-            [harja.asiakas.kommunikaatio :as k]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
-            [harja.tyokalut.vkm :as vkm]
-
             [harja.views.urakka.valinnat :as u-valinnat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -92,7 +91,8 @@
                                                (:id urakka))
                       (not= tila :lukittu)
                       (false? lukittu?))
-        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
+        pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)
+        _ (js/console.log "asiatarkastus " (pr-str asiatarkastus))]
 
     [:div.pot-asiatarkastus
      [:h3 "Asiatarkastus"]
@@ -632,12 +632,12 @@
                              (if rivi
                                 (:nimi rivi)
                                 "- Valitse Ajorata -"))
-            :pituus-max    256
+            :pituus-max    256 :elementin-id "alustan-ajorata"
             :validoi       (:tr-ajorata alustatoimien-validointi)
             :tasaa         :oikea
             :kokonaisluku? true}
            {:otsikko       "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys 10
-            :pituus-max    256
+            :pituus-max    256 :elementin-id "alustan-kaista"
             :valinnat      pot/+kaistat+
             :valinta-arvo  :koodi
             :valinta-nayta (fn [rivi]
@@ -961,6 +961,7 @@
       ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
       (komp/lukko lukon-id)
       (komp/sisaan #(do
+                      (nav/vaihda-kartan-koko! :S)
                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
                       (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                       (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))
@@ -1083,6 +1084,8 @@
 
 ;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;
 
+;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
+(def pot2-vuodesta-eteenpain 2021)
 
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
@@ -1090,8 +1093,13 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
-  (let [urakka-id (:id urakka)]
+(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka urakka-tila paallystysilmoitukset] :as app}]
+  (let [urakka-id (:id urakka)
+        valittu-vuosi (:valittu-urakan-vuosi urakka-tila)
+        avaa-paallystysilmoitus-handler (fn [e! rivi]
+                                          (if (>= valittu-vuosi pot2-vuodesta-eteenpain)
+                                            (e! (pot2-tiedot/->HaePot2Tiedot (:paallystyskohde-id rivi)))
+                                            (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))]
     [grid/grid
      {:otsikko      ""
       :tunniste     :paallystyskohde-id
@@ -1125,14 +1133,14 @@
        :leveys      20
        :komponentti (fn [rivi]
                       [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-      {:otsikko     "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
-       :tyyppi      :komponentti
+      {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+       :tyyppi :komponentti
        :komponentti (fn [rivi]
                       (if (:tila rivi)
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))}
+                         {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
                          [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                        [:button.nappi-toissijainen.nappi-grid {:on-click #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))}
+                        [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus-handler e! rivi)}
                          [:span "Aloita päällystysilmoitus"]]))}]
      paallystysilmoitukset]))
 
@@ -1180,21 +1188,31 @@
          :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
        paallystysilmoitukset])))
 
+
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
+    (komp/sisaan #(nav/vaihda-kartan-koko! :M))
     (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
-         [:h3 "Päällystysilmoitukset"]
+         [:div
+          [:h3 {:style {:display "inline-block"}}
+           "Päällystysilmoitukset"]
+          ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
+          #_[napit/nappi "Muokkaa urakan materiaaleja"
+           #(e! (tiedot-massat/->NaytaModal true))
+           {:ikoni (ikonit/livicon-pen)
+            :luokka "napiton-nappi"
+            :style {:background-color "#fafafa"
+                    :margin-left "2rem"}}]]
+
+
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         #_[yha/yha-lahetysnappi {:oikeus       oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
-                                  :vuosi        valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
-                                  :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-virhe #(e! (paallystys/->YHAVientiEpaonnistui %)) :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
          [yha-lahetykset-taulukko e! (select-keys app #{:urakka :urakka-tila :paallystysilmoitukset :kohteet-yha-lahetyksessa})]]))))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
@@ -1235,12 +1253,23 @@
         (e! (paallystys/->HaePaallystysilmoitukset)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
-    (fn [e! {:keys [paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]
+    (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja pot2-lomake pot2-massat? avaa-massa-lomake?] :as app}]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
+       ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
+       ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
+       ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
        (if paallystysilmoitus-lomakedata
-         [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+         (if (> (:valittu-urakan-vuosi urakka-tila) 2020)
+           [pot2-lomake/pot2-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+           [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
-          [ilmoitusluettelo e! app]])])))
+          [ilmoitusluettelo e! app]])
+       ;; huom: tässä kohti ei passata e!:tä ja appia, vaan luodaan
+       ;; modalissa uusi tuck state. Asiat menivät aika pahasti rikki,
+       ;; kun koetin passata tämän näkymän e! ja app sisään
+       ;; esimerkiksi :urakka avaimen alta hävisi tietoja
+       ;; Voitanee joskus refaktoroida jos nähdään tarpeelliseksi
+       [massat-view/materiaalikirjasto-modal nil nil]])))
