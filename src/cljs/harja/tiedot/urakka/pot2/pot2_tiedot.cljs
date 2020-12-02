@@ -68,6 +68,7 @@
                      paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (println "TallennaPot2Tiedot paallystysilmoitus-lomakedata: " (pr-str paallystysilmoitus-lomakedata))
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
+                               (assoc :pot-versio 2)
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
                                (update :ilmoitustiedot dissoc :virheet)
