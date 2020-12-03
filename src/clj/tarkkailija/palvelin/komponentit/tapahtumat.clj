@@ -181,9 +181,12 @@
                                                    :lkm lkm})
                 (let [{::keys [paluuarvo]} (async/<!! kuuntelu-aloitettu-huomauttaja)]
                   ;(log/debug "[KOMPONENTTI-EVENT] AJETAAN JÄLKEEN FN TAPAHTUMALLE: " tapahtuma)
-                  (kuuntelun-jalkeen possukanava paluuarvo)
-                  (async/put! kuuntelu-aloitettu-kuittaus true)
-                  [possukanava paluuarvo]))))))
+                  (if (= ::virhe paluuarvo)
+                    [::virhe nil]
+                    (do
+                      (kuuntelun-jalkeen possukanava paluuarvo)
+                      (async/put! kuuntelu-aloitettu-kuittaus true)
+                      [possukanava paluuarvo]))))))))
 
 (defn- tapahtuman-nimi [kw]
   (-> kw
@@ -195,54 +198,57 @@
       (.replace ">" "")))
 
 (defn pura-tapahtuma-loopin-ajot! [db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat]
-  (try (let [ajot (loop [ajo (async/poll! tapahtuma-loopin-ajot)
-                         ajot []]
-                    (if (nil? ajo)
-                      ajot
-                      (recur (async/poll! tapahtuma-loopin-ajot)
-                             (conj ajot ajo))))
-             ajojen-lkm (volatile! 0)]
-         (doseq [{:keys [f tunnistin ryhmatunnistin yhta-aikaa? lkm]} ajot]
-           (cond
-             (not (and f tunnistin)) (log/error (str "Tapahtuma looppiin annettu käsky ilman tunnistinta tai funktiota. Tunnistin: " tunnistin " funktio: " f))
-             (and yhta-aikaa?
-                  (-> @yhta-aikaa-ajettavat (get ryhmatunnistin) count (= (dec lkm))))
-             (jdbc/with-db-transaction [db db]
-                                       (doseq [{:keys [f tunnistin]} (get @yhta-aikaa-ajettavat ryhmatunnistin)]
-                                         ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
-                                         (let [paluuarvo (f db)]
-                                           (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
-                                                                           ::paluuarvo paluuarvo})
-                                           (vswap! ajojen-lkm inc)))
-                                       ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
-                                       (let [paluuarvo (f db)]
-                                         (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
-                                                                         ::paluuarvo paluuarvo})
-                                         (vswap! ajojen-lkm inc)
-                                         (swap! yhta-aikaa-ajettavat dissoc ryhmatunnistin)))
-             yhta-aikaa?
-             (swap! yhta-aikaa-ajettavat update ryhmatunnistin conj {:f f :tunnistin tunnistin})
-             :else
-             (when f
-               ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
-               (let [paluuarvo (f db)]
-                 (when tunnistin
-                   (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
-                                                   ::paluuarvo paluuarvo}))
-                 (vswap! ajojen-lkm inc))
-               #_(when tunnistin
-                   (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin})))))
-         (async/<!! (async/go-loop [kuittaukset []]
-                      (when-not (= @ajojen-lkm (count kuittaukset))
-                        (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
-                          (recur (conj kuittaukset kuittaus))))))
-         #_(log/debug (str "[KOMPONENTTI-EVENT] pura-tapahtuma-loopin-ajot! finito")))
-       (catch Throwable t
-         (log/error (str "Tapahtuma loopin ajot kaatui virheeseen: " (.getMessage t)))
-         (binding [*out* *err*]
-           (println "Stack trace:"))
-         (.printStackTrace t)
-         (throw t))))
+  (let [ajot (loop [ajo (async/poll! tapahtuma-loopin-ajot)
+                    ajot []]
+               (if (nil? ajo)
+                 ajot
+                 (recur (async/poll! tapahtuma-loopin-ajot)
+                        (conj ajot ajo))))
+        ajojen-lkm (volatile! 0)]
+    (doseq [{:keys [f tunnistin ryhmatunnistin yhta-aikaa? lkm]} ajot]
+      (try
+        (cond
+          (not (and f tunnistin)) (log/error (str "Tapahtuma looppiin annettu käsky ilman tunnistinta tai funktiota. Tunnistin: " tunnistin " funktio: " f))
+          (and yhta-aikaa?
+               (-> @yhta-aikaa-ajettavat (get ryhmatunnistin) count (= (dec lkm))))
+          (jdbc/with-db-transaction [db db]
+                                    (doseq [{:keys [f tunnistin]} (get @yhta-aikaa-ajettavat ryhmatunnistin)]
+                                      ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
+                                      (let [paluuarvo (f db)]
+                                        (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                                                        ::paluuarvo paluuarvo})
+                                        (vswap! ajojen-lkm inc)))
+                                    ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
+                                    (let [paluuarvo (f db)]
+                                      (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                                                      ::paluuarvo paluuarvo})
+                                      (vswap! ajojen-lkm inc)
+                                      (swap! yhta-aikaa-ajettavat dissoc ryhmatunnistin)))
+          yhta-aikaa?
+          (swap! yhta-aikaa-ajettavat update ryhmatunnistin conj {:f f :tunnistin tunnistin})
+          :else
+          (when f
+            ;(log/debug (str "[KOMPONENTTI-EVENT] ALOITETAAN KUUNTELU tunnisteelle: " tunnistin))
+            (let [paluuarvo (f db)]
+              (when tunnistin
+                (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                                ::paluuarvo paluuarvo}))
+              (vswap! ajojen-lkm inc))
+            #_(when tunnistin
+                (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin}))))
+        (catch Throwable t
+          (log/error (str "Tapahtuma loopin ajot kaatui virheeseen: " (.getMessage t)))
+          (async/put! kuuntelu-aloitettu {::kuuntelu tunnistin
+                                          ::paluuarvo ::virhe})
+          (binding [*out* *err*]
+            (println "Stack trace:"))
+          (.printStackTrace t)
+          (throw t))))
+    (async/<!! (async/go-loop [kuittaukset []]
+                 (when-not (= @ajojen-lkm (count kuittaukset))
+                   (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
+                     (recur (conj kuittaukset kuittaus))))))
+    #_(log/debug (str "[KOMPONENTTI-EVENT] pura-tapahtuma-loopin-ajot! finito"))))
 
 (defn- tapahtuma-loop-sisalto [{:keys [ajossa db connection tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus
                                        kuuntelu-aloitettu yhta-aikaa-ajettavat kuuntelijat tarkkailu-kanava
