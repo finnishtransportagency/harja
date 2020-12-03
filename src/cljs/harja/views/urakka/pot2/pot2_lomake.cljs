@@ -31,9 +31,10 @@
 (defn- kulutuskerros
   "Alikohteiden päällysteiden kulutuskerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
-   {:keys [massat massatyypit]} kohdeosat-atom]
+   {:keys [massat massatyypit materiaalikoodistot]} kohdeosat-atom]
   (let [voi-muokata? true
-        perusleveys 2]
+        perusleveys 2
+        kulutuskerros-toimenpiteet (:kulutuskerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros"
       :tunniste :kohdeosa-id
@@ -54,7 +55,10 @@
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
-     [{:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-numero}
+     [{:otsikko "Toimenpide" :nimi :toimenpide :leveys 3
+       :tyyppi :valinta :valinnat kulutuskerros-toimenpiteet :valinta-arvo ::pot2-domain/koodi
+       :valinta-nayta ::pot2-domain/lyhenne}
+      {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-numero}
       {:otsikko "Ajor." :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-ajorata}
       {:otsikko "Kaista" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-kaista}
       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-alkuosa}
@@ -63,10 +67,12 @@
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-loppuetaisyys}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
        :muokattava? (constantly false) :hae #(paallystys/rivin-kohteen-pituus (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
-      {:otsikko "Päällyste" :nimi :paallyste :leveys 4
-       :tyyppi :valinta :valinnat massat
+      {:otsikko "Päällyste" :nimi :materiaali :leveys 3
+       :tyyppi :valinta :valinnat massat :valinta-arvo :pot2-massa/id
        :valinta-nayta (fn [rivi]
-                        (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))}]
+                        (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))}
+      {:otsikko "Piennar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
+                                                                            (boolean (:piennar rivi)))}]
      kohdeosat-atom]))
 
 

@@ -420,9 +420,23 @@ SELECT nimi, tunnus, kohdenumero, yhaid
 FROM yllapitokohde
 WHERE yhaid IN (:ulkoiset-idt);
 
--- name: tallenna-pot2-paallystekerros
+-- name: paivita-pot2-paallystekerros<!
+UPDATE pot2_paallystekerros
+   SET kohdeosa_id = :kohdeosa_id,
+       toimenpide = :toimenpide,
+       materiaali = :materiaali,
+       leveys = :leveys,
+       massamenekki = :massamenekki,
+       pinta_ala = :pinta_ala,
+       kokonaismassamaara = :kokonaismassamaara,
+       piennar = :piennar,
+       lisatieto = :lisatieto,
+       pot2_id = :pot2_id
+ WHERE id = :paallystekerros_id;
+
+-- name: luo-pot2-paallystekerros<!
 INSERT INTO pot2_paallystekerros
     (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki,
      pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id)
      VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
-             :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id)
+             :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id);

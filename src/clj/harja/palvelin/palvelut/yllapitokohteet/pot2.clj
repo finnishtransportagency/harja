@@ -78,10 +78,19 @@
         lisaainetyypit (fetch db ::pot2-domain/pot2-lisaainetyyppi
                               (specql/columns ::pot2-domain/pot2-lisaainetyyppi)
                               {})
+        alusta-toimenpiteet (fetch db ::pot2-domain/pot2-alusta-toimenpide
+                                          (specql/columns ::pot2-domain/pot2-alusta-toimenpide)
+                                          {})
+        kulutuskerros-toimenpiteet (fetch db ::pot2-domain/pot2-kulutuskerros-toimenpide
+                                          (specql/columns ::pot2-domain/pot2-kulutuskerros-toimenpide)
+                                          {})
         koodistot {:massatyypit massatyypit
                    :runkoainetyypit runkoainetyypit
                    :sideainetyypit sideainetyypit
-                   :lisaainetyypit lisaainetyypit}]
+                   :lisaainetyypit lisaainetyypit
+                   :alusta-toimenpiteet alusta-toimenpiteet
+                   :kulutuskerros-toimenpiteet kulutuskerros-toimenpiteet
+                   }]
     koodistot))
 
 (defn- tallenna-runkoaineet
