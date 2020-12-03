@@ -66,10 +66,21 @@
      (t/from-time-zone joda-time suomen-aikavyohyke)))
 
 #?(:clj
+   (defn suomen-aikavyohykkeessa? [pvm]
+     {:pre [(instance? DateTime pvm)]
+      :post [(boolean? %)]}
+     (= (str (.getZone (.getChronology pvm)))
+        (str suomen-aikavyohyke))))
+
+#?(:clj
    (defn suomen-aikavyohykkeeseen
      "Palauttaa uuden Joda-ajan Suomen aikavyöhykkeessä niin, että aika on absoluuttisesti paikallisessa Suomeen ajassa."
      [joda-time]
-     (t/to-time-zone joda-time suomen-aikavyohyke)))
+     {:pre [(instance? DateTime joda-time)]
+      :post [(suomen-aikavyohykkeessa? %)]}
+     (if (suomen-aikavyohykkeessa? joda-time)
+       joda-time
+       (t/to-time-zone joda-time suomen-aikavyohyke))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs

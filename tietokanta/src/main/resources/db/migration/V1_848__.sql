@@ -1,16 +1,16 @@
-CREATE TABLE tapahtuma (
-                           kanava TEXT PRIMARY KEY,
-                           nimi TEXT UNIQUE NOT NULL,
-                           uusin_arvo INT,
-                           palvelimien_uusimmat_arvot JSONB
+CREATE TABLE tapahtumatyyppi (
+                           id SERIAL PRIMARY KEY,
+                           kanava TEXT UNIQUE NOT NULL,
+                           nimi TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE tapahtuman_tiedot (
                                    id SERIAL PRIMARY KEY,
                                    arvo TEXT NOT NULL,
                                    hash TEXT NOT NULL,
-                                   kanava TEXT REFERENCES tapahtuma(kanava),
-                                   luotu TIMESTAMP
+                                   kanava TEXT NOT NULL REFERENCES tapahtumatyyppi(kanava),
+                                   palvelin TEXT NOT NULL,
+                                   luotu TIMESTAMP NOT NULL
 );
 
 CREATE OR REPLACE FUNCTION esta_nimen_ja_kanavan_paivitys() RETURNS trigger AS $$
@@ -26,7 +26,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tg_esta_nimen_ja_kanavan_paivitys
     BEFORE UPDATE
-    ON tapahtuma
+    ON tapahtumatyyppi
     FOR EACH ROW
 EXECUTE PROCEDURE esta_nimen_ja_kanavan_paivitys();
 
@@ -80,58 +80,19 @@ CREATE TRIGGER tg_resetoi_id_tapahtumien_tiedot_taulukosta
     FOR EACH STATEMENT
 EXECUTE PROCEDURE resetoi_tapahtuman_tiedot_id_serial();
 
-CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data_text TEXT, _hash TEXT) RETURNS bool AS
+CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data_text TEXT, _hash TEXT, _palvelin TEXT) RETURNS bool AS
 $$
 DECLARE
     _sqlstate TEXT;
-    message  TEXT;
-    detail   TEXT;
-    hint     TEXT;
-    palvelin TEXT;
+    _message  TEXT;
+    _detail   TEXT;
+    _hint     TEXT;
     _id INTEGER;
-
-    data JSONB := data_text::JSONB;
-    palvelin_index INT := 0;
-    el JSONB;
 BEGIN
-
-    IF (jsonb_typeof(data) = 'array')
-    THEN
-        FOR el IN SELECT * FROM jsonb_array_elements(data)
-            LOOP
-                palvelin_index = palvelin_index + 1;
-                IF (el::TEXT ILIKE('%:palvelin%'))
-                THEN
-                    EXIT;
-                END IF;
-            END LOOP;
-
-        SELECT data->>palvelin_index
-        INTO palvelin;
-    END IF;
-
-    INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu, hash)
-    VALUES(data_text, _kanava, NOW(), _hash)
+    INSERT INTO tapahtuman_tiedot (arvo, kanava, luotu, hash, palvelin)
+    VALUES(data_text, _kanava, NOW(), _hash, _palvelin)
     RETURNING id
         INTO _id;
-
-    UPDATE tapahtuma
-    SET uusin_arvo=_id
-    WHERE kanava=_kanava;
-
-    IF palvelin IS NOT NULL
-    THEN
-        UPDATE tapahtuma
-        SET palvelimien_uusimmat_arvot=(SELECT jsonb_set(CASE WHEN palvelimien_uusimmat_arvot IS NULL
-                                                                  THEN '{}'::JSONB
-                                                              ELSE palvelimien_uusimmat_arvot
-                                                             END,
-                                                         ARRAY[palvelin]::TEXT[],
-                                                         to_jsonb(_id))
-                                        FROM tapahtuma
-                                        WHERE kanava=_kanava)
-        WHERE kanava=_kanava;
-    END IF;
 
     PERFORM pg_notify(_kanava, _id::TEXT);
 
@@ -140,10 +101,10 @@ BEGIN
 EXCEPTION
     WHEN others THEN
         GET STACKED DIAGNOSTICS _sqlstate = RETURNED_SQLSTATE,
-            message = MESSAGE_TEXT,
-            detail = PG_EXCEPTION_DETAIL,
-            hint = PG_EXCEPTION_HINT;
-        RAISE NOTICE E'pg_notify käsittely aiheutti virheen %\nViesti: %\nYksityiskohdat: %\nVihje: %', _sqlstate, message, detail, hint;
+            _message = MESSAGE_TEXT,
+            _detail = PG_EXCEPTION_DETAIL,
+            _hint = PG_EXCEPTION_HINT;
+        RAISE NOTICE E'pg_notify käsittely aiheutti virheen %\nViesti: %\nYksityiskohdat: %\nVihje: %', _sqlstate, _message, _detail, _hint;
         RETURN false;
 END;
 $$ LANGUAGE plpgsql;

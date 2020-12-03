@@ -43,7 +43,7 @@
          *tarkkaile-yhta-aikaa* nil)
 
 (def transit-write-optiot {:handlers {DateTime (t/write-handler (constantly "dt")
-                                                                #(pvm/suomen-aika->iso8601-basic %))}})
+                                                                #(-> % pvm/suomen-aikavyohykkeeseen pvm/suomen-aika->iso8601-basic))}})
 
 (def transit-read-optiot {:handlers {"dt" (t/read-handler #(pvm/iso8601-basic->suomen-aika %))}})
 
@@ -67,7 +67,7 @@
                       :map ::tyyppi-asetuksilla))
 
 (defn- uusi-tapahtuman-kanava []
-  (str "k_" (clj-str/replace (str (UUID/randomUUID)) #"-" "_")))
+  (str (UUID/randomUUID)))
 
 (defn- aseta-ps-parametrit [ps parametrit]
   (loop [i 1
@@ -81,9 +81,11 @@
     (aseta-ps-parametrit ps parametrit)
     (.executeUpdate ps)))
 
-(defn tapahtuman-tiedot-clj-dataksi [tapahtuman-tiedot]
-  (assoc (transit/lue-transit-string (:arvo tapahtuman-tiedot) transit-read-optiot)
-    ::aika (:luotu tapahtuman-tiedot)))
+(defn tapahtuman-tiedot-clj-dataksi [{:keys [arvo luotu palvelin]}]
+  (assoc (transit/lue-transit-string arvo transit-read-optiot)
+    :aika (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi luotu))
+    :palvelin palvelin))
+
 
 (defn tapahtuman-kanava
   "Palauttaa PostgreSQL:n kanavan tekstinä annetulle tapahtumalle."
@@ -91,7 +93,7 @@
   {:pre [(string? tapahtuma)]
    :post [(or (nil? %)
               (string? %))]}
-  (q-tapahtumat/tapahtuman-kanava db {:nimi tapahtuma}))
+  (q-tapahtumat/hae-tapahtuman-kanava db {:nimi tapahtuma}))
 
 (defn- kaytettava-kanava!
   "Yrittää tallenntaa kantaan uuden kanava-tapahtuma parin kantaan ja plauttaa kanavan.
@@ -120,13 +122,13 @@
 (defn- kuuntelu-fn
   [kaytettava-kanava tapahtumayhteys]
   {:pre [(string? kaytettava-kanava)
-         (uuid? (UUID/fromString (-> kaytettava-kanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))]}
-  (u tapahtumayhteys (str "LISTEN " kaytettava-kanava)))
+         (uuid? (UUID/fromString kaytettava-kanava))]}
+  (u tapahtumayhteys (str "LISTEN \"" kaytettava-kanava "\"")))
 
 (defn tapahtuman-data-ok?!
-  [{:keys [arvo hash]} tapahtuma]
+  [{:keys [arvo hash palvelin]} tapahtuma]
   (if-not (= hash (konv/sha256 arvo))
-    (let [{:keys [payload palvelin lahetetty-data]} (transit/lue-transit-string arvo transit-read-optiot)]
+    (let [{:keys [payload lahetetty-data]} (transit/lue-transit-string arvo transit-read-optiot)]
       (log/error (str "Saatiin tapahtumasta " tapahtuma " erillainen data kuin lähetettiin."))
       (when dev-tyokalut/dev-environment?
         (log/info (str "[KOMPONENTTI-EVENT] Saatu payload: " payload))
@@ -140,8 +142,8 @@
 
 (defn paluuarvo [tyyppi tapahtuma db]
   (let [tapahtuman-tiedot (case tyyppi
-                            :viimeisin (q-tapahtumat/uusin-arvo db {:nimi tapahtuma})
-                            (:palvelimet-viimeisin :viimeisin-per-palvelin) (q-tapahtumat/uusin-arvo-per-palvelin db {:nimi tapahtuma})
+                            :viimeisin (q-tapahtumat/hae-uusin-arvo db {:nimi tapahtuma})
+                            (:palvelimet-viimeisin :viimeisin-per-palvelin) (q-tapahtumat/hae-uusin-arvo-per-palvelin db {:nimi tapahtuma})
                             nil)
         uusin-arvo-loytynyt? (and (not (nil? tapahtuman-tiedot))
                                   (not (empty? tapahtuman-tiedot)))]
@@ -250,7 +252,7 @@
                                      (doseq [^PGNotification notification (seq (.getNotifications connection))]
                                        (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
                                              tapahtuman-nimi (.getName notification)
-                                             tapahtuman-tiedot (-> (q-tapahtumat/tapahtuman-tiedot db {:idt #{tapahtumadatan-id}}) first)]
+                                             tapahtuman-tiedot (-> (q-tapahtumat/hae-tapahtuman-tiedot db {:idt #{tapahtumadatan-id}}) first)]
                                          (log/debug (str "TAPAHTUMA LOOP - TAPAHTUMAN NIMI: " tapahtuman-nimi))
                                          (when (tapahtuman-data-ok?! tapahtuman-tiedot tapahtuman-nimi)
                                            (let [data (tapahtuman-tiedot-clj-dataksi tapahtuman-tiedot)]
@@ -317,7 +319,7 @@
                                                                                               (jdbc/db-connection db))
                                                                              yhta-aikaa-ajettavat (atom {})]
                                                                          (when kaatui-virheeseen?
-                                                                           (doseq [{:keys [kanava]} (q-tapahtumat/kaikki-kanavat db)]
+                                                                           (doseq [{:keys [kanava]} (q-tapahtumat/hae-kaikki-kanavat db)]
                                                                              (kuuntelu-fn kanava connection))
                                                                            (reset! tapahtuma-loop-kaynnissa? true))
                                                                          (loop []
@@ -346,10 +348,10 @@
   (stop [this]
     (async/put! (::tapahtuma-loopin-ajot this)
                 (fn [tapahtumayhteys]
-                  (run! #(u tapahtumayhteys (str "UNLISTEN " %))
+                  (run! #(u tapahtumayhteys (str "UNLISTEN \"" % "\""))
                         (map first @kuuntelijat))
                   (doseq [[pos-kanava async-kanava] @tarkkailijat]
-                    (u tapahtumayhteys (str "UNLISTEN " pos-kanava))
+                    (u tapahtumayhteys (str "UNLISTEN \"" pos-kanava "\""))
                     (async/close! async-kanava))))
     (reset! tapahtuma-loop-kaynnissa? false)
     (reset! ajossa false)
@@ -443,13 +445,15 @@
           kanava (kaytettava-kanava! db tapahtuma)]
       (if (= ::virhe kanava)
         false
-        (let [julkaistava-data (merge {:payload payload
-                                       :palvelin host-name}
+        (let [julkaistava-data (merge {:payload payload}
                                       (when dev-tyokalut/dev-environment?
                                         {:lahetetty-data (dev-tyokalut/datan-tiedot payload {:type-string? true})}))
               data-transitina (transit/clj->transit julkaistava-data transit-write-optiot)
               transit-hash (konv/sha256 (str data-transitina))
-              julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava :data data-transitina :hash transit-hash})]
+              julkaisu-onnistui? (q-tapahtumat/julkaise-tapahtuma db {:kanava kanava
+                                                                      :data data-transitina
+                                                                      :hash transit-hash
+                                                                      :palvelin host-name})]
           (when-not julkaisu-onnistui?
             (log/error (str "Tapahtuman " tapahtuma " julkaisu epäonnistui datalle:\n" payload)))
           julkaisu-onnistui?)))))

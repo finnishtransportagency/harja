@@ -9,8 +9,7 @@
        :dynamic true}
   *log-error* false)
 
-(def host-nimi (fmt/leikkaa-merkkijono 512
-                                       (.toString (InetAddress/getLocalHost))))
+(def host-nimi (.getHostName (InetAddress/getLocalHost)))
 
 (defn tapahtuman-julkaisia!
   ([tapahtuma]
