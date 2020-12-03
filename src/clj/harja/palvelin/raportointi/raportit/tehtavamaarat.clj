@@ -76,6 +76,7 @@
 
 (defn muodosta-taulukko
   [db user kysely-fn {:keys [alkupvm loppupvm] :as parametrit}]
+  (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
