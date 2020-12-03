@@ -85,8 +85,10 @@
     :kuvaus "Tehtävämäärät"
     :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}} ;; fixme: onko :hoito tässä ylimääräinen?
 
+   ;; testidatasta huomoita: myös lapissa ivalon mhu-testiurakka
+   ;; urakkatyypit: teiden-hoito = mh eli mhu, hoito = vanhan tyyliset
    {:nimi :vemtr
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     ;; fixme: takrkista konteksti

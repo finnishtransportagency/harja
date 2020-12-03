@@ -1,6 +1,4 @@
--- name: kysely
-
--- 
+-- name: luo-tehtavamaarat-ja-toteumat-aikavalilla-nakymat!
 
 -- mh-urakoiden toteuma_tehtava -taulun linkitystietoja vastaa vanhoissa
 -- yh-urakoissa toimenpidekoodi: taso = 3 -> toimenpiteet, taso = 4 -> tehtävät
@@ -26,7 +24,7 @@ CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_toteutuneet AS
                    LEFT JOIN toteuma_materiaali tm
                              ON t.id = tm.toteuma AND tm.poistettu = FALSE,
   toimenpidekoodi tpk4, urakka u, toimenpideinstanssi tpi
-  WHERE tpi.toimenpide = tpk4.emo and tpi.urakka = u.id and u.tyyppi = 'hoito' and (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi AND (not tpk4.poistettu) AND t.alkanut > '2020-11-01' GROUP BY tpk4.id, tpk4.nimi, tpk4.yksikko, tpi.urakka, tpi.nimi; -- t.alkanut-rajaus nopeuttaa devkäytössä, muutetaan parametriksi
+  WHERE tpi.toimenpide = tpk4.emo and tpi.urakka = u.id and u.tyyppi = 'hoito' and (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi AND (not tpk4.poistettu) AND t.alkanut > '2020-01-01' GROUP BY tpk4.id, tpk4.nimi, tpk4.yksikko, tpi.urakka, tpi.nimi; -- t.alkanut-rajaus nopeuttaa devkäytössä, muutetaan parametriksi
 
 DROP VIEW IF EXISTS yh_vemtr_suunnitellut;
 CREATE OR REPLACE TEMPORARY VIEW yh_vemtr_suunnitellut AS
@@ -51,6 +49,9 @@ DROP VIEW IF EXISTS mhu_vemtr;
 CREATE OR REPLACE TEMPORARY VIEW mhu_vemtr AS
   WITH urakat AS (SELECT u.id
                 FROM urakka u
+                -- where (:alkupvm between u.alkupvm and u.loppupvm
+                --   or :loppupvm between u.alkupvm and u.loppupvm)
+		
                 WHERE ('2020-01-01' between u.alkupvm and u.loppupvm -- fixme: parametrit
                   or '2020-12-31' between u.alkupvm and u.loppupvm)
   ),
@@ -92,8 +93,7 @@ WHERE ut.poistettu is not true
   and ut.urakka in (SELECT id FROM urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, ut."hoitokauden-alkuvuosi", tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, tpi.urakka;
 
+-- name: hae-tehtavamaarat-ja-toteumat-aikavalilla*
+
+-- todo, lisätään urakkan-alkupvm ja urakan-loppupvm viewien sarakkeiksi
 SELECT * FROM mhu_vemtr UNION SELECT * FROM yh_vemtr_suunnitellut UNION SELECT * FROM yh_vemtr_toteutuneet;
-
--- mistä hoitokauden alkuvuosi yh-caseen?
-
-

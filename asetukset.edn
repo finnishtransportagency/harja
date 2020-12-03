@@ -5,7 +5,7 @@
                   {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
  :http-palvelin {:threads 16
-                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
+                 :anti-csrf-token #=(slurp "../harja-testidata/.harja/anti-csrf-token")
                  :salli-oletuskayttaja? #=(eval (harja.tyokalut.env/env "HARJA_SALLI_OLETUSKAYTTAJA" false))
                  :dev-resources-path #=(eval (harja.tyokalut.env/env "HARJA_DEV_RESOURCES_PATH" "dev-resources"))}
 
@@ -35,7 +35,7 @@
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        ;; :slack {:taso :warn
-       ;;         :webhook-url #=(slurp "../.harja/slack-webhook-url")}
+       ;;         :webhook-url #=(slurp "../harja-testidata/.harja/slack-webhook-url")}
        ;; :hipchat {:taso     :warn
        ;;           :huone-id 1396730
        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
@@ -68,14 +68,14 @@
  ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
  ;        :toimenpideAkuittausjono "Harja.HarjaToT-LOIK.Ack"
- ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
+ ;        :ilmoitukset {:google-static-maps-key #=(slurp "../harja-testidata/.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
 
  :turi {:turvallisuuspoikkeamat-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/poikkeamaTuonti"
         :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
         :kayttajatunnus "Harja"
-        :salasana #=(slurp "../.harja/turi-salasana")
+        :salasana #=(slurp "../harja-testidata/.harja/turi-salasana")
         :paivittainen-lahetysaika [0 0 0]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
@@ -100,13 +100,13 @@
 
  :geometriapaivitykset {:tuontivali 60
                         :kayttajatunnus "ava-harja"
-                        :salasana #=(slurp "../.harja/ava-salasana")
+                        :salasana #=(slurp "../harja-testidata/.harja/ava-salasana")
 
                         :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
                         :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
-                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20190226.csv"
+                        :laajennetun-tieosoiteverkon-tiedot "../harja-testidata/.harja/harjalle_ajorata_kaista_puoli_20190226.csv"
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
                         :pohjavesialueen-osoite "https://ava.vayla.fi/harja/PTV_tl141.shz"
@@ -160,7 +160,7 @@
 
  :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
        :kayttajatunnus "restusr"
-       :salasana #=(slurp "../.harja/yha-salasana")}
+       :salasana #=(slurp "../harja-testidata/.harja/yha-salasana")}
 
  :velho {:paallystetoteuma-url ""
          :autorisaatio ""}
@@ -168,7 +168,7 @@
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti {:url "http://localhost:28080/sendsms"
               :kayttajatunnus "solita-2"
-              :salasana #=(slurp "../.harja/labyrintti-salasana")}
+              :salasana #=(slurp "../harja-testidata/.harja/labyrintti-salasana")}
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}

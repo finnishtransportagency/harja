@@ -182,6 +182,7 @@
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
+  (def *k user)
   (let [urakat (oikeudet/kayttajan-urakat user)]
     (if (and (nil? organisaatio) (empty? urakat))
       (do

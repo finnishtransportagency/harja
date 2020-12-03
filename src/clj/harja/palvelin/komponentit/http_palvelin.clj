@@ -293,9 +293,11 @@
              (some? csrf-token)
              (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now)))
       (f req)
-      {:status 403
-       :headers {"Content-Type" "text/html"}
-       :body "Virheellinen CSRF-token"})))
+      (do
+        (log/debug "anti-csrf failasi, parametrit:" random-avain csrf-token (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now)))
+        {:status 403
+         :headers {"Content-Type" "text/html"}
+         :body "Virheellinen CSRF-token"}))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true

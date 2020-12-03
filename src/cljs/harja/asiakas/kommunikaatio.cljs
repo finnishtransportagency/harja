@@ -53,8 +53,12 @@
   []
   (go-loop [token (get-csrf-token)]
     (if token
-      token
-      (do (<! (timeout 100))
+      (do
+        (.log js/console "saatiin csrf token")
+        token)
+      (do
+          (.log js/console "csrf puuttuu vielä")
+          (<! (timeout 300))
           (recur (get-csrf-token))))))
 
 (defn virhe?
