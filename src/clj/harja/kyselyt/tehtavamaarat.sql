@@ -23,7 +23,7 @@ with urakat as (select u.id
                         else true
                   end
                   and u.tyyppi = 'teiden-hoito'),
-     toteumat as (select tt.maara,
+     toteumat as (select sum(tt.maara) as "maara",
                          tt.toimenpidekoodi,
                          tt.poistettu,
                          tt.urakka_id
@@ -34,31 +34,49 @@ with urakat as (select u.id
                     :alkupvm <= t.paattynyt
                     and case when :urakka::integer is not null then t.urakka = :urakka else true end
                     and :loppupvm >= t.alkanut
-                    and t.poistettu = false)
+                    and t.poistettu = false
+                  group by tt.toimenpidekoodi, tt.poistettu, tt.urakka_id),
+     suunnitelmat as (select sum(ut.maara) as "maara",
+                             ut.tehtava,
+                             ut.urakka
+                      from urakka_tehtavamaara ut
+                      where ut.urakka in (select id from urakat)
+                        and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+                        and ut.poistettu is not true
+                      group by ut.urakka, ut.tehtava)
 select tpk.nimi               as "nimi",
        tpk.jarjestys          as "jarjestys",
-       sum(ut.maara)          as "suunniteltu",
+       suunnitelmat.maara     as "suunniteltu",
        tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko            as "yksikko",
        tpk.id                 as "toimenpidekoodi",
        tpi.urakka             as "urakka",
        tpi.nimi               as "toimenpide",
-       sum(toteumat.maara)    as "toteuma"
+       toteumat.maara         as "toteuma",
+       (CASE
+           WHEN tpk3.koodi = '23104' THEN 1
+           WHEN tpk3.koodi = '23116' THEN 2
+           WHEN tpk3.koodi = '23124' THEN 3
+           WHEN tpk3.koodi = '20107' THEN 4
+           WHEN tpk3.koodi = '20191' THEN 5
+           WHEN tpk3.koodi = '14301' THEN 6
+           WHEN tpk3.koodi = '23151' THEN 7
+           END) AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
        join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
-       left join urakka_tehtavamaara ut
-                 on ut.tehtava = tpk.id
-                   and ut.urakka = tpi.urakka
-                   and ut.poistettu is not true
-                   and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+       join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
+       left join suunnitelmat
+                 on suunnitelmat.tehtava = tpk.id
+                   and suunnitelmat.urakka = tpi.urakka
        left join toteumat
                  on toteumat.toimenpidekoodi = tpk.id
                    and toteumat.urakka_id = tpi.urakka
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk.suunnitteluyksikko, tpi.urakka
-having coalesce(sum(ut.maara), sum(toteumat.maara)) >= 0
-order by tpk.id;
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk3.koodi, tpk.suunnitteluyksikko, tpi.urakka, suunnitelmat.maara, toteumat.maara
+having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
+order by tpi.urakka, "toimenpide-jarjestys", tpk.jarjestys;
+
 
 -- name: lisaa-tehtavamaara<!
 INSERT INTO urakka_tehtavamaara

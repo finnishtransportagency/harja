@@ -87,22 +87,24 @@
 
 (deftest tehtavamaara-raportti-ikavat-jutut
   (testing "Määrien haku raportilla ei toimi"
-    (let [[_ _ [_ _ _ rivit]] (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi       :tehtavamaarat
-                                 :konteksti  "urakka"
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2016 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2017 10 1))}})
-          [_ _ [_ _ _ rivit]] (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [[_ _ [_ _ _ rivit]]
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :suorita-raportti
+                            +kayttaja-jvh+
+                            {:nimi       :tehtavamaarat
+                             :konteksti  "urakka"
+                             :parametrit {:alkupvm  (c/to-date (t/local-date 2016 10 1))
+                                          :loppupvm (c/to-date (t/local-date 2017 10 1))}})
+          [_ _ [_ _ _ rivit2]]
+          (kutsu-palvelua (:http-palvelin jarjestelma)
                           :suorita-raportti
                           +kayttaja-jvh+
                           {:nimi       :tehtavamaarat
                            :konteksti  "urakka"
-                           :urakka-id  8234759283495
+                           :urakka-id  82347592
                            :parametrit {:alkupvm  (c/to-date (t/local-date 2016 10 1))
                                         :loppupvm (c/to-date (t/local-date 2017 10 1))}})]
-      (is (empty? rivit) "Väärät parametrit, mitä tapahtuuu")
+      (is (empty? rivit) "Haetaan urakkaa ilman urakka-id")
       (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :suorita-raportti
                                                             +kayttaja-jvh+
@@ -110,4 +112,4 @@
                                                              :konteksti  "urakka"
                                                              :urakka-id  8234759283495
                                                              :parametrit {:loppupvm (c/to-date (t/local-date 2017 10 1))}})) "Parametreja puuttuu")
-      (is (empty? rivit) "Muitakin puuttuu"))))
+      (is (empty? rivit2) "Ei olemassa oleva id"))))

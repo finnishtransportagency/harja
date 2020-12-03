@@ -73,24 +73,12 @@
     (vec m)))
 
 (defn- muodosta-taulukko
-  [db user parametrit]
-  (let [xform (map (fn [[_ rivit]]
-                     [[(:urakka (first rivit)) (:jarjestys (first rivit))] rivit]))
+  [db user {:keys [alkupvm loppupvm] :as parametrit}]
+  (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         suunnitellut-ryhmissa (->> parametrit
-                                   (hae-tehtavamaarat db)
-                                   (sort-by :jarjestys)
-                                   (group-by :toimenpide))
-        suunnitellut-ryhmissa-muunnetut-avaimet (into {}
-                                                      xform
-                                                      suunnitellut-ryhmissa)
-        suunnitellut-sortattu (into
-                                (sorted-map-by
-                                  (fn [a b]
-                                    (compare a b)))
-                                suunnitellut-ryhmissa-muunnetut-avaimet)
-        suunnitellut-flattina (mapcat second suunnitellut-sortattu)
+                                   (hae-tehtavamaarat db))
         suunnitellut-valiotsikoineen (keep identity
-                                           (loop [rivit suunnitellut-flattina
+                                           (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil
                                                   kaikki []]
                                              (if (empty? rivit)
@@ -108,7 +96,7 @@
                                                               rivi))))))
         muodosta-rivi (comp
                         (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
-                        (map null-arvot-nollaksi-rivilla)   ;:TODO Sql?
+                        (map null-arvot-nollaksi-rivilla)
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
                         (map muodosta-otsikot))
@@ -116,20 +104,23 @@
     {:rivit   rivit
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
-               {:otsikko "Suunniteltu määrä" :leveys 2 :fmt :numero}
+               {:otsikko (str "Suunniteltu määrä "
+                              (if (> (count hoitokaudet) 1)
+                                (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
+                                (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
+                :leveys  2 :fmt :numero}
                {:otsikko "Toteuma" :leveys 2 :fmt :numero}
                {:otsikko "Toteuma-%" :leveys 2}]}))
 
 (defn suorita
-  [db user {:keys [alkupvm loppupvm] :as params}]
+  [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
   (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user params)]
     [:raportti
-     {:nimi "Tehtävämäärät"}
-     #_[:teksti (str "helou" (pr-str rivit))]
-     #_[:teksti (str "helou" (pr-str otsikot))]
-     #_[:teksti (str "helou" (pr-str debug))]
+     {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
      [:taulukko
-      {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+      {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
        :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
-      rivit]]))
+      rivit]
+     [:teksti (str "Mikäli suunnitellun määrän yksikkö on eri kuin saman tehtävän toteutuneen määrän yksikkö, näytetään tällä raportilla toteutunut määrä, mutta ei suunniteltua määrää. Yksikkö-sarakkeessa näkyy tällöin toteutuneen määrän yksikkö. Tällaisia tehtäviä ovat esimerkiksi monet liukkaudentorjuntaan liittyvät työt, joihin Tehtävä- ja määräluettelossa suunnitellaan materiaalimääriä.")]
+     [:teksti (str "Toteutuneita materiaalimääriä voi tarkastella materiaali- ja ympäristöraportilla.")]]))
