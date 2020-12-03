@@ -24,7 +24,8 @@
     [harja.ui.viesti :as viesti]
     [harja.ui.modal :as modal]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
-    [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus])
+    [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
+    [harja.tyokalut.vkm :as vkm])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -242,6 +243,21 @@
       (osoitteet-mapiksi)
       (alustatoimet-mapiksi)))
 
+(defn hae-osan-pituudet [grid-state osan-pituudet-teille-atom]
+  (let [tiet (into #{} (map (comp :tr-numero second)) grid-state)]
+    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
+      (go
+        (let [pituudet (<! (vkm/tieosien-pituudet tie))]
+          (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
+          (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
+
+(defn tien-osat-riville
+  [rivi osan-pituudet-teille]
+  (get @osan-pituudet-teille (:tr-numero rivi)))
+
+(defn rivin-kohteen-pituus
+  [osien-pituudet rivi]
+  (tr-domain/laske-tien-pituus osien-pituudet rivi))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 

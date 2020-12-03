@@ -18,7 +18,8 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.pot2.massat :as tiedot-massa]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-    [harja.views.urakka.pot-yhteinen :as pot-yhteinen])
+    [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
+    [harja.domain.tierekisteri :as tr])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -31,13 +32,17 @@
   "Alikohteiden päällysteiden kulutuskerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
    {:keys [massat massatyypit]} kohdeosat-atom]
-  (let [voi-muokata? true]
+  (let [voi-muokata? true
+        perusleveys 2]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros"
       :tunniste :kohdeosa-id
       :uusi-rivi (fn [rivi]
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))
+      ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
+      :luomisen-jalkeen (fn [grid-state]
+                          (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
       :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                         [:div
                                          [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
@@ -49,18 +54,19 @@
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
-     [{:otsikko "Tie" :tyyppi :positiivinen-numero :nimi :tr-numero}
-      {:otsikko "Ajor." :tyyppi :positiivinen-numero :nimi :tr-ajorata}
-      {:otsikko "Kaista" :tyyppi :positiivinen-numero :nimi :tr-kaista}
-      {:otsikko "Aosa" :tyyppi :positiivinen-numero :nimi :tr-alkuosa}
-      {:otsikko "Aet" :tyyppi :positiivinen-numero :nimi :tr-alkuetaisyys}
-      {:otsikko "Losa" :tyyppi :positiivinen-numero :nimi :tr-loppuosa}
-      {:otsikko "Let" :tyyppi :positiivinen-numero :nimi :tr-loppuetaisyys}
-      {:otsikko "Pituus (m)" :tyyppi :positiivinen-numero :nimi :tr-pituus}
-      (when massat
-        {:otsikko "Päällyste" :nimi :paallyste :tyyppi :valinta :valinnat massat
-         :valinta-nayta (fn [rivi]
-                          (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))})]
+     [{:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-numero}
+      {:otsikko "Ajor." :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-ajorata}
+      {:otsikko "Kaista" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-kaista}
+      {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-alkuosa}
+      {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-alkuetaisyys}
+      {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-loppuosa}
+      {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-loppuetaisyys}
+      {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+       :muokattava? (constantly false) :hae #(paallystys/rivin-kohteen-pituus (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
+      {:otsikko "Päällyste" :nimi :paallyste :leveys 4
+       :tyyppi :valinta :valinnat massat
+       :valinta-nayta (fn [rivi]
+                        (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))}]
      kohdeosat-atom]))
 
 
@@ -115,10 +121,13 @@
   ;; Toistaiseksi ei käytetä lukkoa POT2-näkymässä
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
-                                                                                     (apply f vanha-arvo args)))))]
+                                                                                     (apply f vanha-arvo args)))))
+        {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
+                     (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
+                     (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (reset! pot2-tiedot/kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat paallystysilmoitus-lomakedata))))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
