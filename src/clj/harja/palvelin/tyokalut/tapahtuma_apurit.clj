@@ -11,11 +11,11 @@
 
 (def host-nimi (.getHostName (InetAddress/getLocalHost)))
 
-(defn tapahtuman-julkaisia!
+(defn tapahtuman-tarkkailija!
   ([tapahtuma]
-   (jr/kutsu :tapahtuman-julkaisia! tapahtuma))
+   (jr/kutsu :tapahtuman-tarkkailija! tapahtuma))
   ([tapahtuma tyyppi]
-   (jr/kutsu :tapahtuman-julkaisia! tapahtuma tyyppi)))
+   (jr/kutsu :tapahtuman-tarkkailija! tapahtuma tyyppi)))
 
 (defn tapahtuman-kuuntelija!
   [tapahtuma f]
@@ -74,8 +74,8 @@
                          (partition 2 tapahtumakasittelijat))]
     `(async/thread (let [ryhmanimi# (str (gensym "useampi"))
                          kuuntelijat# (mapv (fn [[~'tapahtuma ~'tyyppi]]
-                                              (jr/kutsu :yhta-aikaa-tapahtuman-julkaisia! {:tunnistin ryhmanimi#
-                                                                                           :lkm ~(count tapahtumat#)}
+                                              (jr/kutsu :yhta-aikaa-tapahtuman-tarkkailija! {:tunnistin ryhmanimi#
+                                                                                             :lkm ~(count tapahtumat#)}
                                                         ~'tapahtuma
                                                         ~'tyyppi))
                                             ~(mapv #(vec (take 2 %)) tapahtumat#))

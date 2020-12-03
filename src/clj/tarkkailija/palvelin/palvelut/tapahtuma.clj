@@ -9,23 +9,19 @@
             [taoensso.timbre :as log])
   (:import [java.lang Math]))
 
-(def ^{:private true
-       :dynamic true}
-  *log-error* false)
-
-(defn tapahtuman-julkaisia!
+(defn tapahtuman-tarkkailija!
   ([klusterin-tapahtumat tapahtuma]
-   (tapahtuman-julkaisia! klusterin-tapahtumat tapahtuma :perus))
+   (tapahtuman-tarkkailija! klusterin-tapahtumat tapahtuma :perus))
   ([klusterin-tapahtumat tapahtuma tyyppi]
    {:pre [(s/valid? ::tapahtumat/tapahtuma tapahtuma)
           (s/valid? ::tapahtumat/tyyppi tyyppi)]
     :post [(p/chan? %)]}
    (tapahtumat-p/tarkkaile! klusterin-tapahtumat tapahtuma tyyppi)))
 
-(defn yhta-aikaa-tapahtuman-julkaisia!
+(defn yhta-aikaa-tapahtuman-tarkkailija!
   [klusterin-tapahtumat ryhmakutsuntiedot & args]
   (binding [tapahtumat/*tarkkaile-yhta-aikaa* ryhmakutsuntiedot]
-    (apply tapahtuman-julkaisia! klusterin-tapahtumat args)))
+    (apply tapahtuman-tarkkailija! klusterin-tapahtumat args)))
 
 (defn tapahtuman-kuuntelija!
   [klusterin-tapahtumat tapahtuma f]
@@ -57,7 +53,7 @@
    f
    & args]
   {:post [(future? %)]}
-  (future (let [kuuntelija (async/<!! (tapahtuman-julkaisia! klusterin-tapahtumat tapahtuma tyyppi))
+  (future (let [kuuntelija (async/<!! (tapahtuman-tarkkailija! klusterin-tapahtumat tapahtuma tyyppi))
                 timeout-annettu? (not= 0 timeout)]
             (when kuuntelija
               (async/go
@@ -106,8 +102,6 @@
   "Palauttaa funktion, jolle annettava data julkaistaan aina tässä määritetylle eventille."
   [klusterin-tapahtumat tapahtuma host-nimi]
   (fn [data]
-    (when *log-error*
-      (log/error (str "Event: " tapahtuma " sai dataksi: " data)))
     (julkaise-tapahtuma klusterin-tapahtumat tapahtuma data host-nimi)))
 
 (defn tapahtuma-datan-spec
@@ -117,8 +111,7 @@
   (fn [data]
     (if (s/valid? spec data)
       (tapahtuma-julkaisija data)
-      (binding [*log-error* true]
-        (tapahtuma-julkaisija {::validointi-epaonnistui data})))))
+      (throw (IllegalArgumentException. (str "Data " data " ei oli validi. \n" (s/explain-str spec data)))))))
 
 (defrecord Tapahtuma []
   component/Lifecycle
@@ -126,8 +119,8 @@
     (rajapinta/lisaa rajapinta :tapahtuma-julkaisija (partial tapahtuma-julkaisija klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :tapahtuma-datan-spec tapahtuma-datan-spec)
     (rajapinta/lisaa rajapinta :lopeta-tapahtuman-kuuntelu lopeta-tapahtuman-kuuntelu)
-    (rajapinta/lisaa rajapinta :tapahtuman-julkaisia! (partial tapahtuman-julkaisia! klusterin-tapahtumat))
-    (rajapinta/lisaa rajapinta :yhta-aikaa-tapahtuman-julkaisia! (partial yhta-aikaa-tapahtuman-julkaisia! klusterin-tapahtumat))
+    (rajapinta/lisaa rajapinta :tapahtuman-tarkkailija! (partial tapahtuman-tarkkailija! klusterin-tapahtumat))
+    (rajapinta/lisaa rajapinta :yhta-aikaa-tapahtuman-tarkkailija! (partial yhta-aikaa-tapahtuman-tarkkailija! klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :tapahtuman-kuuntelija! (partial tapahtuman-kuuntelija! klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :julkaise-tapahtuma (partial julkaise-tapahtuma klusterin-tapahtumat))
     (rajapinta/lisaa rajapinta :tarkkaile-tapahtumaa (partial tarkkaile-tapahtumaa klusterin-tapahtumat))
@@ -137,8 +130,8 @@
     (rajapinta/poista rajapinta :tapahtuma-julkaisija)
     (rajapinta/poista rajapinta :tapahtuma-datan-spec)
     (rajapinta/poista rajapinta :lopeta-tapahtuman-kuuntelu)
-    (rajapinta/poista rajapinta :yhta-aikaa-tapahtuman-julkaisia!)
-    (rajapinta/poista rajapinta :tapahtuman-julkaisia!)
+    (rajapinta/poista rajapinta :yhta-aikaa-tapahtuman-tarkkailija!)
+    (rajapinta/poista rajapinta :tapahtuman-tarkkailija!)
     (rajapinta/poista rajapinta :tapahtuman-kuuntelija!)
     (rajapinta/poista rajapinta :julkaise-tapahtuma)
     (rajapinta/poista rajapinta :tarkkaile-tapahtumaa)
