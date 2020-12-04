@@ -452,7 +452,7 @@
 
   p/Kuuroudu
   (lopeta-tarkkailu! [this kuuntelija]
-    (async/unsub (::broadcast this) (get (::tarkkailija->tapahtuma this) kuuntelija) kuuntelija)
+    (async/unsub (::broadcast this) (get @(::tarkkailija->tapahtuma this) kuuntelija) kuuntelija)
     (swap! (::tarkkailija->tapahtuma this) dissoc kuuntelija)
     nil)
 

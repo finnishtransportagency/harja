@@ -440,3 +440,13 @@
               (is (= (dissoc (<!!-timeout tarkkailija-3 default-odottelu) :aika)
                      {:palvelin (:nimi harja-tarkkailija)
                       :payload {:a 2}})))))))))
+
+(deftest lopeta-tarkkailu-toimii
+  (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
+    (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
+          a-payload 42
+          odota-tapahtuma (async/go (async/<! tarkkailija))]
+      (is (not (false? tarkkailija)))
+      (tapahtumat-p/lopeta-tarkkailu! tapahtumat-k tarkkailija)
+      (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
+      (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma default-odottelu))))))

@@ -54,7 +54,7 @@
            db-replica-asetukset :db-replica} timeout-asetukset
           varoaika (* 5 1000)]
       (merge this
-             (zipmap [::harja-kuuntelija ::sonja-kuuntelija ::db-kuuntelija ::db-replica-kuuntelija]
+             (zipmap [::harja-kuuntelija ::sonja-kuuntelija ::sonjan-uudelleenkaynnistys-epaonnistui ::db-kuuntelija ::db-replica-kuuntelija]
                      (tapahtuma-apurit/tarkkaile-tapahtumia :harja-tila {:tyyppi :viimeisin-per-palvelin} (partial tallenna-harjan-tila-cacheen komponenttien-tila)
                                                             :sonja-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (:paivitystiheys-ms sonja-asetukset) varoaika)} (partial tallenna-sonjan-tila-cacheen komponenttien-tila)
                                                             :sonjan-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-sonjan-uudelleen-kaynnistamisen-tila-cacheen komponenttien-tila)
@@ -63,10 +63,11 @@
   (stop [this]
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::harja-kuuntelija this))
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::sonja-kuuntelija this))
+    (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::sonjan-uudelleenkaynnistys-epaonnistui this))
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::db-kuuntelija this))
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::db-replica-kuuntelija this))
     (tyhjenna-cache! komponenttien-tila)
-    (dissoc this ::harja-kuuntelija ::sonja-kuuntelija ::db-kuuntelija ::db-replica-kuuntelija)))
+    (dissoc this ::harja-kuuntelija ::sonja-kuuntelija ::sonjan-uudelleenkaynnistys-epaonnistui ::db-kuuntelija ::db-replica-kuuntelija)))
 
 (defn komponentin-tila [timeout-asetukset]
   (->KomponentinTila timeout-asetukset (atom {})))

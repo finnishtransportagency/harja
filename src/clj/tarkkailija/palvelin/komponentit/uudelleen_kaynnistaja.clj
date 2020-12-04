@@ -11,7 +11,8 @@
 
 (defn- varmista-sonjan-toimivuus! [this timeout]
   (let [sonja-yhteys-aloitettu? (::sonja-yhteys-aloitettu? this)
-        uudelleen-kaynnistys-aika (::uudelleen-kaynnistys-aika this)]
+        uudelleen-kaynnistys-aika (::uudelleen-kaynnistys-aika this)
+        viestien-maara-kaynnistyksesta (::viestien-maara-kaynnistyksesta this)]
     {::sonja-yhteys-aloitettu (tapahtuma-apurit/tarkkaile-tapahtumaa
                                 :sonja-yhteys-aloitettu
                                 {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
@@ -24,14 +25,15 @@
                                   (println (str "---> @sonja-yhteys-aloitettu? " @sonja-yhteys-aloitettu?))
                                   (println "uudelleen-kaynnistys-aika: " @uudelleen-kaynnistys-aika)
                                   (println "aika: " aika)
-                                  (println "(pvm/jalkeen? @uudelleen-kaynnistys-aika aika): " (pvm/jalkeen? @uudelleen-kaynnistys-aika aika))
+                                  (println "(pvm/jalkeen? @uudelleen-kaynnistys-aika aika): " (pvm/jalkeen? aika @uudelleen-kaynnistys-aika))
                                   (cond
                                     (and timeout?
                                          (not @sonja-yhteys-aloitettu?))
                                     (do (log/error ":sonja-yhteys-aloitettu päättyi timeoutiin eikä Sonjayhteyttä oltu aloitettu")
                                         (kaynnista-sonja-uusiksi! this))
                                     (or (nil? @uudelleen-kaynnistys-aika)
-                                        (pvm/jalkeen? @uudelleen-kaynnistys-aika aika)) (reset! sonja-yhteys-aloitettu? true))))
+                                        ;; yhteys aloitettu uudelleen käynnistämisen jälkeen?
+                                        (pvm/jalkeen? aika @uudelleen-kaynnistys-aika)) (reset! sonja-yhteys-aloitettu? true))))
      ::sonja-tila (tapahtuma-apurit/tarkkaile-tapahtumaa
                     :sonja-tila
                     {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
@@ -43,10 +45,13 @@
                       (println (str "--->  (= palvelin tapahtuma-apurit/host-nimi) " (= palvelin tapahtuma-apurit/host-nimi)))
                       (println (str "---> @sonja-yhteys-aloitettu? " @sonja-yhteys-aloitettu?))
                       (println (str "---> (not (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload))) " (not (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload)))))
-                      (when (or timeout?
-                                (and @sonja-yhteys-aloitettu?
-                                     (not (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload)))))
-                        (kaynnista-sonja-uusiksi! this))))}))
+                      (let [sonjayhteys-ok? (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload))]
+                        (swap! viestien-maara-kaynnistyksesta inc)
+                        (when (or timeout?
+                                  (and @sonja-yhteys-aloitettu?
+                                       (not sonjayhteys-ok?)
+                                       (> @viestien-maara-kaynnistyksesta 3)))
+                          (kaynnista-sonja-uusiksi! this)))))}))
 
 (defn- sonjatarkkailu! [uudelleen-kaynnistaja]
   (let [varoaika (* 5 1000)
@@ -84,6 +89,7 @@
         (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref ::sonja-tila deref))
         (println "===========> 4")
         (reset! (::sonja-yhteys-aloitettu? uudelleen-kaynnistaja) nil)
+        (reset! (::viestien-maara-kaynnistyksesta uudelleen-kaynnistaja) 0)
         (reset! (::uudelleen-kaynnistys-aika uudelleen-kaynnistaja) (pvm/nyt-suomessa))
         (println "===========> 5")
         (tapahtuma-apurit/julkaise-tapahtuma :harjajarjestelman-restart #{:sonja})
@@ -96,6 +102,7 @@
   (start [this]
     (let [this (assoc this ::sonja-yhteys-aloitettu? (atom nil)
                            ::uudelleen-kaynnistyksia (atom 0)
+                           ::viestien-maara-kaynnistyksesta (atom 0)
                            ::uudelleen-kaynnistys-aika (atom nil))]
       (println "SONJA UUDELLEEN KÄYNNISTYS KÄYTÖSSÄ? " (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys))
       (when (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys)
@@ -106,6 +113,7 @@
       (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @tarkkailija))
     (reset! (::sonja-yhteys-aloitettu? this) nil)
     (reset! (::uudelleen-kaynnistyksia this) 0)
+    (reset! (::viestien-maara-kaynnistyksesta this) 0)
     (reset! (::uudelleen-kaynnistys-aika this) nil)
     (reset! tapahtumien-tarkkailijat nil)
     (dissoc this ::sonja-yhteys-aloitettu ::uudelleen-kaynnistyksia ::uudelleen-kaynnistys-aika)))

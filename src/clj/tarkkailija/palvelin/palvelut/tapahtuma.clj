@@ -69,7 +69,7 @@
                            (log/error (str "Kuuntelijan go loop kaatui virheeseen kutsuessa funktiota f. " (.getMessage t)))
                            (binding [*out* *err*]
                              (println "Stack trace:"))
-                           (.printStackTrace *err*)
+                           (.printStackTrace t)
                            (throw t)))
                     (recur (if timeout-annettu?
                              (async/alts! [kuuntelija
@@ -125,7 +125,7 @@
   (start [{:keys [klusterin-tapahtumat rajapinta] :as this}]
     (rajapinta/lisaa-palvelu rajapinta :tapahtuma-julkaisija (partial tapahtuma-julkaisija klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :tapahtuma-datan-spec tapahtuma-datan-spec)
-    (rajapinta/lisaa-palvelu rajapinta :lopeta-tapahtuman-kuuntelu lopeta-tapahtuman-kuuntelu)
+    (rajapinta/lisaa-palvelu rajapinta :lopeta-tapahtuman-kuuntelu (partial lopeta-tapahtuman-kuuntelu klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :tapahtuman-tarkkailija! (partial tapahtuman-tarkkailija! klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :yhta-aikaa-tapahtuman-tarkkailija! (partial yhta-aikaa-tapahtuman-tarkkailija! klusterin-tapahtumat))
     (rajapinta/lisaa-palvelu rajapinta :tapahtuman-kuuntelija! (partial tapahtuman-kuuntelija! klusterin-tapahtumat))

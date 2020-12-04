@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojure.spec.alpha :as s]
             [harja.testi :refer :all]
+            [harja.tyokalut.predikaatti :as pred]
             [harja.palvelin.tyokalut.jarjestelma-rajapinta-kutsut :as rajapinta]
             [clojure.core.async :as async])
   (:import (java.util.concurrent TimeoutException)))
@@ -45,7 +46,9 @@
 (deftest tapahtuman-tarkkailija!-test
   (let [tarkkailija (<!!-timeout (rajapinta/kutsu-palvelua :tapahtuman-tarkkailija! :foo) 1000)]
     (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo 1 "testi-host")
-    (is (= (:payload (<!!-timeout tarkkailija 1000)) 1) "Tarkkailijaan tuli arvo")))
+    (try (is (= (:payload (<!!-timeout tarkkailija 1000)) 1) "Tarkkailijaan tuli arvo")
+         (finally
+           (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu tarkkailija)))))
 
 (deftest tarkkaile-tapahtumaa-test
   (testing "perus kuuntelija"
@@ -97,9 +100,12 @@
                                                       {}
                                                       tapahtuman-inc-fn)
         kuuntelijat (mapv deref tarkkailija-futuret)]
-    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo :tapahtuma-julkaistu "testi-host")
-    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :bar :tapahtuma-julkaistu "testi-host")
-    (odota-ehdon-tayttymista #(= 2 @testin-tila) ":foo ja :bar tapahtuman tarkkailijat triggeröity" 2000)
+    (try (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo :tapahtuma-julkaistu "testi-host")
+         (rajapinta/kutsu-palvelua :julkaise-tapahtuma :bar :tapahtuma-julkaistu "testi-host")
+         (odota-ehdon-tayttymista #(= 2 @testin-tila) ":foo ja :bar tapahtuman tarkkailijat triggeröity" 2000)
+         (finally
+           (doseq [kuuntelija kuuntelijat]
+             (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu kuuntelija))))
     (is true "Odotusehto täyttyi")))
 
 (deftest yhta-aikaa-tapahtuman-tarkkailija!-test
@@ -117,8 +123,22 @@
                                                         :perus)
           kuuntelija-1 (<!!-timeout kuuntelija-kanava-1 1000)
           kuuntelija-2 (<!!-timeout kuuntelija-kanava-2 1000)]
-      (rajapinta/kutsu-palvelua :julkaise-tapahtuma :bar :tapahtuma-julkaistu "testi-host")
-      (is (= (:payload (async/<!! kuuntelija-2)) :tapahtuma-julkaistu) ":bar kanavaan julkaistiin tapahtuma"))))
+      (try (rajapinta/kutsu-palvelua :julkaise-tapahtuma :bar :tapahtuma-julkaistu "testi-host")
+        (is (= (:payload (async/<!! kuuntelija-2)) :tapahtuma-julkaistu) ":bar kanavaan julkaistiin tapahtuma")
+           (finally
+             (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu kuuntelija-1)
+             (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu kuuntelija-2))))))
 
 (deftest lopeta-tapahtuman-kuuntelu-test
-  )
+  (let [testin-tila (atom nil)
+        kuuntelija (rajapinta/kutsu-palvelua :tarkkaile-tapahtumaa
+                                             :foo
+                                             {}
+                                             (fn [{payload :payload}]
+                                               (reset! testin-tila payload)))
+        tarkkailija (deref kuuntelija 2000 ::timeout)]
+    (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu tarkkailija)
+    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo :tapahtuma-julkaistu "testi-host")
+    (async/<!! (async/timeout 1000))
+    (is (pred/chan-closed? tarkkailija) "Kanava pitäs olla sammutettu")
+    (is (nil? @testin-tila) "Tapahtumaa ei pitäisi käsitellä, kun sen kuuntelu on lopetettu")))
