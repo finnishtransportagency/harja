@@ -8,9 +8,9 @@
 
 (defn tarkkailija-jarjestelma [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (pystyta-harja-tarkkailija)
+  (pystyta-harja-tarkkailija!)
   (testit)
-  (lopeta-harja-tarkkailija))
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each tarkkailija-jarjestelma)
 

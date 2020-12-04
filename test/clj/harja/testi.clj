@@ -1258,7 +1258,7 @@
 
 (def harja-tarkkailija)
 
-(defn pystyta-harja-tarkkailija []
+(defn pystyta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija
                   (constantly
                     (component/start
@@ -1271,7 +1271,7 @@
                                      (tapahtuma/->Tapahtuma)
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija))))))
-(defn lopeta-harja-tarkkailija []
+(defn lopeta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija component/stop))
 
 (defn sonja-kasittely [kuuntelijoiden-lopettajat]
@@ -1297,7 +1297,7 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
-     (pystyta-harja-tarkkailija)
+     (pystyta-harja-tarkkailija!)
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1337,7 +1337,7 @@
            (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]
              (lopetus-fn#)))))
      (alter-var-root #'jarjestelma component/stop)
-     (lopeta-harja-tarkkailija)))
+     (lopeta-harja-tarkkailija!)))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan
