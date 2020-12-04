@@ -13,7 +13,7 @@
 (def +wmts-livi-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmtslivi")
 
 
-(def basic-auth-header (delay (str/trim-newline (slurp "../harja-testidata/.harja/mml"))))
+(def basic-auth-header (delay (str/trim-newline (slurp "../.harja/mml"))))
 
 (def debug-last-wmts-response (atom nil))
 

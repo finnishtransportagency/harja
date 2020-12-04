@@ -1,3 +1,5 @@
+-- todo: hallintayksikkö ja muut valinnat 
+
 -- name: hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
 SELECT tpk4.nimi as nimi,
      NULL ::integer as jarjestys,

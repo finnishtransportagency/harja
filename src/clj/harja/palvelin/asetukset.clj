@@ -192,11 +192,11 @@
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
-  {:http-palvelin {:portti 3000 :url "http://harjadb-docker:3000/"
+  {:http-palvelin {:portti 3000 :url "http://localhost:3000/"
                    :threads 64
                    :max-body-size (* 1024 1024 16)}
    :kehitysmoodi true
-   :tietokanta {:palvelin "harjadb-docker"
+   :tietokanta {:palvelin "localhost"
                 :tietokanta "harja"
                 :portti 5432
                 :yhteyspoolin-koko 64

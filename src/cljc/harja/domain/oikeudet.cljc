@@ -72,7 +72,6 @@
                             {rooli :rooli
                              roolin-urakka-id :urakka-id
                              roolin-organisaatio-id :organisaatio-id}]
-  (log/debug "oikeus-urakkaan?")
   (let [konteksti (oikeus-pred rooli)
         urakkaoikeus? (= roolin-urakka-id urakka-id)]
     (case konteksti
