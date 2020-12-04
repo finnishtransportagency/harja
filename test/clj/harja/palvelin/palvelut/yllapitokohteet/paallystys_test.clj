@@ -382,6 +382,23 @@
             :sideainetyyppi 2}))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
+(deftest hae-yllapitokohteen-olemassa-oleva-pot2-paallystysilmoitus ; petar todo
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :urakan-paallystysilmoitus-paallystyskohteella
+                                                    +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :paallystyskohde-id paallystyskohde-id})
+        kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    (is (not (nil? paallystysilmoitus-kannassa)))
+    (is (= 234234 (count kohdeosat)))
+    (is (-> kohdeosat
+            (nth 1)
+            :blabla-petar
+            nil?))))                     ; petar varmista että on pot2
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'"))]
@@ -460,17 +477,18 @@
                              :sideainetyyppi 1
                              :pitoisuus 54
                              :lisaaineet "asd"}]}))
-        (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
+        (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
-(deftest tallenna-uusi-paallystysilmoitus-pot2-kantaan-FIXME
+(deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan      ; petar todo
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'"))]
     (is (not (nil? paallystyskohde-id)))
-    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> pot-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
+                                 (assoc :pot-versio 2)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
 
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
@@ -482,6 +500,142 @@
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
       (is (= (count (:yllapitokohteet vastaus)) 4))
+      (is (= (count (:paallystysilmoitukset vastaus)) 4))
+
+      (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+            paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :urakan-paallystysilmoitus-paallystyskohteella
+                                                        +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :paallystyskohde-id paallystyskohde-id})]
+        (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
+        (is (not (nil? paallystysilmoitus-kannassa)))
+        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+        (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 4753.95M))
+        (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
+                                                                                         (dissoc osoite :kohdeosa-id)))
+               {:alustatoimet [{:kasittelymenetelma 1
+                                :paksuus 1234
+                                :tekninen-toimenpide 1
+                                :tr-numero 22
+                                :tr-kaista 11
+                                :tr-ajorata 1
+                                :tr-alkuetaisyys 3
+                                :tr-alkuosa 3
+                                :tr-loppuetaisyys 5
+                                :tr-loppuosa 3
+                                :verkkotyyppi 1
+                                :verkon-sijainti 1
+                                :verkon-tarkoitus 1}]
+                :osoitteet [{;; Alikohteen tiedot
+                             :nimi "Tie 22"
+                             :tr-numero 22
+                             :tr-alkuosa 3
+                             :tr-alkuetaisyys 3
+                             :tr-loppuosa 3
+                             :tr-loppuetaisyys 5
+                             :tr-ajorata 1
+                             :tr-kaista 11
+                             :paallystetyyppi 1
+                             :raekoko 1
+                             :tyomenetelma 12
+                             :massamaara 2.00M
+                             :toimenpide "Wut"
+                             ;; Päällystetoimenpiteen tiedot
+                             :toimenpide-paallystetyyppi 1
+                             :toimenpide-raekoko 1
+                             :kokonaismassamaara 2
+                             :rc% 3
+                             :toimenpide-tyomenetelma 12
+                             :leveys 5
+                             :massamenekki 7
+                             :pinta-ala 8
+                             ;; Kiviaines- ja sideainetiedot
+                             :esiintyma "asd"
+                             :km-arvo "asd"
+                             :muotoarvo "asd"
+                             :sideainetyyppi 1
+                             :pitoisuus 54
+                             :lisaaineet "asd"}]}))
+        (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
+
+
+(deftest ei-saa-paivittaa-jos-on-vaara-versio               ; petar tämä on valmis testi, implementaatio puuttuu
+  (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
+    (is (not (nil? paallystyskohde-vanha-pot-id)))
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+          paallystysilmoitus-pot2 (-> pot-testidata
+                                      (assoc :pot-versio 2)
+                                      (assoc :paallystyskohde-id paallystyskohde-vanha-pot-id)
+                                      (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
+          _ (println "petar urakkaId=" urakka-id)]
+      (is (thrown-with-msg? IllegalArgumentException #"Väärä POT versio 2. Ota yhteyttä Harjan tukeen."
+                            (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                                         :sopimus-id         sopimus-id
+                                                                                         :vuosi              paallystysilmoitus-domain/pot2-vuodesta-eteenpain
+                                                                                         :paallystysilmoitus paallystysilmoitus-pot2}))))))
+
+(deftest paivittaa-paallystysilmoitus-pot2-ei-saa-paivittaa-kaikki-ylapitokohdeosa-kentat-FIXME ; petar
+  (let [;; Ei saa olla POT ilmoitusta
+        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
+    (is (not (nil? paallystyskohde-id)))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+          ylapitokohdeosa-id 123
+          paallystysilmoitus (-> pot-testidata
+                                 (assoc :pot-versio 2)
+                                 (assoc :paallystyskohde-id paallystyskohde-id)
+                                 (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
+                                 (assoc-in [:ilmoitustiedot :osoitteet 2]
+                                           {;; tämä täytyy päivittää
+                                            :id ylapitokohdeosa-id
+                                            :poistettu false
+                                            :nimi "Tie 20"
+                                            :tr-numero 20
+                                            :tr-alkuosa 3
+                                            :tr-alkuetaisyys 3
+                                            :tr-loppuosa 3
+                                            :tr-loppuetaisyys 5
+                                            :tr-ajorata 1
+                                            :tr-kaista 11
+                                            :paallystetyyppi 1
+                                            :raekoko 1
+                                            :tyomenetelma 12
+                                            :massamaara 2
+                                            :toimenpide "Emt"
+                                            ;; Päällystetoimenpiteen tiedot
+                                            :toimenpide-paallystetyyppi 1
+                                            :toimenpide-raekoko 1
+                                            :kokonaismassamaara 2
+                                            :rc% 3
+                                            :toimenpide-tyomenetelma 12
+                                            :leveys 5
+                                            :massamenekki 7
+                                            :pinta-ala 8
+                                            ;; Kiviaines- ja sideainetiedot
+                                            :esiintyma "asd"
+                                            :km-arvo "asd"
+                                            :muotoarvo "asd"
+                                            :sideainetyyppi 1
+                                            :pitoisuus 54
+                                            :lisaaineet "asd"}
+
+
+                                           ))
+          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          _ (println "petar urakkaId=" urakka-id (pr-str paallystysilmoitus))
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                               :sopimus-id sopimus-id
+                                                                               :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain
+                                                                               :paallystysilmoitus paallystysilmoitus})]
+
+      ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
+      (is (= (count (:yllapitokohteet vastaus)) 123123))
       (is (= (count (:paallystysilmoitukset vastaus)) 4))
 
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))

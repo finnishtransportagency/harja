@@ -42,7 +42,7 @@
 (defn onko-pot2?
   "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
   [paallystysilmoitus]
-  (nil? (:ilmoitustiedot paallystysilmoitus)))
+  (= (:pot-versio paallystysilmoitus) 2))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -218,7 +218,7 @@
     (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
 
-(defn hae-urakan-paallystysilmoitus-paallystyskohteella
+(defn hae-urakan-paallystysilmoitus-paallystyskohteella     ; petar
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
    Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohdeosa-taulusta ja liitetään mukaan ilmoitukseen.
@@ -489,6 +489,8 @@
          :osoitteet
          (filter (comp not :poistettu)))))
 
+;; petar da li treba ovde nesto
+
 (defn- tallenna-pot2-paallystekerros
   [db paallystysilmoitus]
   (doseq [rivi (->> paallystysilmoitus
@@ -526,6 +528,7 @@
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [pot2? (onko-pot2? paallystysilmoitus)
+          paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           hae-paallystysilmoitus (fn [paallystyskohde-id]
                                        (first (into []
                                                     (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
@@ -535,14 +538,16 @@
                                                      db
                                                      {:paallystyskohde paallystyskohde-id}))))
 
+          _ (println "petar trazim ovaj paallystyskohde-id=" paallystyskohde-id)
+          vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
+          - (println "petar i nasao sam ovo " (pr-str vanha-paallystysilmoitus))
           tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
           ali-ja-muut-kohteet (remove :poistettu (-> paallystysilmoitus :ilmoitustiedot :osoitteet))
           alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
           kohde-id (:paallystyskohde-id paallystysilmoitus)
           virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
       (if (empty? virheviestit)
-        (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
-              paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
+        (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                     db user {:urakka-id urakka-id :sopimus-id sopimus-id
                                              :vuosi vuosi
                                              :yllapitokohde-id paallystyskohde-id
@@ -559,7 +564,6 @@
                         paallystysilmoitus (if pot2?
                                              paallystysilmoitus
                                              (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat))
-                        vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
                         paallystysilmoitus-id (if vanha-paallystysilmoitus
                                                 (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                             vanha-paallystysilmoitus)

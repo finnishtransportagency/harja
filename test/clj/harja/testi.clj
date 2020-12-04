@@ -838,6 +838,13 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
+(defn hae-yllapitokohde-tarkea-kohde-pot2 []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = 'Tärkeä kohde mt20';"))))
+
+(defn poista-paallystysilmoitus-paallystyskohtella [paallystyskohde-id]
+  (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))) ; petar pot2:ssa tulee paljon muita tauluja
+
 (defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero
    :aosa aosa
