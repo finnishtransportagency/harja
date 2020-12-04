@@ -2,7 +2,9 @@
   (:require [clojure.test :refer :all]
             [clojure.spec.alpha :as s]
             [harja.testi :refer :all]
-            [harja.palvelin.tyokalut.jarjestelma-rajapinta-kutsut :as rajapinta]))
+            [harja.palvelin.tyokalut.jarjestelma-rajapinta-kutsut :as rajapinta]
+            [clojure.core.async :as async])
+  (:import (java.util.concurrent TimeoutException)))
 
 (defn tarkkailija-jarjestelma [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -28,6 +30,22 @@
                                                ::bar)]
       (is (true? (julkaisija {:a 1})) "Testitapahtuman julkaisu pitäisi onnistua")
       (is (thrown? IllegalArgumentException (julkaisija "ei-ok"))))))
+
+(deftest tapahtuman-kuuntelija!-test
+  (let [testin-tila (atom nil)
+        kuuntelijan-lopetus (rajapinta/kutsu-palvelua :tapahtuman-kuuntelija!
+                                                      :foo
+                                                      (fn [{payload :payload}]
+                                                        (reset! testin-tila payload)))]
+    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo 1 "testi-host")
+    (odota-ehdon-tayttymista #(not (nil? @testin-tila)) ":foo tapahtuman kuuntelija triggeröity" 2000)
+    (is (= @testin-tila 1))
+    (is (true? (kuuntelijan-lopetus)))))
+
+(deftest tapahtuman-tarkkailija!-test
+  (let [tarkkailija (<!!-timeout (rajapinta/kutsu-palvelua :tapahtuman-tarkkailija! :foo) 1000)]
+    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo 1 "testi-host")
+    (is (= (:payload (<!!-timeout tarkkailija 1000)) 1) "Tarkkailijaan tuli arvo")))
 
 (deftest tarkkaile-tapahtumaa-test
   (testing "perus kuuntelija"
@@ -68,12 +86,39 @@
              (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu kuuntelija))))))
 
 (deftest tarkkaile-tapahtumia-test
-  )
+  (let [testin-tila (atom 0)
+        tapahtuman-inc-fn (fn [_]
+                            (swap! testin-tila inc))
+        tarkkailija-futuret (rajapinta/kutsu-palvelua :tarkkaile-tapahtumia
+                                                      :foo
+                                                      {}
+                                                      tapahtuman-inc-fn
+                                                      :bar
+                                                      {}
+                                                      tapahtuman-inc-fn)
+        kuuntelijat (mapv deref tarkkailija-futuret)]
+    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo :tapahtuma-julkaistu "testi-host")
+    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :bar :tapahtuma-julkaistu "testi-host")
+    (odota-ehdon-tayttymista #(= 2 @testin-tila) ":foo ja :bar tapahtuman tarkkailijat triggeröity" 2000)
+    (is true "Odotusehto täyttyi")))
+
 (deftest yhta-aikaa-tapahtuman-tarkkailija!-test
-  )
-(deftest tapahtuman-kuuntelija!-test
-  )
+  (let [kuuntelija-kanava-1 (rajapinta/kutsu-palvelua :yhta-aikaa-tapahtuman-tarkkailija!
+                                                      {:tunnistin "foo-bar"
+                                                       :lkm 2}
+                                                      :foo
+                                                      :perus)]
+    ;; Odotellaan hetki, jotta voidaan varmistua siitä, että kuuntelua ei olla aloitettu
+    (is (thrown? TimeoutException (<!!-timeout kuuntelija-kanava-1 1000)))
+    (let [kuuntelija-kanava-2 (rajapinta/kutsu-palvelua :yhta-aikaa-tapahtuman-tarkkailija!
+                                                        {:tunnistin "foo-bar"
+                                                         :lkm 2}
+                                                        :bar
+                                                        :perus)
+          kuuntelija-1 (<!!-timeout kuuntelija-kanava-1 1000)
+          kuuntelija-2 (<!!-timeout kuuntelija-kanava-2 1000)]
+      (rajapinta/kutsu-palvelua :julkaise-tapahtuma :bar :tapahtuma-julkaistu "testi-host")
+      (is (= (:payload (async/<!! kuuntelija-2)) :tapahtuma-julkaistu) ":bar kanavaan julkaistiin tapahtuma"))))
+
 (deftest lopeta-tapahtuman-kuuntelu-test
-  )
-(deftest tapahtuman-tarkkailija!-test
   )

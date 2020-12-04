@@ -370,7 +370,8 @@
 
   p/Kuuntele
   ;; Kuutele! ja tarkkaile! ero on se, että eventin sattuessa kuuntele! kutsuu callback funktiota kun taas
-  ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle.
+  ;; tarkkaile! lisää eventin async/chan:iin, joka palautetaan kutsujalle. Lisäksi tarkkaile! käsittely
+  ;; on async kun taasen kuuntele! ei ole
   (kuuntele! [this tapahtuma callback]
     (when-not (ifn? callback)
       (throw (IllegalArgumentException. "Tapahtuman kuuntelija callbackin pitää toteuttaa IFn protokolla")))
@@ -398,7 +399,8 @@
                  (fn [kanavan-callbackit]
                    (keep #(when-not (= fn-tunnistin (-> % meta :tunnistin))
                             %)
-                         kanavan-callbackit)))))))
+                         kanavan-callbackit)))
+          true))))
   (tarkkaile! [this tapahtuma tyyppi]
     (let [{:keys [tunnistin lkm]} *tarkkaile-yhta-aikaa*]
       (when (and *tarkkaile-yhta-aikaa*

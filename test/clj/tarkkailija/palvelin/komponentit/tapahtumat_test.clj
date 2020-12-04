@@ -51,13 +51,6 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn <!!-timeout [kanava timeout]
-  (let [[arvo valmistunut-kanava] (async/alts!! [kanava
-                                                 (async/timeout timeout)])]
-    (if (not= valmistunut-kanava kanava)
-      (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
-      arvo)))
-
 (deftest julkaisu-ja-kuuntelu
   (testing "tapahtumat-komponentti on luotu onnistuneesti"
     (is (some? (:klusterin-tapahtumat harja-tarkkailija))))

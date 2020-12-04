@@ -5,7 +5,7 @@ CREATE TABLE tapahtumatyyppi (
 );
 
 CREATE TABLE tapahtuman_tiedot (
-                                   id SERIAL PRIMARY KEY,
+                                   id BIGSERIAL PRIMARY KEY,
                                    arvo TEXT NOT NULL,
                                    hash TEXT NOT NULL,
                                    kanava TEXT NOT NULL REFERENCES tapahtumatyyppi(kanava),
@@ -50,16 +50,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION resetoi_tapahtuman_tiedot_id_serial() RETURNS trigger AS $$
-BEGIN
-    IF(currval('tapahtuman_tiedot_id_seq') = 2147483647)
-    THEN
-        PERFORM setval('tapahtuman_tiedot_id_seq', 1);
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Ei välttämättä ideaalia hoitaa vanhdan datan
 -- poistoa triggerin kautta, mutta toimiipi
 CREATE TRIGGER tg_poista_vanhat_tapahtumat
@@ -73,12 +63,6 @@ CREATE TRIGGER tg_esta_tapahtumien_muokkaus_ja_poisto
     ON tapahtuman_tiedot
     FOR EACH ROW
 EXECUTE PROCEDURE esta_tapahtumien_muokkaus_ja_ennenaikainen_poisto();
-
-CREATE TRIGGER tg_resetoi_id_tapahtumien_tiedot_taulukosta
-    AFTER INSERT
-    ON tapahtuman_tiedot
-    FOR EACH STATEMENT
-EXECUTE PROCEDURE resetoi_tapahtuman_tiedot_id_serial();
 
 CREATE OR REPLACE FUNCTION julkaise_tapahtuma(_kanava TEXT, data_text TEXT, _hash TEXT, _palvelin TEXT) RETURNS bool AS
 $$

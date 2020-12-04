@@ -38,6 +38,13 @@
 
 (def jarjestelma nil)
 
+(defn <!!-timeout [kanava timeout]
+  (let [[arvo valmistunut-kanava] (async/alts!! [kanava
+                                                 (async/timeout timeout)])]
+    (if (not= valmistunut-kanava kanava)
+      (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
+      arvo)))
+
 (Locale/setDefault (Locale. "fi" "FI"))
 
 (def ^{:dynamic true
