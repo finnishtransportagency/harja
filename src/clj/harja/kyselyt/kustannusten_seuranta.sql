@@ -59,6 +59,7 @@ WHERE s.urakka = :urakka
     OR tk.koodi = '23151' -- mhu-johto
     )
 UNION ALL
+-- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta
 -- kiinteahintainen_tyo taulusta haetaan osa suunnitelluista kustannuksista eli hankinnat. Tämä on siis vain budejetointi sarakkeeseen.
 -- Kiinteät suunnitellut kustannukset tallennetaan KIINTEAHINTAINEN_TYO-tauluun.
 -- Hinta on kiinteä, kun se on sopimuksessa sovittu, yleensä kuukausille jaettava könttäsumma.
@@ -180,7 +181,7 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'toimistokulut'                           AS toimenpideryhma,
-       tk_tehtava.nimi                              AS tehtava_nimi,
+       tk_tehtava.nimi                           AS tehtava_nimi,
        'MHU Hoidonjohto'                         AS toimenpide,
        kt.luotu                                  AS luotu,
        concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
@@ -223,7 +224,7 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            END                 AS toimenpide,
        lk.luotu                AS luotu,
        l.erapaiva::TEXT        AS ajankohta,
-       'toteutunut'                 AS toteutunut,
+       'toteutunut'            AS toteutunut,
        tk_tehtava.jarjestys    AS jarjestys,
        'hankintakustannukset'  AS paaryhma
 FROM lasku_kohdistus lk
@@ -280,6 +281,48 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND lk.lasku = l.id
   AND lk.toimenpideinstanssi = tpi.id
+  AND tpi.toimenpide = tk.id
+  -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
+  AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+UNION ALL
+-- Osa toteutuneista erillishankinnoista, hoidonjohdonpalkkioista ja johdon- hallintakorvauksesta
+-- siirretään kustannusarvoitu_tyo taulusta toteutunut_tyo tauluun aina kuukauden viimeisenä päivänä.
+-- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
+SELECT tpi.id                                  AS toimenpideinstanssi_id,
+       tk.nimi                                 AS toimenpidekoodi_nimi,
+       0                                       AS budjetoitu_summa,
+       t.summa                                 AS toteutunut_summa,
+       'kokonaishintainen'                     AS maksutyyppi,
+       CASE
+           WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
+           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
+           WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
+           END                                 AS toimenpideryhma,
+       tr.nimi                                 AS tehtava_nimi,
+       CASE
+           WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
+           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
+           END                                 AS toimenpide,
+       t.luotu                                 AS luotu,
+       concat(t.vuosi, '-', t.kuukausi, '-01') AS ajankohta,
+       tr.nimi                                 AS toteutunut,
+       tk_tehtava.jarjestys                    AS jarjestys,
+       CASE
+           WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
+           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
+           WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
+           WHEN tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
+           END                                 AS paaryhma
+FROM toteutunut_tyo t
+         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = t.tehtava
+         LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
+     toimenpideinstanssi tpi,
+     toimenpidekoodi tk
+WHERE t.urakka_id = :urakka
+  AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND t.toimenpideinstanssi = tpi.id
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
   AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')

@@ -188,7 +188,7 @@ $$
 
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu,
                                               "toimenkuva-id")
-            VALUES (urakka_id, 5, 40, vuosi, 3, ennen_urakkaa, NOW(),
+            VALUES (urakka_id, 5, 41.25, vuosi, 3, ennen_urakkaa, NOW(),
                     (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
 
         -- Bonukset - 10/2019

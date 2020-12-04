@@ -176,4 +176,53 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Paikkaukset
 \i testidata/paikkaukset.sql
 
+-- Siirretään kaikki olemassaolevat kustannusarvoidut_tyot toteutunut_tyo tauluun, mikäli kuukausi on eri kuin kuluva kuukausi.
+-- Kuluvan kuukauden kustannusarvoidut_tyot siirretään vasta kuukauden viimeisenä päivänä
+INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus_id,
+                            urakka_id, luotu)
+SELECT k.vuosi,
+       k.kuukausi,
+       k.summa,
+       k.tyyppi,
+       k.tehtava,
+       k.tehtavaryhma,
+       k.toimenpideinstanssi,
+       k.sopimus,
+       (select s.urakka FROM sopimus s where s.id = k.sopimus) as "urakka-id",
+       NOW()
+FROM kustannusarvioitu_tyo k
+WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) <
+      date_trunc('month', current_date);
+
+-- Siirretään kaikki olemassaolevat rivit johto_ja_hallintakorvaus taulusta toteutunut_tyo tauluun, mikäli kuukausi on eri kuin kuluva kuukausi.
+-- Kuluvan kuukauden johto_ja_hallintakorvaus siirretään vasta kuukauden viimeisenä päivänä
+INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
+                            sopimus_id, urakka_id, luotu)
+SELECT j.vuosi,
+       j.kuukausi,
+       (j.tunnit * j.tuntipalkka)                     AS summa,
+       'laskutettava-tyo'                             AS tyyppi,
+       null                                           AS tehtava,
+       (SELECT id
+        FROM tehtavaryhma
+        WHERE nimi = 'Johto- ja hallintokorvaus (J)') AS tehtavaryhma,
+       (SELECT tpi.id AS id
+        FROM toimenpideinstanssi tpi
+                 JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                 JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+             maksuera m
+        WHERE tpi.urakka = j."urakka-id"
+          AND m.toimenpideinstanssi = tpi.id
+          AND tpk2.koodi = '23150')                   AS toimenpideinstanssi,
+       (SELECT id
+        FROM sopimus s
+        WHERE s.urakka = j."urakka-id"
+          AND s.poistettu IS NOT TRUE
+        ORDER BY s.loppupvm DESC)                     AS sopimus_id,
+       j."urakka-id",
+       NOW()
+FROM johto_ja_hallintokorvaus j
+WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) <
+      date_trunc('month', current_date);
+
 SELECT paivita_raportti_cachet();
