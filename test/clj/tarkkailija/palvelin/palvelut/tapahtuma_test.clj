@@ -29,17 +29,51 @@
       (is (true? (julkaisija {:a 1})) "Testitapahtuman julkaisu pitäisi onnistua")
       (is (thrown? IllegalArgumentException (julkaisija "ei-ok"))))))
 
-(deftest lopeta-tapahtuman-kuuntelu-test
-  )
-(deftest tapahtuman-tarkkailija!-test
+(deftest tarkkaile-tapahtumaa-test
+  (testing "perus kuuntelija"
+    (let [inc-n 3
+          testin-tila (atom nil)
+          tarkkailija-future (rajapinta/kutsu-palvelua :tarkkaile-tapahtumaa
+                                                       :foo
+                                                       {:tyyppi :perus}
+                                                       (fn [{tapahtuman-data :payload} inc-n]
+                                                         (reset! testin-tila (+ tapahtuman-data inc-n)))
+                                                       inc-n)
+          ;; Odotetaan, että tarkkailu on aloitettu
+          kuuntelija @tarkkailija-future]
+      (try (reset! testin-tila 0)
+           (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo 1 "testi-host")
+           (odota-ehdon-tayttymista #(not= 0 @testin-tila) ":foo tapahtuman tarkkailija triggeröity" 2000)
+           (is (= @testin-tila (+ inc-n 1)) "Tapahtuman funkkari toimii")
+           (finally
+             (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu kuuntelija)))))
+  (testing "viimeisin kuuntelija ja timeout"
+    (rajapinta/kutsu-palvelua :julkaise-tapahtuma :foo :tapahtuma-julkaistu "testi-host")
+    (let [testin-tila (atom nil)
+          tarkkailija-future (rajapinta/kutsu-palvelua :tarkkaile-tapahtumaa
+                                                       :foo
+                                                       {:tyyppi :viimeisin
+                                                        :timeout 1000}
+                                                       (fn [{tapahtuman-data :payload} timeout?]
+                                                         (if timeout?
+                                                           (reset! testin-tila :timeout)
+                                                           (reset! testin-tila tapahtuman-data))))
+          ;; Odotetaan, että tarkkailu on aloitettu
+          kuuntelija @tarkkailija-future]
+      (try (odota-ehdon-tayttymista #(not (nil? @testin-tila)) ":foo tapahtuman tarkkailija triggeröity viimesimmästä tapahtumasta" 2000)
+           (is (= @testin-tila :tapahtuma-julkaistu) "Viimeisimmän tapahtuman funkkari toimii")
+           (odota-ehdon-tayttymista #(not= :tapahtuma-julkaistu @testin-tila) ":foo tapahtuman tarkkailija triggeröity timeoutista" 2000)
+           (is (= @testin-tila :timeout) "Timeout funkkari toimii")
+           (finally
+             (rajapinta/kutsu-palvelua :lopeta-tapahtuman-kuuntelu kuuntelija))))))
+
+(deftest tarkkaile-tapahtumia-test
   )
 (deftest yhta-aikaa-tapahtuman-tarkkailija!-test
   )
 (deftest tapahtuman-kuuntelija!-test
   )
-(deftest julkaise-tapahtuma-test
+(deftest lopeta-tapahtuman-kuuntelu-test
   )
-(deftest tarkkaile-tapahtumaa-test
-  )
-(deftest tarkkaile-tapahtumia-test
+(deftest tapahtuman-tarkkailija!-test
   )

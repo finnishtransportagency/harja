@@ -62,9 +62,15 @@
                                                      (async/timeout timeout)])
                                        [(async/<! kuuntelija) kuuntelija])]
                   (when-not (p/chan-closed? kuuntelija)
-                    (if timeout-annettu?
-                      (apply f arvo (not= portti kuuntelija) args)
-                      (apply f arvo args))
+                    (try (if timeout-annettu?
+                           (apply f arvo (not= portti kuuntelija) args)
+                           (apply f arvo args))
+                         (catch Throwable t
+                           (log/error (str "Kuuntelijan go loop kaatui virheeseen kutsuessa funktiota f. " (.getMessage t)))
+                           (binding [*out* *err*]
+                             (println "Stack trace:"))
+                           (.printStackTrace *err*)
+                           (throw t)))
                     (recur (if timeout-annettu?
                              (async/alts! [kuuntelija
                                            (async/timeout timeout)])
