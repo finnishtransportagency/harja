@@ -256,7 +256,8 @@
   (let [ilmoitustiedot (q "SELECT pi.ilmoitustiedot
                            FROM paallystysilmoitus pi
                            JOIN yllapitokohde yk ON yk.id = pi.paallystyskohde
-                           WHERE yk.vuodet[1] >= 2019")]
+                           WHERE yk.vuodet[1] >= 2019
+                             AND pi.versio = 1")]
     (doseq [[ilmoitusosa] ilmoitustiedot]
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           (konv/jsonb->clojuremap ilmoitusosa))))))
@@ -339,6 +340,7 @@
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     ;; Päällystysilmoituksen perustiedot OK
     (is (not (nil? paallystysilmoitus-kannassa)))
+    (is (= (:pot-versio paallystysilmoitus-kannassa) 1))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
     (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
     (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 7043.95))
@@ -393,11 +395,8 @@
                                                                     :paallystyskohde-id paallystyskohde-id})
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
-    (is (= 234234 (count kohdeosat)))
-    (is (-> kohdeosat
-            (nth 1)
-            :blabla-petar
-            nil?))))                     ; petar varmista että on pot2
+    (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
+    (is (= 234234 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
@@ -513,51 +512,6 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 4753.95M))
-        (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
-                                                                                         (dissoc osoite :kohdeosa-id)))
-               {:alustatoimet [{:kasittelymenetelma 1
-                                :paksuus 1234
-                                :tekninen-toimenpide 1
-                                :tr-numero 22
-                                :tr-kaista 11
-                                :tr-ajorata 1
-                                :tr-alkuetaisyys 3
-                                :tr-alkuosa 3
-                                :tr-loppuetaisyys 5
-                                :tr-loppuosa 3
-                                :verkkotyyppi 1
-                                :verkon-sijainti 1
-                                :verkon-tarkoitus 1}]
-                :osoitteet [{;; Alikohteen tiedot
-                             :nimi "Tie 22"
-                             :tr-numero 22
-                             :tr-alkuosa 3
-                             :tr-alkuetaisyys 3
-                             :tr-loppuosa 3
-                             :tr-loppuetaisyys 5
-                             :tr-ajorata 1
-                             :tr-kaista 11
-                             :paallystetyyppi 1
-                             :raekoko 1
-                             :tyomenetelma 12
-                             :massamaara 2.00M
-                             :toimenpide "Wut"
-                             ;; Päällystetoimenpiteen tiedot
-                             :toimenpide-paallystetyyppi 1
-                             :toimenpide-raekoko 1
-                             :kokonaismassamaara 2
-                             :rc% 3
-                             :toimenpide-tyomenetelma 12
-                             :leveys 5
-                             :massamenekki 7
-                             :pinta-ala 8
-                             ;; Kiviaines- ja sideainetiedot
-                             :esiintyma "asd"
-                             :km-arvo "asd"
-                             :muotoarvo "asd"
-                             :sideainetyyppi 1
-                             :pitoisuus 54
-                             :lisaaineet "asd"}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 

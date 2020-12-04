@@ -71,6 +71,7 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
+  pi.versio                     AS "pot-versio",
   tila,
   ypka.kohde_alku               AS "aloituspvm",
   ypka.kohde_valmis             AS "valmispvm-kohde",

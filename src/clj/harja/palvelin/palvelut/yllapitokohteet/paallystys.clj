@@ -245,6 +245,7 @@
                                     :id))
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
+        - (println "petar hajde da vidimo sta je vratio " (pr-str paallystysilmoitus))
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (cond
               (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
