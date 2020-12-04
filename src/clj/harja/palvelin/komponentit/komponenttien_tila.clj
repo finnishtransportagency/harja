@@ -8,9 +8,6 @@
 (defn- tallenna-sonjan-tila-cacheen [komponenttien-tila {:keys [palvelin payload]} timeout?]
   (swap! komponenttien-tila
          (fn [kt]
-           (println (str "----> kt: " kt))
-           (println (str "----> palvelin: " palvelin))
-           (println (str "----> payload: " payload))
            (if (and (map? payload)
                     (contains? payload :olioiden-tilat))
              (-> kt

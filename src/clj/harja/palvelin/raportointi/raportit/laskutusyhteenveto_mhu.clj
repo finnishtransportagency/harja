@@ -279,7 +279,7 @@
                                                     :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                           (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
-        _ (println "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
+        _ (log/debug "laskutusyhteenvedot" (pr-str laskutusyhteenvedot))
 
         urakoiden-lahtotiedot (lyv-yhteiset/urakoiden-lahtotiedot laskutusyhteenvedot)
 

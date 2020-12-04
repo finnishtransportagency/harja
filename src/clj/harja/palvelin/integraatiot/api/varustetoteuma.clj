@@ -113,7 +113,7 @@
             ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
             ;; sama payload lähetetään Harjaan uudelleen.
             ;; --> Pitää tutkia mitä tierekisteri palauttaa samalle kutsulle
-            (println "*** Vastaus tierekisteriltä " vastaus)
+            (log/debug "*** Vastaus tierekisteriltä " vastaus)
             (when (:onnistunut vastaus)
               (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
               (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db  { :id (:varustetoteuma-id toimenpide)

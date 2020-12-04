@@ -1,10 +1,11 @@
 (ns harja.repl-tyokalut
   (:require [harja.palvelin.main :as main]
+            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]))
 
 (defn dev-start []
   (if main/harja-jarjestelma
-    (println "Harja on jo käynnissä!")
+    (log/info "Harja on jo käynnissä!")
     (main/kaynnista-jarjestelma main/asetukset-tiedosto false)))
 
 (defn dev-stop []

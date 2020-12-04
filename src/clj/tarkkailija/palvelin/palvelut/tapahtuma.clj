@@ -68,7 +68,7 @@
                          (catch Throwable t
                            (log/error (str "Kuuntelijan go loop kaatui virheeseen kutsuessa funktiota f. " (.getMessage t)))
                            (binding [*out* *err*]
-                             (println "Stack trace:"))
+                             (log/error "Stack trace:"))
                            (.printStackTrace t)
                            (throw t)))
                     (recur (if timeout-annettu?

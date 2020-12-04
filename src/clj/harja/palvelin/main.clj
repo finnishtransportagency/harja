@@ -772,11 +772,8 @@
                                            (kaynnista-pelkastaan-jarjestelma)
                                            (when (nil? (alter-var-root #'harja-jarjestelma
                                                                        (fn [harja-jarjestelma]
-                                                                         (println "----- :harjajarjestelman-restart ----")
-                                                                         (println "payload: " payload)
+                                                                         (log/warn "harjajarjestelman-restart")
                                                                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                (println "----- UUDELLEEN KÄYNNISTYS ----")
-                                                                                (println (str (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)))
                                                                                 (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
                                                                                   (do (aloita-sonja uudelleen-kaynnistetty-jarjestelma)
                                                                                       (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo))

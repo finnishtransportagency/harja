@@ -444,7 +444,7 @@
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :poista-kuuntelija " (.getMessage e))
          (binding [*out* *err*]
-           (println "Stack Trace:"))
+           (log/error "Stack Trace:"))
          (.printStackTrace e)
          {:virhe e})))
 
