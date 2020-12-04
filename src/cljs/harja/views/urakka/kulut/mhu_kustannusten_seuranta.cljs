@@ -78,16 +78,10 @@
                                                                                             ;"/MaksuT:" (:maksutyyppi rivi) "/ToimenpKoodi:" (:toimenpidekoodi_nimi rivi)
                                                                                             ;"/ryhmä:" (:toimenpideryhma rivi)
                                                                                             )]
-                                               [:td.numero {:style {:width (:budjetoitu leveydet)}} (str (formatoi-naytolle->big budjetoitu-summa false) " ")]
+                                               [:td.numero {:style {:width (:budjetoitu leveydet)}} ]
                                                [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
-                                               [:td.numero {:class (if (big/gt (big/->big toteutunut-summa)
-                                                                               (big/->big budjetoitu-summa))
-                                                                     "negatiivinen-numero" "numero")
-                                                            :style {:width (:erotus leveydet)}} (str (formatoi-naytolle->big erotus false) " ")]
-                                               [:td.numero {:class (if (big/gt (big/->big toteutunut-summa)
-                                                                               (big/->big budjetoitu-summa))
-                                                                     "negatiivinen-numero" "numero")
-                                                            :style {:width (:prosentti leveydet)}} (laske-prosentti toteutunut-summa budjetoitu-summa)]]])))
+                                               [:td.numero {:style {:width (:erotus leveydet)}} ]
+                                               [:td.numero {:style {:width (:prosentti leveydet)}} ]]])))
                                        tehtavat))]
           (doall (concat [^{:key (str "otsikko-" (hash toimenpide))}
                           [:tr.bottom-border
@@ -256,7 +250,7 @@
            [:td {:class (if (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                                     (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
                           "negatiivinen-numero" "numero")
-                 :style {:width (:prosentti leveydet)}} #_(laske-prosentti
+                 :style {:width (:prosentti leveydet)}} (laske-prosentti
                                                             (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                                                             (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))]])
         ;; Näytetään lisätyöt
@@ -273,17 +267,17 @@
 
 (defn yhteenveto-laatikko [app data]
   (let []
-    [:div.yhteenveto [:h4 "Yhteenveto"]
-     [:div [:span "Tavoitehinta: "] [:span (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])]]
-     [:div [:span "Toteuma: "] [:span (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])]]
-     [:div [:span "Tavoitehinnan ylitys: "]
-      (when (> 0 (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
-                    (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])))
+    [:div.yhteenveto.header [:span "Yhteenveto"]
+     [:div.row [:span "Tavoitehinta: "] [:span (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])]]
+     [:div.row [:span "Toteuma: "] [:span (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])]]
+     [:div.row [:span "Tavoitehinnan ylitys: "]
+      (when (> (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
+                    (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])) 0)
         [:span.negatiivinen-numero
          (formatoi-naytolle->big (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
                                     (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])
                                     ))])]
-     [:div [:span "Lisätyöt: "] [:span (formatoi-naytolle->big (:lisatyot data))]]]))
+     [:div.row [:span "Lisätyöt: "] [:span (formatoi-naytolle->big (:lisatyot data))]]]))
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"

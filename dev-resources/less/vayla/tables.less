@@ -17,7 +17,12 @@
     tr {
       height:40px;
       &.bottom-border {
-        border-bottom: black solid 1px;
+        th:not(:first-child) {
+          box-shadow: 0px 1px 0px @legend-border-color;
+        }
+        td:not(:first-child) {
+          box-shadow: 0px 1px 0px @legend-border-color;
+        }
       }
       td, th {
         padding-left: 25px;
