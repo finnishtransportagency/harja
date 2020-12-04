@@ -59,13 +59,13 @@
                       (poista-reader-makrot "\"foo\"")
                       muokkaa-asetuksia)]
     (testi/pudota-ja-luo-testitietokanta-templatesta)
-    (testi/pystyta-harja-tarkkailija)
+    (testi/pystyta-harja-tarkkailija!)
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
     #_(when @jarjestelma
       (component/stop @jarjestelma))
-    (testi/lopeta-harja-tarkkailija)
+    (testi/lopeta-harja-tarkkailija!)
     (.delete file)))
 
 (use-fixtures :once testiasetukset)

@@ -38,6 +38,13 @@
 
 (def jarjestelma nil)
 
+(defn <!!-timeout [kanava timeout]
+  (let [[arvo valmistunut-kanava] (async/alts!! [kanava
+                                                 (async/timeout timeout)])]
+    (if (not= valmistunut-kanava kanava)
+      (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
+      arvo)))
+
 (Locale/setDefault (Locale. "fi" "FI"))
 
 (def ^{:dynamic true
@@ -256,19 +263,24 @@
          (when log?
            (log/warn e "- yritetään uudelleen, yritys" n-kierros)))))))
 
+(defonce ^:private testikannan-luonti-lukko (Object.))
+
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
-  (with-open [c (.getConnection temppidb)
-              ps (.createStatement c)]
+  (locking testikannan-luonti-lukko
+    (with-open [c (.getConnection temppidb)
+                ps (.createStatement c)]
 
-    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
-    (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
-    (yrita-querya (fn [] (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")) 5)
-    (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-  (luo-kannat-uudelleen)
-  (odota-etta-kanta-pystyssa {:datasource db})
-  (odota-etta-kanta-pystyssa {:datasource temppidb}))
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+      (yrita-querya (fn [] 
+                      (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
+                    5))
+    (luo-kannat-uudelleen)
+    (odota-etta-kanta-pystyssa {:datasource db})
+    (odota-etta-kanta-pystyssa {:datasource temppidb})))
 
 (defn katkos-testikantaan!
   "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan
@@ -1242,7 +1254,7 @@
 
 (def harja-tarkkailija)
 
-(defn pystyta-harja-tarkkailija []
+(defn pystyta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija
                   (constantly
                     (component/start
@@ -1256,7 +1268,8 @@
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija)
                         :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 5000}} (atom nil)))))))
-(defn lopeta-harja-tarkkailija []
+
+(defn lopeta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija component/stop))
 
 (defn sonja-kasittely [kuuntelijoiden-lopettajat]
@@ -1282,7 +1295,7 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
-     (pystyta-harja-tarkkailija)
+     (pystyta-harja-tarkkailija!)
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1319,7 +1332,7 @@
            (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]
              (lopetus-fn#)))))
      (alter-var-root #'jarjestelma component/stop)
-     (lopeta-harja-tarkkailija)))
+     (lopeta-harja-tarkkailija!)))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan

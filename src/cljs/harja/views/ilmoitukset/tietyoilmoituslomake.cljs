@@ -72,7 +72,7 @@
                                               rivi
                                               (assoc rivi ::t/materiaali (ffirst tp-valinnat))))}
        [{:otsikko       "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
-         :valinnat      tp-valinnat
+         :valinnat      tp-valinnat :elementin-id (name avain)
          :valinta-arvo  first
          :valinta-nayta second
          :pakollinen?   true
@@ -104,7 +104,7 @@
                                               rivi
                                               (assoc rivi ::t/rajoitus (first t/nopeusrajoitukset))))}
        [{:otsikko     "Rajoitus (km/h)" :nimi ::t/rajoitus
-         :tyyppi      :valinta
+         :tyyppi      :valinta :elementin-id "nr"
          :valinnat    t/nopeusrajoitukset
          :pakollinen? true
          :validoi     [[:ei-tyhja "Valitse rajoitus"]]

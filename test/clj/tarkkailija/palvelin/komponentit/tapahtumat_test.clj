@@ -1,4 +1,4 @@
-(ns ^:hidas harja.palvelin.komponentit.tapahtumat-test
+(ns ^:hidas tarkkailija.palvelin.komponentit.tapahtumat-test
   (:require [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -50,13 +50,6 @@
        (catch Exception e (println "saatiin poikkeus harja-tarkkailija systeemin sammutuksessa: " e))))
 
 (use-fixtures :each jarjestelma-fixture)
-
-(defn <!!-timeout [kanava timeout]
-  (let [[arvo valmistunut-kanava] (async/alts!! [kanava
-                                                 (async/timeout timeout)])]
-    (if (not= valmistunut-kanava kanava)
-      (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
-      arvo)))
 
 (deftest julkaisu-ja-kuuntelu
   (testing "tapahtumat-komponentti on luotu onnistuneesti"
@@ -111,15 +104,17 @@
         (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma 500))
             "Kanavassa ei pitäisi olla vielä mitään")
         (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
-               {:palvelin (:nimi harja-tarkkailija)
-                :payload a-payload})
-            "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty"))
+        (let [tapahtuman-arvo (<!!-timeout odota-tapahtuma default-odottelu)]
+          (is (= (dissoc tapahtuman-arvo :aika)
+                 {:palvelin (:nimi harja-tarkkailija)
+                  :payload a-payload})
+              "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
+          (is (contains? tapahtuman-arvo :aika) "Tapahtumien pitäisi sisältää aika kentän")))
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
             a-payload 1337
             odota-tapahtuma (async/go (async/<! tarkkailija))]
         (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
+        (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan ei pitäisi tulla kakutettua kamaa vaan juurikin se mikä on lähetetty"))))
@@ -151,17 +146,17 @@
             odota-tapahtuma (async/go (async/<! tarkkailija))]
         (is (not (false? tarkkailija)))
         (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a ensimmainen-a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
+        (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload ensimmainen-a-payload})))
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))
             a-payload 1337]
-        (is (= (<!!-timeout tarkkailija default-odottelu)
+        (is (= (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload ensimmainen-a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")
         (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout tarkkailija default-odottelu)
+        (is (= (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")))))
@@ -229,11 +224,11 @@
         (is (not (false? tarkkailija)))
         (is (not (false? toinen-tarkkailija)))
         (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (<!!-timeout odota-tapahtuma default-odottelu)
+        (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
-        (is (= (<!!-timeout toinen-odota-tapahtuma default-odottelu)
+        (is (= (dissoc (<!!-timeout toinen-odota-tapahtuma default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
@@ -241,11 +236,11 @@
               odota-tapahtuma (async/go (async/<! tarkkailija))
               toinen-odota-tapahtuma (async/go (async/<! toinen-tarkkailija))]
           (tapahtumat-p/julkaise! toinen-tapahtumat-k :tapahtuma-a a-payload (:nimi toinen-harja-tarkkailija))
-          (is (= (<!!-timeout odota-tapahtuma default-odottelu-pidennetty)
+          (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu-pidennetty) :aika)
                  {:palvelin (:nimi toinen-harja-tarkkailija)
                   :payload a-payload})
               "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")
-          (is (= (<!!-timeout toinen-odota-tapahtuma default-odottelu-pidennetty)
+          (is (= (dissoc (<!!-timeout toinen-odota-tapahtuma default-odottelu-pidennetty) :aika)
                  {:palvelin (:nimi toinen-harja-tarkkailija)
                   :payload a-payload})
               "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")))))
@@ -261,12 +256,12 @@
                                 :payload a-payload-palvelin-1}
           paluuarvo-palvelin-2 {:palvelin (:nimi toinen-harja-tarkkailija)
                                 :payload a-payload-palvelin-2}]
-      (is (let [paluuarvo (<!!-timeout tarkkailija (* 2 default-odottelu-pidennetty))]
+      (is (let [paluuarvo (dissoc (<!!-timeout tarkkailija (* 2 default-odottelu-pidennetty)) :aika)]
             (or (= paluuarvo paluuarvo-palvelin-1)
                 (= paluuarvo paluuarvo-palvelin-2)))
           "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
            Järjestystä ei ole fixattu")
-      (is (let [paluuarvo (<!!-timeout tarkkailija (* 2 default-odottelu-pidennetty))]
+      (is (let [paluuarvo (dissoc (<!!-timeout tarkkailija (* 2 default-odottelu-pidennetty)) :aika)]
             (or (= paluuarvo paluuarvo-palvelin-1)
                 (= paluuarvo paluuarvo-palvelin-2)))
           "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
@@ -283,9 +278,9 @@
     (testing "Possukanavan luonti"
       (let [toinen-tapahtuma "bar"
             toinen-kanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) toinen-tapahtuma)]
-        (is (uuid? (UUID/fromString (-> uusikanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))
+        (is (uuid? (UUID/fromString uusikanava))
             "Possukanavan pitäisi olla modifioitu versio UUID:stä")
-        (is (uuid? (UUID/fromString (-> toinen-kanava (clj-str/replace-first #"k_" "") (clj-str/replace #"_" "-"))))
+        (is (uuid? (UUID/fromString toinen-kanava))
             "Possukanavan pitäisi olla modifioitu versio UUID:stä")
         (is (not= uusikanava toinen-kanava)
             "Possukanavien nimet pitäisi olla uniikkeja!")
@@ -293,9 +288,9 @@
             "Samalla tapahtumalla pitäisi palautua sama possukanava")))
     (testing "Kannassa olevaa possukanavaa ei voi muokata"
       (let [primary-key uusikanava]
-        (u "UPDATE tapahtuma SET kanava='foobar' WHERE kanava='" primary-key "'")
-        (u "UPDATE tapahtuma SET nimi='foobar' WHERE kanava='" primary-key "'")
-        (let [muokkauksen-jalkeen (first (q-map "SELECT nimi, kanava FROM tapahtuma WHERE kanava='" primary-key "'"))]
+        (u "UPDATE tapahtumatyyppi SET kanava='foobar' WHERE kanava='" primary-key "'")
+        (u "UPDATE tapahtumatyyppi SET nimi='foobar' WHERE kanava='" primary-key "'")
+        (let [muokkauksen-jalkeen (first (q-map "SELECT nimi, kanava FROM tapahtumatyyppi WHERE kanava='" primary-key "'"))]
           (is (= uusi-tapahtuma (:nimi muokkauksen-jalkeen))
               "Olemassa olevan tapahtuman nimeä ei saisi muuttaa")
           (is (= uusikanava (:kanava muokkauksen-jalkeen))
@@ -333,20 +328,20 @@
                 (when-not (= i 10)
                   (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
-              (is (thrown? TimeoutException (<!!-timeout loop-ajettu default-odottelu-pidennetty))
+              (is (thrown? TimeoutException (<!!-timeout loop-ajettu pitka-odottelu))
                   "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
               (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
               (is (<!!-timeout loop-ajettu default-odottelu-pidennetty)
                   "tapahtuma loop pitäsi nyt päästä loppuun")
               (let [tarkkailija (<!!-timeout tarkkailija default-odottelu)]
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
-                (loop [arvo (<!!-timeout tarkkailija default-odottelu)
+                (loop [arvo (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                        i 1]
                   (cond
                     (< i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                              :payload {:a i}})
                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
-                                (recur (<!!-timeout tarkkailija default-odottelu)
+                                (recur (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                                        (inc i)))
                     (= i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                              :payload {:a i}})
@@ -381,7 +376,7 @@
                   "tapahtuma loop pitäsi nyt päästä loppuun")
               (let [tarkkailija (<!!-timeout tarkkailija default-odottelu)]
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
-                (do (is (= (<!!-timeout tarkkailija default-odottelu)
+                (do (is (= (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                            {:palvelin (:nimi harja-tarkkailija)
                             :payload {:b 9}}))
                     (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
@@ -425,8 +420,9 @@
                 "Tarkkailija-1 pitäisi odotella toista tarkkailijaa")
             (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))
             (odota-yksi-loop)
-            (is (= (<!!-timeout tarkkailija-2 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
-                                                                 :payload {:a 1}})
+            (is (= (dissoc (<!!-timeout tarkkailija-2 default-odottelu) :aika)
+                   {:palvelin (:nimi harja-tarkkailija)
+                    :payload {:a 1}})
                 "Tarkkailija-2 ei pitäisi jumittaa ykkösen takia")
             (let [tarkkailija-3 (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"
                                                                              :lkm 2}]
@@ -435,9 +431,12 @@
                   tarkkailija-1 (loop-kunnes-realisoinut tarkkailija-1)]
               (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a 2} (:nimi harja-tarkkailija))
               (odota-yksi-loop)
-              (is (= (<!!-timeout tarkkailija-1 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
-                                                                   :payload {:a 2}}))
-              (is (= (<!!-timeout tarkkailija-2 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
-                                                                   :payload {:a 2}}))
-              (is (= (<!!-timeout tarkkailija-3 default-odottelu) {:palvelin (:nimi harja-tarkkailija)
-                                                                   :payload {:a 2}})))))))))
+              (is (= (dissoc (<!!-timeout tarkkailija-1 default-odottelu) :aika)
+                     {:palvelin (:nimi harja-tarkkailija)
+                      :payload {:a 2}}))
+              (is (= (dissoc (<!!-timeout tarkkailija-2 default-odottelu) :aika)
+                     {:palvelin (:nimi harja-tarkkailija)
+                      :payload {:a 2}}))
+              (is (= (dissoc (<!!-timeout tarkkailija-3 default-odottelu) :aika)
+                     {:palvelin (:nimi harja-tarkkailija)
+                      :payload {:a 2}})))))))))
