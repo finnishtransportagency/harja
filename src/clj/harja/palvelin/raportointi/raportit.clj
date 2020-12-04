@@ -92,7 +92,7 @@
    {:nimi :vemtr
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     ;; fixme: takrkista konteksti
-    :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :konteksti #{"hallintayksikko" "koko maa"}
     :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
     :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
