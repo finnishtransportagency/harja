@@ -11,7 +11,8 @@ INSERT INTO paallystysilmoitus(
     muokkaaja,
     muokattu,
     luoja,
-    luotu)
+    luotu,
+    versio)
 VALUES
 ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'),
  '2024-12-31',
@@ -21,4 +22,5 @@ VALUES
  NULL,
  NULL,
  (SELECT id FROM kayttaja WHERE kayttajanimi = 'skanska'),
- NOW());
+ NOW(),
+ 2);

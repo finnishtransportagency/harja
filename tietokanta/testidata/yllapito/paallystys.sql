@@ -435,7 +435,7 @@ VALUES ((SELECT id
 
 -- Leppäjärven ilmoitustiedoissa on kirjattu tietoja olemattomalle kohdeosalle (osa on ehkä myöhemmin poistettu)
 -- Tällainen tapaus ei saa aiheuttaa ongelmia.
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot) VALUES ((SELECT id
+INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot) VALUES (1, (SELECT id
                                                                                           FROM yllapitokohde
                                                                                           WHERE nimi =
                                                                                                 'Leppäjärven ramppi'),
@@ -494,7 +494,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
       }
     ]
   }');
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot) VALUES ((SELECT id
+INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot) VALUES (1, (SELECT id
                                                                                           FROM yllapitokohde
                                                                                           WHERE
                                                                                             nimi = 'Nakkilan ramppi'),
@@ -538,8 +538,8 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
       }
     ]
   }');
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
-VALUES ((SELECT id
+INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
+VALUES (1, (SELECT id
          FROM yllapitokohde
          WHERE nimi = 'Oulaisten ohitusramppi'), 'valmis' ::paallystystila, '2005-12-20 00:00:00+02', '{
   "osoitteet": [
@@ -577,8 +577,8 @@ VALUES ((SELECT id
     }
   ]
 }', 'hylatty' ::paallystysilmoituksen_paatostyyppi, 'Ei tässä ole mitään järkeä', '2005-12-20 00:00:00+02');
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
-VALUES ((SELECT id
+INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
+VALUES (1, (SELECT id
          FROM yllapitokohde
          WHERE nimi = 'Oulun ohitusramppi'), 'lukittu' ::paallystystila, '2005-12-20 00:00:00+02', '{
   "osoitteet": [
@@ -1029,8 +1029,8 @@ VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, 100, 4543.9
        ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 400, 100, 4543.95, 0),
        ((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'), 200, 10, 4543.95, 0);
 
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
-VALUES ((SELECT id
+INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
+VALUES (1, (SELECT id
          FROM yllapitokohde
          WHERE nimi = 'Ouluntie'), 'aloitettu' ::paallystystila, '2022-12-31'::DATE,
          '{

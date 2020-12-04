@@ -194,13 +194,13 @@ WHERE paallystyskohde = :id
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu)
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu, versio)
 VALUES (:paallystyskohde,
         :tila :: PAALLYSTYSTILA,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
-        :kayttaja, FALSE);
+        :kayttaja, FALSE, 1);
 
 -- name: hae-paallystysilmoituksen-kommentit
 -- Hakee annetun päällystysilmoituksen kaikki kommentit (joita ei ole poistettu) sekä
