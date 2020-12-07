@@ -1,7 +1,9 @@
--- q: onko samasta työstä tarkoitus tuottaa sekä toteutuneiden ja suunniteltujen rivit,
--- vai pitäisikö näiden jotenkin sulkea toisiaan pois, vai yhdistetäänkö ne raporttikoodissa?
 
 -- name: hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
+
+-- todo - onko samasta työstä tarkoitus tuottaa sekä toteutuneiden ja suunniteltujen rivit,
+-- vai pitäisikö näiden jotenkin sulkea toisiaan pois, vai yhdistetäänkö ne raporttikoodissa?
+
 SELECT tpk4.nimi as nimi,
      NULL ::integer as jarjestys,
      NULL ::numeric as "suunniteltu",
