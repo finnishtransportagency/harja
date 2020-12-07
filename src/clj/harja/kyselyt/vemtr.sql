@@ -1,3 +1,6 @@
+-- q: onko samasta työstä tarkoitus tuottaa sekä toteutuneiden ja suunniteltujen rivit,
+-- vai pitäisikö näiden jotenkin sulkea toisiaan pois, vai yhdistetäänkö ne raporttikoodissa?
+
 -- name: hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
 SELECT tpk4.nimi as nimi,
      NULL ::integer as jarjestys,
@@ -22,7 +25,6 @@ SELECT tpk4.nimi as nimi,
 	(not tpk4.poistettu) AND
 	(t.alkanut, t.paattynyt) OVERLAPS (:alkupvm, :loppupvm)
 	and ((:hallintayksikko is null) or (u.hallintayksikko = :hallintayksikko))
-	--  and (DATE :alkupvm, DATE :loppupvm) OVERLAPS (DATE t.alkanut, t.paattynyt)
   GROUP BY tpk4.id, tpk4.nimi, tpk4.yksikko, tpi.urakka, tpi.nimi
 
 
@@ -35,12 +37,12 @@ SELECT tpk4.nimi as nimi,
 	 tpk4.yksikko,
 	 tpk4.id as toimenpidekoodi,
 	 tyo.urakka as urakka,
-	 tpi.nimi as toimenpide, -- mistä tpi (josta tpi.nimi as toimenpide)?
+	 tpi.nimi as toimenpide,
 	 null::numeric as "toteuma",
 	 null ::numeric as "toteutunut-materiaalimaara",
 	 'yh-suunnitellut' as rivityyppi
 FROM yksikkohintainen_tyo tyo
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tyo.tehtava	,
+  JOIN toimenpidekoodi tpk4 ON tpk4.id = tyo.tehtava,
   urakka u, toimenpideinstanssi tpi
   WHERE tpi.toimenpide = tpk4.emo and tpi.urakka = u.id and
         u.id = tyo.urakka AND u.tyyppi = 'hoito' and (not u.poistettu) and
