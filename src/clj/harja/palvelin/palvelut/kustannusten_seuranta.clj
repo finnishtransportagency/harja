@@ -31,8 +31,10 @@
           res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
                                                                              :alkupvm alkupvm
                                                                              :loppupvm loppupvm
-                                                                             })
-          _ (println "Rivit kustannusten seurantaan " (pr-str res))]
+                                                                             :hoitokauden-alkuvuosi
+                                                                             (pvm/hoitokauden-alkuvuosi
+                                                                               (pvm/iso-8601->pvm alkupvm))
+                                                                             })]
       res)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 

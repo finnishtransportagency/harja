@@ -54,12 +54,11 @@
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');"))
 
-(defn erilliskustannusten-toteumat-sql-haku [urakka alkupvm loppupvm]
-  (str "SELECT
+(defn erilliskustannusten-toteumat-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+  (let [query (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM lasku_kohdistus lk
-                 LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpidekoodi tk,
@@ -70,7 +69,26 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Erillishankinnat (W)'
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')"))
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+        UNION ALL
+        SELECT
+       (SELECT korotettuna
+        FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi ", 9,
+                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka "),
+                                            coalesce(t.summa, 0),
+                                            (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
+                                               AS toteutunut_summa,
+        0 AS budjetoitu_summa
+        FROM toteutunut_tyo t
+              JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'Erillishankinnat (W)',
+             toimenpideinstanssi tpi,
+             toimenpidekoodi tk
+        WHERE t.urakka_id = " urakka "
+          AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
+          AND t.toimenpideinstanssi = tpi.id
+          AND tpi.toimenpide = tk.id
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')")]
+    query))
 
 (defn- hoidonjohdonpalkkio-budjetoidut-sql-haku [urakka alkupvm loppupvm]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
@@ -90,8 +108,8 @@
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
-(defn- hoidonjohdonpalkkio-toteumat-sql-haku [urakka alkupvm loppupvm]
-  (str "SELECT
+(defn- hoidonjohdonpalkkio-toteumat-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+  (let [query (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM lasku_kohdistus lk
@@ -106,7 +124,29 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Hoidonjohtopalkkio (G)'
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')"))
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+        UNION ALL
+        SELECT
+          (SELECT korotettuna
+             FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi ", 9,
+                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka "),
+                                            coalesce(t.summa, 0),
+                                            (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
+                                               AS toteutunut_summa,
+        0 AS budjetoitu_summa
+        FROM toteutunut_tyo t
+              LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+              LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
+             toimenpideinstanssi tpi,
+             toimenpidekoodi tk
+        WHERE t.urakka_id = " urakka "
+          AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
+          AND t.toimenpideinstanssi = tpi.id
+          AND tpi.toimenpide = tk.id
+          AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")
+        _ (println "query: " query)]
+    query))
 
 (defn- johto-ja-hallintokorvaukset-budjetoidut-sql-haku [urakka alkupvm loppupvm]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
@@ -132,7 +172,7 @@
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
-(defn- johto-ja-hallintokorvaukset-toteutuneet-sql-haku [urakka alkupvm loppupvm]
+(defn- johto-ja-hallintokorvaukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
   (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
@@ -148,7 +188,27 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')"))
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+        UNION ALL
+        SELECT
+       (SELECT korotettuna
+        FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi ", 9,
+                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka "),
+                                            coalesce(t.summa, 0),
+                                            (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
+                                               AS toteutunut_summa,
+        0 AS budjetoitu_summa
+        FROM toteutunut_tyo t
+              LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+              LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
+             toimenpideinstanssi tpi,
+             toimenpidekoodi tk
+        WHERE t.urakka_id = " urakka "
+          AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
+          AND t.toimenpideinstanssi = tpi.id
+          AND tpi.toimenpide = tk.id
+          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');"))
 
 (defn- hankintakustannukset-budjetoitu-sql-haku [urakka alkupvm loppupvm]
   (str "
@@ -242,6 +302,32 @@ WHERE l.urakka = " urakka "
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')"))
 
+(defn- lisatyot-sql-haku [urakka alkupvm loppupvm]
+  (str "SELECT lk.summa AS toteutunut_summa,
+             0 AS budjetoitu_summa,
+             CASE
+                 WHEN tk.koodi = '23104' THEN 'Talvihoito'
+                 WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
+                 WHEN tk.koodi = '23124' THEN 'Sorateiden hoito'
+                 WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
+                 WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
+                 WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
+                 WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
+                 END                 AS toimenpide
+        FROM lasku_kohdistus lk
+                 LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+                 LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+             toimenpideinstanssi tpi,
+             toimenpidekoodi tk,
+             lasku l
+        WHERE l.urakka = " urakka "
+          AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
+          AND lk.maksueratyyppi = 'lisatyo'
+          AND lk.lasku = l.id
+          AND lk.toimenpideinstanssi = tpi.id
+          AND tpi.toimenpide = tk.id")
+  )
+
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu
 ;; (mm. Hankintakustannukset, Johto- ja Hallintakorvaus, Hoidonjohdonpalkkio, Erillishankinnat)
@@ -258,9 +344,7 @@ WHERE l.urakka = " urakka "
                            vastaus)
         eh-summa (apply + (map #(:budjetoitu_summa %) erillishankinnat))
         erillishankinnat-sql (q (erilliskustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) erillishankinnat-sql))
-        _ (println "erillishankinnat-sql" eh-summa (pr-str erillishankinnat-sql))
-        _ (println "erillishankinnat" sql-summa (pr-str erillishankinnat))]
+        sql-summa (apply + (map #(first %) erillishankinnat-sql))]
     (is (= eh-summa sql-summa))))
 
 ;; Testataan/vertaillaan erillishankintojen toteutumia
@@ -268,16 +352,15 @@ WHERE l.urakka = " urakka "
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
         vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
         erillishankinnat (filter
                            #(when (= "erillishankinnat" (:paaryhma %))
                               true)
                            vastaus)
         eh-summa (apply + (map #(:toteutunut_summa %) erillishankinnat))
-        erillishankinnat-sql (q (erilliskustannusten-toteumat-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) erillishankinnat-sql))
-        _ (println "erillishankinnat-sql" eh-summa (pr-str erillishankinnat-sql))
-        _ (println "erillishankinnat" sql-summa (pr-str erillishankinnat))]
+        erillishankinnat-sql (q (erilliskustannusten-toteumat-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        sql-summa (apply + (map #(first %) erillishankinnat-sql))]
     (is (= eh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hoidonjohdonpalkkioiden budjetoituja summia
@@ -292,9 +375,7 @@ WHERE l.urakka = " urakka "
                       vastaus)
         hj-summa (apply + (map #(:budjetoitu_summa %) hj_palkkiot))
         hj-sql (q (hoidonjohdonpalkkio-budjetoidut-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) hj-sql))
-        _ (println "hj-sql" sql-summa (pr-str hj-sql))
-        _ (println "hj" hj-summa (pr-str hj_palkkiot))]
+        sql-summa (apply + (map #(first %) hj-sql))]
     (is (= hj-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hoidonjohdonpalkkioiden toteutuneita summia
@@ -302,16 +383,15 @@ WHERE l.urakka = " urakka "
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
         vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
         hj_palkkiot (filter
                       #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
                          true)
                       vastaus)
         hj-summa (apply + (map #(:toteutunut_summa %) hj_palkkiot))
-        hj-sql (q (hoidonjohdonpalkkio-toteumat-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) hj-sql))
-        _ (println "hj-sql" sql-summa (pr-str hj-sql))
-        _ (println "hj" hj-summa (pr-str hj_palkkiot))]
+        hj-sql (q (hoidonjohdonpalkkio-toteumat-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        sql-summa (apply + (map #(first %) hj-sql))]
     (is (= hj-summa sql-summa))))
 
 ;; Testataan/vertaillaan Johto- ja hallintokorvauksen budjetoituja summia
@@ -327,9 +407,7 @@ WHERE l.urakka = " urakka "
                                 vastaus)
         jjh-summa (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset))
         jjh-sql (q (johto-ja-hallintokorvaukset-budjetoidut-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) jjh-sql))
-        _ (println "jjh-sql" sql-summa (pr-str jjh-sql))
-        _ (println "johto_ja_h_korvaukset" jjh-summa (pr-str johto_ja_h_korvaukset))]
+        sql-summa (apply + (map #(first %) jjh-sql))]
     (is (= jjh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Johto- ja hallintokorvauksen toteutuneita summia
@@ -337,16 +415,15 @@ WHERE l.urakka = " urakka "
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
         vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
         johto_ja_h_korvaukset (filter
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
         jjh-summa (apply + (map #(:toteutunut_summa %) johto_ja_h_korvaukset))
-        jjh-sql (q (johto-ja-hallintokorvaukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) jjh-sql))
-        _ (println "jjh-sql" sql-summa (pr-str jjh-sql))
-        _ (println "johto_ja_h_korvaukset" jjh-summa (pr-str johto_ja_h_korvaukset))]
+        jjh-sql (q (johto-ja-hallintokorvaukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        sql-summa (apply + (map #(first %) jjh-sql))]
     (is (= jjh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hankintakustannusten budjetoituja summia
@@ -362,9 +439,7 @@ WHERE l.urakka = " urakka "
                                vastaus)
         h-summa (apply + (map #(:budjetoitu_summa %) hankintakustannukset))
         h-sql (q (hankintakustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) h-sql))
-        _ (println "h-sql" sql-summa (pr-str h-sql))
-        _ (println "hankintakustannukset" h-summa (pr-str hankintakustannukset))]
+        sql-summa (apply + (map #(first %) h-sql))]
     (is (= h-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hankintakustannusten toteutuneita summia
@@ -380,9 +455,23 @@ WHERE l.urakka = " urakka "
                                vastaus)
         h-summa (apply + (map #(:toteutunut_summa %) hankintakustannukset))
         h-sql (q (hankintakustannukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) h-sql))
-        _ (println "h-sql" sql-summa (pr-str h-sql))
-        _ (println "hankintakustannukset" h-summa (pr-str hankintakustannukset))]
+        sql-summa (apply + (map #(first %) h-sql))]
     (is (= h-summa sql-summa))))
+
+;; Testataan/vertaillaan toteutuneita lisätöitä
+;; Lisätöitä ei voi suunnitella etukäteen, joten niille ei ole budjetoituja kustannuksia olemassa.
+(deftest lisatyot-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        lisatyot (filter
+                   #(when (= "lisatyo" (:maksutyyppi %))
+                      true)
+                   vastaus)
+        l-summa (apply + (map #(:toteutunut_summa %) lisatyot))
+        l-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
+        sql-summa (apply + (map #(first %) l-sql))]
+    (is (= l-summa sql-summa))))
 
 ;; TODO: Tee erillinen urakka, jolle syötetään suunnitelmat ja kulut ja tarkista, että kaikki löytyy tietokannasta oikein

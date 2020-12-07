@@ -283,7 +283,7 @@ WHERE l.urakka = :urakka
   AND lk.toimenpideinstanssi = tpi.id
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
-  AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+  AND tk.koodi = '23151'
 UNION ALL
 -- Osa toteutuneista erillishankinnoista, hoidonjohdonpalkkioista ja johdon- hallintakorvauksesta
 -- siirretään kustannusarvoitu_tyo taulusta toteutunut_tyo tauluun aina kuukauden viimeisenä päivänä.
@@ -291,11 +291,16 @@ UNION ALL
 SELECT tpi.id                                  AS toimenpideinstanssi_id,
        tk.nimi                                 AS toimenpidekoodi_nimi,
        0                                       AS budjetoitu_summa,
-       t.summa                                 AS toteutunut_summa,
+       (SELECT korotettuna
+        FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi, 9,
+                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka),
+                                            coalesce(t.summa, 0),
+                                            (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))))
+                                               AS toteutunut_summa,
        'kokonaishintainen'                     AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            END                                 AS toimenpideryhma,
@@ -310,7 +315,7 @@ SELECT tpi.id                                  AS toimenpideinstanssi_id,
        tk_tehtava.jarjestys                    AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
@@ -325,5 +330,5 @@ WHERE t.urakka_id = :urakka
   AND t.toimenpideinstanssi = tpi.id
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
-  AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+  AND tk.koodi = '23151'
 ORDER BY jarjestys ASC, ajankohta asc;
