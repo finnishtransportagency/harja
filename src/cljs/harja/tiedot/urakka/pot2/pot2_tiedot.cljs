@@ -66,20 +66,17 @@
   (process-event [_ {{urakka-id :id :as urakka} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
-    (println "TallennaPot2Tiedot paallystysilmoitus-lomakedata: " (pr-str paallystysilmoitus-lomakedata))
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
-                               (assoc :pot-versio 2)
-                               ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
-                               (update :ilmoitustiedot dissoc :virheet)
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               (assoc :pot-versio 2)
+                               (update :ilmoitustiedot dissoc :virheet)
                                (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
                                                                 (into (sorted-map)
                                                                       @kohdeosat-atom))))]
-      (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str paallystysilmoitus-lomakedata))
-      (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
+      (log "TallennaPot2Tiedot lahetettava-data: " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
                          {:urakka-id urakka-id
                           :sopimus-id (first valittu-sopimusnumero)

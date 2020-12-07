@@ -493,7 +493,7 @@
 ;; petar da li treba ovde nesto
 
 (defn- tallenna-pot2-paallystekerros
-  [db paallystysilmoitus]
+  [db paallystysilmoitus pot2-id]
   (doseq [rivi (->> paallystysilmoitus
                     :kulutuskerros
                     (filter (comp not :poistettu)))]
@@ -502,7 +502,9 @@
           params (merge rivi
                         {:kohdeosa_id (:kohdeosa-id rivi)
                          :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
-                         :paallystekerros_id paallystekerros-id})]
+                         :paallystekerros_id paallystekerros-id
+                         :lisatieto (:lisatieto rivi)
+                         :pot2_id pot2-id})]
       (if paallystekerros-id
         ;; UPDATE
         (q/paivita-pot2-paallystekerros<! (merge params
@@ -554,7 +556,8 @@
                                              :yllapitokohde-id paallystyskohde-id
                                              :osat (map #(assoc % :id (:kohdeosa-id %))
                                                      (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})
-              pot2-paallystekerros (when pot2? (tallenna-pot2-paallystekerros db paallystysilmoitus))
+              pot2-paallystekerros (when pot2? (tallenna-pot2-paallystekerros db paallystysilmoitus
+                                                                              (:id vanha-paallystysilmoitus)))
               _ (println "Tallennuksen paluuarvo pot2-paallystekerros " pot2-paallystekerros)]
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.

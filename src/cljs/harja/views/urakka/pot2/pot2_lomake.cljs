@@ -28,6 +28,40 @@
 (defn- alusta [e! app]
   [:div "Alustatiedot"])
 
+(defn- kulutuskerroksen-toiminnot-sarake
+  [rivi osa e! app voi-muokata? kohdeosat-atom]
+  (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn]
+                             (let [vanhat-kohdeosat @kohdeosat-atom
+                                   uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
+                               (swap! kohdeosat-atom (fn [_]
+                                                       uudet-kohdeosat))))
+        lisaa-osa-fn (fn [index]
+                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
+                                             (yllapitokohteet/lisaa-uusi-kohdeosa vanhat-kohdeosat (inc index) {}))))
+        poista-osa-fn (fn [index]
+                        (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
+                                              (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
+    (fn [rivi {:keys [index]} voi-muokata?]
+      (let [yllapitokohde (-> app :paallystysilmoitus-lomakedata
+                              :perustiedot
+                              (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
+        [:span.tasaa-oikealle
+         [napit/yleinen-ensisijainen ""
+          lisaa-osa-fn
+          {:ikoni (ikonit/livicon-plus)
+           :disabled (or (not (:kirjoitusoikeus? app))
+                         (not voi-muokata?))
+           :luokka "napiton-nappi btn-xs"
+           :toiminto-args [index]}]
+         [napit/kielteinen ""
+          poista-osa-fn
+          {:ikoni (ikonit/livicon-trash)
+           :disabled (or (not (:kirjoitusoikeus? app))
+                         (not voi-muokata?))
+           :luokka "napiton-nappi btn-xs"
+           :toiminto-args [index]}]])))
+  )
+
 (defn- kulutuskerros
   "Alikohteiden päällysteiden kulutuskerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
@@ -41,6 +75,7 @@
       :uusi-rivi (fn [rivi]
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))
+      :piilota-toiminnot? true
       ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
       :luomisen-jalkeen (fn [grid-state]
                           (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
@@ -55,24 +90,44 @@
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
-     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys 1
+     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys perusleveys
        :tyyppi :valinta :valinnat kulutuskerros-toimenpiteet :valinta-arvo ::pot2-domain/koodi
-       :valinta-nayta ::pot2-domain/lyhenne}
-      {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-numero}
-      {:otsikko "Ajor." :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-ajorata}
-      {:otsikko "Kaista" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-kaista}
-      {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-alkuosa}
-      {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-alkuetaisyys}
-      {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-loppuosa}
-      {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-loppuetaisyys}
+       :valinta-nayta ::pot2-domain/lyhenne :pakollinen? true}
+      {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-numero :pakollinen? true}
+      {:otsikko "Ajor." :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-ajorata :pakollinen? true}
+      {:otsikko "Kaista" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-kaista :pakollinen? true}
+      {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-alkuosa :pakollinen? true}
+      {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-alkuetaisyys :pakollinen? true}
+      {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-loppuosa :pakollinen? true}
+      {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       :leveys perusleveys :nimi :tr-loppuetaisyys :pakollinen? true}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
-       :muokattava? (constantly false) :hae #(paallystys/rivin-kohteen-pituus (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
+       :muokattava? (constantly false) :pakollinen? true
+       :hae #(paallystys/rivin-kohteen-pituus
+               (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) }
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3
        :tyyppi :valinta :valinnat massat :valinta-arvo :pot2-massa/id
        :valinta-nayta (fn [rivi]
-                        (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))}
-      {:otsikko "Piennar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
-                                                                            (boolean (:piennar rivi)))}]
+                        (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi)) :pakollinen? true}
+      {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
+       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+      {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
+       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+      {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea
+       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+      {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
+       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+      {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
+                                                                            (boolean (:piennar rivi)))}
+      {:otsikko "Toiminnot" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
+       :tasaa :keskita :komponentti-args [e! app voi-muokata? kohdeosat-atom]
+       :komponentti kulutuskerroksen-toiminnot-sarake}]
      kohdeosat-atom]))
 
 
@@ -116,6 +171,9 @@
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi})
 
+(def kohdeosan-relevantit-avaimet
+  #{:kohdeosa-id :tr-kaista :tr-ajorata :tr-loppuosa :tr-alkuosa :tr-loppuetaisyys :nimi
+    :tr-alkuetaisyys :tr-numero :materiaali :toimenpide})
 
 (defn pot2-lomake
   [e! {yllapitokohde-id :yllapitokohde-id
@@ -129,12 +187,16 @@
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
+    (println "(:kohdeosat paallystysilmoitus-lomakedata) " (pr-str (:kohdeosat paallystysilmoitus-lomakedata)))
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
-                     (reset! pot2-tiedot/kohdeosat-atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet (:kohdeosat paallystysilmoitus-lomakedata))))
+                     (reset! pot2-tiedot/kohdeosat-atom
+                             (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                                          (mapv #(select-keys % kohdeosan-relevantit-avaimet)
+                                                                                (:kohdeosat paallystysilmoitus-lomakedata)))))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
