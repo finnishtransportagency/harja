@@ -265,19 +265,21 @@
            [:td {:style {:width (:prosentti leveydet)}}]])
         ]]]]))
 
-(defn yhteenveto-laatikko [app data]
-  (let []
+(defn yhteenveto-laatikko [e! app data]
+  (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+        hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
+        tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitovuosi-nro app) 0))
+        kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitovuosi-nro app) 0))
+        toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))]
     [:div.yhteenveto.header [:span "Yhteenveto"]
-     [:div.row [:span "Tavoitehinta: "] [:span (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])]]
-     [:div.row [:span "Toteuma: "] [:span (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])]]
+     [:div.row [:span "Tavoitehinta: "] [:span.pull-right (formatoi-naytolle->big tavoitehinta true)]]
+     [:div.row [:span "Kattohinta: "] [:span.pull-right (formatoi-naytolle->big kattohinta true)]]
+     [:div.row [:span "Toteuma: "] [:span.pull-right (formatoi-naytolle->big toteuma true)]]
      [:div.row [:span "Tavoitehinnan ylitys: "]
-      (when (> (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
-                    (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])) 0)
-        [:span.negatiivinen-numero
-         (formatoi-naytolle->big (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
-                                    (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa])
-                                    ))])]
-     [:div.row [:span "Lisätyöt: "] [:span (formatoi-naytolle->big (:lisatyot data))]]]))
+      (when (big/gt toteuma tavoitehinta)
+        [:span.negatiivinen-numero.pull-right
+         (str "+ " (formatoi-naytolle->big (big/minus toteuma tavoitehinta)))])]
+     [:div.row [:span "Lisätyöt: "] [:span.pull-right (formatoi-naytolle->big (:lisatyot data) false)]]]))
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -290,8 +292,10 @@
                              2019
                              (get-in app [:hoitokauden-alkuvuosi]))]
     [:div.kustannusten-seuranta
-     [debug/debug app]
-     [:div {:style {:padding-top "1rem"}} [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
+     #_ [debug/debug app]
+     [:div {:style {:padding-top "1rem"}}
+      [:h1 "Kustannusten seuranta"]
+      [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
      Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]
      [:div.row
       [:div.col-xs-6.col-md-3
@@ -304,14 +308,16 @@
         hoitokaudet]]]
 
      [ryhmitellyt-taulukko e! app taulukon-rivit]
-     [yhteenveto-laatikko app taulukon-rivit]]))
+     [yhteenveto-laatikko e! app taulukon-rivit]]))
 
 (defn kustannusten-seuranta* [e! app]
   (komp/luo
     (komp/lippu tila/kustannusten-seuranta-nakymassa?)
     (komp/piirretty (fn [this]
-                      (e! (kustannusten-seuranta-tiedot/->HaeKustannukset (:hoitokauden-alkuvuosi app)
-                                                                          nil nil))))
+                      (do
+                        (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
+                        (e! (kustannusten-seuranta-tiedot/->HaeKustannukset (:hoitokauden-alkuvuosi app)
+                                                                            nil nil)))))
     (fn [e! app]
       [:div {:id "vayla"}
        [:div

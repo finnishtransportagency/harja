@@ -20,6 +20,9 @@
 (defrecord HaeKustannukset [hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
 (defrecord KustannustenHakuOnnistui [vastaus])
 (defrecord KustannustenHakuEpaonnistui [vastaus])
+(defrecord HaeBudjettitavoite [])
+(defrecord HaeBudjettitavoiteHakuOnnistui [vastaus])
+(defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
 (defrecord AvaaRivi [tyyppi avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 
@@ -70,14 +73,10 @@
                                              (not= "lisatyo" (:maksutyyppi tehtava)))
                                        tehtava))
                                    toimenpiteen-tehtavat)
-            jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)
-            _ (js/console.log "Mihin osa lisatoista katoaa" (pr-str (map (juxt :maksutyyppi :toteutunut_summa :toimenpidekoodi_nimi) toimenpiteen-tehtavat)))
-            ]
+            jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)]
         {:paaryhma paaryhmaotsikko
          :toimenpide (first toimenpide)
          :jarjestys jarjestys
-
-         ;; TODO: Muuta reduce:ksi
          :toimenpide-toteutunut-summa (reduce (fn [summa tehtava]
                                                 (+ summa (:toteutunut_summa tehtava)))
                                               0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
@@ -215,9 +214,7 @@
                                                         raportin-paaryhmat))
                     :yht-budjetoitu-summa (apply + (map (fn [pr]
                                                           (get taulukon-rivit (keyword (str pr "-budjetoitu"))))
-                                                        raportin-paaryhmat))}
-
-          ]
+                                                        raportin-paaryhmat))}]
       (-> app
           (assoc-in [:kustannukset-yhteensa] yhteensa)
           (assoc-in [:kustannukset] vastaus)
@@ -227,6 +224,24 @@
   KustannustenHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
+    app)
+
+  HaeBudjettitavoite
+  (process-event [_ app]
+    (tuck-apurit/post! :budjettitavoite
+                       {:urakka-id (-> @tila/yleiset :urakka :id)}
+                       {:onnistui ->HaeBudjettitavoiteHakuOnnistui
+                        :epaonnistui ->HaeBudjettitavoiteHakuEpaonnistui
+                        :paasta-virhe-lapi? true})
+    app)
+
+  HaeBudjettitavoiteHakuOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :budjettitavoite vastaus))
+
+  HaeBudjettitavoiteHakuEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
     app)
 
   ;; Vain yksi rivi voi olla avattuna kerralla, joten tallennetaan avain app-stateen tai poistetaan se, jos se oli jo valittuna
@@ -261,3 +276,17 @@
   (let [urakka-loppupvm (-> @tila/yleiset :urakka :loppupvm)
         hoitokauden-nro (- 6 (- (pvm/vuosi urakka-loppupvm) valittu-hoitokausivuosi))]
     hoitokauden-nro))
+
+(defn hoitokauden-tavoitehinta [hoitokauden-nro app]
+  (let [_ (js/console.log "budjettitavoite" (pr-str (:budjettitavoite app)))
+        tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                              (:tavoitehinta %))
+                           (:budjettitavoite app))]
+    tavoitehinta))
+
+(defn hoitokauden-kattohinta [hoitokauden-nro app]
+  (let [_ (js/console.log "budjettitavoite" (pr-str (:budjettitavoite app)))
+        kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                              (:kattohinta %))
+                           (:budjettitavoite app))]
+    kattohinta))
