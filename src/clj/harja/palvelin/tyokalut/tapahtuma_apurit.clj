@@ -1,6 +1,7 @@
 (ns harja.palvelin.tyokalut.tapahtuma-apurit
   (:require [clojure.core.async :as async]
             [harja.palvelin.jarjestelma-rajapinta :as jr]
+            [harja.tyokalut.predikaatti :as predikaatti]
             [harja.fmt :as fmt]
             [certifiable.log :as log])
   (:import [java.net InetAddress]))
@@ -26,15 +27,27 @@
   (log/debug (str "[KOMPONENTTI-EVENT] julkaise-tapahtuma - tapahtuma: " tapahtuma " data: " data))
   (jr/kutsu :julkaise-tapahtuma tapahtuma data host-nimi))
 
-(defn tarkkaile [lopeta-tarkkailu-kanava timeout-ms f]
+(defn loop-f
+  [lopeta-tarkkailu-kanava timeout-ms f]
+  {:pre [(predikaatti/chan? lopeta-tarkkailu-kanava)
+         (integer? timeout-ms)
+         (ifn? f)]
+   :post [(predikaatti/chan? %)]}
   (async/go
-    (f)
-    (loop [[_ kanava] (async/alts! [lopeta-tarkkailu-kanava
-                                    (async/timeout timeout-ms)])]
-      (when-not (= kanava lopeta-tarkkailu-kanava)
-        (f)
-        (recur (async/alts! [lopeta-tarkkailu-kanava
-                             (async/timeout timeout-ms)]))))))
+    (try (f)
+         (loop [[_ kanava] (async/alts! [lopeta-tarkkailu-kanava
+                                         (async/timeout timeout-ms)])]
+           (when-not (= kanava lopeta-tarkkailu-kanava)
+             (f)
+             (recur (async/alts! [lopeta-tarkkailu-kanava
+                                  (async/timeout timeout-ms)]))))
+         (catch Throwable t
+           (log/error "loop-f kaatui: " (.getMessage t))
+           (binding [*out* *err*]
+             (log/error "Stacktrace"))
+           (.printStackTrace t)
+           (async/close! lopeta-tarkkailu-kanava)
+           (throw t)))))
 
 (defn tarkkaile-tapahtumaa [& args]
   (apply jr/kutsu :tarkkaile-tapahtumaa args))

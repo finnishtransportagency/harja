@@ -691,7 +691,7 @@
 
       :status (component/using
                 (status/luo-status (:kehitysmoodi asetukset))
-                [:http-palvelin :db  :komponenttien-tila])
+                [:http-palvelin :komponenttien-tila])
 
       :vaylien-geometriahaku
       (component/using

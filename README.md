@@ -70,7 +70,9 @@ askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
 #### Docker compose
 
 1. Asenna docker ja docker compose
-2. aja `bash sh/dc/aja-harja-dokkerissa.sh`
+2. Jos olet linuxilla, niin lisää itsesi `docker` ryhmään, jos näin ei jo ole. Lisää tietoja
+   [täältä](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
+3. Aja `bash sh/dc/aja-harja-dokkerissa.sh`
 
 ## Kirjautuminen ja ModHeader
 

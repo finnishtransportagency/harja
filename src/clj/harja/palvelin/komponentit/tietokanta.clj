@@ -46,15 +46,15 @@
                         lopeta-tarkkailu-kanava
                         paivitystiheys-ms
                         tapahtuma-julkaisija]
-  (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
-                              paivitystiheys-ms
-                              (fn []
-                                (tapahtuma-julkaisija (get (kp/status db) ::kp/tiedot)))))
+  (tapahtuma-apurit/loop-f lopeta-tarkkailu-kanava
+                           paivitystiheys-ms
+                           (fn []
+                             (tapahtuma-julkaisija (get (kp/status db) ::kp/tiedot)))))
 
 (defn luo-db-tapahtumat [this db-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava]
   (let [tapahtuma (db-tunnistin->db-tila-tapahtuma db-nimi)
         tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija tapahtuma)
-                                                            ::db-tapahtuma)]
+                                                                    ::db-tapahtuma)]
     (case db-nimi
       :db (tarkkaile-kantaa this lopeta-tarkkailu-kanava (get tarkkailun-timeout-arvot :paivitystiheys-ms) tapahtuma-julkaisija)
       :db-replica (tarkkaile-kantaa this lopeta-tarkkailu-kanava (get tarkkailun-timeout-arvot :paivitystiheys-ms) tapahtuma-julkaisija)
@@ -121,8 +121,8 @@
    ;; fallbackiksi (eli System.error), ja loggaustaso SEVERE:ksi.
    ;; http://www.mchange.com/projects/c3p0/#configuring_logging
    (System/setProperties
-    (doto (new Properties (System/getProperties))
-      (.put "com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog")
-      (.put "com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "SEVERE")))
+     (doto (new Properties (System/getProperties))
+       (.put "com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog")
+       (.put "com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "SEVERE")))
    (->Tietokanta asetukset
                  kehitysmoodi)))

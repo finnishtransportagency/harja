@@ -96,7 +96,10 @@
                       :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
-                      :salasana nil})
+                      :salasana nil
+                      :tarkkailun-timeout-arvot {:paivitystiheys-ms 3000
+                                                 :kyselyn-timeout-ms 10000}
+                      :tarkkailun-nimi :db})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
@@ -104,7 +107,10 @@
                        :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                        :tietokanta "temp"
                        :kayttaja "harjatest"
-                       :salasana nil})
+                       :salasana nil
+                       :tarkkailun-timeout-arvot {:paivitystiheys-ms 3000
+                                                  :kyselyn-timeout-ms 10000}
+                       :tarkkailun-nimi :db-temppi})
 
 (defn odota-ehdon-tayttymista [ehto-fn viesti max-aika-ms]
   (loop [max-ts (+ max-aika-ms (System/currentTimeMillis))]
@@ -1266,8 +1272,7 @@
                         :tapahtuma (component/using
                                      (tapahtuma/->Tapahtuma)
                                      [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija)
-                        :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 5000}} (atom nil)))))))
+                        :rajapinta (rajapinta/->Rajapintakasittelija))))))
 
 (defn lopeta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija component/stop))
@@ -1308,7 +1313,7 @@
                                        [:db])
                            :http-palvelin (component/using
                                             (http/luo-http-palvelin portti true)
-                                            [:todennus])
+                                            [:db :todennus])
                            :integraatioloki (component/using
                                               (integraatioloki/->Integraatioloki nil)
                                               [:db])

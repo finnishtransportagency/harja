@@ -145,9 +145,9 @@
                           :onnistunut (s/keys :req-un [::olioiden-tilat])))
 
 (defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
-  (tapahtuma-apurit/tarkkaile lopeta-tarkkailu-kanava
-                              paivitystiheys-ms
-                              (fn []
+  (tapahtuma-apurit/loop-f lopeta-tarkkailu-kanava
+                           paivitystiheys-ms
+                           (fn []
                                 (try
                                   (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
                                         jms-tila (:vastaus vastaus)]
@@ -155,7 +155,10 @@
                                     (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
                                   (catch Throwable t
                                     (tapahtuma-julkaisija :tilan-lukemisvirhe)
-                                    (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))
+                                    (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t)))
+                                    (binding [*out* *err*]
+                                      (log/error "Stack trace:"))
+                                    (.printStackTrace t))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %

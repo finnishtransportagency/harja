@@ -6,7 +6,8 @@
 (def sonja-asetukset {:url (str "tcp://" (env/env "HARJA_SONJA_BROKER_HOST" "localhost") ":" (env/env "HARJA_SONJA_BROKER_PORT" 61616))
                       :kayttaja ""
                       :salasana ""
-                      :tyyppi :activemq})
+                      :tyyppi :activemq
+                      :paivitystiheys-ms 3000})
 
 (def integraatio-sampo-asetukset {:lahetysjono-sisaan sampo-tk/+lahetysjono-sisaan+
                                   :kuittausjono-sisaan sampo-tk/+kuittausjono-sisaan+

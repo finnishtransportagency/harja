@@ -70,7 +70,7 @@
 
 (defn replikoinnin-tila [komponenttien-tila]
   (async/go
-    (let [timeout-ms 100000
+    (let [timeout-ms 10000
           replikoinnin-tila-ok? (async/<! (replikoinnin-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
       {:ok? replikoinnin-tila-ok?
        :komponentti :db-replica
@@ -79,7 +79,7 @@
 
 (defn sonja-yhteyden-tila [komponenttien-tila]
   (async/go
-    (let [timeout-ms 1000 #_120000
+    (let [timeout-ms 120000
           yhteys-ok? (async/<! (sonja-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
       {:ok? yhteys-ok?
        :komponentti :sonja
@@ -126,13 +126,11 @@
             (fn [viestit]
               (apply str (interpose "\n" viestit))))))
 
-(defrecord Status [status kehitysmoodi?]
+(defrecord Status [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin
-           db :db
            komponenttien-tila :komponenttien-tila
            :as this}]
-    (reset! status {:viesti "Harja käynnistyy"})
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
@@ -161,8 +159,7 @@
   (stop [{http :http-palvelin :as this}]
     (http-palvelin/poista-palvelu http :status)
     (http-palvelin/poista-palvelu http :app-status)
-    (reset! status {:viesti "Harja sammutetaan"})
     this))
 
 (defn luo-status [kehitysmoodi?]
-  (->Status (atom nil) kehitysmoodi?))
+  (->Status kehitysmoodi?))
