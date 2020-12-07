@@ -201,7 +201,7 @@ VALUES (:paallystyskohde,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
-        :kayttaja, FALSE, 1);
+        :kayttaja, FALSE, :versio);
 
 -- name: hae-paallystysilmoituksen-kommentit
 -- Hakee annetun päällystysilmoituksen kaikki kommentit (joita ei ole poistettu) sekä

@@ -159,6 +159,14 @@
                                     :verkon-tarkoitus 1
                                     :tekninen-toimenpide 1}]}})
 
+(def pot2-testidata (-> pot-testidata
+                        (assoc :pot-versio 2)
+                        ;; (assoc-in [:perustiedot :aloituspvm] (pvm/luo-pvm 2021 9 1))
+                        ;; (assoc-in [:perustiedot :valmispvm-kohde] (pvm/luo-pvm 2021 9 2))
+                        ;; (assoc-in [:perustiedot :valmispvm-paallystys] (pvm/luo-pvm 2021 9 2))
+                        ;; (assoc-in [:perustiedot :takuupvm] (pvm/luo-pvm 2021 9 3))
+                        ))
+
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
@@ -301,6 +309,9 @@
                                                :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain})
         tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
     (is (= (count paallystysilmoitukset) 2) "Päällystysilmoituksia löytyi vuodelle 2021")
+    (is (= (:pot-versio tarkea-kohde) 2))
+
+  (println "petar prosao je test verzije")
     (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
     (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
     (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
@@ -393,6 +404,7 @@
                                                     +kayttaja-jvh+ {:urakka-id urakka-id
                                                                     :sopimus-id sopimus-id
                                                                     :paallystyskohde-id paallystyskohde-id})
+        - (println "petar testiram ovo " (pr-str paallystysilmoitus-kannassa))
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
@@ -485,12 +497,11 @@
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-          paallystysilmoitus (-> pot-testidata
+          paallystysilmoitus (-> pot2-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
-                                 (assoc :pot-versio 2)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
-
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          - (println "petar evo sad cu da upisem " (pr-str paallystysilmoitus))
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                :sopimus-id sopimus-id
@@ -500,6 +511,11 @@
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
       (is (= (count (:yllapitokohteet vastaus)) 4))
       (is (= (count (:paallystysilmoitukset vastaus)) 4))
+
+      (let [[tallennettu-versio ilmoitustiedot] (first (q "SELECT versio, ilmoitustiedot FROM paallystysilmoitus
+                                                           WHERE paallystyskohde = " paallystyskohde-id))]
+        (is (= tallennettu-versio 2))
+        (is (nil? ilmoitustiedot) "POT2:ssa kirjoittamme ne omille tauluille"))
 
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)

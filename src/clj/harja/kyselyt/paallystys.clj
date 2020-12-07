@@ -21,6 +21,10 @@
                                    (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                                          :sopimus sopimus-id
                                                                          :vuosi vuosi}))
+        _ (println "petar evo me ovde sam procitao iza baze i konvertovao " (pr-str paallytysilmoitukset))
+        _ (println "petar ima ih " (count paallytysilmoitukset))
         paallytysilmoitukset (yllapitokohteet-q/liita-kohdeosat-kohteisiin
                                db paallytysilmoitukset :paallystyskohde-id)]
+    (println "petar sada ih ima " (count paallytysilmoitukset))
+    (println "petar i vrednosti su " (pr-str paallytysilmoitukset))
     paallytysilmoitukset))

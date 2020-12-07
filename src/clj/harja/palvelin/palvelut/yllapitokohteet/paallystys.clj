@@ -247,6 +247,7 @@
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         - (println "petar hajde da vidimo sta je vratio " (pr-str paallystysilmoitus))
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
+            (println "petar OVDE NISAM SME DA UDJEM")
             (cond
               (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
               ;; Vuonna 2018 käytettiin uutta ja vanhaa mallia
@@ -282,7 +283,7 @@
     paallystysilmoitus))
 
 (defn- luo-paallystysilmoitus [db user urakka-id
-                               {:keys [paallystyskohde-id ilmoitustiedot perustiedot]
+                               {:keys [paallystyskohde-id ilmoitustiedot perustiedot pot-versio]
                                 :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
@@ -301,6 +302,7 @@
            db
            {:paallystyskohde paallystyskohde-id
             :tila tila
+            :versio pot-versio
             :ilmoitustiedot ilmoitustiedot
             :takuupvm (konversio/sql-date takuupvm)
             :kayttaja (:id user)}))))
@@ -544,6 +546,7 @@
           _ (println "petar trazim ovaj paallystyskohde-id=" paallystyskohde-id)
           vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
           - (println "petar i nasao sam ovo " (pr-str vanha-paallystysilmoitus))
+          - (println "petar a novi koji hocu da upisem je " (pr-str paallystysilmoitus))
           tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
           ali-ja-muut-kohteet (remove :poistettu (-> paallystysilmoitus :ilmoitustiedot :osoitteet))
           alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
@@ -568,6 +571,8 @@
                         paallystysilmoitus (if pot2?
                                              paallystysilmoitus
                                              (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat))
+
+                        - (println "petar hajde da vidimo sta ce da pokusa da upise " (pr-str paallystysilmoitus))
                         paallystysilmoitus-id (if vanha-paallystysilmoitus
                                                 (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                                                             vanha-paallystysilmoitus)
