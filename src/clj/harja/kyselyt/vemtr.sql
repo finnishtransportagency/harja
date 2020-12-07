@@ -26,7 +26,7 @@ SELECT tpk4.nimi as nimi,
         (not u.poistettu) and t.urakka = u.id and tpk4.id = tt.toimenpidekoodi and
 	(not tpk4.poistettu) AND
 	(t.alkanut, t.paattynyt) OVERLAPS (:alkupvm, :loppupvm)
-	and ((:hallintayksikko is null) or (u.hallintayksikko = :hallintayksikko))
+	and ((:hallintayksikko::integer is null) or (u.hallintayksikko = :hallintayksikko::integer))
   GROUP BY tpk4.id, tpk4.nimi, tpk4.yksikko, tpi.urakka, tpi.nimi
 
 
@@ -49,6 +49,6 @@ FROM yksikkohintainen_tyo tyo
   WHERE tpi.toimenpide = tpk4.emo and tpi.urakka = u.id and
         u.id = tyo.urakka AND u.tyyppi = 'hoito' and (not u.poistettu) and
 	(u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
-	and ((:hallintayksikko is null) or (u.hallintayksikko = :hallintayksikko))
+	and ((:hallintayksikko::integer is null) or (u.hallintayksikko = :hallintayksikko::integer))
 
   GROUP BY tpk4.id, tyo.urakka, tpi.nimi
