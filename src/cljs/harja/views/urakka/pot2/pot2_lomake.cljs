@@ -55,7 +55,7 @@
                                              {:ikoni (ikonit/livicon-arrow-down)
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
-     [{:otsikko "Toimenpide" :nimi :toimenpide :leveys 3
+     [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys 1
        :tyyppi :valinta :valinnat kulutuskerros-toimenpiteet :valinta-arvo ::pot2-domain/koodi
        :valinta-nayta ::pot2-domain/lyhenne}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-numero}
@@ -67,7 +67,7 @@
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true :leveys perusleveys :nimi :tr-loppuetaisyys}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
        :muokattava? (constantly false) :hae #(paallystys/rivin-kohteen-pituus (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
-      {:otsikko "Päällyste" :nimi :materiaali :leveys 3
+      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3
        :tyyppi :valinta :valinnat massat :valinta-arvo :pot2-massa/id
        :valinta-nayta (fn [rivi]
                         (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))}

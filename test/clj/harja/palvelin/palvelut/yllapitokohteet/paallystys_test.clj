@@ -269,7 +269,7 @@
                                               :urakan-paallystysilmoitukset +kayttaja-jvh+
                                               {:urakka-id urakka-id
                                                :sopimus-id sopimus-id})]
-    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi")))
+    (is (= (count paallystysilmoitukset) 12) "Päällystysilmoituksia löytyi")))
 
 (deftest hae-paallystysilmoitukset-2
   (let [urakka-id @muhoksen-paallystysurakan-id
