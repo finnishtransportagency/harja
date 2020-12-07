@@ -192,7 +192,6 @@
 
           ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
           hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
-          ;_ (js/console.log "hankintakustannusten-toimenpiteet" (pr-str hankintakustannusten-toimenpiteet))
           hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
           jjhallinnan-toimenpiteet (summaa-hoito-ja-hallinta-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
           hankintakustannusten-toimenpiteet (sort-by :jarjestys hankintakustannusten-toimenpiteet)
@@ -278,15 +277,13 @@
     hoitokauden-nro))
 
 (defn hoitokauden-tavoitehinta [hoitokauden-nro app]
-  (let [_ (js/console.log "budjettitavoite" (pr-str (:budjettitavoite app)))
-        tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
                               (:tavoitehinta %))
                            (:budjettitavoite app))]
     tavoitehinta))
 
 (defn hoitokauden-kattohinta [hoitokauden-nro app]
-  (let [_ (js/console.log "budjettitavoite" (pr-str (:budjettitavoite app)))
-        kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
                               (:kattohinta %))
                            (:budjettitavoite app))]
     kattohinta))
