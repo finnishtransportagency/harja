@@ -1,8 +1,13 @@
 
 -- name: hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
 
--- todo - onko samasta työstä tarkoitus tuottaa sekä toteutuneiden ja suunniteltujen rivit,
+-- todo 1 - onko samasta työstä tarkoitus tuottaa sekä toteutuneiden ja suunniteltujen rivit,
 -- vai pitäisikö näiden jotenkin sulkea toisiaan pois, vai yhdistetäänkö ne raporttikoodissa?
+
+-- todo 2 - toimenpiteiden järjestys - mukaile tm-rapsan puolelta
+
+-- todo 3 - ryhmittely toimenpiteen (l3) mukaan ja summat elyittäin, eli esim talvihoito pp elyssä ois yksi rivi
+
 
 SELECT tpk4.nimi as nimi,
      NULL ::integer as jarjestys,
