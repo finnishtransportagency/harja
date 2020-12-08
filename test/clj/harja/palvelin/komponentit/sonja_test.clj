@@ -19,7 +19,7 @@
             [cheshire.core :as cheshire]
             [slingshot.slingshot :refer [try+]]
 
-            [harja.palvelin.main :as sut]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -113,7 +113,7 @@
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
-                             (<! (sut/aloita-sonja jarjestelma)))]
+                             (<! (jms/aloita-sonja jarjestelma)))]
     (testit))
   (alter-var-root #'jarjestelma component/stop)
   (lopeta-harja-tarkkailija!))
@@ -204,7 +204,7 @@
                                                                             [:sonja :db :integraatioloki]))))
                                             (timeout 10000)])
             sonja-yhteys (when toinen-jarjestelma
-                           (sut/aloita-sonja toinen-jarjestelma))]
+                           (jms/aloita-sonja toinen-jarjestelma))]
         (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
         (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
         (>!! sulje-sonja-kanava true)
