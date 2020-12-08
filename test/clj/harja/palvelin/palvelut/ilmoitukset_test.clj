@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.ilmoitukset-test
+(ns ^:hidas harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
             [clojure.set :as set]
             [clojure.core.async :refer [go]]
@@ -15,6 +15,8 @@
   (:import (java.util Date)))
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (urakkatieto-alustus!)
   (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -28,12 +30,11 @@
 
   (testit)
   (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (lopeta-harja-tarkkailija!)
+  (urakkatieto-lopetus!))
 
 
-(use-fixtures :each (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest hae-ilmoitukset-sarakkeet
   (let []

@@ -15,6 +15,7 @@
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
   (pystyta-harja-tarkkailija!)
   (alter-var-root
     #'jarjestelma
@@ -33,7 +34,7 @@
   (lopeta-harja-tarkkailija!))
 
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :once jarjestelma-fixture)
 
 (def ilmoituksien-saajat
   [{:etunimi "Erkki"

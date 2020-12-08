@@ -1,4 +1,4 @@
-(ns harja.palvelin.main-test
+(ns ^:hidas harja.palvelin.main-test
   "Testaa, että main käynnistää kaikki halutut komponentit. Tämän testin pointti on suojata
   ettei komponenttien lisäämisessä tule virheitä ja joitain tarvittuja komponentteja poistu.
   Kun lisäät komponentin, lisää se myös testin keysettiin."
@@ -34,12 +34,24 @@
                              (assoc :tloik {})
                              (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
                              (assoc-in [:turi :urakan-tyotunnit-url] ""))]
-    (str asetukset-datana)))
+    asetukset-datana
+    #_(str asetukset-datana)))
 
 (defn- poista-reader-makro [s korvaava-teksti]
   (str/replace s
-               #"#=\([^\;\#]*(?<!\;|(?:[\#][\=\_]))[^\;]*\)"
+               #"#=\([^\(\)]*\)"
                korvaava-teksti))
+
+(defn- poista-sisaiset-sulut [s]
+  (str/replace s
+               #"#=\((?:[^\(\)]*\()*([^\)\(]*)\)"
+               (fn [args]
+                 (case (count args)
+                   0 ""
+                   1 (first args)
+                   2 (apply str (let [lopputulos (first args)
+                                      pudotettavien-maara (+ (count (second args)) 2)]
+                                  (drop-last pudotettavien-maara lopputulos)))))))
 
 (defn- poista-reader-makrot [teksti korvaava-teksti]
   (loop [teksti teksti
@@ -47,9 +59,10 @@
          loop-n 0]
     (cond
       (> loop-n 1000) (do (println teksti) (throw (Exception. "liikaa looppeja")))
-      sisaltaa-readermakroja? (recur (poista-reader-makro teksti korvaava-teksti)
-                                     (re-find #"\#=" teksti)
-                                     (inc loop-n))
+      sisaltaa-readermakroja? (let [uusi-teksti (-> teksti (poista-reader-makro korvaava-teksti) poista-sisaiset-sulut)]
+                                (recur uusi-teksti
+                                       (re-find #"\#=" uusi-teksti)
+                                       (inc loop-n)))
       :default teksti)))
 
 (defn- testiasetukset [testit]
@@ -63,7 +76,7 @@
     (spit file asetukset)
     (binding [*testiasetukset* file]
       (testit))
-    #_(when @jarjestelma
+    (when @jarjestelma
       (component/stop @jarjestelma))
     (testi/lopeta-harja-tarkkailija!)
     (.delete file)))
@@ -123,7 +136,8 @@
     :paikkaukset
     :jarjestelman-tila
     :yha-paikkauskomponentti
-    :pot2})
+    :pot2
+    :komponenttien-tila})
 
 (def ei-statusta
   #{:metriikka
@@ -177,7 +191,8 @@
     :tieluvat
     :paikkaukset
     :jarjestelman-tila
-    :yha-paikkauskomponentti})
+    :yha-paikkauskomponentti
+    :pot2})
 
 (deftest main-komponentit-loytyy
   (reset! jarjestelma (component/start (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))))

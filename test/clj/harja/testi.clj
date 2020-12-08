@@ -1108,8 +1108,7 @@
   (pudota-ja-luo-testitietokanta-templatesta)
   (testit))
 
-(defn urakkatieto-fixture [testit]
-  (pudota-ja-luo-testitietokanta-templatesta)
+(defn urakkatieto-alustus! []
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
@@ -1127,11 +1126,18 @@
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
-  (reset! yit-rakennus-id (hae-yit-rakennus-id))
-  (testit)
+  (reset! yit-rakennus-id (hae-yit-rakennus-id)))
+
+(defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id nil)
   (reset! pudasjarven-alueurakan-id nil))
+
+(defn urakkatieto-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (urakkatieto-alustus!)
+  (testit)
+  (urakkatieto-lopetus!))
 
 (use-fixtures :once urakkatieto-fixture)
 

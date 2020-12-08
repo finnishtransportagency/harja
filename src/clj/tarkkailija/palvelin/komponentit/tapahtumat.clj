@@ -312,7 +312,6 @@
                            ::kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
                            ::tarkkailija->tapahtuma (atom {}))
           kuuntelu-valmis (async/chan)]
-      (log/info "Tapahtumat-komponentti käynnistyy")
       (reset! tarkkailijat {})
       (reset! kuuntelijat {})
       (reset! ajossa true)

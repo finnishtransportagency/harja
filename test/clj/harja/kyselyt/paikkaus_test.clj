@@ -7,7 +7,21 @@
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]))
 
-(use-fixtures :each (compose-fixtures urakkatieto-fixture tietokantakomponentti-fixture))
+(defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (urakkatieto-alustus!)
+  (pystyta-harja-tarkkailija!)
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!)
+  (urakkatieto-lopetus!))
+
+(use-fixtures :each jarjestelma-fixture)
 
 (def testipaikkauksen-ulkoinen-id 666123)
 (def testikohteen-ulkoinen-id 666567)

@@ -15,6 +15,8 @@
 
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (urakkatieto-alustus!)
   (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -28,12 +30,11 @@
 
   (testit)
   (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (lopeta-harja-tarkkailija!)
+  (urakkatieto-lopetus!))
 
 
-(use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+(use-fixtures :once jarjestelma-fixture)
 
 (deftest laske-hoitourakan-indeksilaskennan-perusluku
   (let [ur @oulun-alueurakan-2014-2019-id
