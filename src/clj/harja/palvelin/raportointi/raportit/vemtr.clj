@@ -11,8 +11,9 @@
 (defn hae-tm-combo [db params]  
   (let [combo-fn 
         (juxt tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla
-              vemtr-q/hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
-              vemtr-q/hae-yh-suunnitellut-tehtavamaarat-ja-toteumat-aikavalilla)
+              vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla
+              #_vemtr-q/hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
+             #_vemtr-q/hae-yh-suunnitellut-tehtavamaarat-ja-toteumat-aikavalilla)
         kolme-tulosjoukkoa (combo-fn db params)]
     (apply concat kolme-tulosjoukkoa)))
 
