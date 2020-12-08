@@ -171,7 +171,7 @@
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-paivita))) 666.7M) "Päivitys päivitti määrän.")
 
     ;; hoitokauden tietojen lisäys
-    (is (= (count tehtavamaarat-lisayksen-jalkeen) 14) "Uudet rivit lisättiin, vanhat säilyivät.")
+    (is (= (count tehtavamaarat-lisayksen-jalkeen) 17) "Uudet rivit lisättiin, vanhat säilyivät.")
     (is (= (:maara (first (filter #(and (= id-ise-rampit (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-lisaa))) 666M) "Lisäys lisäsi määrän.")
