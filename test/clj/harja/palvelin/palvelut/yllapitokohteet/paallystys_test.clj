@@ -69,7 +69,8 @@
               jarjestelma-fixture)
 
 (def pot-testidata
-  {:perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
+  {:pot-versio 1
+   :perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
                  :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
                  :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
                  :takuupvm (pvm/luo-pvm 2019 9 3)
@@ -422,6 +423,7 @@
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
 
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          - (println "petar evo bas sam ovde")
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                :sopimus-id sopimus-id
@@ -429,6 +431,8 @@
                                                                                :paallystysilmoitus paallystysilmoitus})]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
+
+      (println "petar upisao je, a bogami i u yllapitokohdeosa " (pr-str vastaus))
       (is (= (count (:yllapitokohteet vastaus)) 4))
       (is (= (count (:paallystysilmoitukset vastaus)) 4))
 
@@ -531,7 +535,7 @@
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
-(deftest ei-saa-paivittaa-jos-on-vaara-versio               ; petar tämä on valmis testi, implementaatio puuttuu
+(deftest ei-saa-paivittaa-jos-on-vaara-versio
   (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
     (is (not (nil? paallystyskohde-vanha-pot-id)))
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
@@ -547,6 +551,17 @@
                                                                                          :sopimus-id         sopimus-id
                                                                                          :vuosi              paallystysilmoitus-domain/pot2-vuodesta-eteenpain
                                                                                          :paallystysilmoitus paallystysilmoitus-pot2}))))))
+
+(deftest ei-saa-paivittaa-jos-ei-ole-versiota               ; petar tämä on valmis testi, implementaatio puuttuu
+    (let [paallystysilmoitus-pot2 (-> pot-testidata
+                                      (dissoc :pot-versio)
+                                      (assoc :paallystyskohde-id 123))]
+      (is (thrown-with-msg? IllegalArgumentException #"Pyynnöstä puuttuu versio. Ota yhteyttä Harjan tukeen."
+                            (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          1
+                                                                                         :sopimus-id         1
+                                                                                         :vuosi              2020
+                                                                                         :paallystysilmoitus paallystysilmoitus-pot2})))))
 
 (deftest paivittaa-paallystysilmoitus-pot2-ei-saa-paivittaa-kaikki-ylapitokohdeosa-kentat-FIXME ; petar
   (let [;; Ei saa olla POT ilmoitusta
