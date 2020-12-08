@@ -465,6 +465,7 @@
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
+                               (assoc :pot-versio 1)
                                (update :ilmoitustiedot dissoc :virheet)
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
