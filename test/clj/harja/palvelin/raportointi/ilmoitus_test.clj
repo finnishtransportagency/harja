@@ -42,7 +42,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-ilmoitukset-raportille-koko-maa-test
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2016"))
         ilmoitukset
         (ilmoitusraportti/hae-ilmoitukset-raportille
@@ -53,7 +53,7 @@
     (is (= (count ilmoitukset) 7))))
 
 (deftest hae-ilmoitukset-raportille-hoito-ja-teiden-hoito-test
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         odotettu-urakasta-26 {:kuittaus {:kuittaustyyppi nil},
                               :sijainti nil,
                               :ilmoitustyyppi :kysely,
@@ -78,7 +78,7 @@
     (is (= (count ilmoitukset) 7))))
 
 (deftest hae-ilmoitukset-raportille-hoito-ja-teiden-hoito-laaja-aikavali-test
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         [alkupvm loppupvm] [(pvm/->pvm "1.1.2015") (pvm/nyt)]
         ilmoitukset
         (ilmoitusraportti/hae-ilmoitukset-raportille
@@ -90,7 +90,7 @@
 
 
 (deftest hae-ilmoitukset-raportille-organisaatio-seka-urakka-id-test
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
         rovaniemen-urakan-id (testi/hae-rovaniemen-maanteiden-hoitourakan-id)
         lapin-elyn-id (->
@@ -105,7 +105,7 @@
     (is (= (count ilmoitukset) 6))))
 
 (deftest hae-ilmoitukset-raportille-pelkka-organisaatio-test
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         [alkupvm loppupvm] [(pvm/->pvm "1.1.2015") (pvm/nyt)]
         elyn-id (->
                   (testi/q "SELECT id FROM organisaatio WHERE nimi = 'Pohjois-Pohjanmaa'")

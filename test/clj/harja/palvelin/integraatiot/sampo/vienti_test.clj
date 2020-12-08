@@ -87,7 +87,7 @@
           "Sakko on laskettu oikein, kun sakon summa on nil"))))
 
 (deftest kaikkien-maksueran-ja-kustannussuunnitelman-paivittaminen-likaiseksi
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         tpi  (first (q-map "select id from toimenpideinstanssi where nimi = 'Oulu Talvihoito TP' "))]
 
     ;; Varmistetaan lähtötilanne: maksuerät ja kustannussuunnitelmat eivät ole likaisia.

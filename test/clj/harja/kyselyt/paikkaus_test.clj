@@ -4,9 +4,10 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.paikkaus :as paikkaus]
             [harja.kyselyt.paikkaus :as paikkaus-q]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]))
 
-(use-fixtures :each urakkatieto-fixture)
+(use-fixtures :each (compose-fixtures urakkatieto-fixture tietokantakomponentti-fixture))
 
 (def testipaikkauksen-ulkoinen-id 666123)
 (def testikohteen-ulkoinen-id 666567)
@@ -57,13 +58,13 @@
    ::paikkaus/kirjattu #inst"2018-02-22T08:00:15.937759000-00:00"})
 
 (deftest hae-paikkaustoimenpiteet
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         ulkoinen-id 6661
         vastaus (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id})]
     (is (every? #(= ulkoinen-id (::paikkaus/ulkoinen-id %)) vastaus) "Jokainen löytynyt tietue vastaa hakuehtoa")))
 
 (deftest onko-olemassa-ulkoisella-idlla
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]
+  (let [db (:db jarjestelma)]
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkauskohteesta.")
     (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666 yit-rakennus-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkauskohde.")
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 1234 666 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkauskohdetta.")
@@ -104,7 +105,7 @@
   (ffirst (q "select count (id) from paikkaustoteuma;")))
 
 (deftest luo-uusi-paikkaus-ja-paikkauskohde
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
@@ -139,7 +140,7 @@
           "Oletetut tienkohdat löytyvät"))))
 
 (deftest paivita-paikkaus-tai-paikkauskohde
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
@@ -166,7 +167,7 @@
     (is (= "PAB-B, Pehmeät asfalttibetonit" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")))
 
 (deftest kohteiden-paivittaminen
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)
         uuden-kohteen-ulkoinen-id 12345]
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id testipaikkaus)
@@ -179,7 +180,7 @@
     (is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id}))))))
 
 (deftest luo-uusi-paikkaustoteuma
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         toteumien-maara-luonnin-jalkeen (+ (hae-paikkaustoteumien-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
@@ -209,7 +210,7 @@
               ::paikkaus/tyyppi "kokonaishintainen"})))))
 
 (deftest poista-paikkaustoteuma
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]
+  (let [db (:db jarjestelma)]
     (paikkaus-q/tallenna-paikkaustoteuma db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuma)
     (is (= 1 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is not true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;"))))) "Paikkaustoteuma löytyy tallennuksen jälkeen.")
     (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db destian-kayttaja-id oikean-urakan-id [testipaikkaustoteuman-ulkoinen-id])

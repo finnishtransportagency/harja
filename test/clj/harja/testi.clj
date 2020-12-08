@@ -1293,6 +1293,17 @@
                       (sonja-kaynnistaminen!))))
         (sonja-kaynnistaminen!)))))
 
+(defn tietokantakomponentti-fixture [testit]
+  (pystyta-harja-tarkkailija!)
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
