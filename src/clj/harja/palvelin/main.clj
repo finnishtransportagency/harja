@@ -3,6 +3,7 @@
     [taoensso.timbre :as log]
     [clojure.core.async :refer [<! go timeout]]
     [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
+    [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtumien-tulkkaus]
     [tarkkailija.palvelin.tarkkailija :as tarkkailija]
     ;; Yleiset palvelinkomponentit
@@ -724,20 +725,6 @@
 
 (defonce harja-jarjestelma nil)
 
-(defn aloita-sonja [jarjestelma]
-  (go
-    (log/info "Aloitaetaan Sonjayhteys")
-    (loop []
-      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/kasky (:sonja jarjestelma) {:aloita-yhteys nil}))]
-        (when vastaus
-          (log/info "Sonja yhteys aloitettu"))
-        (when kaskytysvirhe
-          (log/error "Sonjayhteyden aloittamisessa käskytysvirhe: " kaskytysvirhe))
-        (<! (timeout 2000))
-        (if (or virhe (= :kasykytyskanava-taynna kaskytysvirhe))
-          (recur)
-          vastaus)))))
-
 (defn- merkkaa-kaynnistyminen! []
   (log/debug "Merkataan HARJAn käynnistyminen")
   (event-apurit/julkaise-tapahtuma :harja-tila
@@ -760,7 +747,7 @@
                      (let [jarjestelma (-> asetukset
                                            luo-jarjestelma
                                            component/start)]
-                       (aloita-sonja jarjestelma)
+                       (jms/aloita-sonja jarjestelma)
                        jarjestelma)))))
 
 (defn- kuuntele-tapahtumia! []
@@ -775,7 +762,7 @@
                                                                          (log/warn "harjajarjestelman-restart")
                                                                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
                                                                                 (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
-                                                                                  (do (aloita-sonja uudelleen-kaynnistetty-jarjestelma)
+                                                                                  (do (jms/aloita-sonja uudelleen-kaynnistetty-jarjestelma)
                                                                                       (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                 uudelleen-kaynnistetty-jarjestelma)

@@ -197,7 +197,7 @@
       (.replace "<" "")
       (.replace ">" "")))
 
-(defn pura-tapahtuma-loopin-ajot! [db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat]
+(defn pura-tapahtuma-loopin-ajot! [db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat ajossa]
   (let [ajot (loop [ajo (async/poll! tapahtuma-loopin-ajot)
                     ajot []]
                (if (nil? ajo)
@@ -244,16 +244,24 @@
             (println "Stack trace:"))
           (.printStackTrace t)
           (throw t))))
-    (async/<!! (async/go-loop [kuittaukset []]
-                 (when-not (= @ajojen-lkm (count kuittaukset))
-                   (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
-                     (recur (conj kuittaukset kuittaus))))))
+    (let [lopeta-loop? (atom false)
+          ajossa-loop (async/go-loop [ajossa? @ajossa]
+                        (when ajossa?
+                          (async/<! (async/timeout 100))
+                          (recur (and @ajossa (not @lopeta-loop?)))))
+          [_ kanava] (async/alts!! [(async/go-loop [kuittaukset []]
+                                      (when-not (= @ajojen-lkm (count kuittaukset))
+                                        (let [kuittaus (async/<! kuuntelu-aloitettu-kuittaus)]
+                                          (recur (conj kuittaukset kuittaus)))))
+                                    ajossa-loop])]
+      (when-not (= kanava ajossa-loop)
+        (reset! lopeta-loop? true)))
     #_(log/debug (str "[KOMPONENTTI-EVENT] pura-tapahtuma-loopin-ajot! finito"))))
 
 (defn- tapahtuma-loop-sisalto [{:keys [ajossa db connection tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus
                                        kuuntelu-aloitettu yhta-aikaa-ajettavat kuuntelijat tarkkailu-kanava
                                        loop-odotus]}]
-  (pura-tapahtuma-loopin-ajot! db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat)
+  (pura-tapahtuma-loopin-ajot! db tapahtuma-loopin-ajot kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu yhta-aikaa-ajettavat ajossa)
   (let [tapahtumien-haku-onnistui? (try
                                      (doseq [^PGNotification notification (seq (.getNotifications connection))]
                                        (let [tapahtumadatan-id (Integer/parseInt (.getParameter notification))
@@ -311,45 +319,45 @@
                            ::kuuntelu-aloitettu kuuntelu-aloitettu
                            ::kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
                            ::tarkkailija->tapahtuma (atom {}))
-          kuuntelu-valmis (async/chan)]
-      (reset! tarkkailijat {})
-      (reset! kuuntelijat {})
-      (reset! ajossa true)
-      ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "sonjaping" tai "urakan_123_tapahtumat".
-      ;; arvona kullakin avaimella on seq async-kanavia (?)
-      (thread (loop [kaatui-virheeseen? false
-                     timeout-arvo 0]
-                (let [kaatui-virheeseen? (try (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
-                                                                       (async/put! kuuntelu-valmis true)
-                                                                       (let [connection (cast (Class/forName "org.postgresql.jdbc.PgConnection")
-                                                                                              (jdbc/db-connection db))
-                                                                             yhta-aikaa-ajettavat (atom {})]
-                                                                         (when kaatui-virheeseen?
-                                                                           (doseq [{:keys [kanava]} (q-tapahtumat/hae-kaikki-kanavat db)]
-                                                                             (kuuntelu-fn kanava connection))
-                                                                           (reset! tapahtuma-loop-kaynnissa? true))
-                                                                         (loop []
-                                                                           (if (or (not @ajossa)
-                                                                                   (tapahtuma-loop-sisalto {:ajossa ajossa :db db :connection connection :tapahtuma-loopin-ajot tapahtuma-loopin-ajot
-                                                                                                            :loop-odotus (get-in asetukset [:tarkkailija :loop-odotus])
-                                                                                                            :kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
-                                                                                                            :kuuntelu-aloitettu kuuntelu-aloitettu :yhta-aikaa-ajettavat yhta-aikaa-ajettavat
-                                                                                                            :kuuntelijat kuuntelijat :tarkkailu-kanava tarkkailu-kanava}))
-                                                                             true
-                                                                             (recur)))))
-                                              (catch Throwable t
-                                                (log/error "Tapahtuma loop kaatui: " (.getMessage t) ".\nStack: " (.printStackTrace t))
-                                                true))]
-                  (reset! tapahtuma-loop-kaynnissa? false)
-                  (when @ajossa
-                    (async/<!! (async/timeout timeout-arvo))
-                    (recur kaatui-virheeseen? (min (* 60 1000)
-                                                   (+ timeout-arvo
-                                                      (* 2
-                                                         (max 500 timeout-arvo)))))))))
+          kuuntelu-valmis (async/chan)
+          _ (reset! tarkkailijat {})
+          _ (reset! kuuntelijat {})
+          _ (reset! ajossa true)
+          ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "sonjaping" tai "urakan_123_tapahtumat".
+          ;; arvona kullakin avaimella on seq async-kanavia (?)
+          tapahtuma-loop (thread (loop [kaatui-virheeseen? false
+                                        timeout-arvo 0]
+                                   (let [kaatui-virheeseen? (try (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
+                                                                                          (async/put! kuuntelu-valmis true)
+                                                                                          (let [connection (cast (Class/forName "org.postgresql.jdbc.PgConnection")
+                                                                                                                 (jdbc/db-connection db))
+                                                                                                yhta-aikaa-ajettavat (atom {})]
+                                                                                            (when kaatui-virheeseen?
+                                                                                              (doseq [{:keys [kanava]} (q-tapahtumat/hae-kaikki-kanavat db)]
+                                                                                                (kuuntelu-fn kanava connection))
+                                                                                              (reset! tapahtuma-loop-kaynnissa? true))
+                                                                                            (loop []
+                                                                                              (if (or (not @ajossa)
+                                                                                                      (tapahtuma-loop-sisalto {:ajossa ajossa :db db :connection connection :tapahtuma-loopin-ajot tapahtuma-loopin-ajot
+                                                                                                                               :loop-odotus (get-in asetukset [:tarkkailija :loop-odotus])
+                                                                                                                               :kuuntelu-aloitettu-kuittaus kuuntelu-aloitettu-kuittaus
+                                                                                                                               :kuuntelu-aloitettu kuuntelu-aloitettu :yhta-aikaa-ajettavat yhta-aikaa-ajettavat
+                                                                                                                               :kuuntelijat kuuntelijat :tarkkailu-kanava tarkkailu-kanava}))
+                                                                                                true
+                                                                                                (recur)))))
+                                                                 (catch Throwable t
+                                                                   (log/error "Tapahtuma loop kaatui: " (.getMessage t) ".\nStack: " (.printStackTrace t))
+                                                                   true))]
+                                     (reset! tapahtuma-loop-kaynnissa? false)
+                                     (when @ajossa
+                                       (async/<!! (async/timeout timeout-arvo))
+                                       (recur kaatui-virheeseen? (min (* 60 1000)
+                                                                      (+ timeout-arvo
+                                                                         (* 2
+                                                                            (max 500 timeout-arvo)))))))))]
       (reset! tapahtuma-loop-kaynnissa? true)
       (async/<!! kuuntelu-valmis)
-      this))
+      (assoc this ::tapahtuma-loop tapahtuma-loop)))
 
   (stop [this]
     (async/put! (::tapahtuma-loopin-ajot this)
@@ -361,6 +369,7 @@
                     (async/close! async-kanava))))
     (reset! tapahtuma-loop-kaynnissa? false)
     (reset! ajossa false)
+    (async/<!! (::tapahtuma-loop this))
     (doseq [[tarkkailija _] @(::tarkkailija->tapahtuma this)]
       (p/lopeta-tarkkailu! this tarkkailija))
     (async/close! (::tarkkailu-kanava this))

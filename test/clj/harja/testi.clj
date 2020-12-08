@@ -24,7 +24,7 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-    [harja.palvelin.main :as sut]
+    [harja.palvelin.integraatiot.jms :as jms]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
@@ -1265,6 +1265,7 @@
 (def urakka nil)
 
 (def harja-tarkkailija)
+(def ^:dynamic *uudelleen-kaynnistaja-mukaan?* false)
 
 (defn pystyta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija
@@ -1278,7 +1279,14 @@
                         :tapahtuma (component/using
                                      (tapahtuma/->Tapahtuma)
                                      [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija))))))
+                        :rajapinta (rajapinta/->Rajapintakasittelija)
+                        :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
+                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 1000}} (atom nil))
+                                                 (reify component/Lifecycle
+                                                   (start [this]
+                                                     this)
+                                                   (stop [this]
+                                                     this))))))))
 
 (defn lopeta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija component/stop))
@@ -1286,7 +1294,7 @@
 (defn sonja-kasittely [kuuntelijoiden-lopettajat]
   (when *aloita-sonja?*
     (let [sonja-kaynnistaminen! (fn []
-                                  (<!! (sut/aloita-sonja jarjestelma))
+                                  (<!! (jms/aloita-sonja jarjestelma))
                                   (when *sonja-kaynnistetty-fn*
                                     (*sonja-kaynnistetty-fn*)))]
       (if *lisattavia-kuuntelijoita?*
