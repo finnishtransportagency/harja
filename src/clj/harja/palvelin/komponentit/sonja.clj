@@ -154,7 +154,7 @@
                                     (tallenna-sonjan-tila-kantaan db jms-tila)
                                     (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
                                   (catch Throwable t
-                                    (tapahtuma-julkaisija :tilan-lukemisvirhe)
+                                    (tapahtuma-julkaisija {:virhe :tilan-lukemisvirhe})
                                     (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t)))
                                     (binding [*out* *err*]
                                       (log/error "Stack trace:"))
@@ -377,6 +377,10 @@
 
 (defmethod jms-toiminto! :aloita-yhteys
   [{:keys [tila yhteys-aloitettu?] :as sonja} _]
+  (loop [yhteys-oliot-luotu? (not= JMS-alkutila @tila)]
+    (when-not yhteys-oliot-luotu?
+      (<!! (timeout 1000))
+      (recur (not= JMS-alkutila @tila))))
   (try (let [{:keys [istunnot yhteys]} @tila
              poikkeuskuuntelija (tee-jms-poikkeuskuuntelija sonja)]
          ;; Alustetaan vastaanottaja jvm oliot
