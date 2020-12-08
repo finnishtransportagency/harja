@@ -509,8 +509,8 @@
                                                                                :paallystysilmoitus paallystysilmoitus})]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
-      (is (= (count (:yllapitokohteet vastaus)) 4))
-      (is (= (count (:paallystysilmoitukset vastaus)) 4))
+      (is (= (count (:yllapitokohteet vastaus)) 2))
+      (is (= (count (:paallystysilmoitukset vastaus)) 2))
 
       (let [[tallennettu-versio ilmoitustiedot] (first (q "SELECT versio, ilmoitustiedot FROM paallystysilmoitus
                                                            WHERE paallystyskohde = " paallystyskohde-id))]
