@@ -134,6 +134,22 @@ GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paally
   ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,
   u.id;
 
+-- name: hae-kohdeosan-pot2-paallystekerrokset
+SELECT
+  -- POT2 spesifiset haut
+  pot2p.id as "pot2p_id",
+  pot2p.kohdeosa_id,
+  pot2p.toimenpide,
+  pot2p.materiaali,
+  pot2p.leveys,
+  pot2p.massamenekki,
+  pot2p.pinta_ala,
+  pot2p.kokonaismassamaara,
+  pot2p.piennar,
+  pot2p.lisatieto
+FROM pot2_paallystekerros pot2p
+WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
+
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
   id,

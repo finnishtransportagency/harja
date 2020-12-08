@@ -217,6 +217,31 @@
                                (:osoitteet ilmoitustiedot))]
     (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
+(def pot2-kulutuskerroksen-avaimet
+  #{:kohdeosa-id :tr-kaista :tr-ajorata :tr-loppuosa :tr-alkuosa :tr-loppuetaisyys :nimi
+    :tr-alkuetaisyys :tr-numero :materiaali :toimenpide :piennar :kokonaismassamaara
+    :leveys :pinta_ala :massamenekki})
+
+(defn- pot2-kulutuskerros
+  "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen (kulutuskerros) rivit.
+  Käyttää PO1:n kohdeosat-avaimen tietoja pohjana, ja yhdistää ne kulutuskerros-avaimen alle pot2_paallystekerros taulussa
+  oleviin tietoihin."
+  [db paallystysilmoitus]
+  (let [kulutuskerros
+        (mapv (fn [kohdeosa]
+                (let [kulutuskerros (first
+                                      (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
+                                                                                   :kohdeosa_id (:id kohdeosa)}))
+                      rivi (select-keys (merge kohdeosa kulutuskerros) pot2-kulutuskerroksen-avaimet)]
+                  rivi))
+              (:kohdeosat paallystysilmoitus))]
+    (assoc paallystysilmoitus :kulutuskerros kulutuskerros)))
+
+(defn- pot1-kohdeosat [paallystysilmoitus]
+  (first (konversio/sarakkeet-vektoriin
+           paallystysilmoitus
+           {:kohdeosa :kohdeosat}
+           :id)))
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella     ; petar
   "Hakee päällystysilmoituksen ja kohteen tiedot.
@@ -239,10 +264,10 @@
                                  (q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
-        paallystysilmoitus (first (konversio/sarakkeet-vektoriin
-                                    paallystysilmoitus
-                                    {:kohdeosa :kohdeosat}
-                                    :id))
+        paallystysilmoitus (pot1-kohdeosat paallystysilmoitus)
+        paallystysilmoitus (if (onko-pot2? paallystysilmoitus)
+                             (pot2-kulutuskerros db paallystysilmoitus)
+                             paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         - (println "petar hajde da vidimo sta je vratio " (pr-str paallystysilmoitus))

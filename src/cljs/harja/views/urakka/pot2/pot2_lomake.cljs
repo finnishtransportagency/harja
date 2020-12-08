@@ -171,10 +171,6 @@
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi})
 
-(def kohdeosan-relevantit-avaimet
-  #{:kohdeosa-id :tr-kaista :tr-ajorata :tr-loppuosa :tr-alkuosa :tr-loppuetaisyys :nimi
-    :tr-alkuetaisyys :tr-numero :materiaali :toimenpide})
-
 (defn pot2-lomake
   [e! {yllapitokohde-id :yllapitokohde-id
        paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
@@ -187,7 +183,7 @@
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
-    (println "(:kohdeosat paallystysilmoitus-lomakedata) " (pr-str (:kohdeosat paallystysilmoitus-lomakedata)))
+    (println "paallystysilmoitus-lomakedata kulutuskerros" (pr-str (:kulutuskerros paallystysilmoitus-lomakedata)))
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
@@ -195,13 +191,12 @@
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (reset! pot2-tiedot/kohdeosat-atom
                              (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                                          (mapv #(select-keys % kohdeosan-relevantit-avaimet)
-                                                                                (:kohdeosat paallystysilmoitus-lomakedata)))))
+                                                                          (:kulutuskerros paallystysilmoitus-lomakedata))))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
-              kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot})
+              kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :kulutuskerros})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila})
               {:keys [tila]} perustiedot
