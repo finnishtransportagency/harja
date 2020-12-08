@@ -10,6 +10,7 @@
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -23,7 +24,8 @@
                                         (t/->Tarkastukset)
                                         [:http-palvelin :db :karttakuvat])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (def soratietarkastus ;; soratietarkastus
   {:uusi? true

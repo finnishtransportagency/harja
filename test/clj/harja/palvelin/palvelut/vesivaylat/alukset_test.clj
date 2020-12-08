@@ -21,6 +21,7 @@
             [harja.domain.muokkaustiedot :as m]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -31,7 +32,8 @@
                                       (vv-alukset/->Alukset)
                                       [:db :http-palvelin])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each (compose-fixtures
                       jarjestelma-fixture

@@ -23,6 +23,7 @@
             [harja.domain.kanavat.lt-toiminto :as toiminto]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -33,7 +34,8 @@
                                                   (kan-liikennetapahtumat/->Liikennetapahtumat)
                                                   [:http-palvelin :db])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each (compose-fixtures
                       jarjestelma-fixture

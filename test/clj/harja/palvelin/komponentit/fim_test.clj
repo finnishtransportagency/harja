@@ -13,6 +13,7 @@
 (def +testi-fim+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root
     #'jarjestelma
     (fn [_]
@@ -26,7 +27,8 @@
                  [:db :integraatioloki])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :once jarjestelma-fixture)
 

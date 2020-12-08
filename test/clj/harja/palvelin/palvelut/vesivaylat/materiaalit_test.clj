@@ -25,6 +25,7 @@
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
+  (testi/pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -49,7 +50,8 @@
                                           [:db :http-palvelin :fim :sonja-sahkoposti])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (testi/lopeta-harja-tarkkailija!))
 
 (t/use-fixtures :each testi/tietokanta-fixture jarjestelma-fixture)
 

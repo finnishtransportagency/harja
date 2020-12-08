@@ -23,6 +23,7 @@
 (def +oikea-testi-tierekisteri-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri")
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (let [tietokanta (tietokanta/luo-tietokanta testitietokanta)]
@@ -48,7 +49,8 @@
                                            [:http-palvelin :db]))))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 
 (use-fixtures :once (compose-fixtures

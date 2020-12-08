@@ -21,6 +21,7 @@
             [taoensso.timbre :as log]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -31,7 +32,8 @@
                                             (kan-toimenpiteet/->Kanavatoimenpiteet)
                                             [:http-palvelin :db])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))

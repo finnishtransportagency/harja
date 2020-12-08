@@ -7,13 +7,15 @@
              [harja.domain.vesivaylat.toimenpide :as toimenpide]))
 
 (defn jarjestelma-fixture [testit]
+  (ht/pystyta-harja-tarkkailija!)
   (alter-var-root #'ht/jarjestelma
                   (fn [_]
                     (component/start
                      (component/system-map
                       :db (tietokanta/luo-tietokanta ht/testitietokanta)))))
   (testit)
-  (alter-var-root #'ht/jarjestelma component/stop))
+  (alter-var-root #'ht/jarjestelma component/stop)
+  (ht/lopeta-harja-tarkkailija!))
 
 
 (use-fixtures :once (compose-fixtures

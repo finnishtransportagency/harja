@@ -16,6 +16,7 @@
             [harja.palvelin.palvelut.sopimukset :as sopimukset]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -27,7 +28,8 @@
                                       [:db :http-palvelin])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 
 (use-fixtures :once (compose-fixtures

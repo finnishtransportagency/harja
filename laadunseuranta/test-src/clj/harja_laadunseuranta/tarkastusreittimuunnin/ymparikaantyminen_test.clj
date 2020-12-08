@@ -15,6 +15,7 @@
             [harja-laadunseuranta.tarkastusreittimuunnin.testityokalut :as tyokalut]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -26,7 +27,8 @@
                           (harja-laadunseuranta/->Laadunseuranta)
                           [:db :http-palvelin])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 

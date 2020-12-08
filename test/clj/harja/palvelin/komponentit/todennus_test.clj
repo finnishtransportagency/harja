@@ -7,6 +7,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root
    #'jarjestelma
    (fn [_]
@@ -17,7 +18,8 @@
                   (todennus/http-todennus nil)
                   [:db])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :once jarjestelma-fixture)
 

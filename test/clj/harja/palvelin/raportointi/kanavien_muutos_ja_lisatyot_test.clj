@@ -16,6 +16,7 @@
             [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -33,7 +34,8 @@
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
 
   (testit)
-  (component/stop jarjestelma))
+  (component/stop jarjestelma)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each (compose-fixtures
                      urakkatieto-fixture

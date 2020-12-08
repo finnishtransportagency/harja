@@ -8,6 +8,7 @@
             [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -18,7 +19,8 @@
                                        [:http-palvelin])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (deftest raportoi-yhteyskatkos-testi
   (let [kayttaja +kayttaja-jvh+

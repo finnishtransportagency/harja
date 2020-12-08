@@ -17,6 +17,7 @@
   (:import (org.apache.commons.io IOUtils)))
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root
     #'jarjestelma
     (fn [_]
@@ -31,7 +32,8 @@
                                  [:db :virustarkistus])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
