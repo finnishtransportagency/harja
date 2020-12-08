@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.yllapitokohteet-test
+(ns ^:hidas harja.palvelin.integraatiot.api.yllapitokohteet-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
@@ -816,7 +816,6 @@
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
         tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)
         tarkastus (first tarkastukset-kirjauksen-jalkeen)]
-
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
     (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")))
     (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))

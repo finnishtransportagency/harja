@@ -61,6 +61,15 @@
       nil)))
 
 (defn luo-yhteyspool [{:keys [palvelin portti tietokanta kayttaja salasana yhteyspoolin-koko]}]
+  ;; c3p0 voi käyttää loggaukseen esimerkiksi slf4j:sta, mutta fallbackina toimii aina stderr.
+  ;; Tämä on ongelmallista, koska oletuksena c3p0 tuntuu loggaavan (lähes) kaiken, emmekä me halua
+  ;; että stderriin tungetaan INFO-tason viestejä. Siksi tässä asetetaan ensiksi loggausmekanismi
+  ;; fallbackiksi (eli System.error), ja loggaustaso SEVERE:ksi.
+  ;; http://www.mchange.com/projects/c3p0/#configuring_logging
+  (System/setProperties
+    (doto (new Properties (System/getProperties))
+      (.put "com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog")
+      (.put "com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "SEVERE")))
   (doto (ComboPooledDataSource.)
     (.setDriverClass "org.postgresql.Driver")
     (.setJdbcUrl (str "jdbc:postgresql://" palvelin ":" portti "/" tietokanta))
@@ -115,14 +124,5 @@
   ([asetukset]
    (luo-tietokanta asetukset false))
   ([asetukset kehitysmoodi]
-   ;; c3p0 voi käyttää loggaukseen esimerkiksi slf4j:sta, mutta fallbackina toimii aina stderr.
-   ;; Tämä on ongelmallista, koska oletuksena c3p0 tuntuu loggaavan (lähes) kaiken, emmekä me halua
-   ;; että stderriin tungetaan INFO-tason viestejä. Siksi tässä asetetaan ensiksi loggausmekanismi
-   ;; fallbackiksi (eli System.error), ja loggaustaso SEVERE:ksi.
-   ;; http://www.mchange.com/projects/c3p0/#configuring_logging
-   (System/setProperties
-     (doto (new Properties (System/getProperties))
-       (.put "com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog")
-       (.put "com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "SEVERE")))
    (->Tietokanta asetukset
                  kehitysmoodi)))
