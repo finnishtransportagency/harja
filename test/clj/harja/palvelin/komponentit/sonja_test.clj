@@ -85,6 +85,7 @@
 
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -114,7 +115,8 @@
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
                              (<! (sut/aloita-sonja jarjestelma)))]
     (testit))
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each jarjestelma-fixture)
 

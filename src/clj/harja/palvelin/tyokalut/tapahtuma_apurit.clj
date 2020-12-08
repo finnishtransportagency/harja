@@ -37,10 +37,12 @@
     (try (f)
          (loop [[_ kanava] (async/alts! [lopeta-tarkkailu-kanava
                                          (async/timeout timeout-ms)])]
-           (when-not (= kanava lopeta-tarkkailu-kanava)
-             (f)
-             (recur (async/alts! [lopeta-tarkkailu-kanava
-                                  (async/timeout timeout-ms)]))))
+           (if-not (= kanava lopeta-tarkkailu-kanava)
+             (do
+               (f)
+               (recur (async/alts! [lopeta-tarkkailu-kanava
+                                    (async/timeout timeout-ms)])))
+             (log/info "Suljetaan loop-f")))
          (catch Throwable t
            (log/error "loop-f kaatui: " (.getMessage t))
            (binding [*out* *err*]
