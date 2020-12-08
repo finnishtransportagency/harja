@@ -4,7 +4,8 @@
              [urakat :as urakat-q]
              [tehtavamaarat :as tm-q]
              [toteumat :as toteuma-q]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log])
   (:import (java.math RoundingMode)))
 
 (defn- laske-hoitokaudet
@@ -18,9 +19,10 @@
     (range alku-hoitokausi (inc loppu-hoitokausi))))
 
 (defn- hae-tehtavamaarat
-  [db {:keys [urakka-id hallintayksikko-id alkupvm loppupvm]}]
+  [db kysely-fn {:keys [urakka-id hallintayksikko-id alkupvm loppupvm]}]
+  (log/debug "hae-tehtavamaarat: saatiin alku/loppupvm:t" alkupvm loppupvm)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)]
-    (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla
+    (kysely-fn
       db
       {:alkupvm         alkupvm
        :loppupvm        loppupvm
@@ -72,11 +74,12 @@
     {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
     (vec m)))
 
-(defn- muodosta-taulukko
-  [db user {:keys [alkupvm loppupvm] :as parametrit}]
+(defn muodosta-taulukko
+  [db user kysely-fn {:keys [alkupvm loppupvm] :as parametrit}]
+  (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         suunnitellut-ryhmissa (->> parametrit
-                                   (hae-tehtavamaarat db))
+                                   (hae-tehtavamaarat db kysely-fn))
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil
@@ -114,7 +117,7 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
-  (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user params)]
+  (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla params)]
     [:raportti
      {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
      [:taulukko
