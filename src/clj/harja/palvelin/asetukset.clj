@@ -238,7 +238,9 @@
 
 (defn ominaisuus-kaytossa? [k]
   (let [pko @pois-kytketyt-ominaisuudet]
-    (not (contains? pko k))))
+    (if (nil? pko)
+      false
+      (not (contains? pko k)))))
 
 (defn aseta-kaytettavat-ominaisuudet! [pois-kytketyt-ominaisuudet-joukko]
   (reset! pois-kytketyt-ominaisuudet pois-kytketyt-ominaisuudet-joukko))

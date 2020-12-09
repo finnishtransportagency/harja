@@ -5,7 +5,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
-            [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtuma-tulkkaus]))
+            [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtuma-tulkkaus]
+            [clojure.core.async :as async]))
 
 (def kaikkien-tapahtumien-kuuntelija nil)
 
@@ -106,5 +107,6 @@
                                (clj-set/subset? ok-tapahtumien-nimet (into #{} (keys @tila))))
                              (str "Tapahtumia " ok-tapahtumien-nimet " ei julkaistu ajallaan")
                              5000)
+    (async/<!! (async/timeout 700))
     (is (-> jarjestelma (get-in [:komponenttien-tila :komponenttien-tila]) deref (get tapahtuma-apurit/host-nimi) kaikki-ok?)
         (str "Kaikki ei ok tapahtumasarjalle: " (mapv first satunnainen-sarja-tapahtumia)))))
