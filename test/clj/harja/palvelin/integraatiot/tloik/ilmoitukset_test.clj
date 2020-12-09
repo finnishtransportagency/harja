@@ -48,9 +48,7 @@
                                                     :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
-                  (labyrintti/luo-labyrintti
-                    {:url "http://localhost:28080/sendsms"
-                     :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
+                  (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)

@@ -31,4 +31,5 @@
        :vastaus-spec ::sd/hae-jonojen-tilat-vastaus})
     this)
   (stop [this]
+    (poista-palvelu (:http-palvelin this) :hae-sonjan-tila)
     this))
