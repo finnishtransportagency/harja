@@ -23,6 +23,23 @@ div.yhteenveto {
   .negatiivinen-numero {
     color: @red-dark;
   }
+}
 
+/*Kustannusten seuranta taulukossa on uusin taulukkoelementti ja sen vaatimat muutokset on tässä */
+.paaryhma-center {
+  padding-left: 0px;
+  padding-right: 0px;
+  text-align: center;
+}
 
+table {
+
+  body {
+    tr {
+      &:hover, &:focus {
+        background-color: @blue;
+      }
+    }
+
+  }
 }

@@ -288,10 +288,10 @@ SELECT tpi.id                                  AS toimenpideinstanssi_id,
        tk.nimi                                 AS toimenpidekoodi_nimi,
        0                                       AS budjetoitu_summa,
        (SELECT korotettuna
-        FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi, 9,
-                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka),
-                                            coalesce(t.summa, 0),
-                                            (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))))
+        FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
+                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
+                                            coalesce(t.summa, 0)::NUMERIC,
+                                            (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC))
                                                AS toteutunut_summa,
        'kokonaishintainen'                     AS maksutyyppi,
        CASE

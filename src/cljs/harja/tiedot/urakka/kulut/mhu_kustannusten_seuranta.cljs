@@ -25,18 +25,22 @@
 (defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
 (defrecord AvaaRivi [tyyppi avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
+(defrecord ValitseKuukausi [urakka kuukausi vuosi])
 
 (defn hae-kustannukset [urakka-id hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
-  (let [alkupvm (when hoitokauden-alkuvuosi
-                  (str hoitokauden-alkuvuosi "-10-01"))
-        #_alkupvm #_(if aikavali-alkupvm
-                      aikavali-alkupvm alkupvm)
-        loppupvm (when hoitokauden-alkuvuosi
-                   (str (inc hoitokauden-alkuvuosi) "-09-30"))
-        #_loppupvm #_(if aikavali-loppupvm
-                       aikavali-loppupvm loppupvm)]
+  (let [alkupvm (if (and
+                      hoitokauden-alkuvuosi
+                      (not aikavali-alkupvm))
+                  (str hoitokauden-alkuvuosi "-10-01")
+                  (str (pvm/vuosi aikavali-alkupvm) "-" (pvm/kuukausi aikavali-alkupvm) "-" (pvm/paiva aikavali-alkupvm)))
+        loppupvm (if (and
+                       hoitokauden-alkuvuosi
+                       (not aikavali-loppupvm))
+                   (str (inc hoitokauden-alkuvuosi) "-09-30")
+                   (str (pvm/vuosi aikavali-loppupvm) "-" (pvm/kuukausi aikavali-loppupvm) "-" (pvm/paiva aikavali-loppupvm)))]
     (tuck-apurit/post! :urakan-kustannusten-seuranta-paaryhmittain
                        {:urakka-id urakka-id
+                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                         :alkupvm alkupvm
                         :loppupvm loppupvm}
                        {:onnistui ->KustannustenHakuOnnistui
@@ -254,7 +258,15 @@
     (do
       (hae-kustannukset urakka vuosi nil nil)
       (-> app
-          (assoc-in [:hoitokauden-alkuvuosi] vuosi))))
+          (assoc :valittu-kuukausi nil)
+          (assoc :hoitokauden-alkuvuosi vuosi))))
+
+  ValitseKuukausi
+  (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
+    (do
+      (hae-kustannukset urakka vuosi (first kuukausi) (second kuukausi))
+      (-> app
+          (assoc-in [:valittu-kuukausi] kuukausi))))
 
   ;ValitseAikavali
   #_(process-event

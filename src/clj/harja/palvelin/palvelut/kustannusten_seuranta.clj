@@ -24,17 +24,14 @@
             [specql.core :as specql]))
 
 
-(defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
+(defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   ;; TODO tarkista käyttöoikeudet
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
     (let [_ (println "hae-urakan-kustannusten-seuranta-toimenpideittain :: tiedot " (pr-str tiedot))
           res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
                                                                              :alkupvm alkupvm
                                                                              :loppupvm loppupvm
-                                                                             :hoitokauden-alkuvuosi
-                                                                             (pvm/hoitokauden-alkuvuosi
-                                                                               (pvm/iso-8601->pvm alkupvm))
-                                                                             })]
+                                                                             :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
       res)
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
