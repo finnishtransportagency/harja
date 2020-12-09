@@ -158,7 +158,7 @@
                                                           (mapv tapahtuman-tiedot-clj-dataksi tapahtuman-tiedot))))))
 
 (defn- kuuntele-klusterin-tapahtumaa!
-  [{:keys [db tapahtuma-loopin-ajot kuuntelu-aloitettu-broadcast kuuntelu-aloitettu-kuittaus
+  [{:keys [db tapahtuma-loopin-ajot kuuntelu-aloitettu-broadcast
            tapahtuma tyyppi kuuntelun-jalkeen ryhmatunnistin lkm]}]
   {:pre [(not (nil? db))
          (not (nil? tapahtuma))]}
@@ -185,7 +185,6 @@
                     [::virhe nil]
                     (do
                       (kuuntelun-jalkeen possukanava paluuarvo)
-                      (async/put! kuuntelu-aloitettu-kuittaus true)
                       [possukanava paluuarvo]))))))))
 
 (defn- tapahtuman-nimi [kw]
@@ -284,7 +283,7 @@
     (when @ajossa
       (not tapahtumien-haku-onnistui?))))
 
-(defn- tarkkailija-kuuntelun-jalkeen [tyyppi kuuntelija-kanava broadcast tarkkailijat]
+(defn- tarkkailija-kuuntelun-jalkeen [tyyppi kuuntelija-kanava broadcast tarkkailijat kuuntelu-aloitettu-kuittaus]
   (fn [possu-kanava paluu-arvo]
     ;(log/debug "[KOMPONENTTI-EVENT]tarkkailija-kuuntelun-jalkeen: " tyyppi)
     (when-not (nil? paluu-arvo)
@@ -294,7 +293,8 @@
         (:viimeisin-per-palvelin :palvelimet-viimeisin) (doseq [arvo paluu-arvo]
                                                           (async/put! kuuntelija-kanava {::data arvo}))))
     (async/sub broadcast possu-kanava kuuntelija-kanava)
-    (swap! tarkkailijat update possu-kanava conj kuuntelija-kanava)))
+    (swap! tarkkailijat update possu-kanava conj kuuntelija-kanava)
+    (async/put! kuuntelu-aloitettu-kuittaus true)))
 
 (defrecord Tapahtumat [asetukset kuuntelijat tarkkailijat ajossa]
   component/Lifecycle
@@ -328,7 +328,8 @@
           tapahtuma-loop (thread (loop [kaatui-virheeseen? false
                                         timeout-arvo 0]
                                    (let [kaatui-virheeseen? (try (jdbc/with-db-connection [db (get-in this [:db :db-spec])]
-                                                                                          (async/put! kuuntelu-valmis true)
+                                                                                          (when-not @tapahtuma-loop-kaynnissa?
+                                                                                            (async/put! kuuntelu-valmis true))
                                                                                           (let [connection (cast (Class/forName "org.postgresql.jdbc.PgConnection")
                                                                                                                  (jdbc/db-connection db))
                                                                                                 yhta-aikaa-ajettavat (atom {})]
@@ -355,8 +356,8 @@
                                                                       (+ timeout-arvo
                                                                          (* 2
                                                                             (max 500 timeout-arvo)))))))))]
-      (reset! tapahtuma-loop-kaynnissa? true)
       (async/<!! kuuntelu-valmis)
+      (reset! tapahtuma-loop-kaynnissa? true)
       (assoc this ::tapahtuma-loop tapahtuma-loop)))
 
   (stop [this]
@@ -393,11 +394,11 @@
     (let [tapahtuma (tapahtuman-nimi tapahtuma)
           fn-tunnistin (str (gensym "callback"))
           kuuntelun-jalkeen (fn [possukanava _]
-                              (swap! kuuntelijat update possukanava conj (with-meta callback {:tunnistin fn-tunnistin})))
+                              (swap! kuuntelijat update possukanava conj (with-meta callback {:tunnistin fn-tunnistin}))
+                              (async/put! (::kuuntelu-aloitettu-kuittaus this) true))
           kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
                                                               :kuuntelu-aloitettu-broadcast (::kuuntelu-aloitettu-broadcast this)
                                                               :tapahtuma-loopin-ajot (::tapahtuma-loopin-ajot this)
-                                                              :kuuntelu-aloitettu-kuittaus (::kuuntelu-aloitettu-kuittaus this)
                                                               :tapahtuma tapahtuma
                                                               :kuuntelun-jalkeen kuuntelun-jalkeen})
           [possukanava _] (async/<!! kuuntelu-sekvenssi)]
@@ -440,11 +441,10 @@
                                                   (fn [t]
                                                     (log/error t (str "Kuuntelija kanavassa error eventille " tapahtuma))))
                     tapahtuma (tapahtuman-nimi tapahtuma)
-                    kuuntelun-jalkeen (tarkkailija-kuuntelun-jalkeen tyyppi kuuntelija-kanava (::broadcast this) (:tarkkailijat this))
+                    kuuntelun-jalkeen (tarkkailija-kuuntelun-jalkeen tyyppi kuuntelija-kanava (::broadcast this) (:tarkkailijat this) (::kuuntelu-aloitettu-kuittaus this))
                     kuuntelu-sekvenssi (kuuntele-klusterin-tapahtumaa! {:db (get-in this [:db :db-spec])
                                                                         :kuuntelu-aloitettu-broadcast (::kuuntelu-aloitettu-broadcast this)
                                                                         :tapahtuma-loopin-ajot (::tapahtuma-loopin-ajot this)
-                                                                        :kuuntelu-aloitettu-kuittaus (::kuuntelu-aloitettu-kuittaus this)
                                                                         :tapahtuma tapahtuma
                                                                         :tyyppi tyyppi
                                                                         :kuuntelun-jalkeen kuuntelun-jalkeen

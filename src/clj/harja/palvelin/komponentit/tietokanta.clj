@@ -5,6 +5,7 @@
             [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [try+]]
 
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
@@ -92,16 +93,17 @@
   component/Lifecycle
   (start [this]
     (let [lopeta-tarkkailu-kanava (async/chan)
-          {:keys [tarkkailun-timeout-arvot tarkkailun-nimi]} asetukset
+          {:keys [tarkkailun-timeout-arvot tarkkailun-nimi julkaise-tila?]} asetukset
           this (assoc this ::lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava
                            :datasource (luo-yhteyspool asetukset))]
-      (when tarkkailun-nimi
+      (when (and tarkkailun-nimi julkaise-tila?)
         (luo-db-tapahtumat this tarkkailun-nimi tarkkailun-timeout-arvot lopeta-tarkkailu-kanava))
       (when kehitysmoodi
         (autoreload/start-autoreload))
       this))
   (stop [this]
-    (when (get-in this [:asetukset :tarkkailun-nimi])
+    (when (and (get-in this [:asetukset :tarkkailun-nimi])
+               (get-in this [:asetukset :julkaise-tila?]))
       (tapahtuma-apurit/julkaise-tapahtuma (db-tunnistin->db-tila-tapahtuma (get-in this [:asetukset :tarkkailun-nimi])) :suljetaan)
       (async/>!! (::lopeta-tarkkailu-kanava this) true)
       (async/close! (::lopeta-tarkkailu-kanava this)))

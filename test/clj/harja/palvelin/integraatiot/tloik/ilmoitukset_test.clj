@@ -24,7 +24,8 @@
             [harja.pvm :as pvm]
             [clj-time
              [coerce :as tc]
-             [format :as df]])
+             [format :as df]]
+            [clojure.core.async :as async])
   (:import (org.postgis PGgeometry)))
 
 (def kayttaja "yit-rakennus")
@@ -144,6 +145,7 @@
     (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
+      (async/<!! (async/timeout 1000))
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
 
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 20000)

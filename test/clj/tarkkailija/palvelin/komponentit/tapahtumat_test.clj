@@ -1,8 +1,11 @@
 (ns ^:hidas tarkkailija.palvelin.komponentit.tapahtumat-test
-  (:require [tarkkailija.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
+  (:require [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [tarkkailija.palvelin.komponentit.event-tietokanta :as event-tietokanta]
+            [tarkkailija.palvelin.komponentit
+             [event-tietokanta :as event-tietokanta]
+             [tapahtumat :as tapahtumat]
+             [jarjestelma-rajapinta :as rajapinta]]
+            [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
             [harja.kyselyt.konversio :as konv]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -35,7 +38,11 @@
              :db-event (event-tietokanta/luo-tietokanta testitietokanta)
              :klusterin-tapahtumat (component/using
                                      (tapahtumat/luo-tapahtumat tarkkailija-asetukset)
-                                     {:db :db-event})))
+                                     {:db :db-event})
+             :tapahtuma (component/using
+                          (tapahtuma/->Tapahtuma)
+                          [:klusterin-tapahtumat :rajapinta])
+             :rajapinta (rajapinta/->Rajapintakasittelija)))
     :nimi nimi))
 
 (defn jarjestelma-fixture [testit]
@@ -301,9 +308,12 @@
         loop-ajettu (async/chan)
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
     (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
+                                                      (println "AJETAAN LOOP ENNEN ODOTTELUA")
                                                       (async/<!! aja-loop)
+                                                      (println "AJETAAN LOOP LOPPUUN")
                                                       (let [paluuarvo (apply tapahtuma-loop-sisalto-original args)]
-                                                        (async/put! loop-ajettu true)
+                                                        (println "PALUUARVO: " paluuarvo)
+                                                        (async/>!! loop-ajettu true)
                                                         paluuarvo))]
       (testing "Viimeisin tarkkailija saa kaikki tapahtumat kakutustapahtuman jälkeen"
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
@@ -314,20 +324,24 @@
                                                                    (let [original-fn (apply tarkkailija-kuuntelun-jalkeen-original args)]
                                                                      (fn [& args-sisa]
                                                                        (apply original-fn args-sisa)
+                                                                       (println "KAKUTUS TEHTY")
                                                                        (async/>!! kakutuskeskustelukanava :kakutus-tehty)
-                                                                       (async/<!! kakutuskeskustelukanava))))]
+                                                                       (->> (async/<!! kakutuskeskustelukanava) (println "SUATIIN KAKUTUSKANAVASTA: ")))))]
             (let [tarkkailija (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin)]
               (is (not (nil? (<!!-timeout (async/go-loop []
-                                            (async/offer! aja-loop true)
+                                            (println "KÄSKETÄÄN LOOPIN AJAA")
+                                            (async/>! aja-loop true)
+                                            (async/<! loop-ajettu)
+                                            (println "POLLATAAN KAKUTUSKESKUSTELUKANAVAA")
                                             (if-let [tila (async/poll! kakutuskeskustelukanava)]
                                               tila
-                                              (do (async/poll! loop-ajettu)
-                                                  (recur))))
+                                              (recur)))
                                           (+ default-odottelu 2000)))))
               (loop [i 2]
                 (when-not (= i 10)
                   (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
+              (async/put! aja-loop true)
               (is (thrown? TimeoutException (<!!-timeout loop-ajettu pitka-odottelu))
                   "tapahtuma loopin pitää odotella, että kaikki kuittaukset on tullut perille")
               (async/put! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
@@ -337,6 +351,7 @@
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
                 (loop [arvo (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                        i 1]
+                  (println "ARVO: " arvo)
                   (cond
                     (< i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                              :payload {:a i}})
@@ -359,10 +374,10 @@
                                                  (apply kuuntelu-fn-original args))]
             (let [tarkkailija (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-b :viimeisin)]
               (is (not (nil? (<!!-timeout (async/go-loop []
-                                            (async/offer! aja-loop true)
+                                            (async/>! aja-loop true)
                                             (if-let [tila (async/poll! kakutuskeskustelukanava)]
                                               tila
-                                              (do (async/poll! loop-ajettu)
+                                              (do (async/<! loop-ajettu)
                                                   (recur))))
                                           (+ 2000 default-odottelu)))))
               (loop [i 2]

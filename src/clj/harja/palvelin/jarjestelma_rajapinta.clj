@@ -1,5 +1,6 @@
 (ns harja.palvelin.jarjestelma-rajapinta
-  (:require [taoensso.timbre :as log]))
+  (:require [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [throw+]]))
 
 (defonce rajapinta (atom {}))
 
@@ -8,4 +9,7 @@
   {:pre [(keyword? palvelu)]}
   (if-let [rajapinta-f (get @rajapinta palvelu)]
     (apply rajapinta-f args)
-    (log/warn (str "[JÄRJESTELMÄRAJAPINTA] Kutsuttiin järjestelmäpalvelua " palvelu ", mutta sitä ei ole määritetty"))))
+    (do (log/warn (str "[JÄRJESTELMÄRAJAPINTA] Kutsuttiin järjestelmäpalvelua " palvelu ", mutta sitä ei ole määritetty"))
+        (throw+ {:type :jarjestelma-rajapinta
+                 :virheet [{:koodi :rajapintaa-ei-maaritetty
+                            :viesti (str "Rjapintaa ei määritelty palvelulle " palvelu)}]}))))

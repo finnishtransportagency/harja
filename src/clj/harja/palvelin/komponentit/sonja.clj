@@ -602,8 +602,6 @@
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
-          tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija :sonja-tila)
-                                                              ::sonja-tila)
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
@@ -617,13 +615,18 @@
                  :saikeen-sammutus-kanava saikeen-sammutus-kanava)
           jms-saije (luo-jms-saije this saikeen-sammutus-kanava)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
-      (assoc this
-             :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db))))
+      (if (:julkaise-tila? asetukset)
+        (let [tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija :sonja-tila)
+                                                                          ::sonja-tila)]
+          (assoc this
+            :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db)))
+        this)))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
-    (tapahtuma-apurit/julkaise-tapahtuma :sonja-tila :suljetaan)
-    (>!! lopeta-tarkkailu-kanava true)
-    (async/close! lopeta-tarkkailu-kanava)
+    (when (get-in this [:asetukset :julkaise-tila?])
+      (tapahtuma-apurit/julkaise-tapahtuma :sonja-tila :suljetaan)
+      (>!! lopeta-tarkkailu-kanava true)
+      (async/close! lopeta-tarkkailu-kanava))
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
     (when-not @jms-saije-sammutettu?
       (>!! saikeen-sammutus-kanava true))
