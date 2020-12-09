@@ -56,6 +56,9 @@
 (def ^{:dynamic true
        :doc "Tänne mapissa kanavan nimi funktio pareja, joiden pitäs olla testissä käytössä.
              Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
+(def ^:dynamic *kaynnistyksen-jalkeen-hook* nil)
+(def ^:dynamic *ennen-sulkemista-hook* nil)
+
 (def sonja-aloitus-go (atom nil))
 
 (defn lisaa-kuuntelijoita!
@@ -1348,6 +1351,8 @@
                                                   [:db])
 
                            ~@omat))))
+     (when *kaynnistyksen-jalkeen-hook*
+       (*kaynnistyksen-jalkeen-hook*))
      (alter-var-root #'urakka
                      (fn [_#]
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
@@ -1360,6 +1365,8 @@
          (when (not (empty? @kuuntelijoiden-lopettajat#))
            (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]
              (lopetus-fn#)))))
+     (when *ennen-sulkemista-hook*
+       (*ennen-sulkemista-hook*))
      (alter-var-root #'jarjestelma component/stop)
      (lopeta-harja-tarkkailija!)))
 
