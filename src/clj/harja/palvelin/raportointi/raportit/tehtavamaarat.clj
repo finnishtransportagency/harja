@@ -3,7 +3,8 @@
   (:require [harja.kyselyt
              [urakat :as urakat-q]
              [tehtavamaarat :as tm-q]
-             [toteumat :as toteuma-q]]
+             [toteumat :as toteuma-q]
+             [hallintayksikot :as hallinta-q]]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:import (java.math RoundingMode)))
@@ -74,10 +75,36 @@
     {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
     (vec m)))
 
+(defn taustatiedot                                          ; helvetti mikä härveli :D
+  [db params & haut]
+  (println "haut" haut)
+  (let [haut-muunnoksilla (mapv #(fn [db params acc]
+                                   (let [db-fn (first %)
+                                         muunnos-fn (second %)]
+                                     (db-fn db
+                                            (muunnos-fn params acc))))
+                                haut)
+        haku-fn (fn [db params] (reduce (fn [acc h]
+                                          (println "has ->_>_>_>_>_>" acc)
+                                          (let [haku (first (h db params acc))]
+                                            (println "-------> " haku)
+                                            (conj acc haku)))
+                                        []
+                                        haut-muunnoksilla))]
+    (haku-fn db params)))
+
 (defn muodosta-taulukko
-  [db user kysely-fn {:keys [alkupvm loppupvm] :as parametrit}]
+  [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
+        raportin-taustatiedot (apply taustatiedot
+                                     db
+                                     parametrit
+                                     (keep identity (vector
+                                                      (when urakka-id [urakat-q/urakan-hallintayksikko (fn [ps _] {:id (get ps :urakka-id)})])
+                                                      (when urakka-id [urakat-q/hae-urakka (fn [ps _] {:id (get ps :urakka-id)})])
+                                                      (when urakka-id [hallinta-q/hae-organisaatio (fn [_ acc] {:id (get (first acc) :hallintayksikko-id)})])
+                                                      (when hallintayksikko-id [hallinta-q/hae-organisaatio (fn [ps _] {:id (get ps :hallintayksikko-id)})]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
         suunnitellut-valiotsikoineen (keep identity
@@ -105,6 +132,7 @@
                         (map muodosta-otsikot))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
+     :debug   raportin-taustatiedot
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
                {:otsikko (str "Suunniteltu määrä "
@@ -120,6 +148,7 @@
   (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla params)]
     [:raportti
      {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
+     [:teksti (pr-str debug)]
      [:taulukko
       {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
        :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
