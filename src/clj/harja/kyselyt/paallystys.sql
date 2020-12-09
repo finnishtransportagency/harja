@@ -138,7 +138,7 @@ GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paally
 SELECT
   -- POT2 spesifiset haut
   pot2p.id as "pot2p_id",
-  pot2p.kohdeosa_id,
+  pot2p.kohdeosa_id as "kohdeosa-id",
   pot2p.toimenpide,
   pot2p.materiaali,
   pot2p.leveys,
@@ -449,7 +449,7 @@ UPDATE pot2_paallystekerros
        piennar = :piennar,
        lisatieto = :lisatieto,
        pot2_id = :pot2_id
- WHERE id = :paallystekerros_id;
+ WHERE id = :pot2p_id;
 
 -- name: luo-pot2-paallystekerros<!
 INSERT INTO pot2_paallystekerros

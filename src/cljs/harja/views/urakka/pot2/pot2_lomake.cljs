@@ -70,8 +70,7 @@
         perusleveys 2
         kulutuskerros-toimenpiteet (:kulutuskerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
-     {:otsikko "Kulutuskerros"
-      :tunniste :kohdeosa-id
+     {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :uusi-rivi (fn [rivi]
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))
@@ -116,13 +115,13 @@
        :valinta-nayta (fn [rivi]
                         (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi)) :pakollinen? true}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
-       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+       :leveys perusleveys :pakollinen? true}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
-       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+       :leveys perusleveys :pakollinen? true}
       {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea
-       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+       :leveys perusleveys :pakollinen? true}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
-       :kokonaisluku? true :leveys perusleveys :pakollinen? true}
+       :leveys perusleveys :pakollinen? true}
       {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                             (boolean (:piennar rivi)))}
       {:otsikko "Toiminnot" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys

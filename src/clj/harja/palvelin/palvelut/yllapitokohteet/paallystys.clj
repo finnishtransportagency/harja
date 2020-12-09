@@ -220,7 +220,7 @@
 (def pot2-kulutuskerroksen-avaimet
   #{:kohdeosa-id :tr-kaista :tr-ajorata :tr-loppuosa :tr-alkuosa :tr-loppuetaisyys :nimi
     :tr-alkuetaisyys :tr-numero :materiaali :toimenpide :piennar :kokonaismassamaara
-    :leveys :pinta_ala :massamenekki})
+    :leveys :pinta_ala :massamenekki :pot2p_id})
 
 (defn- pot2-kulutuskerros
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen (kulutuskerros) rivit.
@@ -232,7 +232,10 @@
                 (let [kulutuskerros (first
                                       (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
                                                                                    :kohdeosa_id (:id kohdeosa)}))
-                      rivi (select-keys (merge kohdeosa kulutuskerros) pot2-kulutuskerroksen-avaimet)]
+                      rivi (select-keys (merge kohdeosa kulutuskerros
+                                               ;; kohdeosan id on aina läsnä YLLAPITOKOHDEOSA-taulussa, mutta pot2_paallystekerros-taulun
+                                               ;; riviä ei välttämättä ole tässä kohti vielä olemassa (jos INSERT)
+                                               {:kohdeosa-id (:id kohdeosa)}) pot2-kulutuskerroksen-avaimet)]
                   rivi))
               (:kohdeosat paallystysilmoitus))]
     (assoc paallystysilmoitus :kulutuskerros kulutuskerros)))
@@ -518,24 +521,22 @@
          (filter (comp not :poistettu)))))
 
 ;; petar da li treba ovde nesto
-
 (defn- tallenna-pot2-paallystekerros
-  [db paallystysilmoitus pot2-id]
+  [db paallystysilmoitus pot2-id paivitetyt-kohdeosat]
   (doseq [rivi (->> paallystysilmoitus
                     :kulutuskerros
                     (filter (comp not :poistettu)))]
-    (println "POT päällystekerroksen rivi " rivi)
-    (let [paallystekerros-id (:id rivi)
+    (let [;; Kohdeosan id voi olla rivillä jo, tai sitten se ei ole vaan luotiin juuri aiemmin samassa transaktiossa, ja täytyy
+          ;; tällöin kaivaa paivitetyt-kohdeosat objektista tierekisteriosoitetietojen  perusteella
+          kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
           params (merge rivi
-                        {:kohdeosa_id (:kohdeosa-id rivi)
+                        {:kohdeosa_id kohdeosan-id
                          :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
-                         :paallystekerros_id paallystekerros-id
                          :lisatieto (:lisatieto rivi)
                          :pot2_id pot2-id})]
-      (if paallystekerros-id
+      (if (:pot2p_id rivi)
         ;; UPDATE
-        (q/paivita-pot2-paallystekerros<! (merge params
-                                                 {:paallystekerros_id paallystekerros-id}))
+        (q/paivita-pot2-paallystekerros<! db params)
         ;; HOX: Tämä ao. SQL ei vielä toimi, tai ei ole testattu...
         (q/luo-pot2-paallystekerros<! db params)))))
 
@@ -587,7 +588,8 @@
                                              :osat (map #(assoc % :id (:kohdeosa-id %))
                                                      (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})
               pot2-paallystekerros (when pot2? (tallenna-pot2-paallystekerros db paallystysilmoitus
-                                                                              (:id vanha-paallystysilmoitus)))
+                                                                              (:id vanha-paallystysilmoitus)
+                                                                              paivitetyt-kohdeosat))
               _ (println "Tallennuksen paluuarvo pot2-paallystekerros " pot2-paallystekerros)]
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.

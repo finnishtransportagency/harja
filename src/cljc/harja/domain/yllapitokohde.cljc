@@ -1168,3 +1168,14 @@ yllapitoluokkanimi->numero
 
 (defn indeksoi-kohdeosat [kohdeosat]
   (into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) kohdeosat))))
+
+(defn uuden-kohdeosan-id
+  "Palauttaa uuden kohdeosan id:n riville. Tarpeen esim. POT2:ssa, kun transaktiossa luodaan uusi kohdeosa,
+  ja se ei ole läsnä rivillä, mutta on läsnä kohdeosat-muuttujassa."
+  [rivi kohdeosat]
+  (:id
+    (first
+      (filter (fn [kohdeosa]
+                (= (select-keys kohdeosa tr-domain/vali-avaimet)
+                   (select-keys rivi tr-domain/vali-avaimet)))
+              kohdeosat))))
