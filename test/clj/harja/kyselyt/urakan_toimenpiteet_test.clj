@@ -11,7 +11,6 @@
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
   (urakkatieto-alustus!)
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -21,9 +20,7 @@
 
   (testit)
   (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!)
   (urakkatieto-lopetus!))
-
 
 (use-fixtures :once jarjestelma-fixture)
 

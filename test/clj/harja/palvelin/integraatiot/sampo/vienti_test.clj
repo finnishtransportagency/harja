@@ -29,7 +29,6 @@
 (def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -39,8 +38,7 @@
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])
                         :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja :integraatioloki])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 

@@ -13,7 +13,6 @@
             [clj-time.coerce :as c]))
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -31,8 +30,7 @@
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
   (raportit-q/paivita_raportti_cachet (:db jarjestelma))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture

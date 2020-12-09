@@ -16,7 +16,6 @@
 
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -25,8 +24,7 @@
                         :http-palvelin (testi-http-palvelin)))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 
 (use-fixtures :once (compose-fixtures

@@ -16,7 +16,6 @@
 
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (pystyta-harja-tarkkailija!)
   (alter-var-root
     #'jarjestelma
     (fn [_]
@@ -30,8 +29,7 @@
                  [:db :integraatioloki])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 
 (use-fixtures :once jarjestelma-fixture)

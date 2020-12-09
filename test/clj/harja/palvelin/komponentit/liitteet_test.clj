@@ -12,7 +12,6 @@
   (u (str "DELETE FROM liite WHERE id = " liite-id ";")))
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -23,8 +22,7 @@
                           (harja.palvelin.komponentit.liitteet/->Liitteet nil)
                           [:db])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 

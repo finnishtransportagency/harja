@@ -8,7 +8,6 @@
 (def +testiviesti+ {:suunta "ulos" :sisaltotyyppi "application/xml" :siirtotyyppi "jms" :sisalto "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" :otsikko nil :parametrit nil})
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -16,8 +15,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 

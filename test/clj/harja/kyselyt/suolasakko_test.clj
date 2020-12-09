@@ -15,7 +15,6 @@
 
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -31,8 +30,7 @@
                    (async/<! (async/timeout 1000))
                    (recur (inc k))))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each (compose-fixtures
                       urakkatieto-fixture

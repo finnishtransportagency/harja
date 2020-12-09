@@ -9,7 +9,6 @@
   (:import (org.apache.commons.io IOUtils)))
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -17,8 +16,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 

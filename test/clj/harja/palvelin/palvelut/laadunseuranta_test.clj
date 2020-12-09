@@ -19,7 +19,6 @@
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -49,8 +48,7 @@
                                           (ls/->Laadunseuranta)
                                           [:http-palvelin :db :fim :sonja-sahkoposti :labyrintti])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 

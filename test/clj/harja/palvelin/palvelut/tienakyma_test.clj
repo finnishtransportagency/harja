@@ -9,7 +9,6 @@
   (:import [harja.domain.roolit EiOikeutta]))
 
 (defn jarjestelma-fixture [testit]
-  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -20,8 +19,7 @@
                                   (tienakyma/->Tienakyma)
                                   [:db :http-palvelin])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
 
