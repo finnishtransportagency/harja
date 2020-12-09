@@ -412,10 +412,11 @@
     (is (= 234234 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
 
 (defn- hae-yllapitokohdeosadata [nimi tr-numero]
-  (let [[paallystetyyppi raekoko tyomenetelma massamaara toimenpide id]
-        (first (q (str "SELECT paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide, id
+  (let [[tr_alkuosa paallystetyyppi raekoko tyomenetelma massamaara toimenpide id]
+        (first (q (str "SELECT tr_alkuosa, paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide, id
                         FROM yllapitokohdeosa WHERE nimi = '" nimi "' AND tr_numero = " tr-numero)))]
-    {:paallystetyyppi paallystetyyppi
+    {:tr_alkuosa      tr_alkuosa
+     :paallystetyyppi paallystetyyppi
      :raekoko         raekoko
      :tyomenetelma    tyomenetelma
      :massamaara      massamaara
@@ -443,7 +444,6 @@
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
-          - (println "pocetak testkejsa")
           [urakka-id sopimus-id vastaus yllapitokohdeosadata] (tallenna-testipaallystysilmoitus paallystysilmoitus 2020)]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
@@ -509,7 +509,8 @@
                              :lisaaineet "asd"}]}))
         (println "petar skoro na kraju testkejsa")
         (is (= yllapitokohdeosadata
-               {:paallystetyyppi 1
+               {:tr_alkuosa      3
+                :paallystetyyppi 1
                 :raekoko         1
                 :tyomenetelma    12
                 :massamaara      2.00M
@@ -519,31 +520,37 @@
 
 (deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
   (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+        _ (is (not (nil? paallystyskohde-id)))
         alkuperainen-paallystysilmoitus (-> pot-testidata
-                               (assoc :paallystyskohde-id paallystyskohde-id)
-                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))]
-    (is (not (nil? paallystyskohde-id)))
-    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
-    (let [[_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus alkuperainen-paallystysilmoitus 2020)]
-     (is (= yllapitokohdeosadata
-            {:paallystetyyppi 1
-             :raekoko         1
-             :tyomenetelma    12
-             :massamaara      2.00M
-             :toimenpide      "Wut"
-             :id              48})))
-    (println "petar evo sad cu kobajagi da apdejtujem")
-    (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
-                                 (assoc-in [:ilmoitustiedot :osoitteet 0 :toimenpide] "Freude"))
-          - (println "petar novi ilmoitus " (pr-str uusi-paallystysilmoitus))
-          [_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
+                                            (assoc :paallystyskohde-id paallystyskohde-id)
+                                            (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))]
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " alkuperäinen ilmoitus")
+    (let [[_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus alkuperainen-paallystysilmoitus 2020)
+          kohdeosa-id (:id yllapitokohdeosadata)]
       (is (= yllapitokohdeosadata
-             {:paallystetyyppi 1
+             {:tr_alkuosa      3
+              :paallystetyyppi 1
               :raekoko         1
               :tyomenetelma    12
               :massamaara      2.00M
-              :toimenpide      "Freude-Liebe"
-              :id              48})))))
+              :toimenpide      "Wut"
+              :id              48}))
+      (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
+                                        (assoc-in [:ilmoitustiedot :osoitteet 0 :tr-alkuosa] 3) ;; petar täytyy keksia minimi validi muuttos
+                                        (assoc-in [:ilmoitustiedot :osoitteet 0 :toimenpide] "Freude")
+                                        (assoc-in [:ilmoitustiedot :osoitteet 0 :kohdeosa-id] kohdeosa-id))
+            - (println "petar novi ilmoitus " (pr-str uusi-paallystysilmoitus))
+            [_ _ vastaus paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
+        (println "petar izasao je iz apdejta")
+        (is (nil? (:virhe vastaus)))
+        (is (= paivitetty-yllapitokohdeosadata
+               {:tr_alkuosa      3
+                :paallystetyyppi 1
+                :raekoko         1
+                :tyomenetelma    12
+                :massamaara      2.00M
+                :toimenpide      "Freude"
+                :id              48}))))))
 
 (deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan      ; petar todo
   (let [;; Ei saa olla POT ilmoitusta

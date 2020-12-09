@@ -421,7 +421,7 @@
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
   (log/debug "Päivitetään ylläpitokohdeosa")
-  (println "====================== petar update id = " id " urakka=" urakka-id)
+  (println "====================== petar update id = " id " alkuosa=" tr-alkuosa)
   (q/paivita-yllapitokohdeosa<! db
                                 ;; POT1 ja POT2
                                 {:nimi nimi
@@ -452,6 +452,7 @@
 
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi] :as tiedot}]
+  (println "petar 123 " (pr-str osat))
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
@@ -485,6 +486,7 @@
 
               (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
               (doseq [osa osat]
+                (println "petar --------------- osa " (pr-str osa))
                 (if (id-olemassa? (:id osa))
                   (paivita-yllapitokohdeosa db user urakka-id osa)
                   (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
