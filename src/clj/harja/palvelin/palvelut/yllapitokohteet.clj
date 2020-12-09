@@ -390,7 +390,7 @@
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
                                           paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
-  (println "petar insertujem nimi=" nimi " tunnus=" tunnus " tr-numero=" tr-numero)
+  (println "================ petar insertujem nimi=" nimi " tunnus=" tunnus " tr-numero=" tr-numero)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db                            ; petar
                               ;; POT1 ja POT2
@@ -421,7 +421,7 @@
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
   (log/debug "Päivitetään ylläpitokohdeosa")
-  (println "petar update id = " id " urakka=" urakka-id)
+  (println "====================== petar update id = " id " urakka=" urakka-id)
   (q/paivita-yllapitokohdeosa<! db
                                 ;; POT1 ja POT2
                                 {:nimi nimi

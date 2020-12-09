@@ -411,28 +411,43 @@
     (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
     (is (= 234234 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
 
+(defn- hae-yllapitokohdeosadata [nimi tr-numero]
+  (let [[paallystetyyppi raekoko tyomenetelma massamaara toimenpide id]
+        (first (q (str "SELECT paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide, id
+                        FROM yllapitokohdeosa WHERE nimi = '" nimi "' AND tr_numero = " tr-numero)))]
+    {:paallystetyyppi paallystetyyppi
+     :raekoko         raekoko
+     :tyomenetelma    tyomenetelma
+     :massamaara      massamaara
+     :toimenpide      toimenpide
+     :id              id}))
+
+(defn- tallenna-testipaallystysilmoitus
+  [paallystysilmoitus, vuosi]
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                             :sopimus-id         sopimus-id
+                                                                             :vuosi              vuosi
+                                                                             :paallystysilmoitus paallystysilmoitus})
+        yllapitokohdeosadata (hae-yllapitokohdeosadata "Tie 22" 22)]
+    [urakka-id sopimus-id vastaus yllapitokohdeosadata]))
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'"))]
+        paallystyskohde-id (hae-yllapitokohde-kirkkotie)]
     (is (not (nil? paallystyskohde-id)))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
-          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-          paallystysilmoitus (-> pot-testidata
+    (let [paallystysilmoitus (-> pot-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
-
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
-          - (println "petar evo bas sam ovde")
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                               :sopimus-id sopimus-id
-                                                                               :vuosi 2020
-                                                                               :paallystysilmoitus paallystysilmoitus})]
+          - (println "pocetak testkejsa")
+          [urakka-id sopimus-id vastaus yllapitokohdeosadata] (tallenna-testipaallystysilmoitus paallystysilmoitus 2020)]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
 
-      (println "petar upisao je, a bogami i u yllapitokohdeosa " (pr-str vastaus))
       (is (= (count (:yllapitokohteet vastaus)) 4))
       (is (= (count (:paallystysilmoitukset vastaus)) 4))
 
@@ -492,7 +507,43 @@
                              :sideainetyyppi 1
                              :pitoisuus 54
                              :lisaaineet "asd"}]}))
+        (println "petar skoro na kraju testkejsa")
+        (is (= yllapitokohdeosadata
+               {:paallystetyyppi 1
+                :raekoko         1
+                :tyomenetelma    12
+                :massamaara      2.00M
+                :toimenpide      "Wut"
+                :id              48}))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
+
+(deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
+  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+        alkuperainen-paallystysilmoitus (-> pot-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))]
+    (is (not (nil? paallystyskohde-id)))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
+    (let [[_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus alkuperainen-paallystysilmoitus 2020)]
+     (is (= yllapitokohdeosadata
+            {:paallystetyyppi 1
+             :raekoko         1
+             :tyomenetelma    12
+             :massamaara      2.00M
+             :toimenpide      "Wut"
+             :id              48})))
+    (println "petar evo sad cu kobajagi da apdejtujem")
+    (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
+                                 (assoc-in [:ilmoitustiedot :osoitteet 0 :toimenpide] "Freude"))
+          - (println "petar novi ilmoitus " (pr-str uusi-paallystysilmoitus))
+          [_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
+      (is (= yllapitokohdeosadata
+             {:paallystetyyppi 1
+              :raekoko         1
+              :tyomenetelma    12
+              :massamaara      2.00M
+              :toimenpide      "Freude-Liebe"
+              :id              48})))))
 
 (deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan      ; petar todo
   (let [;; Ei saa olla POT ilmoitusta
@@ -505,7 +556,6 @@
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
-          - (println "petar evo sad cu da upisem " (pr-str paallystysilmoitus))
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                :sopimus-id sopimus-id

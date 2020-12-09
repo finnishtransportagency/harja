@@ -275,7 +275,7 @@
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         - (println "petar hajde da vidimo sta je vratio " (pr-str paallystysilmoitus))
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-            (println "petar OVDE NISAM SME DA UDJEM")
+            (println "petar OVDE NISAM SME DA UDJEM za POT2")
             (cond
               (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
               ;; Vuonna 2018 käytettiin uutta ja vanhaa mallia
