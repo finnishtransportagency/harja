@@ -75,20 +75,20 @@
     {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
     (vec m)))
 
-(defn taustatiedot                                          ; helvetti mikä härveli :D
+(defn taustatiedot                                          ; härveli :D
   [db params & haut]
   (println "haut" haut)
   (let [haut-muunnoksilla (mapv #(fn [db params acc]
                                    (let [db-fn (first %)
-                                         muunnos-fn (second %)]
-                                     (db-fn db
-                                            (muunnos-fn params acc))))
+                                         muunnos-fn (second %)
+                                         parametrit (muunnos-fn params acc)]
+                                     (if parametrit
+                                       (db-fn db parametrit)
+                                       (db-fn db))))
                                 haut)
         haku-fn (fn [db params] (reduce (fn [acc h]
-                                          (println "has ->_>_>_>_>_>" acc)
-                                          (let [haku (first (h db params acc))]
-                                            (println "-------> " haku)
-                                            (conj acc haku)))
+                                          (let [haku (h db params acc)]
+                                            (concat acc haku)))
                                         []
                                         haut-muunnoksilla))]
     (haku-fn db params)))
@@ -101,10 +101,21 @@
                                      db
                                      parametrit
                                      (keep identity (vector
-                                                      (when urakka-id [urakat-q/urakan-hallintayksikko (fn [ps _] {:id (get ps :urakka-id)})])
-                                                      (when urakka-id [urakat-q/hae-urakka (fn [ps _] {:id (get ps :urakka-id)})])
-                                                      (when urakka-id [hallinta-q/hae-organisaatio (fn [_ acc] {:id (get (first acc) :hallintayksikko-id)})])
-                                                      (when hallintayksikko-id [hallinta-q/hae-organisaatio (fn [ps _] {:id (get ps :hallintayksikko-id)})]))))
+                                                      (when urakka-id
+                                                        [urakat-q/urakan-hallintayksikko
+                                                         (fn [ps _] {:id (get ps :urakka-id)})])
+                                                      (when urakka-id
+                                                        [urakat-q/hae-urakka
+                                                         (fn [ps _] {:id (get ps :urakka-id)})])
+                                                      (when urakka-id
+                                                        [hallinta-q/hae-organisaatio
+                                                         (fn [_ acc] {:id (get (first acc) :hallintayksikko-id)})])
+                                                      (when hallintayksikko-id
+                                                        [hallinta-q/hae-organisaatio
+                                                         (fn [ps _] {:id (get ps :hallintayksikko-id)})])
+                                                      (when (not (or urakka-id hallintayksikko-id))
+                                                        [hallinta-q/hallintayksikot-ilman-geometriaa
+                                                         (fn [_ _] nil)]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
         suunnitellut-valiotsikoineen (keep identity
