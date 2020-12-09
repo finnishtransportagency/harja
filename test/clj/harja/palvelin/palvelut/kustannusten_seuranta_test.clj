@@ -222,12 +222,11 @@
       WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
       WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
       WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-      WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
-       END AS toimenpide
+     END AS toimenpide
   FROM toimenpidekoodi tk,
-      kustannusarvioitu_tyo kt,
-      toimenpideinstanssi tpi,
-      sopimus s
+       kustannusarvioitu_tyo kt,
+       toimenpideinstanssi tpi,
+       sopimus s
   WHERE s.urakka = " urakka "
    AND kt.sopimus = s.id
    AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
@@ -239,20 +238,18 @@
      OR tk.koodi = '20107' -- paallystepaikkaukset
      OR tk.koodi = '20191' -- mhu-yllapito
      OR tk.koodi = '14301' -- mhu-korvausinvestointi
-     OR tk.koodi = '23151' -- mhu-johto
      )
 UNION ALL
   SELECT
     kt.summa,
     0 AS toteutunut_summa,
     CASE
-    WHEN tk.koodi = '23104' THEN 'Talvihoito'
-    WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
-    WHEN tk.koodi = '23124' THEN 'Sorateiden hoito'
-    WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
-    WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
-    WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-    WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
+      WHEN tk.koodi = '23104' THEN 'Talvihoito'
+      WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
+      WHEN tk.koodi = '23124' THEN 'Sorateiden hoito'
+      WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
+      WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
+      WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
     END AS toimenpide
   FROM toimenpidekoodi tk,
     kiinteahintainen_tyo kt,
@@ -262,12 +259,11 @@ UNION ALL
     AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
     AND tpi.toimenpide = tk.id
     AND (tk.koodi = '23104' -- talvihoito
-     OR tk.koodi = '23116' -- liikenneympariston-hoito
-     OR tk.koodi = '23124' -- sorateiden-hoito
-     OR tk.koodi = '20107' -- paallystepaikkaukset
-     OR tk.koodi = '20191' -- mhu-yllapito
-      OR tk.koodi = '14301' -- mhu-korvausinvestointi
-      OR tk.koodi = '23151' -- mhu-johto
+         OR tk.koodi = '23116' -- liikenneympariston-hoito
+         OR tk.koodi = '23124' -- sorateiden-hoito
+         OR tk.koodi = '20107' -- paallystepaikkaukset
+         OR tk.koodi = '20191' -- mhu-yllapito
+         OR tk.koodi = '14301' -- mhu-korvausinvestointi
       )"))
 
 (defn- hankintakustannukset-toteutuneet-sql-haku [urakka alkupvm loppupvm]
@@ -284,19 +280,18 @@ UNION ALL
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           --WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
-           END                 AS toimenpide
-FROM lasku_kohdistus lk
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
-         JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
-     toimenpideinstanssi tpi,
-     toimenpidekoodi tk,
-     lasku l
-WHERE l.urakka = " urakka "
-  AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
-  AND lk.lasku = l.id
-  AND lk.toimenpideinstanssi = tpi.id
-  AND tpi.toimenpide = tk.id
+       END                 AS toimenpide
+       FROM lasku_kohdistus lk
+             LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+             LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+            toimenpideinstanssi tpi,
+           toimenpidekoodi tk,
+           lasku l
+       WHERE l.urakka = " urakka "
+         AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
+         AND lk.lasku = l.id
+         AND lk.toimenpideinstanssi = tpi.id
+         AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
@@ -313,7 +308,7 @@ WHERE l.urakka = " urakka "
                  WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
                  WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
                  WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
-                 END                 AS toimenpide
+             END                 AS toimenpide
         FROM lasku_kohdistus lk
                  LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
                  LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,

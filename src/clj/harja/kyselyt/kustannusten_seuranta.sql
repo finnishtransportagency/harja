@@ -33,7 +33,6 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
            END                                   AS toimenpide,
        kt.luotu                                  AS luotu,
        concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
@@ -56,7 +55,6 @@ WHERE s.urakka = :urakka
     OR tk.koodi = '20107' -- paallystepaikkaukset
     OR tk.koodi = '20191' -- mhu-yllapito
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
-    OR tk.koodi = '23151' -- mhu-johto
     )
 UNION ALL
 -- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta
@@ -77,7 +75,6 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
            END                                   AS toimenpide,
        kt.luotu                                  AS luotu,
        concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
@@ -98,7 +95,6 @@ WHERE tpi.urakka = :urakka
     OR tk.koodi = '20107' -- paallystepaikkaukset
     OR tk.koodi = '20191' -- mhu-yllapito
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
-    OR tk.koodi = '23151' -- mhu-johto
     )
 UNION ALL
 -- Budjetoidut Erillishankinnat - toimenpide_koodi = '23150' - haetaan mukaan budjettiin kustannusarvioitu_työ taulusta, kun toimenpidekoodi on 23150
@@ -220,7 +216,6 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
            END                 AS toimenpide,
        lk.luotu                AS luotu,
        l.erapaiva::TEXT        AS ajankohta,
@@ -229,7 +224,7 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
        'hankintakustannukset'  AS paaryhma
 FROM lasku_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
-         JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+         LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk,
      lasku l
@@ -237,6 +232,7 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND lk.lasku = l.id
   AND lk.toimenpideinstanssi = tpi.id
+  AND lk.poistettu IS NOT TRUE
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
   AND (tk.koodi = '23104' OR tk.koodi = '23116'

@@ -88,7 +88,7 @@
                                (+ summa (:toteutunut_summa tehtava))
                                summa))
                            0 toimenpiteen-tehtavat)
-         :tehtavat toteutuneet-tehtavat}))
+         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}))
     toimenpiteet))
 
 (defn- summaa-hoito-ja-hallinta-tehtavat [tehtavat paaryhmaotsikko]
@@ -194,7 +194,6 @@
           hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
           hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
           jjhallinnan-toimenpiteet (summaa-hoito-ja-hallinta-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
-          hankintakustannusten-toimenpiteet (sort-by :jarjestys hankintakustannusten-toimenpiteet)
           jjhallinnan-toimenpiteet (sort-by :jarjestys jjhallinnan-toimenpiteet)
 
           taulukon-rivit (-> {}
