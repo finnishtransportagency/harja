@@ -77,7 +77,6 @@
 
 (defn taustatiedot                                          ; härveli :D
   [db params & haut]
-  (println "haut" haut)
   (let [haut-muunnoksilla (mapv #(fn [db params acc]
                                    (let [db-fn (first %)
                                          muunnos-fn (second %)
@@ -143,7 +142,7 @@
                         (map muodosta-otsikot))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
-     :debug   raportin-taustatiedot
+     :debug   suunnitellut-ryhmissa
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
                {:otsikko (str "Suunniteltu määrä "

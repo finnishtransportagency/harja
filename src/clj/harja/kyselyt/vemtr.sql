@@ -88,11 +88,12 @@ with urakat as (select id, hallintayksikko
               group by yt.urakka, yt.tehtava)
 select toteumat.maara             as toteuma,
        tyot.maara                 as suunniteltu,
-       o.nimi                     as hallintayksikko,
+       o.id                     as hallintayksikko,
        tehtava.nimi               as nimi,
        emo.nimi                   as toimenpide,
        tehtava.suunnitteluyksikko as suunnitteluyksikko,
-       tehtava.yksikko            as yksikko
+       tehtava.yksikko            as yksikko,
+       'yksikkohintaiset' as rivityyppi
 from toimenpideinstanssi tpi
        join urakka u on tpi.urakka = u.id
        join toimenpidekoodi emo on emo.id = tpi.toimenpide
@@ -101,5 +102,5 @@ from toimenpideinstanssi tpi
        join organisaatio o on o.id = u.hallintayksikko
        left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
 where tpi.urakka in (select id from urakat)
-group by o.nimi, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, tyot.maara, tpi.urakka
+group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, tyot.maara, tpi.urakka
 having coalesce(toteumat.maara, tyot.maara) >= 0
