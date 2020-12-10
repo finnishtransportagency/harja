@@ -173,21 +173,21 @@
   (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
 
 (define-tables
-  ["pot2_kulutuskerros_toimenpide" ::pot2-kulutuskerros-toimenpide
+  ["pot2_mk_kulutuskerros_toimenpide" ::pot2-mk-kulutuskerros-toimenpide
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
-  ["pot2_alusta_toimenpide" ::pot2-alusta-toimenpide
+  ["pot2_mk_alusta_toimenpide" ::pot2-mk-alusta-toimenpide
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
   ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_alusta" ::pot2-alusta]
-  ["pot2_massatyyppi" ::pot2-massatyyppi]
-  ["pot2_runkoainetyyppi" ::pot2-runkoainetyyppi]
-  ["pot2_sideainetyyppi" ::pot2-sideainetyyppi]
-  ["pot2_lisaainetyyppi" ::pot2-lisaainetyyppi]
-  ["pot2_massa_runkoaine" ::pot2-massa-runkoaine
+  ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi]
+  ["pot2_mk_runkoainetyyppi" ::pot2-mk-runkoainetyyppi]
+  ["pot2_mk_sideainetyyppi" ::pot2-mk-sideainetyyppi]
+  ["pot2_mk_lisaainetyyppi" ::pot2-mk-lisaainetyyppi]
+  ["pot2_mk_massan_runkoaine" ::pot2-mk-massan-runkoaine
    {"id" :runkoaine/id
     "pot2_massa_id" :pot2-massa/id
     "tyyppi" :runkoaine/tyyppi
@@ -197,18 +197,18 @@
     "kuulamyllyarvo" :runkoaine/kuulamyllyarvo
     "litteysluku" :runkoaine/litteysluku
     "massaprosentti" :runkoaine/massaprosentti}]
-  ["pot2_massa_sideaine" ::pot2-massa-sideaine
+  ["pot2_mk_massan_sideaine" ::pot2-mk-massan-sideaine
    {"id" :sideaine/id
     "pot2_massa_id" :pot2-massa/id
     "tyyppi" :sideaine/tyyppi
     "pitoisuus" :sideaine/pitoisuus
     "lopputuote?" :sideaine/lopputuote?}]
-  ["pot2_massa_lisaaine" ::pot2-massa-lisaaine
+  ["pot2_mk_massan_lisaaine" ::pot2-mk-massan-lisaaine
    {"id" :lisaaine/id
     "pot2_massa_id" :pot2-massa/id
     "tyyppi" :lisaaine/tyyppi
     "pitoisuus" :lisaaine/pitoisuus}]
-  ["pot2_massa" ::pot2-massa
+  ["pot2_mk_urakan_massa" ::pot2-mk-urakan-massa
    {"id" :pot2-massa/id
     "pot2_id" ::pot2-id
     "urakka_id" ::urakka-id
@@ -226,13 +226,13 @@
     "luoja" ::m/luoja-id
     "luotu" ::m/luotu}
    {::runkoaineet (specql.rel/has-many :pot2-massa/id
-                                       ::pot2-massa-runkoaine
+                                       ::pot2-mk-massan-runkoaine
                                        :pot2-massa/id)}
    {::sideaineet (specql.rel/has-many :pot2-massa/id
-                                      ::pot2-massa-sideaine
+                                      ::pot2-mk-massan-sideaine
                                       :pot2-massa/id)}
    {::lisaaineet (specql.rel/has-many :pot2-massa/id
-                                       ::pot2-massa-lisaaine
+                                       ::pot2-mk-massan-lisaaine
                                        :pot2-massa/id)}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])

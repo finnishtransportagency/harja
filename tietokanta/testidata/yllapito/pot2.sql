@@ -16,8 +16,8 @@ BEGIN
     kohdeid = (SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20');
     kohdeosaid_kaista11 = (SELECT id FROM yllapitokohdeosa WHERE nimi = 'Tärkeä kohdeosa kaista 11');
     kohdeosaid_kaista21 = (SELECT id FROM yllapitokohdeosa WHERE nimi = 'Tärkeä kohdeosa kaista 12');
-    massa1_id = (SELECT id FROM pot2_massa WHERE dop_nro = '1234567' and urakka_id = urakkaid);
-    massa2_id = (SELECT id FROM pot2_massa WHERE dop_nro = '987654331-2' and urakka_id = urakkaid);
+    massa1_id = (SELECT id from pot2_mk_urakan_massa WHERE dop_nro = '1234567' and urakka_id = urakkaid);
+    massa2_id = (SELECT id from pot2_mk_urakan_massa WHERE dop_nro = '987654331-2' and urakka_id = urakkaid);
 
 
 INSERT INTO paallystysilmoitus(

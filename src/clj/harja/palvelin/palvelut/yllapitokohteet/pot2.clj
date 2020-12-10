@@ -24,7 +24,7 @@
   (let [_ (println "hae-urakan-pot2-massat :: urakka-id" (pr-str urakka-id))
         massat
         (fetch db
-               ::pot2-domain/pot2-massa
+               ::pot2-domain/pot2-mk-urakan-massa
                #{:pot2-massa/id
                  ::pot2-domain/tyyppi
                  ::pot2-domain/nimen-tarkenne
@@ -45,7 +45,7 @@
                {::pot2-domain/urakka-id urakka-id
                 ::pot2-domain/poistettu? false})
         massat (map #(assoc % ::pot2-domain/sideaineet (fetch db
-                                                              ::pot2-domain/pot2-massa-sideaine
+                                                              ::pot2-domain/pot2-mk-massan-sideaine
                                                               #{:sideaine/id
                                                                 :pot2-massa/id
                                                                 :sideaine/tyyppi
@@ -54,7 +54,7 @@
                                                               {:pot2-massa/id (:pot2-massa/id %)}))
                     massat)
         massat (map #(assoc % ::pot2-domain/lisaaineet (fetch db
-                                                              ::pot2-domain/pot2-massa-lisaaine
+                                                              ::pot2-domain/pot2-mk-massan-lisaaine
                                                               #{:lisaaine/id
                                                                 :pot2-massa/id
                                                                 :lisaaine/tyyppi
@@ -66,23 +66,23 @@
 
 (defn hae-pot2-koodistot [db user {:keys []}]
   (oikeudet/ei-oikeustarkistusta!)
-  (let [massatyypit (fetch db ::pot2-domain/pot2-massatyyppi
-                               (specql/columns ::pot2-domain/pot2-massatyyppi)
+  (let [massatyypit (fetch db ::pot2-domain/pot2-mk-massatyyppi
+                               (specql/columns ::pot2-domain/pot2-mk-massatyyppi)
                                {})
-        runkoainetyypit (fetch db ::pot2-domain/pot2-runkoainetyyppi
-                           (specql/columns ::pot2-domain/pot2-runkoainetyyppi)
+        runkoainetyypit (fetch db ::pot2-domain/pot2-mk-runkoainetyyppi
+                           (specql/columns ::pot2-domain/pot2-mk-runkoainetyyppi)
                            {})
-        sideainetyypit (fetch db ::pot2-domain/pot2-sideainetyyppi
-                          (specql/columns ::pot2-domain/pot2-sideainetyyppi)
+        sideainetyypit (fetch db ::pot2-domain/pot2-mk-sideainetyyppi
+                          (specql/columns ::pot2-domain/pot2-mk-sideainetyyppi)
                           {})
-        lisaainetyypit (fetch db ::pot2-domain/pot2-lisaainetyyppi
-                              (specql/columns ::pot2-domain/pot2-lisaainetyyppi)
+        lisaainetyypit (fetch db ::pot2-domain/pot2-mk-lisaainetyyppi
+                              (specql/columns ::pot2-domain/pot2-mk-lisaainetyyppi)
                               {})
-        alusta-toimenpiteet (fetch db ::pot2-domain/pot2-alusta-toimenpide
-                                          (specql/columns ::pot2-domain/pot2-alusta-toimenpide)
+        alusta-toimenpiteet (fetch db ::pot2-domain/pot2-mk-alusta-toimenpide
+                                          (specql/columns ::pot2-domain/pot2-mk-alusta-toimenpide)
                                           {})
-        kulutuskerros-toimenpiteet (fetch db ::pot2-domain/pot2-kulutuskerros-toimenpide
-                                          (specql/columns ::pot2-domain/pot2-kulutuskerros-toimenpide)
+        kulutuskerros-toimenpiteet (fetch db ::pot2-domain/pot2-mk-kulutuskerros-toimenpide
+                                          (specql/columns ::pot2-domain/pot2-mk-kulutuskerros-toimenpide)
                                           {})
         koodistot {:massatyypit massatyypit
                    :runkoainetyypit runkoainetyypit
@@ -99,7 +99,7 @@
     (doseq [[ra-tyyppi r] runkoaineet]
       (let [runkoaine-id (:runkoaine/id r)
             runkoaine (if (:valittu? r)
-                        (upsert! db ::pot2-domain/pot2-massa-runkoaine
+                        (upsert! db ::pot2-domain/pot2-mk-massan-runkoaine
                                  (merge
                                    {:pot2-massa/id massa-id
                                     :runkoaine/tyyppi ra-tyyppi
@@ -116,7 +116,7 @@
                                      {:runkoaine/id runkoaine-id})))
                         ;; jos valittu? = false, kyseessä voi olla olemassaolevan runkoainetyypin poistaminen
                         (when (int? runkoaine-id)
-                          (delete! db ::pot2-domain/pot2-massa-runkoaine {:runkoaine/id runkoaine-id})))]
+                          (delete! db ::pot2-domain/pot2-mk-massan-runkoaine {:runkoaine/id runkoaine-id})))]
         (swap! paluuarvo conj runkoaine)))
     @paluuarvo))
 
@@ -129,7 +129,7 @@
         ;; tarkistetaan ensin kannasta, onko sellaisia ja jos ne puuttuvat payloadista, poistetaan
         ennestaan-kannassa-olevien-idt (into #{}
                                              (map :sideaine/id
-                                                  (fetch db ::pot2-domain/pot2-massa-sideaine
+                                                  (fetch db ::pot2-domain/pot2-mk-massan-sideaine
                                                          #{:sideaine/id}
                                                          {:pot2-massa/id massa-id
                                                           :sideaine/lopputuote? (boolean (= kayttotapa :lopputuote))})))
@@ -138,11 +138,11 @@
                                                                                           (vals aineet))))]
     (doseq [poistettavan-id idt-jotka-poistettu-uilta]
       (when (int? poistettavan-id)
-        (delete! db ::pot2-domain/pot2-massa-sideaine {:sideaine/id poistettavan-id
+        (delete! db ::pot2-domain/pot2-mk-massan-sideaine {:sideaine/id poistettavan-id
                                                        :pot2-massa/id massa-id})))
     (doseq [[_ {:sideaine/keys [id tyyppi pitoisuus]}] aineet]
       (let [paluurivi (if valittu?
-                        (upsert! db ::pot2-domain/pot2-massa-sideaine
+                        (upsert! db ::pot2-domain/pot2-mk-massan-sideaine
                                  (merge
                                    {:pot2-massa/id massa-id
                                     :sideaine/tyyppi tyyppi
@@ -152,7 +152,7 @@
                                      {:sideaine/id id})))
                         ;; jos valittu? = false, kyseessä voi olla olemassaolevan sideainetyypin poistaminen
                         (when (int? id)
-                          (delete! db ::pot2-domain/pot2-massa-sideaine {:sideaine/id id
+                          (delete! db ::pot2-domain/pot2-mk-massan-sideaine {:sideaine/id id
                                                                          :pot2-massa/id massa-id})))]
         (swap! paluuarvot conj paluurivi)))
     @paluuarvot))
@@ -176,7 +176,7 @@
     (doseq [[la-tyyppi {:lisaaine/keys [id pitoisuus]
                         valittu? :valittu?}] lisaaineet]
       (let [lisaaine (if valittu?
-                       (upsert! db ::pot2-domain/pot2-massa-lisaaine
+                       (upsert! db ::pot2-domain/pot2-mk-massan-lisaaine
                                 (merge
                                   {:pot2-massa/id massa-id
                                    :lisaaine/tyyppi la-tyyppi
@@ -185,7 +185,7 @@
                                     {:lisaaine/id id})))
                        ;; jos valittu? = false, kyseessä voi olla olemassaolevan lisaainetyypin poistaminen
                        (when (int? id)
-                         (delete! db ::pot2-domain/pot2-massa-lisaaine {:lisaaine/id id
+                         (delete! db ::pot2-domain/pot2-mk-massan-lisaaine {:lisaaine/id id
                                                                         :pot2-massa/id massa-id})))]
         (swap! paluuarvo conj lisaaine)))
     @paluuarvo))
@@ -200,7 +200,7 @@
           _ (println "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
           _ (println "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
           _ (println "tallenna-urakan-paallystysmassa :: lisaaineet" (pr-str lisaaineet))
-          massa (upsert! db ::pot2-domain/pot2-massa
+          massa (upsert! db ::pot2-domain/pot2-mk-urakan-massa
                          (merge
                            (if massa-id
                              {:pot2-massa/id massa-id
