@@ -1,26 +1,24 @@
 (ns harja.views.urakka.kulut.mhu-kustannusten-seuranta
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
-            [clojure.string :as str]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
-            [harja.ui.napit :as napit]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.komponentti :as komp]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
-            [harja.ui.kentat :as kentat]
-            [harja.loki :refer [log logt]]
-            [harja.pvm :as pvm]
             [cljs.core.async :refer [<! >! chan]]
             [cljs.core.async :refer [<! timeout]]
             [cljs-time.core :as t]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
-
+            [clojure.string :as str]
             [tuck.core :as tuck]
+            [harja.loki :refer [log logt]]
+            [harja.pvm :as pvm]
             [harja.ui.debug :as debug]
+            [harja.ui.protokollat :refer [Haku hae]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.komponentti :as komp]
+            [harja.transit :as transit]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
+            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -37,9 +35,9 @@
     (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2)))
 
 ; spekseistä laskettu
-(def leveydet {:caret-paaryhma "5%"
-               :paaryhma-vari "5%"
-               :tehtava "40%"
+(def leveydet {:caret-paaryhma "2%"
+               :paaryhma-vari "2%"
+               :tehtava "46%"
                :budjetoitu "15%"
                :toteuma "15%"
                :erotus "10%"
@@ -287,14 +285,22 @@
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)  ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
-        taulukon-rivit (:kustannukset-grouped1 app)
+        taulukon-rivit (:kustannukset app)
         valittu-hoitokausi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
                              2019
                              (get-in app [:hoitokauden-alkuvuosi]))
         valittu-kuukausi (:valittu-kuukausi app)
         hoitokauden-kuukaudet (pvm/aikavalin-kuukausivalit
                                 [(pvm/->pvm (str "01.10." valittu-hoitokausi))
-                                 (pvm/->pvm (str "30.09." (inc valittu-hoitokausi)))])]
+                                 (pvm/->pvm (str "30.09." (inc valittu-hoitokausi)))])
+        haun-alkupvm (if valittu-kuukausi
+                       (first valittu-kuukausi)
+                       (str "01.10." valittu-hoitokausi)
+                       )
+        haun-loppupvm (if valittu-kuukausi
+                       (second valittu-kuukausi)
+                       (str "30.09." (inc valittu-hoitokausi))
+                       )]
     [:div.kustannusten-seuranta
      [debug/debug app]
      [:div {:style {:padding-top "1rem"}}
@@ -321,7 +327,19 @@
                                                      (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
                                                    "Koko hoitokausi")
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-        hoitokauden-kuukaudet]]]
+        hoitokauden-kuukaudet]]
+      [:div.col-xs-6.col-md-3
+       ^{:key "raporttixls"}
+       [:form {:style  {:margin-left "auto"}
+               :target "_blank" :method "POST"
+               :action (k/excel-url :kulut)}
+        [:input {:type  "hidden" :name "parametrit"
+                 :value (transit/clj->transit {:urakka-id   (:id @nav/valittu-urakka)
+                                         :urakka-nimi (:nimi @nav/valittu-urakka)
+                                         :alkupvm     haun-alkupvm
+                                         :loppupvm    haun-loppupvm})}]
+        [:button {:type  "submit"
+                  :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]
 
      [kustannukset-taulukko e! app taulukon-rivit]
      [yhteenveto-laatikko e! app taulukon-rivit]]))
