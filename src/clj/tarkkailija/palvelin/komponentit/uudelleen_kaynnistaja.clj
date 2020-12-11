@@ -76,20 +76,25 @@
         (tapahtuma-apurit/julkaise-tapahtuma :harjajarjestelman-restart #{:sonja})
         (async/<!! tapahtuman-odottaja)))))
 
+(defonce start-lukko (Object.))
+
 (defrecord UudelleenKaynnistaja [timeout-asetukset tapahtumien-tarkkailijat]
   component/Lifecycle
   (start [this]
-    (let [this (assoc this ::sonja-yhteys-aloitettu? (atom nil)
-                           ::uudelleen-kaynnistyksia (atom 0)
-                           ::viestien-maara-kaynnistyksesta (atom 0)
-                           ::uudelleen-kaynnistys-aika (atom nil))]
-      (if (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys)
-        (sonjatarkkailu! this)
-        (log/info "Sonja uudelleen käynnistys ei ole käytössä"))
-      this))
+    (locking start-lukko
+      (when-not (contains? this ::sonja-yhteys-aloitettu)
+        (let [this (assoc this ::sonja-yhteys-aloitettu? (atom nil)
+                               ::uudelleen-kaynnistyksia (atom 0)
+                               ::viestien-maara-kaynnistyksesta (atom 0)
+                               ::uudelleen-kaynnistys-aika (atom nil))]
+          (if (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys)
+            (sonjatarkkailu! this)
+            (log/info "Sonja uudelleen käynnistys ei ole käytössä"))
+          this))))
   (stop [this]
-    (doseq [[_ tarkkailija] @(:tapahtumien-tarkkailijat this)]
-      (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @tarkkailija))
+    (when (:tapahtumien-tarkkailijat this)
+      (doseq [[_ tarkkailija] @(:tapahtumien-tarkkailijat this)]
+        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @tarkkailija)))
     (reset! (::sonja-yhteys-aloitettu? this) nil)
     (reset! (::uudelleen-kaynnistyksia this) 0)
     (reset! (::viestien-maara-kaynnistyksesta this) 0)

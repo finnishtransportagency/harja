@@ -18,4 +18,6 @@
   "Tarkastaa onko annettu kanava sammutettu. Tämän funktion toimiminen riippuu async kirjaston
    toteutuksesta, joten tuon kirjaston päivittäminen mahdollisesti hajoittaa tämän funktion."
   [c]
+  {:pre [(chan? c)]
+   :post [(boolean? %)]}
   (protocols-impl/closed? c))

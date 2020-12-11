@@ -31,33 +31,37 @@
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (every? (fn [[_ host-tila]]
-                              (get-in host-tila [:db :kaikki-ok?]))
-                            @komponenttien-tila))))
+                    (and (> (count @komponenttien-tila) 1)
+                         (every? (fn [[_ host-tila]]
+                                   (get-in host-tila [:db :kaikki-ok?]))
+                                 @komponenttien-tila)))))
 
 (defn replikoinnin-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (every? (fn [[_ host-tila]]
-                              (get-in host-tila [:db-replica :kaikki-ok?]))
-                            @komponenttien-tila))))
+                    (and (> (count @komponenttien-tila) 1)
+                         (every? (fn [[_ host-tila]]
+                                   (get-in host-tila [:db-replica :kaikki-ok?]))
+                                 @komponenttien-tila)))))
 
 (defn sonja-yhteyden-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (every? (fn [[_ host-tila]]
-                              (get-in host-tila [:sonja :kaikki-ok?]))
-                            @komponenttien-tila))))
+                    (and (> (count @komponenttien-tila) 1)
+                         (every? (fn [[_ host-tila]]
+                                   (get-in host-tila [:sonja :kaikki-ok?]))
+                                 @komponenttien-tila)))))
 
 (defn harjan-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
                   (fn []
-                    (every? (fn [[_ host-tila]]
-                              (get-in host-tila [:harja :kaikki-ok?]))
-                            @komponenttien-tila))))
+                    (and (> (count @komponenttien-tila) 1)
+                         (every? (fn [[_ host-tila]]
+                                   (get-in host-tila [:harja :kaikki-ok?]))
+                                 @komponenttien-tila)))))
 
 (defn tietokannan-tila [komponenttien-tila]
   (async/go

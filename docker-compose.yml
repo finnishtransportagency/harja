@@ -165,7 +165,7 @@ services:
       fi
 
       echo 'Aloitetaan LESS kääntäminen'
-      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1 &
+      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1
       disown
       lein with-profile $${LEIN_PROFILES} less once
       echo 'Luodaan .edn filut figwheeliä varten'

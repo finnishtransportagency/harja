@@ -90,7 +90,7 @@
         (loop [[kerta & loput-kerrat] (range 0 50)
                testattu-kerran? false]
           (when-not (or (nil? kerta)
-                        @tapahtumat/tapahtuma-loop-kaynnissa?)
+                        @(get-in harja-tarkkailija [:klusterin-tapahtumat ::tapahtumat/tapahtuma-loop-kaynnissa?]))
             (when-not testattu-kerran?
               (tapahtumat-p/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
               (is (thrown? AssertionError (odota-arvo saatiin default-odottelu)) "Ei pitäisi saada tapahtumia ennenkuin tapahtumaloop on käynnissä"))

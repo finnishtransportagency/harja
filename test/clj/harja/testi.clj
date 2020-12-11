@@ -1267,32 +1267,36 @@
 (def portti nil)
 (def urakka nil)
 
-(def harja-tarkkailija)
+(def harja-tarkkailija nil)
 (def ^:dynamic *uudelleen-kaynnistaja-mukaan?* false)
-
-(defn pystyta-harja-tarkkailija! []
-  (alter-var-root #'harja-tarkkailija
-                  (constantly
-                    (component/start
-                      (component/system-map
-                        :db-event (event-tietokanta/luo-tietokanta testitietokanta)
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                {:db :db-event})
-                        :tapahtuma (component/using
-                                     (tapahtuma/->Tapahtuma)
-                                     [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija)
-                        :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
-                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 1000}} (atom nil))
-                                                 (reify component/Lifecycle
-                                                   (start [this]
-                                                     this)
-                                                   (stop [this]
-                                                     this))))))))
 
 (defn lopeta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija component/stop))
+
+(defn pystyta-harja-tarkkailija! []
+  (alter-var-root #'harja-tarkkailija
+                  (fn [tarkkailija]
+                    (if tarkkailija
+                      (do
+                        (component/stop tarkkailija)
+                        (component/start tarkkailija))
+                      (component/start
+                        (component/system-map
+                          :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+                          :klusterin-tapahtumat (component/using
+                                                  (tapahtumat/luo-tapahtumat {:loop-odotus 100})
+                                                  {:db :db-event})
+                          :tapahtuma (component/using
+                                       (tapahtuma/->Tapahtuma)
+                                       [:klusterin-tapahtumat :rajapinta])
+                          :rajapinta (rajapinta/->Rajapintakasittelija)
+                          :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
+                                                   (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms 1000}} (atom nil))
+                                                   (reify component/Lifecycle
+                                                     (start [this]
+                                                       this)
+                                                     (stop [this]
+                                                       this)))))))))
 
 (defn sonja-kasittely [kuuntelijoiden-lopettajat]
   (when *aloita-sonja?*
