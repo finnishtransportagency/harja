@@ -361,9 +361,9 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
-      :toteumat (component/using
-                  (kustannusten-seuranta/->KustannustenSeuranta)
-                  [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet])
+      :kustannusten-seuranta (component/using
+                               (kustannusten-seuranta/->KustannustenSeuranta)
+                               [:http-palvelin :db :db-replica :excel-vienti :pois-kytketyt-ominaisuudet])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
