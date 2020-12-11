@@ -268,7 +268,9 @@
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
         paallystysilmoitus (pot1-kohdeosat paallystysilmoitus)
-        paallystysilmoitus (if (onko-pot2? paallystysilmoitus)
+        paallystysilmoitus (if (or (onko-pot2? paallystysilmoitus)
+                                   ;; jos paallystysilmoitus puuttuu vielä, täytyy siltä palauttaa kulutuskerroksen kohdeosat!
+                                   (nil? (:pot-versio paallystysilmoitus)))
                              (pot2-kulutuskerros db paallystysilmoitus)
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)

@@ -11,8 +11,6 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.kommentit :as kommentit]
             [harja.ui.komponentti :as komp]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.lomake :as lomake]
@@ -227,7 +225,8 @@
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
        ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
        (if paallystysilmoitus-lomakedata
-         (if (> (:valittu-urakan-vuosi urakka-tila) 2020)
+         (if (>= (:valittu-urakan-vuosi urakka-tila)
+                 pot/pot2-vuodesta-eteenpain)
            [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
                                                           :massat :materiaalikoodistot})
             lukko urakka kayttaja]
