@@ -20,7 +20,7 @@ WITH nimen_kanava AS (SELECT kanava FROM tapahtumatyyppi WHERE nimi = :nimi),
                     FROM tapahtuman_tiedot tt
                        JOIN nimen_kanava nk ON nk.kanava=tt.kanava
                     GROUP BY tt.kanava)
-SELECT tt.arvo, tt.hash, tt.luotu, tt.palvelin
+SELECT tt.arvo, tt.hash, tt.luotu, tt.palvelin, tt.id
 FROM tapahtuman_tiedot tt
   JOIN uusin_aika ua ON ua.luotu = tt.luotu AND
                         ua.kanava = tt.kanava
@@ -40,7 +40,7 @@ WITH nimen_kanava AS (SELECT kanava FROM tapahtumatyyppi WHERE nimi = :nimi),
                                                                                       pva.luotu=tt.luotu AND
                                                                                       pva.kanava=tt.kanava
                                         GROUP BY tt.palvelin)
-SELECT tt.arvo, tt.hash, tt.luotu, tt.palvelin
+SELECT tt.arvo, tt.hash, tt.luotu, tt.palvelin, tt.id
 FROM tapahtuman_tiedot tt
   JOIN palvelimien_viimeisimmat_arvot pva ON tt.id=pva.id;
 
