@@ -761,9 +761,9 @@
                                                                        (fn [harja-jarjestelma]
                                                                          (log/warn "harjajarjestelman-restart")
                                                                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
-                                                                                  (do (jms/aloita-sonja uudelleen-kaynnistetty-jarjestelma)
-                                                                                      (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo))
+                                                                                (jms/aloita-sonja uudelleen-kaynnistetty-jarjestelma)
+                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
+                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                 uudelleen-kaynnistetty-jarjestelma)
                                                                               (catch Throwable t

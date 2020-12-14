@@ -1,4 +1,4 @@
-(ns ^:hidas harja.palvelin.main-test
+(ns ^:integraatio harja.palvelin.main-test
   "Testaa, että main käynnistää kaikki halutut komponentit. Tämän testin pointti on suojata
   ettei komponenttien lisäämisessä tule virheitä ja joitain tarvittuja komponentteja poistu.
   Kun lisäät komponentin, lisää se myös testin keysettiin."
@@ -7,12 +7,14 @@
             [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.testi :as testi]
+            [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tyokalut]
             [com.stuartsierra.component :as component]
             [com.stuartsierra.dependency :as dep]
             [clojure.test :refer [is deftest testing use-fixtures]]
             [clojure.string :as str]
             [clojure.edn :as edn]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [harja.palvelin.integraatiot.jms :as jms])
   (:import (java.io File)
            (clojure.lang ExceptionInfo)))
 
@@ -26,12 +28,19 @@
                              (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
                              (assoc :tietokanta testi/testitietokanta)
                              (assoc :tietokanta-replica testi/testitietokanta)
-                             (assoc :sonja {:url "tcp://localhost:61617"
+                             (assoc :sonja {:url (str "tcp://"
+                                                      (harja.tyokalut.env/env "HARJA_SONJA_BROKER_HOST" "localhost")
+                                                      ":"
+                                                      (harja.tyokalut.env/env "HARJA_SONJA_BROKER_PORT" 61616))
                                             :kayttaja ""
                                             :salasana ""
                                             :tyyppi :activemq})
                              (assoc :sampo {})
-                             (assoc :tloik {})
+                             (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
+                                            :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
+                                            :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
+                                            :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
+                                            :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+})
                              (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
                              (assoc-in [:turi :urakan-tyotunnit-url] ""))]
     asetukset-datana
@@ -144,7 +153,7 @@
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
+    :integraatioloki :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -194,6 +203,8 @@
     :yha-paikkauskomponentti
     :pot2})
 
+(def hidas-ok-status #{:sonja})
+
 (deftest main-komponentit-loytyy
   (reset! jarjestelma (component/start (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))))
   (let [komponentit (set (keys @jarjestelma))]
@@ -226,9 +237,22 @@
            (catch Throwable t
              (is false (str "Komponentin käynnistäminen epäonnistui!\n"
                             "Viesti: " (.getMessage t)))))
-      (doseq [komponentti komponentit]
-        (or (contains? ei-statusta komponentti)
-            (is (try (kp/status-ok? (get @jarjestelma komponentti))
-                     (catch Throwable t
-                       false))
-                (str "Komponentin " komponentti " status ei ole ok uudelleen käynnistämisen jälkeen.")))))))
+      (jms/aloita-sonja @jarjestelma)
+      (doseq [komponentti (sort (dep/topo-comparator (component/dependency-graph @jarjestelma komponentit)) komponentit)]
+        (cond
+          (contains? ei-statusta komponentti)
+          nil
+          (contains? hidas-ok-status komponentti)
+          (testi/odota-ehdon-tayttymista (fn [] (kp/status-ok? (get @jarjestelma komponentti)))
+                                         (str "Komponentin "
+                                              komponentti
+                                              " ei ole toipunut uudelleen käynnistämisestä pitkänkään odotuksen jälkeen: "
+                                              (kp/status (get @jarjestelma komponentti)))
+                                         (* 1000 15))
+          :else (is (try (kp/status-ok? (get @jarjestelma komponentti))
+                         (catch Throwable t
+                           false))
+                    (str "Komponentin "
+                         komponentti
+                         " status ei ole ok uudelleen käynnistämisen jälkeen: "
+                         (kp/status (get @jarjestelma komponentti)))))))))

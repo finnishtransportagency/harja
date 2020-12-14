@@ -2,10 +2,12 @@
   "Komponentti Sonja-väylän JMS-jonoihin liittymiseksi."
   (:require [com.stuartsierra.component :as component]
             [clojure.xml :refer [parse]]
+            [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tt]
             [clojure.zip :refer [xml-zip]]
             [clojure.spec.alpha :as s]
             [cheshire.core :as cheshire]
             [clojure.core.async :refer [thread >!! <!! timeout chan] :as async]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as clj-str]
@@ -144,15 +146,14 @@
 (s/def ::sonja-tila (s/or :virhe (s/keys :req-un [::virhe])
                           :onnistunut (s/keys :req-un [::olioiden-tilat])))
 
-(defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
+(defn aloita-sonja-yhteyden-tarkkailu [this paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
   (tapahtuma-apurit/loop-f lopeta-tarkkailu-kanava
                            paivitystiheys-ms
                            (fn []
                                 (try
-                                  (let [vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil}))
-                                        jms-tila (:vastaus vastaus)]
+                                  (let [jms-tila (::kp/tiedot (kp/status this))]
                                     (tallenna-sonjan-tila-kantaan db jms-tila)
-                                    (tapahtuma-julkaisija (or jms-tila {:virhe vastaus})))
+                                    (tapahtuma-julkaisija jms-tila))
                                   (catch Throwable t
                                     (tapahtuma-julkaisija {:virhe :tilan-lukemisvirhe})
                                     (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage t)))
@@ -371,6 +372,40 @@
       yhteys-oliot
       (yhteys-oliot! yhteys-future sonja))))
 
+(defn yhteyden-tila [yhteys]
+  (exception-wrapper yhteys getClientID))
+
+(defn istunnon-tila
+  [istunto]
+  (exception-wrapper istunto getAcknowledgeMode))
+
+(defn tuottajan-tila [tuottaja]
+  (exception-wrapper tuottaja getDeliveryMode))
+
+(defn vastaanottajan-tila [vastaanottaja]
+  (exception-wrapper vastaanottaja getMessageListener))
+
+(defn jms-client-tila [jms-tila]
+  (let [olioiden-tilat {:yhteyden-tila (yhteyden-tila (:yhteys jms-tila))
+                        :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
+                                          ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
+                                          ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException
+                                          (let [{:keys [jonot istunto]} istunto-tiedot
+                                                istunnon-tila (istunnon-tila istunto)]
+                                            {:istunnon-tila istunnon-tila
+                                             :jarjestelma jarjestelma
+                                             :jonot (mapv (fn [[jonon-nimi {:keys [tuottaja vastaanottaja virheet]}]]
+                                                            {jonon-nimi (cond-> {}
+                                                                                tuottaja
+                                                                                (merge {:tuottaja {:tuottajan-tila (tuottajan-tila tuottaja)
+                                                                                                   :virheet virheet}})
+                                                                                vastaanottaja
+                                                                                (merge {:vastaanottaja {:vastaanottajan-tila (vastaanottajan-tila vastaanottaja)
+                                                                                                        :virheet virheet}}))})
+                                                          jonot)}))
+                                        (:istunnot jms-tila))}]
+    {:olioiden-tilat olioiden-tilat}))
+
 (defmulti jms-toiminto!
   (fn [sonja kasky]
     (-> kasky keys first)))
@@ -437,6 +472,10 @@
          ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
          ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit ja blokkaa siksi aikaa.
          ;; Tämän jälkeen luodaan uusi vastaanottaja.
+         (log/debug "[SONJA] Poistetaan kuuntelija")
+         (log/debug (str "[SONJA] --> params: " params))
+         (log/debug (str "[SONJA] --> vastaanottaja: " vastaanottaja))
+         (log/debug (str "[SONJA] --> kuuntelijat: " kuuntelijat))
          (when vastaanottaja
            (.close vastaanottaja))
          (if (empty? kuuntelijat)
@@ -455,30 +494,31 @@
          (.printStackTrace e)
          {:virhe e})))
 
+(defmethod jms-toiminto! :poista-lahettaja
+  [{:keys [tila]} kasky]
+  (try (let [params (when-let [params (vals kasky)]
+                      (first params))
+             [jarjestelma jonon-nimi] params
+             {:keys [jonot istunto]} (get-in @tila [:istunnot jarjestelma])
+             {:keys [tuottaja jono] :as jonon-tiedot} (get jonot jonon-nimi)]
+         (log/debug "[SONJA] Poistetaan lähettäjä")
+         (log/debug (str "[SONJA] --> params: " params))
+         (log/debug (str "[SONJA] --> tuottaja: " tuottaja))
+         (when tuottaja
+           (.close tuottaja))
+         (when (and jarjestelma jonon-nimi)
+           (swap! tila assoc-in [:istunnot jarjestelma :jonot jonon-nimi] nil))
+         true)
+       (catch Exception e
+         (log/error "VIRHE TAPAHTUI :poista-lahettaja " (.getMessage e))
+         (binding [*out* *err*]
+           (log/error "Stack Trace:"))
+         (.printStackTrace e)
+         {:virhe e})))
+
 (defmethod jms-toiminto! :jms-tilanne
   [{:keys [tila]} kasky]
-  (try (let [{:keys [yhteys istunnot]} @tila
-             yhteyden-tila @jms-connection-tila
-             olioiden-tilat {:yhteyden-tila yhteyden-tila
-                             :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
-                                               ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
-                                               ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException
-                                               (let [{:keys [jonot istunto]} istunto-tiedot
-                                                     istunnon-tila (exception-wrapper istunto getAcknowledgeMode)]
-                                                 {:istunnon-tila istunnon-tila
-                                                  :jarjestelma jarjestelma
-                                                  :jonot (mapv (fn [[jonon-nimi {:keys [tuottaja vastaanottaja virheet]}]]
-                                                                 (let [tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
-                                                                       vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
-                                                                   {jonon-nimi {:tuottaja (when tuottaja
-                                                                                            {:tuottajan-tila tuottajan-tila
-                                                                                             :virheet virheet})
-                                                                                :vastaanottaja (when vastaanottaja
-                                                                                                 {:vastaanottajan-tila vastaanottajan-tila
-                                                                                                  :virheet virheet})}}))
-                                                               jonot)}))
-                                             istunnot)}]
-         {:olioiden-tilat olioiden-tilat})
+  (try (jms-client-tila @tila)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
@@ -619,7 +659,7 @@
         (let [tapahtuma-julkaisija (tapahtuma-apurit/tapahtuma-datan-spec (tapahtuma-apurit/tapahtuma-julkaisija :sonja-tila)
                                                                           ::sonja-tila)]
           (assoc this
-            :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db)))
+            :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu this (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db)))
         this)))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
@@ -673,7 +713,12 @@
     (laheta this jonon-nimi viesti nil (str "istunto-" jonon-nimi)))
 
   (kasky [{kaskytyskanava :kaskytyskanava} kaskyn-tiedot]
-    (laheta-viesti-kaskytyskanavaan! kaskytyskanava kaskyn-tiedot)))
+    (laheta-viesti-kaskytyskanavaan! kaskytyskanava kaskyn-tiedot))
+  kp/IStatus
+  (-status [this]
+    (let [status (jms-client-tila @(:tila this))]
+      {::kp/kaikki-ok? (tt/sonjayhteys-ok? (:olioiden-tilat status))
+       ::kp/tiedot status})))
 
 (defn luo-oikea-sonja [asetukset]
   (->SonjaYhteys asetukset nil nil))

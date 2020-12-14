@@ -71,32 +71,36 @@
   (fn [viesti viesti-id]
     (laheta-jonoon lokittaja sonja jono viesti viesti-id)))
 
-(defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
-  (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
-  (try
-    (sonja/kuuntele! sonja jono
-                    (fn [viesti]
-                      (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
-                      (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
-                                                   (catch java.lang.ClassNotFoundException e
-                                                     (log/error "Ei löytynyt MultipartMessage luokkaa: " e)
-                                                     nil))
-                            viestin-sisalto (if multipart-viesti?
-                                              ;; Oletuksena on, että multipartvastaus sisältää vain yhden osan
-                                              (-> viesti
-                                                (.getPart 0)
-                                                (.getContentBytes)
-                                                (String.))
-                                              (.getText viesti))
-                            data (viestiparseri viestin-sisalto)
-                            viesti-id (viesti->id data)
-                            onnistunut (onnistunut? data)]
-                        (if viesti-id
-                          (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut jono)
-                          (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
-                        (kasittelija data viesti-id onnistunut))))
-    (catch Exception e
-      (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
+(defn kuittausjonokuuntelija
+  ([lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
+   (kuittausjonokuuntelija lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija nil))
+  ([lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija kuuntelija-fn-meta]
+   (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
+   (try
+     (sonja/kuuntele! sonja jono
+                      (with-meta (fn [viesti]
+                                   (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
+                                   (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
+                                                                (catch java.lang.ClassNotFoundException e
+                                                                  (log/error "Ei löytynyt MultipartMessage luokkaa: " e)
+                                                                  nil))
+                                         viestin-sisalto (if multipart-viesti?
+                                                           ;; Oletuksena on, että multipartvastaus sisältää vain yhden osan
+                                                           (-> viesti
+                                                               (.getPart 0)
+                                                               (.getContentBytes)
+                                                               (String.))
+                                                           (.getText viesti))
+                                         data (viestiparseri viestin-sisalto)
+                                         viesti-id (viesti->id data)
+                                         onnistunut (onnistunut? data)]
+                                     (if viesti-id
+                                       (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut jono)
+                                       (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
+                                     (kasittelija data viesti-id onnistunut)))
+                                 kuuntelija-fn-meta))
+     (catch Exception e
+       (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus.")))))
 
 (defn jms-kuuntelu [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)

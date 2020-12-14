@@ -24,6 +24,7 @@
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.pvm :as pvm]
             [compojure.core :as compojure]
             [clj-time
@@ -33,13 +34,13 @@
             [cheshire.core :as cheshire]
             [clojure.string :as clj-str]))
 
-(def kayttaja "skanska" #_"yit-rakennus")
+(def kayttaja "skanska")
 
-(defonce asetukset {:sonja integraatio/sonja-asetukset})
+(defonce asetukset {:sonja (assoc integraatio/sonja-asetukset :julkaise-tila? true)})
 
 (def koko-testin-tila (atom {}))
 
-(defrecord testiapikomponentti []
+(defrecord TestiAPIKomponentti []
   component/Lifecycle
   (start
     [this]
@@ -66,6 +67,14 @@
     (poista-palvelu (:http-palvelin this) :testiapikutsu)
     this))
 
+(defrecord TestiKuuntelijaKomponentti []
+  component/Lifecycle
+  (start [this]
+    (assoc this :testikuuntelija (sonja/kuuntele! (:sonja this) +tloik-ilmoituskuittausjono+ (fn [viesti] (swap! koko-testin-tila update :tloik-ilmoituksia-n (fn [n] (inc (or n 0))))))))
+  (stop [this]
+    ((:testikuuntelija this))
+    (dissoc this :testikuuntelija)))
+
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
@@ -88,8 +97,11 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :labyrintti :sonja-sahkoposti])
     :testiapi (component/using
-                    (->testiapikomponentti)
-                    [:http-palvelin])))
+                    (->TestiAPIKomponentti)
+                    [:http-palvelin])
+    :testikuuntelija (component/using
+                       (->TestiKuuntelijaKomponentti)
+                       [:sonja :tloik])))
 
 (use-fixtures :each (fn [testit]
                       (println "POIS KYTKETYT OMINAISUUDET")
@@ -115,9 +127,9 @@
                                                                                                                                 (fn [harja-jarjestelma]
                                                                                                                                   (log/debug "harjajarjestelman-restart")
                                                                                                                                   (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                                                                         (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma)
-                                                                                                                                           (do (jms/aloita-sonja uudelleen-kaynnistetty-jarjestelma)
-                                                                                                                                               (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo))
+                                                                                                                                         (jms/aloita-sonja uudelleen-kaynnistetty-jarjestelma)
+                                                                                                                                         (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
+                                                                                                                                           (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                                                                            (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
                                                                                                                                          uudelleen-kaynnistetty-jarjestelma)
                                                                                                                                        (catch Throwable t
@@ -137,7 +149,7 @@
 (deftest sonjan-tapahtumia-kuunneellaan
   (ei-lisattavia-kuuntelijoita!)
   (testing "sonja yhteys aloitettu viesti menee perille uudestaan käynnistäjälle"
-    (odota-ehdon-tayttymista #(-> harja-tarkkailija :uudelleen-kaynnistaja ::uudelleen-kaynnistaja/sonja-yhteys-aloitettu? deref true?)
+    (odota-ehdon-tayttymista #(-> harja-tarkkailija :uudelleen-kaynnistaja ::uudelleen-kaynnistaja/sonja-yhteys-aloitettu-atom? deref true?)
                              "Uudelleen käynnistäjän pitäisi tietää Sonjan käynnistymisestä"
                              10000))
   (testing "Sonja toimii oikein ja siitä menee viesti perille uudestaan käynnistäjälle"
@@ -147,7 +159,8 @@
                              10000)))
 
 (deftest sonjan-hajotessa-se-potkitaan-uudestaan-pystyyn
-  (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ (fn [viesti] (swap! koko-testin-tila update :tloik-ilmoituksia-n (fn [n] (inc (or n 0)))))})
+  (ei-lisattavia-kuuntelijoita!)
+  ;(lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ (fn [viesti] (swap! koko-testin-tila update :tloik-ilmoituksia-n (fn [n] (inc (or n 0)))))})
   (let [restart-onnistui-tarkkailija (event-apurit/tapahtuman-tarkkailija! :harjajarjestelman-restart-onnistui)
         restart-epaonnistui-tarkkailija (event-apurit/tapahtuman-tarkkailija! :harjajarjestelman-restart-epaonnistui)
         restart-onnistui-tarkkailija (async/<!! restart-onnistui-tarkkailija)
@@ -155,6 +168,7 @@
         tila (atom nil)]
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
     (odota-ehdon-tayttymista #(= 1 (get @koko-testin-tila :tloik-ilmoituksia-n)) "Kuittaus on vastaanotettu." 20000)
+    (is (= 1 (get @koko-testin-tila :tloik-ilmoituksia-n)))
     (testing "sonja uudelleen käynnistys triggeröity yhteyden sammutuksesta ja http kutsu menee läpi"
       (api-tyokalut/async-post-kutsu ["/api/testiapikutsu"] kayttaja portti "{\"odota-restart\": true}" (fn [& args]))
       (async/go (let [[arvo kanava] (async/alts! [restart-onnistui-tarkkailija
@@ -167,7 +181,7 @@
                   (swap! koko-testin-tila assoc :restart-done? true)
                   (event-apurit/lopeta-tapahtuman-kuuntelu restart-onnistui-tarkkailija)
                   (event-apurit/lopeta-tapahtuman-kuuntelu restart-epaonnistui-tarkkailija)))
-      (odota-ehdon-tayttymista #(-> harja-tarkkailija :uudelleen-kaynnistaja ::uudelleen-kaynnistaja/sonja-yhteys-aloitettu? deref true?)
+      (odota-ehdon-tayttymista #(-> harja-tarkkailija :uudelleen-kaynnistaja ::uudelleen-kaynnistaja/sonja-yhteys-aloitettu-atom? deref true?)
                                "Uudelleen käynnistäjän pitäisi tietää Sonjan käynnistymisestä"
                                10000)
       (-> jarjestelma :sonja :tila deref :yhteys (.close))
@@ -179,8 +193,11 @@
                                "API kutsu pitäisi mennä sonjarestartista huolimatta läpi"
                                5000))
     (testing "uusi ilmoitus pitäsi toimia restartin jälkeen"
-      (async/<!! (async/timeout 5000))
+      (odota-ehdon-tayttymista #(kp/status-ok? (:tloik jarjestelma))
+                               (str "Tloik ei ole ok odotuksen jälkeen: " (kp/status (:tloik jarjestelma)))
+                               20000)
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (-> (testi-ilmoitus-sanoma)
                                                                         (clj-str/replace "<ilmoitusId>123456789</ilmoitusId>" "<ilmoitusId>123456788</ilmoitusId>")
                                                                         (clj-str/replace "<tunniste>UV-1509-1a</tunniste>" "<tunniste>UV-1509-2a</tunniste>")))
-      (odota-ehdon-tayttymista #(= 2 (get @koko-testin-tila :tloik-ilmoituksia-n)) "Kuittaus on vastaanotettu restartin jälkeen." 20000))))
+      (odota-ehdon-tayttymista #(= 2 (get @koko-testin-tila :tloik-ilmoituksia-n)) "Kuittaus on vastaanotettu restartin jälkeen." 5000)
+      (is (= 2 (get @koko-testin-tila :tloik-ilmoituksia-n))))))

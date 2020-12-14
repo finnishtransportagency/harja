@@ -1,6 +1,7 @@
 (ns harja.palvelin.tyokalut.jarjestelma
   (:require [com.stuartsierra.component :as component]
             [com.stuartsierra.dependency :as dep]
+            [clojure.core.async :as async]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp])
   (:import (com.stuartsierra.component SystemMap)))
 
@@ -36,14 +37,32 @@
   (locking uudelleen-kaynnistajan-lukko
     (kp/restart system system-component-keys)))
 
-(defn kaikki-ok? [system]
-  (let [kaikki-komponentit (keys system)]
-    (loop [[komponentin-nimi & loput-komponentit] kaikki-komponentit
-           jarjestelma-ok? true]
-      (if (or (nil? komponentin-nimi)
-              (false? jarjestelma-ok?))
-        jarjestelma-ok?
-        (recur loput-komponentit
-               (let [komponentti (get system komponentin-nimi)]
-                 (or (not (satisfies? kp/IStatus komponentti))
-                     (kp/status-ok? komponentti))))))))
+(defn kaikki-ok?
+  "Tarkistaa, että onhan systeemi ok niiltä osin kuin IStatus protokolla on määritelty.
+   Lisäksi voidaan antaa timeout (millisekuntteja), jonka ajan testejä maksimissaan ajellaan."
+  ([system] (kaikki-ok? system nil))
+  ([system timeout]
+   {:pre [(instance? SystemMap system)
+          (or (nil? timeout)
+              (int? timeout))]
+    :post [(boolean? %)]}
+   (let [max-ts (+ timeout (System/currentTimeMillis))
+         kaikki-komponentit (keys system)
+         jarjestelma-test (fn []
+                            (loop [[komponentin-nimi & loput-komponentit] kaikki-komponentit
+                                   jarjestelma-ok? true]
+                              (if (or (nil? komponentin-nimi)
+                                      (false? jarjestelma-ok?))
+                                jarjestelma-ok?
+                                (recur loput-komponentit
+                                       (let [komponentti (get system komponentin-nimi)]
+                                         (or (not (satisfies? kp/IStatus komponentti))
+                                             (kp/status-ok? komponentti)))))))]
+     (if timeout
+       (async/<!! (async/go-loop [ok? (jarjestelma-test)]
+                    (if (or ok?
+                            (> (System/currentTimeMillis) max-ts))
+                      ok?
+                      (do (async/<! (async/timeout 500))
+                          (recur (jarjestelma-test))))))
+       (jarjestelma-test)))))
