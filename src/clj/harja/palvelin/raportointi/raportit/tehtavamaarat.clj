@@ -3,7 +3,8 @@
   (:require [harja.kyselyt
              [urakat :as urakat-q]
              [tehtavamaarat :as tm-q]
-             [toteumat :as toteuma-q]]
+             [toteumat :as toteuma-q]
+             [hallintayksikot :as hallinta-q]]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:import (java.math RoundingMode)))
@@ -69,31 +70,81 @@
                  [:nimi :yksikko :suunniteltu :toteuma])))
 
 (defn- muodosta-otsikot
-  [m]
-  (if (= 1 (count (keys m)))
+  [hyt m]
+  (cond
+    (and (= 1 (count (keys m)))
+         (some #(= (first m) %) hyt))
+    {:rivi (conj (vec m) "" "" "" "") :korosta? true :lihavoi? true}
+
+    (= 1 (count (keys m)))
     {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
-    (vec m)))
+
+    :else (vec m)))
+
+(defn taustatiedot                                          ; härveli :D
+  [db params & haut]
+  (let [haut-muunnoksilla (mapv #(fn [db params acc]
+                                   (let [db-fn (first %)
+                                         muunnos-fn (second %)
+                                         parametrit (muunnos-fn params acc)]
+                                     (if parametrit
+                                       (db-fn db parametrit)
+                                       (db-fn db))))
+                                haut)
+        haku-fn (fn [db params] (reduce (fn [acc h]
+                                          (let [haku (h db params acc)]
+                                            (concat acc haku)))
+                                        []
+                                        haut-muunnoksilla))]
+    (haku-fn db params)))
 
 (defn muodosta-taulukko
-  [db user kysely-fn {:keys [alkupvm loppupvm] :as parametrit}]
+  [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
+        raportin-taustatiedot (apply taustatiedot
+                                     db
+                                     parametrit
+                                     (keep identity (vector
+                                                      (when urakka-id
+                                                        [urakat-q/urakan-hallintayksikko
+                                                         (fn [ps _] {:id (get ps :urakka-id)})])
+                                                      (when urakka-id
+                                                        [urakat-q/hae-urakka
+                                                         (fn [ps _] {:id (get ps :urakka-id)})])
+                                                      (when urakka-id
+                                                        [hallinta-q/hae-organisaatio
+                                                         (fn [_ acc] {:id (get (first acc) :hallintayksikko-id)})])
+                                                      (when hallintayksikko-id
+                                                        [hallinta-q/hae-organisaatio
+                                                         (fn [ps _] {:id (get ps :hallintayksikko-id)})])
+                                                      (when (not (or urakka-id hallintayksikko-id))
+                                                        [hallinta-q/hallintayksikot-ilman-geometriaa
+                                                         (fn [_ _] nil)]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil
+                                                  hallintayksikko nil
                                                   kaikki []]
                                              (if (empty? rivit)
                                                kaikki
                                                (let [rivi (first rivit)
                                                      uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
+                                                     uusi-hallintayksikko? (not= hallintayksikko (:hallintayksikko rivi))
+                                                     hallintayksikko (if uusi-hallintayksikko?
+                                                                       (:hallintayksikko rivi)
+                                                                       hallintayksikko)
                                                      toimenpide (if uusi-toimenpide?
                                                                   (:toimenpide rivi)
                                                                   toimenpide)]
                                                  (recur (rest rivit)
                                                         toimenpide
+                                                        hallintayksikko
                                                         (conj kaikki
+                                                              (when uusi-hallintayksikko?
+                                                                {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) raportin-taustatiedot)})
                                                               (when uusi-toimenpide?
                                                                 {:nimi toimenpide})
                                                               rivi))))))
@@ -102,9 +153,10 @@
                         (map null-arvot-nollaksi-rivilla)
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
-                        (map muodosta-otsikot))
+                        (map (partial muodosta-otsikot (map :nimi raportin-taustatiedot))))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
+     :debug   raportin-taustatiedot
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
                {:otsikko (str "Suunniteltu määrä "
