@@ -70,10 +70,16 @@
                  [:nimi :yksikko :suunniteltu :toteuma])))
 
 (defn- muodosta-otsikot
-  [m]
-  (if (= 1 (count (keys m)))
+  [hyt m]
+  (cond
+    (and (= 1 (count (keys m)))
+         (some #(= (first m) %) hyt))
+    {:rivi (conj (vec m) "" "" "" "") :korosta? true :lihavoi? true}
+
+    (= 1 (count (keys m)))
     {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
-    (vec m)))
+
+    :else (vec m)))
 
 (defn taustatiedot                                          ; härveli :D
   [db params & haut]
@@ -120,17 +126,25 @@
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil
+                                                  hallintayksikko nil
                                                   kaikki []]
                                              (if (empty? rivit)
                                                kaikki
                                                (let [rivi (first rivit)
                                                      uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
+                                                     uusi-hallintayksikko? (not= hallintayksikko (:hallintayksikko rivi))
+                                                     hallintayksikko (if uusi-hallintayksikko?
+                                                                       (:hallintayksikko rivi)
+                                                                       hallintayksikko)
                                                      toimenpide (if uusi-toimenpide?
                                                                   (:toimenpide rivi)
                                                                   toimenpide)]
                                                  (recur (rest rivit)
                                                         toimenpide
+                                                        hallintayksikko
                                                         (conj kaikki
+                                                              (when uusi-hallintayksikko?
+                                                                {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) raportin-taustatiedot)})
                                                               (when uusi-toimenpide?
                                                                 {:nimi toimenpide})
                                                               rivi))))))
@@ -139,10 +153,10 @@
                         (map null-arvot-nollaksi-rivilla)
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
-                        (map muodosta-otsikot))
+                        (map (partial muodosta-otsikot (map :nimi raportin-taustatiedot))))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
-     :debug   suunnitellut-ryhmissa
+     :debug   raportin-taustatiedot
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
                {:otsikko (str "Suunniteltu määrä "
@@ -158,7 +172,6 @@
   (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla params)]
     [:raportti
      {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
-     [:teksti (pr-str debug)]
      [:taulukko
       {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
        :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}

@@ -61,7 +61,6 @@
   (let [{:keys [otsikot rivit debug]} (tm-r/muodosta-taulukko db user hae-tm-combo params)]
     [:raportti
      {:nimi "Valtakunnallinen määrätoteumaraportti"}
-     [:teksti (pr-str debug)]
      [:taulukko
       {:otsikko    "Määrätoteumat ajalta "
        :sheet-nimi "Määrätoteumat"}
