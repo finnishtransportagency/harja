@@ -86,7 +86,7 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn- validoi-vastaus! [spec data]
+(defn- validoi-vastaus [spec data]
   (when spec
     (log/debug "VALIDOI VASTAUS: " spec)
     (when (not (s/valid? spec data))
@@ -133,11 +133,11 @@
                   (http/with-channel req channel
                                      (async/go
                                        (let [vastaus (async/<! (:channel palvelu-vastaus))]
-                                         (validoi-vastaus! (:vastaus-spec optiot) (:vastaus vastaus))
+                                         (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
                                          (http/send! channel vastaus)
                                          (http/close channel))))
                   (do
-                    (validoi-vastaus! (:vastaus-spec optiot) palvelu-vastaus)
+                    (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
                     (transit-vastaus palvelu-vastaus))))
               (catch harja.domain.roolit.EiOikeutta eo
                 ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
@@ -170,7 +170,7 @@
             {:status 304}
             (try+
               (let [vastaus (palvelu-fn (:kayttaja req))]
-                (validoi-vastaus! (:vastaus-spec optiot) vastaus)
+                (validoi-vastaus (:vastaus-spec optiot) vastaus)
                 {:status 200
                  :headers (merge {"Content-Type" "application/transit+json"}
                                  (if last-modified
@@ -195,7 +195,9 @@
     [this nimi palvelu-fn optiot]
     "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
      sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure
-     tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi.
+     tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. Funktion täytyy heittää
+     poikkeuksen jos tapahtuu virhe. IllegalArgumentException kertoo http-palvelin:lle että täytyy palauta
+     status 400, kaikki muut poikkeus tyypit palauttavat status 500.
      Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
      polkuun /edn/nimi (ilman keywordin kaksoispistettä).
 
