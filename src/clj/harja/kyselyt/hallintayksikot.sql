@@ -26,3 +26,6 @@ SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi
 
 -- name: hae-hallintayksikon-geometria
 SELECT alue FROM organisaatio WHERE id = :id;
+
+-- name: hallintayksikot-ilman-geometriaa
+select id, nimi from organisaatio where tyyppi = 'hallintayksikko'::ORGANISAATIOTYYPPI;

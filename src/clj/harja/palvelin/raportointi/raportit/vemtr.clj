@@ -8,19 +8,59 @@
   (:import (java.math RoundingMode)))
 
 
-(defn hae-tm-combo [db params]  
-  (let [combo-fn 
+(defn- sama-tehtava-ja-ely?
+  [e t]
+  (and (= (:nimi e) (:nimi t))
+       (= (:hallintayksikko e) (:hallintayksikko t))))
+
+(defn- laske-yhteen
+  [e t]
+  (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
+           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
+
+(defn kombota-samat
+  [ekat tokat]
+  (loop [ekat ekat
+         tokat tokat
+         kombottu []]
+    (let [e (first ekat)
+          t (first tokat)]
+      (if (not (or e t))
+        kombottu
+        (let [e (or (some #(when (sama-tehtava-ja-ely? % e)
+                             (laske-yhteen % e))
+                          kombottu)
+                    (when (sama-tehtava-ja-ely? e t)
+                      (laske-yhteen e t))
+                    e)
+              t (or (some #(when (sama-tehtava-ja-ely? % t)
+                             (laske-yhteen % t))
+                          kombottu)
+                    (when-not (sama-tehtava-ja-ely? e t)
+                      t))
+              kombottu (filter #(not (or (sama-tehtava-ja-ely? % e)
+                                         (sama-tehtava-ja-ely? % t)))
+                               kombottu)
+              kombottu (apply conj kombottu (keep identity [e t]))]
+          (recur (rest ekat) (rest tokat) kombottu))))))
+
+(defn hae-tm-combo [db params]
+  (let [combo-fn
         (juxt tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla
-              vemtr-q/hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
-              vemtr-q/hae-yh-suunnitellut-tehtavamaarat-ja-toteumat-aikavalilla)
-        kolme-tulosjoukkoa (combo-fn db params)]
-    (apply concat kolme-tulosjoukkoa)))
+              vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla
+              #_vemtr-q/hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
+              #_vemtr-q/hae-yh-suunnitellut-tehtavamaarat-ja-toteumat-aikavalilla)
+        [mhut yht :as kaksi-tulosjoukkoa] (combo-fn db params)]
+
+    (println (count (apply concat kaksi-tulosjoukkoa) ) (count (kombota-samat mhut yht)))
+    #_(apply concat kaksi-tulosjoukkoa)
+    (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat mhut yht))))
 
 (defn suorita
   [db user params]
   (let [{:keys [otsikot rivit debug]} (tm-r/muodosta-taulukko db user hae-tm-combo params)]
     [:raportti
-     {:nimi "Tehtävämäärät"}
+     {:nimi "Valtakunnallinen määrätoteumaraportti"}
      [:taulukko
       {:otsikko    "Määrätoteumat ajalta "
        :sheet-nimi "Määrätoteumat"}
