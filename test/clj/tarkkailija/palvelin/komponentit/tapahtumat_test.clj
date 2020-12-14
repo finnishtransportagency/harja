@@ -6,6 +6,7 @@
              [tapahtumat :as tapahtumat]
              [jarjestelma-rajapinta :as rajapinta]]
             [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
+            [harja.tyokalut.predikaatti :as predikaatti]
             [harja.kyselyt.konversio :as konv]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -26,8 +27,6 @@
 (def default-odottelu (+ (:loop-odotus tarkkailija-asetukset) 600))
 (def default-odottelu-pidennetty (+ default-odottelu 1000))
 (def pitka-odottelu (+ default-odottelu-pidennetty 5000))
-
-(def viestit (async/chan 1000))
 
 (defn luo-jarjestelma [_]
   (component/start
@@ -52,12 +51,7 @@
   (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root #'harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-a"))
   (alter-var-root #'jarjestelma luo-jarjestelma)
-
-  #_(with-redefs [println (fn [& args]
-                          (async/>!! viestit (apply str args)))]
-    (testit))
   (testit)
-  (println "LOPETETAAN TESTI")
   (try (alter-var-root #'jarjestelma component/stop)
        (catch Exception e (println "saatiin poikkeus komponentin sammutuksessa: " e)))
   (try (alter-var-root #'harja-tarkkailija component/stop)
@@ -132,7 +126,7 @@
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan ei pitäisi tulla kakutettua kamaa vaan juurikin se mikä on lähetetty"))))
-  (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille"
+   (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           kuuntelu-ja-tarkkailu-lkm (atom 0)
           tarkkailija-1 (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
@@ -159,18 +153,18 @@
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
             odota-tapahtuma (async/go (async/<! tarkkailija))]
         (is (not (false? tarkkailija)))
-        (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a ensimmainen-a-payload (:nimi harja-tarkkailija))
-        (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu) :aika)
+        (is (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a ensimmainen-a-payload (:nimi harja-tarkkailija)))
+        (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu-pidennetty) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload ensimmainen-a-payload})))
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))
             a-payload 1337]
-        (is (= (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
+        (is (= (dissoc (<!!-timeout tarkkailija default-odottelu-pidennetty) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload ensimmainen-a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")
         (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-        (is (= (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
+        (is (= (dissoc (<!!-timeout tarkkailija default-odottelu-pidennetty) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
             "Kanavaan pitäisi tulla kakutettu arvo")))))
@@ -180,19 +174,19 @@
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           data {:a 1}
           tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))]
-      (with-redefs [konv/sha256 (constantly "differentHash")]
+      (with-redefs [konv/sha256 (constantly "eriHash")]
         (let [julkaisu-onnistui? (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a data (:nimi harja-tarkkailija))]
           (is julkaisu-onnistui?)))
       (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
           "Väärällä hashillä olevaa dataa ei pitäisi antaa tarkkailijoille!")
       (let [viimeisin-tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))]
         (is (thrown? TimeoutException (<!!-timeout viimeisin-tarkkailija default-odottelu))
-            "Väärällä hashillä olevaa dataa ei pitäisi antaa viimeisin tarkkailijoille!"))))
+            "Väärällä hashillä olevaa dataa xnei pitäisi antaa viimeisin tarkkailijoille!"))))
   (testing "Väärän tyyppinen kuuntelija"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
       (is (thrown? IllegalArgumentException (tapahtumat-p/kuuntele! tapahtumat-k :tapahtuma-a 3)))
       (is (thrown? ArityException (tapahtumat-p/kuuntele! tapahtumat-k :tapahtuma-a (fn []))))))
-  (testing "Käsky tapahtuma-looppiin ilman funktiota"
+  (testing "Käsky tapahtuma-looppiin ilman viestintä- ja possukanavaa"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           err-count (atom 0)
           lahde-redefsista? (atom false)
@@ -203,10 +197,11 @@
                                            (swap! err-count inc))
                                          msg)]})
       (with-redefs [tapahtumat/pura-tapahtuma-loopin-ajot! (fn [& args]
-                                                             (apply original-pura-tapahtumat args)
-                                                             (reset! lahde-redefsista? true))]
-        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:f (fn [])})
-        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:tunnistin "foo"})
+                                                             (let [paluuarvo (apply original-pura-tapahtumat args)]
+                                                               (reset! lahde-redefsista? true)
+                                                               paluuarvo))]
+        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:viestakanava (async/chan)})
+        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:possukanava (@#'tapahtumat/uusi-tapahtuman-kanava)})
         (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {})
         (while (not @lahde-redefsista?)
           (async/<!! (async/timeout 10))))
@@ -311,15 +306,7 @@
               "Olemassa olevan tapahtuman kanavaa ei saisi muuttaa"))))))
 
 (deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
-  (let [#_#_aja-loop (async/chan 1
-                             (map (fn [x] (println (str "-- loop ajetaan: " x)) x))
-                             (fn [t]
-                               (println (str "-- tx ajetaan error: " (.getMessage t)))))
-        aja-loop-atom (atom false)
-        #_#_loop-ajettu (async/chan 1
-                                (map (fn [x] (println (str "-- loop ajettu: " x)) x))
-                                (fn [t]
-                                  (println (str "-- tx error: " (.getMessage t)))))
+  (let [aja-loop-atom (atom false)
         loop-ajettu-atom (atom false)
         odota-loopin-ajo! (fn []
                            (odota-ehdon-tayttymista (fn [] (= @loop-ajettu-atom true)) "loop-ajettu-atom ei true" 5000)
@@ -327,47 +314,24 @@
                             true)
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto
         laheta-viimeisimmat-arvot!-original @#'tapahtumat/laheta-viimeisimmat-arvot!]
-    (Thread/setDefaultUncaughtExceptionHandler
-      (reify Thread$UncaughtExceptionHandler
-        (uncaughtException [_ thread e]
-          (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-          (log/error "Virhe: " e)
-          (println (.getStackTrace e)))))
     (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [{db :db :as args-map}]
                                                       ;; Tämä ehto on hyödyllinen oikeastaan vain REPL:issä
-                                                      (println (str "(:tietokanta testitietokanta) " (:tietokanta testitietokanta)))
-                                                      (println (str "(:dbname db) " (:dbname db)))
-                                                      (println (str "db " db))
                                                       (if (= (:dbname db) (:tietokanta testitietokanta))
                                                         (do
-                                                          (println "AJETAAN LOOP ENNEN ODOTTELUA")
                                                           (odota-ehdon-tayttymista (fn [] (= @aja-loop-atom true)) "aja-loop ei true" 50000)
-                                                          ;(async/<!! aja-loop)
-                                                          (println "AJETAAN LOOP LOPPUUN")
                                                           (let [paluuarvo (tapahtuma-loop-sisalto-original args-map)]
-                                                            (println (str "PALUUARVO: " paluuarvo))
-                                                            ; (async/>!! loop-ajettu :foo)
                                                             (reset! aja-loop-atom false)
                                                             (reset! loop-ajettu-atom true)
                                                             paluuarvo))
                                                         (tapahtuma-loop-sisalto-original args-map)))]
-      (async/<!! (async/timeout 1000))
-      ;(async/>!! aja-loop true)
-      ;(println (async/<!! loop-ajettu))
       (reset! aja-loop-atom true)
       (odota-loopin-ajo!)
       (testing "Viimeisin tarkkailija saa kaikki tapahtumat kakutustapahtuman jälkeen"
-        (println 1)
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
               kakutuskeskustelukanava (async/chan)
               _ (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))]
-          (println 2)
           (with-redefs [tapahtumat/laheta-viimeisimmat-arvot!
                         (fn [ok-ajot-possukanavittain db]
-                          (println "----> tapahtumat/laheta-viimeisimmat-arvot!")
-                          (println (str "-->(:tietokanta testitietokanta) " (:tietokanta testitietokanta)))
-                          (println (str "-->(:dbname db) " (:dbname db)))
-                          (println (str "-->db " db))
                           (if (= (:dbname db) (:tietokanta testitietokanta))
                             (let [kutsuttu-paluuarvoa? (atom false)
                                   paluuarvo-oritinal @#'tapahtumat/paluuarvo]
@@ -376,23 +340,14 @@
                                                                    (apply paluuarvo-oritinal args))]
                                 (laheta-viimeisimmat-arvot!-original ok-ajot-possukanavittain db)
                                 (when @kutsuttu-paluuarvoa?
-                                  (println "KAKUTUS TEHTY")
                                   (async/>!! kakutuskeskustelukanava :kakutus-tehty)
-                                  (println (str "SUATIIN KAKUTUSKANAVASTA: " (async/<!! kakutuskeskustelukanava))))))
+                                  (async/<!! kakutuskeskustelukanava))))
                             (laheta-viimeisimmat-arvot!-original ok-ajot-possukanavittain db)))]
-            (println 3)
             (let [tarkkailija (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin)
-                  _ (println 4)
                   kakutuskanavan-arvo (<!!-timeout (async/thread
                                                      (let [alts-loppu? (atom false)]
                                                        (loop []
-                                                         (println "KÄSKETÄÄN LOOPIN AJAA")
                                                          (reset! aja-loop-atom true)
-                                                         ;(async/>!! aja-loop true)
-                                                         ;(async/<!! (async/timeout 2400))
-                                                         ;(println (str "loop-ajettu: " (async/<!! loop-ajettu)))
-                                                         ;(odota-loopin-ajo!)
-
                                                          (let [[arvo _] (async/alts!! [(async/timeout 1000)
                                                                                        (async/go-loop []
                                                                                          (if (and (not @loop-ajettu-atom)
@@ -405,47 +360,23 @@
                                                            (reset! alts-loppu? true)
                                                            (case arvo
                                                              :kakutus-tehty :jatketaan-matkaa
-                                                             (nil :ajettu) (recur)))
-                                                         ;(println "POLLATAAN KAKUTUSKESKUSTELUKANAVAA")
-                                                         #_(if-let [tila (async/poll! kakutuskeskustelukanava)]
-                                                             tila
-                                                             (recur)))))
+                                                             (nil :ajettu) (recur))))))
                                                    (+ default-odottelu 4000))]
-              (println 5)
-              (println kakutuskanavan-arvo)
               (is (not (nil? kakutuskanavan-arvo)))
-              (println 6)
               (loop [i 2]
                 (when-not (= i 10)
                   (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a i} (:nimi harja-tarkkailija))
                   (recur (inc i))))
-              (println 7)
-              ;(async/>!! aja-loop true)
-              ;; Käsketään ajaa loop vaikka se ei vielä voi ajaa, koska jumittaa odottamassa kuittausta
-              ;; (ellei sitte sen timeout ole mennyt)
-              ;;(reset! aja-loop-atom true)
-              (println 8)
-              #_(is (thrown? AssertionError (odota-loopin-ajo!))               ;(<!!-timeout loop-ajettu pitka-odottelu)
-                  "tapahtuma loopin pitää odotella, että kaikki kuittaukset ovat tulleet perille")
-              (println 9)
               (async/>!! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
-              (println 10)
               ;; Odootetaan että loop menee kakutuksen jälkeen loppuun
               (odota-loopin-ajo!)
               ;; Ajetaan loop uudestaan, jotta saadaan nuo edellä julkaistut 9 tapahtumaa käsiteltyä
               (reset! aja-loop-atom true)
               (odota-loopin-ajo!)
-              ;(is (<!!-timeout loop-ajettu default-odottelu-pidennetty)
-              ;    "tapahtuma loop pitäsi nyt päästä loppuun")
-              (println 11)
               (let [tarkkailija (<!!-timeout tarkkailija default-odottelu)]
-                (println 12)
-                (println "--TARKKAILIJA: " tarkkailija)
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
-                (println 13)
                 (loop [arvo (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                        i 1]
-                  (println "ARVO: " arvo)
                   (cond
                     (< i 9) (do (is (= arvo {:palvelin (:nimi harja-tarkkailija)
                                              :payload {:a i}})
@@ -456,59 +387,28 @@
                                              :payload {:a i}})
                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
                                 (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
-                                    "Ei pitäisi olla enää tapahtumia"))))
-                (println 14))))))
+                                    "Ei pitäisi olla enää tapahtumia")))))))))
       (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
-              _ (println 15)
-              kakutuskeskustelukanava (async/chan)
-              _ (println 16)
-              kuuntelu-fn-original @#'tapahtumat/kuuntelu-fn
-              _ (println 17)
-              _ (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-b {:b 1} (:nimi harja-tarkkailija))]
-          (println 18)
-          (with-redefs [#_#_tapahtumat/kuuntelu-fn (fn [kaytettava-kanava tapahtumayhteys]
-                                                 (let [kannan-nimi (with-open [s (.createStatement tapahtumayhteys)
-                                                                               rs (.executeQuery s "SELECT current_database()")]
-                                                                     (.next rs)
-                                                                     (str (.getObject rs 1)))]
-                                                   (if (= kannan-nimi (:tietokanta testitietokanta))
-                                                     (do
-                                                       (println "kuuntelu-fn")
-                                                       (async/>!! kakutuskeskustelukanava :kakutus-seuraavaksi)
-                                                       (async/<!! kakutuskeskustelukanava)
-                                                       (kuuntelu-fn-original kaytettava-kanava tapahtumayhteys))
-                                                     (kuuntelu-fn-original kaytettava-kanava tapahtumayhteys))))
-                        tapahtumat/laheta-viimeisimmat-arvot!
+              kakutuskeskustelukanava (async/chan)]
+          (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-b {:b 1} (:nimi harja-tarkkailija))
+          (with-redefs [tapahtumat/laheta-viimeisimmat-arvot!
                         (fn [ok-ajot-possukanavittain db]
-                          (println "----> tapahtumat/laheta-viimeisimmat-arvot!")
-                          (println (str "-->(:tietokanta testitietokanta) " (:tietokanta testitietokanta)))
-                          (println (str "-->(:dbname db) " (:dbname db)))
-                          (println (str "-->db " db))
                           (if (= (:dbname db) (:tietokanta testitietokanta))
                             (let [kutsuttu-paluuarvoa? (atom false)
                                   paluuarvo-oritinal @#'tapahtumat/paluuarvo]
                               (with-redefs [tapahtumat/paluuarvo (fn [& args]
                                                                    (reset! kutsuttu-paluuarvoa? true)
-                                                                   (println "KAKUTUSTA OLLAAN TEKEMÄSSÄ")
                                                                    (async/>!! kakutuskeskustelukanava :kakutus-seuraavaksi)
                                                                    (async/<!! kakutuskeskustelukanava)
                                                                    (apply paluuarvo-oritinal args))]
                                 (laheta-viimeisimmat-arvot!-original ok-ajot-possukanavittain db)))
                             (laheta-viimeisimmat-arvot!-original ok-ajot-possukanavittain db)))]
-            (println 19)
             (let [tarkkailija (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-b :viimeisin)]
-              (println 20)
               (is (not (nil? (<!!-timeout (async/thread
                                             (let [alts-loppu? (atom false)]
                                               (loop []
-                                                (println "KÄSKETÄÄN LOOPIN AJAA")
                                                 (reset! aja-loop-atom true)
-                                                ;(async/>!! aja-loop true)
-                                                ;(async/<!! (async/timeout 2400))
-                                                ;(println (str "loop-ajettu: " (async/<!! loop-ajettu)))
-                                                ;(odota-loopin-ajo!)
-
                                                 (let [[arvo _] (async/alts!! [(async/timeout 1000)
                                                                               (async/go-loop []
                                                                                 (if (and (not @loop-ajettu-atom)
@@ -521,40 +421,23 @@
                                                   (reset! alts-loppu? true)
                                                   (case arvo
                                                     :kakutus-seuraavaksi :jatketaan-matkaa
-                                                    (nil :ajettu) (recur)))
-                                                ;(println "POLLATAAN KAKUTUSKESKUSTELUKANAVAA")
-                                                #_(if-let [tila (async/poll! kakutuskeskustelukanava)]
-                                                    tila
-                                                    (recur)))))
+                                                    (nil :ajettu) (recur))))))
                                           (+ default-odottelu 4000)))))
-              (println 21)
               (loop [i 2]
-                (println 22)
                 (when-not (= i 10)
-                  (println 23)
                   (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-b {:b i} (:nimi harja-tarkkailija))
-                  (println 24)
                   (recur (inc i))))
-              (println 25)
-              #_(is (thrown? AssertionError (odota-loopin-ajo!))               ;(<!!-timeout loop-ajettu pitka-odottelu)
-                  "tapahtuma loopin pitää odotella, että kaikki kuittaukset ovat tulleet perille")
-              (println 26)
               (async/>!! kakutuskeskustelukanava :lopeta-jalkeen-funktio)
-              (println 27)
-              (is (odota-loopin-ajo!)                                          ;(<!!-timeout loop-ajettu default-odottelu-pidennetty)
+              (is (odota-loopin-ajo!)
                   "tapahtuma loop pitäsi nyt päästä loppuun")
               ;; Ajetaan loop uudestaan, jotta saadaan nuo edellä julkaistut 9 tapahtumaa käsiteltyä
               (reset! aja-loop-atom true)
               (odota-loopin-ajo!)
-              (println 28)
               (let [tarkkailija (<!!-timeout tarkkailija default-odottelu)]
-                (println 29)
                 (is (not (nil? tarkkailija)) "Ei pitäs tulla timeout tässä")
-                (println 30)
                 (do (is (= (dissoc (<!!-timeout tarkkailija default-odottelu) :aika)
                            {:palvelin (:nimi harja-tarkkailija)
                             :payload {:b 9}}))
-                    (println 31)
                     (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
                         "Pitäisi olla vain tuo yksi arvo"))))))))))
 
@@ -569,7 +452,9 @@
                                                          (when-not (async/poll! lopeta-looppaus)
                                                            (async/offer! aja-loop true)
                                                            (if-let [kanavan-arvo (async/poll! kanava)]
-                                                             kanavan-arvo
+                                                             (do (async/put! lopeta-looppaus true)
+                                                                 (async/<! loop-ajettu)
+                                                                 kanavan-arvo)
                                                              (do (async/poll! loop-ajettu)
                                                                  (recur)))))
                                                        timeout)
@@ -577,7 +462,7 @@
                                             (async/put! lopeta-looppaus true)
                                             (throw e))))))
         odota-yksi-loop (fn []
-                          (async/>!! aja-loop true)
+                          (async/offer! aja-loop true)
                           (<!!-timeout loop-ajettu default-odottelu))
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
     (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
@@ -592,11 +477,11 @@
                                 (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
                 tarkkailija-2 (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a)
                 tarkkailija-2 (loop-kunnes-realisoinut tarkkailija-2)]
+            (is (predikaatti/chan? tarkkailija-2))
             (is (thrown? TimeoutException (loop-kunnes-realisoinut tarkkailija-1 100))
                 "Tarkkailija-1 pitäisi odotella toista tarkkailijaa")
             (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))
-            (odota-yksi-loop)
-            (is (= (dissoc (<!!-timeout tarkkailija-2 default-odottelu) :aika)
+            (is (= (dissoc (loop-kunnes-realisoinut tarkkailija-2 default-odottelu) :aika)
                    {:palvelin (:nimi harja-tarkkailija)
                     :payload {:a 1}})
                 "Tarkkailija-2 ei pitäisi jumittaa ykkösen takia")
