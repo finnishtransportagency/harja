@@ -74,12 +74,8 @@ with urakat as (select id, hallintayksikko
                          join toteuma_tehtava tt on tt.toteuma = t.id
                          join toimenpidekoodi tpk on tt.toimenpidekoodi = tpk.id
 
-                  where t.urakka in (select id
-                                     from urakka u
-                                     where (:hallintayksikko::integer is null or u.hallintayksikko = :hallintayksikko::integer)
-                                       and u.tyyppi = 'hoito'
-                                       and u.poistettu = false
-                                       and (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm))
+                  where t.urakka in (select id from urakat)
+                  and (t.alkanut, t.paattynyt) overlaps (:alkupvm, :loppupvm)
                   group by o.id, tpk.id),
      tyot as (select sum(yt.maara) as "maara", yt.tehtava as "tehtava", yt.urakka as "urakka"
               from yksikkohintainen_tyo yt
