@@ -93,7 +93,17 @@ select toteumat.maara             as toteuma,
        emo.nimi                   as toimenpide,
        tehtava.suunnitteluyksikko as suunnitteluyksikko,
        tehtava.yksikko            as yksikko,
-       'yksikkohintaiset' as rivityyppi
+       tehtava.jarjestys as jarjestys,
+       'yksikkohintaiset' as rivityyppi,
+       (CASE
+          WHEN emo.koodi = '23104' THEN 1
+          WHEN emo.koodi = '23116' THEN 2
+          WHEN emo.koodi = '23124' THEN 3
+          WHEN emo.koodi = '20107' THEN 4
+          WHEN emo.koodi = '20191' THEN 5
+          WHEN emo.koodi = '14301' THEN 6
+          WHEN emo.koodi = '23151' THEN 7
+         END)                 AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
        join urakka u on tpi.urakka = u.id
        join toimenpidekoodi emo on emo.id = tpi.toimenpide
@@ -102,5 +112,5 @@ from toimenpideinstanssi tpi
        join organisaatio o on o.id = u.hallintayksikko
        left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
 where tpi.urakka in (select id from urakat)
-group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, tyot.maara, tpi.urakka
+group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, tyot.maara, tpi.urakka, tehtava.jarjestys, emo.koodi
 having coalesce(toteumat.maara, tyot.maara) >= 0

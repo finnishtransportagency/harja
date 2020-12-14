@@ -54,13 +54,13 @@
 
     (println (count (apply concat kaksi-tulosjoukkoa) ) (count (kombota-samat mhut yht)))
     #_(apply concat kaksi-tulosjoukkoa)
-    (sort-by (juxt :hallintayksikko :jarjestys) (kombota-samat mhut yht))))
+    (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat mhut yht))))
 
 (defn suorita
   [db user params]
   (let [{:keys [otsikot rivit debug]} (tm-r/muodosta-taulukko db user hae-tm-combo params)]
     [:raportti
-     {:nimi "Tehtävämäärät"}
+     {:nimi "Valtakunnallinen määrätoteumaraportti"}
      [:teksti (pr-str debug)]
      [:taulukko
       {:otsikko    "Määrätoteumat ajalta "
