@@ -160,13 +160,61 @@
                                     :verkon-tarkoitus 1
                                     :tekninen-toimenpide 1}]}})
 
-(def pot2-testidata (-> pot-testidata
-                        (assoc :pot-versio 2)
-                        ;; (assoc-in [:perustiedot :aloituspvm] (pvm/luo-pvm 2021 9 1))
-                        ;; (assoc-in [:perustiedot :valmispvm-kohde] (pvm/luo-pvm 2021 9 2))
-                        ;; (assoc-in [:perustiedot :valmispvm-paallystys] (pvm/luo-pvm 2021 9 2))
-                        ;; (assoc-in [:perustiedot :takuupvm] (pvm/luo-pvm 2021 9 3))
-                        ))
+(def pot2-testidata
+  {:paallystyskohde-id 28,
+   :pot-versio 2,
+   :perustiedot {:tila nil,
+                 :tr-kaista nil,
+                 :kohdenimi "Aloittamaton kohde mt20",
+                 :kohdenumero "L43",
+                 :tr-ajorata nil,
+                 :kommentit [],
+                 :tr-loppuosa 3,
+                 :valmispvm-kohde nil,
+                 :tunnus nil,
+                 :tr-alkuosa 3,
+                 :tr-loppuetaisyys 5000,
+                 :aloituspvm #inst "2021-06-18T21:00:00.000-00:00",
+                 :takuupvm nil,
+                 :tr-osoite {:tr-kaista nil,
+                             :tr-ajorata nil,
+                             :tr-loppuosa 3,
+                             :tr-alkuosa 3,
+                             :tr-loppuetaisyys 5000,
+                             :tr-alkuetaisyys 1,
+                             :tr-numero 20},
+                 :asiatarkastus {:lisatiedot nil,
+                                 :hyvaksytty nil,
+                                 :tarkastusaika nil,
+                                 :tarkastaja nil},
+                 :tr-alkuetaisyys 1,
+                 :tr-numero 20,
+                 :tekninen-osa {:paatos nil,
+                                :kasittelyaika nil,
+                                :perustelu nil},
+                 :valmispvm-paallystys nil},
+   :ilmoitustiedot nil,
+   :kulutuskerros ({:kohdeosa-id 13,
+                    :tr-kaista 11,
+                    :tr-ajorata 1,
+                    :tr-loppuosa 1,
+                    :tr-alkuosa 1,
+                    :tr-loppuetaisyys 5000,
+                    :nimi "Kohdeosa kaista 11",
+                    :tr-alkuetaisyys 3,
+                    :tr-numero 20,
+                    :toimenpide nil}
+                   {:kohdeosa-id 14,
+                    :tr-kaista 12,
+                    :tr-ajorata 1,
+                    :tr-loppuosa 1,
+                    :tr-alkuosa 1,
+                    :tr-loppuetaisyys 5000,
+                    :nimi "Kohdeosa kaista 12",
+                    :tr-alkuetaisyys 3,
+                    :tr-numero 20,
+                    :toimenpide nil})})
+
 
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
@@ -411,20 +459,10 @@
     (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
     (is (= 234234 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
 
-(defn- putsaa-yllapitokohdeosa [tr-numero]
-  (u (str "DELETE FROM yllapitokohdeosa WHERE tr_numero = " tr-numero ";")))
-
-(defn- hae-yllapitokohdeosadata [tr-numero]
-  (let [[nimi paallystetyyppi raekoko tyomenetelma massamaara toimenpide id]
-        (first (q (str "SELECT nimi, paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide, id
-                        FROM yllapitokohdeosa WHERE tr_numero = " tr-numero)))]
-    {:nimi            nimi
-     :paallystetyyppi paallystetyyppi
-     :raekoko         raekoko
-     :tyomenetelma    tyomenetelma
-     :massamaara      massamaara
-     :toimenpide      toimenpide
-     :id              id}))
+(defn- hae-yllapitokohdeosadata [yllapitokohde-id]
+  (println "petar evo sad gledam delove " yllapitokohde-id)
+  (set (q-map (str "SELECT nimi, paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide
+                        FROM yllapitokohdeosa WHERE NOT poistettu AND yllapitokohde = " yllapitokohde-id))))
 
 (defn- tallenna-testipaallystysilmoitus
   [paallystysilmoitus, vuosi]
@@ -435,11 +473,10 @@
                                                                              :sopimus-id         sopimus-id
                                                                              :vuosi              vuosi
                                                                              :paallystysilmoitus paallystysilmoitus})
-        yllapitokohdeosadata (hae-yllapitokohdeosadata 22)]
+        yllapitokohdeosadata (hae-yllapitokohdeosadata (:paallystyskohde-id paallystysilmoitus))]
     [urakka-id sopimus-id vastaus yllapitokohdeosadata]))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
-  (putsaa-yllapitokohdeosa 22)
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (hae-yllapitokohde-kirkkotie)]
     (is (not (nil? paallystyskohde-id)))
@@ -513,17 +550,15 @@
                              :lisaaineet "asd"}]}))
         (println "petar skoro na kraju testkejsa")
         (is (= yllapitokohdeosadata
-               {:nimi            "Tie 22"
-                :paallystetyyppi 1
-                :raekoko         1
-                :tyomenetelma    12
-                :massamaara      2.00M
-                :toimenpide      "Wut"
-                :id              48}))
+               #{{:nimi            "Tie 22"
+                  :paallystetyyppi 1
+                  :raekoko         1
+                  :tyomenetelma    12
+                  :massamaara      2.00M
+                  :toimenpide      "Wut"}} ))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
 (deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
-  (putsaa-yllapitokohdeosa 22)
   (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
         _ (is (not (nil? paallystyskohde-id)))
         alkuperainen-paallystysilmoitus (-> pot-testidata
@@ -533,50 +568,62 @@
     (let [[_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus alkuperainen-paallystysilmoitus 2020)
           kohdeosa-id (:id yllapitokohdeosadata)]
       (is (= yllapitokohdeosadata
-             {:nimi            "Tie 22"
-              :paallystetyyppi 1
-              :raekoko         1
-              :tyomenetelma    12
-              :massamaara      2.00M
-              :toimenpide      "Wut"
-              :id              48}))
+             #{{:nimi            "Tie 22"
+                :paallystetyyppi 1
+                :raekoko         1
+                :tyomenetelma    12
+                :massamaara      2.00M
+                :toimenpide      "Wut"}}))
       (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :nimi] "Uusi Tie 22")
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :toimenpide] "Freude")
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :kohdeosa-id] kohdeosa-id))
             - (println "petar novi ilmoitus " (pr-str uusi-paallystysilmoitus))
             [_ _ vastaus paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
-        (println "petar izasao je iz apdejta")
+        (println "petar izasao je iz apdejta i vratio " (pr-str paivitetty-yllapitokohdeosadata))
         (is (nil? (:virhe vastaus)))
         (is (= paivitetty-yllapitokohdeosadata
-               {:nimi            "Uusi Tie 22"
-                :paallystetyyppi 1
-                :raekoko         1
-                :tyomenetelma    12
-                :massamaara      2.00M
-                :toimenpide      "Freude"
-                :id              48}))))))
+               #{{:nimi            "Uusi Tie 22"
+                  :paallystetyyppi 1
+                  :raekoko         1
+                  :tyomenetelma    12
+                  :massamaara      2.00M
+                  :toimenpide      "Freude"}}))))))
 
 (deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan      ; petar todo
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'"))]
+        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'"))]
     (is (not (nil? paallystyskohde-id)))
+    (is (= 28 paallystyskohde-id))
+    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
-          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-          paallystysilmoitus (-> pot2-testidata
+    (let [paallystysilmoitus (-> pot2-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                               :sopimus-id sopimus-id
-                                                                               :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain
-                                                                               :paallystysilmoitus paallystysilmoitus})]
-
+          - (println "petar DA VIDIMO " (pr-str paallystysilmoitus))
+          [urakka-id sopimus-id vastaus yllapitokohdeosadata] (tallenna-testipaallystysilmoitus
+                                                                paallystysilmoitus
+                                                                paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
       (is (= (count (:yllapitokohteet vastaus)) 2))
       (is (= (count (:paallystysilmoitukset vastaus)) 2))
+
+
+      (println "petar hajde ipak da vidimo " (pr-str yllapitokohdeosadata))
+      (is (= yllapitokohdeosadata
+             #{{:nimi "Kohdeosa kaista 12",
+                :paallystetyyppi nil,
+                :raekoko nil,
+                :tyomenetelma nil,
+                :massamaara nil,
+                :toimenpide "Wut"}
+               {:nimi "Kohdeosa kaista 11",
+                :paallystetyyppi nil,
+                :raekoko nil,
+                :tyomenetelma nil,
+                :massamaara nil,
+                :toimenpide "Wut"}}))
 
       (let [[tallennettu-versio ilmoitustiedot] (first (q "SELECT versio, ilmoitustiedot FROM paallystysilmoitus
                                                            WHERE paallystyskohde = " paallystyskohde-id))]
@@ -593,7 +640,7 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 4753.95M))
+        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0.00M))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
