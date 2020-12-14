@@ -255,13 +255,14 @@
                                        kommentit]))))]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                     takuupvm] :as perustiedot-nyt}
+                     takuupvm pot-versio] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu?
          muokkaa!
          validoinnit huomautukset]
-      (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
+      (let [pot2? (= 2 pot-versio)
+            nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
                                       kirjoitusoikeus?))]
@@ -303,16 +304,15 @@
             {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
              :varoita [tarkista-takuu-pvm]}
-            {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
             {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
              :tyyppi :pvm :muokattava? false-fn}
-            {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
-             :hae toteuman-kokonaishinta-hae-fn
-             :fmt fmt/euro-opt :tyyppi :numero
-             :muokattava? false-fn
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
+            (when-not pot2?
+              {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
+               :hae toteuman-kokonaishinta-hae-fn
+               :fmt fmt/euro-opt :tyyppi :numero
+               :muokattava? false-fn
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when (and (not= :valmis tila)
                        (not= :lukittu tila))
               {:otsikko "Käsittely"
