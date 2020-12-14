@@ -126,7 +126,7 @@
                              (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                                           (:kulutuskerros paallystysilmoitus-lomakedata))))
                      (nav/vaihda-kartan-koko! :S)))
-      (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
+      (fn [e! {:keys [paallystysilmoitus-lomakedata massat materiaalikoodistot] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :kulutuskerros})
