@@ -1,4 +1,4 @@
-(ns ^:hidas harja.palvelin.palvelut.ilmoitukset-test
+(ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
             [clojure.set :as set]
             [clojure.core.async :refer [go]]

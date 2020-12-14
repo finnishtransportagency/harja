@@ -372,9 +372,6 @@
       yhteys-oliot
       (yhteys-oliot! yhteys-future sonja))))
 
-(defn yhteyden-tila [yhteys]
-  (exception-wrapper yhteys getClientID))
-
 (defn istunnon-tila
   [istunto]
   (exception-wrapper istunto getAcknowledgeMode))
@@ -386,7 +383,7 @@
   (exception-wrapper vastaanottaja getMessageListener))
 
 (defn jms-client-tila [jms-tila]
-  (let [olioiden-tilat {:yhteyden-tila (yhteyden-tila (:yhteys jms-tila))
+  (let [olioiden-tilat {:yhteyden-tila @jms-connection-tila
                         :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
                                           ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
                                           ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException

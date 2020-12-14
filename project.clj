@@ -257,10 +257,7 @@
                    :no-perf (complement :perf)
                    :perf :perf
                    :integraatio :integraatio
-                   :hidas :hidas
-                   :default (fn [m]
-                              (let [testit-joita-ei-ajeta #{:integraatio :hidas}]
-                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
+                   :default (complement :integraatio)
                    }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

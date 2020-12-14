@@ -12,4 +12,4 @@
     (is (false? (pred/chan-closed? kanava)) "chan-clsed? ei tunnistanut avointa kanavaa oikein")
     (async/close! kanava)
     (is (pred/chan-closed? kanava) "chan-clsed? ei tunnistanut suljettua kanavaa oikein")
-    #?(:clj (is (thrown? IllegalArgumentException (pred/chan-closed? :foo))))))
+    #?(:clj (is (thrown? AssertionError (pred/chan-closed? :foo))))))
