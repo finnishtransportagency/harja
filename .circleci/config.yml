@@ -117,18 +117,6 @@ jobs:
       - run: |
           cd /tmp
           bash sisus.bash test $CIRCLE_BRANCH
-  hitaat-testit:
-    docker:
-      - image: solita/harja-testit:latest # eka image = "primary container"
-      - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
-        command: >
-          bash -c "
-          bash odota-tapahtumaa.sh env.git localhost 80;
-          source lue-arvot-ymparistomuuttujiin.sh;
-          bash dbn-kaynnistys.sh;
-          bash julkaise-tapahtuma.sh db.valmis;
-          /bin/bash;"
 
     steps:
       - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
@@ -263,7 +251,6 @@ workflows:
     jobs:
       - prod-build
       - back-testit
-      - hitaat-testit
       - integraatio-testit
       - front-testit
       - e2e-testit:
