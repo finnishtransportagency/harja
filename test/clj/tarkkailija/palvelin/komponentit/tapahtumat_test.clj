@@ -1,4 +1,4 @@
-(ns tarkkailija.palvelin.komponentit.tapahtumat-test
+(ns ^:hidas tarkkailija.palvelin.komponentit.tapahtumat-test
   (:require [harja.palvelin.tapahtuma-protokollat :as tapahtumat-p]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [tarkkailija.palvelin.komponentit

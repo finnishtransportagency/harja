@@ -58,6 +58,7 @@
              Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
 (def ^:dynamic *kaynnistyksen-jalkeen-hook* nil)
 (def ^:dynamic *ennen-sulkemista-hook* nil)
+(def ^:dynamic *harja-tarkkailija-mukaan?* false)
 
 (def sonja-aloitus-go (atom nil))
 
@@ -1313,7 +1314,7 @@
         (sonja-kaynnistaminen!)))))
 
 (defn tietokantakomponentti-fixture [testit]
-  (pystyta-harja-tarkkailija!)
+  #_(pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -1321,7 +1322,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)))))
   (testit)
   (alter-var-root #'jarjestelma component/stop)
-  (lopeta-harja-tarkkailija!))
+  #_(lopeta-harja-tarkkailija!))
 
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
@@ -1330,7 +1331,8 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
-     (pystyta-harja-tarkkailija!)
+     (when *harja-tarkkailija-mukaan?*
+       (pystyta-harja-tarkkailija!))
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1370,7 +1372,8 @@
      (when *ennen-sulkemista-hook*
        (*ennen-sulkemista-hook*))
      (alter-var-root #'jarjestelma component/stop)
-     (lopeta-harja-tarkkailija!)))
+     (when *harja-tarkkailija-mukaan?*
+       (lopeta-harja-tarkkailija!))))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan
