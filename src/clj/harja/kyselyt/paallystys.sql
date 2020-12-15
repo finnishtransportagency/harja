@@ -153,6 +153,7 @@ WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
   id,
+  versio                     AS "pot-versio",
   tila,
   ilmoitustiedot,
   paatos_tekninen_osa        AS "tekninen-osa_paatos",

@@ -688,12 +688,11 @@
     (is (not (nil? paallystyskohde-vanha-pot-id)))
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-          paallystysilmoitus-pot2 (-> pot-testidata
-                                      (assoc :pot-versio 2)
+          paallystysilmoitus-pot2 (-> pot2-testidata
                                       (assoc :paallystyskohde-id paallystyskohde-vanha-pot-id)
                                       (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
           _ (println "petar urakkaId=" urakka-id)]
-      (is (thrown-with-msg? IllegalArgumentException #"Väärä POT versio 2. Ota yhteyttä Harjan tukeen."
+      (is (thrown-with-msg? IllegalArgumentException #"Väärä POT versio. Pyynnössä on 2, pitäisi olla 1. Ota yhteyttä Harjan tukeen."
                             (kutsu-palvelua (:http-palvelin jarjestelma)
                                             :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                                          :sopimus-id         sopimus-id
