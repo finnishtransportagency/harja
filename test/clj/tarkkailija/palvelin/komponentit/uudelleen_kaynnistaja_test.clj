@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.jms :as jms]
             [tarkkailija.palvelin.komponentit.uudelleen-kaynnistaja :as uudelleen-kaynnistaja]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
@@ -70,7 +70,7 @@
 (defrecord TestiKuuntelijaKomponentti []
   component/Lifecycle
   (start [this]
-    (assoc this :testikuuntelija (sonja/kuuntele! (:sonja this) +tloik-ilmoituskuittausjono+ (fn [viesti] (swap! koko-testin-tila update :tloik-ilmoituksia-n (fn [n] (inc (or n 0))))))))
+    (assoc this :testikuuntelija (jms/kuuntele! (:sonja this) +tloik-ilmoituskuittausjono+ (fn [viesti] (swap! koko-testin-tila update :tloik-ilmoituksia-n (fn [n] (inc (or n 0))))))))
   (stop [this]
     ((:testikuuntelija this))
     (dissoc this :testikuuntelija)))
@@ -127,7 +127,7 @@
                                                                                                                                 (fn [harja-jarjestelma]
                                                                                                                                   (log/debug "harjajarjestelman-restart")
                                                                                                                                   (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                                                                         (jms/aloita-sonja uudelleen-kaynnistetty-jarjestelma)
+                                                                                                                                         (jms/aloita-jms uudelleen-kaynnistetty-jarjestelma)
                                                                                                                                          (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
                                                                                                                                            (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                                                                            (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
@@ -166,7 +166,7 @@
         restart-onnistui-tarkkailija (async/<!! restart-onnistui-tarkkailija)
         restart-epaonnistui-tarkkailija (async/<!! restart-epaonnistui-tarkkailija)
         tila (atom nil)]
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
+    (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
     (odota-ehdon-tayttymista #(= 1 (get @koko-testin-tila :tloik-ilmoituksia-n)) "Kuittaus on vastaanotettu." 20000)
     (is (= 1 (get @koko-testin-tila :tloik-ilmoituksia-n)))
     (testing "sonja uudelleen käynnistys triggeröity yhteyden sammutuksesta ja http kutsu menee läpi"
@@ -196,7 +196,7 @@
       (odota-ehdon-tayttymista #(kp/status-ok? (:tloik jarjestelma))
                                (str "Tloik ei ole ok odotuksen jälkeen: " (kp/status (:tloik jarjestelma)))
                                20000)
-      (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (-> (testi-ilmoitus-sanoma)
+      (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (-> (testi-ilmoitus-sanoma)
                                                                         (clj-str/replace "<ilmoitusId>123456789</ilmoitusId>" "<ilmoitusId>123456788</ilmoitusId>")
                                                                         (clj-str/replace "<tunniste>UV-1509-1a</tunniste>" "<tunniste>UV-1509-2a</tunniste>")))
       (odota-ehdon-tayttymista #(= 2 (get @koko-testin-tila :tloik-ilmoituksia-n)) "Kuittaus on vastaanotettu restartin jälkeen." 5000)

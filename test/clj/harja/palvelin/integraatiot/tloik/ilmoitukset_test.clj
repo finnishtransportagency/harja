@@ -8,7 +8,7 @@
             [harja.integraatio :as integraatio]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
@@ -144,7 +144,7 @@
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
       (async/<!! (async/timeout 1000))
-      (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
+      (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
 
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 20000)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 20000)
@@ -172,7 +172,7 @@
   (let [sanoma +ilmoitus-ruotsissa+
         viestit (atom [])]
     (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
+    (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
@@ -193,7 +193,7 @@
     (let [kuittausviestit (atom [])]
       (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit conj (.getText %))})
 
-      (sonja/laheta (:sonja jarjestelma)
+      (jms/laheta (:sonja jarjestelma)
                     +tloik-ilmoitusviestijono+
                     (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
 
@@ -221,7 +221,7 @@
   (let [sanoma +ilmoitus-hailuodon-jaatiella+
         viestit (atom [])]
     (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
+    (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 

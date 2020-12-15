@@ -17,7 +17,7 @@
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
             [namespacefy.core :as namespacefy])
   (:import (java.util UUID)))

@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitus-sanoma]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
             [harja.kyselyt.urakat :as urakat]
             [harja.tyokalut.xml :as xml]
@@ -26,7 +26,7 @@
 
 (defn laheta-kuittaus [sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id onnistunut lisatietoja]
   (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja kuittausjono)
-  (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
+  (jms/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
   (let [ilmoituksen-urakkatyyppi (ilmoitus/urakkatyyppi urakkatyyppi)

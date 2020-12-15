@@ -3,7 +3,7 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
@@ -54,7 +54,7 @@
                                                                 #(reset! saapunut %))]
 
     ;; Lähetetään sähköpostiviesti Harjaan
-    (sonja/laheta (:sonja jarjestelma) "email-to-harja" viesti-xml)
+    (jms/laheta (:sonja jarjestelma) "email-to-harja" viesti-xml)
 
     (odota-ehdon-tayttymista #(not (nil? @saapunut)) "Odotetaan, että sähköposti on vastaanotettu" 500)
 
@@ -66,7 +66,7 @@
 
 (deftest sahkopostin-lahetys
   (let [lahetetty (atom nil)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))
 
     ;; Lähetetään viesti ja odotetaan, että se on mennyt jonoon
     (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma)
@@ -96,7 +96,7 @@
 
       ;; Lähetetään kuittaus ja varmistetaan, että integraatiotapahtuma on merkitty päättyneeksi
       (let [kuittaus-xml (xml/tee-xml-sanoma (kuittaus {:viesti-id viesti-id} nil))]
-        (sonja/laheta (:sonja jarjestelma) "harja-to-email-ack" kuittaus-xml)
+        (jms/laheta (:sonja jarjestelma) "harja-to-email-ack" kuittaus-xml)
 
         (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)
                                  "Odota, että integraatiotapahtuma päätetään"

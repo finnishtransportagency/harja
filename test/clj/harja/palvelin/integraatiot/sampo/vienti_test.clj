@@ -10,7 +10,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.jms-test :refer [feikki-sonja]]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.vienti :as sampo-vienti]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.kustannussuunnitelmat :as qk]
@@ -47,7 +47,7 @@
 
 (deftest laheta-maksuera
   (let [viestit (atom [])]
-    (sonja/kuuntele! (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
+    (jms/kuuntele! (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
     (is (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) +testi-maksueran-numero+) "Lähetys onnistui")
     (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))

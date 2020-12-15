@@ -21,7 +21,7 @@
             [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
@@ -943,7 +943,7 @@
         sahkoposti-valitetty (atom false)
         sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
                                                              (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
                                                                                                     .getText
                                                                                                     xml/lue

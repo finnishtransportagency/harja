@@ -237,7 +237,7 @@
            (catch Throwable t
              (is false (str "Komponentin käynnistäminen epäonnistui!\n"
                             "Viesti: " (.getMessage t)))))
-      (jms/aloita-sonja @jarjestelma)
+      (jms/aloita-jms @jarjestelma)
       (doseq [komponentti (sort (dep/topo-comparator (component/dependency-graph @jarjestelma komponentit)) komponentit)]
         (cond
           (contains? ei-statusta komponentti)

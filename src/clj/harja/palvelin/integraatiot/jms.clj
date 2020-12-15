@@ -779,20 +779,6 @@
       {::kp/kaikki-ok? (jmsyhteys-ok? (:olioiden-tilat status))
        ::kp/tiedot status})))
 
-(defn aloita-sonja [jarjestelma]
-  (async/go
-    (log/info "Aloitaetaan Sonjayhteys")
-    (loop []
-      (let [{:keys [vastaus virhe kaskytysvirhe]} (async/<! (sonja/kasky (:sonja jarjestelma) {:aloita-yhteys nil}))]
-        (when vastaus
-          (log/info "Sonja yhteys aloitettu"))
-        (when kaskytysvirhe
-          (log/error "Sonjayhteyden aloittamisessa käskytysvirhe: " kaskytysvirhe))
-        (async/<! (async/timeout 2000))
-        (if (or virhe (= :kasykytyskanava-taynna kaskytysvirhe))
-          (recur)
-          vastaus)))))
-
 (defn yhteyden-tila [yhteys]
   (exception-wrapper yhteys getClientID))
 

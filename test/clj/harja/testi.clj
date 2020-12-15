@@ -9,7 +9,7 @@
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.sonja :as sonja]
+    [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.komponentit.liitteet :as liitteet]
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
@@ -1299,7 +1299,7 @@
 (defn sonja-kasittely [kuuntelijoiden-lopettajat]
   (when *aloita-sonja?*
     (let [sonja-kaynnistaminen! (fn []
-                                  (<!! (jms/aloita-sonja jarjestelma))
+                                  (<!! (jms/aloita-jms jarjestelma))
                                   (when *sonja-kaynnistetty-fn*
                                     (*sonja-kaynnistetty-fn*)))]
       (if *lisattavia-kuuntelijoita?*
@@ -1308,7 +1308,7 @@
                                                   (timeout 5000)])]
                       (when (and kuuntelijat (map? kuuntelijat))
                         (doseq [[kanava f] kuuntelijat]
-                          (swap! kuuntelijoiden-lopettajat conj (sonja/kuuntele! (:sonja jarjestelma) kanava f))))
+                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:sonja jarjestelma) kanava f))))
                       (sonja-kaynnistaminen!))))
         (sonja-kaynnistaminen!)))))
 

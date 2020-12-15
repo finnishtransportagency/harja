@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.integraatiopisteet.jms
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -40,7 +40,7 @@
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
      (try+
-       (if-let [jms-viesti-id (sonja/laheta sonja jono viesti nil)]
+       (if-let [jms-viesti-id (jms/laheta sonja jono viesti nil)]
          (do
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
            (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
@@ -77,7 +77,7 @@
   ([lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija kuuntelija-fn-meta]
    (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
    (try
-     (sonja/kuuntele! sonja jono
+     (jms/kuuntele! sonja jono
                       (with-meta (fn [viesti]
                                    (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
                                    (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
@@ -105,7 +105,7 @@
 (defn jms-kuuntelu [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
   (try
-    (sonja/kuuntele!
+    (jms/kuuntele!
       sonja jono-sisaan
       (fn [viesti]
         (log/debug "Vastaanotettiin viesti jonosta " jono-sisaan ": " viesti)
@@ -124,7 +124,7 @@
                 (if (and jono-ulos kuittausmuodostaja)
                   (let [vastauksen-sisalto (kuittausmuodostaja vastaus)]
                     (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "" jono-ulos)
-                    (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
+                    (jms/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
                   (lokittaja :onnistunut nil "" tapahtuma-id ulkoinen-id)))
               (catch Exception e
                 ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio

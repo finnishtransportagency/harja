@@ -9,10 +9,10 @@
             [clj-time.coerce :as c]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit
              [tietokanta :as tietokanta]
              [fim-test :refer [+testi-fim+]]
-             [sonja :as sonja]
              [fim :as fim]]
             [harja.palvelin.palvelut
              [yllapitokohteet :refer :all]]
@@ -958,7 +958,7 @@
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-ilman-etta-lahtee-maili
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1011,7 +1011,7 @@
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkopostien-sisallot (atom [])]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [viesti]
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [viesti]
                                                             (swap! sahkopostien-sisallot conj (sanomat/lue-sahkoposti (.getText viesti)))))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
@@ -1077,7 +1077,7 @@
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1155,7 +1155,7 @@
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1194,7 +1194,7 @@
                                             :kohteet kohteet})))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
-  (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" #())
+  (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" #())
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
@@ -1215,7 +1215,7 @@
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1241,7 +1241,7 @@
 (deftest merkitse-tiemerkintaurakan-usea-kohde-valmiiksi
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1271,7 +1271,7 @@
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaralla-urakalla
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1299,7 +1299,7 @@
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         vuosi 2017]
 
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
 
     (with-fake-http
       [+testi-fim+ fim-vastaus]
@@ -1361,7 +1361,7 @@
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         vuosi 2017]
 
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
 
     (with-fake-http
       [+testi-fim+ fim-vastaus]

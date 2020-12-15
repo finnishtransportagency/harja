@@ -11,7 +11,7 @@
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.tyokalut.xml :as xml]
             [clojure.data.zip.xml :as z]
@@ -157,9 +157,9 @@
                                                       "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
         _ (Thread/sleep 2000)
         tloik-kuittaukset (atom [])
-        sonja-kuittaus (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
+        sonja-kuittaus (jms/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
         _ (Thread/sleep 2000)
-        sonja-ilmoitus (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma ilmoitusaika lahetysaika))]
+        sonja-ilmoitus (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma ilmoitusaika lahetysaika))]
     (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 30000)
     (is (= 200 (:status @vastaus)))
 

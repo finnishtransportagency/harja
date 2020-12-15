@@ -21,7 +21,7 @@
 
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
@@ -41,33 +41,33 @@
                           (:tapahtuma @tila)
                           :ok))
           lahetys-fn (fn [viesti]
-                       (let [vastaus (sonja/laheta sonja "testilahetys-jono" viesti nil "testijarjestelma-lahetys")]
+                       (let [vastaus (jms/laheta sonja "testilahetys-jono" viesti nil "testijarjestelma-lahetys")]
                          vastaus))
           testijonokanava (chan 1000)
           testijonot (chan)]
       (thread
         (>!! testijonot
              (case (<!! lopputila)
-               :ok {:testijono (sonja/kuuntele! sonja "testijono" (fn [_]) "testijarjestelma")}
-               :exception {:testijono (sonja/kuuntele! sonja "virhetestijono" (fn [viesti]
+               :ok {:testijono (jms/kuuntele! sonja "testijono" (fn [_]) "testijarjestelma")}
+               :exception {:testijono (jms/kuuntele! sonja "virhetestijono" (fn [viesti]
                                                                            (throw (Exception. "VIRHE")))
                                                        "testijarjestelma")}
-               :useampi-kuuntelija {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
+               :useampi-kuuntelija {:testijono-1 (jms/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
                                                                                                             (>!! testijonokanava :viestia-kasitellaan)
                                                                                                             ;; Nukutaan sekuntti, jotta 'pääsäikeessä' keretään sammuttaa kuuntelija.
                                                                                                             (<!! (timeout 1000))
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
                                                                                                                                                     (if laskuri (inc laskuri) 1))))
                                                                   "testijarjestelma")
-                                    :testijono-2 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
+                                    :testijono-2 (jms/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
                                                                                                                                                     (if laskuri (inc laskuri) 1))))
                                                                   "testijarjestelma")}
-               :kuormitus {:testijono-1 (sonja/kuuntele! sonja "testijono-1" (fn [viesti]
+               :kuormitus {:testijono-1 (jms/kuuntele! sonja "testijono-1" (fn [viesti]
                                                                                (Thread/sleep (.intValue (* 100 (rand))))
                                                                                (throw (Exception.))
                                                                                (put! testijonokanava viesti)))
-                           :testijono-2 (sonja/kuuntele! sonja "testijono-2" (fn [viesti]
+                           :testijono-2 (jms/kuuntele! sonja "testijono-2" (fn [viesti]
                                                                                (Thread/sleep (.intValue (* 100 (rand))))
                                                                                (put! testijonokanava viesti)))})))
       (assoc this :testijonot testijonot
@@ -113,7 +113,7 @@
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
-                             (<! (jms/aloita-sonja jarjestelma)))]
+                             (<! (jms/aloita-jms jarjestelma)))]
     (testit))
   (alter-var-root #'jarjestelma component/stop)
   (lopeta-harja-tarkkailija!))
@@ -204,7 +204,7 @@
                                                                             [:sonja :db :integraatioloki]))))
                                             (timeout 10000)])
             sonja-yhteys (when toinen-jarjestelma
-                           (jms/aloita-sonja toinen-jarjestelma))]
+                           (jms/aloita-jms toinen-jarjestelma))]
         (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
         (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
         (>!! sulje-sonja-kanava true)
@@ -218,7 +218,7 @@
         {:keys [istunto jonot]} (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma"))
         {:keys [jono vastaanottaja]} (get jonot "testijono")]
     ;; Lähetetään viesti
-    (sonja/laheta (-> jarjestelma :sonja) "testijono" "foo" nil "testijarjestelma")
+    (jms/laheta (-> jarjestelma :sonja) "testijono" "foo" nil "testijarjestelma")
     (is (= 2 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara)))
     ;; Odotetaan, että viestiä käsitellään
     (<!! testijonokanava)
@@ -336,11 +336,11 @@
   (let [kaskytyskanava (-> jarjestelma :sonja :kaskytyskanava)
         db (:db jarjestelma)
         tyyppi (-> asetukset :sonja :tyyppi)
-        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))
+        status-ennen (:vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))
         kysy-status (fn []
                       (loop [kertoja 1]
                         (when (< kertoja 5)
-                          (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]}))]
+                          (let [vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]}))]
                             (if (= vastaus {:kaskytysvirhe :aikakatkaisu})
                               (recur (inc kertoja))
                               (:vastaus vastaus))))))
@@ -380,7 +380,7 @@
         pitkaan-kestava-lahetys-kanava (chan)
         ;; Lähetetään pitkään kestävä viesti (yli Sonja ns määritellyn timeoutin)
         pitkaan-kestava-lahetys (with-redefs [sonja/viestin-kasittely-timeout 100
-                                              sonja/laheta-viesti (fn [& args]
+                                              jms/laheta-viesti (fn [& args]
                                                                     (println "LÄHETETÄÄN HIDAS VIESTI")
                                                                     (>!! pitkaan-kestava-lahetys-kanava true)
                                                                     (<!! (timeout 500))
@@ -393,7 +393,7 @@
         ;; Samalla kun pitkään kestävää viestiä lähetetään, lähetetään 120 muuta viestiä, joiden kaikkien pitäisi
         ;; epäonnistua
         muut-lahetykset (with-redefs [sonja/viestin-kasittely-timeout 100
-                                      sonja/laheta-viesti (fn [& args]
+                                      jms/laheta-viesti (fn [& args]
                                                             ;; Jos viesti lähetetään, nostetaan counterin lukemaa.
                                                             ;; Tässä testissä viestejä ei tulisi lähettää yhtään.
                                                             (swap! lahetykset update :lahetettiin inc))

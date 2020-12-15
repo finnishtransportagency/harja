@@ -5,12 +5,7 @@
             [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as xml-zip]
-            [clojure.data.zip :as zip]))
+            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
 
 (def kayttaja "jvh")
 

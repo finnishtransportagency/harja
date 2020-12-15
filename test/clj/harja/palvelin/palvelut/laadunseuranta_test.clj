@@ -15,7 +15,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [clojure.java.io :as io]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.integraatiot.jms :as jms])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -179,7 +179,7 @@
         sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
 
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
 
     (with-fake-http
       [+testi-fim+ fim-vastaus

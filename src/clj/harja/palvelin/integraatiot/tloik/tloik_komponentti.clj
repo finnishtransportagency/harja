@@ -11,7 +11,6 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.integraatiot.jms :as jms-util]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
@@ -37,7 +36,7 @@
                                     jms-lahettaja kehitysmoodi?]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
-    (sonja/kuuntele!
+    (jms-util/kuuntele!
       sonja ilmoitusviestijono
       (with-meta (partial ilmoitukset/vastaanota-ilmoitus
                           sonja (tee-lokittaja this "ilmoituksen-kirjaus")
@@ -134,7 +133,7 @@
           (when-not (poista-ajastettu-fn)
             (log/error (str "Ajastetun tehtava: " ajastettu " lopetus epäonnistui")))))
       (doseq [[_ lahettajan-nimi] lahettajat]
-        (sonja/kasky (:sonja this) {:poista-lahettaja [(jms-util/oletusjarjestelmanimi lahettajan-nimi) lahettajan-nimi]}))
+        (jms-util/kasky (:sonja this) {:poista-lahettaja [(jms-util/oletusjarjestelmanimi lahettajan-nimi) lahettajan-nimi]}))
       (as-> this $
             (apply dissoc $ kuuntelijat)
             (apply dissoc $ ajastetut))))

@@ -1,6 +1,6 @@
 (ns harja.jms-test
   "JMS testit: hornetq"
-  (:require [harja.palvelin.komponentit.sonja :as sonja]
+  (:require [harja.palvelin.integraatiot.jms :as jms]
             [clojure.core.async :refer [<! go] :as async]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log])
@@ -27,7 +27,7 @@
                (conj vanhat-kuuntelijat kuuntelija))))
     #(swap! kuuntelijat update-in [nimi] disj kuuntelija))
   (kuuntele! [this nimi kuuntelija]
-    (sonja/kuuntele! this nimi kuuntelija nil))
+    (jms/kuuntele! this nimi kuuntelija nil))
 
   (laheta [_ nimi viesti {:keys [correlation-id]} jarjestelma]
     (log/info "Feikki Sonja lähettää jonoon: " nimi)
@@ -51,10 +51,10 @@
       (.getJMSMessageID msg)))
 
   (laheta [this nimi viesti otsikot]
-    (sonja/laheta this nimi viesti otsikot nil))
+    (jms/laheta this nimi viesti otsikot nil))
 
   (laheta [this nimi viesti]
-    (sonja/laheta this nimi viesti nil))
+    (jms/laheta this nimi viesti nil))
 
   (kasky [this kaskyn-tiedot]
     (log/debug "Feikki Sonja, sai käskyn: " kaskyn-tiedot)))

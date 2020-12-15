@@ -5,7 +5,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.integraatio :as integraatio]
             [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
             [harja.palvelin.palvelut.status :as status]

@@ -7,7 +7,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sahkoposti-sanomat]
             [clj-time
              [core :as t]
@@ -57,8 +57,8 @@
   (let [ilmoitusviesti (atom nil)
         urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
     (tloik-apurit/tee-testipaivystys urakka-id)
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
-    (sonja/laheta (:sonja jarjestelma)
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
+    (jms/laheta (:sonja jarjestelma)
                   tloik-apurit/+tloik-ilmoitusviestijono+
                   (tloik-apurit/testi-ilmoitus-sanoma
                     (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
@@ -74,7 +74,7 @@
       (is (= (:otsikko saapunut) (str "#[" urakka-id "/123456789] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)")))
 
       ;; Lähetä aloitettu kuittaus
-      (sonja/laheta (:sonja jarjestelma) "email-to-harja"
+      (jms/laheta (:sonja jarjestelma) "email-to-harja"
                     (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
                                        (:otsikko saapunut)
                                        (str "[Vastaanotettu] " viesti)))
@@ -87,7 +87,7 @@
       (let [viesti (str (UUID/randomUUID))]
 
         ;; Lähetä lopetettu toimenpitein kuittaus
-        (sonja/laheta (:sonja jarjestelma) "email-to-harja"
+        (jms/laheta (:sonja jarjestelma) "email-to-harja"
                       (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
                                          (:otsikko saapunut)
                                          (str "[Lopetettu toimenpitein] " viesti)))

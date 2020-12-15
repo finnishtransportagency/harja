@@ -8,7 +8,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-sonja]]
@@ -51,8 +51,8 @@
   (with-redefs [t/now #(t/first-day-of-the-month 2017 2)]
     (let [viestit (atom [])]
       (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-      (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-      (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
+      (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+      (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
       (tarkista-vastaus (first @viestit)))
@@ -79,8 +79,8 @@
 (deftest tarkista-paallystysurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-paallystysurakka-sanoma+)
+    (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-paallystysurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (tarkista-vastaus (first @viestit))
@@ -95,8 +95,8 @@
 (deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-tiemerkintasurakka-sanoma+)
+    (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-tiemerkintasurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (tarkista-vastaus (first @viestit))
@@ -111,8 +111,8 @@
 (deftest tarkista-valaistusurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-valaistusurakka-sanoma+)
+    (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-valaistusurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (tarkista-vastaus (first @viestit))
@@ -131,10 +131,10 @@
 #_(deftest aja-testipatteri
     (let [SIIRTOJA (COUNT TESTIDATAPATTERI)
           VIESTIT (ATOM [])]
-      (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+      (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
       (doseq [testidata testidatapatteri]
         (println "Lähetetään: " testidata)
-        (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
+        (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
       (odota-ehdon-tayttymista #(= siirtoja (count @viestit)) "Kuittaukset on vastaanotettu." 1200000)
       (let [epaonnistuneet (q "SELECT v.sisalto, t.lisatietoja FROM integraatioviesti  v  RIGHT JOIN integraatiotapahtuma t ON v.integraatiotapahtuma = t.id  RIGHT JOIN integraatio i ON t.integraatio = i.id WHERE NOT t.onnistunut AND v.suunta = 'sisään' AND i.jarjestelma = 'sampo' and nimi = 'sisaanluku'")]
         (println "Epäonnistuneet:" epaonnistuneet)

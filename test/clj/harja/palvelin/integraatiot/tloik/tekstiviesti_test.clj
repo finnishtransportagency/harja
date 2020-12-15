@@ -16,7 +16,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.tyokalut.xml :as xml]
             [clojure.string :as str]))
 
@@ -81,7 +81,7 @@
         "Tuntematon viestinumero käsitellään oikein.")
 
     (let [viesti (atom nil)]
-      (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
+      (jms/kuuntele! (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
 
       (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
              (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))

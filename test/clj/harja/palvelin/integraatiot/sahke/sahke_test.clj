@@ -6,7 +6,7 @@
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-sonja]]
@@ -28,7 +28,7 @@
   (let [viestit (atom [])
         urakan-nimi "Oulun alueurakka 2014-2019"
         urakka-id (first (q (str "SELECT id FROM urakka WHERE nimi = '" urakan-nimi "';")))]
-    (sonja/kuuntele! (:sonja jarjestelma) +lahetysjono+ #(swap! viestit conj (.getText %)))
+    (jms/kuuntele! (:sonja jarjestelma) +lahetysjono+ #(swap! viestit conj (.getText %)))
     (sahke/laheta-urakka-sahkeeseen (:sahke jarjestelma) urakka-id)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Urakkaviesti lähetetty onnistuneesti." 10000)
     (is (= 1 (count @viestit)) "Urakka viestejä lähti vain 1")
