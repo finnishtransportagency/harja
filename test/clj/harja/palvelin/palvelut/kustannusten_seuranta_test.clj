@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.kustannusten-seuranta-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
@@ -17,9 +18,12 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :excel-vienti (component/using
+                                        (excel-vienti/luo-excel-vienti)
+                                        [:http-palvelin])
                         :kustannusten-seuranta (component/using
                                                  (kustannusten-seuranta/->KustannustenSeuranta)
-                                                 [:http-palvelin :db :db-replica])))))
+                                                 [:http-palvelin :db :db-replica :excel-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -29,12 +33,23 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(defn- hae-kustannukset [urakka-id alkupvm loppupvm]
+(defn- hae-kustannukset [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm]
   (kutsu-palvelua
     (:http-palvelin jarjestelma)
     :urakan-kustannusten-seuranta-paaryhmittain
     +kayttaja-tero+
     {:urakka-id urakka-id
+     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+     :alkupvm alkupvm
+     :loppupvm loppupvm}))
+
+(defn- lataa-excel [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm]
+  (kutsu-palvelua
+    (:http-palvelin jarjestelma)
+    :kustannukset
+    +kayttaja-tero+
+    {:urakka-id urakka-id
+     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
      :alkupvm alkupvm
      :loppupvm loppupvm}))
 
@@ -332,7 +347,8 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         erillishankinnat (filter
                            #(when (= "erillishankinnat" (:paaryhma %))
                               true)
@@ -348,7 +364,7 @@ UNION ALL
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
         hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         erillishankinnat (filter
                            #(when (= "erillishankinnat" (:paaryhma %))
                               true)
@@ -363,7 +379,8 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         hj_palkkiot (filter
                       #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
                          true)
@@ -379,7 +396,7 @@ UNION ALL
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
         hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         hj_palkkiot (filter
                       #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
                          true)
@@ -395,7 +412,8 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         johto_ja_h_korvaukset (filter
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
@@ -411,7 +429,7 @@ UNION ALL
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
         hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         johto_ja_h_korvaukset (filter
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
@@ -427,7 +445,8 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         hankintakustannukset (filter
                                #(when (= "hankintakustannukset" (:paaryhma %))
                                   true)
@@ -443,7 +462,8 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        hoitokauden-alkuvuosi 2019  
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         hankintakustannukset (filter
                                #(when (= "hankintakustannukset" (:paaryhma %))
                                   true)
@@ -459,7 +479,8 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        vastaus (hae-kustannukset urakka-id alkupvm loppupvm)
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         lisatyot (filter
                    #(when (= "lisatyo" (:maksutyyppi %))
                       true)
@@ -468,5 +489,17 @@ UNION ALL
         l-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
         sql-summa (apply + (map #(first %) l-sql))]
     (is (= l-summa sql-summa))))
+
+;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
+;; Excelin sisältöä ei valitoida
+#_ (deftest excel-render-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
+        vastaus (lataa-excel urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        _ (println "excel-render-test :: vastaus" (pr-str vastaus))
+        ]
+    ))
 
 ;; TODO: Tee erillinen urakka, jolle syötetään suunnitelmat ja kulut ja tarkista, että kaikki löytyy tietokannasta oikein
