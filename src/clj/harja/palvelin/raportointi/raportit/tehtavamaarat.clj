@@ -20,34 +20,24 @@
            :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
 
 (defn kombota-samat-tehtavat
-  ([ekat tokat]
-   (kombota-samat-tehtavat ekat tokat {}))
-  ([ekat tokat {:keys [tarkistus-fn]}]
-   (loop [ekat ekat
-          tokat tokat
+  ([rivit]
+   (kombota-samat-tehtavat rivit {}))
+  ([rivit {:keys [tarkistus-fn]}]
+   (loop [rivit rivit
           kombottu []]
-     (let [e (first ekat)
-           t (first tokat)
+     (let [r (first rivit)
            tarkista (or tarkistus-fn
                         sama-tehtava-ja-ely?)]
-       (if (not (or e t))
+       (if (not r)
          kombottu
-         (let [e (or (some #(when (tarkista % e)
-                              (laske-yhteen % e))
+         (let [r (or (some #(when (tarkista % r)
+                              (laske-yhteen % r))
                            kombottu)
-                     (when (tarkista e t)
-                       (laske-yhteen e t))
-                     e)
-               t (or (some #(when (tarkista % t)
-                              (laske-yhteen % t))
-                           kombottu)
-                     (when-not (tarkista e t)
-                       t))
-               kombottu (filter #(not (or (tarkista % e)
-                                          (tarkista % t)))
+                     r)
+               kombottu (filter #(not (tarkista % r))
                                 kombottu)
-               kombottu (apply conj kombottu (keep identity [e t]))]
-           (recur (rest ekat) (rest tokat) kombottu)))))))
+               kombottu (apply conj kombottu (keep identity [r]))]
+           (recur (rest rivit) kombottu)))))))
 
 (defn- laske-hoitokaudet
   [alkupvm loppupvm]
@@ -210,7 +200,8 @@
 
 (defn db-haku-fn
   [db params]
-  (kombota-samat-tehtavat (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params) []))
+  (kombota-samat-tehtavat
+    (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params)))
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
