@@ -18,6 +18,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
+            [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -64,9 +65,7 @@
                                      (mapcat
                                        (fn [rivi]
                                          (let [_ (reset! row-index-atom (inc @row-index-atom))
-                                               toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
-                                               budjetoitu-summa (big/->big (or (:budjetoitu_summa rivi) 0))
-                                               erotus (big/->big (big/minus budjetoitu-summa toteutunut-summa))]
+                                               toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))]
                                            (concat
                                              [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
                                               [:tr.bottom-border
@@ -121,12 +120,12 @@
                                  (pvm/nyt)
                                  (pvm/->pvm (str "30.09." (inc valittu-hoitokauden-alkuvuosi))))
                                nil)]
-    [:div
+    [:div.col-xs-12 {:style {:padding-top "24px"}}
      [:div
       [:h4 "Hoitovuosi: " hoitovuosi-nro " (1.10." valittu-hoitokauden-alkuvuosi " - 09.30." (inc valittu-hoitokauden-alkuvuosi) ")"]
       (when hoitovuotta-jaljella
         [:span "Hoitovuotta on jäljellä " hoitovuotta-jaljella " päivää."])]
-     [:div.table-default
+     [:div.table-default {:style {:padding-top "24px"}}
       [:table.table-default-header-valkoinen
        [:thead
         [:tr.bottom-border {:style {:text-transform "uppercase"}}
@@ -268,16 +267,17 @@
         tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitovuosi-nro app) 0))
         kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitovuosi-nro app) 0))
         toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))]
-    [:div.yhteenveto
-     [:div.header [:span "Yhteenveto"]]
-     [:div.row [:span "Tavoitehinta: "] [:span.pull-right (formatoi-naytolle->big tavoitehinta true)]]
-     [:div.row [:span "Kattohinta: "] [:span.pull-right (formatoi-naytolle->big kattohinta true)]]
-     [:div.row [:span "Toteuma: "] [:span.pull-right (formatoi-naytolle->big toteuma true)]]
-     (when (big/gt toteuma tavoitehinta)
-       [:div.row [:span "Tavoitehinnan ylitys: "]
-        [:span.negatiivinen-numero.pull-right
-         (str "+ " (formatoi-naytolle->big (big/minus toteuma tavoitehinta)))]])
-     [:div.row [:span "Lisätyöt: "] [:span.pull-right (formatoi-naytolle->big (:lisatyot data) false)]]]))
+    [:div.col-xs-12
+     [:div.yhteenveto
+      [:div.header [:span "Yhteenveto"]]
+      [:div.row [:span "Tavoitehinta: "] [:span.pull-right (formatoi-naytolle->big tavoitehinta true)]]
+      [:div.row [:span "Kattohinta: "] [:span.pull-right (formatoi-naytolle->big kattohinta true)]]
+      [:div.row [:span "Toteuma: "] [:span.pull-right (formatoi-naytolle->big toteuma true)]]
+      (when (big/gt toteuma tavoitehinta)
+        [:div.row [:span "Tavoitehinnan ylitys: "]
+         [:span.negatiivinen-numero.pull-right
+          (str "+ " (formatoi-naytolle->big (big/minus toteuma tavoitehinta)))]])
+      [:div.row [:span "Lisätyöt: "] [:span.pull-right (formatoi-naytolle->big (:lisatyot data) false)]]]]))
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -295,51 +295,52 @@
                                  (pvm/->pvm (str "30.09." (inc valittu-hoitokausi)))])
         haun-alkupvm (if valittu-kuukausi
                        (first valittu-kuukausi)
-                       (str "01.10." valittu-hoitokausi)
-                       )
+                       (str valittu-hoitokausi "-10-01"))
         haun-loppupvm (if valittu-kuukausi
                        (second valittu-kuukausi)
-                       (str "30.09." (inc valittu-hoitokausi))
-                       )]
+                       (str (inc valittu-hoitokausi) "-09-30"))]
     [:div.kustannusten-seuranta
      [debug/debug app]
-     [:div {:style {:padding-top "1rem"}}
-      [:h1 "Kustannusten seuranta"]
-      [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
+     [:div
+      [:div.col-xs-12.header {:style {:padding-top "1rem"}}
+       [:h1 "Kustannusten seuranta"]
+       [:p.urakka (:nimi @nav/valittu-urakka)]
+       [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
      Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]
-     [:div.row
-      [:div.col-xs-6.col-md-3
-       [:span.alasvedon-otsikko "Hoitokausi"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
-                                     :vayla-tyyli? true
-                                     :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                     :format-fn #(str "1.10." % "-30.9." (inc %))
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-        hoitokaudet]]
-      [:div.col-xs-6.col-md-3
-       [:span.alasvedon-otsikko "Kuukausi"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
-                                     :vayla-tyyli? true
-                                     :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))
-                                     :format-fn #(if %
-                                                   (let [[alkupvm _] %
-                                                         kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
-                                                     (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
-                                                   "Koko hoitokausi")
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-        hoitokauden-kuukaudet]]
-      [:div.col-xs-6.col-md-3
-       ^{:key "raporttixls"}
-       [:form {:style  {:margin-left "auto"}
-               :target "_blank" :method "POST"
-               :action (k/excel-url :kulut)}
-        [:input {:type  "hidden" :name "parametrit"
-                 :value (transit/clj->transit {:urakka-id   (:id @nav/valittu-urakka)
-                                         :urakka-nimi (:nimi @nav/valittu-urakka)
-                                         :alkupvm     haun-alkupvm
-                                         :loppupvm    haun-loppupvm})}]
-        [:button {:type  "submit"
-                  :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]
+      [:div.row {:style {:padding-top "24px"}}
+       [:div.col-xs-6.col-md-3 {:style {:height "61px"}}
+        [:span.alasvedon-otsikko "Hoitokausi"]
+        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                      :vayla-tyyli? true
+                                      :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+                                      :format-fn #(str "1.10." % "-30.9." (inc %))
+                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+         hoitokaudet]]
+       [:div.col-xs-6.col-md-3 {:style {:height "61px"}}
+        [:span.alasvedon-otsikko "Kuukausi"]
+        [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
+                                      :vayla-tyyli? true
+                                      :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))
+                                      :format-fn #(if %
+                                                    (let [[alkupvm _] %
+                                                          kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                                                      (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
+                                                    "Koko hoitokausi")
+                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+         hoitokauden-kuukaudet]]
+       [:div.col-xs-6.col-md-3 {:style {:height "61px" :padding-top "21px"}}
+        ^{:key "raporttixls"}
+        [:form {:style {:margin-left "auto"}
+                :target "_blank" :method "POST"
+                :action (k/excel-url :kustannukset)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value (transit/clj->transit {:urakka-id (:id @nav/valittu-urakka)
+                                                :urakka-nimi (:nimi @nav/valittu-urakka)
+                                                :hoitokauden-alkuvuosi valittu-hoitokausi
+                                                :alkupvm haun-alkupvm
+                                                :loppupvm haun-loppupvm})}]
+         [:button {:type "submit"
+                   :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]]]
 
      [kustannukset-taulukko e! app taulukon-rivit]
      [yhteenveto-laatikko e! app taulukon-rivit]]))

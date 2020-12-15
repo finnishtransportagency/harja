@@ -1,6 +1,5 @@
 (ns harja.domain.kulut.kustannusten-seuranta
-  "Kustannusten seurannan datan prosessoinnin apurit"
-  (:require [harja.pvm :as pvm]))
+  "Kustannusten seurannan datan prosessoinnin apurit")
 
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
@@ -122,8 +121,9 @@
                              (:toimenpide-toteutunut-summa rivi))
                            toimenpiteet)))
       (assoc :lisatyot (reduce (fn [summa rivi]
-                                 (+ summa (:lisatyot rivi)))
-                               (:lisatyot taulukko-rivit) toimenpiteet))))
+                                 (+ (or summa 0) (or (:lisatyot rivi) 0)))
+                               (:lisatyot taulukko-rivit)
+                               toimenpiteet))))
 
 (defn jarjesta-tehtavat
   "Tietokannasta saadaan kaikki kustannukset alimman tasoluokan mukaan eli tehtävittäin.
