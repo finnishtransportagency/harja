@@ -30,11 +30,11 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
-            [harja.tiedot.urakka.pot2.massat :as tiedot-massat]
+            [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
 
             [harja.views.urakka.pot1-lomake :as pot1-lomake]
-            [harja.views.urakka.pot2.massalistaus :as massat-view]
+            [harja.views.urakka.pot2.materiaalikirjasto :as massat-view]
             [harja.views.urakka.pot2.pot2-lomake :as pot2-lomake]
 
             [harja.fmt :as fmt]
@@ -165,7 +165,7 @@
            "Päällystysilmoitukset"]
           ;; HUOM! ei päästetä materiaalikirjastoa vielä tuotantoon, eli tämä oltava kommentoituna develop-haarassa
           [napit/nappi "Muokkaa urakan materiaaleja"
-           #(e! (tiedot-massat/->NaytaModal true))
+           #(e! (mk-tiedot/->NaytaModal true))
            {:ikoni (ikonit/livicon-pen)
             :luokka "napiton-nappi"
             :style {:background-color "#fafafa"
@@ -213,8 +213,8 @@
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] true))
         (e! (paallystys/->HaePaallystysilmoitukset))
-        (e! (tiedot-massat/->HaePot2Massat))
-        (e! (tiedot-massat/->HaeKoodistot)))
+        (e! (mk-tiedot/->HaePot2Massat))
+        (e! (mk-tiedot/->HaeKoodistot)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
     (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja] :as app}]

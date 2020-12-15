@@ -272,3 +272,14 @@
                                                              ::dop-nro
                                                              ::nimen-tarkenne
                                                              ::kuulamyllyluokka])))))))
+
+(defn murskeen-rikastettu-nimi [mursketyypit rivi]
+  ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
+  ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
+  (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi rivi))
+       (str/join " " (remove nil? (mapv val
+                                        (select-keys rivi [::tyyppi
+                                                           ::nimen-tarkenne
+                                                           ::dop-nro
+                                                           ::rakeisuus
+                                                           ::iskunkestavyys]))))))

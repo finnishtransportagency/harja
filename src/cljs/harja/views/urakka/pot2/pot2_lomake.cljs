@@ -18,7 +18,7 @@
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.tiedot.urakka.pot2.massat :as tiedot-massa]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.alusta :as alusta]
     [harja.views.urakka.pot2.kulutuskerros :as kulutuskerros]
@@ -98,7 +98,7 @@
    [:h2 {:style {:display "inline-block"}}
     "Toimenpiteet ja materiaalit"]
    [napit/nappi "Muokkaa urakan materiaaleja *)"
-    #(e! (tiedot-massa/->NaytaModal true))
+    #(e! (mk-tiedot/->NaytaModal true))
     {:ikoni (ikonit/livicon-pen)
      :luokka "napiton-nappi"
      :style {:background-color "#fafafa"

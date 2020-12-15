@@ -1,5 +1,5 @@
-(ns harja.tiedot.urakka.pot2.massat
-  "UI controlleri pot2 massoille"
+(ns harja.tiedot.urakka.pot2.materiaalikirjasto
+  "UI controlleri pot2 materiaalikirjastolle"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
@@ -19,13 +19,15 @@
 (defrecord AlustaTila [])
 (defrecord UusiMassa [avaa-massa-lomake?])
 (defrecord MuokkaaMassaa [rivi klooni?])
+(defrecord UusiMurske [avaa-murske-lomake?])
+(defrecord MuokkaaMursketta [rivi klooni?])
 (defrecord NaytaModal [avataanko?])
 
 (defrecord TallennaLomake [data])
 (defrecord TallennaMassaOnnistui [vastaus])
 (defrecord TallennaMassaEpaonnistui [vastaus])
 (defrecord TyhjennaLomake [data])
-(defrecord PaivitaLomake [data])
+(defrecord PaivitaMassaLomake [data])
 (defrecord PaivitaAineenTieto [polku arvo])
 (defrecord LisaaSideaine [sideaineen-kayttotapa])
 (defrecord PoistaSideaine [sideaineen-kayttotapa])
@@ -166,7 +168,17 @@
           (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet] sideaineet)
           (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet] lisaaineet))))
 
-  PaivitaLomake
+  UusiMurske
+  (process-event [{avaa-murske-lomake? :avaa-murske-lomake?} app]
+    (js/console.log "Uusi murske lomake avataan" avaa-murske-lomake?)
+    (assoc app :avaa-murske-lomake? avaa-murske-lomake?
+               :pot2-murske-lomake nil))
+
+  MuokkaaMursketta
+  (process-event [{rivi :rivi klooni? :klooni?} app]
+  app)
+
+  PaivitaMassaLomake
   (process-event [{data :data} app]
     (update app :pot2-massa-lomake merge data))
 

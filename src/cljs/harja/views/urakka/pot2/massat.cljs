@@ -1,4 +1,4 @@
-(ns harja.views.urakka.pot2.massalistaus
+(ns harja.views.urakka.pot2.massat
   "POT2 massalistaukset"
   (:require [clojure.string :as str]
             [cljs.core.async :refer [<! chan]]
@@ -21,7 +21,7 @@
             [harja.domain.pot2 :as pot2-domain]
             [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.pot2.massat :as tiedot-massa]
+            [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.loki :refer [log logt tarkkaile!]])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -37,7 +37,7 @@
    (r/wrap
      arvo
      (fn [uusi-arvo]
-       (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))])
+       (e! (mk-tiedot/->PaivitaAineenTieto polku uusi-arvo))))])
 
 (defn- otsikko-ja-kentta
   [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys placeholder
@@ -57,7 +57,7 @@
     (r/wrap
       arvo
       (fn [uusi-arvo]
-        (e! (tiedot-massa/->PaivitaAineenTieto polku uusi-arvo))))]])
+        (e! (mk-tiedot/->PaivitaAineenTieto polku uusi-arvo))))]])
 
 (defn- runkoaineiden-kentat [tiedot polun-avaimet]
   (let [{:runkoaine/keys [esiintyma fillerityyppi kuulamyllyarvo litteysluku
@@ -134,7 +134,7 @@
 
 (defn- sideaineet-komponentti [e! rivi kayttotapa polun-avaimet sideainetyypit]
   (let [aineet (or (get-in rivi (cons :data [::pot2-domain/sideaineet kayttotapa :aineet]))
-                   {0 tiedot-massa/tyhja-sideaine})
+                   {0 mk-tiedot/tyhja-sideaine})
         jo-valitut-sideainetyypit (into #{} (map :sideaine/tyyppi (vals aineet)))]
     [:div
      (map-indexed (fn [idx [_ sideaine]]
@@ -159,44 +159,44 @@
      (when (= :lisatty kayttotapa)
        [:div
         [napit/uusi "Lisää uusi"
-         #(e! (tiedot-massa/->LisaaSideaine kayttotapa))
+         #(e! (mk-tiedot/->LisaaSideaine kayttotapa))
          {:luokka (str "napiton-nappi lisaa-sideaine")}]
         [napit/poista "Poista viimeisin"
-         #(e! (tiedot-massa/->PoistaSideaine kayttotapa))
+         #(e! (mk-tiedot/->PoistaSideaine kayttotapa))
          {:luokka (str "napiton-nappi poista-sideaine")}]])]))
 
 (defn- ainevalintalaatikot [tyyppi aineet]
   (if (= tyyppi :sideaineet)
-    tiedot-massa/sideaineen-kayttotavat
+    mk-tiedot/sideaineen-kayttotavat
     aineet))
 
 (defn- ainevalinta-kentat [e! rivi tyyppi aineet]
   [:div.ainevalinta-kentat
    (for [t (ainevalintalaatikot tyyppi aineet)]
-      (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
-            {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
-        ^{:key t}
-        [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
-         (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
-                   (tiedot-massa/lisatty-sideaine-mahdollinen? (:data rivi)))
-           [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
-                                        :arvo valittu? :label-luokka (when valittu? "bold")
-                                        :polku (conj polun-avaimet :valittu?)}])
+     (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
+           {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
+       ^{:key t}
+       [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
+        (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
+                  (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
+          [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
+                                       :arvo valittu? :label-luokka (when valittu? "bold")
+                                       :polku (conj polun-avaimet :valittu?)}])
 
-         (when valittu?
-           [:div.kentat-haitari
-            (case tyyppi
-              (:runkoaineet :lisaaineet)
-              (for [k (tyypin-kentat {:tyyppi tyyppi
-                                      :tiedot tiedot
-                                      :polun-avaimet polun-avaimet})]
-                ^{:key (:otsikko k)}
-                [:div.inline-block {:style {:margin-right "6px"}}
-                 [otsikko-ja-kentta e! k]])
+        (when valittu?
+          [:div.kentat-haitari
+           (case tyyppi
+             (:runkoaineet :lisaaineet)
+             (for [k (tyypin-kentat {:tyyppi tyyppi
+                                     :tiedot tiedot
+                                     :polun-avaimet polun-avaimet})]
+               ^{:key (:otsikko k)}
+               [:div.inline-block {:style {:margin-right "6px"}}
+                [otsikko-ja-kentta e! k]])
 
-              :sideaineet
-              [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
-               polun-avaimet aineet])])]))])
+             :sideaineet
+             [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
+              polun-avaimet aineet])])]))])
 
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
@@ -205,7 +205,7 @@
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)]
     [:div
      [ui-lomake/lomake
-      {:muokkaa! #(e! (tiedot-massa/->PaivitaLomake (ui-lomake/ilman-lomaketietoja %)))
+      {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
        :otsikko (if (:pot2-massa/id pot2-massa-lomake)
                   "Muokkaa massaa"
                   "Uusi massa")
@@ -225,14 +225,14 @@
                       [:div.tallenna-peruuta
                        [napit/tallenna
                         "Tallenna"
-                        #(e! (tiedot-massa/->TallennaLomake data))
+                        #(e! (mk-tiedot/->TallennaLomake data))
                         {:vayla-tyyli? true
                          :luokka "suuri"
                          :disabled (or (not (ui-lomake/voi-tallentaa? data))
                                        (not (empty? muut-validointivirheet)))}]
                        [napit/yleinen
                         "Peruuta" :toissijainen
-                        #(e! (tiedot-massa/->TyhjennaLomake data))
+                        #(e! (mk-tiedot/->TyhjennaLomake data))
                         {:vayla-tyyli? true
                          :luokka "suuri"}]]
 
@@ -243,7 +243,7 @@
                            {:otsikko "Massan poistaminen"
                             :sisalto
                             [:div "Haluatko ihan varmasti poistaa tämän massan?"]
-                            :toiminto-fn #(e! (tiedot-massa/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
+                            :toiminto-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                             :hyvaksy "Kyllä"}))
                        {:vayla-tyyli? true
                         :luokka "suuri"}]]])
@@ -303,40 +303,40 @@
 
 (defn- massan-runkoaineet
   [rivi ainetyypit]
-[:span
- (for [{:runkoaine/keys [kuulamyllyarvo
-                         litteysluku] :as aine}
-       (reverse
-         (sort-by :runkoaine/massaprosentti
-                  (:harja.domain.pot2/runkoaineet rivi)))
-       :let [aineen-otsikko (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
-                                 (if (:runkoaine/esiintyma aine)
-                                   (yleiset/str-suluissa-opt (:runkoaine/esiintyma aine))
-                                   (when (= 7 (:runkoaine/tyyppi aine))
-                                     (yleiset/str-suluissa-opt (:runkoaine/kuvaus aine)))))
-             otsikko-rivitettyna (let [[aine tiedot] (str/split aineen-otsikko #"\(")
-                                       tiedot (if (str/includes? tiedot ")")
-                                                (str "(" tiedot)
-                                                tiedot)]
-                                   [:div [:div aine] [:div tiedot]])]]
-   ^{:key (:runkoaine/id aine)}
-   [:span
-    [:div
-     (when (or kuulamyllyarvo litteysluku)
-       [yleiset/wrap-if true
-        [yleiset/tooltip {} :%
-         [yleiset/avain-arvo-tooltip otsikko-rivitettyna
-          {:width "300px"}
-          "KM-arvo" kuulamyllyarvo
-          "Litteysluku" litteysluku]]
-        [:span {:style {:color "#004D99"
-                        :margin-right "8px"
-                        :position "relative"
-                        :top "1px"}}
-         [ikonit/livicon-info-circle]]])
+  [:span
+   (for [{:runkoaine/keys [kuulamyllyarvo
+                           litteysluku] :as aine}
+         (reverse
+           (sort-by :runkoaine/massaprosentti
+                    (:harja.domain.pot2/runkoaineet rivi)))
+         :let [aineen-otsikko (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
+                                   (if (:runkoaine/esiintyma aine)
+                                     (yleiset/str-suluissa-opt (:runkoaine/esiintyma aine))
+                                     (when (= 7 (:runkoaine/tyyppi aine))
+                                       (yleiset/str-suluissa-opt (:runkoaine/kuvaus aine)))))
+               otsikko-rivitettyna (let [[aine tiedot] (str/split aineen-otsikko #"\(")
+                                         tiedot (if (str/includes? tiedot ")")
+                                                  (str "(" tiedot)
+                                                  tiedot)]
+                                     [:div [:div aine] [:div tiedot]])]]
+     ^{:key (:runkoaine/id aine)}
      [:span
-      aineen-otsikko
-      [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]]])])
+      [:div
+       (when (or kuulamyllyarvo litteysluku)
+         [yleiset/wrap-if true
+          [yleiset/tooltip {} :%
+           [yleiset/avain-arvo-tooltip otsikko-rivitettyna
+            {:width "300px"}
+            "KM-arvo" kuulamyllyarvo
+            "Litteysluku" litteysluku]]
+          [:span {:style {:color "#004D99"
+                          :margin-right "8px"
+                          :position "relative"
+                          :top "1px"}}
+           [ikonit/livicon-info-circle]]])
+       [:span
+        aineen-otsikko
+        [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]]])])
 
 (defn- massan-sideaineet [rivi ainetyypit]
   [:span
@@ -360,34 +360,34 @@
        (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
        [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
-(defn- massan-toiminnot [e! rivi]
+(defn massan-toiminnot [e! rivi]
   [:span.pull-right
    [yleiset/wrap-if true
     [yleiset/tooltip {} :% "Muokkaa"]
     [napit/nappi ""
-     #(e! (tiedot-massa/->MuokkaaMassaa rivi false))
+     #(e! (mk-tiedot/->MuokkaaMassaa rivi false))
      {:ikoninappi? true :luokka "klikattava"
       :ikoni (ikonit/livicon-pen)}]]
 
    [yleiset/wrap-if true
     [yleiset/tooltip {} :% "Luo kopio"]
     [napit/nappi ""
-     #(e! (tiedot-massa/->MuokkaaMassaa rivi true))
+     #(e! (mk-tiedot/->MuokkaaMassaa rivi true))
      {:ikoninappi? true :luokka "klikattava"
       :ikoni (ikonit/livicon-duplicate)}]]])
 
-(defn- massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
+(defn massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Massat"
     :tunniste :pot2-massa/id
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
-    :rivi-klikattu #(e! (tiedot-massa/->MuokkaaMassaa % false))
+    :rivi-klikattu #(e! (mk-tiedot/->MuokkaaMassaa % false))
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Luo uusi massa"
-                      :toiminto #(e! (tiedot-massa/->UusiMassa true))
+                      :toiminto #(e! (mk-tiedot/->UusiMassa true))
                       :opts {:ikoni (ikonit/livicon-plus)
                              :luokka "napiton-nappi"}}}
    [{:otsikko "Massatyyppi" :tyyppi :string
@@ -416,13 +416,13 @@
    [murskeet-taulukko e! app]
    ;; spacer, jotta alimpien rivien pop up ei piiloudu. Voi olla että voidaan poistaa kunhan murskeiden hallionta on tehty
    [:div {:style {:height "100px"}}]
-   [napit/sulje #(swap! tiedot-massa/nayta-materiaalikirjasto? not)]])
+   [napit/sulje #(swap! mk-tiedot/nayta-materiaalikirjasto? not)]])
 
 (defn massat [e! app]
   (komp/luo
-    (komp/lippu tiedot-massa/materiaalikirjastossa?)
+    (komp/lippu mk-tiedot/materiaalikirjastossa?)
     (komp/piirretty (fn [this]
-                      (e! (tiedot-massa/->AlustaTila))))
+                      (e! (mk-tiedot/->AlustaTila))))
     (fn [e! app]
       [:div
        (if (:avaa-massa-lomake? app)
@@ -434,8 +434,8 @@
   [modal/modal
    {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
     :luokka "materiaalikirjasto-modal"
-    :nakyvissa? @tiedot-massa/nayta-materiaalikirjasto?
-    :sulje-fn #(swap! tiedot-massa/nayta-materiaalikirjasto? not)}
+    :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
+    :sulje-fn #(swap! mk-tiedot/nayta-materiaalikirjasto? not)}
    [:div
     [massat e! app]]])
 

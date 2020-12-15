@@ -18,7 +18,7 @@
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.tiedot.urakka.pot2.massat :as tiedot-massa]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
