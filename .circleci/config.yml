@@ -130,6 +130,16 @@ jobs:
           bash julkaise-tapahtuma.sh db.valmis;
           /bin/bash;"
 
+    steps:
+      - run: if [[ "${CIRCLE_BRANCH}" =~ \& ]]; then echo "Brancin nimessä on '&' merkki"; exit 1; fi;
+      - julkaise-tapahtuma:
+          tapahtuma: "env.git"
+          args: "BRANCH=${CIRCLE_BRANCH}&COMMIT=${CIRCLE_SHA1}"
+      - odota-tapahtumaa:
+          tapahtuma: "db.valmis"
+      - run: |
+          cd /tmp
+          bash sisus.bash hidas $CIRCLE_BRANCH
   # Tänne voisi alkaa siirtelemään integraatiotestejä
   integraatio-testit:
     docker:
