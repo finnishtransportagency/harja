@@ -58,7 +58,6 @@
              Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
 (def ^:dynamic *kaynnistyksen-jalkeen-hook* nil)
 (def ^:dynamic *ennen-sulkemista-hook* nil)
-(def ^:dynamic *harja-tarkkailija-mukaan?* false)
 
 (def sonja-aloitus-go (atom nil))
 
@@ -1331,8 +1330,7 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
-     (when *harja-tarkkailija-mukaan?*
-       (pystyta-harja-tarkkailija!))
+     (pystyta-harja-tarkkailija!)
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1372,8 +1370,7 @@
      (when *ennen-sulkemista-hook*
        (*ennen-sulkemista-hook*))
      (alter-var-root #'jarjestelma component/stop)
-     (when *harja-tarkkailija-mukaan?*
-       (lopeta-harja-tarkkailija!))))
+     (lopeta-harja-tarkkailija!)))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan

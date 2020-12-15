@@ -469,10 +469,6 @@
          ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
          ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit ja blokkaa siksi aikaa.
          ;; Tämän jälkeen luodaan uusi vastaanottaja.
-         (log/debug "[SONJA] Poistetaan kuuntelija")
-         (log/debug (str "[SONJA] --> params: " params))
-         (log/debug (str "[SONJA] --> vastaanottaja: " vastaanottaja))
-         (log/debug (str "[SONJA] --> kuuntelijat: " kuuntelijat))
          (when vastaanottaja
            (.close vastaanottaja))
          (if (empty? kuuntelijat)

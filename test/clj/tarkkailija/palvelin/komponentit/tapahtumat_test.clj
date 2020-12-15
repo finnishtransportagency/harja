@@ -200,11 +200,11 @@
                                                              (let [paluuarvo (apply original-pura-tapahtumat args)]
                                                                (reset! lahde-redefsista? true)
                                                                paluuarvo))]
-        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:viestakanava (async/chan)})
+        (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:viestintakanava (async/chan 3)})
         (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {:possukanava (@#'tapahtumat/uusi-tapahtuman-kanava)})
         (async/put! (::tapahtumat/tapahtuma-loopin-ajot tapahtumat-k) {})
         (while (not @lahde-redefsista?)
-          (async/<!! (async/timeout 10))))
+          (async/<!! (async/timeout 50))))
       (log/set-config! original-config)
       (is (= 3 @err-count)
           "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä")))
@@ -439,7 +439,8 @@
                            {:palvelin (:nimi harja-tarkkailija)
                             :payload {:b 9}}))
                     (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
-                        "Pitäisi olla vain tuo yksi arvo"))))))))))
+                        "Pitäisi olla vain tuo yksi arvo"))))))))
+    (reset! aja-loop-atom true)))
 
 (deftest ryhmittain-ajettavat-testit-ajetaan-yhta-aikaa
   (let [aja-loop (async/chan)

@@ -110,7 +110,6 @@
                       (reset! koko-testin-tila {})
                       (let [jarjestelma-restart-tarkkailija (atom nil)]
                         (binding [*uudelleen-kaynnistaja-mukaan?* true
-                                  *harja-tarkkailija-mukaan?* true
                                   *aloita-sonja?* true
                                   *lisattavia-kuuntelijoita?* true
                                   *sonja-kaynnistetty-fn* (fn []
