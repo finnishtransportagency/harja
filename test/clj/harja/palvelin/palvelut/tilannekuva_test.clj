@@ -33,6 +33,7 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
+                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
@@ -156,6 +157,11 @@
                                    "tk" (-> suodattimet
                                             transit/clj->transit
                                             (java.net.URLEncoder/encode))}}))))
+
+(deftest hae-tietyoilmoitukset
+  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]    
+    ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
+    (is (= (count (:tietyoilmoitukset vastaus)) 4))))
 
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
