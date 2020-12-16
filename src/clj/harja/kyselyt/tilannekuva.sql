@@ -351,7 +351,7 @@ SELECT ypko.id,
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
        JOIN urakka u ON ypk.urakka = u.id
        JOIN organisaatio o ON u.urakoitsija = o.id
- WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
+ WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND
@@ -538,7 +538,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
                     AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys ed. SQL
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
-                    AND ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
+                    AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi;
 
 -- name: osoite-reittipisteille
 -- Palauttaa tierekisteriosoitteen
@@ -566,7 +566,7 @@ SELECT
   t.tehtavat,
   MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+WHERE ST_Distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -588,7 +588,7 @@ SELECT
   ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
 FROM tyokonehavainto t
 WHERE
-  ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+  ST_Distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -610,7 +610,7 @@ SELECT
     sijainti               as reitti
 FROM tyokonehavainto t
 WHERE
-        ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+        ST_Distance(t.sijainti::GEOMETRY, ST_MakePoint(:keskipiste_x, :keskipiste_y)) < :sade AND
     (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
      (t.urakkaid IS NULL AND
