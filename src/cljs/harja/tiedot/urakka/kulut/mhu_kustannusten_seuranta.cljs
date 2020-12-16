@@ -110,21 +110,7 @@
     (do
       (hae-kustannukset urakka vuosi (first kuukausi) (second kuukausi))
       (-> app
-          (assoc-in [:valittu-kuukausi] kuukausi))))
-
-  ;ValitseAikavali
-  #_(process-event
-      [{:keys [polku arvo]} app]
-      (let [arvo (if (nil? arvo)
-                   (get-in app [polku])
-                   arvo)]
-        (-> app
-            (assoc-in [:hoitokauden-alkuvuosi] nil)
-            (assoc-in [(case polku
-                         :alkupvm :aikavali-alkupvm
-                         :loppupvm :aikavali-loppupvm)] arvo))))
-
-  )
+          (assoc-in [:valittu-kuukausi] kuukausi)))))
 
 (defn hoitokauden-jarjestysnumero [valittu-hoitokausivuosi]
   (let [urakka-loppupvm (-> @tila/yleiset :urakka :loppupvm)
