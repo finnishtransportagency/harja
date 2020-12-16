@@ -113,7 +113,8 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
-    :kustannusten-seuranta})
+    :kustannusten-seuranta
+    :kustannusarvoiduntyontoteumien-ajastus})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

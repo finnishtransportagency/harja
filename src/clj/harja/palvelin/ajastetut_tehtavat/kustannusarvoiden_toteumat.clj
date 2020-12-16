@@ -54,8 +54,8 @@
 (defrecord KustannusarvoidenToteumat []
   component/Lifecycle
   (start [{db :db :as this}]
-    (assoc this ::kustannusarvoiduntyontoteumien-ajastus
+    (assoc this :kustannusarvoiduntyontoteumien-ajastus
                 (ajasta db)))
-  (stop [{poista ::kustannusarvoiduntyontoteumien-ajastus :as this}]
+  (stop [{poista :kustannusarvoiduntyontoteumien-ajastus :as this}]
     (poista)
-    (dissoc this ::kustannusarvoiduntyontoteumien-ajastus)))
+    (dissoc this :kustannusarvoiduntyontoteumien-ajastus)))
