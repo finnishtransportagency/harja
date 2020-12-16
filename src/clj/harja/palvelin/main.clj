@@ -708,7 +708,7 @@
             (:paivitysvali-paivissa asetukset)))
         [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
 
-      ::kustannusarvoiduntyontoteumien-ajastus
+      :kustannusarvoiduntyontoteumien-ajastus
       (component/using (kustannusarvoiden-toteumat/->KustannusarvoidenToteumat)
         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
