@@ -164,7 +164,8 @@ SELECT
   asiatarkastus_hyvaksytty   AS "asiatarkastus_hyvaksytty",
   asiatarkastus_lisatiedot   AS "asiatarkastus_lisatiedot"
 FROM paallystysilmoitus pi
-WHERE paallystyskohde = :paallystyskohde;
+WHERE paallystyskohde = :paallystyskohde
+  AND NOT poistettu;
 
 -- name: paivita-paallystysilmoitus<!
 -- Päivittää päällystysilmoituksen tiedot (ei käsittelyä tai asiatarkastusta, päivitetään erikseen)

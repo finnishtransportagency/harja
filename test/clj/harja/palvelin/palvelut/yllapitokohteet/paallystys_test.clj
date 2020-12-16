@@ -194,7 +194,7 @@
                                 :perustelu nil},
                  :valmispvm-paallystys nil},
    :ilmoitustiedot nil,
-   :kulutuskerros ({:kohdeosa-id 13,
+   :kulutuskerros [{:kohdeosa-id 13,
                     :tr-kaista 11,
                     :tr-ajorata 1,
                     :tr-loppuosa 1,
@@ -203,7 +203,12 @@
                     :nimi "Kohdeosa kaista 11",
                     :tr-alkuetaisyys 3,
                     :tr-numero 20,
-                    :toimenpide nil}
+                    :toimenpide 12,
+                    :leveys 3,
+                    :kokonaismassamaara 2,
+                    :pinta_ala 1,
+                    :massamenekki 2,
+                    :materiaali 1}
                    {:kohdeosa-id 14,
                     :tr-kaista 12,
                     :tr-ajorata 1,
@@ -213,8 +218,12 @@
                     :nimi "Kohdeosa kaista 12",
                     :tr-alkuetaisyys 3,
                     :tr-numero 20,
-                    :toimenpide nil})})
-
+                    :toimenpide 21,
+                    :leveys 3,
+                    :kokonaismassamaara 2,
+                    :pinta_ala 1,
+                    :massamenekki 2,
+                    :materiaali 1}]})
 
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
@@ -636,14 +645,14 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0.00M))
+        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
 (deftest paivittaa-pot2-paallystysilmoitus-ei-muoka-kaikki-yllapitokohdeosan-kentat
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'"))]
     (is (= 28 paallystyskohde-id))
-    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
+    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Freude' WHERE yllapitokohde = 28"))
     (let [alkuperainen-paallystysilmoitus (-> pot2-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
@@ -656,13 +665,13 @@
                 :raekoko nil,
                 :tyomenetelma nil,
                 :massamaara nil,
-                :toimenpide "Wut"}
+                :toimenpide "Freude"}
                {:nimi "Kohdeosa kaista 11",
                 :paallystetyyppi nil,
                 :raekoko nil,
                 :tyomenetelma nil,
                 :massamaara nil,
-                :toimenpide "Wut"}}) "toimenpide jne ei ole päivetetty")
+                :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty")
       (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
                                         (assoc-in [:kulutuskerros 0 :nimi] "Uusi uudistettu tie 22"))
             [_ _ _ paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
@@ -672,13 +681,13 @@
                   :raekoko nil,
                   :tyomenetelma nil,
                   :massamaara nil,
-                  :toimenpide "Wut"}
+                  :toimenpide "Freude"}
                  {:nimi "Uusi uudistettu tie 22",
                   :paallystetyyppi nil,
                   :raekoko nil,
                   :tyomenetelma nil,
                   :massamaara nil,
-                  :toimenpide "Wut"}}) "toimenpide jne ei ole päivetetty, mutta nimi on päivetetty")))
+                  :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty, mutta nimi on päivetetty")))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 
