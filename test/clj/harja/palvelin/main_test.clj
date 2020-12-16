@@ -112,7 +112,8 @@
     :paikkaukset
     :jarjestelman-tila
     :yha-paikkauskomponentti
-    :pot2})
+    :pot2
+    :kustannusten-seuranta})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

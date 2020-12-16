@@ -1,3 +1,5 @@
+-- toteutunut_tyo tauluun siirretään mhurakoiden suunnitellut kustannukset aina kuukauden viimeinen päivä.
+
 CREATE TABLE toteutunut_tyo
 (
     id                  serial primary key, -- sisäinen ID
