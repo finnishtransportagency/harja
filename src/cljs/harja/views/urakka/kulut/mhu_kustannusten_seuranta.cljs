@@ -165,9 +165,9 @@
               ^{:key (hash l)}
               l)))
 
-        [:tr.bottom-border {:key "Johto- ja hallintokorvaukset"}
-         [:td.paaryhma-center {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :johto-ja-hallintakorvaus))
-                               :style {:width (:caret-paaryhma leveydet)}}
+        [:tr.bottom-border.selectable {:key "Johto- ja hallintokorvaukset"
+                                       :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :johto-ja-hallintakorvaus))}
+         [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
           (if (= :johto-ja-hallintakorvaus (get-in app [:valittu-rivi :paaryhma]))
             [:img {:alt "Expander" :src "images/expander-down.svg"}]
             [:img {:alt "Expander" :src "images/expander.svg"}])]
