@@ -19,7 +19,7 @@
             [cheshire.core :as cheshire]
             [slingshot.slingshot :refer [try+]]
 
-            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -180,7 +180,7 @@
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
   (<!! *sonja-yhteys*)
   (let [sulje-sonja-kanava (chan)]
-    (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
+    (with-redefs [jms/aloita-yhdistaminen (fn [& args]
                                               (loop []
                                                 (if (not (poll! sulje-sonja-kanava))
                                                   (do
@@ -250,7 +250,7 @@
                                              istunnot-lahetyksen-jalkeen))
         istunto (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email") :istunto)
         jono (-> jonot-lahetyksen-jalkeen (get "harja-to-email") :jono)
-        viestit-jonossa (sonja/hae-jonon-viestit istunto jono)
+        viestit-jonossa (jms/hae-jonon-viestit istunto jono)
         viesti (->> viestit-jonossa first (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
     (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
     (tarkista-xml-sisalto viesti {:vastaanottajat (fn [vastaanottajat]
@@ -325,7 +325,7 @@
     ;; Vain testijono-2 viestit pitäisi olla käsitelty, koska ykkönen nakkaa exceptionia
     (is (= kasitellyt-viestit testijono-2-vastaanottamat-viestit))
     ;; Tarkistetaan, että testijono-1:n vastaanottaja on kummiski vielä pystyssä
-    (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))))
+    (is (= "ACTIVE" (jms/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))))
 
 
 (deftest main-komponentit-loytyy
@@ -353,7 +353,7 @@
         _ (s-tk/sonja-jolokia-connection nil :start)
         ;; Odotetaan hetki, että yhteys on aloitettu
         _ (<!! (go-loop [i 0]
-                 (when (and (not= "ACTIVE" @sonja/jms-connection-tila)
+                 (when (and (not= "ACTIVE" (-> jarjestelma :sonja :jms-connection-tila deref))
                             (< i 5))
                    (<! (timeout 1000))
                    (recur (inc i)))))
@@ -379,7 +379,7 @@
         lahetykset (atom {:taynna 0 :ruuhkaa 0 :lahetettiin 0 :kaskyjen-kasittely 0})
         pitkaan-kestava-lahetys-kanava (chan)
         ;; Lähetetään pitkään kestävä viesti (yli Sonja ns määritellyn timeoutin)
-        pitkaan-kestava-lahetys (with-redefs [sonja/viestin-kasittely-timeout 100
+        pitkaan-kestava-lahetys (with-redefs [jms/viestin-kasittely-timeout 100
                                               jms/laheta-viesti (fn [& args]
                                                                     (println "LÄHETETÄÄN HIDAS VIESTI")
                                                                     (>!! pitkaan-kestava-lahetys-kanava true)
@@ -389,15 +389,15 @@
                                   (thread (lahetys-fn "foo"))
                                   ;; Odotellaan, jotta with-redefs toimii
                                   (<!! pitkaan-kestava-lahetys-kanava))
-        kasittele-kasky-ennen-redefs! sonja/kasittele-kasky!
+        kasittele-kasky-ennen-redefs! jms/kasittele-kasky!
         ;; Samalla kun pitkään kestävää viestiä lähetetään, lähetetään 120 muuta viestiä, joiden kaikkien pitäisi
         ;; epäonnistua
-        muut-lahetykset (with-redefs [sonja/viestin-kasittely-timeout 100
+        muut-lahetykset (with-redefs [jms/viestin-kasittely-timeout 100
                                       jms/laheta-viesti (fn [& args]
                                                             ;; Jos viesti lähetetään, nostetaan counterin lukemaa.
                                                             ;; Tässä testissä viestejä ei tulisi lähettää yhtään.
                                                             (swap! lahetykset update :lahetettiin inc))
-                                      sonja/kasittele-kasky! (fn [& args]
+                                      jms/kasittele-kasky! (fn [& args]
                                                                ;; Kun jms-säije sammutetaan, käsitellään jonossa jo
                                                                ;; olevat viestit ensin pois.
                                                                (swap! lahetykset update :kaskyjen-kasittely inc)
@@ -416,7 +416,7 @@
                           ;; olevat 100 viestiä tulisi tulla timeout todetuiksi.
                           ;; Odotellaan tässä, että säije on sammutettu, jotta with-redefsit toimii.
                           (<!! (go-loop []
-                                 (when-not (true? @sonja/jms-saije-sammutettu?)
+                                 (when-not (true? (get @jms/jms-saije-sammutettu? "sonja"))
                                    (<! (timeout 100))
                                    (recur)))))]
     (is (= 100 (:ruuhkaa @lahetykset)))

@@ -16,7 +16,7 @@
     (log/info "Feikki Sonja lopetettu")
     this)
 
-  sonja/Sonja
+  jms/JMS
   (kuuntele! [_ nimi kuuntelija jarjestelma]
     (log/debug "Lisätään kuuntelija:" kuuntelija ", jonoon: " nimi ", jarjestelmaan: " jarjestelma)
     (swap! kuuntelijat
@@ -31,7 +31,7 @@
 
   (laheta [_ nimi viesti {:keys [correlation-id]} jarjestelma]
     (log/info "Feikki Sonja lähettää jonoon: " nimi)
-    (let [msg (sonja/luo-viesti viesti (reify javax.jms.Session
+    (let [msg (jms/luo-viesti viesti (reify javax.jms.Session
                                          (createTextMessage [this]
                                            (let [txt (atom nil)
                                                  id (str "ID:" (swap! viesti-id inc))]
@@ -55,6 +55,9 @@
 
   (laheta [this nimi viesti]
     (jms/laheta this nimi viesti nil))
+
+  (sammuta-lahettaja [this jonon-nimi jarjestelma])
+  (sammuta-lahettaja [this jonon-nimi])
 
   (kasky [this kaskyn-tiedot]
     (log/debug "Feikki Sonja, sai käskyn: " kaskyn-tiedot)))

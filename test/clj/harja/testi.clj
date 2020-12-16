@@ -24,7 +24,6 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-    [harja.palvelin.integraatiot.jms :as jms]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]

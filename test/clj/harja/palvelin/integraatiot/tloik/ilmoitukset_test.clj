@@ -9,6 +9,7 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.sonja :as sonja]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]

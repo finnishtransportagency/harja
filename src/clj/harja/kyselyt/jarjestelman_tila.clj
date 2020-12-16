@@ -6,4 +6,4 @@
 (defn sonjan-tila
   ([db] (sonjan-tila db false))
   ([db kehitysmoodi?]
-   (hae-sonjan-tila db {:kehitys? kehitysmoodi?})))
+   (hae-jarjestelman-tila db {:kehitys? kehitysmoodi? :osa-alue "sonja"})))
