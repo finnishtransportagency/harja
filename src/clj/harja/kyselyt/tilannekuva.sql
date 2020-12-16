@@ -215,7 +215,7 @@ FROM tarkastus t
 WHERE sijainti IS NOT NULL AND
       ((t.urakka IN (:urakat) AND u.urakkanro IS NOT NULL) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
-      ST_Distance(ST_SetSRID(t.sijainti, 4326), ST_SetSRID(ST_MakePoint(:x, :y), 4326)) < :toleranssi AND
+      ST_Distance84(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
 t.tyyppi :: TEXT IN (:tyypit) AND
 (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 -- Ei kuulu poistettuun ylläpitokohteeseen
@@ -246,7 +246,7 @@ WHERE sijainti IS NOT NULL AND
        (t.urakkaid IS NULL AND
         (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
       (t.lahetysaika BETWEEN :alku AND :loppu) AND
-      ST_Distance(ST_SetSRID(t.sijainti, 4326), ST_SetSRID(ST_MakePoint(:x, :y), 4326)) < :toleranssi
+      ST_Distance84(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
 GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
 
 -- name: hae-turvallisuuspoikkeamat
@@ -351,7 +351,7 @@ SELECT ypko.id,
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
        JOIN urakka u ON ypk.urakka = u.id
        JOIN organisaatio o ON u.urakoitsija = o.id
- WHERE ST_Distance(ST_SetSRID(ypko.sijainti, 4326), ST_SetSRID(ST_MakePoint(:x, :y), 4326)) < :toleranssi
+ WHERE ST_Distance84(ypko.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND
@@ -538,7 +538,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
                     AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys ed. SQL
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
-                    AND ST_Distance(ST_SetSRID(t.reitti, 4326), ST_SetSRID(ST_MakePoint(:x, :y), 4326)) < :toleranssi;
+                    AND ST_Distance84(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi;
 
 -- name: osoite-reittipisteille
 -- Palauttaa tierekisteriosoitteen
@@ -566,7 +566,7 @@ SELECT
   t.tehtavat,
   MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_Distance(ST_SetSRID(t.sijainti::GEOMETRY, 4326), ST_SetSRID(st_makepoint(:keskipiste_x, :keskipiste_y), 4326)) < :sade AND
+WHERE ST_Distance84(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -588,7 +588,7 @@ SELECT
   ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
 FROM tyokonehavainto t
 WHERE
-  ST_Distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+  ST_Distance84(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -610,7 +610,7 @@ SELECT
     sijainti               as reitti
 FROM tyokonehavainto t
 WHERE
-        ST_Distance(t.sijainti::GEOMETRY, ST_MakePoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+        ST_Distance84(t.sijainti::GEOMETRY, ST_MakePoint(:keskipiste_x, :keskipiste_y)) < :sade AND
     (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
      (t.urakkaid IS NULL AND

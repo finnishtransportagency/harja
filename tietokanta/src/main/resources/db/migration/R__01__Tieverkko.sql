@@ -1,3 +1,10 @@
+CREATE OR REPLACE FUNCTION ST_Distance84(geom1 GEOMETRY, geom2 GEOMETRY)
+ RETURNS float AS $$
+BEGIN
+ RETURN ST_Distance(ST_SetSRID(geom1, 4326), ST_SetSRID(geom2, 4326));
+END;
+$$ language plpgsql;
+
 -- Kääntää MULTILINESTRING geometrian osien järjestyksen toisin päin.
 -- Tämä tarvitaan kun kerätään vasemmalla ajoradalla olevia geometrioita
 -- yhteen. ST_Reverse kääntää vain pisteet, mutta ei osia, piirtäessä
@@ -221,7 +228,7 @@ DECLARE
   osa_ RECORD;
   kohta tr_osan_kohta;
 BEGIN
-  SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
+  SELECT tie,osa,ajorata,geom,ST_Distance84(piste, geom) as d
   FROM tr_osan_ajorata
   WHERE geom IS NOT NULL AND
         ST_Intersects(piste, envelope)
@@ -246,7 +253,7 @@ DECLARE
   rivit laheinen_osoiterivi[];
 BEGIN
   rivit := ARRAY[]::laheinen_osoiterivi[];
-  FOR r IN SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d, geom
+  FOR r IN SELECT tie,osa,ajorata,geom,ST_Distance84(piste, geom) as d, geom
            FROM tr_osan_ajorata
            WHERE geom IS NOT NULL AND
                  ST_Intersects(piste, envelope)
@@ -294,7 +301,7 @@ DECLARE
 BEGIN
   SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
                a.geom as alkuosa_geom, b.geom as loppuosa_geom,
-               (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
+               (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
   FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
       ON b.tie=a.tie AND b.ajorata=a.ajorata
   WHERE a.geom IS NOT NULL AND
@@ -348,10 +355,10 @@ DECLARE
 BEGIN
   -- Minimipituus on linnuntie (teleportaatiota ei sallittu)
   -- miinus 10 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
-  min_pituus := ST_Distance(apiste, bpiste) - 10.0;
+  min_pituus := ST_Distance84(apiste, bpiste) - 10.0;
   FOR r IN SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
                         a.geom as alkuosa_geom, b.geom as loppuosa_geom,
-                        (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
+                        (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
            FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
                ON b.tie=a.tie AND b.ajorata=a.ajorata
            WHERE a.geom IS NOT NULL AND
