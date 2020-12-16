@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/tehtavamaarat.sql"
   {:positional? true})
+
+

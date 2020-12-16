@@ -145,7 +145,7 @@
                          :leveys :kokonaismassamaara :pinta-ala :kuulamylly}
         :validoi-alussa? true}
        [(assoc paallystys/paallyste-grid-skeema
-          :nimi :toimenpide-paallystetyyppi
+          :nimi :toimenpide-paallystetyyppi :elementin-id "pt-paallyste"
           :fokus-klikin-jalkeen? true
           :leveys 30
           :tayta-alas? tayta-alas?-fn
@@ -183,7 +183,7 @@
          :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
         (assoc paallystys/tyomenetelma-grid-skeema
-          :nimi :toimenpide-tyomenetelma
+          :nimi :toimenpide-tyomenetelma :elementin-id "pt-tyomenetelma"
           :fokus-klikin-jalkeen? true
           :leveys 30
           :tayta-alas? tayta-alas?-fn

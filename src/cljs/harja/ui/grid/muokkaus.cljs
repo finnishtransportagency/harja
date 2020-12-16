@@ -63,7 +63,7 @@
      arvo]))
 
 (defn- muokkauselementin-tila
-  [{:keys [aseta nimi valinta-arvo hae]}
+  [{:keys [aseta nimi valinta-arvo hae elementin-id]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
    tulevat-elementit]
@@ -135,7 +135,7 @@
                                                                          uusi)]
                                                               (@grid-tilan-muokkaus-fn uusi)))))))
        :reagent-render
-       (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa
+       (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa elementin-id
                     komponentti hae kentta-arity-3? komponentti-args] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
@@ -145,7 +145,8 @@
                hae-fn (or hae #(get % nimi))
                arvo (hae-fn rivi)
                tasaus-luokka (y/tasaus-luokka tasaa)
-               tayta-alas (:tayta-alas? sarake)]
+               tayta-alas (:tayta-alas? sarake)
+               elementin-id (str rivi-index elementin-id)]
            (if (or (nil? muokattava?) (muokattava? rivi i))
              [:td {:class (str "muokattava " tasaus-luokka (cond
                                                              (not (empty? kentan-virheet)) " sisaltaa-virheen"
@@ -188,13 +189,15 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                                  :on-blur fokus-pois-elementilta
-                                                                 :disabled? (not voi-muokata?))
+                                                                 :disabled? (not voi-muokata?)
+                                                                 :elementin-id elementin-id)
                                         arvo
                                         @data-muokkaus-fn]
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                                  :on-blur fokus-pois-elementilta
-                                                                 :disabled? (not voi-muokata?))
+                                                                 :disabled? (not voi-muokata?)
+                                                                 :elementin-id elementin-id)
                                         arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
