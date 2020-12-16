@@ -11,7 +11,7 @@
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]
             [clj-time.core :as t]))
 
@@ -20,7 +20,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     "yit"
-    :sonja (feikki-sonja)
+    :sonja (feikki-jms "sonja")
     :sampo (component/using
              (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
              [:db :sonja :integraatioloki])))

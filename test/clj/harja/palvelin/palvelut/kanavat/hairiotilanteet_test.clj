@@ -12,7 +12,7 @@
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.vesivaylat.materiaali :as vv-materiaali]
             [clojure.test.check.generators :as gen]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -35,7 +35,7 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"

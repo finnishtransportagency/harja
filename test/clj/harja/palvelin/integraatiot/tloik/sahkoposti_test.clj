@@ -3,7 +3,7 @@
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
@@ -18,7 +18,8 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :sonja (feikki-sonja)
+    :itmf (feikki-jms "itmf")
+    :sonja (feikki-jms "sonja")
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"
@@ -28,7 +29,7 @@
     :labyrintti (feikki-labyrintti)
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :sonja-sahkoposti])))
+             [:db :itmf :integraatioloki :sonja-sahkoposti])))
 
 (use-fixtures :each jarjestelma-fixture)
 

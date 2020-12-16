@@ -753,7 +753,8 @@
                      (let [jarjestelma (-> asetukset
                                            luo-jarjestelma
                                            component/start)]
-                       (jms/aloita-jms jarjestelma)
+                       (jms/aloita-jms (:sonja jarjestelma))
+                       (jms/aloita-jms (:itmf jarjestelma))
                        jarjestelma)))))
 
 (defn- kuuntele-tapahtumia! []
@@ -767,7 +768,8 @@
                                                                        (fn [harja-jarjestelma]
                                                                          (log/warn "harjajarjestelman-restart")
                                                                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                (jms/aloita-jms uudelleen-kaynnistetty-jarjestelma)
+                                                                                (jms/aloita-jms (:sonja uudelleen-kaynnistetty-jarjestelma))
+                                                                                (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma))
                                                                                 (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))

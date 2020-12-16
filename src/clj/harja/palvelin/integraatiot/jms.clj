@@ -38,27 +38,25 @@
 (def aktiivinen "ACTIVE")
 (def sammutettu "CLOSED")
 
-(defonce jms-saije-sammutettu? (atom {}))
-
 (def JMS-alkutila
   {:yhteys nil :istunnot {}})
 
 (def ei-jms-yhteytta {:type :jms-yhteysvirhe
                       :virheet [{:koodi :ei-yhteytta
-                                 :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
+                                 :viesti "JMS yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 
 (def aikakatkaisu-virhe {:type :jms-kaskytysvirhe
                          :virheet [{:koodi :ruuhkaa
-                                    :viesti "Sonja-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
+                                    :viesti "JMS-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
 (def kasykytyskanava-taynna-virhe {:type :jms-kaskytysvirhe
                                    :virheet [{:koodi :taynna
-                                              :viesti "Sonja-säije ei pysty käsittelemään enempää viestejä."}]})
+                                              :viesti "JMS-säije ei pysty käsittelemään enempää viestejä."}]})
 (def jms-saije-sammutetaan-virhe {:type :jms-kaskytysvirhe
                                   :virheet [{:koodi :saije-sammutetaan
-                                             :viesti "Sonja-säijetta samutetaan."}]})
+                                             :viesti "JMS-säijetta samutetaan."}]})
 (def jms-saije-sammutettu-virhe {:type :jms-kaskytysvirhe
                                  :virheet [{:koodi :saije-sammutettu
-                                            :viesti "Sonja-säije on sammutettu."}]})
+                                            :viesti "JMS-säije on sammutettu."}]})
 
 (def viestin-kasittely-timeout 15000)
 
@@ -114,7 +112,7 @@
   (sammuta-lahettaja [this jonon-nimi] [this jonon-nimi jarjestelma])
 
   (kasky [this kasky]
-    "Lähettää käskyn sonja komponentille"))
+    "Lähettää käskyn JMS komponentille"))
 
 (defmacro exception-wrapper [olio metodi]
   `(try (. ~olio ~metodi)
@@ -231,13 +229,13 @@
 
 (defn tee-sonic-jms-tilamuutoskuuntelija [jms-connection-tila]
   (let [lokita-tila #(case %
-                       0 (do (log/info "Sonja JMS yhteyden tila: ACTIVE")
+                       0 (do (log/info "JMS yhteyden tila: ACTIVE")
                              (reset! jms-connection-tila "ACTIVE"))
-                       1 (do (log/info "Sonja JMS yhteyden tila: RECONNECTING")
+                       1 (do (log/info "JMS yhteyden tila: RECONNECTING")
                              (reset! jms-connection-tila "RECONNECTING"))
-                       2 (do (log/error "Sonja JMS yhteyden tila: FAILED")
+                       2 (do (log/error "JMS yhteyden tila: FAILED")
                              (reset! jms-connection-tila "FAILED"))
-                       3 (do (log/info "Sonja JMS yhteyden tila: CLOSED")
+                       3 (do (log/info "JMS yhteyden tila: CLOSED")
                              (reset! jms-connection-tila "CLOSED")))
         kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")]
@@ -297,7 +295,7 @@
   (try
     (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE)
     (catch JMSException e
-      (log/error "Sonja ei saanut luotua sessiota. " (.getMessage e) "\n stackTrace: " (.getStackTrace e)))))
+      (log/error "JMS ei saanut luotua sessiota. " (.getMessage e) "\n stackTrace: " (.getStackTrace e)))))
 
 (defn- yhdista [{:keys [kayttaja salasana tyyppi] :as asetukset} qcf aika jms-connection-tila]
   (try
@@ -311,10 +309,10 @@
                                                                   (onRejectedMessage [this msg e]
                                                                     (try
                                                                       (taoensso.timbre/error
-                                                                        (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
+                                                                        (str "Harjasta on lähetetty viesti JMSn kautta jonnekkin, mutta"
                                                                              " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
                                                                       (taoensso.timbre/error
-                                                                        (str "Sonjalta tullut virhe msg: " msg
+                                                                        (str "JMS:lta tullut virhe msg: " msg
                                                                              " Virhekoodi: " (.getErrorCode e)))
                                                                       ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
                                                                       ;; eaiheuttaa muiden viestien käsittelyn.
@@ -336,7 +334,7 @@
       (Thread/sleep aika)
       (yhdista asetukset qcf (min (* 2 aika) 600000) jms-connection-tila))))
 
-(defn aloita-yhdistaminen [{:keys [url tyyppi] :as asetukset} jms-connection-tila]
+(defn aloita-yhdistaminen [nimi {:keys [url tyyppi] :as asetukset} jms-connection-tila]
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (let [qcf (luo-connection-factory url tyyppi)
         yhteys (yhdista asetukset qcf 10000 jms-connection-tila)]
@@ -349,16 +347,16 @@
       (do
         (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
                                           (.getJMSProviderName meta-data)))
-        (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
+        (log/info (str "Saatiin yhteys " nimi " JMS-brokeriin."))
         {:yhteys yhteys :qcf qcf})
       (do
-        (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen.")
+        (log/error (str "Jokin meni vikaan, kun yritettiin saada yhteys " nimi "... Yritetään yhdistää uudelleen."))
         ;; Yhteys objekti kummiskin pitää sammuttaa, jotta ylimääräiset säikeet sammutetaan ja muistia vapautetaan
         (try (.close yhteys)
              (catch Throwable t
                (log/debug "EI saatu sulettua epäonnistunutta yhteyttä")))
         (async/<!! (async/timeout 10000))
-        (aloita-yhdistaminen asetukset jms-connection-tila)))))
+        (aloita-yhdistaminen nimi asetukset jms-connection-tila)))))
 
 (defn aseta-viestien-kasittelija! [vastaanottaja kuuntelijat tila jarjestelma jonon-nimi]
   (.setMessageListener vastaanottaja
@@ -592,7 +590,7 @@
                                                                                          vastaus
                                                                                          {:vastaus vastaus}))
                                                                                      (catch Throwable t
-                                                                                       (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: ")
+                                                                                       (log/error "Jokin meni vikaan käskyissä: " (.getMessage t) "\nStackTrace: ")
                                                                                        (.printStackTrace t)
                                                                                        {:virhe t}))
                                                                         kasittelyn-kesto (float (/ (- (System/currentTimeMillis) kasittelyn-alku)
@@ -612,9 +610,9 @@
 
    Näitä jms-olioita käsitellään omassa säikeessään 'pääsäikeen' sijasta, jotta Harja järjestelmä voidaan muuten käynnistää
    vaikka olisi jotain ongelmia JMS clienttien kanssa."
-  [{:keys [yhteys-future tila kaskytyskanava nimi] :as jms-client} sammutus-kanava]
+  [{:keys [yhteys-future tila kaskytyskanava nimi jms-saije-sammutettu?] :as jms-client} sammutus-kanava]
   (async/thread
-    (swap! jms-saije-sammutettu? assoc nimi false)
+    (reset! jms-saije-sammutettu? false)
     ;; Ensin varmistetaan, että yhteys jms-clientan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
     ;; joku arvo pihalle.
     (let [yhteys-oliot (yhteys-oliot! yhteys-future)]
@@ -640,7 +638,7 @@
                               (if (nil? kasky)
                                 (do
                                   (jms-toiminto! jms-client {:lopeta-yhteys nil})
-                                  (swap! jms-saije-sammutettu? assoc nimi false))
+                                  (reset! jms-saije-sammutettu? true))
                                 (do
                                   (kasittele-kasky! kasky jms-client)
                                   (recur (async/poll! kaskytyskanava)))))))))))
@@ -650,7 +648,7 @@
    Lisäksi käskyä ei käsitellä, jos timeout kerkeää mennä loppuun.
    Palauttaa kanavan, josta tuloksen voi lukea. Tulos voi olla käskyn käsitelty tulos tai sitten virhe-map, jossa ilmoitetaan
    epäonnisuiko käsittely timeoutin vai täyden bufferin takia taikka sammutetun jms-saikeen takia."
-  [kaskytyskanava kasky nimi]
+  [kaskytyskanava kasky jms-saije-sammutettu?]
   (async/thread
     (let [kaskyn-kasittely-jms-saikeelle (async/chan)
           kaskyn-kasittely-kaskytys-saikeelle (async/chan)
@@ -678,7 +676,7 @@
                                                                                (async/>!! kaskyn-kasittely-jms-saikeelle :kasittele)
                                                                                (async/<!! kaskyn-kasittely-kaskytys-saikeelle)))))
         ;; Käskytyskanava on sammutettu
-        false (if (= :sammutettu (get @jms-saije-sammutettu? nimi))
+        false (if @jms-saije-sammutettu?
                 {:kaskytysvirhe :jms-saije-sammutettu}
                 {:kaskytysvirhe :jms-saijetta-sammutetaan})
         ;; Käskytyskanava on täynnä
@@ -693,6 +691,7 @@
     (let [JMS-oliot (atom JMS-alkutila)
           yhteys-aloitettu? (atom false)
           jms-connection-tila (atom nil)
+          jms-saije-sammutettu? (atom true)
           ;; HUOM! käskytyskanavaan ei tulisi laittaa viestejä muuten kuin laheta-viesti-kaskytyskanavaan!
           ;; funktion kautta.
           kaskytyskanava (async/chan 100)
@@ -701,9 +700,10 @@
           ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
           ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
-                          (aloita-yhdistaminen asetukset jms-connection-tila))
+                          (aloita-yhdistaminen nimi asetukset jms-connection-tila))
           this (assoc this
                  :tila JMS-oliot
+                 :jms-saije-sammutettu? jms-saije-sammutettu?
                  :jms-connection-tila jms-connection-tila
                  :yhteys-aloitettu? yhteys-aloitettu?
                  :yhteys-future yhteys-future
@@ -718,23 +718,24 @@
             :yhteyden-tiedot (aloita-jms-yhteyden-tarkkailu this (:paivitystiheys-ms asetukset) lopeta-tarkkailu-kanava tapahtuma-julkaisija db)))
         this)))
 
-  (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
+  (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila nimi jms-saije-sammutettu?] :as this}]
     (when (and (get-in this [:asetukset :julkaise-tila?])
                (predikaatti/chan? lopeta-tarkkailu-kanava)
                (not (predikaatti/chan-closed? lopeta-tarkkailu-kanava)))
-      (tapahtuma-apurit/julkaise-tapahtuma :jms-tila {(:nimi this) :suljetaan})
+      (tapahtuma-apurit/julkaise-tapahtuma :jms-tila {nimi :suljetaan})
       (async/>!! lopeta-tarkkailu-kanava true)
       (async/close! lopeta-tarkkailu-kanava))
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
-    (when-not (get @jms-saije-sammutettu? (:nimi this))
+    (when-not @jms-saije-sammutettu?
       (async/>!! saikeen-sammutus-kanava true))
     ;; Odotetaan, että käsitteillä olevat viestit on käsitelty
     (async/<!! (async/go-loop []
-                 (when (not (get @jms-saije-sammutettu? (:nimi this)))
+                 (when (not @jms-saije-sammutettu?)
                    (< (async/timeout 1000))
                    (recur))))
     (assoc this :tila nil
                 :jms-connection-tila nil
+                :jms-saije-sammutettu? nil
                 :yhteys-aloitettu? nil
                 :yhteys-future nil
                 :kaskytyskanava nil
@@ -749,7 +750,7 @@
                  {:kuuntelijat (conj (or kuuntelijat #{}) kuuntelija-fn)}))
         #(laheta-viesti-kaskytyskanavaan! (:kaskytyskanava this)
                                           {:poista-kuuntelija [jarjestelma jonon-nimi kuuntelija-fn]}
-                                          (:nimi this)))
+                                          (:jms-saije-sammutettu? this)))
       (do
         (log/warn (str "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä järejestelmälle: " (:nimi this)))
         (constantly nil))))
@@ -759,7 +760,7 @@
   (laheta [{kaskytyskanava :kaskytyskanava :as this} jonon-nimi viesti otsikot jarjestelma]
     (let [lahetyksen-viesti (async/<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava
                                                                         {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}
-                                                                        (:nimi this)))]
+                                                                        (:jms-saije-sammutettu? this)))]
       (cond
         (contains? lahetyksen-viesti :virhe) (throw (:virhe lahetyksen-viesti))
         (contains? lahetyksen-viesti :kaskytysvirhe) (case (:kaskytysvirhe lahetyksen-viesti)
@@ -775,11 +776,11 @@
   (sammuta-lahettaja [this jonon-nimi jarjestelma]
     (laheta-viesti-kaskytyskanavaan! (:kaskytyskanava this)
                                      {:poista-lahettaja [jarjestelma jonon-nimi]}
-                                     (:nimi this)))
+                                     (:jms-saije-sammutettu? this)))
   (sammuta-lahettaja [this jonon-nimi]
     (sammuta-lahettaja this jonon-nimi (oletusjarjestelmanimi jonon-nimi)))
-  (kasky [{:keys [kaskytyskanava nimi]} kaskyn-tiedot]
-    (laheta-viesti-kaskytyskanavaan! kaskytyskanava kaskyn-tiedot nimi))
+  (kasky [{:keys [kaskytyskanava jms-saije-sammutettu?]} kaskyn-tiedot]
+    (laheta-viesti-kaskytyskanavaan! kaskytyskanava kaskyn-tiedot jms-saije-sammutettu?))
   kp/IStatus
   (-status [this]
     (let [status (jms-client-tila @(:tila this) (:jms-connection-tila this))]

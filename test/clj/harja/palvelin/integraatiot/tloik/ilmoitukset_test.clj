@@ -9,18 +9,19 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.itmf :as itmf]
             [harja.palvelin.komponentit.sonja :as sonja]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
+            [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.pvm :as pvm]
             [clj-time
@@ -31,7 +32,8 @@
 
 (def kayttaja "yit-rakennus")
 
-(defonce asetukset {:sonja integraatio/sonja-asetukset})
+(defonce asetukset {:itmf integraatio/itmf-asetukset
+                    :sonja integraatio/sonja-asetukset})
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -39,9 +41,12 @@
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki])
-    :sonja (component/using
-             (sonja/luo-oikea-sonja (:sonja asetukset))
+    :itmf (component/using
+             (itmf/luo-oikea-itmf (:itmf asetukset))
              [:db])
+    :sonja (component/using
+            (sonja/luo-oikea-sonja (:sonja asetukset))
+            [:db])
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"
@@ -53,14 +58,14 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :labyrintti :sonja-sahkoposti])))
+             [:db :itmf :sonja :integraatioloki :labyrintti :sonja-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
-                      (binding [*aloita-sonja?* true
+                      (binding [*aloitettavat-jmst* #{"itmf" "sonja"}
                                 *lisattavia-kuuntelijoita?* true
-                                *sonja-kaynnistetty-fn* (fn []
-                                                          (s-tk/sonja-jolokia-jono +tloik-ilmoitusviestijono+ nil :purge)
-                                                          (s-tk/sonja-jolokia-jono +tloik-ilmoituskuittausjono+ nil :purge))]
+                                *jms-kaynnistetty-fn* (fn []
+                                                          (jms-tk/itmf-jolokia-jono +tloik-ilmoitusviestijono+ nil :purge)
+                                                          (jms-tk/itmf-jolokia-jono +tloik-ilmoituskuittausjono+ nil :purge))]
                         (jarjestelma-fixture testit))))
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
@@ -138,14 +143,14 @@
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
-    (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
     (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
       (async/<!! (async/timeout 1000))
-      (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
+      (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
 
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 20000)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 20000)
@@ -172,8 +177,8 @@
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
         viestit (atom [])]
-    (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
-    (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+    (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
@@ -192,9 +197,9 @@
 (deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
   (try
     (let [kuittausviestit (atom [])]
-      (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit conj (.getText %))})
+      (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit conj (.getText %))}})
 
-      (jms/laheta (:sonja jarjestelma)
+      (jms/laheta (:itmf jarjestelma)
                     +tloik-ilmoitusviestijono+
                     (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
 
@@ -221,8 +226,8 @@
   "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
   (let [sanoma +ilmoitus-hailuodon-jaatiella+
         viestit (atom [])]
-    (lisaa-kuuntelijoita! {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))})
-    (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+    (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 

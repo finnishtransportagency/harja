@@ -5,17 +5,21 @@ services:
     mem_limit: 500m
     environment:
       - "TZ=Europe/Helsinki"
+      - "TCP_PORT=${HARJA_SONJA_BROKER_PORT}"
+      - "UI_PORT=${HARJA_SONJA_BROKER_AI_PORT}"
     ports:
-      - "127.0.0.1:${HARJA_SONJA_BROKER_PORT}:61616" # broker (admin:adminactivemq)(amq:amq)
-      - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+      - "127.0.0.1:${HARJA_SONJA_BROKER_PORT}:${HARJA_SONJA_BROKER_PORT}" # broker (admin:adminactivemq)(amq:amq)
+      - "127.0.0.1:${HARJA_SONJA_BROKER_AI_PORT}:${HARJA_SONJA_BROKER_AI_PORT}"   # web    localhost:8161/admin/queues.jsp (admin:admin)
   activemq-itmf:
     image: solita/harja-activemq:5.15.9
     mem_limit: 500m
     environment:
       - "TZ=Europe/Helsinki"
+      - "TCP_PORT=${HARJA_ITMF_BROKER_PORT}"
+      - "UI_PORT=${HARJA_ITMF_BROKER_AI_PORT}"
     ports:
-      - "127.0.0.1:${HARJA_ITMF_BROKER_PORT}:61616" # broker (admin:adminactivemq)(amq:amq)
-      - "127.0.0.1:8171:8171"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+      - "127.0.0.1:${HARJA_ITMF_BROKER_PORT}:${HARJA_ITMF_BROKER_PORT}" # broker (admin:adminactivemq)(amq:amq)
+      - "127.0.0.1:${HARJA_ITMF_BROKER_AI_PORT}:${HARJA_ITMF_BROKER_AI_PORT}"   # web    localhost:8171/admin/queues.jsp (admin:admin)
   harja-app-1:
     extends:
       file: docker-compose-common.yml

@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]))
 
 (def +lahetysjono+ "urakat-sahkeeseen")
@@ -17,7 +17,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     "yit"
-    :sonja (feikki-sonja)
+    :sonja (feikki-jms "sonja")
     :sahke (component/using
              (sahke/->Sahke +lahetysjono+ nil)
              [:db :sonja :integraatioloki])))

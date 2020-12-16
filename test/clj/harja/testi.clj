@@ -47,11 +47,11 @@
 (Locale/setDefault (Locale. "fi" "FI"))
 
 (def ^{:dynamic true
-       :doc "Jos käytössä on oikea Sonja komponentti, pitää se aloittaa ennen testien ajoa"} *aloita-sonja?* false)
+       :doc "Jos käytössä on oikea JMS komponentti, pitää se aloittaa ennen testien ajoa. Anna lista JMS clienttejä"} *aloitettavat-jmst* nil)
 (def ^{:dynamic true
        :doc "Jos halutaan testissä lisätä kuuntelijoita, pitää ne lisätä ennen kunntelun aloitusta."} *lisattavia-kuuntelijoita?* false)
 (def ^{:dynamic true
-       :doc "Callback sen jälkeen kun on sonja käynnistetty. Hyvä paikka purgeta jonoja."} *sonja-kaynnistetty-fn* nil)
+       :doc "Callback sen jälkeen kun on jms(t) käynnistetty. Hyvä paikka purgeta jonoja."} *jms-kaynnistetty-fn* nil)
 (def ^{:dynamic true
        :doc "Tänne mapissa kanavan nimi funktio pareja, joiden pitäs olla testissä käytössä.
              Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
@@ -1295,21 +1295,29 @@
                                                    (stop [this]
                                                      this))))))))
 
-(defn sonja-kasittely [kuuntelijoiden-lopettajat]
-  (when *aloita-sonja?*
-    (let [sonja-kaynnistaminen! (fn []
-                                  (<!! (jms/aloita-jms jarjestelma))
-                                  (when *sonja-kaynnistetty-fn*
-                                    (*sonja-kaynnistetty-fn*)))]
+(defn jms-kasittely [kuuntelijoiden-lopettajat]
+  (when *aloitettavat-jmst*
+    (let [jms-kaynnistaminen! (fn []
+                                  (when (contains? *aloitettavat-jmst* "sonja")
+                                    (<!! (jms/aloita-jms (:sonja jarjestelma))))
+                                  (when (contains? *aloitettavat-jmst* "itmf")
+                                    (<!! (jms/aloita-jms (:itmf jarjestelma))))
+                                  (when *jms-kaynnistetty-fn*
+                                    (*jms-kaynnistetty-fn*)))]
       (if *lisattavia-kuuntelijoita?*
         (reset! sonja-aloitus-go
-                (go (let [[kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
-                                                  (timeout 5000)])]
-                      (when (and kuuntelijat (map? kuuntelijat))
-                        (doseq [[kanava f] kuuntelijat]
+                (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
+                                                  (timeout 5000)])
+                          sonja-kuuntelijat (get jms-kuuntelijat "sonja")
+                          itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
+                      (when (and sonja-kuuntelijat (map? sonja-kuuntelijat))
+                        (doseq [[kanava f] sonja-kuuntelijat]
                           (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:sonja jarjestelma) kanava f))))
-                      (sonja-kaynnistaminen!))))
-        (sonja-kaynnistaminen!)))))
+                      (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
+                        (doseq [[kanava f] itmf-kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
+                      (jms-kaynnistaminen!))))
+        (jms-kaynnistaminen!)))))
 
 (defn tietokantakomponentti-fixture [testit]
   #_(pystyta-harja-tarkkailija!)
@@ -1361,7 +1369,7 @@
      ;; aloita-sonja palauttaa kanavan.
      (binding [*lisattavat-kuuntelijat* (chan)]
        (let [kuuntelijoiden-lopettajat# (atom [])]
-         (sonja-kasittely kuuntelijoiden-lopettajat#)
+         (jms-kasittely kuuntelijoiden-lopettajat#)
          (testit#)
          (when (not (empty? @kuuntelijoiden-lopettajat#))
            (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]

@@ -20,7 +20,7 @@
 
             [harja.testi :refer :all]
 
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.pvm :as pvm]
 
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -49,7 +49,7 @@
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"

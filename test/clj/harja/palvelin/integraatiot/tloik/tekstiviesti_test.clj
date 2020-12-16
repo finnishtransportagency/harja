@@ -4,7 +4,7 @@
             [clojure.data.zip.xml :as z]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
@@ -29,7 +29,8 @@
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki])
-    :sonja (feikki-sonja)
+    :sonja (feikki-jms "sonja")
+    :itmf (feikki-jms "itmf")
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"
@@ -43,7 +44,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :labyrintti])))
+             [:db :itmf :integraatioloki :labyrintti])))
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines

@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.testi :refer :all]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.integraatiot :as integraatiot]
             [clojure.test :as t :refer :all]
@@ -17,7 +17,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     "jvh"
-    :sonja (feikki-sonja)
+    :sonja (feikki-jms "sonja")
     :sonja-sahkoposti (component/using
                         (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
                                                          {:sahkoposti-sisaan-jono "email-to-harja"

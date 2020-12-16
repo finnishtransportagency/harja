@@ -35,6 +35,13 @@
                                             :kayttaja ""
                                             :salasana ""
                                             :tyyppi :activemq})
+                             (assoc :sonja {:url (str "tcp://"
+                                                      (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                                                      ":"
+                                                      (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61616))
+                                            :kayttaja ""
+                                            :salasana ""
+                                            :tyyppi :activemq})
                              (assoc :sampo {})
                              (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
@@ -146,7 +153,8 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
-    :komponenttien-tila})
+    :komponenttien-tila
+    :itmf})
 
 (def ei-statusta
   #{:metriikka
@@ -237,7 +245,8 @@
            (catch Throwable t
              (is false (str "Komponentin käynnistäminen epäonnistui!\n"
                             "Viesti: " (.getMessage t)))))
-      (jms/aloita-jms @jarjestelma)
+      (jms/aloita-jms (:sonja @jarjestelma))
+      (jms/aloita-jms (:itmf @jarjestelma))
       (doseq [komponentti (sort (dep/topo-comparator (component/dependency-graph @jarjestelma komponentit)) komponentit)]
         (cond
           (contains? ei-statusta komponentti)

@@ -7,13 +7,13 @@
   (:import (javax.jms Message Session TextMessage)
            (java.util UUID)))
 
-(defrecord FeikkiSonja [kuuntelijat viesti-id]
+(defrecord FeikkiJMS [jms-nimi kuuntelijat viesti-id]
   component/Lifecycle
   (start [this]
-    (log/info "Feikki Sonja käynnistetty")
+    (log/info (str "Feikki " jms-nimi " käynnistetty"))
     this)
   (stop [this]
-    (log/info "Feikki Sonja lopetettu")
+    (log/info (str "Feikki " jms-nimi " lopetettu"))
     this)
 
   jms/JMS
@@ -30,7 +30,7 @@
     (jms/kuuntele! this nimi kuuntelija nil))
 
   (laheta [_ nimi viesti {:keys [correlation-id]} jarjestelma]
-    (log/info "Feikki Sonja lähettää jonoon: " nimi)
+    (log/info (str "Feikki " jms-nimi " lähettää jonoon: " nimi))
     (let [msg (jms/luo-viesti viesti (reify javax.jms.Session
                                          (createTextMessage [this]
                                            (let [txt (atom nil)
@@ -60,11 +60,11 @@
   (sammuta-lahettaja [this jonon-nimi])
 
   (kasky [this kaskyn-tiedot]
-    (log/debug "Feikki Sonja, sai käskyn: " kaskyn-tiedot)))
+    (log/debug (str "Feikki " jms-nimi ", sai käskyn: " kaskyn-tiedot))))
 
 
-(defn feikki-sonja []
-  (->FeikkiSonja (atom nil) (atom 0)))
+(defn feikki-jms [nimi]
+  (->FeikkiJMS nimi (atom nil) (atom 0)))
 
         
       

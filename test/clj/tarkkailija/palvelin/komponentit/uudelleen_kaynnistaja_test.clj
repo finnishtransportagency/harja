@@ -16,12 +16,12 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
+            [harja.palvelin.integraatiot.jms.tyokalut :as s-tk]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
@@ -110,9 +110,9 @@
                       (reset! koko-testin-tila {})
                       (let [jarjestelma-restart-tarkkailija (atom nil)]
                         (binding [*uudelleen-kaynnistaja-mukaan?* true
-                                  *aloita-sonja?* true
+                                  *aloitettavat-jmst* #{"sonja"}
                                   *lisattavia-kuuntelijoita?* true
-                                  *sonja-kaynnistetty-fn* (fn []
+                                  *jms-kaynnistetty-fn* (fn []
                                                             (s-tk/sonja-jolokia-jono +tloik-ilmoitusviestijono+ nil :purge)
                                                             (s-tk/sonja-jolokia-jono +tloik-ilmoituskuittausjono+ nil :purge))
                                   *kaynnistyksen-jalkeen-hook* (fn []
@@ -127,7 +127,8 @@
                                                                                                                                 (fn [harja-jarjestelma]
                                                                                                                                   (log/debug "harjajarjestelman-restart")
                                                                                                                                   (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                                                                         (jms/aloita-jms uudelleen-kaynnistetty-jarjestelma)
+                                                                                                                                         (jms/aloita-jms (:sonja uudelleen-kaynnistetty-jarjestelma))
+                                                                                                                                         (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma))
                                                                                                                                          (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
                                                                                                                                            (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                                                                            (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))

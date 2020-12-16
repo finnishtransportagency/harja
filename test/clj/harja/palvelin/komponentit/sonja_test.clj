@@ -24,7 +24,7 @@
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
+            [harja.palvelin.integraatiot.jms.tyokalut :as s-tk]))
 
 (defonce asetukset {:sonja integraatio/sonja-asetukset})
 
@@ -113,7 +113,7 @@
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
-                             (<! (jms/aloita-jms jarjestelma)))]
+                             (<! (jms/aloita-jms (:sonja jarjestelma))))]
     (testit))
   (alter-var-root #'jarjestelma component/stop)
   (lopeta-harja-tarkkailija!))
@@ -204,7 +204,7 @@
                                                                             [:sonja :db :integraatioloki]))))
                                             (timeout 10000)])
             sonja-yhteys (when toinen-jarjestelma
-                           (jms/aloita-jms toinen-jarjestelma))]
+                           (jms/aloita-jms (:sonja toinen-jarjestelma)))]
         (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
         (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
         (>!! sulje-sonja-kanava true)
@@ -336,12 +336,12 @@
   (let [kaskytyskanava (-> jarjestelma :sonja :kaskytyskanava)
         db (:db jarjestelma)
         tyyppi (-> asetukset :sonja :tyyppi)
-        jarjestelman-nimi (get-in jarjestelma [:sonja :nimi])
-        status-ennen (:vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jarjestelman-nimi)))
+        jms-saije-sammutettu? (get-in jarjestelma [:sonja :jms-saije-sammutettu?])
+        status-ennen (:vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jms-saije-sammutettu?)))
         kysy-status (fn []
                       (loop [kertoja 1]
                         (when (< kertoja 5)
-                          (let [vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jarjestelman-nimi))]
+                          (let [vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jms-saije-sammutettu?))]
                             (if (= vastaus {:kaskytysvirhe :aikakatkaisu})
                               (recur (inc kertoja))
                               (:vastaus vastaus))))))

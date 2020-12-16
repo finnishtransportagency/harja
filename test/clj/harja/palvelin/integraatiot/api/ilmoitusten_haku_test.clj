@@ -6,7 +6,7 @@
              [format :as df]]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
@@ -30,10 +30,10 @@
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki])
-    :sonja (feikki-sonja)
+    :itmf (feikki-jms "itmf")
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki])))
+             [:db :itmf :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 

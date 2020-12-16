@@ -12,7 +12,7 @@
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [clojure.core.async :refer [<!! timeout]]
             [clojure.string :as str]
@@ -37,7 +37,7 @@
     :vkm (component/using
            (vkm/->VKM +testi-vkm+)
            [:db :integraatioloki])
-    :sonja (feikki-sonja)
+    :sonja (feikki-jms "sonja")
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"

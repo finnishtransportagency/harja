@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.vienti :as sampo-vienti]
             [harja.kyselyt.maksuerat :as qm]
@@ -34,7 +34,7 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])
                         :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja :integraatioloki])))))
   (testit)

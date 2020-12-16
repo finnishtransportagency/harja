@@ -30,7 +30,7 @@
                                                     [:db :sonja :integraatioloki])))
 
 (use-fixtures :each (fn [testit]
-                      (binding [*aloita-sonja?* true
+                      (binding [*aloitettavat-jmst* #{"sonja"}
                                 *kaynnistyksen-jalkeen-hook*
                                 (fn []
                                   (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
