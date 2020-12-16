@@ -69,13 +69,9 @@
                                            (concat
                                              [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
                                               [:tr.bottom-border
-                                               [:th {:style {:width (:caret-paaryhma leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
-                                               [:th {:style {:width (:paaryhma-vari leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
-                                               [:td {:style {:width (:tehtava leveydet)}} (str ;"Nimi:"
-                                                                                            (:tehtava_nimi rivi) ;"/KustannusT:" (:toteutunut rivi)
-                                                                                            ;"/MaksuT:" (:maksutyyppi rivi) "/ToimenpKoodi:" (:toimenpidekoodi_nimi rivi)
-                                                                                            ;"/ryhmä:" (:toimenpideryhma rivi)
-                                                                                            )]
+                                               [:td {:style {:width (:caret-paaryhma leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
+                                               [:td {:style {:width (:paaryhma-vari leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
+                                               [:td {:style {:width (:tehtava leveydet)}} (:tehtava_nimi rivi)]
                                                [:td.numero {:style {:width (:budjetoitu leveydet)}}]
                                                [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
                                                [:td.numero {:style {:width (:erotus leveydet)}}]
