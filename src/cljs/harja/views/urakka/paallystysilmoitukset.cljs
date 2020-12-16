@@ -213,7 +213,7 @@
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] true))
         (e! (paallystys/->HaePaallystysilmoitukset))
-        (e! (mk-tiedot/->HaePot2Massat))
+        (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
         (e! (mk-tiedot/->HaeKoodistot)))
       (fn []
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
@@ -228,11 +228,11 @@
          (if (>= (:valittu-urakan-vuosi urakka-tila)
                  pot/pot2-vuodesta-eteenpain)
            [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
-                                                          :massat :materiaalikoodistot})
+                                                          :massat :murskeet :materiaalikoodistot})
             lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
           [ilmoitusluettelo e! app]])
-       [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :materiaalikoodistot
-                                                                   :avaa-massa-lomake? :pot2-massa-lomake})]])))
+       [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :murskeet :materiaalikoodistot
+                                                                   :pot2-massa-lomake :pot2-murske-lomake})]])))

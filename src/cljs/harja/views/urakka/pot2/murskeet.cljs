@@ -29,12 +29,91 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
+  (let [{:keys [mursketyypit]} materiaalikoodistot
+        _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))]
+    [:div
+     [ui-lomake/lomake
+      {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
+       :otsikko (if (::pot2-domain/murske-id pot2-murske-lomake)
+                  "Muokkaa mursketta"
+                  "Uusi murske")
+       :footer-fn (fn [data]
+                    [:div
+                     (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data)))
+                       [:div
+                        [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
+                        [:ul
+                         (for [puute (ui-lomake/puuttuvat-pakolliset-kentat data)]
+                           ^{:key (name puute)}
+                           [:li (name puute)])]])
+                     [:div.flex-row
+                      [:div.tallenna-peruuta
+                       [napit/tallenna
+                        "Tallenna"
+                        #(e! (mk-tiedot/->TallennaMurskeLomake data))
+                        {:vayla-tyyli? true
+                         :luokka "suuri"
+                         :disabled (not (ui-lomake/voi-tallentaa? data))}]
+                       [napit/yleinen
+                        "Peruuta" :toissijainen
+                        #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
+                        {:vayla-tyyli? true
+                         :luokka "suuri"}]]
+
+                      [napit/poista
+                       "Poista"
+                       (fn []
+                         (varmista-kayttajalta/varmista-kayttajalta
+                           {:otsikko "Murskeen poistaminen"
+                            :sisalto
+                            [:div "Haluatko ihan varmasti poistaa tämän murskeen?"]
+                            :toiminto-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
+                            :hyvaksy "Kyllä"}))
+                       {:vayla-tyyli? true
+                        :luokka "suuri"}]]])
+       :vayla-tyyli? true}
+      [{:otsikko "Murskeen nimi" :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
+        :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
+        :hae (fn [rivi]
+               (if-not (::pot2-domain/tyyppi rivi)
+                 "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
+                 (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string)))}
+       (ui-lomake/rivi
+         {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
+          :vayla-tyyli? true})
+       (ui-lomake/rivi
+         {:otsikko "" :nimi ::pot2-domain/tyyppi :tyyppi :valinta
+          :valinnat (:mursketyypit materiaalikoodistot)
+          :valinta-nayta :nimi :valinta-arvo :koodi
+          :vayla-tyyli? true})
+       (ui-lomake/rivi
+         {:otsikko "Rakeisuus"
+          :nimi ::pot2-domain/rakeisuus
+          :tyyppi :valinta :valinta-nayta (fn [rivi]
+                                            (str (:nimi rivi)))
+          :vayla-tyyli? true :valinta-arvo :nimi
+          :valinnat pot2-domain/murskeen-rakeisuusarvot
+          :pakollinen? true}
+         {:otsikko "Iskunkestävyys"
+          :nimi ::pot2-domain/iskunkestavyys :tyyppi :valinta
+          :valinta-nayta (fn [rivi]
+                           (str rivi))
+          :vayla-tyyli? true
+          :valinta-arvo identity
+          :valinnat pot2-domain/murskeen-iskunkestavyysarvot
+          :pakollinen? true}
+         {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
+          :validoi [[:ei-tyhja "Anna DoP nro"]]
+          :vayla-tyyli? true :pakollinen? true})]
+
+      pot2-murske-lomake]]))
 
 
 (defn murskeet-taulukko [e! {:keys [murskeet materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Murskeet"
-    :tunniste :pot2-murske/id
+    :tunniste ::pot2-domain/murske-id
     :tyhja (if (nil? murskeet)
              [ajax-loader "Haetaan urakan murskeita..."]
              "Urakalle ei ole vielä lisätty murskeita")
@@ -42,15 +121,19 @@
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Luo uusi murske"
-                      :toiminto #(e! (mk-tiedot/->UusiMurske true))
+                      :toiminto #(e! (mk-tiedot/->UusiMurske))
                       :opts {:ikoni (ikonit/livicon-plus)
                              :luokka "napiton-nappi"}}}
-   [{:otsikko "Nimi" :tyyppi :string
+   [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
+     :komponentti (fn [rivi]
+                    [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi :komponentti])}
+    {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 8
      :hae (fn [rivi]
-            (pot2-domain/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi))
-     :solun-luokka (constantly "bold") :leveys 8}
-    {:nimi ::pot2-domain/mursketyyppi :tyyppi :string :muokattava? (constantly false)}
-
+            (mk-tiedot/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
+    {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string :muokattava? (constantly false) :leveys 8}
+    {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 8}
+    {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 8}
+    {:otsikko "DOP" :nimi ::pot2-domain/dop-nro :tyyppi :string :muokattava? (constantly false) :leveys 8}
     {:otsikko "Toiminnot" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [massat-view/massan-toiminnot e! rivi])}]

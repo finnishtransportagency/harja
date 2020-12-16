@@ -206,7 +206,7 @@
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
-       :otsikko (if (:pot2-massa/id pot2-massa-lomake)
+       :otsikko (if (::pot2-domain/massa-id pot2-massa-lomake)
                   "Muokkaa massaa"
                   "Uusi massa")
        :footer-fn (fn [data]
@@ -253,7 +253,7 @@
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                 (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi)))}
+                 (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string)))}
        (ui-lomake/rivi
          {:otsikko "Massatyyppi"
           :nimi ::pot2-domain/tyyppi :tyyppi :valinta
@@ -298,8 +298,7 @@
        {:nimi ::pot2-domain/lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti :palstoja 2
         :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]
 
-      pot2-massa-lomake]
-     [debug app {:otsikko "TUCK STATE"}]]))
+      pot2-massa-lomake]]))
 
 (defn- massan-runkoaineet
   [rivi ainetyypit]
@@ -309,7 +308,7 @@
          (reverse
            (sort-by :runkoaine/massaprosentti
                     (:harja.domain.pot2/runkoaineet rivi)))
-         :let [aineen-otsikko (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
+         :let [aineen-otsikko (str (mk-tiedot/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
                                    (if (:runkoaine/esiintyma aine)
                                      (yleiset/str-suluissa-opt (:runkoaine/esiintyma aine))
                                      (when (= 7 (:runkoaine/tyyppi aine))
@@ -346,7 +345,7 @@
      ^{:key (:sideaine/id aine)}
      [:span
       [:div
-       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
+       (str (mk-tiedot/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
        [:span.pull-right (str (:sideaine/pitoisuus aine) "%")]]])])
 
 (defn- massan-lisaaineet [rivi ainetyypit]
@@ -357,7 +356,7 @@
      ^{:key (:lisaaine/id aine)}
      [:span
       [:div
-       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
+       (str (mk-tiedot/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
        [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
 (defn massan-toiminnot [e! rivi]
@@ -379,7 +378,7 @@
 (defn massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Massat"
-    :tunniste :pot2-massa/id
+    :tunniste ::pot2-domain/massa-id
     :tyhja (if (nil? massat)
              [ajax-loader "Haetaan massatyyppejä..."]
              "Urakalle ei ole vielä lisätty massoja")
@@ -387,13 +386,12 @@
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true
     :custom-toiminto {:teksti "Luo uusi massa"
-                      :toiminto #(e! (mk-tiedot/->UusiMassa true))
+                      :toiminto #(e! (mk-tiedot/->UusiMassa))
                       :opts {:ikoni (ikonit/livicon-plus)
                              :luokka "napiton-nappi"}}}
-   [{:otsikko "Massatyyppi" :tyyppi :string
-     :hae (fn [rivi]
-            (pot2-domain/massatyypin-rikastettu-nimi (:massatyypit materiaalikoodistot) rivi))
-     :solun-luokka (constantly "bold") :leveys 8}
+   [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
+     :komponentti (fn [rivi]
+                    [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) rivi :komponentti])}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
@@ -407,36 +405,3 @@
      :komponentti (fn [rivi]
                     [massan-toiminnot e! rivi])}]
    massat])
-
-(defn- murskeet-taulukko [e! {:keys [murskeet] :as app}])
-
-(defn- materiaalikirjasto [e! app]
-  [:span
-   [massat-taulukko e! app]
-   [murskeet-taulukko e! app]
-   ;; spacer, jotta alimpien rivien pop up ei piiloudu. Voi olla että voidaan poistaa kunhan murskeiden hallionta on tehty
-   [:div {:style {:height "100px"}}]
-   [napit/sulje #(swap! mk-tiedot/nayta-materiaalikirjasto? not)]])
-
-(defn massat [e! app]
-  (komp/luo
-    (komp/lippu mk-tiedot/materiaalikirjastossa?)
-    (komp/piirretty (fn [this]
-                      (e! (mk-tiedot/->AlustaTila))))
-    (fn [e! app]
-      [:div
-       (if (:avaa-massa-lomake? app)
-         [massa-lomake e! app]
-         [materiaalikirjasto e! app])
-       [debug app {:otsikko "TUCK STATE"}]])))
-
-(defn materiaalikirjasto-modal [e! app]
-  [modal/modal
-   {:otsikko (str "Urakan materiaalikirjasto - " (:nimi @nav/valittu-urakka))
-    :luokka "materiaalikirjasto-modal"
-    :nakyvissa? @mk-tiedot/nayta-materiaalikirjasto?
-    :sulje-fn #(swap! mk-tiedot/nayta-materiaalikirjasto? not)}
-   [:div
-    [massat e! app]]])
-
-

@@ -145,9 +145,9 @@
        :hae #(paallystys/rivin-kohteen-pituus
                (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) }
       {:otsikko "Pääl\u00ADlyste *)" :nimi :materiaali :leveys 3
-       :tyyppi :valinta :valinnat massat :valinta-arvo :pot2-massa/id
+       :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :valinta-nayta (fn [rivi]
-                        (pot2-domain/massatyypin-rikastettu-nimi massatyypit rivi))}
+                        (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string))}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys perusleveys}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea

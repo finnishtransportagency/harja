@@ -46,8 +46,14 @@
                       (e! (mk-tiedot/->AlustaTila))))
     (fn [e! app]
       [:div
-       (if (:avaa-massa-lomake? app)
+       (cond
+         (:pot2-massa-lomake app)
          [massat/massa-lomake e! app]
+
+         (:pot2-murske-lomake app)
+         [murskeet/murske-lomake e! app]
+
+         :else
          [urakan-materiaalit e! app])
        [debug app {:otsikko "TUCK STATE"}]])))
 

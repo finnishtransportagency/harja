@@ -184,12 +184,13 @@
   ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_alusta" ::pot2-alusta]
   ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi]
+  ["pot2_mk_mursketyyppi" ::pot2-mk-mursketyyppi]
   ["pot2_mk_runkoainetyyppi" ::pot2-mk-runkoainetyyppi]
   ["pot2_mk_sideainetyyppi" ::pot2-mk-sideainetyyppi]
   ["pot2_mk_lisaainetyyppi" ::pot2-mk-lisaainetyyppi]
   ["pot2_mk_massan_runkoaine" ::pot2-mk-massan-runkoaine
    {"id" :runkoaine/id
-    "pot2_massa_id" :pot2-massa/id
+    "pot2_massa_id" ::massa-id
     "tyyppi" :runkoaine/tyyppi
     "esiintyma" :runkoaine/esiintyma
     "fillerityyppi" :runkoaine/fillerityyppi
@@ -199,20 +200,19 @@
     "massaprosentti" :runkoaine/massaprosentti}]
   ["pot2_mk_massan_sideaine" ::pot2-mk-massan-sideaine
    {"id" :sideaine/id
-    "pot2_massa_id" :pot2-massa/id
+    "pot2_massa_id" ::massa-id
     "tyyppi" :sideaine/tyyppi
     "pitoisuus" :sideaine/pitoisuus
     "lopputuote?" :sideaine/lopputuote?}]
   ["pot2_mk_massan_lisaaine" ::pot2-mk-massan-lisaaine
    {"id" :lisaaine/id
-    "pot2_massa_id" :pot2-massa/id
+    "pot2_massa_id" ::massa-id
     "tyyppi" :lisaaine/tyyppi
     "pitoisuus" :lisaaine/pitoisuus}]
   ["pot2_mk_urakan_massa" ::pot2-mk-urakan-massa
-   {"id" :pot2-massa/id
+   {"id" ::massa-id
     "pot2_id" ::pot2-id
     "urakka_id" ::urakka-id
-    "nimi" ::nimi
     "nimen_tarkenne" ::nimen-tarkenne
     "tyyppi" ::tyyppi
     "max_raekoko" ::max-raekoko
@@ -225,61 +225,37 @@
     "muokattu" ::m/muokattu
     "luoja" ::m/luoja-id
     "luotu" ::m/luotu}
-   {::runkoaineet (specql.rel/has-many :pot2-massa/id
+   {::runkoaineet (specql.rel/has-many ::massa-id
                                        ::pot2-mk-massan-runkoaine
-                                       :pot2-massa/id)}
-   {::sideaineet (specql.rel/has-many :pot2-massa/id
+                                       ::massa-id)}
+   {::sideaineet (specql.rel/has-many ::massa-id
                                       ::pot2-mk-massan-sideaine
-                                      :pot2-massa/id)}
-   {::lisaaineet (specql.rel/has-many :pot2-massa/id
+                                      ::massa-id)}
+   {::lisaaineet (specql.rel/has-many ::massa-id
                                        ::pot2-mk-massan-lisaaine
-                                       :pot2-massa/id)}])
+                                       ::massa-id)}]
+  ["pot2_mk_urakan_murske" ::pot2-mk-urakan-murske
+   {"id" ::murske-id
+    "urakka_id" ::urakka-id
+    "nimen_tarkenne" ::nimen-tarkenne
+    "tyyppi" ::tyyppi
+    "esiintyma" ::esiintyma
+    "rakeisuus" ::rakeisuus
+    "iskunkestavyys" ::iskunkestavyys
+    "dop_nro" ::dop-nro
+    "poistettu" ::poistettu?
+
+    "muokkaaja" ::m/muokkaaja-id
+    "muokattu" ::m/muokattu
+    "luoja" ::m/luoja-id
+    "luotu" ::m/luotu}])
 
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
 (def litteyslukuluokat [1, 2, 3, 4, 5, 6])
+;; ao. arvot tulevat postgres CUSTOM ENUM typeistä. Pidettävä synkassa.
+(def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63"])
+(def murskeen-iskunkestavyysarvot ["LA30" "LA35" "LA40"])
 
 (def erikseen-lisattava-fillerikiviaines
   ;; Huom! Tämän on matchattava postgres custom typen fillerityyppi -arvoihin
   ["Kalkkifilleri (KF)", "Lentotuhka (LT)", "Muu fillerikiviaines"])
-
-(defn ainetyypin-koodi->nimi [ainetyypit koodi]
-  (::nimi (first
-            (filter #(= (::koodi %) koodi)
-                    ainetyypit))))
-
-(defn ainetyypin-koodi->lyhenne [ainetyypit koodi]
-  (::lyhenne (first
-            (filter #(= (::koodi %) koodi)
-                    ainetyypit))))
-
-(def asfalttirouheen-tyypin-id 2)
-
-(defn massan-rc-pitoisuus
-  "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
-  [rivi]
-  (when-let [runkoaineet (::runkoaineet rivi)]
-    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
-                                            runkoaineet))]
-      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
-
-(defn massatyypin-rikastettu-nimi [massatyypit rivi]
-  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (let [rivi (assoc rivi ::rc% (massan-rc-pitoisuus rivi))]
-    (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi rivi))
-         (str/join " " (remove nil? (mapv val
-                                          (select-keys rivi [::max-raekoko
-                                                             ::rc%
-                                                             ::dop-nro
-                                                             ::nimen-tarkenne
-                                                             ::kuulamyllyluokka])))))))
-
-(defn murskeen-rikastettu-nimi [mursketyypit rivi]
-  ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
-  ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
-  (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi rivi))
-       (str/join " " (remove nil? (mapv val
-                                        (select-keys rivi [::tyyppi
-                                                           ::nimen-tarkenne
-                                                           ::dop-nro
-                                                           ::rakeisuus
-                                                           ::iskunkestavyys]))))))
