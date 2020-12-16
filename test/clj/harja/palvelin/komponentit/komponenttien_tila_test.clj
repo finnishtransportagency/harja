@@ -23,17 +23,18 @@
                     (component/start
                       (component/system-map
                         :komponenttien-tila (komponenttien-tila/komponentin-tila {:sonja {:paivitystiheys-ms 5000}
+                                                                                  :itmf {:paivitystiheys-ms 5000}
                                                                                   :db {:paivitystiheys-ms 5000}
                                                                                   :db-replica {:paivitystiheys-ms 5000}})))))
   (alter-var-root #'kaikkien-tapahtumien-kuuntelija
                   (fn [_]
-                    (zipmap [::harja-kuuntelija ::harjajarjestelman-restart ::harjajarjestelman-restart-onnistui ::harjajarjestelman-restart-epaonnistui ::sonja-kuuntelija ::sonjan-uudelleenkaynnistys-epaonnistui ::db-kuuntelija ::db-replica-kuuntelija]
+                    (zipmap [::harja-kuuntelija ::harjajarjestelman-restart ::harjajarjestelman-restart-onnistui ::harjajarjestelman-restart-epaonnistui ::jms-kuuntelija ::jms-uudelleenkaynnistys-epaonnistui ::db-kuuntelija ::db-replica-kuuntelija]
                             (tapahtuma-apurit/tarkkaile-tapahtumia :harja-tila {:tyyppi :perus} (partial tallenna-tapahtuma :harja-tila)
                                                                    :harjajarjestelman-restart {:tyyppi :perus} (partial tallenna-tapahtuma :harjajarjestelman-restart)
                                                                    :harjajarjestelman-restart-onnistui {:tyyppi :perus} (partial tallenna-tapahtuma :harjajarjestelman-restart-onnistui)
                                                                    :harjajarjestelman-restart-epaonnistui {:tyyppi :perus} (partial tallenna-tapahtuma :harjajarjestelman-restart-epaonnistui)
-                                                                   :sonja-tila {:tyyppi :perus} (partial tallenna-tapahtuma :sonja-tila)
-                                                                   :sonjan-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-tapahtuma :sonjan-uudelleenkaynnistys-epaonnistui)
+                                                                   :jms-tila {:tyyppi :perus} (partial tallenna-tapahtuma :jms-tila)
+                                                                   :jms-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-tapahtuma :jms-uudelleenkaynnistys-epaonnistui)
                                                                    :db-tila {:tyyppi :perus} (partial tallenna-tapahtuma :db-tila)
                                                                    :db-replica-tila {:tyyppi :perus} (partial tallenna-tapahtuma :db-replica-tila)))))
   (doseq [[_ tarkkailija] kaikkien-tapahtumien-kuuntelija]
@@ -56,20 +57,20 @@
                  :harjajarjestelman-restart {::ok #{:sonja}}
                  :harjajarjestelman-restart-onnistui {::ok tapahtuma-tulkkaus/tyhja-arvo}
                  :harjajarjestelman-restart-epaonnistui {::ok tapahtuma-tulkkaus/tyhja-arvo}
-                 :sonja-tila {::ok {:olioiden-tilat {:yhteyden-tila "ACTIVE"
-                                                     :istunnot [{:istunnon-tila "ACTIVE"
-                                                                 :jarjestelma "foo"
-                                                                 :jonot [{:foo-jono {:tuottaja nil
-                                                                                     :vastaanottaja {:virheet nil
-                                                                                                     :vastaanottajan-tila "ACTIVE"}}}]}]}}
-                              ::ei-ok {:olioiden-tilat {:yhteyden-tila "ACTIVE"
-                                                        :istunnot [{:istunnon-tila "CLOSED"
-                                                                    :jarjestelma "foo"
-                                                                    :jonot [{:foo-jono {:tuottaja nil
-                                                                                        :vastaanottaja {:virheet nil
-                                                                                                        :vastaanottajan-tila "ACTIVE"}}}]}]}}
-                              ::virhe {:virhe nil}}
-                 :sonjan-uudelleenkaynnistys-epaonnistui {::ok tapahtuma-tulkkaus/tyhja-arvo}
+                 :jms-tila {::ok {"sonja" {:yhteyden-tila "ACTIVE"
+                                           :istunnot [{:istunnon-tila "ACTIVE"
+                                                       :jarjestelma "foo"
+                                                       :jonot [{:foo-jono {:tuottaja nil
+                                                                           :vastaanottaja {:virheet nil
+                                                                                           :vastaanottajan-tila "ACTIVE"}}}]}]}}
+                            ::ei-ok {"sonja" {:yhteyden-tila "ACTIVE"
+                                              :istunnot [{:istunnon-tila "CLOSED"
+                                                          :jarjestelma "foo"
+                                                          :jonot [{:foo-jono {:tuottaja nil
+                                                                              :vastaanottaja {:virheet nil
+                                                                                              :vastaanottajan-tila "ACTIVE"}}}]}]}}
+                            ::virhe {:virhe nil}}
+                 :jms-uudelleenkaynnistys-epaonnistui {::ok "sonja"}
                  :db-tila {::ok true
                            ::ei-ok false}
                  :db-replica-tila {::ok true
@@ -78,7 +79,7 @@
 (deftest ok-tapahtumat-satunnaisessa-jarjestyksessa
   (let [ok-tapahtumat (map (fn [[tapahtuma vaihtoehdot]]
                              [tapahtuma (::ok vaihtoehdot)])
-                           (dissoc tapahtumat :harjajarjestelman-restart-epaonnistui :sonjan-uudelleenkaynnistys-epaonnistui))
+                           (dissoc tapahtumat :harjajarjestelman-restart-epaonnistui :jms-uudelleenkaynnistys-epaonnistui))
         satunnainen-sarja-tapahtumia (loop [sarja []
                                             sisaltaa-kaikki? (= (into #{} ok-tapahtumat) (into #{} sarja))]
                                        (if (or sisaltaa-kaikki?
@@ -90,7 +91,7 @@
         kaikki-ok? (fn [{:keys [sonja harja db db-replica]}]
                      (and
                        ;; sonja tapahtumaa ei annettu tai sitten sonja on ok
-                       (or (empty? (clj-set/intersection ok-tapahtumien-nimet #{:sonja-tila :harjajarjestelman-restart}))
+                       (or (empty? (clj-set/intersection ok-tapahtumien-nimet #{:jms-tila :harjajarjestelman-restart}))
                            (:kaikki-ok? sonja))
                        ;; harja tapahtumaa ei annettu tai sitten harja on ok
                        (or (empty? (clj-set/intersection ok-tapahtumien-nimet #{:harja-tila :harjajarjestelman-restart :harjajarjestelman-restart-onnistui}))

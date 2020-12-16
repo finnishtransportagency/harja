@@ -28,6 +28,8 @@ services:
       - "HARJA_DEV_RESOURCES_PATH=${DC_JAETTU_KANSIO}/${BRANCH}/dev-resources"
       - "HARJA_SONJA_BROKER_PORT=${HARJA_SONJA_BROKER_PORT}"
       - "HARJA_SONJA_BROKER_HOST=${HARJA_SONJA_BROKER_HOST}"
+      - "HARJA_ITMF_BROKER_PORT=${HARJA_ITMF_BROKER_PORT}"
+      - "HARJA_ITMF_BROKER_HOST=${HARJA_ITMF_BROKER_HOST}"
     env_file:
       - .docker_compose_container_env
     volumes:

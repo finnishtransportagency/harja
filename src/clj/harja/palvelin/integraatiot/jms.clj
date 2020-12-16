@@ -24,8 +24,16 @@
 (s/def ::yhteyden-tila any?)
 (s/def ::istunnot any?)
 (s/def ::olioiden-tilat (s/keys :req-un [::yhteyden-tila ::istunnot]))
-(s/def ::jms-tila (s/or :virhe (s/keys :req-un [::virhe])
-                        :onnistunut (s/keys :req-un [::olioiden-tilat])))
+(s/def ::jms-epaonnistunut-viesti (s/keys :req-un [::virhe]))
+(s/def ::jms-onnistunut-viesti ::olioiden-tilat)
+(s/def ::jms-viesti (fn [m]
+                      (let [[jarjestelma viesti] (first m)]
+                        (and (map? m)
+                             (= (count m) 1)
+                             (string? jarjestelma)
+                             (or (s/valid? ::jms-onnistunut-viesti viesti)
+                                 (s/valid? ::jms-epaonnistunut-viesti viesti))))))
+(s/def ::jms-tila ::jms-viesti)
 
 (def aktiivinen "ACTIVE")
 (def sammutettu "CLOSED")
@@ -210,10 +218,10 @@
                            (fn []
                              (try
                                (let [jms-tila (::kp/tiedot (kp/status this))]
-                                 (tallenna-jms-tila-kantaan db jms-tila (:nimi this))
-                                 (tapahtuma-julkaisija {(:nimi this) jms-tila}))
+                                 (tallenna-jms-tila-kantaan db (get jms-tila (:nimi this)) (:nimi this))
+                                 (tapahtuma-julkaisija jms-tila))
                                (catch Throwable t
-                                 (tapahtuma-julkaisija {:virhe :tilan-lukemisvirhe})
+                                 (tapahtuma-julkaisija {(:nimi this) {:virhe :tilan-lukemisvirhe}})
                                  (log/error (str "Jms tilan lukemisessa virhe jarjestelmässä "
                                                  (:nimi this) ": "
                                                  (.getMessage t)))
@@ -435,23 +443,22 @@
           (yhteys-oliot! yhteys-future)))))
 
 (defn jms-client-tila [jms-tila jms-connection-tila]
-  (let [olioiden-tilat {:yhteyden-tila @jms-connection-tila
-                        :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
-                                          (let [{:keys [jonot istunto]} istunto-tiedot
-                                                istunnon-tila (istunnon-tila istunto)]
-                                            {:istunnon-tila istunnon-tila
-                                             :jarjestelma jarjestelma
-                                             :jonot (mapv (fn [[jonon-nimi {:keys [tuottaja vastaanottaja virheet]}]]
-                                                            {jonon-nimi (cond-> {}
-                                                                                tuottaja
-                                                                                (merge {:tuottaja {:tuottajan-tila (tuottajan-tila tuottaja)
-                                                                                                   :virheet virheet}})
-                                                                                vastaanottaja
-                                                                                (merge {:vastaanottaja {:vastaanottajan-tila (vastaanottajan-tila vastaanottaja)
-                                                                                                        :virheet virheet}}))})
-                                                          jonot)}))
-                                        (:istunnot jms-tila))}]
-    {:olioiden-tilat olioiden-tilat}))
+  {:yhteyden-tila @jms-connection-tila
+   :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
+                     (let [{:keys [jonot istunto]} istunto-tiedot
+                           istunnon-tila (istunnon-tila istunto)]
+                       {:istunnon-tila istunnon-tila
+                        :jarjestelma jarjestelma
+                        :jonot (mapv (fn [[jonon-nimi {:keys [tuottaja vastaanottaja virheet]}]]
+                                       {jonon-nimi (cond-> {}
+                                                           tuottaja
+                                                           (merge {:tuottaja {:tuottajan-tila (tuottajan-tila tuottaja)
+                                                                              :virheet virheet}})
+                                                           vastaanottaja
+                                                           (merge {:vastaanottaja {:vastaanottajan-tila (vastaanottajan-tila vastaanottaja)
+                                                                                   :virheet virheet}}))})
+                                     jonot)}))
+                   (:istunnot jms-tila))})
 
 (defmulti jms-toiminto!
           (fn [_ kasky]
@@ -776,8 +783,8 @@
   kp/IStatus
   (-status [this]
     (let [status (jms-client-tila @(:tila this) (:jms-connection-tila this))]
-      {::kp/kaikki-ok? (jmsyhteys-ok? (:olioiden-tilat status))
-       ::kp/tiedot status})))
+      {::kp/kaikki-ok? (jmsyhteys-ok? status)
+       ::kp/tiedot {(:nimi this) status}})))
 
 (defn yhteyden-tila [yhteys]
   (exception-wrapper yhteys getClientID))

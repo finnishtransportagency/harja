@@ -1,14 +1,21 @@
 version: '2.4'
 services:
-  activemq:
+  activemq-sonja:
     image: solita/harja-activemq:5.15.9
     mem_limit: 500m
     environment:
       - "TZ=Europe/Helsinki"
-    container_name: activemq
     ports:
       - "127.0.0.1:${HARJA_SONJA_BROKER_PORT}:61616" # broker (admin:adminactivemq)(amq:amq)
       - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+  activemq-itmf:
+    image: solita/harja-activemq:5.15.9
+    mem_limit: 500m
+    environment:
+      - "TZ=Europe/Helsinki"
+    ports:
+      - "127.0.0.1:${HARJA_ITMF_BROKER_PORT}:61616" # broker (admin:adminactivemq)(amq:amq)
+      - "127.0.0.1:8171:8171"   # web    localhost:8161/admin/queues.jsp (admin:admin)
   harja-app-1:
     extends:
       file: docker-compose-common.yml

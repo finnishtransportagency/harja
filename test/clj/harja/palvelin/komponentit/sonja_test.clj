@@ -336,11 +336,12 @@
   (let [kaskytyskanava (-> jarjestelma :sonja :kaskytyskanava)
         db (:db jarjestelma)
         tyyppi (-> asetukset :sonja :tyyppi)
-        status-ennen (:vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))
+        jarjestelman-nimi (get-in jarjestelma [:sonja :nimi])
+        status-ennen (:vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jarjestelman-nimi)))
         kysy-status (fn []
                       (loop [kertoja 1]
                         (when (< kertoja 5)
-                          (let [vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]}))]
+                          (let [vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jarjestelman-nimi))]
                             (if (= vastaus {:kaskytysvirhe :aikakatkaisu})
                               (recur (inc kertoja))
                               (:vastaus vastaus))))))
@@ -360,15 +361,15 @@
         status-aloituksen-jalkeen (kysy-status)]
 
     ;; STATUS ENNEN TESTIT
-    (is (= (-> status-ennen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
-    (doseq [istunto (-> status-ennen :olioiden-tilat :istunnot)]
+    (is (= (-> status-ennen (get jarjestelman-nimi) :yhteyden-tila) "ACTIVE"))
+    (doseq [istunto (-> status-ennen (get jarjestelman-nimi) :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
     ;; STATUS LOPETUKSEN JÄLKEEN TESTIT
-    (is (= (-> status-lopetuksen-jalkeen :olioiden-tilat :yhteyden-tila) "RECONNECTING"))
+    (is (= (-> status-lopetuksen-jalkeen (get jarjestelman-nimi) :yhteyden-tila) "RECONNECTING"))
     ;; STATUS RECONNECTIN JÄLKEEN
-    (is (= (-> status-aloituksen-jalkeen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
-    (doseq [istunto (-> status-aloituksen-jalkeen :olioiden-tilat :istunnot)]
+    (is (= (-> status-aloituksen-jalkeen (get jarjestelman-nimi) :yhteyden-tila) "ACTIVE"))
+    (doseq [istunto (-> status-aloituksen-jalkeen (get jarjestelman-nimi) :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))))
 

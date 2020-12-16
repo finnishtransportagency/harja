@@ -7,102 +7,130 @@
             [harja.palvelin.tyokalut.tapahtuma-tulkkaus :as tapahtuma-tulkkaus]
             [harja.pvm :as pvm]))
 
-(declare kaynnista-sonja-uusiksi!)
+(declare kaynnista-jarjestelma-uusiksi!)
 
-(defn- varmista-sonjan-toimivuus! [this timeout]
-  (let [sonja-yhteys-aloitettu-atom? (::sonja-yhteys-aloitettu-atom? this)
-        uudelleen-kaynnistys-aika (::uudelleen-kaynnistys-aika this)
-        viestien-maara-kaynnistyksesta (::viestien-maara-kaynnistyksesta this)]
-    {::sonja-yhteys-aloitettu (tapahtuma-apurit/tarkkaile-tapahtumaa
-                                :sonja-yhteys-aloitettu
-                                {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
-                                 :timeout (* 1000 60 10)}
-                                (fn [{:keys [palvelin aika]} timeout?]
+(def tama-namespace (namespace ::this))
+
+(defn- varmista-jms-toimivuus! [this jarjestelma timeout]
+  (let [jarjestelma-ns-kw (keyword tama-namespace jarjestelma)
+        yhteys-aloitettu-ns-ks (keyword tama-namespace (str jarjestelma "-yhteys-aloitettu"))
+        tila-ns-ks (keyword tama-namespace (str jarjestelma "-tila"))
+        tila-atom (::tila this)
+        yhteys-aloitettu? (fn [] (-> tila-atom deref jarjestelma-ns-kw ::yhteys-aloitettu?))
+        merkkaa-yhteys-aloitetuksi! (fn [] (swap! tila-atom assoc-in [jarjestelma-ns-kw ::yhteys-aloitettu?] true))
+        uudelleen-kaynnistys-aika (fn [] (-> tila-atom deref jarjestelma-ns-kw ::uudelleen-kaynnistys-aika))
+        viestien-maara-kaynnistyksesta (fn [] (-> tila-atom deref jarjestelma-ns-kw ::viestien-maara-kaynnistyksesta))
+        inc-viestien-maara-kaynnistuksesta (fn [] (swap! tila-atom update-in [jarjestelma-ns-kw ::viestien-maara-kaynnistyksesta] inc))]
+    {yhteys-aloitettu-ns-ks (tapahtuma-apurit/tarkkaile-tapahtumaa
+                              :jms-yhteys-aloitettu
+                              {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
+                               :timeout (* 1000 60 10)}
+                              (fn [{:keys [palvelin payload aika]} timeout?]
+                                (when (= (:jarjestelma payload) jarjestelma)
                                   (cond
                                     (and timeout?
-                                         (not @sonja-yhteys-aloitettu-atom?))
-                                    (do (log/error ":sonja-yhteys-aloitettu päättyi timeoutiin eikä Sonjayhteyttä oltu aloitettu")
-                                        (kaynnista-sonja-uusiksi! this))
-                                    (or (nil? @uudelleen-kaynnistys-aika)
+                                         (not (yhteys-aloitettu?)))
+                                    (do (log/error (str yhteys-aloitettu-ns-ks " päättyi timeoutiin eikä yhteyttä oltu aloitettu"))
+                                        (kaynnista-jarjestelma-uusiksi! this jarjestelma))
+                                    (or (nil? (uudelleen-kaynnistys-aika))
                                         ;; yhteys aloitettu uudelleen käynnistämisen jälkeen?
-                                        (pvm/jalkeen? aika @uudelleen-kaynnistys-aika)) (reset! sonja-yhteys-aloitettu-atom? true))))
-     ::sonja-tila (tapahtuma-apurit/tarkkaile-tapahtumaa
-                    :sonja-tila
-                    {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
-                     :timeout timeout}
-                    (fn [{:keys [palvelin payload]} timeout?]
-                      (let [sonjayhteys-ok? (tapahtuma-tulkkaus/sonjayhteys-ok? (:olioiden-tilat payload))]
-                        (swap! viestien-maara-kaynnistyksesta inc)
+                                        (pvm/jalkeen? aika (uudelleen-kaynnistys-aika))) (merkkaa-yhteys-aloitetuksi!)))))
+     tila-ns-ks (tapahtuma-apurit/tarkkaile-tapahtumaa
+                  :jms-tila
+                  {:tyyppi {:palvelimet-viimeisin #{tapahtuma-apurit/host-nimi}}
+                   :timeout timeout}
+                  (fn [{:keys [palvelin payload]} timeout?]
+                    (when-let [jarjestelma-payload (get payload jarjestelma)]
+                      (let [yhteys-ok? (tapahtuma-tulkkaus/jmsyhteys-ok? jarjestelma-payload)]
+                        (inc-viestien-maara-kaynnistuksesta)
                         (when (or timeout?
-                                  (and @sonja-yhteys-aloitettu-atom?
-                                       (not sonjayhteys-ok?)
-                                       (> @viestien-maara-kaynnistyksesta 3)))
-                          (kaynnista-sonja-uusiksi! this)))))}))
+                                  (and (yhteys-aloitettu?)
+                                       (not yhteys-ok?)
+                                       (> (viestien-maara-kaynnistyksesta) 3)))
+                          (kaynnista-jarjestelma-uusiksi! this jarjestelma))))))}))
 
-(defn- sonjatarkkailu! [uudelleen-kaynnistaja]
+(defn- varmista-sonjan-toimivuus! [this timeout]
+  (varmista-jms-toimivuus! this "sonja" timeout))
+
+(defn- varmista-itmfn-toimivuus! [this timeout]
+  (varmista-jms-toimivuus! this "itmf" timeout))
+
+(defn- jmstarkkailu! [jarjestelma uudelleen-kaynnistaja]
   (let [varoaika (* 5 1000)
         {:keys [timeout-asetukset tapahtumien-tarkkailijat]} uudelleen-kaynnistaja]
     (swap! tapahtumien-tarkkailijat
            (fn [tarkkailijat]
              (merge tarkkailijat
-                    (varmista-sonjan-toimivuus! uudelleen-kaynnistaja (+ (get-in timeout-asetukset [:sonja :paivitystiheys-ms]) varoaika)))))))
+                    (case jarjestelma
+                      "sonja" (varmista-sonjan-toimivuus! uudelleen-kaynnistaja (+ (get-in timeout-asetukset [:sonja :paivitystiheys-ms]) varoaika))
+                      "itmf" (varmista-itmfn-toimivuus! uudelleen-kaynnistaja (+ (get-in timeout-asetukset [:itmf :paivitystiheys-ms]) varoaika))))))))
 
-(defn- sonjan-uudelleen-kaynnistys-onnistui! [uudelleen-kaynnistaja & _]
-  (log/info "SONJAN UUDELLEEN KÄYNNISTYS ONNISTUI!")
-  (reset! (::uudelleen-kaynnistyksia uudelleen-kaynnistaja) 0)
-  (sonjatarkkailu! uudelleen-kaynnistaja))
+(defn- jarjestelman-uudelleen-kaynnistys-onnistui! [uudelleen-kaynnistaja jarjestelma & _]
+  (log/info (str jarjestelma " UUDELLEEN KÄYNNISTYS ONNISTUI!"))
+  (let [jarjestelma-ns-kw (keyword tama-namespace jarjestelma)
+        tila-atom (::tila uudelleen-kaynnistaja)]
+    (swap! tila-atom assoc-in [jarjestelma-ns-kw ::uudelleen-kaynnistyksia] 0)
+    (jmstarkkailu! jarjestelma uudelleen-kaynnistaja)))
 
-(defn- sonjan-uudelleen-kaynnistys-epaonnistui! [uudelleen-kaynnistaja & _]
-  (log/info "SONJAN UUDELLEEN KÄYNNISTYS EPÄONNISTUI")
-  (let [uudelleen-kaynnistyksia (::uudelleen-kaynnistyksia uudelleen-kaynnistaja)]
-    (reset! uudelleen-kaynnistyksia 0)
-    (tapahtuma-apurit/julkaise-tapahtuma :sonjan-uudelleenkaynnistys-epaonnistui tapahtuma-tulkkaus/tyhja-arvo)))
+(defn- jarjestelman-uudelleen-kaynnistys-epaonnistui! [uudelleen-kaynnistaja jarjestelma & _]
+  (log/info (str jarjestelma " UUDELLEEN KÄYNNISTYS EPÄONNISTUI"))
+  (let [jarjestelma-ns-kw (keyword tama-namespace jarjestelma)
+        tila-atom (::tila uudelleen-kaynnistaja)]
+    (swap! tila-atom assoc-in [jarjestelma-ns-kw ::uudelleen-kaynnistyksia] 0)
+    (tapahtuma-apurit/julkaise-tapahtuma :jms-uudelleenkaynnistys-epaonnistui jarjestelma)))
 
-(defn- kaynnista-sonja-uusiksi! [uudelleen-kaynnistaja]
-  (log/info "---> KÄYNNISTETÄÄN SONJA UUSIKSI!")
-  (let [uudelleen-kaynnistyksia (::uudelleen-kaynnistyksia uudelleen-kaynnistaja)]
-    (if (> @uudelleen-kaynnistyksia 0)
-      (sonjan-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja)
-      (let [_ (swap! uudelleen-kaynnistyksia inc)
-            tapahtuman-odottaja (async/<!! (tapahtuma-apurit/kuuntele-tapahtumia :harjajarjestelman-restart-onnistui {:f (partial sonjan-uudelleen-kaynnistys-onnistui! uudelleen-kaynnistaja)
+(defn- kaynnista-jarjestelma-uusiksi! [uudelleen-kaynnistaja jarjestelma]
+  (log/info "---> KÄYNNISTETÄÄN " jarjestelma " UUSIKSI!")
+  (let [jarjestelma-ns-kw (keyword tama-namespace jarjestelma)
+        yhteys-aloitettu-ns-ks (keyword tama-namespace (str jarjestelma "-yhteys-aloitettu"))
+        tila-ns-ks (keyword tama-namespace (str jarjestelma "-tila"))
+        tila-atom (::tila uudelleen-kaynnistaja)
+        uudelleen-kaynnistysten-maara (fn [] (-> tila-atom deref jarjestelma-ns-kw ::uudelleen-kaynnistyksia))
+        inc-uudelleen-kaynnistyksia (fn [] (swap! tila-atom update-in [jarjestelma-ns-kw ::uudelleen-kaynnistyksia] inc))]
+    (if (> (uudelleen-kaynnistysten-maara) 0)
+      (jarjestelman-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja jarjestelma)
+      (let [_ (inc-uudelleen-kaynnistyksia)
+            tapahtuman-odottaja (async/<!! (tapahtuma-apurit/kuuntele-tapahtumia :harjajarjestelman-restart-onnistui {:f (partial jarjestelman-uudelleen-kaynnistys-onnistui! uudelleen-kaynnistaja jarjestelma)
                                                                                                                       :tyyppi {:palvelimet-perus #{tapahtuma-apurit/host-nimi}}}
-                                                                                 :harjajarjestelman-restart-epaonnistui {:f (partial sonjan-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja)
+                                                                                 :harjajarjestelman-restart-epaonnistui {:f (partial jarjestelman-uudelleen-kaynnistys-epaonnistui! uudelleen-kaynnistaja jarjestelma)
                                                                                                                          :tyyppi {:palvelimet-perus #{tapahtuma-apurit/host-nimi}}}))]
-        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref ::sonja-yhteys-aloitettu deref))
-        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref ::sonja-tila deref))
-        (reset! (::sonja-yhteys-aloitettu-atom? uudelleen-kaynnistaja) nil)
-        (reset! (::viestien-maara-kaynnistyksesta uudelleen-kaynnistaja) 0)
-        (reset! (::uudelleen-kaynnistys-aika uudelleen-kaynnistaja) (pvm/nyt-suomessa))
-        (tapahtuma-apurit/julkaise-tapahtuma :harjajarjestelman-restart #{:sonja})
+        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref yhteys-aloitettu-ns-ks deref))
+        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu (-> uudelleen-kaynnistaja (get :tapahtumien-tarkkailijat) deref tila-ns-ks deref))
+        (swap! tila-atom assoc-in [jarjestelma-ns-kw ::yhteys-aloitettu?] nil)
+        (swap! tila-atom assoc-in [jarjestelma-ns-kw ::viestien-maara-kaynnistyksesta] 0)
+        (swap! tila-atom assoc-in [jarjestelma-ns-kw ::uudelleen-kaynnistys-aika] (pvm/nyt-suomessa))
+        (tapahtuma-apurit/julkaise-tapahtuma :harjajarjestelman-restart #{(keyword jarjestelma)})
         (async/<!! tapahtuman-odottaja)))))
 
 (defonce start-lukko (Object.))
+
+(def alkutila {::sonja {::yhteys-aloitettu? nil
+                        ::uudelleen-kaynnistyksia 0
+                        ::viestien-maara-kaynnistyksesta 0
+                        ::uudelleen-kaynnistys-aika nil}
+               ::itmf {::yhteys-aloitettu? nil
+                       ::uudelleen-kaynnistyksia 0
+                       ::viestien-maara-kaynnistyksesta 0
+                       ::uudelleen-kaynnistys-aika nil}})
 
 (defrecord UudelleenKaynnistaja [timeout-asetukset tapahtumien-tarkkailijat]
   component/Lifecycle
   (start [this]
     (locking start-lukko
       (when-not (contains? this ::sonja-yhteys-aloitettu-atom?)
-        (let [this (assoc this ::sonja-yhteys-aloitettu-atom? (atom nil)
-                               ::uudelleen-kaynnistyksia (atom 0)
-                               ::viestien-maara-kaynnistyksesta (atom 0)
-                               ::uudelleen-kaynnistys-aika (atom nil))]
+        (let [this (assoc this ::tila (atom alkutila))]
           (if (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys)
-            (sonjatarkkailu! this)
+            (jmstarkkailu! "sonja" this)
             (log/info "Sonja uudelleen käynnistys ei ole käytössä"))
+          (if (asetukset/ominaisuus-kaytossa? :itmf-uudelleen-kaynnistys)
+            (jmstarkkailu! "itmf" this)
+            (log/info "ITMF uudelleen käynnistys ei ole käytössä"))
           this))))
   (stop [this]
-    (when (:tapahtumien-tarkkailijat this)
-      (doseq [[_ tarkkailija] @(:tapahtumien-tarkkailijat this)]
-        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @tarkkailija)))
-    (when-let [a (::sonja-yhteys-aloitettu-atom? this)]
-      (reset! a nil))
-    (when-let [a (::uudelleen-kaynnistyksia this)]
-      (reset! a 0))
-    (when-let [a (::viestien-maara-kaynnistyksesta this)]
-      (reset! a 0))
-    (when-let [a (::uudelleen-kaynnistys-aika this)]
-      (reset! a nil))
-    (when-let [a tapahtumien-tarkkailijat]
-      (reset! a nil))
-    (dissoc this ::sonja-yhteys-aloitettu ::uudelleen-kaynnistyksia ::uudelleen-kaynnistys-aika)))
+    (when-let [tapahtumien-tarkkailijat (:tapahtumien-tarkkailijat this)]
+      (doseq [[_ tarkkailija] @tapahtumien-tarkkailijat]
+        (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @tarkkailija))
+      (reset! tapahtumien-tarkkailijat nil))
+    (when-let [tila (::tila this)]
+      (reset! tila alkutila))
+    (dissoc this ::tila)))

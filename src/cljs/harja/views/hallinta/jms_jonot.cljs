@@ -1,6 +1,6 @@
-(ns harja.views.hallinta.sonjajonot
+(ns harja.views.hallinta.jms-jonot
   (:require [tuck.core :as t]
-            [harja.tiedot.hallinta.sonjajonot :as tila]
+            [harja.tiedot.hallinta.jms-jonot :as tila]
             [harja.pvm :as pvm]
             [cljs-time.coerce :as tc]
             [harja.ui.komponentti :as komp]
@@ -74,22 +74,32 @@
                        {:key %1})
                     istunnot)]]]))
 
-(defn virhe [app]
-  [:p "Sonjan tilaa ei haettu..."])
+(defn virhe [jarjestelma app]
+  [:p (str jarjestelma " tilaa ei haettu...")])
 
-(defn sonjajonot* [e! app]
+(defn jmsjonot* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tila/->AloitaSonjaTilanHakeminen))
-                      #(e! (tila/->LopetaSonjaTilanHakeminen)))
-    (fn [e! {sonjan-tila :sonjan-tila :as app}]
+    (komp/sisaan-ulos #(do (e! (tila/->AloitaJMSTilanHakeminen :sonja))
+                           (e! (tila/->AloitaJMSTilanHakeminen :itmf)))
+                      #(do (e! (tila/->LopetaJMSTilanHakeminen :sonja))
+                           (e! (tila/->LopetaJMSTilanHakeminen :itmf))))
+    (fn [e! {jarjestelmien-tilat :jarjestelmien-tilat :as app}]
       [:div
        [debug/debug app]
-       (if sonjan-tila
-         (map #(with-meta
-                 [tila e! %]
-                 {:key (:palvelin %)})
-              sonjan-tila)
-         [virhe app])])))
+       [:div
+        (if-let [sonjan-tila (:sonja jarjestelmien-tilat)]
+          (map #(with-meta
+                  [tila e! %]
+                  {:key (:palvelin %)})
+               sonjan-tila)
+          [virhe "sonja" app])]
+       [:div
+        (if-let [itmfn-tila (:itmf jarjestelmien-tilat)]
+          (map #(with-meta
+                  [tila e! %]
+                  {:key (:palvelin %)})
+               itmfn-tila)
+          [virhe "itmf" app])]])))
 
-(defn sonjajonot []
-  [t/tuck tila/tila sonjajonot*])
+(defn jms-jonot []
+  [t/tuck tila/tila jmsjonot*])

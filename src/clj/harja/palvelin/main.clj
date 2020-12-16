@@ -12,6 +12,7 @@
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.fim :as fim]
     [harja.palvelin.komponentit.sonja :as sonja]
+    [harja.palvelin.komponentit.itmf :as itmf]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
@@ -234,6 +235,11 @@
                                        (select-keys (get-in asetukset [:komponenttien-tila :sonja])
                                                     #{:paivitystiheys-ms})))
                [:db])
+      :itmf (component/using
+               (itmf/luo-itmf (merge (:itmf asetukset)
+                                       (select-keys (get-in asetukset [:komponenttien-tila :itmf])
+                                                    #{:paivitystiheys-ms})))
+               [:db])
       :sonja-sahkoposti
       (component/using
         (let [{:keys [vastausosoite jonot suora? palvelin]}
@@ -268,7 +274,7 @@
       ;; T-LOIK
       :tloik (component/using
                (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
-               [:sonja :db :integraatioloki
+               [:itmf :db :integraatioloki :sonja
                 :sonja-sahkoposti :labyrintti])
 
       ;; Tierekisteri
