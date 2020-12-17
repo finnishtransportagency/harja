@@ -48,22 +48,32 @@
     :nimi nimi))
 
 (defn jarjestelma-fixture [testit]
+  (println "1")
   (pudota-ja-luo-testitietokanta-templatesta)
+  (println "2")
   (alter-var-root #'harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-a"))
+  (println "3")
   (alter-var-root #'jarjestelma luo-jarjestelma)
+  (println "4")
   (testit)
+  (println "5")
   (try (alter-var-root #'jarjestelma component/stop)
        (catch Exception e (println "saatiin poikkeus komponentin sammutuksessa: " e)))
+  (println "6")
   (try (alter-var-root #'harja-tarkkailija component/stop)
-       (catch Exception e (println "saatiin poikkeus harja-tarkkailija systeemin sammutuksessa: " e))))
+       (catch Exception e (println "saatiin poikkeus harja-tarkkailija systeemin sammutuksessa: " e)))
+  (println "7"))
 
 (use-fixtures :each jarjestelma-fixture)
 
-#_(deftest julkaisu-ja-kuuntelu
+(deftest julkaisu-ja-kuuntelu
   (testing "tapahtumat-komponentti on luotu onnistuneesti"
-    (is (some? (:klusterin-tapahtumat harja-tarkkailija))))
+    (println "-->tapahtumat-komponentti on luotu onnistuneesti")
+    (is (some? (:klusterin-tapahtumat harja-tarkkailija)))
+    (println "<-->tapahtumat-komponentti on luotu onnistuneesti"))
   (let [saatiin (atom nil)]
     (testing "Perustapaus"
+      (println "-->Perustapaus")
       (let [lopetus-fn (tapahtumat-p/kuuntele! (:klusterin-tapahtumat harja-tarkkailija)
                                                "seppo"
                                              (fn kuuntele-callback [viesti]
@@ -76,8 +86,10 @@
         (is (= 1 (count kuuntelija-funktiot-kuuntelun-jalkeen)) "Yhtä tapahtumaa kuunnellaan")
         (is (= 1 (count (-> kuuntelija-funktiot-kuuntelun-jalkeen first val))) "Yhdellä tapahtumalla on yksi kuuntelija")
         (is (= 0 (count (-> harja-tarkkailija (get-in [:klusterin-tapahtumat :kuuntelijat]) deref first val)))
-            "Tapahtumalla ei ole enää kuuntelijaa, kun tapahtuman kuuntelu on lopetettu")))
+            "Tapahtumalla ei ole enää kuuntelijaa, kun tapahtuman kuuntelu on lopetettu"))
+      (println "<-->Perustapaus"))
     (testing "Toipuminen kantayhteyden katkosta"
+      (println "-->Toipuminen kantayhteyden katkosta")
       (reset! saatiin nil)
       (let [lopetus-fn (tapahtumat-p/kuuntele! (:klusterin-tapahtumat harja-tarkkailija) "seppo"
                                              (fn kuuntele-callback [viesti]
@@ -100,10 +112,12 @@
                    true)))
         (tapahtumat-p/julkaise! (:klusterin-tapahtumat harja-tarkkailija) "seppo" "foo" "testi")
         (is (odota-arvo saatiin default-odottelu) "Pitäisi saada tapahtumia, kun tapahtumaloop on alkanut")
-        (lopetus-fn)))))
+        (lopetus-fn))
+      (println "<-->Toipuminen kantayhteyden katkosta"))))
 
 (deftest tarkkaile-kanavaa-testit-ok-tapaukset
   (testing "Perus tarkkailun aloitus onnistuu"
+    (println "-->Perus tarkkailun aloitus onnistuu")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
             a-payload 42
@@ -125,8 +139,10 @@
         (is (= (dissoc (<!!-timeout odota-tapahtuma default-odottelu) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
-            "Kanavaan ei pitäisi tulla kakutettua kamaa vaan juurikin se mikä on lähetetty"))))
+            "Kanavaan ei pitäisi tulla kakutettua kamaa vaan juurikin se mikä on lähetetty")))
+    (println "<-->Perus tarkkailun aloitus onnistuu"))
    (testing "Julkaiseminen ilmoittaa kaikille tarkkailijoille"
+     (println "-->Julkaiseminen ilmoittaa kaikille tarkkailijoille")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           kuuntelu-ja-tarkkailu-lkm (atom 0)
           tarkkailija-1 (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
@@ -146,8 +162,10 @@
       (<!!-timeout odota-tapahtuma-1 default-odottelu)
       (<!!-timeout odota-tapahtuma-2 default-odottelu)
       (<!!-timeout odota-tapahtuma-3 default-odottelu)
-      (is (= 5 @kuuntelu-ja-tarkkailu-lkm))))
+      (is (= 5 @kuuntelu-ja-tarkkailu-lkm)))
+     (println "<-->Julkaiseminen ilmoittaa kaikille tarkkailijoille"))
   (testing "Viimeisin tarkkailu onnistuu"
+    (println "-->Viimeisin tarkkailu onnistuu")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           ensimmainen-a-payload 42]
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
@@ -167,10 +185,12 @@
         (is (= (dissoc (<!!-timeout tarkkailija default-odottelu-pidennetty) :aika)
                {:palvelin (:nimi harja-tarkkailija)
                 :payload a-payload})
-            "Kanavaan pitäisi tulla kakutettu arvo")))))
+            "Kanavaan pitäisi tulla kakutettu arvo")))
+    (println "<-->Viimeisin tarkkailu onnistuu")))
 
 (deftest tarkkaile-kanavaa-testit-ei-ok-tapaukset
   (testing "Väärä hash saatu"
+    (println "-->Väärä hash saatu")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           data {:a 1}
           tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))]
@@ -181,12 +201,16 @@
           "Väärällä hashillä olevaa dataa ei pitäisi antaa tarkkailijoille!")
       (let [viimeisin-tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a :viimeisin))]
         (is (thrown? TimeoutException (<!!-timeout viimeisin-tarkkailija default-odottelu))
-            "Väärällä hashillä olevaa dataa xnei pitäisi antaa viimeisin tarkkailijoille!"))))
+            "Väärällä hashillä olevaa dataa xnei pitäisi antaa viimeisin tarkkailijoille!")))
+    (println "<-->Väärä hash saatu"))
   (testing "Väärän tyyppinen kuuntelija"
+    (println "-->Väärän tyyppinen kuuntelija")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
       (is (thrown? IllegalArgumentException (tapahtumat-p/kuuntele! tapahtumat-k :tapahtuma-a 3)))
-      (is (thrown? ArityException (tapahtumat-p/kuuntele! tapahtumat-k :tapahtuma-a (fn []))))))
+      (is (thrown? ArityException (tapahtumat-p/kuuntele! tapahtumat-k :tapahtuma-a (fn [])))))
+    (println "<-->Väärän tyyppinen kuuntelija"))
   (testing "Käsky tapahtuma-looppiin ilman viestintä- ja possukanavaa"
+    (println "-->Käsky tapahtuma-looppiin ilman viestintä- ja possukanavaa")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           err-count (atom 0)
           lahde-redefsista? (atom false)
@@ -207,8 +231,10 @@
           (async/<!! (async/timeout 50))))
       (log/set-config! original-config)
       (is (= 3 @err-count)
-          "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä")))
+          "Tapahtuma loopin käskyillä pitäisi aina olla funktio ja tunnistin määritettynä"))
+    (println "<-->Käsky tapahtuma-looppiin ilman viestintä- ja possukanavaa"))
   (testing "Väärä argumentti yhtäaikaa alkaville"
+    (println "-->Väärä argumentti yhtäaikaa alkaville")
     (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* 1]
                                             (tapahtumat-p/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))
     (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin :foo :lkm 3}]
@@ -216,13 +242,18 @@
     (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:lkm 3}]
                                             (tapahtumat-p/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))
     (is (thrown? IllegalArgumentException (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"}]
-                                            (tapahtumat-p/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))))
+                                            (tapahtumat-p/tarkkaile! (:klusterin-tapahtumat harja-tarkkailija) :foo))))
+    (println "<-->Väärä argumentti yhtäaikaa alkaville")))
 
 (deftest julkaisu-ilmoittaa-kaikkiin-jarjestelmiin
+  (println "julkaisu-ilmoittaa-kaikkiin-jarjestelmiin")
   (alter-var-root #'toinen-harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-b"))
+  (println "julkaisu-ilmoittaa-kaikkiin-jarjestelmiin")
   (alter-var-root #'toinen-jarjestelma luo-jarjestelma)
+  (println "julkaisu-ilmoittaa-kaikkiin-jarjestelmiin")
 
   (testing "Perus tarkkailun aloitus onnistuu molemmissa järjestelmissä"
+    (println "-->Perus tarkkailun aloitus onnistuu molemmissa järjestelmissä")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           toinen-tapahtumat-k (:klusterin-tapahtumat toinen-harja-tarkkailija)]
       (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
@@ -252,8 +283,10 @@
           (is (= (dissoc (<!!-timeout toinen-odota-tapahtuma default-odottelu-pidennetty) :aika)
                  {:palvelin (:nimi toinen-harja-tarkkailija)
                   :payload a-payload})
-              "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty")))))
+              "Kanavaan pitäisi tulla se kama, joka on juuri lähetetty"))))
+    (println "<-->Perus tarkkailun aloitus onnistuu molemmissa järjestelmissä"))
   (testing "viimeisin-per-palvelin tapahtuma toimii"
+    (println "-->viimeisin-per-palvelin tapahtuma toimii")
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           toinen-tapahtumat-k (:klusterin-tapahtumat toinen-harja-tarkkailija)
           a-payload-palvelin-1 42
@@ -274,17 +307,23 @@
             (or (= paluuarvo paluuarvo-palvelin-1)
                 (= paluuarvo paluuarvo-palvelin-2)))
           "viimeisin-per-palvelin tarkkailijalle pitäisi tulla arvot molemmilta palvelimilta.
-           Järjestystä ei ole fixattu")))
+           Järjestystä ei ole fixattu"))
+    (println "<-->viimeisin-per-palvelin tapahtuma toimii"))
 
+  (println "julkaisu-ilmoittaa-kaikkiin-jarjestelmiin<<<")
   (try (alter-var-root #'toinen-jarjestelma component/stop)
        (catch Exception e (println "saatiin poikkeus toisen komponentin sammutuksessa: " e)))
+  (println "julkaisu-ilmoittaa-kaikkiin-jarjestelmiin<<")
   (try (alter-var-root #'toinen-harja-tarkkailija component/stop)
-       (catch Exception e (println "saatiin poikkeus toisen harja-tarkkailija systeemin sammutuksessa: " e))))
+       (catch Exception e (println "saatiin poikkeus toisen harja-tarkkailija systeemin sammutuksessa: " e)))
+  (println "julkaisu-ilmoittaa-kaikkiin-jarjestelmiin<"))
 
 (deftest possukanavien-luonti
+  (println "possukanavien-luonti")
   (let [uusi-tapahtuma "foo"
         uusikanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) uusi-tapahtuma)]
     (testing "Possukanavan luonti"
+      (println "-->Possukanavan luonti")
       (let [toinen-tapahtuma "bar"
             toinen-kanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) toinen-tapahtuma)]
         (is (uuid? (UUID/fromString uusikanava))
@@ -294,8 +333,10 @@
         (is (not= uusikanava toinen-kanava)
             "Possukanavien nimet pitäisi olla uniikkeja!")
         (is (= uusikanava (@#'tapahtumat/kaytettava-kanava! (get-in harja-tarkkailija [:klusterin-tapahtumat :db :db-spec]) uusi-tapahtuma))
-            "Samalla tapahtumalla pitäisi palautua sama possukanava")))
+            "Samalla tapahtumalla pitäisi palautua sama possukanava"))
+      (println "<-->Possukanavan luonti"))
     (testing "Kannassa olevaa possukanavaa ei voi muokata"
+      (println "--<Kannassa olevaa possukanavaa ei voi muokata")
       (let [primary-key uusikanava]
         (u "UPDATE tapahtumatyyppi SET kanava='foobar' WHERE kanava='" primary-key "'")
         (u "UPDATE tapahtumatyyppi SET nimi='foobar' WHERE kanava='" primary-key "'")
@@ -303,9 +344,11 @@
           (is (= uusi-tapahtuma (:nimi muokkauksen-jalkeen))
               "Olemassa olevan tapahtuman nimeä ei saisi muuttaa")
           (is (= uusikanava (:kanava muokkauksen-jalkeen))
-              "Olemassa olevan tapahtuman kanavaa ei saisi muuttaa"))))))
+              "Olemassa olevan tapahtuman kanavaa ei saisi muuttaa")))
+      (println "<--<Kannassa olevaa possukanavaa ei voi muokata"))))
 
 (deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
+  (println "tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun")
   (let [aja-loop-atom (atom false)
         loop-ajettu-atom (atom false)
         odota-loopin-ajo! (fn []
@@ -327,6 +370,7 @@
       (reset! aja-loop-atom true)
       (odota-loopin-ajo!)
       (testing "Viimeisin tarkkailija saa kaikki tapahtumat kakutustapahtuman jälkeen"
+        (println "--->Viimeisin tarkkailija saa kaikki tapahtumat kakutustapahtuman jälkeen")
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
               kakutuskeskustelukanava (async/chan)
               _ (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a {:a 1} (:nimi harja-tarkkailija))]
@@ -387,8 +431,10 @@
                                              :payload {:a i}})
                                     "Lähetetyt arvot pitäisi tulla järjestyksessä")
                                 (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
-                                    "Ei pitäisi olla enää tapahtumia")))))))))
+                                    "Ei pitäisi olla enää tapahtumia"))))))))
+        (println "<--->Viimeisin tarkkailija saa kaikki tapahtumat kakutustapahtuman jälkeen"))
       (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
+        (println "--->Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista")
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
               kakutuskeskustelukanava (async/chan)]
           (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-b {:b 1} (:nimi harja-tarkkailija))
@@ -439,39 +485,63 @@
                            {:palvelin (:nimi harja-tarkkailija)
                             :payload {:b 9}}))
                     (is (thrown? TimeoutException (<!!-timeout tarkkailija default-odottelu))
-                        "Pitäisi olla vain tuo yksi arvo"))))))))
+                        "Pitäisi olla vain tuo yksi arvo"))))))
+        (println "<--->Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista")))
     (reset! aja-loop-atom true)))
 
 (deftest ryhmittain-ajettavat-testit-ajetaan-yhta-aikaa
+  (println "ryhmittain-ajettavat-testit-ajetaan-yhta-aikaa")
   (let [aja-loop (async/chan)
         loop-ajettu (async/chan)
+        aja-loop-atom (atom false)
+        loop-ajettu-atom (atom false)
+        odota-loopin-ajo! (fn []
+                            (odota-ehdon-tayttymista (fn [] (= @loop-ajettu-atom true)) "loop-ajettu-atom ei true" 5000)
+                            (reset! loop-ajettu-atom false)
+                            true)
         loop-kunnes-realisoinut (fn loop-kunnes-realisoinut
                                   ([kanava] (loop-kunnes-realisoinut kanava (+ 2000 default-odottelu)))
                                   ([kanava timeout]
                                    (let [lopeta-looppaus (async/chan)]
                                      (try (<!!-timeout (async/go-loop []
                                                          (when-not (async/poll! lopeta-looppaus)
-                                                           (async/offer! aja-loop true)
+                                                           (reset! aja-loop-atom true)
+                                                           ;(async/offer! aja-loop true)
                                                            (if-let [kanavan-arvo (async/poll! kanava)]
                                                              (do (async/put! lopeta-looppaus true)
-                                                                 (async/<! loop-ajettu)
+                                                                 ;(async/<! loop-ajettu)
+                                                                 (odota-loopin-ajo!)
                                                                  kanavan-arvo)
-                                                             (do (async/poll! loop-ajettu)
+                                                             (do ;(async/poll! loop-ajettu)
+                                                               (odota-loopin-ajo!)
                                                                  (recur)))))
                                                        timeout)
                                           (catch TimeoutException e
                                             (async/put! lopeta-looppaus true)
                                             (throw e))))))
         odota-yksi-loop (fn []
-                          (async/offer! aja-loop true)
-                          (<!!-timeout loop-ajettu default-odottelu))
+                          (reset! aja-loop-atom true)
+                          (odota-loopin-ajo!)
+                          #_(async/offer! aja-loop true)
+                          #_(<!!-timeout loop-ajettu default-odottelu))
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
-    (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
+    (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [{db :db :as args-map}]
+                                                      ;; Tämä ehto on hyödyllinen oikeastaan vain REPL:issä
+                                                      (if (= (:dbname db) (:tietokanta testitietokanta))
+                                                        (do
+                                                          (odota-ehdon-tayttymista (fn [] (= @aja-loop-atom true)) "aja-loop ei true" 50000)
+                                                          (let [paluuarvo (tapahtuma-loop-sisalto-original args-map)]
+                                                            (reset! aja-loop-atom false)
+                                                            (reset! loop-ajettu-atom true)
+                                                            paluuarvo))
+                                                        (tapahtuma-loop-sisalto-original args-map)))
+                  #_(fn [& args]
                                                       (async/<!! aja-loop)
                                                       (let [paluuarvo (apply tapahtuma-loop-sisalto-original args)]
                                                         (async/put! loop-ajettu true)
                                                         paluuarvo))]
       (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
+        (println "--->Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista")
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
           (let [tarkkailija-1 (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"
                                                                            :lkm 2}]
@@ -501,9 +571,12 @@
                       :payload {:a 2}}))
               (is (= (dissoc (<!!-timeout tarkkailija-3 default-odottelu) :aika)
                      {:palvelin (:nimi harja-tarkkailija)
-                      :payload {:a 2}})))))))))
+                      :payload {:a 2}})))))
+        (println "<--->Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista")))
+    (reset! aja-loop-atom true)))
 
 (deftest lopeta-tarkkailu-toimii
+  (println "lopeta-tarkkailu-toimii")
   (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
     (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! tapahtumat-k :tapahtuma-a))
           a-payload 42
@@ -511,4 +584,5 @@
       (is (not (false? tarkkailija)))
       (tapahtumat-p/lopeta-tarkkailu! tapahtumat-k tarkkailija)
       (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
-      (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma default-odottelu))))))
+      (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma default-odottelu))))
+    (println "<<lopeta-tarkkailu-toimii")))
