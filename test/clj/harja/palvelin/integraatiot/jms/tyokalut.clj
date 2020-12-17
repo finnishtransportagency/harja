@@ -130,7 +130,7 @@
 (defn itmf-jolokia-broker [attribute operation]
   (jms-jolokia-broker "itmf" attribute operation))
 
-(defn sonja-laheta-odota [jonon-nimi sanoma]
+(defn jms-laheta-odota [jms-client jonon-nimi sanoma]
   (let [kasitellyn-tapahtuman-id (fn []
                                    (not-empty
                                      (first (q (str "SELECT it.id "
@@ -138,7 +138,9 @@
                                                     "  JOIN integraatioviesti iv ON iv.integraatiotapahtuma=it.id "
                                                     "WHERE iv.sisalto ILIKE('" (clj-str/replace sanoma #"ä" "Ã¤") "') AND "
                                                     "it.paattynyt IS NOT NULL")))))]
-    (sonja-laheta jonon-nimi sanoma)
+    (case jms-client
+      "sonja" (sonja-laheta jonon-nimi sanoma)
+      "itmf" (itmf-laheta jonon-nimi sanoma))
     (<!!
       (go-loop [kasitelty? (kasitellyn-tapahtuman-id)
                 aika 0]
