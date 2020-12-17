@@ -305,7 +305,7 @@
           (is (= uusikanava (:kanava muokkauksen-jalkeen))
               "Olemassa olevan tapahtuman kanavaa ei saisi muuttaa"))))))
 
-(deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
+#_(deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
   (let [aja-loop-atom (atom false)
         loop-ajettu-atom (atom false)
         odota-loopin-ajo! (fn []
