@@ -72,34 +72,71 @@
     (map
       (fn [toimenpide]
         (let [_ (reset! row-index-atom (inc @row-index-atom))
-              tehtavat (:tehtavat toimenpide)
+              hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
+              rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
               negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
                                     (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
               muodostetut-tehtavat (if-not (= (get-in app [:valittu-rivi :toimenpide]) toimenpide)
                                      nil
-                                     (mapcat
-                                       (fn [rivi]
-                                         (let [_ (reset! row-index-atom (inc @row-index-atom))
-                                               toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))]
-                                           (concat
-                                             [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
-                                              [:tr.bottom-border
-                                               [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
-                                               [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-                                               [:td {:style {:width (:tehtava leveydet)}} [:span {:style {:padding-left "8px"}} (:tehtava_nimi rivi)]]
-                                               [:td.numero {:style {:width (:budjetoitu leveydet)}}]
-                                               [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
-                                               [:td.numero {:style {:width (:erotus leveydet)}}]
-                                               [:td.numero {:style {:width (:prosentti leveydet)}}]]])))
-                                       tehtavat))]
+                                     (concat
+                                       [^{:key (str @row-index-atom "hankinta-tehtava")}
+                                        [:tr.bottom-border
+                                         [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+                                         [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+                                         [:td {:style {:width (:tehtava leveydet)}} [:span {:style {:padding-left "8px"}}
+                                                                                     [:span {:style {:font-weight "bold"}} "Hankinnat"]]]
+                                         [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+                                         [:td.numero {:style {:width (:toteuma leveydet)}}]
+                                         [:td.numero {:style {:width (:erotus leveydet)}}]
+                                         [:td.numero {:style {:width (:prosentti leveydet)}}]]]
+                                       (mapcat
+                                         (fn [rivi]
+                                           (let [_ (reset! row-index-atom (inc @row-index-atom))
+                                                 toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))]
+                                             (concat
+                                               [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
+                                                [:tr.bottom-border
+                                                 [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+                                                 [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+                                                 [:td {:style {:width (:tehtava leveydet)}} [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]]
+                                                 [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+                                                 [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
+                                                 [:td.numero {:style {:width (:erotus leveydet)}}]
+                                                 [:td.numero {:style {:width (:prosentti leveydet)}}]]])))
+                                         hankinta-tehtavat)
+                                       [^{:key (str @row-index-atom "rahavaraus-tehtava")}
+                                        [:tr.bottom-border
+                                         [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+                                         [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+                                         [:td {:style {:width (:tehtava leveydet)}} [:span {:style {:padding-left "8px"}}
+                                                                                     [:span {:style {:font-weight "bold"}} "Rahavaraukset"]]]
+                                         [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+                                         [:td.numero {:style {:width (:toteuma leveydet)}}]
+                                         [:td.numero {:style {:width (:erotus leveydet)}}]
+                                         [:td.numero {:style {:width (:prosentti leveydet)}}]]]
+                                       (mapcat
+                                         (fn [rivi]
+                                           (let [_ (reset! row-index-atom (inc @row-index-atom))
+                                                 toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))]
+                                             (concat
+                                               [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
+                                                [:tr.bottom-border
+                                                 [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+                                                 [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+                                                 [:td {:style {:width (:tehtava leveydet)}} [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]]
+                                                 [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+                                                 [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
+                                                 [:td.numero {:style {:width (:erotus leveydet)}}]
+                                                 [:td.numero {:style {:width (:prosentti leveydet)}}]]])))
+                                         rahavaraus-tehtavat)))]
           (doall (concat [^{:key (str "otsikko-" (hash toimenpide))}
                           [:tr.bottom-border
                            (merge
-                             (when (> (count tehtavat) 0)
+                             (when (> (count (:tehtavat toimenpide)) 0)
                                {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :toimenpide toimenpide))}))
                            [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
                            [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}
-                            (when (> (count tehtavat) 0)
+                            (when (> (count (:tehtavat toimenpide)) 0)
                               (if (= (get-in app [:valittu-rivi :toimenpide]) toimenpide)
                                 [:img {:alt "Expander" :src "images/expander-down.svg"}]
                                 [:img {:alt "Expander" :src "images/expander.svg"}]))]
