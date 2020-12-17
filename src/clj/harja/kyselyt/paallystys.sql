@@ -5,6 +5,7 @@ SELECT
   pi.id,
   ypk.tr_numero                 AS "tr-numero",
   pi.tila,
+  pi.versio                     AS "pot-versio",
   nimi,
   kohdenumero,
   yhaid,

@@ -310,12 +310,13 @@
                                                          ;; Verkkoon liittyvät avaimet puuttuu kokonaan, arvoja ei siis annettu
                                                          }]}))]
 
-      (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-paallystysilmoitus
-                      +kayttaja-jvh+ {:urakka-id urakka-id
-                                      :sopimus-id sopimus-id
-                                      :vuosi 2019
-                                      :paallystysilmoitus paallystysilmoitus}))))
+      (is (thrown? IllegalArgumentException
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :tallenna-paallystysilmoitus
+                                   +kayttaja-jvh+ {:urakka-id urakka-id
+                                                   :sopimus-id sopimus-id
+                                                   :vuosi 2019
+                                                   :paallystysilmoitus paallystysilmoitus}))))))
 
 (deftest testidata-on-validia
   ;; On kiva jos testaamme näkymää ja meidän testidata menee validoinnista läpi
@@ -453,20 +454,19 @@
             :sideainetyyppi 2}))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
-(deftest hae-yllapitokohteen-olemassa-oleva-pot2-paallystysilmoitus ; petar todo
-  (let [urakka-id @muhoksen-paallystysurakan-id
-        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+(deftest hae-yllapitokohteen-olemassa-oleva-pot2-paallystysilmoitus
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                     :urakan-paallystysilmoitus-paallystyskohteella
                                                     +kayttaja-jvh+ {:urakka-id urakka-id
                                                                     :sopimus-id sopimus-id
                                                                     :paallystyskohde-id paallystyskohde-id})
-        - (println "petar testiram ovo " (pr-str paallystysilmoitus-kannassa))
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
-    (is (= 234234 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
+    (is (= 2 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
 
 (defn- hae-yllapitokohdeosadata [yllapitokohde-id]
   (println "petar evo sad gledam delove " yllapitokohde-id)
