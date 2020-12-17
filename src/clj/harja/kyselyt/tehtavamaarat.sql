@@ -44,25 +44,29 @@ with urakat as (select u.id
                         and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
                         and ut.poistettu is not true
                       group by ut.urakka, ut.tehtava)
-select tpk.nimi               as "nimi",
+select tpk.nimi               as "nimi",  --tehtävän nimi
        tpk.jarjestys          as "jarjestys",
        suunnitelmat.maara     as "suunniteltu",
        tpk.suunnitteluyksikko as "suunnitteluyksikko",
        tpk.yksikko            as "yksikko",
        tpk.id                 as "toimenpidekoodi",
-       tpi.urakka             as "urakka",
-       tpi.nimi               as "toimenpide",
+       u.hallintayksikko      as "hallintayksikko",
+       tpk3.nimi              as "toimenpide",
        toteumat.maara         as "toteuma",
        (CASE
-           WHEN tpk3.koodi = '23104' THEN 1
-           WHEN tpk3.koodi = '23116' THEN 2
-           WHEN tpk3.koodi = '23124' THEN 3
-           WHEN tpk3.koodi = '20107' THEN 4
-           WHEN tpk3.koodi = '20191' THEN 5
-           WHEN tpk3.koodi = '14301' THEN 6
-           WHEN tpk3.koodi = '23151' THEN 7
-           END) AS "toimenpide-jarjestys"
+          WHEN tpk3.koodi = '23104' THEN 1
+          WHEN tpk3.koodi = '23116' THEN 2
+          WHEN tpk3.koodi = '23124' THEN 3
+          WHEN tpk3.koodi = '20107' THEN 4
+          WHEN tpk3.koodi = '20191' THEN 5
+          WHEN tpk3.koodi = '14301' THEN 6
+          WHEN tpk3.koodi = '23151' THEN 7
+         END)                 AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
+       join urakka u
+       join organisaatio o
+            on o.id = u.hallintayksikko
+            on u.id = tpi.urakka
        join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
        join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
@@ -73,9 +77,10 @@ from toimenpideinstanssi tpi
                    and toteumat.urakka_id = tpi.urakka
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
-group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpi.nimi, tpk3.koodi, tpk.suunnitteluyksikko, tpi.urakka, suunnitelmat.maara, toteumat.maara
+group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
+         u.hallintayksikko, suunnitelmat.maara, toteumat.maara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by tpi.urakka, "toimenpide-jarjestys", tpk.jarjestys;
+order by u.hallintayksikko, "toimenpide-jarjestys", tpk.jarjestys;
 
 
 -- name: lisaa-tehtavamaara<!
