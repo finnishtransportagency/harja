@@ -112,7 +112,7 @@
                      :massaprosentti 34}
                     {:ns :runkoaine}))})
 
-(def default-pot2-massa
+(def urakan-testimassa
   {::pot2-domain/urakka-id (hae-utajarven-paallystysurakan-id)
    ::pot2-domain/nimen-tarkenne "Tarkenne"
    ::pot2-domain/tyyppi (:koodi (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
@@ -122,25 +122,97 @@
    ::pot2-domain/dop-nro "12345abc"
    ::pot2-domain/runkoaineet runkoaine-kiviaines-default1
    ::pot2-domain/sideaineet sideaine-default2
-   ::pot2-domain/lisaaineet lisaaine-default1 })
-
-
+   ::pot2-domain/lisaaineet lisaaine-default1})
 
 ;; Pot2 liittyväisiä testejä. Siirtele nämä omaan tiedostoon kun tuntuu siltä
-(deftest tallenna-uusi-pot2-massa
+(deftest tallenna-uusi-massa-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-pot2-massa
-                                +kayttaja-jvh+ default-pot2-massa)
-        _ (println "tallenna-uusi-pot2-massa :: vastaus " (pr-str vastaus))
-        oletus-vastaus #:harja.domain.pot2{:lisaaineet {1 {:valittu? true, :lisaaine/pitoisuus 1.5M}}, :dop-nro "12345abc", :max-raekoko 5, :urakka-id 7, :nimen-tarkenne "Tarkenne", :litteyslukuluokka 1, :runkoaineet {1 {:valittu? true, :runkoaine/esiintyma "Zatelliitti", :runkoaine/kuulamyllyarvo 12.1M, :runkoaine/litteysluku 4.1M, :runkoaine/massaprosentti 34}}, :kuulamyllyluokka "AN5", :sideaineet {:lopputuote {:valittu? true, :aineet {0 #:sideaine{:tyyppi 1, :pitoisuus 10.56M, :lopputuote? true}}}, :lisatty {:aineet {0 {:valittu? true, :sideaine/tyyppi 2, :sideaine/pitoisuus 10.4M, :sideaine/lopputuote? false}}}}, :tyyppi 1}]
+                                :tallenna-urakan-massa
+                                +kayttaja-jvh+ urakan-testimassa)
+        oletus-vastaus {:harja.domain.muokkaustiedot/luoja-id 3
+                        :harja.domain.pot2/dop-nro "12345abc"
+                        :harja.domain.pot2/kuulamyllyluokka "AN5"
+                        :harja.domain.pot2/lisaaineet {1 {:lisaaine/pitoisuus 1.5M
+                                                          :valittu? true}}
+                        :harja.domain.pot2/litteyslukuluokka 1
+                        :harja.domain.pot2/massa-id 3
+                        :harja.domain.pot2/max-raekoko 5
+                        :harja.domain.pot2/nimen-tarkenne "Tarkenne"
+                        :harja.domain.pot2/runkoaineet {1 {:runkoaine/esiintyma "Zatelliitti"
+                                                           :runkoaine/kuulamyllyarvo 12.1M
+                                                           :runkoaine/litteysluku 4.1M
+                                                           :runkoaine/massaprosentti 34
+                                                           :valittu? true}}
+                        :harja.domain.pot2/sideaineet {:lisatty {:aineet {0 {:sideaine/lopputuote? false
+                                                                             :sideaine/pitoisuus 10.4M
+                                                                             :sideaine/tyyppi 2
+                                                                             :valittu? true}}}
+                                                       :lopputuote {:aineet {0 #:sideaine{:lopputuote? true
+                                                                                          :pitoisuus 10.56M
+                                                                                          :tyyppi 1}}
+                                                                    :valittu? true}}
+                        :harja.domain.pot2/tyyppi 1
+                        :harja.domain.pot2/urakka-id 7}]
+    (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "Tallennettu massa")
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/sideaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/sideaineet oletus-vastaus))))))
 
+(def urakan-testimurske
+  #:harja.domain.pot2{:esiintyma "Kankkulan Kaivo 2", :nimen-tarkenne "LJYR", :iskunkestavyys "LA35", :tyyppi 1, :rakeisuus "0/56", :dop-nro "1234567-dope", :murske-id 1 :urakka-id (hae-utajarven-paallystysurakan-id)})
+
+(deftest tallenna-uusi-murske-test-happy-update
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-murske
+                                +kayttaja-jvh+ urakan-testimurske)
+        oletus-vastaus {:harja.domain.muokkaustiedot/muokkaaja-id 3
+                        :harja.domain.pot2/dop-nro "1234567-dope"
+                        :harja.domain.pot2/esiintyma "Kankkulan Kaivo 2"
+                        :harja.domain.pot2/iskunkestavyys "LA35"
+                        :harja.domain.pot2/murske-id 1
+                        :harja.domain.pot2/nimen-tarkenne "LJYR"
+                        :harja.domain.pot2/poistettu? false
+                        :harja.domain.pot2/rakeisuus "0/56"
+                        :harja.domain.pot2/tyyppi 1
+                        :harja.domain.pot2/urakka-id 7}]
+    (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "murskeen vastaus")))
+
+(deftest tallenna-uusi-murske-test-happy-insert
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-murske
+                                +kayttaja-jvh+ (-> urakan-testimurske
+                                                   (dissoc ::pot2-domain/murske-id)
+                                                   (assoc ::pot2-domain/esiintyma "Hoppilan hyppyri")))
+        uusi-id (ffirst (q " SELECT max (id) FROM pot2_mk_urakan_murske;"))
+        oletus-vastaus {:harja.domain.muokkaustiedot/luoja-id 3
+                        :harja.domain.pot2/dop-nro "1234567-dope"
+                        :harja.domain.pot2/esiintyma "Hoppilan hyppyri"
+                        :harja.domain.pot2/iskunkestavyys "LA35"
+                        :harja.domain.pot2/murske-id uusi-id
+                        :harja.domain.pot2/nimen-tarkenne "LJYR"
+                        :harja.domain.pot2/rakeisuus "0/56"
+                        :harja.domain.pot2/tyyppi 1
+                        :harja.domain.pot2/urakka-id 7}]
+    (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "murskeen vastaus")))
+
+(deftest tallenna-uusi-murske-test-epavalidi-iskunkestavyys
+  (is (thrown? AssertionError
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-murske
+                               +kayttaja-jvh+ (merge urakan-testimurske
+                                                     {::pot2-domain/iskunkestavyys "EPÄVALIDI"})))))
+
+(deftest tallenna-uusi-murske-test-epavalidi-rakeisuus
+  (is (thrown? AssertionError
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-murske
+                               +kayttaja-jvh+ (merge urakan-testimurske
+                                                     {::pot2-domain/rakeisuus "0/666"})))))
+
 (deftest hae-urakan-pot2-massat
   (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tallenna-urakan-pot2-massa
-                          +kayttaja-jvh+ default-pot2-massa)
+                          :tallenna-urakan-massa
+                          +kayttaja-jvh+ urakan-testimassa)
         {massat :massat murskeet :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet
@@ -229,6 +301,6 @@
                                                            :sideaine/tyyppi 1})
                            :harja.domain.pot2/tyyppi 1
                            ::pot2-domain/massa-id 3})
-        oletetut-murskeet []]
+        oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1})]
     (is (= massat oletetut-massat))
     (is (= murskeet oletetut-murskeet))))

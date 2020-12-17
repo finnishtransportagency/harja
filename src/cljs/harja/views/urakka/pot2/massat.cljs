@@ -360,20 +360,23 @@
        [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
 (defn massan-toiminnot [e! rivi]
-  [:span.pull-right
-   [yleiset/wrap-if true
-    [yleiset/tooltip {} :% "Muokkaa"]
-    [napit/nappi ""
-     #(e! (mk-tiedot/->MuokkaaMassaa rivi false))
-     {:ikoninappi? true :luokka "klikattava"
-      :ikoni (ikonit/livicon-pen)}]]
+  (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
+                         mk-tiedot/->MuokkaaMursketta
+                         mk-tiedot/->MuokkaaMassaa)]
+    [:span.pull-right
+     [yleiset/wrap-if true
+      [yleiset/tooltip {} :% "Muokkaa"]
+      [napit/nappi ""
+       #(e! (muokkaus-event rivi false))
+       {:ikoninappi? true :luokka "klikattava"
+        :ikoni (ikonit/livicon-pen)}]]
 
-   [yleiset/wrap-if true
-    [yleiset/tooltip {} :% "Luo kopio"]
-    [napit/nappi ""
-     #(e! (mk-tiedot/->MuokkaaMassaa rivi true))
-     {:ikoninappi? true :luokka "klikattava"
-      :ikoni (ikonit/livicon-duplicate)}]]])
+     [yleiset/wrap-if true
+      [yleiset/tooltip {} :% "Luo kopio"]
+      [napit/nappi ""
+       #(e! (muokkaus-event rivi true))
+       {:ikoninappi? true :luokka "klikattava"
+        :ikoni (ikonit/livicon-duplicate)}]]]))
 
 (defn massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid

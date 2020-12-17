@@ -286,7 +286,7 @@
                                                       (:harja.domain.pot2/poistettu? data))}
           _ (js/console.log "TallennaLomake data" (pr-str data))
           _ (js/console.log "TallennaLomake massa" (pr-str massa))]
-      (tuck-apurit/post! :tallenna-urakan-pot2-massa
+      (tuck-apurit/post! :tallenna-urakan-massa
                          (-> (merge massa
                                     poistettu?)
                              (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id)))
@@ -324,7 +324,7 @@
                                                        (:harja.domain.pot2/poistettu? data))}
           _ (js/console.log "TallennaMurskeLomake data" (pr-str data))
           _ (js/console.log "TallennaMurskeLomake murske" (pr-str murske))]
-      (tuck-apurit/post! :tallenna-urakan-pot2-murske
+      (tuck-apurit/post! :tallenna-urakan-murske
                          (-> (merge murske
                                     poistettu?)
                              (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id)))

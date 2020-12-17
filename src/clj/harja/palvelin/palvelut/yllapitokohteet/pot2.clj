@@ -215,16 +215,12 @@
         (swap! paluuarvo conj lisaaine)))
     @paluuarvo))
 
-(defn tallenna-urakan-paallystysmassa
-  [db user {::pot2-domain/keys [runkoaineet sideaineet lisaaineet] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user (:urakka-id tiedot))
+(defn tallenna-urakan-massa
+  [db user {::pot2-domain/keys [runkoaineet sideaineet lisaaineet urakka-id] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (jdbc/with-db-transaction
     [db db]
     (let [massa-id (::pot2-domain/massa-id tiedot)
-          _ (println (str "" (if massa-id "UPDATE" "INSERT") " massa-id  " (pr-str massa-id)))
-          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
-          _ (println "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
-          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet" (pr-str lisaaineet))
           massa (upsert! db ::pot2-domain/pot2-mk-urakan-massa
                          (merge
                            (if massa-id
@@ -255,6 +251,33 @@
                    :harja.domain.pot2/sideaineet sideaineet
                    :harja.domain.pot2/lisaaineet lisaaineet))))
 
+(defn tallenna-urakan-murske
+  [db user {::pot2-domain/keys [urakka-id] :as tiedot}]
+  (println "tallenna-urakan-murske: "(pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (jdbc/with-db-transaction
+    [db db]
+    (let [murske-id (::pot2-domain/murske-id tiedot)
+          _ (println (str "" (if murske-id "UPDATE" "INSERT") " murske-id  " (pr-str murske-id)))
+          murske (upsert! db ::pot2-domain/pot2-mk-urakan-murske
+                         (merge
+                           (if murske-id
+                             {::pot2-domain/murske-id murske-id
+                              ::muokkaustiedot/muokattu (pvm/nyt)
+                              ::muokkaustiedot/muokkaaja-id (:id user)
+                              ::pot2-domain/poistettu? (boolean (::pot2-domain/poistettu? tiedot))}
+                             {::muokkaustiedot/luotu (pvm/nyt)
+                              ::muokkaustiedot/luoja-id (:id user)})
+                           (select-keys tiedot [::pot2-domain/urakka-id
+                                                ::pot2-domain/nimen-tarkenne
+                                                ::pot2-domain/tyyppi
+                                                ::pot2-domain/esiintyma
+                                                ::pot2-domain/rakeisuus
+                                                ::pot2-domain/iskunkestavyys
+                                                ::pot2-domain/dop-nro])))
+          _ (println "tallenna-urakan-paallystysmurske, palautetaan:" (pr-str murske))]
+      murske)))
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
@@ -269,9 +292,12 @@
       (julkaise-palvelu http :hae-pot2-koodistot
                         (fn [user tiedot]
                           (hae-pot2-koodistot db user tiedot)))
-      (julkaise-palvelu http :tallenna-urakan-pot2-massa
+      (julkaise-palvelu http :tallenna-urakan-massa
                         (fn [user tiedot]
-                          (tallenna-urakan-paallystysmassa db user tiedot)))
+                          (tallenna-urakan-massa db user tiedot)))
+      (julkaise-palvelu http :tallenna-urakan-murske
+                        (fn [user tiedot]
+                          (tallenna-urakan-murske db user tiedot)))
       ;; POT2 liittyviä palveluita myös harja.palvelin.palvelut.yllapitokohteet.paallystys ns:ssä
       this))
 
@@ -280,5 +306,6 @@
       (:http-palvelin this)
       :hae-urakan-massat-ja-murskeet
       :hae-pot2-koodistot
-      :tallenna-urakan-pot2-massa)
+      :tallenna-urakan-massa
+      :tallenna-urakan-murske)
     this))
