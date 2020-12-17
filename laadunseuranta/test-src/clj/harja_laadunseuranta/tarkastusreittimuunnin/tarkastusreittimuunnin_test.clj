@@ -17,21 +17,7 @@
             [harja.domain.tierekisteri :as tr-domain])
   (:import (org.postgis PGgeometry MultiLineString Point)))
 
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :mobiili-laadunseuranta
-                        (component/using
-                          (harja-laadunseuranta/->Laadunseuranta)
-                          [:db :http-palvelin])))))
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
-
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :once (compose-fixtures tietokanta-fixture tietokantakomponentti-fixture))
 
 ;; -------- Apurit --------
 

@@ -31,7 +31,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testi/testitietokanta)
                         :http-palvelin (testi/testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi/testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])

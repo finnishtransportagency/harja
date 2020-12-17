@@ -28,7 +28,7 @@
     kayttaja
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
+                       [:http-palvelin :db :integraatioloki])
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
@@ -43,7 +43,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
+             [:db :sonja :integraatioloki :labyrintti])))
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines
