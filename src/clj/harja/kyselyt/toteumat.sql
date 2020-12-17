@@ -892,7 +892,7 @@ WHERE
   AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
-  AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
+  AND ST_Distance84(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
   AND t.tyyppi = :tyyppi :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);

@@ -348,8 +348,8 @@
 (defn extent-keskipiste [[minx miny maxx maxy]]
   (let [width (- maxx minx)
         height (- maxy miny)]
-    [(+ minx (/ width 2))
-     (+ miny (/ height 2))]))
+    [(float (+ minx (/ width 2)))
+     (float (+ miny (/ height 2)))]))
 
 (defn yhdista-extent
   "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin,
