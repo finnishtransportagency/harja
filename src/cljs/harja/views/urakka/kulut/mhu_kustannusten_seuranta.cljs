@@ -25,15 +25,17 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn- laske-prosentti
+(defn- muotoile-prosentti
   "Olettaa saavansa molemmat parametrit big arvoina."
-  [toteuma suunniteltu]
+  [toteuma suunniteltu negatiivinen?]
   (if (or (nil? toteuma)
           (nil? suunniteltu)
           (big/eq (big/->big 0) toteuma)
           (big/eq (big/->big 0) suunniteltu))
-    0
-    (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2)))
+    [:span 0]
+    [:span (when negatiivinen?
+             {:class "pilleri"})
+     (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2)]))
 
 ; spekseistä laskettu
 (def leveydet {:caret-paaryhma "2%"
@@ -71,6 +73,8 @@
       (fn [toimenpide]
         (let [_ (reset! row-index-atom (inc @row-index-atom))
               tehtavat (:tehtavat toimenpide)
+              negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
+                                    (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
               muodostetut-tehtavat (if-not (= (get-in app [:valittu-rivi :toimenpide]) toimenpide)
                                      nil
                                      (mapcat
@@ -82,7 +86,7 @@
                                               [:tr.bottom-border
                                                [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
                                                [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-                                               [:td {:style {:width (:tehtava leveydet)}} (:tehtava_nimi rivi)]
+                                               [:td {:style {:width (:tehtava leveydet)}} [:span {:style {:padding-left "8px"}} (:tehtava_nimi rivi)]]
                                                [:td.numero {:style {:width (:budjetoitu leveydet)}}]
                                                [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
                                                [:td.numero {:style {:width (:erotus leveydet)}}]
@@ -102,21 +106,28 @@
                            [:td {:style {:width (:tehtava leveydet)}} (:toimenpide toimenpide)]
                            [:td.numero {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (:toimenpide-budjetoitu-summa toimenpide))]
                            [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (:toimenpide-toteutunut-summa toimenpide))]
-                           [:td {:class (if (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
-                                                    (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
-                                          "negatiivinen-numero" "numero")
+                           [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
                                  :style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (:toimenpide-budjetoitu-summa toimenpide) (:toimenpide-toteutunut-summa toimenpide)))]
-                           [:td {:class (if (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
-                                                    (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
-                                          "negatiivinen-numero" "numero")
-                                 :style {:width (:prosentti leveydet)}} (laske-prosentti
+                           [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
+                                 :style {:width (:prosentti leveydet)}} (muotoile-prosentti
                                                                           (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
-                                                                          (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))]]]
+                                                                          (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0))
+                                                                          negatiivinen?)]]]
                          muodostetut-tehtavat))))
       toimenpiteet)))
 
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:hankintakustannukset rivit-paaryhmittain))
+        hankintakustannukset-negatiivinen? (big/gt (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-toteutunut]) 0))
+                                                   (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]) 0)))
+        hallintakorvaus-negatiivinen? (big/gt (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-toteutunut]) 0))
+                                              (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]) 0)))
+        hoidonjohdonpalkkio-negatiivinen? (big/gt (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-toteutunut]) 0))
+                                                  (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]) 0)))
+        erillishankinnat-negatiivinen? (big/gt (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-toteutunut]) 0))
+                                               (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]) 0)))
+        yht-negatiivinen? (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
+                                  (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (rivita-lisatyot e! app (:lisatyot rivit-paaryhmittain))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -156,16 +167,13 @@
                        :font-weight "700"}} "Hankintakustannukset"]
          [:td.numero {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]))]
          [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:hankintakustannukset-toteutunut]))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
+         [:td {:class (if hankintakustannukset-negatiivinen? "negatiivinen-numero" "numero")
                :style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]) (get-in rivit-paaryhmittain [:hankintakustannukset-toteutunut])))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
-               :style {:width (:prosentti leveydet)}} (laske-prosentti
+         [:td {:class (if hankintakustannukset-negatiivinen? "negatiivinen-numero" "numero")
+               :style {:width (:prosentti leveydet)}} (muotoile-prosentti
                                                         (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-toteutunut]) 0))
-                                                        (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]) 0)))]]
+                                                        (big/->big (or (get-in rivit-paaryhmittain [:hankintakustannukset-budjetoitu]) 0))
+                                                        hankintakustannukset-negatiivinen?)]]
         (when (= :hankintakustannukset (get-in app [:valittu-rivi :paaryhma]))
           (doall
             (for [l hankintakustannusten-toimenpiteet]
@@ -183,16 +191,13 @@
                        :font-weight "700"}} "Johto- ja hallintokorvaukset"]
          [:td.numero {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]))]
          [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-toteutunut]))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
+         [:td {:class (if hallintakorvaus-negatiivinen? "negatiivinen-numero" "numero")
                :style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]) (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-toteutunut])))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
-               :style {:width (:prosentti leveydet)}} (laske-prosentti
+         [:td {:class (if hallintakorvaus-negatiivinen? "negatiivinen-numero" "numero")
+               :style {:width (:prosentti leveydet)}} (muotoile-prosentti
                                                         (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-toteutunut]) 0))
-                                                        (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]) 0)))]]
+                                                        (big/->big (or (get-in rivit-paaryhmittain [:johto-ja-hallintakorvaus-budjetoitu]) 0))
+                                                        hallintakorvaus-negatiivinen?)]]
         (when (= :johto-ja-hallintakorvaus (get-in app [:valittu-rivi :paaryhma]))
           (doall
             (for [l jjhk-toimenpiteet]
@@ -206,16 +211,13 @@
                        :font-weight "700"}} "Hoidonjohdonpalkkio"]
          [:td.numero {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]))]
          [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-toteutunut]))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
+         [:td {:class (if hoidonjohdonpalkkio-negatiivinen? "negatiivinen-numero" "numero")
                :style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]) (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-toteutunut])))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
-               :style {:width (:prosentti leveydet)}} (laske-prosentti
+         [:td {:class (if hoidonjohdonpalkkio-negatiivinen? "negatiivinen-numero" "numero")
+               :style {:width (:prosentti leveydet)}} (muotoile-prosentti
                                                         (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-toteutunut]) 0))
-                                                        (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]) 0)))]]
+                                                        (big/->big (or (get-in rivit-paaryhmittain [:hoidonjohdonpalkkio-budjetoitu]) 0))
+                                                        hoidonjohdonpalkkio-negatiivinen?)]]
 
         [:tr.bottom-border {:key "Erillishankinnat"}
          [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}} ""] ;; Erillishankinnoilla ei ole toimenpiteitä tai tehtäviä
@@ -224,16 +226,13 @@
                        :font-weight "700"}} "Erillishankinnat"]
          [:td.numero {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]))]
          [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (get-in rivit-paaryhmittain [:erillishankinnat-toteutunut]))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
+         [:td {:class (if erillishankinnat-negatiivinen? "negatiivinen-numero" "numero")
                :style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]) (get-in rivit-paaryhmittain [:erillishankinnat-toteutunut])))]
-         [:td {:class (if (big/gt (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-toteutunut]) 0))
-                                  (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]) 0)))
-                        "negatiivinen-numero" "numero")
-               :style {:width (:prosentti leveydet)}} (laske-prosentti
+         [:td {:class (if erillishankinnat-negatiivinen? "negatiivinen-numero" "numero")
+               :style {:width (:prosentti leveydet)}} (muotoile-prosentti
                                                         (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-toteutunut]) 0))
-                                                        (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]) 0)))]]
+                                                        (big/->big (or (get-in rivit-paaryhmittain [:erillishankinnat-budjetoitu]) 0))
+                                                        erillishankinnat-negatiivinen?)]]
         ; Näytä yhteensä rivi, mikäli toimenpiteitä on olemassa
         (when true
           [:tr.bottom-border
@@ -246,16 +245,13 @@
 
            [:td.numero {:style {:width (:budjetoitu leveydet)}} (formatoi-naytolle->big (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]))]
            [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
-           [:td {:class (if (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-                                    (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
-                          "negatiivinen-numero" "numero")
+           [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
                  :style {:width (:erotus leveydet)}} (formatoi-naytolle->big (- (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])))]
-           [:td {:class (if (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-                                    (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
-                          "negatiivinen-numero" "numero")
-                 :style {:width (:prosentti leveydet)}} (laske-prosentti
+           [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
+                 :style {:width (:prosentti leveydet)}} (muotoile-prosentti
                                                           (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-                                                          (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))]])]]
+                                                          (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0))
+                                                          yht-negatiivinen?)]])]]
       ;; Lisätyöt
       [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
        [:tbody
@@ -288,12 +284,17 @@
      [:div.yhteenveto
       [:div.header [:span "Yhteenveto"]]
       [:div.row [:span "Tavoitehinta: "] [:span.pull-right (formatoi-naytolle->big tavoitehinta true)]]
-      [:div.row [:span "Kattohinta: "] [:span.pull-right (formatoi-naytolle->big kattohinta true)]]
-      [:div.row [:span "Toteuma: "] [:span.pull-right (formatoi-naytolle->big toteuma true)]]
       (when (big/gt toteuma tavoitehinta)
         [:div.row [:span "Tavoitehinnan ylitys: "]
          [:span.negatiivinen-numero.pull-right
           (str "+ " (formatoi-naytolle->big (big/minus toteuma tavoitehinta)))]])
+      [:div.row [:span "Kattohinta: "] [:span.pull-right (formatoi-naytolle->big kattohinta true)]]
+      (when (big/gt toteuma kattohinta)
+        [:div.row [:span "Kattohinnan ylitys: "]
+         [:span.negatiivinen-numero.pull-right
+          (str "+ " (formatoi-naytolle->big (big/minus toteuma kattohinta)))]])
+      [:div.row [:span "Toteuma: "] [:span.pull-right (formatoi-naytolle->big toteuma true)]]
+
       [:div.row [:span "Lisätyöt: "] [:span.pull-right (formatoi-naytolle->big (:lisatyot-summa data) false)]]]]))
 
 (defn kustannukset
