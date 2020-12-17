@@ -59,7 +59,7 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest julkaisu-ja-kuuntelu
+#_(deftest julkaisu-ja-kuuntelu
   (testing "tapahtumat-komponentti on luotu onnistuneesti"
     (is (some? (:klusterin-tapahtumat harja-tarkkailija))))
   (let [saatiin (atom nil)]
@@ -305,7 +305,7 @@
           (is (= uusikanava (:kanava muokkauksen-jalkeen))
               "Olemassa olevan tapahtuman kanavaa ei saisi muuttaa"))))))
 
-#_(deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
+(deftest tapahtumat-julkaistaan-jarjestyksessa-ilman-aukkoja-julkaisuketjuun
   (let [aja-loop-atom (atom false)
         loop-ajettu-atom (atom false)
         odota-loopin-ajo! (fn []
