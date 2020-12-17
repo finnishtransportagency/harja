@@ -488,7 +488,12 @@ UNION ALL
         l-summa (apply + (map #(:toteutunut_summa %) lisatyot))
         l-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
         sql-summa (apply + (map #(first %) l-sql))]
-    (is (= l-summa sql-summa))))
+    ;; Vertaillaan summaa
+    (is (= l-summa sql-summa))
+    ;; Vertaillaan lisätöiksi määriteltyjen tehtävien määrää
+    (is (= (count lisatyot) (count l-sql) ))))
+
+
 
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida
