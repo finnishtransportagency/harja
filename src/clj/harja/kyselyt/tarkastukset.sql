@@ -187,7 +187,7 @@ FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE t.urakka = :urakka
       AND t.sijainti IS NOT NULL
-      AND ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
+      AND ST_Distance84(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
