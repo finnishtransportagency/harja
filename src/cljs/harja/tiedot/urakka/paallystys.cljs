@@ -3,6 +3,7 @@
   (:require
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]
+    [cognitect.transit :as transit]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
@@ -258,6 +259,18 @@
 (defn rivin-kohteen-pituus
   [osien-pituudet rivi]
   (tr-domain/laske-tien-pituus osien-pituudet rivi))
+
+(defn rivita-virheet
+  "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
+   [vastaus]
+  [(reduce-kv (fn [m k v]
+                (assoc m k (distinct
+                             (flatten
+                               (if (map? v)
+                                 v
+                                 (map (fn [kohde]
+                                        (if (empty? kohde) nil (vals kohde))) v))))))
+              {} (transit/read (transit/reader :json) (get-in vastaus [:response :virhe])))])
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -516,19 +529,7 @@
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-                 ;; Näytä käyttäjälle jotakin myös virheistä, joita validointi ei ole napannut.
-                 (let [vastaus-virhe (if (= :error (:failure vastaus))
-                                      {:virhe [{:teksti (get-in vastaus [:parse-error :original-text])}] }
-                                      (:virhe vastaus))]
-                   (virhe-modal {:virhe [(reduce-kv (fn [m k v]
-                                         (assoc m k (distinct
-                                                      (flatten
-                                                        (if (map? v)
-                                                          v
-                                                          (map (fn [kohde]
-                                                                   (if (empty? kohde) nil (vals kohde))) v))))))
-                                     {} vastaus-virhe)]}
-                 "Päällystysilmoituksen tallennus epäonnistui!"))
+    (virhe-modal {:virhe (rivita-virheet vastaus)} "Päällystysilmoituksen tallennus epäonnistui!")
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit

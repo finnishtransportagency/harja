@@ -592,7 +592,7 @@
             kohde-id (:paallystyskohde-id paallystysilmoitus)
             virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
         (when (seq virheviestit)
-          (throw (IllegalArgumentException. (pr-str virheviestit)))))
+          (throw (IllegalArgumentException. (cheshire/encode virheviestit)))))
       (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                    db user {:urakka-id urakka-id :sopimus-id sopimus-id
                                             :vuosi vuosi
@@ -601,7 +601,7 @@
                                             :osat (map #(assoc % :id (:kohdeosa-id %))
                                                        (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})
             _ (when-let [virhe (:validointivirheet paivitetyt-kohdeosat)]
-                (throw (IllegalArgumentException. (str "Validointi virhe: " (pr-str virhe)))))
+                (throw (IllegalArgumentException. (cheshire/encode virhe))))
             tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
                                     (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
                                     (clj-set/rename-keys {:kohdenimi :nimi}))
