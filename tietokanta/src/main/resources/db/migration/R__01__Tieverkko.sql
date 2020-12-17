@@ -1,9 +1,13 @@
+-- PostGIS 3-versiossa ST_Distancen kanssa täytyy
+-- geometrioita joilla on määritelty koordinaatistotunniste (SRID).
+-- 4326 vastaa wgs84-koordinaatistoa.
+
 CREATE OR REPLACE FUNCTION ST_Distance84(geom1 GEOMETRY, geom2 GEOMETRY)
  RETURNS float AS $$
 BEGIN
  RETURN ST_Distance(ST_SetSRID(geom1, 4326), ST_SetSRID(geom2, 4326));
 END;
-$$ language plpgsql;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Kääntää MULTILINESTRING geometrian osien järjestyksen toisin päin.
 -- Tämä tarvitaan kun kerätään vasemmalla ajoradalla olevia geometrioita
