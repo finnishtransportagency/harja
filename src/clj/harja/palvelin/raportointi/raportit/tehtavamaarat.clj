@@ -9,6 +9,36 @@
             [taoensso.timbre :as log])
   (:import (java.math RoundingMode)))
 
+(defn- sama-tehtava-ja-ely?
+  [e t]
+  (and (= (:nimi e) (:nimi t))
+       (= (:hallintayksikko e) (:hallintayksikko t))))
+
+(defn- laske-yhteen
+  [e t]
+  (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
+           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
+
+(defn kombota-samat-tehtavat
+  ([rivit]
+   (kombota-samat-tehtavat rivit {}))
+  ([rivit {:keys [tarkistus-fn]}]
+   (loop [rivit rivit
+          kombottu []]
+     (let [r (first rivit)
+           tarkista (or tarkistus-fn
+                        sama-tehtava-ja-ely?)]
+       (if (not r)
+         kombottu
+         (let [r (or (some #(when (tarkista % r)
+                              (laske-yhteen % r))
+                           kombottu)
+                     r)
+               kombottu (filter #(not (tarkista % r))
+                                kombottu)
+               kombottu (apply conj kombottu (keep identity [r]))]
+           (recur (rest rivit) kombottu)))))))
+
 (defn- laske-hoitokaudet
   [alkupvm loppupvm]
   (let [alku-hoitokausi (if (pvm/ennen? alkupvm (pvm/hoitokauden-alkupvm (pvm/vuosi alkupvm)))
@@ -123,6 +153,7 @@
                                                          (fn [_ _] nil)]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
+
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil
@@ -156,7 +187,7 @@
                         (map (partial muodosta-otsikot (map :nimi raportin-taustatiedot))))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
-     :debug   raportin-taustatiedot
+     :debug   suunnitellut-ryhmissa
      :otsikot [{:otsikko "Tehtävä" :leveys 6}
                {:otsikko "Yksikkö" :leveys 1}
                {:otsikko (str "Suunniteltu määrä "
@@ -167,9 +198,14 @@
                {:otsikko "Toteuma" :leveys 2 :fmt :numero}
                {:otsikko "Toteuma-%" :leveys 2}]}))
 
+(defn db-haku-fn
+  [db params]
+  (kombota-samat-tehtavat
+    (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params)))
+
 (defn suorita
   [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
-  (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla params)]
+  (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user db-haku-fn params)]
     [:raportti
      {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
      [:taulukko

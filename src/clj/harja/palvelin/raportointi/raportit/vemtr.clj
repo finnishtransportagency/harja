@@ -18,31 +18,35 @@
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
            :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
 
-(defn kombota-samat
-  [ekat tokat]
-  (loop [ekat ekat
-         tokat tokat
-         kombottu []]
-    (let [e (first ekat)
-          t (first tokat)]
-      (if (not (or e t))
-        kombottu
-        (let [e (or (some #(when (sama-tehtava-ja-ely? % e)
-                             (laske-yhteen % e))
-                          kombottu)
-                    (when (sama-tehtava-ja-ely? e t)
-                      (laske-yhteen e t))
-                    e)
-              t (or (some #(when (sama-tehtava-ja-ely? % t)
-                             (laske-yhteen % t))
-                          kombottu)
-                    (when-not (sama-tehtava-ja-ely? e t)
-                      t))
-              kombottu (filter #(not (or (sama-tehtava-ja-ely? % e)
-                                         (sama-tehtava-ja-ely? % t)))
-                               kombottu)
-              kombottu (apply conj kombottu (keep identity [e t]))]
-          (recur (rest ekat) (rest tokat) kombottu))))))
+(defn kombota-samat-tehtavat
+  ([ekat tokat]
+    (kombota-samat-tehtavat ekat tokat {}))
+  ([ekat tokat {:keys [tarkistus-fn]}]
+   (loop [ekat ekat
+          tokat tokat
+          kombottu []]
+     (let [e (first ekat)
+           t (first tokat)
+           tarkista (or tarkistus-fn
+                        sama-tehtava-ja-ely?)]
+       (if (not (or e t))
+         kombottu
+         (let [e (or (some #(when (tarkista % e)
+                              (laske-yhteen % e))
+                           kombottu)
+                     (when (tarkista e t)
+                       (laske-yhteen e t))
+                     e)
+               t (or (some #(when (tarkista % t)
+                              (laske-yhteen % t))
+                           kombottu)
+                     (when-not (tarkista e t)
+                       t))
+               kombottu (filter #(not (or (tarkista % e)
+                                          (tarkista % t)))
+                                kombottu)
+               kombottu (apply conj kombottu (keep identity [e t]))]
+           (recur (rest ekat) (rest tokat) kombottu)))))))
 
 (defn hae-tm-combo [db params]
   (let [combo-fn
@@ -52,9 +56,8 @@
               #_vemtr-q/hae-yh-suunnitellut-tehtavamaarat-ja-toteumat-aikavalilla)
         [mhut yht :as kaksi-tulosjoukkoa] (combo-fn db params)]
 
-    (println (count (apply concat kaksi-tulosjoukkoa) ) (count (kombota-samat mhut yht)))
     #_(apply concat kaksi-tulosjoukkoa)
-    (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat mhut yht))))
+    (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat-tehtavat mhut yht))))
 
 (defn suorita
   [db user params]
