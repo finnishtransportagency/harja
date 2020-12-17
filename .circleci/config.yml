@@ -74,7 +74,7 @@ jobs:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
+      - image: solita/harjadb:postgis-3.1-circle
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
@@ -98,7 +98,7 @@ jobs:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
+      - image: solita/harjadb:postgis-3.1-circle
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
@@ -122,7 +122,7 @@ jobs:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
+      - image: solita/harjadb:postgis-3.1-circle
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
@@ -153,7 +153,7 @@ jobs:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
+      - image: solita/harjadb:postgis-3.1-circle
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
@@ -188,7 +188,7 @@ jobs:
     docker:
       - image: solita/harja-cypress:latest
       - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
+      - image: solita/harjadb:postgis-3.1-circle
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
