@@ -33,6 +33,11 @@
                    [harja.makrot :refer [fnc]]
                    [harja.tyokalut.ui :refer [for*]]))
 
+(def tiiviin-tyylin-sarakemaara 7)
+(defn tiivis-tyyli [skeema]
+  (when (> (count skeema) tiiviin-tyylin-sarakemaara)
+    "tiivis"))
+
 (defn- muokkauselementti [sarake {:keys [gridin-tietoja] :as asetukset}
                           skeema rivi index]
   (let [this-node (atom nil)
@@ -222,6 +227,7 @@
                                  (y/tasaus-luokka tasaa)
                                  (when pakota-rivitys? "grid-pakota-rivitys")
                                  (when solu-klikattu "klikattava")
+                                 (tiivis-tyyli skeema)
                                  (case reunus
                                    :ei "grid-reunus-ei"
                                    :vasen "grid-reunus-vasen"
@@ -434,7 +440,8 @@
       (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]}]
         ^{:key (str i nimi)}
         [:th {:class (y/luokat otsikkorivi-luokka
-                               (y/tasaus-luokka tasaa))
+                               (y/tasaus-luokka tasaa)
+                               (tiivis-tyyli skeema))
               :width (or leveys "5%")}
          otsikko]) skeema)
     (when (or nayta-toimintosarake?

@@ -17,17 +17,13 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
 @livitaulukon-input-korkeus: 22px;
 @livitaulukon-rivi-korkeus: 24px;
-@livi-taulukon-padding: 3px;
-@livi-taulukon-padding-muokatessa: 0;
+@livi-taulukon-padding: 8px 16px;
+@livi-taulukon-padding-tiivis: 3px 1px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: #dee7fb;
 
 .vihje-hento-korostus {
   background-color: @hento-korostusvari;
-}
-
-.livi-taulukon-reunat {
-  border: 1px solid @harmaa7;
 }
 
 .livi-grid {
@@ -95,7 +91,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     thead {
       background-color: @harmaa8;
       word-break: normal;
+      vertical-align: top;
     }
+    tbody {
+      > tr {
+        border-bottom: 1px solid @harmaa-vaalea;
+      }
+    }
+
 
     td:hover {
       > .varoitukset,
@@ -134,8 +137,11 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     text-align: center;
   }
   tr, td, th {
+    background-color: @gray250;
     padding: @livi-taulukon-padding;
-    .livi-taulukon-reunat;
+    &.tiivis {
+      padding: @livi-taulukon-padding-tiivis;
+    }
     .pvm-aika-kentta td {
       padding: 0;
     }
@@ -184,6 +190,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
 
   table th {
+    color: @harmaa-tumma;
+    font-weight: normal;
     overflow: hidden;
   }
 
@@ -211,12 +219,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   div.pvm {
     position: relative;
   }
-  tr.parillinen {
-    background-color: @harmaa10;
-  }
-  tr.pariton {
-    background-color: @harmaa15;
-  }
+
   tr.rivi-valittu {
     color: @valkoinen;
     background-color: @harmaa7;
@@ -243,7 +246,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
   tr.muokataan {
     height: @livitaulukon-rivi-korkeus;
-    padding: @livi-taulukon-padding-muokatessa;
+    padding: @livi-taulukon-padding-tiivis;
     &.parillinen {
       background-color: @harmaa10;
       input[disabled].disabled {
@@ -275,21 +278,35 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     td {
       &.ei-muokattava {
         padding-left: @livi-taulukon-padding;
+        &.tiivis {
+          padding-left: @livi-taulukon-padding-tiivis;
+        }
       }
       &.ei-muokattava.tasaa-oikealle {
         padding-right: @livi-taulukon-padding;
+        &.tiivis {
+          padding-right: @livi-taulukon-padding-tiivis;
+        }
       }
       &.muokattava > input {
         padding: 0 0 0 @livi-taulukon-padding;
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
       }
       &.muokattava.tasaa-oikealle > input {
         padding: 0 @livi-taulukon-padding 0 0;
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
       }
       &.muokattava.tasaa-oikealle > span.grid-kentta-wrapper > input {
         padding: 0 @livi-taulukon-padding 0 0;
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
       }
-      padding: @livi-taulukon-padding-muokatessa;
-      .livi-taulukon-reunat;
+      padding: @livi-taulukon-padding-tiivis;
       > input {
         border: none;
       }
