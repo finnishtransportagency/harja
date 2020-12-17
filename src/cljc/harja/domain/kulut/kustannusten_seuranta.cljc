@@ -41,11 +41,15 @@
          :toimenpide-budjetoitu-summa (reduce (fn [summa tehtava]
                                                 (+ summa (:budjetoitu_summa tehtava)))
                                               0 toimenpiteen-tehtavat)
-         :lisatyot (reduce (fn [summa tehtava]
-                             (if (= "lisatyo" (:maksutyyppi tehtava))
-                               (+ summa (:toteutunut_summa tehtava))
-                               summa))
-                           0 toimenpiteen-tehtavat)
+         :lisatyot-summa (reduce (fn [summa tehtava]
+                                   (if (= "lisatyo" (:maksutyyppi tehtava))
+                                     (+ summa (:toteutunut_summa tehtava))
+                                     summa))
+                                 0 toimenpiteen-tehtavat)
+         :lisatyot (filter (fn [tehtava]
+                             (when (= "lisatyo" (:maksutyyppi tehtava))
+                               true))
+                           toimenpiteen-tehtavat)
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}))
     toimenpiteet))
 
@@ -120,8 +124,13 @@
              (apply + (map (fn [rivi]
                              (:toimenpide-toteutunut-summa rivi))
                            toimenpiteet)))
-      (assoc :lisatyot (reduce (fn [summa rivi]
-                                 (+ (or summa 0) (or (:lisatyot rivi) 0)))
+      (assoc :lisatyot-summa (reduce (fn [summa rivi]
+                                       (+ (or summa 0) (or (:lisatyot-summa rivi) 0)))
+                                     (:lisatyot-summa taulukko-rivit)
+                                     toimenpiteet))
+      (assoc :lisatyot (reduce (fn [kaikki toimenpide]
+                                 (concat kaikki
+                                       (:lisatyot toimenpide)))
                                (:lisatyot taulukko-rivit)
                                toimenpiteet))))
 

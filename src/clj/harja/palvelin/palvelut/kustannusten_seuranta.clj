@@ -16,9 +16,8 @@
 
 
 (defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
-  ;; TODO tarkista käyttöoikeudet
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [_ (println "hae-urakan-kustannusten-seuranta-toimenpideittain :: tiedot " (pr-str tiedot))
+    (let [_ (println "hae-urakan-kustannusten-seuranta-paaryhmittain :: tiedot " (pr-str tiedot))
           res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
                                                                              :alkupvm alkupvm
                                                                              :loppupvm loppupvm
@@ -53,14 +52,42 @@
                         (:tehtavat toimenpide)))))
           toimenpiteet))
 
-(defn- luo-excel-rivi-toimenpiteelle [rivi]
-  [(:paaryhma rivi)
-   (:toimenpide rivi)
-   (:tehtava_nimi rivi)
-   (:budjetoitu_summa rivi)
-   (:toteutunut_summa rivi)
-   (:erotus rivi)
-   (:prosentti rivi)])
+(defn- rivita-lisatyot [lisatyot yhteensa]
+  (concat [{:paaryhma "Lisätyöt"
+            :toimenpide nil
+            :tehtava_nimi nil
+            :toteutunut_summa yhteensa
+            :budjetoitu_summa nil
+            :erotus nil
+            :prosentti nil}]
+          (mapcat
+            (fn [l]
+              [{:paaryhma "Lisätyöt"
+                :toimenpide (:toimenpide l)
+                :tehtava_nimi (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))
+                :toteutunut_summa (or (:toteutunut_summa l) 0)
+                :budjetoitu_summa nil
+                :erotus nil
+                :prosentti nil}])
+            lisatyot)))
+
+(defn- luo-excel-rivi-toimenpiteelle [rivi ensimmainen?]
+  (if ensimmainen?
+    {:rivi [(:paaryhma rivi)
+            (:toimenpide rivi)
+            (:tehtava_nimi rivi)
+            (:budjetoitu_summa rivi)
+            (:toteutunut_summa rivi)
+            (:erotus rivi)
+            (:prosentti rivi)]
+     :lihavoi? true}
+    [nil
+     (:toimenpide rivi)
+     (:tehtava_nimi rivi)
+     (:budjetoitu_summa rivi)
+     (:toteutunut_summa rivi)
+     (:erotus rivi)
+     (:prosentti rivi)]))
 
 (defn- luo-excel-rivi-hoidonjohdolle [kustannusdata]
   (let [bud (get-in kustannusdata [:taulukon-rivit :hoidonjohdonpalkkio-budjetoitu])
@@ -69,7 +96,7 @@
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
                     (* 100 (* 100 (.divide tot bud 2))))]
-    [["Hoidonjohdonpalkkio" nil nil bud tot erotus prosentti]]))
+    [{:rivi ["Hoidonjohdonpalkkio" nil nil bud tot erotus prosentti] :lihavoi? true}]))
 
 (defn- luo-excel-rivi-erillishankinnoille [kustannusdata]
   (let [bud (get-in kustannusdata [:taulukon-rivit :erillishankinnat-budjetoitu])
@@ -78,7 +105,7 @@
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
                     (* 100 (* 100 (.divide tot bud 2))))]
-    [["Erillishankinnat" nil nil bud tot erotus prosentti]]))
+    [{:rivi ["Erillishankinnat" nil nil bud tot erotus prosentti] :lihavoi? true}]))
 
 (defn- luo-excel-rivi-yhteensa [kustannusdata]
   (let [bud (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa])
@@ -89,12 +116,13 @@
                     (* 100 (* 100 (.divide tot bud 2))))]
     [{:rivi ["Yhteensä" nil nil bud tot erotus prosentti] :lihavoi? true}]))
 
-(defn- luo-excel-rivi-lisatyot [kustannusdata]
-  [{:rivi ["Lisätyöt" nil nil nil (get-in kustannusdata [:taulukon-rivit :lisatyot]) nil nil] :lihavoi? true}])
+(defn- luo-excel-rivi-lisatyot [rivi ensimmainen?]
+  (if ensimmainen?
+    {:rivi ["Lisätyöt" (:toimenpide rivi) (:tehtava_nimi rivi) nil (:toteutunut_summa rivi) nil nil] :lihavoi? true}
+    [nil (:toimenpide rivi) (:tehtava_nimi rivi) nil (:toteutunut_summa rivi) nil nil]))
 
 (defn- kustannukset-excel
   [db workbook user {:keys [urakka-id urakka-nimi hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
-  ;;TODO: Tarkista käyttöoikeudet
   (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
   (let [_ (println "kustannukset-excel :: tiedot " (pr-str tiedot))
         kustannukset-tehtavittain (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain
@@ -109,23 +137,29 @@
         hallintakorvausten-toimenpiteet (rivita-toimenpiteet
                                           (get-in kustannusdata [:taulukon-rivit :johto-ja-hallintakorvaus])
                                           "Johto- ja Hallintokorvaukset")
+        lisatyot (rivita-lisatyot (get-in kustannusdata [:taulukon-rivit :lisatyot]) (get-in kustannusdata [:taulukon-rivit :lisatyot-summa]))
         sarakkeet [{:otsikko "Ryhmä"} {:otsikko "Toimenpide"} {:otsikko "Tehtavä"}
                    {:otsikko "Budjetti €" :fmt :raha} {:otsikko "Toteuma €" :fmt :raha}
                    {:otsikko "Erotus €" :fmt :raha} {:otsikko "%" :fmt :prosentti}]
         optiot {:nimi urakka-nimi
                 :tyhja (if (empty? kustannukset-tehtavittain) "Ei kustannuksia valitulla aikavälillä.")}
         ;; Raporttiin laitetaan otsikot aina pääryhmän yläpuolelle ja tästä syystä tämä :taulukko lisätään raporttiin monta kertaa
-        taulukot [[:taulukko optiot sarakkeet (mapv luo-excel-rivi-toimenpiteelle hankintakustannusten-toimenpiteet)]]
-        taulukot (conj taulukot
-                       [:taulukko optiot sarakkeet (mapv luo-excel-rivi-toimenpiteelle hallintakorvausten-toimenpiteet)])
-        taulukot (conj taulukot
-                       [:taulukko optiot sarakkeet (luo-excel-rivi-hoidonjohdolle kustannusdata)])
-        taulukot (conj taulukot
-                       [:taulukko optiot sarakkeet (luo-excel-rivi-erillishankinnoille kustannusdata)])
-        taulukot (conj taulukot
-                       [:taulukko optiot sarakkeet (concat
-                                                     (luo-excel-rivi-yhteensa kustannusdata)
-                                                     (luo-excel-rivi-lisatyot kustannusdata))])
+        taulukot [[:taulukko optiot sarakkeet
+                   (concat
+                     (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first hankintakustannusten-toimenpiteet))
+                                                               true
+                                                               false)) hankintakustannusten-toimenpiteet)
+                     (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first hallintakorvausten-toimenpiteet))
+                                                               true
+                                                               false)) hallintakorvausten-toimenpiteet)
+                     (luo-excel-rivi-hoidonjohdolle kustannusdata)
+                     (luo-excel-rivi-erillishankinnoille kustannusdata)
+                     (luo-excel-rivi-yhteensa kustannusdata)
+                     (mapv (fn [rivi]
+                             (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))
+                                                             true
+                                                             false)))
+                           lisatyot))]]
         taulukko (concat
                    [:raportti {:nimi (str urakka-nimi "_" alkupvm "-" loppupvm)
                                :orientaatio :landscape}]

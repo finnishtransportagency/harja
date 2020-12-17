@@ -53,6 +53,17 @@
          fmt-arvo (harja.fmt/desimaaliluku (or (:b arvo) 0) 2 true)]
      fmt-arvo)))
 
+(defn- rivita-lisatyot [e! app lisatyot]
+  (for [l lisatyot]
+    [:tr.bottom-border
+     [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+     [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+     [:td {:style {:width (:tehtava leveydet)}} (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))]
+     [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+     [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (:toteutunut_summa l) false) " "]
+     [:td.numero {:style {:width (:erotus leveydet)}}]
+     [:td.numero {:style {:width (:prosentti leveydet)}}]]))
+
 (defn- rivita-toimenpiteet-paaryhmalle [e! app toimenpiteet]
   (let [row-index-atom (r/atom 0)
         avattava? true]
@@ -69,8 +80,8 @@
                                            (concat
                                              [^{:key (str @row-index-atom "-tehtava-" (hash rivi))}
                                               [:tr.bottom-border
-                                               [:td {:style {:width (:caret-paaryhma leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
-                                               [:td {:style {:width (:paaryhma-vari leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
+                                               [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+                                               [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
                                                [:td {:style {:width (:tehtava leveydet)}} (:tehtava_nimi rivi)]
                                                [:td.numero {:style {:width (:budjetoitu leveydet)}}]
                                                [:td.numero {:style {:width (:toteuma leveydet)}} (str (formatoi-naytolle->big toteutunut-summa false) " ")]
@@ -82,8 +93,8 @@
                            (merge
                              (when (> (count tehtavat) 0)
                                {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :toimenpide toimenpide))}))
-                           [:td {:style {:width (:caret-paaryhma leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}]
-                           [:td {:style {:width (:paaryhma-vari leveydet) :padding-left "0px" :padding-right "0px" :text-align "center"}}
+                           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+                           [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}
                             (when (> (count tehtavat) 0)
                               (if (= (get-in app [:valittu-rivi :toimenpide]) toimenpide)
                                 [:img {:alt "Expander" :src "images/expander-down.svg"}]
@@ -100,14 +111,14 @@
                                           "negatiivinen-numero" "numero")
                                  :style {:width (:prosentti leveydet)}} (laske-prosentti
                                                                           (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
-                                                                          (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))]
-                           ]]
+                                                                          (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))]]]
                          muodostetut-tehtavat))))
       toimenpiteet)))
 
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:hankintakustannukset rivit-paaryhmittain))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
+        lisatyot (rivita-lisatyot e! app (:lisatyot rivit-paaryhmittain))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         monesko-hoitovuosi (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero (pvm/vuosi (pvm/nyt)))
@@ -244,18 +255,28 @@
                           "negatiivinen-numero" "numero")
                  :style {:width (:prosentti leveydet)}} (laske-prosentti
                                                           (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-                                                          (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))]])
-        ;; Näytetään lisätyöt
-        (when true
-          [:tr.bottom-border {:style {:padding-top "40px"}}
-           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
-           [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-           [:td {:style {:width (:tehtava leveydet) :font-weight "700"}} "Lisätyöt"]
-           [:td.numero {:style {:width (:budjetoitu leveydet)}}]
-           [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (:lisatyot rivit-paaryhmittain))]
-           [:td {:style {:width (:erotus leveydet)}}]
-           [:td {:style {:width (:prosentti leveydet)}}]])
-        ]]]]))
+                                                          (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))]])]]
+      ;; Lisätyöt
+      [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
+       [:tbody
+        [:tr.bottom-border.selectable {:key "Lisätyöt"
+                                       :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :lisatyot))}
+
+         [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
+          (if (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+            [:img {:alt "Expander" :src "images/expander-down.svg"}]
+            [:img {:alt "Expander" :src "images/expander.svg"}])]
+         [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+         [:td {:style {:width (:tehtava leveydet) :font-weight "700"}} "Lisätyöt"]
+         [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+         [:td.numero {:style {:width (:toteuma leveydet)}} (formatoi-naytolle->big (:lisatyot-summa rivit-paaryhmittain))]
+         [:td {:style {:width (:erotus leveydet)}}]
+         [:td {:style {:width (:prosentti leveydet)}}]]
+        (when (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+          (doall
+            (for [l lisatyot]
+              ^{:key (hash l)}
+              l)))]]]]))
 
 (defn yhteenveto-laatikko [e! app data]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -273,7 +294,7 @@
         [:div.row [:span "Tavoitehinnan ylitys: "]
          [:span.negatiivinen-numero.pull-right
           (str "+ " (formatoi-naytolle->big (big/minus toteuma tavoitehinta)))]])
-      [:div.row [:span "Lisätyöt: "] [:span.pull-right (formatoi-naytolle->big (:lisatyot data) false)]]]]))
+      [:div.row [:span "Lisätyöt: "] [:span.pull-right (formatoi-naytolle->big (:lisatyot-summa data) false)]]]]))
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -293,8 +314,8 @@
                        (first valittu-kuukausi)
                        (str valittu-hoitokausi "-10-01"))
         haun-loppupvm (if valittu-kuukausi
-                       (second valittu-kuukausi)
-                       (str (inc valittu-hoitokausi) "-09-30"))]
+                        (second valittu-kuukausi)
+                        (str (inc valittu-hoitokausi) "-09-30"))]
     [:div.kustannusten-seuranta
      [debug/debug app]
      [:div
