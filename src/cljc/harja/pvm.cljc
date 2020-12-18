@@ -22,7 +22,7 @@
      :clj
            (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat)
-                    (org.joda.time DateTimeZone))))
+                    (org.joda.time DateTime DateTimeZone))))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
@@ -66,10 +66,21 @@
      (t/from-time-zone joda-time suomen-aikavyohyke)))
 
 #?(:clj
+   (defn suomen-aikavyohykkeessa? [pvm]
+     {:pre [(instance? DateTime pvm)]
+      :post [(boolean? %)]}
+     (= (str (.getZone (.getChronology pvm)))
+        (str suomen-aikavyohyke))))
+
+#?(:clj
    (defn suomen-aikavyohykkeeseen
      "Palauttaa uuden Joda-ajan Suomen aikavyöhykkeessä niin, että aika on absoluuttisesti paikallisessa Suomeen ajassa."
      [joda-time]
-     (t/to-time-zone joda-time suomen-aikavyohyke)))
+     {:pre [(instance? DateTime joda-time)]
+      :post [(suomen-aikavyohykkeessa? %)]}
+     (if (suomen-aikavyohykkeessa? joda-time)
+       joda-time
+       (t/to-time-zone joda-time suomen-aikavyohyke))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -159,6 +170,20 @@
 #?(:clj
    (defn nyt-suomessa []
      (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
+
+#?(:clj
+   (defn suomen-aika->iso8601-basic
+     [pvm]
+     {:pre [(instance? DateTime pvm)]
+      :post [(string? %)]}
+     (l/format-local-time pvm :basic-date-time)))
+
+#?(:clj
+   (defn iso8601-basic->suomen-aika
+     [iso8601-basic]
+     {:pre [(string? iso8601-basic)]
+      :post [(instance? DateTime %)]}
+     (l/to-local-date-time iso8601-basic)))
 
 (defn pvm?
   [pvm]

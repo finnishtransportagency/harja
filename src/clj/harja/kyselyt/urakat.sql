@@ -47,8 +47,8 @@ SELECT
   u.nimi,
   u.tyyppi,
   u.urakkanro,
-  COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-           st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
+  COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
+           ST_Distance84(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
   LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
@@ -682,9 +682,9 @@ SELECT EXISTS(
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 SELECT u.id,
        :urakkatyyppi as urakkatyyppi,
-       COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-                st_distance(vua.alue, st_makepoint(:x, :y)),
-                st_distance(pua.alue, st_makepoint(:x, :y))) AS etaisyys
+       COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
+                ST_Distance84(vua.alue, st_makepoint(:x, :y)),
+                ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
          LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
          LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
@@ -836,12 +836,12 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
 -- name: hae-lahin-hoidon-alueurakka
 SELECT
   u.id,
-  st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
+  ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
   JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE u.alkupvm <= current_date
       AND u.loppupvm >= current_date
-      AND st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+      AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 

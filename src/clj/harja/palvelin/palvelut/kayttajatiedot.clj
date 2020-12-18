@@ -200,5 +200,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :kayttajatiedot
-                     :yhteydenpito-vastaanottajat)
+                     :yhteydenpito-vastaanottajat
+                     :laheta-sahkoposti-kaikille-kayttajille
+                     :kayttajan-urakat)
     this))

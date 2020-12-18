@@ -20,7 +20,7 @@
 (defn hae-tr-pisteilla
   "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
   [db params]
-  (println "hae tr pisteillä: " params)
+  (log/debug "hae tr pisteillä: " params)
   (try
     (when-let [tros (first (tv/hae-tr-osoite-valille db
                                                      (:x1 params) (:y1 params)
