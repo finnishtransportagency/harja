@@ -18,12 +18,13 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :excel-vienti (component/using
-                                        (excel-vienti/luo-excel-vienti)
-                                        [:http-palvelin])
+                        ;:excel-vienti
+                        #_ (component/using
+                          (excel-vienti/luo-excel-vienti)
+                          [:http-palvelin])
                         :kustannusten-seuranta (component/using
                                                  (kustannusten-seuranta/->KustannustenSeuranta)
-                                                 [:http-palvelin :db :db-replica :excel-vienti])))))
+                                                 [:http-palvelin :db :db-replica #_ :excel-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -159,8 +160,7 @@
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")
-        _ (println "query: " query)]
+          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
     query))
 
 (defn- johto-ja-hallintokorvaukset-budjetoidut-sql-haku [urakka alkupvm loppupvm]
@@ -337,6 +337,11 @@ UNION ALL
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id")
   )
+
+(deftest hae-olemattomia-kustannuksia
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
+    (is (thrown? Exception (hae-kustannukset urakka-id nil nil nil)))))
+
 
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu

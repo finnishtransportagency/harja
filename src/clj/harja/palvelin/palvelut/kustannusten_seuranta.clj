@@ -7,29 +7,34 @@
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
-            [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.big :as big]
             [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
             [harja.palvelin.raportointi.excel :as excel]
-            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]))
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
 
 (defn- hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [_ (println "hae-urakan-kustannusten-seuranta-paaryhmittain :: tiedot " (pr-str tiedot))
-          res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
-                                                                             :alkupvm alkupvm
-                                                                             :loppupvm loppupvm
-                                                                             :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
-      res)
+    (if (nil? hoitokauden-alkuvuosi)
+      (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+               :virheet [{:koodi 400
+                          :viesti "Tuntematon hoitokauden-alkuvuosi."}]})
+      (let [_ (log/info "hae-urakan-kustannusten-seuranta-paaryhmittain :: tiedot " (pr-str tiedot))
+            res (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain db {:urakka urakka-id
+                                                                               :alkupvm alkupvm
+                                                                               :loppupvm loppupvm
+                                                                               :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
+        res))
+
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn- rivita-toimenpiteet [toimenpiteet paaryhma]
   (mapcat (fn [toimenpide]
             (let [toimenpide-tot (:toimenpide-toteutunut-summa toimenpide)
                   toimenpide-bud (:toimenpide-budjetoitu-summa toimenpide)
-                  erotus (when (not= 0 toimenpide-bud) (- toimenpide-bud toimenpide-tot))]
+                  erotus (when (not= 0 toimenpide-bud) (- toimenpide-bud toimenpide-tot))
+                  hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
+                  rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))]
               (concat [{:paaryhma paaryhma
                         :toimenpide (:toimenpide toimenpide)
                         :tehtava_nimi nil
@@ -39,17 +44,47 @@
                         :prosentti (if (or (= 0M toimenpide-tot) (= 0M toimenpide-bud))
                                      0
                                      (* 100 (* 100 (.divide toimenpide-tot toimenpide-bud 2))))}]
+                      (when (= "hankintakustannukset" (:paaryhma toimenpide))
+                        [{:paaryhma paaryhma
+                          :toimenpide nil
+                          :tehtava_nimi "Hankinnat"
+                          :toteutunut_summa nil
+                          :budjetoitu_summa nil
+                          :erotus nil
+                          :prosentti nil}])
                       (mapcat
                         (fn [rivi]
                           (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
                             [{:paaryhma paaryhma
-                              :toimenpide (:toimenpide rivi)
+                              :toimenpide nil
                               :tehtava_nimi (:tehtava_nimi rivi)
                               :toteutunut_summa toteutunut-summa
                               :budjetoitu_summa nil
                               :erotus nil
                               :prosentti nil}]))
-                        (:tehtavat toimenpide)))))
+                        (if (= "hankintakustannukset" (:paaryhma toimenpide))
+                          hankinta-tehtavat
+                          (:tehtavat toimenpide)))
+                      (when (= "hankintakustannukset" (:paaryhma toimenpide))
+                        [{:paaryhma paaryhma
+                          :toimenpide nil
+                          :tehtava_nimi "Rahavaraukset"
+                          :toteutunut_summa nil
+                          :budjetoitu_summa nil
+                          :erotus nil
+                          :prosentti nil}])
+                      (when (= "hankintakustannukset" (:paaryhma toimenpide))
+                        (mapcat
+                          (fn [rivi]
+                            (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
+                              [{:paaryhma paaryhma
+                                :toimenpide nil
+                                :tehtava_nimi (:tehtava_nimi rivi)
+                                :toteutunut_summa toteutunut-summa
+                                :budjetoitu_summa nil
+                                :erotus nil
+                                :prosentti nil}]))
+                          rahavaraus-tehtavat)))))
           toimenpiteet))
 
 (defn- rivita-lisatyot [lisatyot yhteensa]
@@ -81,13 +116,17 @@
             (:erotus rivi)
             (:prosentti rivi)]
      :lihavoi? true}
-    [nil
-     (:toimenpide rivi)
-     (:tehtava_nimi rivi)
-     (:budjetoitu_summa rivi)
-     (:toteutunut_summa rivi)
-     (:erotus rivi)
-     (:prosentti rivi)]))
+    (merge {:rivi [nil
+                   (:toimenpide rivi)
+                   (:tehtava_nimi rivi)
+                   (:budjetoitu_summa rivi)
+                   (:toteutunut_summa rivi)
+                   (:erotus rivi)
+                   (:prosentti rivi)]}
+           (when (or
+                   (= "Hankinnat" (:tehtava_nimi rivi))
+                   (= "Rahavaraukset" (:tehtava_nimi rivi)))
+             {:lihavoi? true}))))
 
 (defn- luo-excel-rivi-hoidonjohdolle [kustannusdata]
   (let [bud (get-in kustannusdata [:taulukon-rivit :hoidonjohdonpalkkio-budjetoitu])
@@ -124,7 +163,7 @@
 (defn- kustannukset-excel
   [db workbook user {:keys [urakka-id urakka-nimi hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-  (let [_ (println "kustannukset-excel :: tiedot " (pr-str tiedot))
+  (let [_ (log/info "kustannukset-excel :: tiedot " (pr-str tiedot))
         kustannukset-tehtavittain (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain
                                     db {:urakka urakka-id
                                         :alkupvm alkupvm
@@ -182,12 +221,9 @@
         http
         :urakan-kustannusten-seuranta-paaryhmittain
         (fn [user tiedot]
-          (hae-urakan-kustannusten-seuranta-paaryhmittain db-replica user tiedot))
-        )
+          (hae-urakan-kustannusten-seuranta-paaryhmittain db-replica user tiedot)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :kustannukset (partial #'kustannukset-excel db)))
-
-
       this))
 
   (stop [this]
