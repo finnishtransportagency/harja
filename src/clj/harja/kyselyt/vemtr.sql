@@ -71,11 +71,11 @@ with urakat as (select id, hallintayksikko
                          join organisaatio o on u.hallintayksikko = o.id
                               on t.urakka = u.id
 
-                         join toteuma_tehtava tt on tt.toteuma = t.id
+                         join toteuma_tehtava tt on tt.toteuma = t.id AND tt.urakka_id = t.urakka AND tt.poistettu = false
                          join toimenpidekoodi tpk on tt.toimenpidekoodi = tpk.id
 
                   where t.urakka in (select id from urakat)
-                  and (t.alkanut, t.paattynyt) overlaps (:alkupvm, :loppupvm)
+                  and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
                   group by o.id, tpk.id),
      tyot as (select sum(yt.maara) as "maara", yt.tehtava as "tehtava", yt.urakka as "urakka"
               from yksikkohintainen_tyo yt
@@ -106,7 +106,7 @@ from toimenpideinstanssi tpi
        join toimenpidekoodi tehtava on tehtava.emo = tpi.toimenpide
        left join tyot on tyot.tehtava = tehtava.id and tyot.urakka = u.id
        join organisaatio o on o.id = u.hallintayksikko
-       left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
+       left join toteumat t on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
 where tpi.urakka in (select id from urakat)
 group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, tyot.maara, tpi.urakka, tehtava.jarjestys, emo.koodi
 having coalesce(toteumat.maara, tyot.maara) >= 0
