@@ -565,16 +565,19 @@
                checkbox))])))))
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
-  [:div.flex-row
-   [:input#kulu-normaali.vayla-radio
-    {:id              id
-     :type            :radio
-     :name            ryhma
-     :checked         valittu?
-     :default-checked oletus-valittu?
-     :disabled        disabloitu?
-     :on-change       muutos-fn}]
-   [:label {:for id} teksti]])
+  ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
+  (let [checked (if valittu?
+                  {:checked valittu?}
+                  {:default-checked oletus-valittu?})]
+    [:div.flex-row
+     [:input#kulu-normaali.vayla-radio
+      (merge {:id id
+              :type :radio
+              :name ryhma
+              :disabled disabloitu?
+              :on-change muutos-fn}
+             checked)]
+     [:label {:for id} teksti]]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?
                                             oletusarvo vayla-tyyli? disabloitu?]} data]
@@ -591,8 +594,8 @@
      (let [group-id (gensym (str "radio-group-"))
            radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot]
-                             ^{:key (str "radio-group-" (name vaihtoehto))}
                              (if vayla-tyyli?
+                               ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [vayla-radio {:teksti    (vaihtoehto-nayta vaihtoehto)
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
                                                            (if valittu?
@@ -601,8 +604,8 @@
                                              :valittu?  (or (and (nil? valittu) (= vaihtoehto oletusarvo))
                                                             (= valittu vaihtoehto))
                                              :ryhma     group-id
-                                             :id        (gensym (str "radio-group-" (name vaihtoehto)))}]
-                               ^{:key (str "radio-group-" (name vaihtoehto))}
+                                             :id        (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
+                               ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div.radio
                                 [:label
                                  [:input {:type      "radio"
