@@ -15,3 +15,10 @@ ALTER TABLE pot2_sideainetyyppi RENAME TO pot2_mk_sideainetyyppi;
 -- pot2_päällystekerroksen järjestysnumero. 1 = kulutuskerros, 2 = 1. alempi päällystekerros...
 ALTER TABLE pot2_paallystekerros ADD COLUMN jarjestysnro INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE pot2_mk_urakan_murske DROP COLUMN nimi;
+
+
+UPDATE pot2_mk_mursketyyppi set koodi = 6 where nimi = 'Muu';
+INSERT INTO pot2_mk_mursketyyppi (nimi, lyhenne, koodi)
+VALUES
+('(UUSIO) Betonimurske I', 'BeM I',  4),
+('(UUSIO) Betonimurske II', 'BeM II', 5);

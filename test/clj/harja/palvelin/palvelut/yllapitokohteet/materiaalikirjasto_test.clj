@@ -335,3 +335,41 @@
         oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1})]
     (is (= massat oletetut-massat))
     (is (= murskeet oletetut-murskeet))))
+
+(deftest hae-pot2-koodistot-test
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-pot2-koodistot +kayttaja-jvh+ {})
+        odotetut-avaimet #{:massatyypit
+                           :mursketyypit
+                           :runkoainetyypit
+                           :sideainetyypit
+                           :lisaainetyypit
+                           :alusta-toimenpiteet
+                           :kulutuskerros-toimenpiteet}]
+    (is (every? #(contains? vastaus %) odotetut-avaimet))
+    (is (= (some #(= :harja.domain.pot2 {:nimi "Kovat asfalttibetonit", :lyhenne "Kovat asfalttibetonit", :koodi 10} %)
+                 (:massatyypit vastaus))))
+    (is (= (some #(= :harja.domain.pot2 {:nimi " Kalliomurske", :lyhenne "KaM", :koodi 1} %)
+                 (:mursketyypit vastaus))))
+    (is (= (some #(= :harja.domain.pot2{:nimi "Kiviaines", :lyhenne "Kiviaines", :koodi 1} %)
+                 (:runkoainetyypit vastaus))))
+    (is (= (some #(= :harja.domain.pot2 {:nimi "Bitumi, 20/30", :lyhenne " Bitumi, 20/30", :koodi 1} %)
+                 (:sideainetyypit vastaus))))
+    (is (= (some #(= :harja.domain.pot2 {:nimi "Kuitu", :lyhenne "Kuitu", :koodi 1}  %)
+                 (:lisaainetyypit vastaus))))
+    (is (= (some #(= :harja.domain.pot2{:nimi "Massanvaihto", :lyhenne "MV", :koodi 1}  %)
+                 (:alusta-toimenpiteet vastaus))))
+    (is (= (some #(= :harja.domain.pot2 {:nimi "Paksuudeltaan vakio laatta", :lyhenne "LTA", :koodi 12}  %)
+                 (:kulutuskerros-toimenpiteet vastaus))))
+
+
+    (is (= (count (:massatyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_massatyyppi"))))
+    (is (= (count (:mursketyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_mursketyyppi"))))
+    (is (= (count (:runkoainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_runkoainetyyppi"))))
+    (is (= (count (:sideainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_sideainetyyppi"))))
+    (is (= (count (:lisaainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_lisaainetyyppi"))))
+    (is (= (count (:alusta-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_alusta_toimenpide"))))
+    (is (= (count (:kulutuskerros-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_kulutuskerros_toimenpide"))))
+    )
+
+  )
