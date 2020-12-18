@@ -274,7 +274,7 @@
       ;; T-LOIK
       :tloik (component/using
                (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
-               [:itmf :db :integraatioloki :sonja
+               [:itmf :db :integraatioloki
                 :sonja-sahkoposti :labyrintti])
 
       ;; Tierekisteri

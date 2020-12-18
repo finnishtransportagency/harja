@@ -55,9 +55,9 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
       {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat! [{:keys [sonja labyrintti db sonja-sahkoposti] :as this} jonot]
+(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db sonja-sahkoposti] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
-                                         sonja (:toimenpideviestijono jonot))]
+                                         itmf (:toimenpideviestijono jonot))]
     (when-let [labyrintti labyrintti]
       (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
       (sms/rekisteroi-kuuntelija! labyrintti

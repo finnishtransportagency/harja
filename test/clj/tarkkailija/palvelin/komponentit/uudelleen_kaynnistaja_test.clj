@@ -95,7 +95,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :labyrintti :sonja-sahkoposti])
+             [:db :itmf :integraatioloki :labyrintti :sonja-sahkoposti])
     :testiapi (component/using
                     (->TestiAPIKomponentti)
                     [:http-palvelin])

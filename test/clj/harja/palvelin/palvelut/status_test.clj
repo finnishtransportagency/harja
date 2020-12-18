@@ -10,11 +10,13 @@
             [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
             [harja.palvelin.palvelut.status :as status]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [harja.palvelin.komponentit.itmf :as itmf]))
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea +kayttaja-jvh+
                                            :komponenttien-tila (komponenttien-tila/komponentin-tila {:sonja {:paivitystiheys-ms (:paivitystiheys-ms integraatio/sonja-asetukset)}
+                                                                                                     :itmf {:paivitystiheys-ms (:paivitystiheys-ms integraatio/itmf-asetukset)}
                                                                                                      :db {:paivitystiheys-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :paivitystiheys-ms])
                                                                                                           :kyselyn-timeout-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :kyselyn-timeout-ms])}
                                                                                                      :db-replica {:paivitystiheys-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :paivitystiheys-ms])
@@ -25,9 +27,12 @@
                                            :sonja (component/using
                                                     (sonja/luo-oikea-sonja integraatio/sonja-asetukset)
                                                     [:db])
+                                           :itmf (component/using
+                                                   (itmf/luo-oikea-itmf integraatio/itmf-asetukset)
+                                                   [:db])
                                            :tloik (component/using
                                                     (luo-tloik-komponentti)
-                                                    [:db :sonja :integraatioloki])))
+                                                    [:db :itmf :integraatioloki])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"sonja"}
@@ -40,11 +45,13 @@
                                                (assoc-in [tapahtuma-apurit/host-nimi :db :kaikki-ok?] true)
                                                (assoc-in [tapahtuma-apurit/host-nimi :db-replica :kaikki-ok?] true)
                                                (assoc-in [tapahtuma-apurit/host-nimi :sonja :kaikki-ok?] true)
+                                               (assoc-in [tapahtuma-apurit/host-nimi :itmf :kaikki-ok?] true)
                                                (assoc-in ["testihost" :harja :kaikki-ok?] true)
                                                (assoc-in ["testihost" :harja :viesti] "kaik kivast")
                                                (assoc-in ["testihost" :db :kaikki-ok?] true)
                                                (assoc-in ["testihost" :db-replica :kaikki-ok?] true)
-                                               (assoc-in ["testihost" :sonja :kaikki-ok?] true)))))
+                                               (assoc-in ["testihost" :sonja :kaikki-ok?] true)
+                                               (assoc-in ["testihost" :itmf :kaikki-ok?] true)))))
                                 *ennen-sulkemista-hook* (fn []
                                                           (reset! (-> jarjestelma :komponenttien-tila :komponenttien-tila) nil))]
                         ;; Testatessa ei ole replicaa käytössä, niin sen tilaa ei voi oikein testata. Harjan tila nyt on muutenkin
@@ -60,6 +67,7 @@
              {:viesti ""
               :harja-ok? true
               :sonja-yhteys-ok? true
+              :itmf-yhteys-ok? true
               :yhteys-master-kantaan-ok? true
               :replikoinnin-tila-ok? true}))
       (is (= (get vastaus :status) 200))))
@@ -75,6 +83,7 @@
                {:viesti (format "HOST: %s\nVIESTI: poks\nHOST: testihost\nVIESTI: kaik kivast" tapahtuma-apurit/host-nimi)
                 :harja-ok? false
                 :sonja-yhteys-ok? true
+                :itmf-yhteys-ok? true
                 :yhteys-master-kantaan-ok? true
                 :replikoinnin-tila-ok? true}))
         (is (= (get vastaus :status) 503)))
@@ -89,6 +98,7 @@
                {:viesti (str "Ei saatu yhteyttä kantaan 10 sekunnin kuluessa.")
                 :harja-ok? true
                 :sonja-yhteys-ok? true
+                :itmf-yhteys-ok? true
                 :yhteys-master-kantaan-ok? false
                 :replikoinnin-tila-ok? true}))
         (is (= (get vastaus :status) 503)))))
@@ -98,6 +108,7 @@
              {:viesti ""
               :harja-ok? true
               :sonja-yhteys-ok? true
+              :itmf-yhteys-ok? true
               :yhteys-master-kantaan-ok? true
               :replikoinnin-tila-ok? true}))
       (is (= (get vastaus :status) 200)))))

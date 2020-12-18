@@ -113,7 +113,7 @@
                                             [:itmf])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :sonja :itmf :integraatioloki :sonja-sahkoposti])))))
+                                 [:db :itmf :integraatioloki :sonja-sahkoposti])))))
   ;; aloita-itmf palauttaa kanavan.
   (binding [*itmf-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun

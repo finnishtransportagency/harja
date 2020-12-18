@@ -58,7 +58,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :sonja :integraatioloki :labyrintti :sonja-sahkoposti])))
+             [:db :itmf :integraatioloki :labyrintti :sonja-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"itmf" "sonja"}
