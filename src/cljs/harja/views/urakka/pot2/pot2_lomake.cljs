@@ -123,8 +123,10 @@
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (reset! pot2-tiedot/kohdeosat-atom
-                             (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                                          (:kulutuskerros paallystysilmoitus-lomakedata))))
+                             (-> (:kulutuskerros paallystysilmoitus-lomakedata)
+                                 (pot2-domain/lisaa-paallystekerroksen-jarjestysnro 1)
+                                 (yllapitokohteet-domain/jarjesta-yllapitokohteet)
+                                 (yllapitokohteet-domain/indeksoi-kohdeosat)))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat materiaalikoodistot] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)

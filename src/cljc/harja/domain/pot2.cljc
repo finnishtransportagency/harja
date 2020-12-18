@@ -259,3 +259,9 @@
 (def erikseen-lisattava-fillerikiviaines
   ;; Huom! Tämän on matchattava postgres custom typen fillerityyppi -arvoihin
   ["Kalkkifilleri (KF)", "Lentotuhka (LT)", "Muu fillerikiviaines"])
+
+(defn lisaa-paallystekerroksen-jarjestysnro
+  "Lisää päällystekerroksen riveille järjesteysnumeron. 1 = kulutuskerros, 2 = alempi päällystekerros"
+  [rivit nro]
+  (assert (#{1 2} nro) "Päällystekerroksen järjestysnumero voi olla 1 tai 2")
+  (map #(assoc % :jarjestysnro nro) rivit))
