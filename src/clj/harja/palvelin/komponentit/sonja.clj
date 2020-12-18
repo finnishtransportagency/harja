@@ -19,7 +19,8 @@
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
            (java.util Date)
            (java.lang.reflect Proxy InvocationHandler)
-           (java.net InetAddress)))
+           (java.net InetAddress)
+           (java.util.concurrent TimeoutException)))
 
 (defonce jms-saije-sammutettu? (atom true))
 (defonce jms-connection-tila (atom nil))
@@ -409,10 +410,14 @@
 
 (defmethod jms-toiminto! :aloita-yhteys
   [{:keys [tila yhteys-aloitettu?] :as sonja} _]
-  (loop [yhteys-oliot-luotu? (not= JMS-alkutila @tila)]
-    (when-not yhteys-oliot-luotu?
-      (<!! (timeout 1000))
-      (recur (not= JMS-alkutila @tila))))
+  (let [aloitusaika (System/currentTimeMillis)]
+    (loop [yhteys-oliot-luotu? (not= JMS-alkutila @tila)
+           aika aloitusaika]
+      (cond
+        (> aika (+ aloitusaika (* 1000 60))) (throw (TimeoutException. "Yhteys olioita ei luotu ajoissa"))
+        (not yhteys-oliot-luotu?) (do (<!! (timeout 1000))
+                                      (recur (not= JMS-alkutila @tila)
+                                             (System/currentTimeMillis))))))
   (try (let [{:keys [istunnot yhteys]} @tila
              poikkeuskuuntelija (tee-jms-poikkeuskuuntelija sonja)]
          ;; Alustetaan vastaanottaja jvm oliot
@@ -423,7 +428,11 @@
          (.setExceptionListener yhteys poikkeuskuuntelija)
          ;; Aloita yhteys
          (log/debug "Aloitetaan yhteys")
-         (.start yhteys)
+         (let [aloita-yhteys (future (.start yhteys))
+               yhteyden-aloitus-arvo (deref aloita-yhteys (async/timeout (* 1000 30)) ::timeout)]
+           (when (= yhteyden-aloitus-arvo ::timeout)
+             (future-cancel aloita-yhteys)
+             (throw (TimeoutException. "Yhteyttä ei saatu aloitettua ajoissa"))))
          (reset! jms-connection-tila "ACTIVE")
          (reset! yhteys-aloitettu? true)
          (tapahtuma-apurit/julkaise-tapahtuma :sonja-yhteys-aloitettu true)
@@ -436,7 +445,11 @@
   [{:keys [tila yhteys-aloitettu?] :as sonja} _]
   (try (let [{:keys [yhteys]} @tila]
          (log/debug "Lopetetaan yhteys")
-         (.close yhteys)
+         (let [lopeta-yhteys (future (.close yhteys))
+               yhteyden-lopetus-arvo (deref lopeta-yhteys (async/timeout (* 1000 30)) ::timeout)]
+           (when (= yhteyden-lopetus-arvo ::timeout)
+             (future-cancel lopeta-yhteys)
+             (log/error "Yhteyttä ei saatu lopetettua oikein")))
          (reset! jms-connection-tila "CLOSED")
          (reset! yhteys-aloitettu? false)
          true)
