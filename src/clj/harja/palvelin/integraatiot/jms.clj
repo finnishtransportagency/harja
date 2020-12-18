@@ -18,7 +18,8 @@
            (javax.jms Session ExceptionListener JMSException MessageListener TextMessage)
            (java.util Date)
            (java.lang.reflect Proxy InvocationHandler)
-           (java.net InetAddress)))
+           (java.net InetAddress)
+           (java.util.concurrent TimeoutException)))
 
 (s/def ::virhe any?)
 (s/def ::yhteyden-tila any?)
@@ -134,20 +135,17 @@
 (defn vastaanottajan-tila [vastaanottaja]
   (exception-wrapper vastaanottaja getMessageListener))
 
-(defn aloita-jms [jarjestelma]
+(defn aloita-jms
+  [jarjestelma]
   (async/go
-    (let [nimi (:nimi jarjestelma)]
-      (log/info (str "Aloitaetaan " nimi))
-      (loop []
-        (let [{:keys [vastaus virhe kaskytysvirhe]} (async/<! (kasky jarjestelma {:aloita-yhteys nil}))]
-          (when vastaus
-            (log/info (str nimi " yhteys aloitettu")))
-          (when kaskytysvirhe
-            (log/error (str "Yhteyden aloittamisessa järjestelmään " nimi " käskytysvirhe: " kaskytysvirhe)))
-          (async/<! (async/timeout 2000))
-          (if (or virhe (= :kasykytyskanava-taynna kaskytysvirhe))
-            (recur)
-            vastaus))))))
+    (let [nimi (:nimi jarjestelma)
+          _ (log/info (str "Aloitaetaan " nimi))
+          {:keys [vastaus virhe kaskytysvirhe]} (async/<! (kasky jarjestelma {:aloita-yhteys nil}))]
+      (when vastaus
+        (log/info (str nimi " yhteys aloitettu")))
+      (when kaskytysvirhe
+        (log/error (str "Yhteyden aloittamisessa järjestelmään " nimi " käskytysvirhe: " kaskytysvirhe)))
+      vastaus)))
 
 (defn olion-tila-aktiivinen? [tila]
   (= tila aktiivinen))
@@ -464,10 +462,14 @@
 
 (defmethod jms-toiminto! :aloita-yhteys
   [{:keys [tila yhteys-aloitettu? jms-connection-tila nimi]} _]
-  (loop [yhteys-oliot-luotu? (not= JMS-alkutila @tila)]
-    (when-not yhteys-oliot-luotu?
-      (async/<!! (async/timeout 1000))
-      (recur (not= JMS-alkutila @tila))))
+  (let [aloitusaika (System/currentTimeMillis)]
+    (loop [yhteys-oliot-luotu? (not= JMS-alkutila @tila)
+           aika aloitusaika]
+      (cond
+        (> aika (+ aloitusaika (* 1000 60))) (throw (TimeoutException. "Yhteys olioita ei luotu ajoissa"))
+        (not yhteys-oliot-luotu?) (do (async/<!! (async/timeout 1000))
+                                      (recur (not= JMS-alkutila @tila)
+                                             (System/currentTimeMillis))))))
   (try (let [{:keys [istunnot yhteys]} @tila
              poikkeuskuuntelija (tee-jms-poikkeuskuuntelija)]
          ;; Alustetaan vastaanottaja jms oliot
@@ -478,6 +480,11 @@
          (.setExceptionListener yhteys poikkeuskuuntelija)
          ;; Aloita yhteys
          (log/debug "Aloitetaan yhteys")
+         (let [aloita-yhteys (future (.start yhteys))
+               yhteyden-aloitus-arvo (deref aloita-yhteys (* 1000 30) ::timeout)]
+           (when (= yhteyden-aloitus-arvo ::timeout)
+             (future-cancel aloita-yhteys)
+             (throw (TimeoutException. "Yhteyttä ei saatu aloitettua ajoissa"))))
          (.start yhteys)
          (reset! jms-connection-tila "ACTIVE")
          (reset! yhteys-aloitettu? true)
@@ -492,7 +499,11 @@
   [{:keys [tila yhteys-aloitettu? jms-connection-tila]} _]
   (try (let [{:keys [yhteys]} @tila]
          (log/debug "Lopetetaan yhteys")
-         (.close yhteys)
+         (let [lopeta-yhteys (future (.close yhteys))
+               yhteyden-lopetus-arvo (deref lopeta-yhteys (* 1000 30) ::timeout)]
+           (when (= yhteyden-lopetus-arvo ::timeout)
+             (future-cancel lopeta-yhteys)
+             (log/error "Yhteyttä ei saatu lopetettua oikein")))
          (reset! jms-connection-tila "CLOSED")
          (reset! yhteys-aloitettu? false)
          true)

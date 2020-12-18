@@ -146,7 +146,8 @@
       (<!!-timeout odota-tapahtuma-1 default-odottelu)
       (<!!-timeout odota-tapahtuma-2 default-odottelu)
       (<!!-timeout odota-tapahtuma-3 default-odottelu)
-      (is (= 5 @kuuntelu-ja-tarkkailu-lkm))))
+      (is (= 5 @kuuntelu-ja-tarkkailu-lkm)))
+    )
   (testing "Viimeisin tarkkailu onnistuu"
     (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
           ensimmainen-a-payload 42]
@@ -445,32 +446,43 @@
 (deftest ryhmittain-ajettavat-testit-ajetaan-yhta-aikaa
   (let [aja-loop (async/chan)
         loop-ajettu (async/chan)
+        aja-loop-atom (atom false)
+        loop-ajettu-atom (atom false)
+        odota-loopin-ajo! (fn []
+                            (odota-ehdon-tayttymista (fn [] (= @loop-ajettu-atom true)) "loop-ajettu-atom ei true" 5000)
+                            (reset! loop-ajettu-atom false)
+                            true)
         loop-kunnes-realisoinut (fn loop-kunnes-realisoinut
                                   ([kanava] (loop-kunnes-realisoinut kanava (+ 2000 default-odottelu)))
                                   ([kanava timeout]
                                    (let [lopeta-looppaus (async/chan)]
                                      (try (<!!-timeout (async/go-loop []
                                                          (when-not (async/poll! lopeta-looppaus)
-                                                           (async/offer! aja-loop true)
+                                                           (reset! aja-loop-atom true)
                                                            (if-let [kanavan-arvo (async/poll! kanava)]
                                                              (do (async/put! lopeta-looppaus true)
-                                                                 (async/<! loop-ajettu)
+                                                                 (odota-loopin-ajo!)
                                                                  kanavan-arvo)
-                                                             (do (async/poll! loop-ajettu)
+                                                             (do (odota-loopin-ajo!)
                                                                  (recur)))))
                                                        timeout)
                                           (catch TimeoutException e
                                             (async/put! lopeta-looppaus true)
                                             (throw e))))))
         odota-yksi-loop (fn []
-                          (async/offer! aja-loop true)
-                          (<!!-timeout loop-ajettu default-odottelu))
+                          (reset! aja-loop-atom true)
+                          (odota-loopin-ajo!))
         tapahtuma-loop-sisalto-original @#'tapahtumat/tapahtuma-loop-sisalto]
-    (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [& args]
-                                                      (async/<!! aja-loop)
-                                                      (let [paluuarvo (apply tapahtuma-loop-sisalto-original args)]
-                                                        (async/put! loop-ajettu true)
-                                                        paluuarvo))]
+    (with-redefs [tapahtumat/tapahtuma-loop-sisalto (fn [{db :db :as args-map}]
+                                                      ;; Tämä ehto on hyödyllinen oikeastaan vain REPL:issä
+                                                      (if (= (:dbname db) (:tietokanta testitietokanta))
+                                                        (do
+                                                          (odota-ehdon-tayttymista (fn [] (= @aja-loop-atom true)) "aja-loop ei true" 50000)
+                                                          (let [paluuarvo (tapahtuma-loop-sisalto-original args-map)]
+                                                            (reset! aja-loop-atom false)
+                                                            (reset! loop-ajettu-atom true)
+                                                            paluuarvo))
+                                                        (tapahtuma-loop-sisalto-original args-map)))]
       (testing "Viimeisin tarkkailija ei saa tapahtumia ennen kakuttamista"
         (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
           (let [tarkkailija-1 (binding [tapahtumat/*tarkkaile-yhta-aikaa* {:tunnistin "foo"
@@ -501,7 +513,8 @@
                       :payload {:a 2}}))
               (is (= (dissoc (<!!-timeout tarkkailija-3 default-odottelu) :aika)
                      {:palvelin (:nimi harja-tarkkailija)
-                      :payload {:a 2}})))))))))
+                      :payload {:a 2}})))))))
+    (reset! aja-loop-atom true)))
 
 (deftest lopeta-tarkkailu-toimii
   (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)]
