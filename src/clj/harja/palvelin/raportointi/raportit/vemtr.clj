@@ -8,15 +8,11 @@
   (:import (java.math RoundingMode)))
 
 
-(defn- sama-tehtava-ja-ely?
-  [e t]
-  (and (= (:nimi e) (:nimi t))
-       (= (:hallintayksikko e) (:hallintayksikko t))))
-
-(defn- laske-yhteen
-  [e t]
+(defn laske-yhteen
+  [e t]  
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
-           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
+           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
+           :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e) 0) (or (:toteutunut-materiaalimaara t) 0))))
 
 (defn kombota-samat-tehtavat
   ([ekat tokat]
@@ -54,10 +50,11 @@
               vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla
               #_vemtr-q/hae-yh-toteutuneet-tehtavamaarat-ja-toteumat-aikavalilla
               #_vemtr-q/hae-yh-suunnitellut-tehtavamaarat-ja-toteumat-aikavalilla)
-        [mhut yht :as kaksi-tulosjoukkoa] (combo-fn db params)]
-
-    #_(apply concat kaksi-tulosjoukkoa)
-    (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat-tehtavat mhut yht))))
+        [mhut yht :as kaksi-tulosjoukkoa] (combo-fn db params)        
+        paluuarvo (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat-tehtavat mhut yht))]
+    ;; (def *c2 yht)
+    ;; (def *c paluuarvo)
+    paluuarvo))
 
 (defn suorita
   [db user params]

@@ -14,10 +14,13 @@
   (and (= (:nimi e) (:nimi t))
        (= (:hallintayksikko e) (:hallintayksikko t))))
 
-(defn- laske-yhteen
+(defn laske-yhteen
   [e t]
+  ;; (if-let [m (:toteutunut-materiaalimaara e)]
+  ;;   (println "TM:" m))
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
-           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
+         :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
+         :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e) ) (or (:toteutunut-materiaalimaara t) 0))))
 
 (defn kombota-samat-tehtavat
   ([rivit]
@@ -63,7 +66,7 @@
 
 (defn- laske-toteuma-%                                      ;:TODO voisko olla sql:ssä?
   [rivi]
-  (let [[_ _ suunniteltu toteuma] rivi
+  (let [[_ _ suunniteltu toteuma toteutunut-materiaalimaara] rivi
         valiotsikko? (-> rivi
                          count
                          (> 1))
@@ -71,9 +74,11 @@
                     (cond
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
-                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))]
-    (keep identity
-          (conj (into [] rivi) toteuma-%))))
+                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))
+        rivi-toteumaprosentilla (filter some?
+                                        (conj (into [] (take 4 rivi)) toteuma-% toteutunut-materiaalimaara))]
+
+    rivi-toteumaprosentilla))
 
 (defn- null->0
   [kvp]
@@ -86,18 +91,23 @@
 
 (defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
   [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
+  ;; (if-let [m (:toteutunut-materiaalimaara rivi)]
+  ;;   (println "TM:" m))
+
   (if-let [valiotsikkorivi? (= 1 (count (keys rivi)))]
     rivi
-    (let [rivi (select-keys rivi [:nimi :toteuma :yksikko])]
+    (let [rivi (select-keys rivi [:nimi :toteuma :yksikko :toteutunut-materiaalimaara])]
       (if (= yksikko suunnitteluyksikko)
         (assoc rivi :suunniteltu suunniteltu)
         (assoc rivi :suunniteltu 0)))))
 
 (defn- ota-tarvittavat-arvot
   [m]
+  ;; (if-let [x (:toteutunut-materiaalimaara m)]
+  ;;   (println "TMotm:" x))
   (vals
-    (select-keys m
-                 [:nimi :yksikko :suunniteltu :toteuma])))
+   (select-keys m
+                [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara])))
 
 (defn- muodosta-otsikot
   [hyt m]
@@ -132,6 +142,7 @@
   [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
+        vemtr? (= kysely-fn db-haku-fn)
         raportin-taustatiedot (apply taustatiedot
                                      db
                                      parametrit
@@ -196,7 +207,8 @@
                                 (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
                 :leveys  2 :fmt :numero}
                {:otsikko "Toteuma" :leveys 2 :fmt :numero}
-               {:otsikko "Toteuma-%" :leveys 2}]}))
+               {:otsikko "Toteuma-%" :leveys 2}
+               {:otsikko "Toteutunut materiaalimäärä" :leveys 2}]}))
 
 (defn db-haku-fn
   [db params]

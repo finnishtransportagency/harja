@@ -65,8 +65,10 @@ with urakat as (select id, hallintayksikko
                   and u.tyyppi = 'hoito'
                   and u.poistettu = false
                   and (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)),
-     toteumat as (select sum(tt.maara) as "maara", tpk.id as "toimenpidekoodi", o.id as "hallintayksikko"
+     toteumat as (select sum(tt.maara) as "maara", tpk.id as "toimenpidekoodi", o.id as "hallintayksikko", sum(tm.maara) as "materiaalimaara"
                   from toteuma t
+                         LEFT JOIN toteuma_materiaali tm
+                            ON t.id = tm.toteuma AND tm.poistettu = FALSE
                          join urakka u
                          join organisaatio o on u.hallintayksikko = o.id
                               on t.urakka = u.id
@@ -84,6 +86,8 @@ with urakat as (select id, hallintayksikko
               group by yt.urakka, yt.tehtava)
 select toteumat.maara             as toteuma,
        tyot.maara                 as suunniteltu,
+       -- 100.0   as "toteutunut-materiaalimaara",
+       toteumat.materiaalimaara as "toteutunut-materiaalimaara",
        o.id                     as hallintayksikko,
        tehtava.nimi               as nimi,
        emo.nimi                   as toimenpide,
@@ -108,5 +112,5 @@ from toimenpideinstanssi tpi
        join organisaatio o on o.id = u.hallintayksikko
        left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
 where tpi.urakka in (select id from urakat)
-group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, tyot.maara, tpi.urakka, tehtava.jarjestys, emo.koodi
+group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, toteumat.materiaalimaara, tyot.maara, tpi.urakka, tehtava.jarjestys, emo.koodi
 having coalesce(toteumat.maara, tyot.maara) >= 0
