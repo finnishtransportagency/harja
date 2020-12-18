@@ -429,7 +429,7 @@
          ;; Aloita yhteys
          (log/debug "Aloitetaan yhteys")
          (let [aloita-yhteys (future (.start yhteys))
-               yhteyden-aloitus-arvo (deref aloita-yhteys (async/timeout (* 1000 30)) ::timeout)]
+               yhteyden-aloitus-arvo (deref aloita-yhteys (* 1000 30) ::timeout)]
            (when (= yhteyden-aloitus-arvo ::timeout)
              (future-cancel aloita-yhteys)
              (throw (TimeoutException. "Yhteyttä ei saatu aloitettua ajoissa"))))
@@ -446,7 +446,7 @@
   (try (let [{:keys [yhteys]} @tila]
          (log/debug "Lopetetaan yhteys")
          (let [lopeta-yhteys (future (.close yhteys))
-               yhteyden-lopetus-arvo (deref lopeta-yhteys (async/timeout (* 1000 30)) ::timeout)]
+               yhteyden-lopetus-arvo (deref lopeta-yhteys (* 1000 30) ::timeout)]
            (when (= yhteyden-lopetus-arvo ::timeout)
              (future-cancel lopeta-yhteys)
              (log/error "Yhteyttä ei saatu lopetettua oikein")))
