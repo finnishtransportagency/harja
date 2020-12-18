@@ -139,9 +139,11 @@
                                         haut-muunnoksilla))]
     (haku-fn db params)))
 
+(declare db-haku-fn)
+
 (defn muodosta-taulukko
   [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
-  (log/debug "muodosta-taulukko: parametrit" parametrit)
+  ;; (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         vemtr? (not= kysely-fn db-haku-fn)
         raportin-taustatiedot (apply taustatiedot
