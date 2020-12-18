@@ -16,8 +16,6 @@
 
 (defn laske-yhteen
   [e t]
-  ;; (if-let [m (:toteutunut-materiaalimaara e)]
-  ;;   (println "TM:" m))
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
          :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
          :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e 0) 0) 
@@ -92,8 +90,6 @@
 
 (defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
   [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
-  ;; (if-let [m (:toteutunut-materiaalimaara rivi)]
-  ;;   (println "TM:" m))
 
   (if-let [valiotsikkorivi? (= 1 (count (keys rivi)))]
     rivi
@@ -104,8 +100,6 @@
 
 (defn- ota-tarvittavat-arvot
   [m]
-  ;; (if-let [x (:toteutunut-materiaalimaara m)]
-  ;;   (println "TMotm:" x))
   (vals
    (select-keys m
                 [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara])))
