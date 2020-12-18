@@ -32,7 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
-                 [http-kit "2.4.0-alpha3"]
+                 [http-kit "2.5.0"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
                  ;[javax.servlet/servlet-api "2.5"]
@@ -140,8 +140,8 @@
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
-                 [com.bhauman/figwheel-main "0.2.11"]]
-
+                 [com.bhauman/figwheel-main "0.2.11"]
+                 [digest "1.4.9"]]
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
                          [org.apache.poi/poi-ooxml "4.1.0"]]
@@ -219,6 +219,7 @@
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
             "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
+            "build-dev-no-env" ["run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
             "compile-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "compile"]
             "repl-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "repl"]
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/prod"]
@@ -251,12 +252,15 @@
                                "with-profile" "prod-cljs" "compile-prod,"
                                "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
-  :test-selectors { ;; lein test :perf
+  :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
                    :perf :perf
                    :integraatio :integraatio
-                   :default (complement :integraatio)
+                   :hidas :hidas
+                   :default (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas}]
+                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
                    }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

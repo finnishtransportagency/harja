@@ -16,10 +16,12 @@
   (:import (java.util Date)
            (org.apache.commons.io IOUtils)))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (defn aja-tieverkon-paivitys
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/kaynnista-paivitys
@@ -38,7 +40,7 @@
 (defn aja-pohjavesialueen-paivitys
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/kaynnista-paivitys
@@ -55,7 +57,7 @@
 (defn aja-siltojen-paivitys
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/kaynnista-paivitys
@@ -72,7 +74,7 @@
 (defn aja-soratien-hoitoluokkien-paivitys
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/kaynnista-paivitys
@@ -90,7 +92,7 @@
 (defn aja-turvalaitteiden-paivitys
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/kaynnista-paivitys
@@ -108,7 +110,7 @@
 (def kayttaja "jvh")
 
 (deftest testaa-tiedoston-muokkausajan-selvitys-alustalla
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         fake-tiedosto-url "http://www.example.com/file.zip"
         fake-muokkausaika "Tue, 15 Nov 1994 12:45:26 GMT"
@@ -122,7 +124,7 @@
         (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
 
 (deftest testaa-tiedoston-lataus-ava-alustalla
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         fake-tiedosto-url "http://www.example.com/test_file.zip"
         kohdetiedosto "test/resurssit/download_test.zip"

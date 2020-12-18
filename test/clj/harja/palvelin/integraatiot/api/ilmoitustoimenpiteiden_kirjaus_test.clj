@@ -20,10 +20,10 @@
     :sonja (feikki-sonja)
     :tloik (component/using
             (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat])
+             [:db :sonja :integraatioloki])
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik])))
+                       [:http-palvelin :db :integraatioloki :tloik])))
 
 (use-fixtures :once jarjestelma-fixture)
 

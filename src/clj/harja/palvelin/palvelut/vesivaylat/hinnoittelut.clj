@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.vesivaylat.hinnoittelut :as q]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
             [harja.tyokalut.tietoturva :as tietoturva]

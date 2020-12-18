@@ -3,7 +3,7 @@
   (:require [postal.core :as postal]
             [taoensso.timbre :as log]
             [clojure.string :as s]
-            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
+            [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
             [com.stuartsierra.component :as component]))
 
 (defprotocol Sahkoposti

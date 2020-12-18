@@ -33,7 +33,6 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
