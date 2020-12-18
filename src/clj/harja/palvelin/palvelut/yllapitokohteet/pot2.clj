@@ -258,7 +258,6 @@
   (jdbc/with-db-transaction
     [db db]
     (let [murske-id (::pot2-domain/murske-id tiedot)
-          _ (println (str "" (if murske-id "UPDATE" "INSERT") " murske-id  " (pr-str murske-id)))
           murske (upsert! db ::pot2-domain/pot2-mk-urakan-murske
                          (merge
                            (if murske-id
@@ -275,7 +274,7 @@
                                                 ::pot2-domain/rakeisuus
                                                 ::pot2-domain/iskunkestavyys
                                                 ::pot2-domain/dop-nro])))
-          _ (println "tallenna-urakan-paallystysmurske, palautetaan:" (pr-str murske))]
+          _ (println "tallenna-urakan-paallystysmurske onnistui, palautetaan:" (pr-str murske))]
       murske)))
 
 (defrecord POT2 []

@@ -124,47 +124,78 @@
    ::pot2-domain/sideaineet sideaine-default2
    ::pot2-domain/lisaaineet lisaaine-default1})
 
-;; Pot2 liittyväisiä testejä. Siirtele nämä omaan tiedostoon kun tuntuu siltä
-(deftest tallenna-uusi-massa-test
+(defn odotettu-massa [ylikirjoitettavat]
+  (merge
+    {:harja.domain.pot2/dop-nro "12345abc"
+     :harja.domain.pot2/kuulamyllyluokka "AN5"
+     :harja.domain.pot2/lisaaineet {1 {:lisaaine/pitoisuus 1.5M
+                                       :valittu? true}}
+     :harja.domain.pot2/litteyslukuluokka 1
+     :harja.domain.pot2/massa-id 3
+     :harja.domain.pot2/max-raekoko 5
+     :harja.domain.pot2/nimen-tarkenne "Tarkenne"
+     :harja.domain.pot2/runkoaineet {1 {:runkoaine/esiintyma "Zatelliitti"
+                                        :runkoaine/kuulamyllyarvo 12.1M
+                                        :runkoaine/litteysluku 4.1M
+                                        :runkoaine/massaprosentti 34
+                                        :valittu? true}}
+     :harja.domain.pot2/sideaineet {:lisatty {:aineet {0 {:sideaine/lopputuote? false
+                                                          :sideaine/pitoisuus 10.4M
+                                                          :sideaine/tyyppi 2
+                                                          :valittu? true}}}
+                                    :lopputuote {:aineet {0 #:sideaine{:lopputuote? true
+                                                                       :pitoisuus 10.56M
+                                                                       :tyyppi 1}}
+                                                 :valittu? true}}
+     :harja.domain.pot2/tyyppi 1
+     :harja.domain.pot2/urakka-id 7}
+    ylikirjoitettavat))
+
+
+;; ;; MASSOJEN TESTIT
+(deftest vaaran-urakan-urakoitsija-ei-saa-lisata-massaa-test
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-massa
+                               +kayttaja-yit_uuvh+ (dissoc urakan-testimassa ::pot2-domain/massa-id)))))
+
+(deftest lisaa-massa-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-urakan-massa
-                                +kayttaja-jvh+ urakan-testimassa)
-        oletus-vastaus {:harja.domain.muokkaustiedot/luoja-id 3
-                        :harja.domain.pot2/dop-nro "12345abc"
-                        :harja.domain.pot2/kuulamyllyluokka "AN5"
-                        :harja.domain.pot2/lisaaineet {1 {:lisaaine/pitoisuus 1.5M
-                                                          :valittu? true}}
-                        :harja.domain.pot2/litteyslukuluokka 1
-                        :harja.domain.pot2/massa-id 3
-                        :harja.domain.pot2/max-raekoko 5
-                        :harja.domain.pot2/nimen-tarkenne "Tarkenne"
-                        :harja.domain.pot2/runkoaineet {1 {:runkoaine/esiintyma "Zatelliitti"
-                                                           :runkoaine/kuulamyllyarvo 12.1M
-                                                           :runkoaine/litteysluku 4.1M
-                                                           :runkoaine/massaprosentti 34
-                                                           :valittu? true}}
-                        :harja.domain.pot2/sideaineet {:lisatty {:aineet {0 {:sideaine/lopputuote? false
-                                                                             :sideaine/pitoisuus 10.4M
-                                                                             :sideaine/tyyppi 2
-                                                                             :valittu? true}}}
-                                                       :lopputuote {:aineet {0 #:sideaine{:lopputuote? true
-                                                                                          :pitoisuus 10.56M
-                                                                                          :tyyppi 1}}
-                                                                    :valittu? true}}
-                        :harja.domain.pot2/tyyppi 1
-                        :harja.domain.pot2/urakka-id 7}]
+                                +kayttaja-jvh+ (dissoc urakan-testimassa ::pot2-domain/massa-id))
+        uusi-id (ffirst (q " SELECT max (id) FROM pot2_mk_urakan_massa;"))
+        oletus-vastaus (odotettu-massa {:harja.domain.pot2/massa-id uusi-id
+                                        :harja.domain.muokkaustiedot/luoja-id (ffirst (q "SELECT id FROM kayttaja where kayttajanimi = 'jvh'"))})]
     (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "Tallennettu massa")
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet oletus-vastaus))))
     (is (= (siivoa-muuttuvat (:harja.domain.pot2/sideaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/sideaineet oletus-vastaus))))))
 
+(deftest paivita-massa-test
+  (let [paivitettavan-id (ffirst (q " SELECT (id) FROM pot2_mk_urakan_massa where dop_nro = '1234567';"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-massa
+                                +kayttaja-jvh+ (assoc urakan-testimassa
+                                                 ::pot2-domain/massa-id paivitettavan-id))
+        oletus-vastaus (odotettu-massa {:harja.domain.muokkaustiedot/muokkaaja-id 3
+                                        ::pot2-domain/massa-id paivitettavan-id
+                                        ::pot2-domain/poistettu? false})]
+    (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "Tallennettu massa")
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/lisaaineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/runkoaineet oletus-vastaus))))
+    (is (= (siivoa-muuttuvat (:harja.domain.pot2/sideaineet vastaus)) (siivoa-muuttuvat (:harja.domain.pot2/sideaineet oletus-vastaus))))))
+
+
+;; MURSKEIDEN TESTIT
 (def urakan-testimurske
   #:harja.domain.pot2{:esiintyma "Kankkulan Kaivo 2", :nimen-tarkenne "LJYR", :iskunkestavyys "LA35", :tyyppi 1, :rakeisuus "0/56", :dop-nro "1234567-dope", :murske-id 1 :urakka-id (hae-utajarven-paallystysurakan-id)})
 
-(deftest tallenna-uusi-murske-test-happy-update
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-murske
-                                +kayttaja-jvh+ urakan-testimurske)
+(defn- tallenna-murske-fn
+  [http-palvelin payload]
+  (kutsu-palvelua http-palvelin :tallenna-urakan-murske +kayttaja-jvh+ payload))
+
+(deftest paivita-murske-test
+  (let [vastaus (tallenna-murske-fn (:http-palvelin jarjestelma) urakan-testimurske)
         oletus-vastaus {:harja.domain.muokkaustiedot/muokkaaja-id 3
                         :harja.domain.pot2/dop-nro "1234567-dope"
                         :harja.domain.pot2/esiintyma "Kankkulan Kaivo 2"
@@ -177,12 +208,16 @@
                         :harja.domain.pot2/urakka-id 7}]
     (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "murskeen vastaus")))
 
-(deftest tallenna-uusi-murske-test-happy-insert
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-murske
-                                +kayttaja-jvh+ (-> urakan-testimurske
-                                                   (dissoc ::pot2-domain/murske-id)
-                                                   (assoc ::pot2-domain/esiintyma "Hoppilan hyppyri")))
+(deftest vaaran-urakan-urakoitsija-ei-saa-lisata-mursketta-test
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-murske
+                               +kayttaja-yit_uuvh+ (dissoc urakan-testimurske ::pot2-domain/murske-id)))))
+
+(deftest lisaa-murske-test
+  (let [vastaus (tallenna-murske-fn (:http-palvelin jarjestelma) (-> urakan-testimurske
+                                                                     (dissoc ::pot2-domain/murske-id)
+                                                                     (assoc ::pot2-domain/esiintyma "Hoppilan hyppyri")))
         uusi-id (ffirst (q " SELECT max (id) FROM pot2_mk_urakan_murske;"))
         oletus-vastaus {:harja.domain.muokkaustiedot/luoja-id 3
                         :harja.domain.pot2/dop-nro "1234567-dope"
@@ -197,17 +232,13 @@
 
 (deftest tallenna-uusi-murske-test-epavalidi-iskunkestavyys
   (is (thrown? AssertionError
-               (kutsu-palvelua (:http-palvelin jarjestelma)
-                               :tallenna-urakan-murske
-                               +kayttaja-jvh+ (merge urakan-testimurske
-                                                     {::pot2-domain/iskunkestavyys "EPÄVALIDI"})))))
+               (tallenna-murske-fn (:http-palvelin jarjestelma) (merge urakan-testimurske
+                                                                       {::pot2-domain/iskunkestavyys "EPÄVALIDI"})))))
 
 (deftest tallenna-uusi-murske-test-epavalidi-rakeisuus
   (is (thrown? AssertionError
-               (kutsu-palvelua (:http-palvelin jarjestelma)
-                               :tallenna-urakan-murske
-                               +kayttaja-jvh+ (merge urakan-testimurske
-                                                     {::pot2-domain/rakeisuus "0/666"})))))
+               (tallenna-murske-fn (:http-palvelin jarjestelma) (merge urakan-testimurske
+                                                                       {::pot2-domain/rakeisuus "0/666"})))))
 
 (deftest hae-urakan-pot2-massat
   (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
