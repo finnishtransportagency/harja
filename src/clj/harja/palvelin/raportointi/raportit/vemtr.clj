@@ -8,6 +8,11 @@
   (:import (java.math RoundingMode)))
 
 
+(defn- sama-tehtava-ja-ely?
+  [e t]
+  (and (= (:nimi e) (:nimi t))
+       (= (:hallintayksikko e) (:hallintayksikko t))))
+
 (defn laske-yhteen
   [e t]  
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
