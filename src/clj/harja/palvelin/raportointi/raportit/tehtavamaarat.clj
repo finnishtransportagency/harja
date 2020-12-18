@@ -20,7 +20,8 @@
   ;;   (println "TM:" m))
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
          :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
-         :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e) ) (or (:toteutunut-materiaalimaara t) 0))))
+         :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e 0) 0) 
+                                        (or (:toteutunut-materiaalimaara t 0) 0))))
 
 (defn kombota-samat-tehtavat
   ([rivit]
@@ -142,7 +143,7 @@
   [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
-        vemtr? (= kysely-fn db-haku-fn)
+        vemtr? (not= kysely-fn db-haku-fn)
         raportin-taustatiedot (apply taustatiedot
                                      db
                                      parametrit
@@ -199,16 +200,17 @@
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
      :debug   suunnitellut-ryhmissa
-     :otsikot [{:otsikko "Tehtävä" :leveys 6}
-               {:otsikko "Yksikkö" :leveys 1}
-               {:otsikko (str "Suunniteltu määrä "
-                              (if (> (count hoitokaudet) 1)
-                                (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
-                                (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
-                :leveys  2 :fmt :numero}
-               {:otsikko "Toteuma" :leveys 2 :fmt :numero}
-               {:otsikko "Toteuma-%" :leveys 2}
-               {:otsikko "Toteutunut materiaalimäärä" :leveys 2}]}))
+     :otsikot (take (if vemtr? 6 5)
+                    [{:otsikko "Tehtävä" :leveys 6}
+                     {:otsikko "Yksikkö" :leveys 1}
+                     {:otsikko (str "Suunniteltu määrä "
+                                    (if (> (count hoitokaudet) 1)
+                                      (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
+                                      (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
+                      :leveys  2 :fmt :numero}
+                     {:otsikko "Toteuma" :leveys 2 :fmt :numero}
+                     {:otsikko "Toteuma-%" :leveys 2}
+                     {:otsikko "Toteutunut materiaalimäärä" :leveys 2}])}))
 
 (defn db-haku-fn
   [db params]
