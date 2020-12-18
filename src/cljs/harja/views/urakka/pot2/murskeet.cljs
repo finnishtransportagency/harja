@@ -83,10 +83,9 @@
          {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
           :vayla-tyyli? true})
        (ui-lomake/rivi
-         {:otsikko "" :nimi ::pot2-domain/tyyppi :tyyppi :valinta
-          :valinnat (:mursketyypit materiaalikoodistot)
-          :valinta-nayta :nimi :valinta-arvo :koodi
-          :vayla-tyyli? true})
+         {:otsikko "Murskeen tyyppi" :nimi ::pot2-domain/tyyppi :tyyppi :radio-group
+          :vaihtoehdot (:mursketyypit materiaalikoodistot) :vaihtoehto-arvo ::pot2-domain/koodi
+          :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true})
        (ui-lomake/rivi
          {:otsikko "Rakeisuus"
           :nimi ::pot2-domain/rakeisuus

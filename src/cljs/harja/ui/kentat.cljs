@@ -566,9 +566,9 @@
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? muutos-fn]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
-  (let [checked (if valittu?
-                  {:checked valittu?}
-                  {:default-checked oletus-valittu?})]
+  (let [checked (if oletus-valittu?
+                  {:default-checked oletus-valittu?}
+                  {:checked valittu?})]
     [:div.flex-row
      [:input#kulu-normaali.vayla-radio
       (merge {:id id
@@ -579,7 +579,7 @@
              checked)]
      [:label {:for id} teksti]]))
 
-(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?
+(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
                                             oletusarvo vayla-tyyli? disabloitu?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
@@ -593,29 +593,32 @@
     [:div
      (let [group-id (gensym (str "radio-group-"))
            radiobuttonit (doall
-                           (for [vaihtoehto vaihtoehdot]
+                           (for [vaihtoehto vaihtoehdot
+                                 :let [vaihtoehdon-arvo (if vaihtoehto-arvo
+                                                          (vaihtoehto-arvo vaihtoehto)
+                                                          vaihtoehto)]]
                              (if vayla-tyyli?
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [vayla-radio {:teksti    (vaihtoehto-nayta vaihtoehto)
                                              :muutos-fn #(let [valittu? (-> % .-target .-checked)]
-                                                           (if valittu?
-                                                             (reset! data vaihtoehto)))
+                                                           (when valittu?
+                                                             (reset! data vaihtoehdon-arvo)))
                                              :disabloitu? disabloitu?
                                              :valittu?  (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                            (= valittu vaihtoehto))
+                                                            (= valittu vaihtoehdon-arvo))
                                              :ryhma     group-id
                                              :id        (gensym (str "radio-group-" (vaihtoehto-nayta vaihtoehto)))}]
                                ^{:key (str "radio-group-" (vaihtoehto-nayta vaihtoehto))}
                                [:div.radio
                                 [:label
-                                 [:input {:type      "radio"
+                                 [:input {:type "radio"
                                           ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
                                           ;; jos parametri annettu
-                                          :checked   (or (and (nil? valittu) (= vaihtoehto oletusarvo))
-                                                         (= valittu vaihtoehto))
+                                          :checked (or (and (nil? valittu) (= vaihtoehto oletusarvo))
+                                                       (= valittu vaihtoehto))
                                           :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                        (if valittu?
-                                                          (reset! data vaihtoehto)))}]
+                                                        (when valittu?
+                                                          (reset! data vaihtoehdon-arvo)))}]
                                  (vaihtoehto-nayta vaihtoehto)]])))]
        (if nayta-rivina?
          [:div {:style {:display "flex" :flex-direction "row" :flex-wrap "wrap"
