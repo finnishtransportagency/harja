@@ -17,10 +17,10 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki :pois-kytketyt-ominaisuudet])
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])
     :api-varusteet (component/using
                      (varusteet/->Varusteet)
-                     [:http-palvelin :db :integraatioloki :tierekisteri :pois-kytketyt-ominaisuudet])))
+                     [:http-palvelin :db :integraatioloki :tierekisteri])))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))

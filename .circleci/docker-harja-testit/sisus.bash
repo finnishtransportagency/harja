@@ -54,6 +54,12 @@ function cmd_integraatio
     lein test :integraatio
 }
 
+function cmd_hidas
+{
+    lein clean
+    lein test :hidas
+}
+
 SUBCMD="$1"
 shift
 BRANCH="$1"

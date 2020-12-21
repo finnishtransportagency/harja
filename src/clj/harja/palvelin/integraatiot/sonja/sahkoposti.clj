@@ -6,7 +6,7 @@
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
-            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
+            [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:import (java.util UUID)))
@@ -62,7 +62,9 @@
     ((:saapuva this))
     ((:lahteva this))
     ((:lahteva-sahkoposti-ja-liite-kuittauskuuntelija this))
-    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija))
+    (reset! kuuntelijat #{})
+    (reset! kuittaus-kuuntelijat {})
+    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija :jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite))
 
   Sahkoposti
   (rekisteroi-kuuntelija! [this kuuntelija-fn]

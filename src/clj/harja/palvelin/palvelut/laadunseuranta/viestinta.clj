@@ -5,7 +5,7 @@
             [harja.tyokalut.html :as html-tyokalut]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.viestinta :as viestinta]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.tyokalut.sms :as sms-tyokalut]
             [hiccup.core :refer [html]]
             [hiccup.core :refer [html h]]

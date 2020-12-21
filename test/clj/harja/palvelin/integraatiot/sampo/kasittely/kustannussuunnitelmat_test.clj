@@ -5,9 +5,11 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 ;; Jos summa on 0 euroa, summaksi asetetaan 1 euro. Sampo-järjestelmän vaatimus.
 (deftest tarkista-kokonaishintaisten-vuosisummien-muodostus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         odotettu [{:alkupvm "2014-01-01T00:00:00.0", :loppupvm "2014-12-31T00:00:00.0", :summa 10500M}
                   {:alkupvm "2015-01-01T00:00:00.0", :loppupvm "2015-12-31T00:00:00.0", :summa 31510M}
                   {:alkupvm "2016-01-01T00:00:00.0", :loppupvm "2016-12-31T00:00:00.0", :summa 1}
@@ -25,7 +27,7 @@
     (is (= odotettu vuosittaiset-summat))))
 
 (deftest tarkista-muiden-maksuerien-vuosisummien-muodostus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         odotettu [{:alkupvm "2014-01-01T00:00:00.0"
                    :loppupvm "2014-12-31T00:00:00.0"
                    :summa 1}

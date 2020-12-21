@@ -27,10 +27,9 @@
                       (component/system-map
                         :db ds
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-toimenpiteet (component/using
                                             (kan-toimenpiteet/->Kanavatoimenpiteet)
-                                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
+                                            [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

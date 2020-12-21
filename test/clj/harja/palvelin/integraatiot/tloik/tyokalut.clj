@@ -28,6 +28,7 @@
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
+(def +tloik-toimenpideviestijono+ "tloik-toimenpideviestijono")
 (defn testi-ilmoitus-sanoma
   ([] (testi-ilmoitus-sanoma ilmoitettu valitetty))
   ([ilmoitettu valitetty]
@@ -270,7 +271,8 @@
   (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
             :ilmoituskuittausjono   +tloik-ilmoituskuittausjono+
             :toimenpidejono         +tloik-ilmoitustoimenpideviestijono+
-            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}
+            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+
+            :toimenpideviestijono   +tloik-toimenpideviestijono+}
            true))
 
 (def +ilmoitus-ruotsissa+
