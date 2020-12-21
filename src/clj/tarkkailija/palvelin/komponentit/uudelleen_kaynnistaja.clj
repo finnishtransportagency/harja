@@ -57,13 +57,18 @@
 
 (defn- jmstarkkailu! [jarjestelma uudelleen-kaynnistaja]
   (let [varoaika (* 5 1000)
+        oletusarvo (* 10 1000)
         {:keys [timeout-asetukset tapahtumien-tarkkailijat]} uudelleen-kaynnistaja]
     (swap! tapahtumien-tarkkailijat
            (fn [tarkkailijat]
              (merge tarkkailijat
                     (case jarjestelma
-                      "sonja" (varmista-sonjan-toimivuus! uudelleen-kaynnistaja (+ (get-in timeout-asetukset [:sonja :paivitystiheys-ms]) varoaika))
-                      "itmf" (varmista-itmfn-toimivuus! uudelleen-kaynnistaja (+ (get-in timeout-asetukset [:itmf :paivitystiheys-ms]) varoaika))))))))
+                      "sonja" (varmista-sonjan-toimivuus! uudelleen-kaynnistaja (+ (or (get-in timeout-asetukset [:sonja :paivitystiheys-ms])
+                                                                                       oletusarvo)
+                                                                                   varoaika))
+                      "itmf" (varmista-itmfn-toimivuus! uudelleen-kaynnistaja (+ (or (get-in timeout-asetukset [:itmf :paivitystiheys-ms])
+                                                                                     oletusarvo)
+                                                                                 varoaika))))))))
 
 (defn- jarjestelman-uudelleen-kaynnistys-onnistui! [uudelleen-kaynnistaja jarjestelma & _]
   (log/info (str jarjestelma " UUDELLEEN KÄYNNISTYS ONNISTUI!"))

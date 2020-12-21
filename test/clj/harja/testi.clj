@@ -257,7 +257,7 @@
   ([f n] (yrita-querya f n true nil))
   ([f n log?] (yrita-querya f n log? nil))
   ([f n log? param?]
-   (loop [n-kierros 1]
+   (loop [n-kierros 0]
      (if (= n-kierros n)
        (throw (Exception. "Queryn yrittäminen epäonnistui"))
        (let [tulos (try+
@@ -290,10 +290,13 @@
 
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
-      (yrita-querya (fn []
+      (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-                    5))
+                    5
+                    true
+                    true))
     (luo-kannat-uudelleen)
     (odota-etta-kanta-pystyssa {:datasource db})
     (odota-etta-kanta-pystyssa {:datasource temppidb})))
@@ -1296,7 +1299,9 @@
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija)
                         :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
-                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}} (atom nil))
+                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}
+                                                                                                :itmf {:paivitystiheys-ms (* 1000 10)}}
+                                                                                               (atom nil))
                                                  (reify component/Lifecycle
                                                    (start [this]
                                                      this)
