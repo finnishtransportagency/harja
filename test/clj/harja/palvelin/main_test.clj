@@ -7,6 +7,7 @@
             [harja.palvelin.tyokalut.jarjestelma :as jarjestelma]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.testi :as testi]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tyokalut]
             [com.stuartsierra.component :as component]
             [com.stuartsierra.dependency :as dep]
@@ -35,14 +36,14 @@
                                             :kayttaja ""
                                             :salasana ""
                                             :tyyppi :activemq})
-                             (assoc :sonja {:url (str "tcp://"
+                             (assoc :itmf {:url (str "tcp://"
                                                       (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
                                                       ":"
                                                       (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61616))
                                             :kayttaja ""
                                             :salasana ""
                                             :tyyppi :activemq})
-                             (assoc :sampo {})
+                             (assoc :sampo integraatio/integraatio-sampo-asetukset)
                              (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
@@ -211,7 +212,7 @@
     :yha-paikkauskomponentti
     :pot2})
 
-(def hidas-ok-status #{:sonja})
+(def hidas-ok-status #{:sonja :itmf})
 
 (deftest main-komponentit-loytyy
   (reset! jarjestelma (component/start (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))))
