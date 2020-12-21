@@ -39,6 +39,9 @@
       (do
         (q/siirra-kustannusarvoidut-tyot-toteutumiin! db {:kuukausi nyt-kuukausi
                                                           :vuosi nyt-vuosi})
+        ;; Luotetaan siihen,
+        (q/siirra-johto-ja-hallintokorvaukset-toteutumiin! db {:kuukausi nyt-kuukausi
+                                                               :vuosi nyt-vuosi})
         (println "Siirto valamis!"))
       (log/info "Ei tehdä toista kertaa."))))
 
