@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.status
   (:require [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
             [clojure.core.async :as async]
@@ -101,12 +102,16 @@
 
 (defn itmf-yhteyden-tila [komponenttien-tila]
   (async/go
-    (let [timeout-ms 120000
-          yhteys-ok? (async/<! (itmf-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
-      {:ok? yhteys-ok?
+    (if (ominaisuus-kaytossa? :itmf)
+      (let [timeout-ms 120000
+            yhteys-ok? (async/<! (itmf-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+        {:ok? yhteys-ok?
+         :komponentti :itmf
+         :viesti (when-not yhteys-ok?
+                   (str "Ei saatu yhteyttä ITMF:ään " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})
+      {:ok? true
        :komponentti :itmf
-       :viesti (when-not yhteys-ok?
-                 (str "Ei saatu yhteyttä ITMF:ään " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})))
+       :viesti "ITMF ei ole käytössä"})))
 
 (defn harjan-tila [komponenttien-tila]
   (async/go

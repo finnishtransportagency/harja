@@ -149,7 +149,8 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto! aseta-kaytettavat-ominaisuudet!]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset tarkista-ymparisto! aseta-kaytettavat-ominaisuudet!
+             ominaisuus-kaytossa?]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
@@ -274,8 +275,13 @@
       ;; T-LOIK
       :tloik (component/using
                (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
-               [:itmf :db :integraatioloki
-                :sonja-sahkoposti :labyrintti])
+               {:itmf (if (ominaisuus-kaytossa? :itmf)
+                        :itmf
+                        :sonja)
+                :db :db
+                :integraatioloki :integraatioloki
+                :sonja-sahkoposti :sonja-sahkoposti
+                :labyrintti :labyrintti})
 
       ;; Tierekisteri
       :tierekisteri (let [asetukset (:tierekisteri asetukset)]
@@ -754,7 +760,8 @@
                                            luo-jarjestelma
                                            component/start)]
                        (jms/aloita-jms (:sonja jarjestelma))
-                       (jms/aloita-jms (:itmf jarjestelma))
+                       (when (ominaisuus-kaytossa? :itmf)
+                         (jms/aloita-jms (:itmf jarjestelma)))
                        jarjestelma)))))
 
 (defn- kuuntele-tapahtumia! []
@@ -769,7 +776,8 @@
                                                                          (log/warn "harjajarjestelman-restart")
                                                                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
                                                                                 (jms/aloita-jms (:sonja uudelleen-kaynnistetty-jarjestelma))
-                                                                                (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma))
+                                                                                (when (ominaisuus-kaytossa? :itmf)
+                                                                                  (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma)))
                                                                                 (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
                                                                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))

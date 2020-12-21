@@ -99,7 +99,8 @@
            itmf-asetukset :itmf
            db-asetukset :db
            db-replica-asetukset :db-replica} timeout-asetukset
-          varoaika (* 5 1000)]
+          varoaika (* 5 1000)
+          default-odotus (* 10 1000)]
       (merge this
              (zipmap [::harja-kuuntelija ::harjajarjestelman-restart ::harjajarjestelman-restart-onnistui
                       ::harjajarjestelman-restart-epaonnistui ::sonja-kuuntelija ::itmf-kuuntelija
@@ -109,12 +110,12 @@
                                                             :harjajarjestelman-restart {:tyyppi :perus} (partial harjajarjestelman-restart komponenttien-tila :aloitus)
                                                             :harjajarjestelman-restart-onnistui {:tyyppi :perus} (partial harjajarjestelman-restart komponenttien-tila :onnistui)
                                                             :harjajarjestelman-restart-epaonnistui {:tyyppi :perus} (partial harjajarjestelman-restart komponenttien-tila :epaonnistui)
-                                                            :jms-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (or (:paivitystiheys-ms sonja-asetukset) 0) varoaika)} (partial tallenna-jms-tila-cacheen komponenttien-tila "sonja")
-                                                            :jms-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (or (:paivitystiheys-ms itmf-asetukset) 0) varoaika)} (partial tallenna-jms-tila-cacheen komponenttien-tila "itmf")
+                                                            :jms-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (or (:paivitystiheys-ms sonja-asetukset) default-odotus) varoaika)} (partial tallenna-jms-tila-cacheen komponenttien-tila "sonja")
+                                                            :jms-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (or (:paivitystiheys-ms itmf-asetukset) default-odotus) varoaika)} (partial tallenna-jms-tila-cacheen komponenttien-tila "itmf")
                                                             :jms-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-jms-uudelleen-kaynnistamisen-tila-cacheen "sonja" komponenttien-tila)
                                                             :jms-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-jms-uudelleen-kaynnistamisen-tila-cacheen "itmf" komponenttien-tila)
-                                                            :db-tila {:tyyppi :viimeisin :timeout (+ (or (:paivitystiheys-ms db-asetukset) 0) varoaika)} (partial tallenna-dbn-tila-cacheen komponenttien-tila)
-                                                            :db-replica-tila {:tyyppi :viimeisin :timeout (+ (or (:paivitystiheys-ms db-replica-asetukset) 0) varoaika)} (partial tallenna-db-replikan-tila-cacheen komponenttien-tila))))))
+                                                            :db-tila {:tyyppi :viimeisin :timeout (+ (or (:paivitystiheys-ms db-asetukset) default-odotus) varoaika)} (partial tallenna-dbn-tila-cacheen komponenttien-tila)
+                                                            :db-replica-tila {:tyyppi :viimeisin :timeout (+ (or (:paivitystiheys-ms db-replica-asetukset) default-odotus) varoaika)} (partial tallenna-db-replikan-tila-cacheen komponenttien-tila))))))
   (stop [this]
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::harja-kuuntelija this))
     (tapahtuma-apurit/lopeta-tapahtuman-kuuntelu @(::harjajarjestelman-restart this))
