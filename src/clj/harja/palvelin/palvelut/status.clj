@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.status
   (:require [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
             [clojure.core.async :as async]
@@ -177,6 +178,16 @@
            :headers {"Content-Type" "application/json; charset=UTF-8"}
            :body (encode
                    (select-keys lahetettava-viesti #{:viesti}))})))
+    (http-palvelin/julkaise-reitti
+      http :app-status-local
+      (GET "/app_status_local" _
+        (let [harja-ok? (async/<!! (tarkista-tila! (* 1000 10)
+                                                (fn []
+                                                  (-> komponenttien-tila :komponenttien-tila deref (get tapahtuma-apurit/host-nimi) :harja :kaikki-ok?))))]
+          {:status (if harja-ok? 200 503)
+           :headers {"Content-Type" "application/json; charset=UTF-8"}
+           :body (encode
+                   {:viesti "Harja ok"})})))
     this)
 
   (stop [{http :http-palvelin :as this}]
