@@ -100,6 +100,10 @@
   ValitseHoitokausi
   (process-event [{urakka :urakka vuosi :vuosi} app]
     (do
+      ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeBudjettitavoite))))
       (hae-kustannukset urakka vuosi nil nil)
       (-> app
           (assoc :valittu-kuukausi nil)
@@ -108,6 +112,10 @@
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
     (do
+      ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeBudjettitavoite))))
       (hae-kustannukset urakka vuosi (first kuukausi) (second kuukausi))
       (-> app
           (assoc-in [:valittu-kuukausi] kuukausi)))))
