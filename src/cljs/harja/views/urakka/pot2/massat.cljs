@@ -201,12 +201,13 @@
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
+        massa-id (::pot2-domain/massa-id pot2-massa-lomake)
         _ (js/console.log "massa-pot2-massa-lomake :: pot2-massa-lomake " (pr-str pot2-massa-lomake))
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
-       :otsikko (if (::pot2-domain/massa-id pot2-massa-lomake)
+       :otsikko (if massa-id
                   "Muokkaa massaa"
                   "Uusi massa")
        :footer-fn (fn [data]
@@ -236,17 +237,18 @@
                         {:vayla-tyyli? true
                          :luokka "suuri"}]]
 
-                      [napit/poista
-                       "Poista"
-                       (fn []
-                         (varmista-kayttajalta/varmista-kayttajalta
-                           {:otsikko "Massan poistaminen"
-                            :sisalto
-                            [:div "Haluatko ihan varmasti poistaa tämän massan?"]
-                            :toiminto-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
-                            :hyvaksy "Kyllä"}))
-                       {:vayla-tyyli? true
-                        :luokka "suuri"}]]])
+                      (when massa-id
+                        [napit/poista
+                         "Poista"
+                         (fn []
+                           (varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "Massan poistaminen"
+                              :sisalto
+                              [:div "Haluatko ihan varmasti poistaa tämän massan?"]
+                              :toiminto-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
+                              :hyvaksy "Kyllä"}))
+                         {:vayla-tyyli? true
+                          :luokka "suuri"}])]])
        :vayla-tyyli? true}
       [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"

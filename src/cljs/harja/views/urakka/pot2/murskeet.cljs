@@ -31,11 +31,12 @@
 
 (defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
   (let [{:keys [mursketyypit]} materiaalikoodistot
+        murske-id (::pot2-domain/murske-id pot2-murske-lomake)
         _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
-       :otsikko (if (::pot2-domain/murske-id pot2-murske-lomake)
+       :otsikko (if murske-id
                   "Muokkaa mursketta"
                   "Uusi murske")
        :footer-fn (fn [data]
@@ -61,17 +62,18 @@
                         {:vayla-tyyli? true
                          :luokka "suuri"}]]
 
-                      [napit/poista
-                       "Poista"
-                       (fn []
-                         (varmista-kayttajalta/varmista-kayttajalta
-                           {:otsikko "Murskeen poistaminen"
-                            :sisalto
-                            [:div "Haluatko ihan varmasti poistaa tämän murskeen?"]
-                            :toiminto-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
-                            :hyvaksy "Kyllä"}))
-                       {:vayla-tyyli? true
-                        :luokka "suuri"}]]])
+                      (when murske-id
+                        [napit/poista
+                         "Poista"
+                         (fn []
+                           (varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "Murskeen poistaminen"
+                              :sisalto
+                              [:div "Haluatko ihan varmasti poistaa tämän murskeen?"]
+                              :toiminto-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
+                              :hyvaksy "Kyllä"}))
+                         {:vayla-tyyli? true
+                         :luokka "suuri"}])]])
        :vayla-tyyli? true}
       [{:otsikko "Murskeen nimi" :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
@@ -87,24 +89,21 @@
           :vaihtoehdot (:mursketyypit materiaalikoodistot) :vaihtoehto-arvo ::pot2-domain/koodi
           :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true})
        (ui-lomake/rivi
-         {:otsikko "Rakeisuus"
-          :nimi ::pot2-domain/rakeisuus
-          :tyyppi :valinta :valinta-nayta (fn [rivi]
-                                            (str (:nimi rivi)))
-          :vayla-tyyli? true :valinta-arvo :nimi
-          :valinnat pot2-domain/murskeen-rakeisuusarvot
-          :pakollinen? true}
-         {:otsikko "Iskunkestävyys"
-          :nimi ::pot2-domain/iskunkestavyys :tyyppi :valinta
-          :valinta-nayta (fn [rivi]
-                           (str rivi))
-          :vayla-tyyli? true
-          :valinta-arvo identity
-          :valinnat pot2-domain/murskeen-iskunkestavyysarvot
-          :pakollinen? true}
          {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
           :validoi [[:ei-tyhja "Anna DoP nro"]]
-          :vayla-tyyli? true :pakollinen? true})]
+          :vayla-tyyli? true :pakollinen? true})
+       (ui-lomake/rivi
+         {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string
+          :validoi [[:ei-tyhja "Anna esiintymä"]]
+          :vayla-tyyli? true :pakollinen? true})
+       (ui-lomake/rivi
+         {:otsikko "Rakeisuus" :vayla-tyyli? true :pakollinen? true
+          :nimi ::pot2-domain/rakeisuus :tyyppi :valinta
+          :valinnat pot2-domain/murskeen-rakeisuusarvot})
+       (ui-lomake/rivi
+         {:otsikko "Iskunkestävyys" :vayla-tyyli? true :pakollinen? true
+          :nimi ::pot2-domain/iskunkestavyys :tyyppi :valinta
+          :valinnat pot2-domain/murskeen-iskunkestavyysarvot})]
 
       pot2-murske-lomake]]))
 
