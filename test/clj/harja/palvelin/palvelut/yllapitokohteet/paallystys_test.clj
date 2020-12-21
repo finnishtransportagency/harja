@@ -196,8 +196,9 @@
    :kulutuskerros [{:kohdeosa-id 13,
                     :tr-kaista 11,
                     :tr-ajorata 1,
-                    :tr-loppuosa 1,
-                    :tr-alkuosa 1,
+                    :jarjestysnro 1,
+                    :tr-loppuosa 3,
+                    :tr-alkuosa 3,
                     :tr-loppuetaisyys 5000,
                     :nimi "Kohdeosa kaista 11",
                     :tr-alkuetaisyys 3,
@@ -211,8 +212,9 @@
                    {:kohdeosa-id 14,
                     :tr-kaista 12,
                     :tr-ajorata 1,
-                    :tr-loppuosa 1,
-                    :tr-alkuosa 1,
+                    :jarjestysnro 1,
+                    :tr-loppuosa 3,
+                    :tr-alkuosa 3,
                     :tr-loppuetaisyys 5000,
                     :nimi "Kohdeosa kaista 12",
                     :tr-alkuetaisyys 3,
@@ -484,10 +486,24 @@
         yllapitokohdeosadata (hae-yllapitokohdeosadata (:paallystyskohde-id paallystysilmoitus))]
     [urakka-id sopimus-id vastaus yllapitokohdeosadata]))
 
+(defn- tallenna-vaara-paallystysilmoitus
+  [paallystyskohde-id paallystysilmoiuts vuosi odotettu-teksti]
+  (log/debug "Yritän tallentaa väärä päällystysilmotus " paallystyskohde-id)
+  (is (some? paallystyskohde-id))
+  (let [paallystysilmoitus (-> paallystysilmoiuts
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
+        maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
+    (is (thrown-with-msg? IllegalArgumentException (re-pattern odotettu-teksti)
+                          (tallenna-testipaallystysilmoitus paallystysilmoitus vuosi)))
+    (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
+      (is (= maara-ennen-lisaysta maara-lisayksen-jalkeen) "Ei saa olla mitään uutta kannassa"))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (hae-yllapitokohde-kirkkotie)]
-    (is (not (nil? paallystyskohde-id)))
+    (is (some? paallystyskohde-id))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [paallystysilmoitus (-> pot-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
@@ -565,9 +581,76 @@
                   :toimenpide      "Wut"}} ))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
+(deftest ei-saa-tallenna-paallystysilmoitus-jos-feilaa-validointi-alkuosa
+  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+        paallystysilmoitus (-> pot-testidata
+                               (assoc-in [:ilmoitustiedot :osoitteet 0 :tr-alkuosa] 2))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
+                                       "Kaista 11 ajoradalla 1 ei kata koko osaa 3")))
+
+(deftest ei-saa-tallenna-paallystysilmoitus-jos-feilaa-validointi-loppuosa
+  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+        paallystysilmoitus (-> pot-testidata
+                               (assoc-in [:ilmoitustiedot :osoitteet 0 :tr-loppuetaisyys] 6000))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
+                                       "(aet: 3, let: 6000)")))
+
+(deftest ei-saa-tallenna-paallystysilmoitus-jos-paallekkain
+  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+        paallystysilmoitus (-> pot-testidata
+                               (assoc-in [:ilmoitustiedot :osoitteet 2] {;; Alikohteen tiedot
+                                                                         :nimi "Tie 22 tosi pieni pätkä"
+                                                                         :tr-numero 22
+                                                                         :tr-alkuosa 3
+                                                                         :tr-alkuetaisyys 4
+                                                                         :tr-loppuosa 3
+                                                                         :tr-loppuetaisyys 5
+                                                                         :tr-ajorata 1
+                                                                         :tr-kaista 11
+                                                                         :paallystetyyppi 1
+                                                                         :raekoko 1
+                                                                         :tyomenetelma 12
+                                                                         :massamaara 2
+                                                                         :toimenpide "Wut"
+                                                                         ;; Päällystetoimenpiteen tiedot
+                                                                         :toimenpide-paallystetyyppi 1
+                                                                         :toimenpide-raekoko 1
+                                                                         :kokonaismassamaara 2
+                                                                         :rc% 3
+                                                                         :toimenpide-tyomenetelma 12
+                                                                         :leveys 5
+                                                                         :massamenekki 7
+                                                                         :pinta-ala 8
+                                                                         ;; Kiviaines- ja sideainetiedot
+                                                                         :esiintyma "asd"
+                                                                         :km-arvo "asd"
+                                                                         :muotoarvo "asd"
+                                                                         :sideainetyyppi 1
+                                                                         :pitoisuus 54
+                                                                         :lisaaineet "asd"}))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
+                                       "Kohteenosa on päällekkäin osan")))
+
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-alkuosa
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc-in [:kulutuskerros 0 :tr-alkuetaisyys] 2))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
+                                       "Kaista 11 ajoradalla 1 ei kata koko osaa 3 blabla ")))
+
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-loppuosa
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc-in [:kulutuskerros 0 :tr-loppuetaisyys] 6000))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
+                                       "(aet: 3, let: 6000)")))
+
+
+
+
 (deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
   (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
-        _ (is (not (nil? paallystyskohde-id)))
+        _ (is (some? paallystyskohde-id))
         alkuperainen-paallystysilmoitus (-> pot-testidata
                                             (assoc :paallystyskohde-id paallystyskohde-id)
                                             (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))]
@@ -598,10 +681,10 @@
                   :toimenpide      "Freude"}}))))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
-(deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan      ; petar todo
+(deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'"))]
-    (is (not (nil? paallystyskohde-id)))
+        paallystyskohde-id (hae-yllapitokohde-aloittamaton)]
+    (is (some? paallystyskohde-id))
     (is (= 28 paallystyskohde-id))
     (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
@@ -649,7 +732,7 @@
 
 (deftest paivittaa-pot2-paallystysilmoitus-ei-muoka-kaikki-yllapitokohdeosan-kentat
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'"))]
+        paallystyskohde-id (hae-yllapitokohde-aloittamaton)]
     (is (= 28 paallystyskohde-id))
     (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Freude' WHERE yllapitokohde = 28"))
     (let [alkuperainen-paallystysilmoitus (-> pot2-testidata
@@ -689,8 +772,6 @@
                   :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty, mutta nimi on päivetetty")))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
-
-
 (deftest ei-saa-paivittaa-jos-on-vaara-versio
   (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
     (is (not (nil? paallystyskohde-vanha-pot-id)))
@@ -698,8 +779,7 @@
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus-pot2 (-> pot2-testidata
                                       (assoc :paallystyskohde-id paallystyskohde-vanha-pot-id)
-                                      (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
-          _ (println "petar urakkaId=" urakka-id)]
+                                      (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))]
       (is (thrown-with-msg? IllegalArgumentException #"Väärä POT versio. Pyynnössä on 2, pitäisi olla 1. Ota yhteyttä Harjan tukeen."
                             (kutsu-palvelua (:http-palvelin jarjestelma)
                                             :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
@@ -720,7 +800,7 @@
 
 (deftest uuden-paallystysilmoituksen-tallennus-eri-urakkaan-ei-onnistu
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
-    (is (not (nil? paallystyskohde-id)))
+    (is (some? paallystyskohde-id))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
           sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
@@ -733,7 +813,7 @@
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
-    (is (not (nil? paallystyskohde-id)))
+    (is (some? paallystyskohde-id))
 
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
@@ -754,7 +834,7 @@
                             {:urakka-id urakka-id
                              :sopimus-id sopimus-id
                              :paallystyskohde-id paallystyskohde-id})]
-        (is (not (nil? paallystysilmoitus-kannassa)))
+        (is (some? paallystysilmoitus-kannassa))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :paatos]) :hyvaksytty))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :perustelu])
@@ -828,7 +908,7 @@
 
 (deftest lisaa-kohdeosa
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
-    (is (not (nil? paallystyskohde-id)))
+    (is (some? paallystyskohde-id))
 
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
@@ -890,7 +970,7 @@
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
   (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)]
-    (is (not (nil? paallystyskohde-id)))
+    (is (some? paallystyskohde-id))
 
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id

@@ -994,6 +994,11 @@
                    WHERE
                    nimi = 'Kirkkotie';"))))
 
+(defn hae-yllapitokohde-aloittamaton []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Aloittamaton kohde mt20';"))))
+
 (defn hae-yllapitokohde-oulaisten-ohitusramppi []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
