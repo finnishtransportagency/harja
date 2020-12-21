@@ -8,7 +8,7 @@
             [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yha :as yha]

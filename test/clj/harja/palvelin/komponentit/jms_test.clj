@@ -1,4 +1,4 @@
-(ns ^:integraatio harja.palvelin.komponentit.sonja-test
+(ns ^:integraatio harja.palvelin.komponentit.jms-test
   (:require [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
             [harja.integraatio :as integraatio]
@@ -19,20 +19,23 @@
             [cheshire.core :as cheshire]
             [slingshot.slingshot :refer [try+]]
 
-            [harja.palvelin.integraatiot.jms :as jms]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.itmf :as itmf]
             [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
+            [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]))
 
-(defonce asetukset {:sonja integraatio/sonja-asetukset})
+(defonce asetukset {:itmf integraatio/itmf-asetukset
+                    :sonja integraatio/sonja-asetukset})
 
+(def ^:dynamic *itmf-yhteys* nil)
 (def ^:dynamic *sonja-yhteys* nil)
 
 (defrecord Testikomponentti [tila]
   component/Lifecycle
-  (start [{sonja :sonja :as this}]
+  (start [{itmf :itmf :as this}]
     (let [tila (atom nil)
           ;; Tässä go-blockissa oletetaan, että kahden sekunnin aikana jarjestelma keretään alustaa ja päästä testin sisälle, jossa testin alussa
           ;; voidaan halutessa muuttaa 'tila' atomin arvoa haluttuun arvoon.
@@ -41,40 +44,40 @@
                           (:tapahtuma @tila)
                           :ok))
           lahetys-fn (fn [viesti]
-                       (let [vastaus (sonja/laheta sonja "testilahetys-jono" viesti nil "testijarjestelma-lahetys")]
+                       (let [vastaus (jms/laheta itmf "testilahetys-jono" viesti nil "testijarjestelma-lahetys")]
                          vastaus))
           testijonokanava (chan 1000)
           testijonot (chan)]
       (thread
         (>!! testijonot
              (case (<!! lopputila)
-               :ok {:testijono (sonja/kuuntele! sonja "testijono" (fn [_]) "testijarjestelma")}
-               :exception {:testijono (sonja/kuuntele! sonja "virhetestijono" (fn [viesti]
+               :ok {:testijono (jms/kuuntele! itmf "testijono" (fn [_]) "testijarjestelma")}
+               :exception {:testijono (jms/kuuntele! itmf "virhetestijono" (fn [viesti]
                                                                            (throw (Exception. "VIRHE")))
                                                        "testijarjestelma")}
-               :useampi-kuuntelija {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
+               :useampi-kuuntelija {:testijono-1 (jms/kuuntele! itmf "testijono" ^{:judu :testijono-1} (fn [_]
                                                                                                             (>!! testijonokanava :viestia-kasitellaan)
                                                                                                             ;; Nukutaan sekuntti, jotta 'pääsäikeessä' keretään sammuttaa kuuntelija.
                                                                                                             (<!! (timeout 1000))
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
                                                                                                                                                     (if laskuri (inc laskuri) 1))))
                                                                   "testijarjestelma")
-                                    :testijono-2 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
+                                    :testijono-2 (jms/kuuntele! itmf "testijono" ^{:judu :testijono-2} (fn [_]
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
                                                                                                                                                     (if laskuri (inc laskuri) 1))))
                                                                   "testijarjestelma")}
-               :kuormitus {:testijono-1 (sonja/kuuntele! sonja "testijono-1" (fn [viesti]
+               :kuormitus {:testijono-1 (jms/kuuntele! itmf "testijono-1" (fn [viesti]
                                                                                (Thread/sleep (.intValue (* 100 (rand))))
                                                                                (throw (Exception.))
                                                                                (put! testijonokanava viesti)))
-                           :testijono-2 (sonja/kuuntele! sonja "testijono-2" (fn [viesti]
+                           :testijono-2 (jms/kuuntele! itmf "testijono-2" (fn [viesti]
                                                                                (Thread/sleep (.intValue (* 100 (rand))))
                                                                                (put! testijonokanava viesti)))})))
       (assoc this :testijonot testijonot
                   :testijonokanava testijonokanava
                   :lahetys-fn lahetys-fn
                   :tila tila)))
-  (stop [{sonja :sonja :as this}]
+  (stop [{itmf :itmf :as this}]
     (doseq [jono [:testijono :testijono-1 :testijono-2]]
       (when-let [sammutus-fn (-> this :tila deref jono)]
         (sammutus-fn)))
@@ -91,9 +94,12 @@
                     (component/start
                       (component/system-map
                         :db ds
-                        :sonja (component/using
-                                 (sonja/luo-oikea-sonja (:sonja asetukset))
+                        :itmf (component/using
+                                 (itmf/luo-oikea-itmf (:itmf asetukset))
                                  [:db])
+                        :sonja (component/using
+                                (sonja/luo-oikea-sonja (:sonja asetukset))
+                                [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
                         :sonja-sahkoposti (component/using
@@ -104,29 +110,36 @@
                                             [:sonja :db :integraatioloki])
                         :testikomponentti (component/using
                                             (->Testikomponentti nil)
-                                            [:sonja])
+                                            [:itmf])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :sonja :integraatioloki :sonja-sahkoposti])))))
-  ;; aloita-sonja palauttaa kanavan.
-  (binding [*sonja-yhteys* (go
+                                 [:db :itmf :integraatioloki :sonja-sahkoposti])))))
+  ;; aloita-itmf palauttaa kanavan.
+  (binding [*itmf-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
-                             (<! (jms/aloita-sonja jarjestelma)))]
+                             (<! (jms/aloita-jms (:itmf jarjestelma))))
+            *sonja-yhteys* (go
+                             ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
+                             (loop [itmf-yhteys-aloitettu? (-> jarjestelma :itmf :yhteys-aloitettu? deref)]
+                               (if itmf-yhteys-aloitettu?
+                                 (<! (jms/aloita-jms (:sonja jarjestelma)))
+                                 (do (<! (timeout 1000))
+                                     (recur (-> jarjestelma :itmf :yhteys-aloitettu? deref))))))]
     (testit))
   (alter-var-root #'jarjestelma component/stop)
   (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest sonjan-kaynnistys
-  (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
-        {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
-         db :db kaskytyskanava :kaskytyskanava} (:sonja jarjestelma)
+(deftest itmfn-kaynnistys
+  (let [[alkoiko-yhteys? _] (alts!! [*itmf-yhteys* (timeout 10000)])
+        {itmf-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
+         db :db kaskytyskanava :kaskytyskanava} (:itmf jarjestelma)
         {:keys [yhteys qcf istunnot jms-saije]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
-    (is (= (:sonja asetukset) sonja-asetukset))
+    (is (= (:itmf asetukset) itmf-asetukset))
     (is (realized? yhteys-future) "Yhteyoliota ei luotu")
     (doseq [[istunnon-nimi istunnon-oliot] istunnot]
       (let [{:keys [jonot istunto]} istunnon-oliot
@@ -160,9 +173,9 @@
 
 (deftest virhe-kasittelija-funktiossa
     (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
-    (is (first (alts!! [*sonja-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
+    (is (first (alts!! [*itmf-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
     (is (not (nil? (-> jarjestelma :testikomponentti :tila deref :testijono))))
-    (s-tk/sonja-laheta "virhetestijono" "foo")
+    (jms-tk/itmf-laheta "virhetestijono" "foo")
     ;; Odotetaan, että viesti on käsitelty
     (loop [n 0
            kasitelty? false]
@@ -171,29 +184,32 @@
                  (not kasitelty?))
         (recur (inc n)
                (= 0
-                  (- (-> (s-tk/sonja-jolokia-jono "virhetestijono" :enqueue-count nil) :body (cheshire/decode) (get "value"))
-                     (-> (s-tk/sonja-jolokia-jono "virhetestijono" :dequeue-count nil) :body (cheshire/decode) (get "value")))))))
-    (is (= "VIRHE" (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "virhetestijono") :virheet first :viesti)))
-    (s-tk/sonja-jolokia-jono "virhetestijono" nil :purge))
+                  (- (-> (jms-tk/itmf-jolokia-jono "virhetestijono" :enqueue-count nil) :body (cheshire/decode) (get "value"))
+                     (-> (jms-tk/itmf-jolokia-jono "virhetestijono" :dequeue-count nil) :body (cheshire/decode) (get "value")))))))
+    (is (= "VIRHE" (-> jarjestelma :itmf :tila deref :istunnot (get "testijarjestelma") :jonot (get "virhetestijono") :virheet first :viesti)))
+    (jms-tk/itmf-jolokia-jono "virhetestijono" nil :purge))
 
-(deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
+(deftest itmf-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
-  (<!! *sonja-yhteys*)
-  (let [sulje-sonja-kanava (chan)]
-    (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
+  (<!! *itmf-yhteys*)
+  (let [sulje-jms? (atom false)]
+    (with-redefs [jms/aloita-yhdistaminen (fn [& args]
                                               (loop []
-                                                (if (not (poll! sulje-sonja-kanava))
+                                                (if (not @sulje-jms?)
                                                   (do
                                                     (Thread/sleep 1000)
                                                     (recur))
                                                   {})))]
-      ;; Varmistetaan, että component/start ei blokkaa vaikka sonjayhteyttä ei saada
+      ;; Varmistetaan, että component/start ei blokkaa vaikka itmfyhteyttä ei saada
       (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
                                                       (component/system-map
                                                         :db (tietokanta/luo-tietokanta testitietokanta)
-                                                        :sonja (component/using
-                                                                 (sonja/luo-oikea-sonja (:sonja asetukset))
+                                                        :itmf (component/using
+                                                                 (itmf/luo-oikea-itmf (:itmf asetukset))
                                                                  [:db])
+                                                        :sonja (component/using
+                                                                (sonja/luo-oikea-sonja (:sonja asetukset))
+                                                                [:db])
                                                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                                           [:db])
                                                         :sonja-sahkoposti (component/using
@@ -203,22 +219,23 @@
                                                                                                               :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
                                                                             [:sonja :db :integraatioloki]))))
                                             (timeout 10000)])
-            sonja-yhteys (when toinen-jarjestelma
-                           (jms/aloita-sonja toinen-jarjestelma))]
-        (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
-        (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
-        (>!! sulje-sonja-kanava true)
-        (-> toinen-jarjestelma :sonja component/stop)))))
+            itmf-yhteys (when toinen-jarjestelma
+                           (jms/aloita-jms (:itmf toinen-jarjestelma)))]
+        (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos ITMF ei käynnisty")
+        (is (nil? (first (alts!! [itmf-yhteys (timeout 1000)]))) "ITMF yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
+        (reset! sulje-jms? true)
+        (component/stop toinen-jarjestelma)
+        #_(-> toinen-jarjestelma :itmf component/stop)))))
 
 (deftest lopeta-kuuntelija
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :useampi-kuuntelija)
-  (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
+  (let [_ (alts!! [*itmf-yhteys* (timeout 10000)])
         testikomponentti (:testikomponentti jarjestelma)
         testijonokanava (:testijonokanava testikomponentti)
-        {:keys [istunto jonot]} (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma"))
+        {:keys [istunto jonot]} (-> jarjestelma :itmf :tila deref :istunnot (get "testijarjestelma"))
         {:keys [jono vastaanottaja]} (get jonot "testijono")]
     ;; Lähetetään viesti
-    (sonja/laheta (-> jarjestelma :sonja) "testijono" "foo" nil "testijarjestelma")
+    (jms/laheta (-> jarjestelma :itmf) "testijono" "foo" nil "testijarjestelma")
     (is (= 2 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara)))
     ;; Odotetaan, että viestiä käsitellään
     (<!! testijonokanava)
@@ -226,7 +243,7 @@
     (let [kanava ((-> testikomponentti :tila deref :testijono-1))
           ;; Odotetaan, että :poista-kuuntelija multimetodi on ajettu loppuun
           [tulos _] (alts!! [kanava (timeout 10000)])
-          {:keys [vastaanottaja]} (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "testijono"))]
+          {:keys [vastaanottaja]} (-> jarjestelma :itmf :tila deref :istunnot (get "testijarjestelma") :jonot (get "testijono"))]
       ;; Lopetuksen pitäisi blokata ja odotella, että consumer saa hoidettua hommansa
       (is (= (-> testikomponentti :tila deref :testikasittelyita) 2))
       (is tulos "Kuuntelijan poisto ei onnistunut")
@@ -236,7 +253,7 @@
 (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        _ (s-tk/sonja-jolokia-jono "harja-to-email" nil :purge)
+        _ (jms-tk/sonja-jolokia-jono "harja-to-email" nil :purge)
         istunnot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :istunnot)
         jonot-ennen-lahetysta (apply merge
                                      (map (fn [[istunnon-nimi istunnon-tiedot]]
@@ -250,7 +267,7 @@
                                              istunnot-lahetyksen-jalkeen))
         istunto (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email") :istunto)
         jono (-> jonot-lahetyksen-jalkeen (get "harja-to-email") :jono)
-        viestit-jonossa (sonja/hae-jonon-viestit istunto jono)
+        viestit-jonossa (jms/hae-jonon-viestit istunto jono)
         viesti (->> viestit-jonossa first (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
     (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
     (tarkista-xml-sisalto viesti {:vastaanottajat (fn [vastaanottajat]
@@ -279,20 +296,20 @@
                           (println (str "VIRHE: " (.getMessage t) " " (.getStackTrace t)))
                           "VIRHE"))))))
 
-(deftest sonja-kuormitus-testi
+(deftest itmf-kuormitus-testi
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
-  (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        _ (s-tk/sonja-jolokia-jono "testilahetys-jono" nil :purge)
-        _ (s-tk/sonja-jolokia-jono "testijono-1" nil :purge)
-        _ (s-tk/sonja-jolokia-jono "testijono-2" nil :purge)
+  (let [_ (alts!! [*itmf-yhteys* (timeout 10000)])
+        _ (jms-tk/itmf-jolokia-jono "testilahetys-jono" nil :purge)
+        _ (jms-tk/itmf-jolokia-jono "testijono-1" nil :purge)
+        _ (jms-tk/itmf-jolokia-jono "testijono-2" nil :purge)
         {:keys [lahetys-fn testijonokanava tila]} (:testikomponentti jarjestelma)
         {:keys [testijono-1 testijono-2]} @tila
-        sonja (-> jarjestelma :sonja)
+        itmf (-> jarjestelma :itmf)
         _ (is (and testijono-1 testijono-2) "Testikomponentin jonoja ei keretty säätää oikein")
-        {istunnot :istunnot} (-> sonja :tila deref :istunnot)
+        {istunnot :istunnot} (-> itmf :tila deref :istunnot)
         testikomponentin-istunnot (select-keys istunnot ["istunto-testijono-1" "istunto-testijono-2"])
-        sonja-broker-tila (fn [jonon-nimi attribuutti]
-                            (-> (s-tk/sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
+        itmf-broker-tila (fn [jonon-nimi attribuutti]
+                            (-> (jms-tk/itmf-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
         testikomponentin-lahettamat-viestit (into #{}
                                                   (repeatedly 100 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
@@ -303,8 +320,8 @@
                                                  (repeatedly 100 #(str "<harja:testi xmlns:harja=\"\">"
                                                                        "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
                                                                        "</viesti></harja:testi>")))
-        testijono-1-lahetys-fn #(s-tk/sonja-laheta "testijono-1" %)
-        testijono-2-lahetys-fn #(s-tk/sonja-laheta "testijono-2" %)
+        testijono-1-lahetys-fn #(jms-tk/itmf-laheta "testijono-1" %)
+        testijono-2-lahetys-fn #(jms-tk/itmf-laheta "testijono-2" %)
         ;; Lähetetään viestejä rinnakkain testikomponentista brokerille
         testijonon-lahetys (thread (suorita-rinnakkain lahetys-fn testikomponentin-lahettamat-viestit))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
@@ -320,67 +337,69 @@
     (doseq [viesti-thread (<!! testijonon-lahetys)
             :let [viesti (<!! viesti-thread)]]
       (is (string? (re-find #"ID:.*" viesti))))
-    (is (= (count testikomponentin-lahettamat-viestit) (- (sonja-broker-tila "testilahetys-jono" :enqueue-count)
-                                                          (sonja-broker-tila "testilahetys-jono" :dequeue-count))))
+    (is (= (count testikomponentin-lahettamat-viestit) (- (itmf-broker-tila "testilahetys-jono" :enqueue-count)
+                                                          (itmf-broker-tila "testilahetys-jono" :dequeue-count))))
     ;; Vain testijono-2 viestit pitäisi olla käsitelty, koska ykkönen nakkaa exceptionia
     (is (= kasitellyt-viestit testijono-2-vastaanottamat-viestit))
     ;; Tarkistetaan, että testijono-1:n vastaanottaja on kummiski vielä pystyssä
-    (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))))
+    (is (= "ACTIVE" (jms/exception-wrapper (-> jarjestelma :itmf :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))))
 
 
 (deftest main-komponentit-loytyy
-  (is (s-tk/sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))))
+  (is (jms-tk/jms-laheta-odota "itmf" "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))))
 
 (deftest jms-yhteys-kay-alhaalla
-  (is (first (alts!! [*sonja-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
-  (let [kaskytyskanava (-> jarjestelma :sonja :kaskytyskanava)
+  (is (first (alts!! [*itmf-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
+  (let [kaskytyskanava (-> jarjestelma :itmf :kaskytyskanava)
         db (:db jarjestelma)
-        tyyppi (-> asetukset :sonja :tyyppi)
-        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))
+        tyyppi (-> asetukset :itmf :tyyppi)
+        jms-saije-sammutettu? (get-in jarjestelma [:itmf :jms-saije-sammutettu?])
+        status-ennen (:vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jms-saije-sammutettu?)))
         kysy-status (fn []
                       (loop [kertoja 1]
                         (when (< kertoja 5)
-                          (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]}))]
+                          (let [vastaus (<!! (jms/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]} jms-saije-sammutettu?))]
                             (if (= vastaus {:kaskytysvirhe :aikakatkaisu})
                               (recur (inc kertoja))
                               (:vastaus vastaus))))))
         _ (println "Lopetetetaan yhteys")
-        _ (s-tk/sonja-jolokia-connection nil :stop)
+        _ (jms-tk/itmf-jolokia-connection nil :stop)
         ;; Odotetaan hetki, että yhteys on pysäytetty
         _ (<!! (timeout 1500))
         status-lopetuksen-jalkeen (kysy-status)
         _ (println "Aloitetaan yhteys uudestaan")
-        _ (s-tk/sonja-jolokia-connection nil :start)
+        _ (jms-tk/itmf-jolokia-connection nil :start)
         ;; Odotetaan hetki, että yhteys on aloitettu
         _ (<!! (go-loop [i 0]
-                 (when (and (not= "ACTIVE" @sonja/jms-connection-tila)
+                 (when (and (not= "ACTIVE" (-> jarjestelma :itmf :jms-connection-tila deref))
                             (< i 5))
                    (<! (timeout 1000))
                    (recur (inc i)))))
         status-aloituksen-jalkeen (kysy-status)]
 
+    (println (str "STATUS ENNEN: " status-ennen))
     ;; STATUS ENNEN TESTIT
-    (is (= (-> status-ennen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
-    (doseq [istunto (-> status-ennen :olioiden-tilat :istunnot)]
+    (is (= (-> status-ennen (get "itmf") :yhteyden-tila) "ACTIVE"))
+    (doseq [istunto (-> status-ennen (get "itmf") :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
     ;; STATUS LOPETUKSEN JÄLKEEN TESTIT
-    (is (= (-> status-lopetuksen-jalkeen :olioiden-tilat :yhteyden-tila) "RECONNECTING"))
+    (is (= (-> status-lopetuksen-jalkeen (get "itmf") :yhteyden-tila) "RECONNECTING"))
     ;; STATUS RECONNECTIN JÄLKEEN
-    (is (= (-> status-aloituksen-jalkeen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
-    (doseq [istunto (-> status-aloituksen-jalkeen :olioiden-tilat :istunnot)]
+    (is (= (-> status-aloituksen-jalkeen (get "itmf") :yhteyden-tila) "ACTIVE"))
+    (doseq [istunto (-> status-aloituksen-jalkeen (get "itmf") :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))))
 
 (deftest liikaa-kaskyja
-  (alts!! [*sonja-yhteys* (timeout 10000)])
-  (let [_ (s-tk/sonja-jolokia-jono "testilahetys-jono" nil :purge)
+  (alts!! [*itmf-yhteys* (timeout 10000)])
+  (let [_ (jms-tk/itmf-jolokia-jono "testilahetys-jono" nil :purge)
         {:keys [lahetys-fn]} (:testikomponentti jarjestelma)
         lahetykset (atom {:taynna 0 :ruuhkaa 0 :lahetettiin 0 :kaskyjen-kasittely 0})
         pitkaan-kestava-lahetys-kanava (chan)
-        ;; Lähetetään pitkään kestävä viesti (yli Sonja ns määritellyn timeoutin)
-        pitkaan-kestava-lahetys (with-redefs [sonja/viestin-kasittely-timeout 100
-                                              sonja/laheta-viesti (fn [& args]
+        ;; Lähetetään pitkään kestävä viesti (yli ITMF ns määritellyn timeoutin)
+        pitkaan-kestava-lahetys (with-redefs [jms/viestin-kasittely-timeout 100
+                                              jms/laheta-viesti (fn [& args]
                                                                     (println "LÄHETETÄÄN HIDAS VIESTI")
                                                                     (>!! pitkaan-kestava-lahetys-kanava true)
                                                                     (<!! (timeout 500))
@@ -389,15 +408,15 @@
                                   (thread (lahetys-fn "foo"))
                                   ;; Odotellaan, jotta with-redefs toimii
                                   (<!! pitkaan-kestava-lahetys-kanava))
-        kasittele-kasky-ennen-redefs! sonja/kasittele-kasky!
+        kasittele-kasky-ennen-redefs! jms/kasittele-kasky!
         ;; Samalla kun pitkään kestävää viestiä lähetetään, lähetetään 120 muuta viestiä, joiden kaikkien pitäisi
         ;; epäonnistua
-        muut-lahetykset (with-redefs [sonja/viestin-kasittely-timeout 100
-                                      sonja/laheta-viesti (fn [& args]
+        muut-lahetykset (with-redefs [jms/viestin-kasittely-timeout 100
+                                      jms/laheta-viesti (fn [& args]
                                                             ;; Jos viesti lähetetään, nostetaan counterin lukemaa.
                                                             ;; Tässä testissä viestejä ei tulisi lähettää yhtään.
                                                             (swap! lahetykset update :lahetettiin inc))
-                                      sonja/kasittele-kasky! (fn [& args]
+                                      jms/kasittele-kasky! (fn [& args]
                                                                ;; Kun jms-säije sammutetaan, käsitellään jonossa jo
                                                                ;; olevat viestit ensin pois.
                                                                (swap! lahetykset update :kaskyjen-kasittely inc)
@@ -411,12 +430,12 @@
                               :taynna (swap! lahetykset update :taynna inc)
                               :ruuhkaa (swap! lahetykset update :ruuhkaa inc)))
                           ;; Sammutetaan jms-säije
-                          (-> jarjestelma :sonja :saikeen-sammutus-kanava (>!! true))
+                          (-> jarjestelma :itmf :saikeen-sammutus-kanava (>!! true))
                           ;; Sammuttaminen aiheuttaa ensin jo jonossa olevien viestien käsittelyn. Ne kaikki jonossa
                           ;; olevat 100 viestiä tulisi tulla timeout todetuiksi.
                           ;; Odotellaan tässä, että säije on sammutettu, jotta with-redefsit toimii.
                           (<!! (go-loop []
-                                 (when-not (true? @sonja/jms-saije-sammutettu?)
+                                 (when-not (true? (-> jarjestelma :itmf :jms-saije-sammutettu? deref))
                                    (<! (timeout 100))
                                    (recur)))))]
     (is (= 100 (:ruuhkaa @lahetykset)))

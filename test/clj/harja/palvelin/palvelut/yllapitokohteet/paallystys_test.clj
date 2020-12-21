@@ -18,10 +18,10 @@
             [harja.domain.skeema :as skeema]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
@@ -45,7 +45,7 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"
@@ -943,7 +943,7 @@
         sahkoposti-valitetty (atom false)
         sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
                                                              (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
                                                                                                     .getText
                                                                                                     xml/lue
