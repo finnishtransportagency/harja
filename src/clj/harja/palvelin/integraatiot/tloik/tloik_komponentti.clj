@@ -9,6 +9,8 @@
   esim. vastaamaan kysymyksiin sekä kertomaaan työn edistymisestä."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
+            [harja.palvelin.integraatiot.jms :as jms-util]
             [harja.palvelin.komponentit.sonja :as sonja]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
@@ -22,8 +24,7 @@
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
              [tekstiviesti :as tekstiviesti]
              [sahkoposti :as sahkopostiviesti]]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -31,17 +32,18 @@
 (defn tee-lokittaja [this integraatio]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
 
-(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja klusterin-tapahtumat] :as this}
+(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja] :as this}
                                     ilmoitusviestijono ilmoituskuittausjono ilmoitusasetukset
                                     jms-lahettaja kehitysmoodi?]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
     (sonja/kuuntele!
       sonja ilmoitusviestijono
-      (partial ilmoitukset/vastaanota-ilmoitus
-               sonja (tee-lokittaja this "ilmoituksen-kirjaus")
-               ilmoitusasetukset klusterin-tapahtumat db ilmoituskuittausjono
-               jms-lahettaja kehitysmoodi?))))
+      (with-meta (partial ilmoitukset/vastaanota-ilmoitus
+                          sonja (tee-lokittaja this "ilmoituksen-kirjaus")
+                          ilmoitusasetukset db ilmoituskuittausjono
+                          jms-lahettaja kehitysmoodi?)
+                 {:jms-kuuntelija :tloik-ilmoitusviesti}))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
@@ -51,9 +53,10 @@
       :viesti-id
       #(and (not (:virhe %)) (not (= "virhe" (:kuittaustyyppi %))))
       (fn [_ viesti-id onnistunut]
-        (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
+        (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
+      {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat [{:keys [sonja labyrintti db sonja-sahkoposti] :as this} jonot]
+(defn rekisteroi-kuittauskuuntelijat! [{:keys [sonja labyrintti db sonja-sahkoposti] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
                                          sonja (:toimenpideviestijono jonot))]
     (when-let [labyrintti labyrintti]
@@ -93,7 +96,7 @@
   component/Lifecycle
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
     (log/debug "Käynnistetään T-LOIK komponentti")
-    (rekisteroi-kuittauskuuntelijat this asetukset)
+    (rekisteroi-kuittauskuuntelijat! this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
@@ -117,15 +120,58 @@
                                         uudelleenlahetysvali-minuuteissa))))
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
-                       :sonja-toimenpidekuittauskuuntelija
-                       :paivittainen-lahetys-tehtava]]
+                       :sonja-toimenpidekuittauskuuntelija]
+          ajastetut [:paivittainen-lahetys-tehtava]
+          lahettajat (select-keys asetukset [:ilmoituskuittausjono :toimenpideviestijono])]
       (doseq [kuuntelija kuuntelijat
               :let [poista-kuuntelija-fn (get this kuuntelija)]]
         (when poista-kuuntelija-fn
-          (poista-kuuntelija-fn)))
-      (apply dissoc this kuuntelijat)))
+          (when-not (poista-kuuntelija-fn)
+            (log/error (str "Kuuntelijan: " kuuntelija " kuuntelun lopetus epäonnistui")))))
+      (doseq [ajastettu ajastetut
+              :let [poista-ajastettu-fn (get this ajastettu)]]
+        (when poista-ajastettu-fn
+          (when-not (poista-ajastettu-fn)
+            (log/error (str "Ajastetun tehtava: " ajastettu " lopetus epäonnistui")))))
+      (doseq [[_ lahettajan-nimi] lahettajat]
+        (sonja/kasky (:sonja this) {:poista-lahettaja [(jms-util/oletusjarjestelmanimi lahettajan-nimi) lahettajan-nimi]}))
+      (as-> this $
+            (apply dissoc $ kuuntelijat)
+            (apply dissoc $ ajastetut))))
 
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
     (let [jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
-      (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))
+      (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id)))
+  kp/IStatus
+  (-status [this]
+    (let [kuuntelijajonot (vals (select-keys asetukset [:ilmoitusviestijono :toimenpidekuittausjono]))
+          ajastetut [:paivittainen-lahetys-tehtava]
+          lahettajajonot (vals (select-keys asetukset [:ilmoituskuittausjono :toimenpideviestijono]))
+          kuuntelijajonojen-tila (reduce (fn [jonojen-tila jonon-nimi]
+                                           (merge jonojen-tila
+                                                  {jonon-nimi (jms-util/jms-jono-ok? (:sonja this) jonon-nimi)}))
+                                         {}
+                                         kuuntelijajonot)
+          lahetysjonojen-tilat (reduce (fn [jonojen-tila jonon-nimi]
+                                         (merge jonojen-tila
+                                                {jonon-nimi (or (not (jms-util/jms-jono-olemassa? (:sonja this) jonon-nimi))
+                                                                (jms-util/jms-jono-ok? (:sonja this) jonon-nimi))}))
+                                       {}
+                                       lahettajajonot)
+          ilmoitusviestijonon-kuuntelija-ok? (or (nil? (:ilmoitusviestijono asetukset))
+                                                 (jms-util/jms-jonolla-kuuntelija? (:sonja this)
+                                                                                   (:ilmoitusviestijono asetukset)
+                                                                                   :tloik-ilmoitusviesti))
+          toimenpidekuittausjonon-kuuntelija-ok? (or (nil? (:toimenpidekuittausjono asetukset))
+                                                     (jms-util/jms-jonolla-kuuntelija? (:sonja this)
+                                                                                       (:toimenpidekuittausjono asetukset)
+                                                                                       :tloik-toimenpidekuittaus))]
+      {::kp/kaikki-ok? (and (every? (fn [[_ ok?]] ok?) kuuntelijajonojen-tila)
+                            (every? (fn [[_ ok?]] ok?) lahetysjonojen-tilat)
+                            ilmoitusviestijonon-kuuntelija-ok?
+                            toimenpidekuittausjonon-kuuntelija-ok?)
+       ::kp/tiedot (merge kuuntelijajonojen-tila
+                          lahetysjonojen-tilat
+                          {:ilmoitusviestijonon-kuuntelija-ok? ilmoitusviestijonon-kuuntelija-ok?
+                           :toimenpidekuittausjonon-kuuntelija-ok? toimenpidekuittausjonon-kuuntelija-ok?})})))

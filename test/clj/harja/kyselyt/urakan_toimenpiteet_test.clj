@@ -9,6 +9,8 @@
 
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (urakkatieto-alustus!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -17,15 +19,13 @@
                         :http-palvelin (testi-http-palvelin)))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (urakkatieto-lopetus!))
 
-
-(use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+(use-fixtures :once jarjestelma-fixture)
 
 (deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot
-    (let [db (tietokanta/luo-tietokanta testitietokanta)
+    (let [db (:db jarjestelma)
           urakka-id @oulun-alueurakan-2005-2010-id
           maara-kannassa (- (ffirst (q
                                    (str "SELECT count(*)
@@ -46,7 +46,7 @@
       (is (= (:taso (nth rivi 3)) 4)))))
 
 (deftest hae-pudun-urakan-toimenpiteet-ja-tehtavat-tasot 
-    (let [db (tietokanta/luo-tietokanta testitietokanta)
+    (let [db (:db jarjestelma)
        urakka-id @pudasjarven-alueurakan-id
           maara-kannassa (- (ffirst (q
                                    (str "SELECT count(*)
@@ -60,7 +60,7 @@
      (is (= (count response) maara-kannassa))))
 
 (deftest testaa-tehtavien-voimassaolo
-         (let [db (tietokanta/luo-tietokanta testitietokanta)
+         (let [db (:db jarjestelma)
                urakka-id @oulun-alueurakan-2005-2010-id
                maara-kannassa (- (ffirst (q
                                         (str "SELECT count(*)

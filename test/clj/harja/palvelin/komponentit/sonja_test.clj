@@ -1,6 +1,7 @@
 (ns ^:integraatio harja.palvelin.komponentit.sonja-test
   (:require [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.kyselyt.konversio :as konv]
@@ -18,23 +19,14 @@
             [cheshire.core :as cheshire]
             [slingshot.slingshot :refer [try+]]
 
-            [harja.palvelin.main :as sut]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
+            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61617"
-                            :kayttaja ""
-                            :salasana ""
-                            :tyyppi :activemq}
-                    :tloik {:ilmoitusviestijono tloik-tk/+tloik-ilmoitusviestijono+
-                            :ilmoituskuittausjono tloik-tk/+tloik-ilmoituskuittausjono+
-                            :toimenpideviestijono tloik-tk/+tloik-ilmoitustoimenpideviestijono+
-                            :toimenpidekuittausjono tloik-tk/+tloik-ilmoitustoimenpidekuittausjono+
-                            :uudelleenlahetysvali-minuuteissa 30}})
+(defonce asetukset {:sonja integraatio/sonja-asetukset})
 
 (def ^:dynamic *sonja-yhteys* nil)
 
@@ -92,6 +84,8 @@
                 :tila nil)))
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -113,25 +107,23 @@
                                             [:sonja])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                [:db])))))
+                                 [:db :sonja :integraatioloki :sonja-sahkoposti])))))
   ;; aloita-sonja palauttaa kanavan.
   (binding [*sonja-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
-                             (<! (sut/aloita-sonja jarjestelma)))]
+                             (<! (jms/aloita-sonja jarjestelma)))]
     (testit))
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
-(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
         {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
-         db :db kaskytyskanava :kaskytyskanava yhteyden-tiedot :yhteyden-tiedot} (:sonja jarjestelma)
+         db :db kaskytyskanava :kaskytyskanava} (:sonja jarjestelma)
         {:keys [yhteys qcf istunnot jms-saije]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (= (:sonja asetukset) sonja-asetukset))
@@ -212,7 +204,7 @@
                                                                             [:sonja :db :integraatioloki]))))
                                             (timeout 10000)])
             sonja-yhteys (when toinen-jarjestelma
-                           (sut/aloita-sonja toinen-jarjestelma))]
+                           (jms/aloita-sonja toinen-jarjestelma))]
         (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
         (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
         (>!! sulje-sonja-kanava true)

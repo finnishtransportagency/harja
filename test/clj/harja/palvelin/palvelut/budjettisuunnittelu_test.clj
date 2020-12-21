@@ -3,7 +3,6 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
             [harja.testi :refer :all]
             [harja.data.hoito.kustannussuunnitelma :as data-gen]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
@@ -19,12 +18,9 @@
                       (component/system-map
                         :db (luo-testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet (component/using
-                                                      (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
-                                                      [:http-palvelin])
                         :budjetoidut-tyot (component/using
                                             (bs/->Budjettisuunnittelu)
-                                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
+                                            [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

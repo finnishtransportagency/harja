@@ -234,6 +234,18 @@
        read-string
        (yhdista-asetukset oletusasetukset)))
 
+(defonce pois-kytketyt-ominaisuudet (atom #{}))
+
+(defn ominaisuus-kaytossa? [k]
+  (let [pko @pois-kytketyt-ominaisuudet]
+    (if (nil? pko)
+      false
+      (not (contains? pko k)))))
+
+(defn aseta-kaytettavat-ominaisuudet! [pois-kytketyt-ominaisuudet-joukko]
+  (reset! pois-kytketyt-ominaisuudet pois-kytketyt-ominaisuudet-joukko))
+
+
 (defn crlf-filter [msg]
   (assoc msg :vargs (mapv (fn [s]
                             (if (string? s)
@@ -241,22 +253,30 @@
                               s))
                           (:vargs msg))))
 
+(defn- logituksen-tunnus [msg]
+  (let [ensimmainen-arg (-> msg :vargs first)
+        tunnus (when (string? ensimmainen-arg)
+                 (second
+                   (re-find #"^\[([^\]]*)\]"
+                            ensimmainen-arg)))]
+    (when tunnus
+      (str/lower-case tunnus))))
+
 (defn logitetaanko
   "Tämän palauttama middleware on hyödyllinen, jos testidatan puuttellisuus aiheuttaa suuret määrät logitusta turhaan.
    Esimerkiksi siltojen tuonnissa halutaan logittaa, jos datassa on jotain ongelmia tuotannossa, mutta testidatan
    kanssa tämä logitus aiheuttaa tuhansia logituksia turhaan."
-  [testidata?]
+  [{:keys [testidata? ei-logiteta]}]
   (fn [msg]
-    (let [ensimmainen-arg (-> msg :vargs first)
-          ei-logiteta? (and (keyword? ensimmainen-arg)
-                            (= :ei-logiteta_ ensimmainen-arg))]
-      (if ei-logiteta?
-        (when-not testidata?
-          (update msg :vargs #(vec (rest %))))
+    (let [ei-logiteta? (when-let [tunnus (logituksen-tunnus msg)]
+                         (and (contains? ei-logiteta tunnus)
+                              testidata?))]
+      (when-not ei-logiteta?
         msg))))
 
 (defn konfiguroi-lokitus [asetukset]
-  (log/merge-config! {:middleware [(logitetaanko (-> asetukset :log :testidata?)) crlf-filter]})
+  (log/merge-config! {:middleware [(logitetaanko (:log asetukset))
+                                   crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
     (log/merge-config! {:appenders {:println {:min-level :info}}}))

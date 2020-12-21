@@ -2,7 +2,10 @@
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]))
+            [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
+            [com.stuartsierra.component :as component]))
+
+(use-fixtures :once tietokantakomponentti-fixture)
 
 (defn luo-ilmoitus [ilmoitus-id]
   (u (format "INSERT INTO ilmoitus (ilmoitusid, ilmoitettu, valitetty, vastaanotettu, \"vastaanotettu-alunperin\", otsikko) VALUES (%s, now(), (now() + interval '30 seconds'), (now() + interval '30 seconds') , (now() + interval '30 seconds'), 'yksikkotesti');" ilmoitus-id)))
@@ -28,7 +31,7 @@
   (first (first (q (format "SELECT hae_seuraava_vapaa_viestinumero('%s')" puhelinnumero)))))
 
 (deftest tarkista-taman-hetkisen-paivystajan-haku
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         paivystaja (hae-paivystaja)
         paivystaja-id (first paivystaja)
         puhelin (second paivystaja)
@@ -61,7 +64,7 @@
     (poista-ilmoitukset)))
 
 (deftest tarkista-viestinumeron-kierratys
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         paivystaja (hae-paivystaja)
         paivystaja-id (first paivystaja)
         puhelin (second paivystaja)

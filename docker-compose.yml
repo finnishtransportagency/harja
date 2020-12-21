@@ -165,13 +165,13 @@ services:
       fi
 
       echo 'Aloitetaan LESS kääntäminen'
-      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1 &
+      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1
       disown
       lein with-profile $${LEIN_PROFILES} less once
       echo 'Luodaan .edn filut figwheeliä varten'
       mkdir -p figwheel_conf/luodut
       rm figwheel_conf/luodut/*
-      lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
+      lein with-profile $${LEIN_PROFILES} run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.cljs.edn
 
       echo 'Käynnistetään frontin repl'
       screen -S figwheel -d -m lein trampoline with-profile $${LEIN_PROFILES},+dev-cljs run -m figwheel.main -b figwheel_conf/luodut/dev-container --repl

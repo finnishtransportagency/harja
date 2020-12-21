@@ -29,11 +29,11 @@
     kayttaja
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
+                       [:http-palvelin :db :integraatioloki])
     :sonja (feikki-sonja)
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat])))
+             [:db :sonja :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
