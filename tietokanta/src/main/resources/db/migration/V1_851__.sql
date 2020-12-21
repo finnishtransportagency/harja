@@ -6,7 +6,7 @@ ALTER TABLE pot2_massa RENAME TO pot2_mk_urakan_massa;
 ALTER TABLE pot2_massa_lisaaine RENAME TO pot2_mk_massan_lisaaine;
 ALTER TABLE pot2_massa_runkoaine RENAME TO pot2_mk_massan_runkoaine;
 ALTER TABLE pot2_massa_sideaine RENAME TO pot2_mk_massan_sideaine;
-ALTER TABLE potpot2_mk_mursketyyppi2_massatyyppi RENAME TO pot2_mk_massatyyppi;
+ALTER TABLE pot2_massatyyppi RENAME TO pot2_mk_massatyyppi;
 ALTER TABLE pot2_murske RENAME TO pot2_mk_urakan_murske;
 ALTER TABLE pot2_mursketyyppi RENAME TO pot2_mk_mursketyyppi;
 ALTER TABLE pot2_runkoainetyyppi RENAME TO pot2_mk_runkoainetyyppi;
