@@ -61,9 +61,9 @@ fi
 
 if [[ -n "$(echo "$@" | grep clean)" ]]
 then
-    lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'"
+    lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'" local
 else
-    lisaa_env_muuttuja LEININGEN_CLEAN ''
+    lisaa_env_muuttuja LEININGEN_CLEAN '' local
 fi
 
 lisaa_env_muuttuja BRANCH "$(git branch --show-current)" local
