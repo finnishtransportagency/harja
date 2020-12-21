@@ -276,19 +276,19 @@
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
-  (locking testikannan-luonti-lukko
-    (with-open [c (.getConnection temppidb)
-                ps (.createStatement c)]
+  (with-open [c (.getConnection temppidb)
+              ps (.createStatement c)]
 
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
-      (yrita-querya (fn [] 
-                      (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
-                      (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-                    5))
-    (luo-kannat-uudelleen)
-    (odota-etta-kanta-pystyssa {:datasource db})
-    (odota-etta-kanta-pystyssa {:datasource temppidb})))
+    (tapa-backend-kannasta ps "harjatest_template")
+    (tapa-backend-kannasta ps "harjatest")
+    (dotimes [n 5]
+      (try
+        (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+        (catch PSQLException e
+          (Thread/sleep 500)
+          (log/warn e "- yritetään uudelleen, yritys" n))))
+    (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
+  (luo-kannat-uudelleen))
 
 (defn katkos-testikantaan!
   "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan
