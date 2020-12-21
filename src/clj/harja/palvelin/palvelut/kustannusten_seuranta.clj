@@ -28,6 +28,13 @@
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
+(defn- laske-prosentti [tot bud]
+  (let [tot (bigdec tot)
+        bud (bigdec bud)]
+    (if (or (= (bigdec 0) tot) (= (bigdec 0) bud))
+      0
+      (* 100 (* 100 (/ tot bud))))))
+
 (defn- rivita-toimenpiteet [toimenpiteet paaryhma]
   (mapcat (fn [toimenpide]
             (let [toimenpide-tot (:toimenpide-toteutunut-summa toimenpide)
@@ -41,9 +48,7 @@
                         :toteutunut_summa toimenpide-tot
                         :budjetoitu_summa toimenpide-bud
                         :erotus erotus
-                        :prosentti (if (or (= 0M toimenpide-tot) (= 0M toimenpide-bud))
-                                     0
-                                     (* 100 (* 100 (.divide toimenpide-tot toimenpide-bud 2))))}]
+                        :prosentti (laske-prosentti toimenpide-tot toimenpide-bud)}]
                       (when (= "hankintakustannukset" (:paaryhma toimenpide))
                         [{:paaryhma paaryhma
                           :toimenpide nil
@@ -134,7 +139,7 @@
         erotus (- bud tot)
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
-                    (* 100 (* 100 (.divide tot bud 2))))]
+                    (laske-prosentti tot bud))]
     [{:rivi ["Hoidonjohdonpalkkio" nil nil bud tot erotus prosentti] :lihavoi? true}]))
 
 (defn- luo-excel-rivi-erillishankinnoille [kustannusdata]
@@ -143,7 +148,7 @@
         erotus (- bud tot)
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
-                    (* 100 (* 100 (.divide tot bud 2))))]
+                    (laske-prosentti tot bud))]
     [{:rivi ["Erillishankinnat" nil nil bud tot erotus prosentti] :lihavoi? true}]))
 
 (defn- luo-excel-rivi-yhteensa [kustannusdata]
@@ -152,7 +157,7 @@
         erotus (when (not= 0 bud) (- bud tot))
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
-                    (* 100 (* 100 (.divide tot bud 2))))]
+                    (laske-prosentti tot bud))]
     [{:rivi ["Yhteensä" nil nil bud tot erotus prosentti] :lihavoi? true}]))
 
 (defn- luo-excel-rivi-lisatyot [rivi ensimmainen?]
