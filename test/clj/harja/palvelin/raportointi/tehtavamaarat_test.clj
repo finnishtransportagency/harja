@@ -83,15 +83,15 @@
     :toimenpide-jarjestys 3}])
 
 (def pitais-tulla
-  [{:rivi ["Pohjois-Pohjanmaa" "" "" "" ""] :korosta? true :lihavoi? true}
-   {:rivi ["Toimenpide1" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
-   ["Tehtava1" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100)]
-   ["Tehtava2" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100)]
-   {:rivi ["Toimenpide2" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
-   ["Tehtava3" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100)]
-   ["Tehtava4" "mm" 0 (bigdec 1) "!"]
-   {:rivi ["Toimenpide3" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
-   ["Tehtava5" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100)]])
+  [{:rivi ["Pohjois-Pohjanmaa" "" "" "" "" ""] :korosta? true :lihavoi? true}
+   {:rivi ["Toimenpide1" "" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
+   ["Tehtava1" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]
+   ["Tehtava2" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]
+   {:rivi ["Toimenpide2" "" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
+   ["Tehtava3" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]
+   ["Tehtava4" "mm" 0 (bigdec 1) "!" 0]
+   {:rivi ["Toimenpide3" "" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
+   ["Tehtava5" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]])
 
 (deftest tehtavamaarien-riviprosessointiharvelien-testit
   (testing "Rivien yhdistelyhärveli yhdistää saman tehtävän ja hallintayksikön sisältävät rivit"
