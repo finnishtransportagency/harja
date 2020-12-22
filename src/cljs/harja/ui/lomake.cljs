@@ -13,6 +13,10 @@
             [harja.ui.ikonit :as ikonit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
+(defrecord ^:private Otsikko [otsikko])
+(defn- otsikko? [x]
+  (instance? Otsikko x))
+
 ; kokoelma palstoja jota käytetään lomakkeen muodostamiseen
 (defrecord Palstat [optiot skeemat])
 
@@ -51,10 +55,38 @@
 (defn ryhma? [x]
   (instance? Ryhma x))
 
+(defn- pura-ryhmat
+  "Purkaa skeemat ryhmistä yhdeksi flat listaksi, jossa ei ole nil arvoja.
+Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
+  [skeemat]
+  (loop [acc []
+         [s & skeemat] (remove nil? skeemat)]
+    (if-not s
+      acc
+      (cond
+        (otsikko? s)
+        (recur acc skeemat)
+
+        (ryhma? s)
+        (recur acc
+               (concat (remove nil? (:skeemat s)) skeemat))
+
+        :default
+        (recur (conj acc s)
+               skeemat)))))
+
 (defn muokattu?
   "Tarkista onko mitään lomakkeen kenttää muokattu"
   [data]
   (not (empty? (::muokatut data))))
+
+(defn puuttuvien-pakollisten-kenttien-otsikot
+  "Palauttaa setin pakollisia kenttiä, jotka puuttuvat"
+  [data]
+  (map (fn [kentta]
+         (:otsikko (first (filter #(= kentta (:nimi %))
+                                  (pura-ryhmat (::skeema data))))))
+       (::puuttuvat-pakolliset-kentat data)))
 
 (defn puuttuvat-pakolliset-kentat
   "Palauttaa setin pakollisia kenttiä, jotka puuttuvat"
@@ -110,30 +142,6 @@ ja kaikki pakolliset kentät on täytetty"
                                                        (:sukunimi nykyinen-lukko))
                                               (str " (" (:etunimi nykyinen-lukko) " " (:sukunimi nykyinen-lukko) ")"))
                                             " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
-
-(defrecord ^:private Otsikko [otsikko])
-(defn- otsikko? [x]
-  (instance? Otsikko x))
-
-(defn- pura-ryhmat
-  "Purkaa skeemat ryhmistä yhdeksi flat listaksi, jossa ei ole nil arvoja.
-Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
-  [skeemat]
-  (loop [acc []
-         [s & skeemat] (remove nil? skeemat)]
-    (if-not s
-      acc
-      (cond
-        (otsikko? s)
-        (recur acc skeemat)
-
-        (ryhma? s)
-        (recur acc
-               (concat (remove nil? (:skeemat s)) skeemat))
-
-        :default
-        (recur (conj acc s)
-               skeemat)))))
 
 (defn- palstoita
   "Ottaa sisään ryhmiä ja muodostaa jokaisesta ryhmästä palstan vertikaalisesti"

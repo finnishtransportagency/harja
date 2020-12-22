@@ -287,7 +287,7 @@
           :valinta-arvo identity
           :valinnat pot2-domain/litteyslukuluokat
           :pakollinen? true}
-         {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
+         {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string
           :validoi [[:ei-tyhja "Anna DoP nro"]]
           :vayla-tyyli? true :pakollinen? true})
 
@@ -406,7 +406,7 @@
     {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisaaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
-    {:otsikko "Toiminnot" :nimi :toiminnot :tyyppi :komponentti :leveys 3
+    {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [massan-toiminnot e! rivi])}]
    massat])

@@ -74,8 +74,11 @@
                         #{::pot2-domain/murske-id
                           ::pot2-domain/nimen-tarkenne
                           ::pot2-domain/tyyppi
+                          ::pot2-domain/tyyppi-tarkenne
                           ::pot2-domain/esiintyma
+                          ::pot2-domain/lahde
                           ::pot2-domain/rakeisuus
+                          ::pot2-domain/rakeisuus-tarkenne
                           ::pot2-domain/iskunkestavyys
                           ::pot2-domain/dop-nro}
                         {::pot2-domain/urakka-id urakka-id
@@ -251,10 +254,23 @@
                    :harja.domain.pot2/sideaineet sideaineet
                    :harja.domain.pot2/lisaaineet lisaaineet))))
 
+(defn- validoi-murske [db murske]
+  (let [muun-tyypin-id (::pot2-domain/koodi
+                         (first (fetch db
+                                       ::pot2-domain/pot2-mk-mursketyyppi
+                                       #{::pot2-domain/koodi}
+                                       {::pot2-domain/nimi "Muu"})))]
+    (assert (or (not= muun-tyypin-id (::pot2-domain/tyyppi murske))
+                (and (= muun-tyypin-id (::pot2-domain/tyyppi murske))
+                     (some? (::pot2-domain/tyyppi-tarkenne murske)))) "Tyyppi annettu tai muulla tyypillä tarkenne")
+    (assert (or (not= "Muu" (::pot2-domain/rakeisuus murske))
+                (some? (::pot2-domain/rakeisuus-tarkenne murske))) "Rakeisuus annettu tai muulla rakeisuudella tarkenne")))
+
 (defn tallenna-urakan-murske
   [db user {::pot2-domain/keys [urakka-id] :as tiedot}]
   (println "tallenna-urakan-murske: "(pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (validoi-murske db tiedot)
   (jdbc/with-db-transaction
     [db db]
     (let [murske-id (::pot2-domain/murske-id tiedot)
@@ -270,8 +286,11 @@
                            (select-keys tiedot [::pot2-domain/urakka-id
                                                 ::pot2-domain/nimen-tarkenne
                                                 ::pot2-domain/tyyppi
+                                                ::pot2-domain/tyyppi-tarkenne
                                                 ::pot2-domain/esiintyma
+                                                ::pot2-domain/lahde
                                                 ::pot2-domain/rakeisuus
+                                                ::pot2-domain/rakeisuus-tarkenne
                                                 ::pot2-domain/iskunkestavyys
                                                 ::pot2-domain/dop-nro])))
           _ (println "tallenna-urakan-paallystysmurske onnistui, palautetaan:" (pr-str murske))]

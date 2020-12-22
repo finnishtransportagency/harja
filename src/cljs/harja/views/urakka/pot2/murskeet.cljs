@@ -29,6 +29,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+
 (defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
@@ -45,9 +46,9 @@
                        [:div
                         [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
                         [:ul
-                         (for [puute (ui-lomake/puuttuvat-pakolliset-kentat data)]
-                           ^{:key (name puute)}
-                           [:li (name puute)])]])
+                         (for [puute (ui-lomake/puuttuvien-pakollisten-kenttien-otsikot data)]
+                           ^{:key (gensym)}
+                           [:li puute])]])
                      [:div.flex-row
                       [:div.tallenna-peruuta
                        [napit/tallenna
@@ -73,7 +74,7 @@
                               :toiminto-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
                               :hyvaksy "Kyllä"}))
                          {:vayla-tyyli? true
-                         :luokka "suuri"}])]])
+                          :luokka "suuri"}])]])
        :vayla-tyyli? true}
       [{:otsikko "Murskeen nimi" :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
@@ -85,25 +86,49 @@
          {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
           :vayla-tyyli? true})
        (ui-lomake/rivi
-         {:otsikko "Murskeen tyyppi" :nimi ::pot2-domain/tyyppi :tyyppi :radio-group
+         {:otsikko "Mursketyyppi" :nimi ::pot2-domain/tyyppi :tyyppi :radio-group :pakollinen? true
           :vaihtoehdot (:mursketyypit materiaalikoodistot) :vaihtoehto-arvo ::pot2-domain/koodi
           :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true})
-       (ui-lomake/rivi
-         {:otsikko "DoP nro" :nimi ::pot2-domain/dop-nro :tyyppi :string
-          :validoi [[:ei-tyhja "Anna DoP nro"]]
-          :vayla-tyyli? true :pakollinen? true})
-       (ui-lomake/rivi
-         {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string
-          :validoi [[:ei-tyhja "Anna esiintymä"]]
-          :vayla-tyyli? true :pakollinen? true})
-       (ui-lomake/rivi
-         {:otsikko "Rakeisuus" :vayla-tyyli? true :pakollinen? true
-          :nimi ::pot2-domain/rakeisuus :tyyppi :valinta
-          :valinnat pot2-domain/murskeen-rakeisuusarvot})
-       (ui-lomake/rivi
-         {:otsikko "Iskunkestävyys" :vayla-tyyli? true :pakollinen? true
-          :nimi ::pot2-domain/iskunkestavyys :tyyppi :valinta
-          :valinnat pot2-domain/murskeen-iskunkestavyysarvot})]
+       (when (= (mk-tiedot/ainetyypin-nimi->koodi mursketyypit "Muu")
+                (::pot2-domain/tyyppi pot2-murske-lomake))
+         (ui-lomake/rivi
+           {:otsikko "Tyyppi" :vayla-tyyli? true :pakollinen? true
+            :nimi ::pot2-domain/tyyppi-tarkenne :tyyppi :string}))
+       (when-not (or (mk-tiedot/mursketyyppia? mursketyypit "(UUSIO) RA, Asfalttirouhe" pot2-murske-lomake)
+                     (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake))
+         (ui-lomake/rivi
+           {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string
+            :validoi [[:ei-tyhja "Anna DoP nro"]]
+            :vayla-tyyli? true :pakollinen? true}))
+       (when-not (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake)
+         (ui-lomake/rivi
+           {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string
+            :validoi [[:ei-tyhja "Anna esiintymä"]]
+            :vayla-tyyli? true :pakollinen? true}))
+       (when (mk-tiedot/nayta-lahde mursketyypit pot2-murske-lomake)
+         (ui-lomake/rivi
+           {:otsikko "Esiintymä / lähde" :nimi ::pot2-domain/lahde :tyyppi :string
+            :validoi [[:ei-tyhja "Anna esiintymä"]]
+            :vayla-tyyli? true :pakollinen? true}))
+       (when-not (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake)
+         (ui-lomake/rivi
+           {:otsikko "Rakeisuus" :vayla-tyyli? true :pakollinen? true
+            :nimi ::pot2-domain/rakeisuus :tyyppi :valinta
+            :valinnat pot2-domain/murskeen-rakeisuusarvot}))
+       (when (= "Muu" (::pot2-domain/rakeisuus pot2-murske-lomake))
+         (ui-lomake/rivi
+           {:otsikko "Muu rakeisuus" :vayla-tyyli? true :pakollinen? true
+            :validoi [[:ei-tyhja "Anna rakeisuuden arvo"]]
+            :nimi ::pot2-domain/rakeisuus-tarkenne :tyyppi :string}))
+       (when-not (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake)
+         (ui-lomake/rivi
+           {:otsikko "Iskunkestävyys" :vayla-tyyli? true :pakollinen? true
+            :nimi ::pot2-domain/iskunkestavyys :tyyppi :valinta
+            :valinnat pot2-domain/murskeen-iskunkestavyysarvot}))
+       (when (= "Muu" (::pot2-domain/tyyppi pot2-murske-lomake))
+         (ui-lomake/rivi
+           {:otsikko "Tyyppi" :vayla-tyyli? true :pakollinen? true
+            :nimi ::pot2-domain/tyyppi-tarkenne :tyyppi :string}))]
 
       pot2-murske-lomake]]))
 
@@ -125,14 +150,14 @@
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
                     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi :komponentti])}
-    {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 8
+    {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
             (mk-tiedot/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
     {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string :muokattava? (constantly false) :leveys 8}
-    {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 8}
-    {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 8}
-    {:otsikko "DOP" :nimi ::pot2-domain/dop-nro :tyyppi :string :muokattava? (constantly false) :leveys 8}
-    {:otsikko "Toiminnot" :nimi :toiminnot :tyyppi :komponentti :leveys 3
+    {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 4}
+    {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 4}
+    {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string :muokattava? (constantly false) :leveys 4}
+    {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [massat-view/massan-toiminnot e! rivi])}]
    murskeet])

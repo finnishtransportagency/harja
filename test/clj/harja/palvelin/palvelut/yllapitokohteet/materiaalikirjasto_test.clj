@@ -39,7 +39,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
@@ -194,19 +193,83 @@
   [http-palvelin payload]
   (kutsu-palvelua http-palvelin :tallenna-urakan-murske +kayttaja-jvh+ payload))
 
+(defn- murkeen-oletusvastaus [ylikirjoitettavat]
+  (merge
+    {:harja.domain.muokkaustiedot/muokkaaja-id 3
+     :harja.domain.pot2/dop-nro "1234567-dope"
+     :harja.domain.pot2/esiintyma "Kankkulan Kaivo 2"
+     :harja.domain.pot2/iskunkestavyys "LA35"
+     :harja.domain.pot2/murske-id 1
+     :harja.domain.pot2/nimen-tarkenne "LJYR"
+     :harja.domain.pot2/poistettu? false
+     :harja.domain.pot2/rakeisuus "0/56"
+     :harja.domain.pot2/tyyppi 1
+     :harja.domain.pot2/urakka-id 7}
+    ylikirjoitettavat))
+
 (deftest paivita-murske-test
   (let [vastaus (tallenna-murske-fn (:http-palvelin jarjestelma) urakan-testimurske)
-        oletus-vastaus {:harja.domain.muokkaustiedot/muokkaaja-id 3
-                        :harja.domain.pot2/dop-nro "1234567-dope"
-                        :harja.domain.pot2/esiintyma "Kankkulan Kaivo 2"
-                        :harja.domain.pot2/iskunkestavyys "LA35"
-                        :harja.domain.pot2/murske-id 1
-                        :harja.domain.pot2/nimen-tarkenne "LJYR"
-                        :harja.domain.pot2/poistettu? false
-                        :harja.domain.pot2/rakeisuus "0/56"
-                        :harja.domain.pot2/tyyppi 1
-                        :harja.domain.pot2/urakka-id 7}]
+        oletus-vastaus (murkeen-oletusvastaus {})]
     (is (= oletus-vastaus (siivoa-muuttuvat vastaus)) "murskeen vastaus")))
+
+(deftest murskeen-tyypin-tarkenne-puuttuu-test
+  (let [muun-tyypin-id (ffirst (q " SELECT (koodi) FROM pot2_mk_mursketyyppi where nimi = 'Muu';"))]
+    (is (thrown? AssertionError
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-urakan-murske
+                                 +kayttaja-jvh+ (assoc urakan-testimurske ::pot2-domain/tyyppi muun-tyypin-id
+                                                                          ::pot2-domain/tyyppi-tarkenne nil))))))
+
+(deftest murskeen-tyypin-tarkenne-on-test
+  (let [muun-tyypin-id (ffirst (q " SELECT (koodi) FROM pot2_mk_mursketyyppi where nimi = 'Muu';"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-murske
+                                +kayttaja-jvh+ (assoc urakan-testimurske ::pot2-domain/tyyppi muun-tyypin-id
+                                                                         ::pot2-domain/tyyppi-tarkenne "Validi tarkenne"))
+        odotettu-vastaus (murkeen-oletusvastaus {::pot2-domain/tyyppi muun-tyypin-id
+                                                 ::pot2-domain/tyyppi-tarkenne "Validi tarkenne"})]
+    (is (= odotettu-vastaus (siivoa-muuttuvat vastaus)))))
+
+(defn testimurske-muu [muun-tyypin-id urakka-id]
+  {:harja.domain.pot2/nimen-tarkenne "Nimen tarkenne"
+   :harja.domain.pot2/tyyppi muun-tyypin-id
+   :harja.domain.pot2/tyyppi-tarkenne "Tyypin tarkenne"
+   :harja.domain.pot2/lahde "Lähde"
+   :harja.domain.pot2/poistettu? false
+   :harja.domain.pot2/urakka-id urakka-id})
+
+(deftest muun-tyyppisen-murskeen-insert-test
+  (let [muun-tyypin-id (ffirst (q " SELECT koodi FROM pot2_mk_mursketyyppi where nimi = 'Muu';"))
+        urakka-id (hae-utajarven-paallystysurakan-id)
+        uusi-id (+ 1 (ffirst (q " SELECT max (id) FROM pot2_mk_urakan_murske;")))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-murske
+                                +kayttaja-jvh+ (testimurske-muu muun-tyypin-id
+                                                                urakka-id))
+        odotettu-vastaus {:harja.domain.muokkaustiedot/luoja-id (:id +kayttaja-jvh+)
+                          :harja.domain.pot2/nimen-tarkenne "Nimen tarkenne"
+                          :harja.domain.pot2/tyyppi muun-tyypin-id
+                          :harja.domain.pot2/tyyppi-tarkenne "Tyypin tarkenne"
+                          :harja.domain.pot2/lahde "Lähde"
+                          ::pot2-domain/murske-id uusi-id
+                          :harja.domain.pot2/urakka-id urakka-id}]
+    (is (= odotettu-vastaus (siivoa-muuttuvat vastaus)))))
+
+(deftest murskeen-rakeisuuden-tarkenne-puuttuu-test
+  (is (thrown? AssertionError
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-murske
+                               +kayttaja-jvh+ (assoc urakan-testimurske ::pot2-domain/rakeisuus "Muu"
+                                                                        ::pot2-domain/rakeisuus-tarkenne nil)))))
+
+(deftest murskeen-rakeisuuden-tarkenne-on-test
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-murske
+                                +kayttaja-jvh+ (assoc urakan-testimurske ::pot2-domain/rakeisuus "Muu"
+                                                                         ::pot2-domain/rakeisuus-tarkenne "Rakeisuuden tarkenne"))
+        odotettu-vastaus (murkeen-oletusvastaus {::pot2-domain/rakeisuus "Muu"
+                                                 ::pot2-domain/rakeisuus-tarkenne "Rakeisuuden tarkenne"})]
+    (is (= odotettu-vastaus (siivoa-muuttuvat vastaus)))))
 
 (deftest vaaran-urakan-urakoitsija-ei-saa-lisata-mursketta-test
   (is (thrown? Exception

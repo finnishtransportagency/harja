@@ -52,15 +52,20 @@
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
 
+(defn ainetyypin-nimi->koodi [ainetyypit nimi]
+  (::pot2-domain/koodi (first
+                         (filter #(= (::pot2-domain/nimi %) nimi)
+                                 ainetyypit))))
+
 (defn ainetyypin-koodi->nimi [ainetyypit koodi]
   (::pot2-domain/nimi (first
-            (filter #(= (::pot2-domain/koodi %) koodi)
-                    ainetyypit))))
+                        (filter #(= (::pot2-domain/koodi %) koodi)
+                                ainetyypit))))
 
 (defn ainetyypin-koodi->lyhenne [ainetyypit koodi]
   (::pot2-domain/lyhenne (first
-               (filter #(= (::pot2-domain/koodi %) koodi)
-                       ainetyypit))))
+                           (filter #(= (::pot2-domain/koodi %) koodi)
+                                   ainetyypit))))
 
 (def asfalttirouheen-tyypin-id 2)
 
@@ -98,7 +103,7 @@
         tarkennukset (rivin-avaimet->str rivi [::pot2-domain/kuulamyllyluokka
                                                ::pot2-domain/rc%] ", ")]
     ;; vähän huonoksi ehkä meni tämän kanssa. Toinen funktiota kutsuva tarvitsee komponenttiwrapperin ja toinen ei
-    ;; pitänee refaktoroida... fixme
+    ;; pitänee refaktoroida... fixme jos ehdit
     (if (= fmt :komponentti)
       [massan-murskeen-nimen-komp ydin tarkennukset fmt]
       (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
@@ -107,7 +112,7 @@
   ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
   ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi rivi)) " "
-                  (rivin-avaimet->str rivi #{::pot2-domain/tyyppi ::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
+                  (rivin-avaimet->str rivi #{::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
         tarkennukset (rivin-avaimet->str rivi #{::pot2-domain/rakeisuus ::pot2-domain/iskunkestavyys} ", ")]
     (if (= fmt :komponentti)
       [massan-murskeen-nimen-komp ydin tarkennukset fmt]
@@ -158,6 +163,17 @@
                       :epaonnistui ->HaePot2MassatJaMurskeetEpaonnistui}))
 (def tyhja-sideaine
   {:sideaine/tyyppi nil :sideaine/pitoisuus nil})
+
+(defn mursketyyppia? [mursketyypit nimi lomake]
+  (= (ainetyypin-nimi->koodi mursketyypit nimi)
+     (::pot2-domain/tyyppi lomake)))
+
+(defn mursketyyppia-bem-tai-muu? [mursketyypit lomake]
+  (or (mursketyyppia? mursketyypit "(UUSIO) Betonimurske I" lomake)
+      (mursketyyppia? mursketyypit "(UUSIO) Betonimurske II" lomake)
+      (mursketyyppia? mursketyypit "Muu" lomake)))
+
+(def nayta-lahde mursketyyppia-bem-tai-muu?)
 
 (extend-protocol tuck/Event
 

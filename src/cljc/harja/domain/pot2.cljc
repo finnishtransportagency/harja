@@ -239,8 +239,11 @@
     "urakka_id" ::urakka-id
     "nimen_tarkenne" ::nimen-tarkenne
     "tyyppi" ::tyyppi
+    "tyyppi_tarkenne" ::tyyppi-tarkenne
     "esiintyma" ::esiintyma
+    "lahde" ::lahde
     "rakeisuus" ::rakeisuus
+    "rakeisuus_tarkenne" ::rakeisuus-tarkenne
     "iskunkestavyys" ::iskunkestavyys
     "dop_nro" ::dop-nro
     "poistettu" ::poistettu?
@@ -253,7 +256,7 @@
 (def massan-max-raekoko [5, 8, 11, 16, 22, 31])
 (def litteyslukuluokat [1, 2, 3, 4, 5, 6])
 ;; ao. arvot tulevat postgres CUSTOM ENUM typeistä. Pidettävä synkassa.
-(def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63"])
+(def murskeen-rakeisuusarvot ["0/32" "0/40" "0/45" "0/56" "0/63" "Muu"])
 (def murskeen-iskunkestavyysarvot ["LA30" "LA35" "LA40"])
 
 (def erikseen-lisattava-fillerikiviaines
