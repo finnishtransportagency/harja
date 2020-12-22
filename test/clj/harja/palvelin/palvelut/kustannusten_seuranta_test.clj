@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.palvelin.palvelut.laskut :as laskut]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -19,12 +20,15 @@
                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         ;:excel-vienti
-                        #_ (component/using
-                          (excel-vienti/luo-excel-vienti)
-                          [:http-palvelin])
+                        #_(component/using
+                            (excel-vienti/luo-excel-vienti)
+                            [:http-palvelin])
                         :kustannusten-seuranta (component/using
                                                  (kustannusten-seuranta/->KustannustenSeuranta)
-                                                 [:http-palvelin :db :db-replica #_ :excel-vienti])))))
+                                                 [:http-palvelin :db :db-replica #_:excel-vienti])
+                        :laskut (component/using
+                                  (laskut/->Laskut)
+                                  [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -467,7 +471,7 @@ UNION ALL
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019  
+        hoitokauden-alkuvuosi 2019
         vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         hankintakustannukset (filter
                                #(when (= "hankintakustannukset" (:paaryhma %))
@@ -480,36 +484,65 @@ UNION ALL
 
 ;; Testataan/vertaillaan toteutuneita lisätöitä
 ;; Lisätöitä ei voi suunnitella etukäteen, joten niille ei ole budjetoituja kustannuksia olemassa.
+;; Tallennetaan laskulla lisätyö Johto ja halllintokrvaukselle, koska se on monimutkaisin lisätyötyyppi
+(defn- uusi-lasku [urakka-id summa]
+  {:id nil
+   :urakka urakka-id
+   :viite "6666668"
+   :erapaiva #inst "2020-08-15T21:00:00.000-00:00"
+   :kokonaissumma 1332
+   :tyyppi "laskutettava"
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :suoritus-alku #inst "2020-08-14T22:00:00.000000000-00:00"
+                   :suoritus-loppu #inst "2020-08-17T22:00:00.000000000-00:00"
+                   :toimenpideinstanssi 48
+                   :tehtavaryhma nil
+                   :lisatyo? true
+                   :tehtava nil}]
+   :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
+
 (deftest lisatyot-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        urakkavastaava (oulun-2019-urakan-urakoitsijan-urakkavastaava)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"
         hoitokauden-alkuvuosi 2019
+        laskun-summa 105.01
+        ;; Lisää uusi lasku listyöstä johto-ja hallintakorvaukselle
+        _ (kutsu-http-palvelua :tallenna-lasku urakkavastaava
+                                   {:urakka-id urakka-id
+                                    :laskuerittely (uusi-lasku urakka-id laskun-summa)})
+
         vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         lisatyot (filter
                    #(when (= "lisatyo" (:maksutyyppi %))
                       true)
                    vastaus)
+        luotu-lisatyo (filter
+                           #(when (= (bigdec laskun-summa) (:toteutunut_summa %))
+                              true)
+                           lisatyot)
         l-summa (apply + (map #(:toteutunut_summa %) lisatyot))
         l-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
         sql-summa (apply + (map #(first %) l-sql))]
     ;; Vertaillaan summaa
     (is (= l-summa sql-summa))
     ;; Vertaillaan lisätöiksi määriteltyjen tehtävien määrää
-    (is (= (count lisatyot) (count l-sql) ))))
-
-
+    (is (= (count lisatyot) (count l-sql)))
+    (is (= (count luotu-lisatyo) 1))))
 
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida
-#_ (deftest excel-render-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (lataa-excel urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
-        _ (println "excel-render-test :: vastaus" (pr-str vastaus))
-        ]
-    ))
+#_(deftest excel-render-test
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          alkupvm "2019-10-01"
+          loppupvm "2020-09-30"
+          hoitokauden-alkuvuosi 2019
+          vastaus (lataa-excel urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+          _ (println "excel-render-test :: vastaus" (pr-str vastaus))
+          ]
+      ))
 
 ;; TODO: Tee erillinen urakka, jolle syötetään suunnitelmat ja kulut ja tarkista, että kaikki löytyy tietokannasta oikein

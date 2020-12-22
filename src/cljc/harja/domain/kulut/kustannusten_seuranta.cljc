@@ -78,7 +78,8 @@
                                        (fn [tehtava]
                                          (when (and
                                                  (not= "hjh" (:toteutunut tehtava))
-                                                 (not= "budjetointi" (:toteutunut tehtava)))
+                                                 (not= "budjetointi" (:toteutunut tehtava))
+                                                 (not= "lisatyo" (:maksutyyppi tehtava)))
                                            tehtava))
                                        toimistotehtavat)]
     (vec [
@@ -101,6 +102,15 @@
            :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
                                                         (:budjetoitu_summa rivi))
                                                       toimistotehtavat))
+           :lisatyot-summa (reduce (fn [summa tehtava]
+                                     (if (= "lisatyo" (:maksutyyppi tehtava))
+                                       (+ summa (:toteutunut_summa tehtava))
+                                       summa))
+                                   0 toimistotehtavat)
+           :lisatyot (filter (fn [tehtava]
+                               (when (= "lisatyo" (:maksutyyppi tehtava))
+                                 true))
+                             toimistotehtavat)
            :tehtavat toteutuneet-toimistotehtavat}])))
 
 (defn- summaa-tehtavat [taulukko-rivit tehtavat indeksi]

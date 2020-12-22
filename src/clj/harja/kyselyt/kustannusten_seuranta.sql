@@ -206,6 +206,7 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
        lk.maksueratyyppi::TEXT AS maksutyyppi,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' THEN 'hankinta'
+           WHEN lk.maksueratyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            ELSE 'rahavaraus'
            END                 AS toimenpideryhma,
        tr.nimi                 AS tehtava_nimi, -- oli tk_tehtava.nimi
@@ -251,6 +252,7 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
+           WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo' THEN 'toimistokulut'
            END                 AS toimenpideryhma,
        tr.nimi                 AS tehtava_nimi,
        CASE
@@ -266,10 +268,11 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
+           WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo' THEN 'johto-ja-hallintakorvaus'
            END                 AS paaryhma
 FROM lasku_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
-         JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+         LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk,
      lasku l
