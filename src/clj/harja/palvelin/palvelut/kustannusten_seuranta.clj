@@ -33,7 +33,7 @@
         bud (bigdec bud)]
     (if (or (= (bigdec 0) tot) (= (bigdec 0) bud))
       0
-      (* 100 (* 100 (/ tot bud))))))
+      (* 100 (* 100 (with-precision 4 (/ tot bud)))))))
 
 (defn- rivita-toimenpiteet [toimenpiteet paaryhma]
   (mapcat (fn [toimenpide]
@@ -129,6 +129,12 @@
                    (:erotus rivi)
                    (:prosentti rivi)]}
            (when (or
+                   (= "Liikenneympäristön hoito" (:toimenpide rivi))
+                   (= "Sorateiden hoito" (:toimenpide rivi))
+                   (= "Päällystepaikkaukset" (:toimenpide rivi))
+                   (= "MHU Ylläpito" (:toimenpide rivi))
+                   (= "MHU Korvausinvestointi" (:toimenpide rivi))
+                   (= "Palkat" (:toimenpide rivi))
                    (= "Hankinnat" (:tehtava_nimi rivi))
                    (= "Rahavaraukset" (:tehtava_nimi rivi)))
              {:lihavoi? true}))))
