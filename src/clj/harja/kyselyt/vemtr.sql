@@ -50,7 +50,7 @@ from toimenpideinstanssi tpi
        join toimenpidekoodi tehtava on tehtava.emo = tpi.toimenpide
        left join tyot on tyot.tehtava = tehtava.id and tyot.urakka = u.id
        join organisaatio o on o.id = u.hallintayksikko
-       left join toteumat t on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
+       left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
 where tpi.urakka in (select id from urakat)
 group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, toteumat.materiaalimaara, tyot.maara, tpi.urakka, tehtava.jarjestys, emo.koodi
 having coalesce(toteumat.maara, tyot.maara) >= 0

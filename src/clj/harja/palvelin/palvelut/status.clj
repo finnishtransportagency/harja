@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.status
   (:require [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
             [clojure.core.async :as async]
@@ -54,6 +55,14 @@
                          (every? (fn [[_ host-tila]]
                                    (get-in host-tila [:sonja :kaikki-ok?]))
                                  @komponenttien-tila)))))
+(defn itmf-yhteyden-tila-ok?
+  [timeout-ms komponenttien-tila]
+  (tarkista-tila! timeout-ms
+                  (fn []
+                    (and (> (count @komponenttien-tila) 1)
+                         (every? (fn [[_ host-tila]]
+                                   (get-in host-tila [:itmf :kaikki-ok?]))
+                                 @komponenttien-tila)))))
 
 (defn harjan-tila-ok?
   [timeout-ms komponenttien-tila]
@@ -91,6 +100,19 @@
        :viesti (when-not yhteys-ok?
                  (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})))
 
+(defn itmf-yhteyden-tila [komponenttien-tila]
+  (async/go
+    (if (ominaisuus-kaytossa? :itmf)
+      (let [timeout-ms 120000
+            yhteys-ok? (async/<! (itmf-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
+        {:ok? yhteys-ok?
+         :komponentti :itmf
+         :viesti (when-not yhteys-ok?
+                   (str "Ei saatu yhteyttä ITMF:ään " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})
+      {:ok? true
+       :komponentti :itmf
+       :viesti "ITMF ei ole käytössä"})))
+
 (defn harjan-tila [komponenttien-tila]
   (async/go
     (let [timeout-ms 10000
@@ -108,6 +130,7 @@
   (clj-set/rename-keys {komponentti ok?}
                        {:harja :harja-ok?
                         :sonja :sonja-yhteys-ok?
+                        :itmf :itmf-yhteys-ok?
                         :db :yhteys-master-kantaan-ok?
                         :db-replica :replikoinnin-tila-ok?}))
 
@@ -143,6 +166,7 @@
                          [(tietokannan-tila komponenttien-tila)
                           (replikoinnin-tila komponenttien-tila)
                           (sonja-yhteyden-tila komponenttien-tila)
+                          (itmf-yhteyden-tila komponenttien-tila)
                           (harjan-tila komponenttien-tila)])
                 {:keys [status] :as lahetettava-viesti} (koko-status testit)]
             {:status status

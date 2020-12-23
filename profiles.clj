@@ -24,7 +24,11 @@
                             :HARJA_AJA_GATLING_RAPORTTI "false"
                             :HARJA_NOLOG "false"
                             :HARJA_SONJA_BROKER_HOST "localhost"
-                            :HARJA_SONJA_BROKER_PORT 61616}}
+                            :HARJA_SONJA_BROKER_PORT 61616
+                            :HARJA_ITMF_BROKER_PORT 61626
+                            :HARJA_ITMF_BROKER_HOST "localhost"
+                            :HARJA_SONJA_BROKER_AI_PORT 8161
+                            :HARJA_ITMF_BROKER_AI_PORT 8171}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script" "laadunseuranta/cljc-src"]}
  :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
                  :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))

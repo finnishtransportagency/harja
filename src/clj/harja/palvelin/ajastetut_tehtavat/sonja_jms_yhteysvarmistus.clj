@@ -7,7 +7,7 @@
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.tyokalut.lukot :as lukot]))
 
 (def sonja-kanava "sonjaping")
@@ -35,7 +35,7 @@
             viestit (atom [])
             lopeta-kuuntelu-fn! (tapahtuma-apurit/tapahtuman-kuuntelija! sonja-kanava (fn [{viesti :payload}] (swap! viestit conj viesti)))]
 
-        (sonja/laheta sonja jono lahteva-viesti)
+        (jms/laheta sonja jono lahteva-viesti)
 
         (when (odota-viestin-saapumista integraatioloki tapahtuma-id #(= 1 (count @viestit)) 100000)
           (let [saapunut-viesti (first @viestit)
@@ -52,7 +52,7 @@
 (defn tee-jms-yhteysvarmistus-tehtava [{:keys [db integraatioloki sonja]} minuutit jono]
   (when (and minuutit jono)
     (log/debug (format "Varmistetaan Sonjan JMS jonoihin yhteys %s minuutin välein." minuutit))
-    {:sonja-lopeta! (sonja/kuuntele! sonja jono #(tapahtuma-apurit/julkaise-tapahtuma sonja-kanava (.getText %)))
+    {:sonja-lopeta! (jms/kuuntele! sonja jono #(tapahtuma-apurit/julkaise-tapahtuma sonja-kanava (.getText %)))
      :ajastus-lopeta! (ajastettu-tehtava/ajasta-minuutin-valein
                         minuutit 34                         ;; ajastus alkaa pyöriä 34 sekunnin kuluttua käynnistyksestä
                         (fn [_] (tarkista-jms-yhteys db integraatioloki sonja jono)))}))

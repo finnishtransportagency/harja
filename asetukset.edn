@@ -66,6 +66,16 @@
   :tyyppi :activemq
   :julkaise-tila? true}
 
+ :itmf
+ {:url #=(eval (str "tcp://"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                 ":"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+  :kayttaja ""
+  :salasana ""
+  :tyyppi :activemq
+  :julkaise-tila? true}
+
 
  ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
  ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
@@ -202,6 +212,7 @@
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
                                :sonja-uudelleen-kaynnistys
+                               :itmf-uudelleen-kaynnistys
                                :ais-data
                                :reittitarkistukset
                                :tiedostopesula}
@@ -239,6 +250,7 @@
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
 
  :komponenttien-tila {:sonja {:paivitystiheys-ms 10000}
+                      :itmf {:paivitystiheys-ms 10000}
                       :db {:paivitystiheys-ms 10000
                            :kyselyn-timeout-ms 20000}
                       :db-replica {:paivitystiheys-ms 10000

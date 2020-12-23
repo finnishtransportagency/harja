@@ -9,6 +9,12 @@
                       :tyyppi :activemq
                       :paivitystiheys-ms 3000})
 
+(def itmf-asetukset {:url (str "tcp://" (env/env "HARJA_ITMF_BROKER_HOST" "localhost") ":" (env/env "HARJA_ITMF_BROKER_PORT" 61626))
+                     :kayttaja ""
+                     :salasana ""
+                     :tyyppi :activemq
+                     :paivitystiheys-ms 3000})
+
 (def integraatio-sampo-asetukset {:lahetysjono-sisaan sampo-tk/+lahetysjono-sisaan+
                                   :kuittausjono-sisaan sampo-tk/+kuittausjono-sisaan+
                                   :lahetysjono-ulos sampo-tk/+lahetysjono-ulos+
