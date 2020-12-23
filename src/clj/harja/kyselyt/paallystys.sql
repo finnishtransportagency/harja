@@ -475,3 +475,21 @@ INSERT INTO pot2_paallystekerros
      pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id)
      VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
              :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id);
+
+-- name: paivita-pot2-alusta<!
+UPDATE pot2_alusta
+   SET tr_numero = :tr-numero,
+       tr_alkuetaisyys = :tr-alkuetaisyys,
+       tr_alkuosa = :tr-alkuosa,
+       tr_loppuetaisyys = :tr-loppuetaisyys,
+       tr_loppuosa = :tr-loppuosa,
+       tr_ajorata = :tr-ajorata,
+       tr_kaista = :tr-kaista,
+       toimenpide = :toimenpide,
+       materiaali = :materiaali,
+       pot2_id = :pot2_id
+ WHERE id = :pot2a_id;
+
+-- name: luo-pot2-alusta<!
+INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, materiaali, pot2_id)
+VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys, :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :materiaali, :pot2_id);

@@ -551,10 +551,21 @@
                          :lisatieto (:lisatieto rivi)
                          :pot2_id pot2-id})]
       (if (:pot2p_id rivi)
-        ;; UPDATE
         (q/paivita-pot2-paallystekerros<! db params)
-        ;; HOX: Tämä ao. SQL ei vielä toimi, tai ei ole testattu...
         (q/luo-pot2-paallystekerros<! db params)))))
+
+(defn- tallenna-pot2-alustarivit
+  [db paallystysilmoitus pot2-id]
+  (doseq [rivi (->> paallystysilmoitus
+                    :alusta
+                    (filter (comp not :poistettu)))]
+    (let [params (merge rivi
+                        {:pot2_id pot2-id})]
+      (println "tallenna-pot2-alustarivit rivi" rivi)
+      (if (:pot2a_id rivi)
+        (q/paivita-pot2-alusta<! db params)
+        (q/luo-pot2-alusta<! db params)))))
+
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
@@ -638,6 +649,8 @@
             pot2-paallystekerros (when pot2? (tallenna-pot2-paallystekerros db paallystysilmoitus
                                                                             paallystysilmoitus-id
                                                                             paivitetyt-kohdeosat))
+            pot2-alustarivit (when pot2? (tallenna-pot2-alustarivit db paallystysilmoitus
+                                                                        paallystysilmoitus-id))
             tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
 
