@@ -52,7 +52,7 @@ INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, le
 INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 15000, 5000, false, null, paallystysilmoituksen_id);
 
 
-INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, toimenpide_tiedot, materiaali, pot2_id)
+INSERT INTO pot2_alusta (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, toimenpide_tiedot, materiaali, pot2_id)
 VALUES (20, 1, 1066, 1, 3827, 1, 11, murskeen_toimenpide_id, 'Lisätietoa kaistalta 11...', murske1_id, paallystysilmoituksen_id),
        (20, 1, 1066, 1, 3827, 1, 12, murskeen_toimenpide_id, 'Lisätietoa kaistalta 12...', murske1_id, paallystysilmoituksen_id);
 
