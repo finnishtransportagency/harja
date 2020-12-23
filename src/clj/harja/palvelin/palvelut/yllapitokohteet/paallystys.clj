@@ -587,7 +587,6 @@
                                                      db
                                                      {:paallystyskohde paallystyskohde-id}))))
 
-          _ (println "petar trazim ovaj paallystyskohde-id=" paallystyskohde-id)
           vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
           - (println "petar i nasao sam ovo " (pr-str vanha-paallystysilmoitus))
           - (println "petar a novi koji hocu da upisem je " (pr-str paallystysilmoitus))]
@@ -599,8 +598,12 @@
                                                    ", pitäisi olla " oikea-versio
                                                    ". Ota yhteyttä Harjan tukeen."))))))
       (let [tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
-            ali-ja-muut-kohteet (remove :poistettu (-> paallystysilmoitus :ilmoitustiedot :osoitteet))
-            alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
+            ali-ja-muut-kohteet (remove :poistettu (if pot2?
+                                                     (-> paallystysilmoitus :kulutuskerros)
+                                                     (-> paallystysilmoitus :ilmoitustiedot :osoitteet)))
+            alustatoimet (if pot2?
+                           nil
+                           (-> paallystysilmoitus :ilmoitustiedot :alustatoimet))
             kohde-id (:paallystyskohde-id paallystysilmoitus)
             virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
         (when (seq virheviestit)
