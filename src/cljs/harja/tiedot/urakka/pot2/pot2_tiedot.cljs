@@ -78,7 +78,10 @@
                                (update :ilmoitustiedot dissoc :virheet)
                                (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
                                                                 (into (sorted-map)
-                                                                      @kohdeosat-atom))))]
+                                                                      @kohdeosat-atom)))
+                               (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
+                                                (into (sorted-map)
+                                                      @alustarivit-atom))))]
       (log "TallennaPot2Tiedot lahetettava-data: " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
                          {:urakka-id urakka-id
