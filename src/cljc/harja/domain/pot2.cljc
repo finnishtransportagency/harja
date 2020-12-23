@@ -268,3 +268,66 @@
   [rivit nro]
   (assert (#{1 2} nro) "Päällystekerroksen järjestysnumero voi olla 1 tai 2")
   (map #(assoc % :jarjestysnro nro) rivit))
+
+;; Murskelomakkeen sarakkeet vaihtelevat mursketyypin mukaan
+(def murskesarakkeet-kam-ja-srm
+  #{::esiintyma
+    ::nimen-tarkenne
+    ::iskunkestavyys
+    ::tyyppi
+    ::rakeisuus
+    ::dop-nro
+    ::rakeisuus-tarkenne
+    ::urakka-id})
+
+(def murskesarakkeet-ra
+  #{::esiintyma
+    ::nimen-tarkenne
+    ::iskunkestavyys
+    ::tyyppi
+    ::rakeisuus
+    ::rakeisuus-tarkenne
+    ::urakka-id})
+
+(def murskesarakkeet-bem1-ja-bem2
+  #{::lahde
+    ::nimen-tarkenne
+    ::tyyppi
+    ::urakka-id})
+
+(def murskesarakkeet-muu
+  #{::lahde
+    ::nimen-tarkenne
+    ::tyyppi-tarkenne
+    ::tyyppi
+    ::urakka-id})
+
+(defn mursketyypin-lyhenne->sarakkeet [lyhenne]
+  (case lyhenne
+    "KaM" murskesarakkeet-kam-ja-srm
+    "SrM" murskesarakkeet-kam-ja-srm
+    "RA" murskesarakkeet-ra
+    "BeM I" murskesarakkeet-bem1-ja-bem2
+    "BeM II" murskesarakkeet-bem1-ja-bem2
+    "Muu" murskesarakkeet-muu
+    ;; haluamme ettei tule tuntemattomia, nil throwaa lopulta koska ei sarakkeita
+    nil))
+
+(defn- ainetyyppi-koodilla [ainetyypit koodi]
+  (first
+    (filter #(= (::koodi %) koodi)
+            ainetyypit)))
+
+(defn- ainetyyppi-nimella [ainetyypit nimi]
+  (first
+    (filter #(= (::nimi %) nimi)
+            ainetyypit)))
+
+(defn ainetyypin-koodi->lyhenne [ainetyypit koodi]
+  (::lyhenne (ainetyyppi-koodilla ainetyypit koodi)))
+
+(defn ainetyypin-nimi->koodi [ainetyypit nimi]
+  (::koodi (ainetyyppi-nimella ainetyypit nimi) ))
+
+(defn ainetyypin-koodi->nimi [ainetyypit koodi]
+  (::nimi (ainetyyppi-koodilla ainetyypit koodi)))

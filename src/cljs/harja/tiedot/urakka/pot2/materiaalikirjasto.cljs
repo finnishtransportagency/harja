@@ -51,22 +51,6 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
-
-(defn ainetyypin-nimi->koodi [ainetyypit nimi]
-  (::pot2-domain/koodi (first
-                         (filter #(= (::pot2-domain/nimi %) nimi)
-                                 ainetyypit))))
-
-(defn ainetyypin-koodi->nimi [ainetyypit koodi]
-  (::pot2-domain/nimi (first
-                        (filter #(= (::pot2-domain/koodi %) koodi)
-                                ainetyypit))))
-
-(defn ainetyypin-koodi->lyhenne [ainetyypit koodi]
-  (::pot2-domain/lyhenne (first
-                           (filter #(= (::pot2-domain/koodi %) koodi)
-                                   ainetyypit))))
-
 (def asfalttirouheen-tyypin-id 2)
 
 (defn massan-rc-pitoisuus
@@ -95,7 +79,7 @@
   [massatyypit rivi fmt]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
   (let [rivi (assoc rivi ::pot2-domain/rc% (massan-rc-pitoisuus rivi))
-        ydin (str (ainetyypin-koodi->lyhenne massatyypit (::pot2-domain/tyyppi rivi))
+        ydin (str (pot2-domain/ainetyypin-koodi->lyhenne massatyypit (::pot2-domain/tyyppi rivi))
                   (rivin-avaimet->str rivi [::pot2-domain/max-raekoko
                                             ::pot2-domain/nimen-tarkenne
                                             ::pot2-domain/dop-nro]))
@@ -111,7 +95,7 @@
 (defn murskeen-rikastettu-nimi [mursketyypit rivi fmt]
   ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
   ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
-  (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi rivi)) " "
+  (let [ydin (str (pot2-domain/ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi rivi)) " "
                   (rivin-avaimet->str rivi #{::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
         tarkennukset (rivin-avaimet->str rivi #{::pot2-domain/rakeisuus ::pot2-domain/iskunkestavyys} ", ")]
     (if (= fmt :komponentti)
@@ -165,7 +149,7 @@
   {:sideaine/tyyppi nil :sideaine/pitoisuus nil})
 
 (defn mursketyyppia? [mursketyypit nimi lomake]
-  (= (ainetyypin-nimi->koodi mursketyypit nimi)
+  (= (pot2-domain/ainetyypin-nimi->koodi mursketyypit nimi)
      (::pot2-domain/tyyppi lomake)))
 
 (defn mursketyyppia-bem-tai-muu? [mursketyypit lomake]

@@ -89,7 +89,7 @@
          {:otsikko "Mursketyyppi" :nimi ::pot2-domain/tyyppi :tyyppi :radio-group :pakollinen? true
           :vaihtoehdot (:mursketyypit materiaalikoodistot) :vaihtoehto-arvo ::pot2-domain/koodi
           :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true})
-       (when (= (mk-tiedot/ainetyypin-nimi->koodi mursketyypit "Muu")
+       (when (= (pot2-domain/ainetyypin-nimi->koodi mursketyypit "Muu")
                 (::pot2-domain/tyyppi pot2-murske-lomake))
          (ui-lomake/rivi
            {:otsikko "Tyyppi" :vayla-tyyli? true :pakollinen? true
@@ -152,7 +152,7 @@
                     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi :komponentti])}
     {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
-            (mk-tiedot/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
+            (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
     {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string :muokattava? (constantly false) :leveys 8}
     {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 4}

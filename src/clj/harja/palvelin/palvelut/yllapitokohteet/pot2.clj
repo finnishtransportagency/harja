@@ -266,6 +266,13 @@
     (assert (or (not= "Muu" (::pot2-domain/rakeisuus murske))
                 (some? (::pot2-domain/rakeisuus-tarkenne murske))) "Rakeisuus annettu tai muulla rakeisuudella tarkenne")))
 
+(defn- mursketyypin-sarakkeet [db tyyppi]
+  (let [mursketyypit (fetch db ::pot2-domain/pot2-mk-mursketyyppi
+                            #{::pot2-domain/koodi ::pot2-domain/lyhenne}
+                            {})
+        lyhenne (pot2-domain/ainetyypin-koodi->lyhenne mursketyypit tyyppi)]
+    (pot2-domain/mursketyypin-lyhenne->sarakkeet lyhenne)))
+
 (defn tallenna-urakan-murske
   [db user {::pot2-domain/keys [urakka-id] :as tiedot}]
   (println "tallenna-urakan-murske: "(pr-str tiedot))
@@ -283,16 +290,7 @@
                               ::pot2-domain/poistettu? (boolean (::pot2-domain/poistettu? tiedot))}
                              {::muokkaustiedot/luotu (pvm/nyt)
                               ::muokkaustiedot/luoja-id (:id user)})
-                           (select-keys tiedot [::pot2-domain/urakka-id
-                                                ::pot2-domain/nimen-tarkenne
-                                                ::pot2-domain/tyyppi
-                                                ::pot2-domain/tyyppi-tarkenne
-                                                ::pot2-domain/esiintyma
-                                                ::pot2-domain/lahde
-                                                ::pot2-domain/rakeisuus
-                                                ::pot2-domain/rakeisuus-tarkenne
-                                                ::pot2-domain/iskunkestavyys
-                                                ::pot2-domain/dop-nro])))
+                           (select-keys tiedot (mursketyypin-sarakkeet db (::pot2-domain/tyyppi tiedot)))))
           _ (println "tallenna-urakan-paallystysmurske onnistui, palautetaan:" (pr-str murske))]
       murske)))
 

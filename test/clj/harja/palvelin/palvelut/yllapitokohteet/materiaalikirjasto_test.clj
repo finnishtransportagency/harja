@@ -18,7 +18,7 @@
             [harja.domain.skeema :as skeema]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.komponentit.sonja :as sonja]
@@ -45,7 +45,8 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
+                        :itmf (feikki-jms "itmf")
+                        :sonja (feikki-jms "sonja")
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"
@@ -226,8 +227,13 @@
                                 :tallenna-urakan-murske
                                 +kayttaja-jvh+ (assoc urakan-testimurske ::pot2-domain/tyyppi muun-tyypin-id
                                                                          ::pot2-domain/tyyppi-tarkenne "Validi tarkenne"))
-        odotettu-vastaus (murkeen-oletusvastaus {::pot2-domain/tyyppi muun-tyypin-id
-                                                 ::pot2-domain/tyyppi-tarkenne "Validi tarkenne"})]
+        odotettu-vastaus {:harja.domain.muokkaustiedot/muokkaaja-id 3
+                          :harja.domain.pot2/murske-id 1
+                          :harja.domain.pot2/nimen-tarkenne "LJYR"
+                          :harja.domain.pot2/poistettu? false
+                          :harja.domain.pot2/tyyppi muun-tyypin-id
+                          :harja.domain.pot2/tyyppi-tarkenne "Validi tarkenne"
+                          :harja.domain.pot2/urakka-id 7}]
     (is (= odotettu-vastaus (siivoa-muuttuvat vastaus)))))
 
 (defn testimurske-muu [muun-tyypin-id urakka-id]
@@ -253,7 +259,8 @@
                           :harja.domain.pot2/lahde "Lähde"
                           ::pot2-domain/murske-id uusi-id
                           :harja.domain.pot2/urakka-id urakka-id}]
-    (is (= odotettu-vastaus (siivoa-muuttuvat vastaus)))))
+    (is (= odotettu-vastaus (siivoa-muuttuvat vastaus)))
+    (is (every? #(contains? vastaus %) pot2-domain/murskesarakkeet-muu))))
 
 (deftest murskeen-rakeisuuden-tarkenne-puuttuu-test
   (is (thrown? AssertionError

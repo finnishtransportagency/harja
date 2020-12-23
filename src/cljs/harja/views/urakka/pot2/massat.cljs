@@ -310,7 +310,7 @@
          (reverse
            (sort-by :runkoaine/massaprosentti
                     (:harja.domain.pot2/runkoaineet rivi)))
-         :let [aineen-otsikko (str (mk-tiedot/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
+         :let [aineen-otsikko (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
                                    (if (:runkoaine/esiintyma aine)
                                      (yleiset/str-suluissa-opt (:runkoaine/esiintyma aine))
                                      (when (= 7 (:runkoaine/tyyppi aine))
@@ -347,7 +347,7 @@
      ^{:key (:sideaine/id aine)}
      [:span
       [:div
-       (str (mk-tiedot/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
+       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
        [:span.pull-right (str (:sideaine/pitoisuus aine) "%")]]])])
 
 (defn- massan-lisaaineet [rivi ainetyypit]
@@ -358,7 +358,7 @@
      ^{:key (:lisaaine/id aine)}
      [:span
       [:div
-       (str (mk-tiedot/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
+       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
        [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
 (defn massan-toiminnot [e! rivi]
