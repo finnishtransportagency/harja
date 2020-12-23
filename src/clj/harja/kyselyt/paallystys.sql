@@ -153,13 +153,13 @@ WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 -- name: hae-pot2-alustarivit
 SELECT
     pot2a.id as "pot2a_id",
-    pot2a.tr_numero,
-    pot2a.tr_alkuetaisyys,
-    pot2a.tr_alkuosa,
-    pot2a.tr_loppuetaisyys,
-    pot2a.tr_loppuosa,
-    pot2a.tr_ajorata,
-    pot2a.tr_kaista,
+    pot2a.tr_numero AS "tr-numero",
+    pot2a.tr_alkuosa AS "tr-alkuosa",
+    pot2a.tr_alkuetaisyys AS "tr-alkuetaisyys",
+    pot2a.tr_loppuosa AS "tr-loppuosa",
+    pot2a.tr_loppuetaisyys AS "tr-loppuetaisyys",
+    pot2a.tr_ajorata AS "tr-ajorata",
+    pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
     pot2a.toimenpide_tiedot,
     pot2a.materiaali

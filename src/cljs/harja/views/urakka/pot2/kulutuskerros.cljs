@@ -19,46 +19,12 @@
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-
-
-(defn- kulutuskerroksen-toiminnot-sarake
-  [rivi osa e! app voi-muokata? kohdeosat-atom]
-  (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn]
-                             (let [vanhat-kohdeosat @kohdeosat-atom
-                                   uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
-                               (swap! kohdeosat-atom (fn [_]
-                                                       uudet-kohdeosat))))
-        lisaa-osa-fn (fn [index]
-                       (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
-                                             (yllapitokohteet/lisaa-uusi-kohdeosa vanhat-kohdeosat (inc index) {}))))
-        poista-osa-fn (fn [index]
-                        (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
-                                              (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
-    (fn [rivi {:keys [index]} voi-muokata?]
-      (let [yllapitokohde (-> app :paallystysilmoitus-lomakedata
-                              :perustiedot
-                              (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
-        [:span.tasaa-oikealle
-         [napit/yleinen-ensisijainen ""
-          lisaa-osa-fn
-          {:ikoni (ikonit/livicon-plus)
-           :disabled (or (not (:kirjoitusoikeus? app))
-                         (not voi-muokata?))
-           :luokka "napiton-nappi btn-xs"
-           :toiminto-args [index]}]
-         [napit/kielteinen ""
-          poista-osa-fn
-          {:ikoni (ikonit/livicon-trash)
-           :disabled (or (not (:kirjoitusoikeus? app))
-                         (not voi-muokata?))
-           :luokka "napiton-nappi btn-xs"
-           :toiminto-args [index]}]])))
-  )
 
 (defn validoi-kulutuskerros
   [rivi taulukko]
@@ -158,7 +124,7 @@
        :leveys perusleveys}
       {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                                   (boolean (:piennar rivi)))}
-      {:otsikko "Toiminnot" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
+      {:otsikko "" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
        :tasaa :keskita :komponentti-args [e! app voi-muokata? kohdeosat-atom]
-       :komponentti kulutuskerroksen-toiminnot-sarake}]
+       :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

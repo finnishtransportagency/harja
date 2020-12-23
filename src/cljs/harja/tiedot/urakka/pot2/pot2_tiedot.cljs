@@ -16,6 +16,7 @@
 
 (defonce pot2-nakymassa? (atom false))
 (defonce kohdeosat-atom (atom nil))
+(defonce alustarivit-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -47,12 +48,14 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
           kulutuskerros (:kulutuskerros vastaus)
+          alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
                       :perustiedot (merge perustiedot
                                           {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)})
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                                   (:id urakka))
-                      :kulutuskerros kulutuskerros}]
+                      :kulutuskerros kulutuskerros
+                      :alusta alusta}]
       (-> app
           (assoc :paallystysilmoitus-lomakedata lomakedata))))
 

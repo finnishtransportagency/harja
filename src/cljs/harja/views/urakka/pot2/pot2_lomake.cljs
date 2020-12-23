@@ -27,10 +27,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-
-(defn- alusta [e! app]
-  [:div "Alustatiedot"])
-
 (defn- otsikkotiedot [{:keys [tila] :as perustiedot}]
   [:span
    [:h1 (str "Päällystysilmoitus - "
@@ -105,10 +101,7 @@
              :margin-left "2rem"}}]])
 
 (defn pot2-lomake
-  [e! {yllapitokohde-id :yllapitokohde-id
-       paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
-       massat :massat
-       materiaalikoodistot :materiaalikoodistot
+  [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
    lukko urakka kayttaja]
   ;; Toistaiseksi ei käytetä lukkoa POT2-näkymässä
@@ -127,8 +120,12 @@
                                  (pot2-domain/lisaa-paallystekerroksen-jarjestysnro 1)
                                  (yllapitokohteet-domain/jarjesta-yllapitokohteet)
                                  (yllapitokohteet-domain/indeksoi-kohdeosat)))
+                     (reset! pot2-tiedot/alustarivit-atom
+                             (-> (:alusta paallystysilmoitus-lomakedata)
+                                 (yllapitokohteet-domain/jarjesta-yllapitokohteet)
+                                 (yllapitokohteet-domain/indeksoi-kohdeosat)))
                      (nav/vaihda-kartan-koko! :S)))
-      (fn [e! {:keys [paallystysilmoitus-lomakedata massat materiaalikoodistot] :as app}]
+      (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :kulutuskerros})
@@ -157,9 +154,10 @@
            [kulutuskerros/kulutuskerros e! kulutuskerros-app {:massat massat
                                                               :materiaalikoodistot materiaalikoodistot
                                                               :validointi (:kulutuskerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
-           #_[alusta e! app {:massat massat
-                             :materiaalikoodistot materiaalikoodistot
-                             :validointi (:alusta pot2-validoinnit)}]
+           [alusta/alusta e! app {:murskeet murskeet
+                                  :materiaalikoodistot materiaalikoodistot
+                                  :validointi (:alusta pot2-validoinnit)}
+            pot2-tiedot/alustarivit-atom]
            [tallenna e! tallenna-app {:kayttaja kayttaja
                                       :urakka-id (:id urakka)
                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
