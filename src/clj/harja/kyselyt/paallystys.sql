@@ -137,7 +137,6 @@ GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paally
 
 -- name: hae-kohdeosan-pot2-paallystekerrokset
 SELECT
-  -- POT2 spesifiset haut
   pot2p.id as "pot2p_id",
   pot2p.kohdeosa_id as "kohdeosa-id",
   pot2p.toimenpide,
@@ -150,6 +149,22 @@ SELECT
   pot2p.lisatieto
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
+
+-- name: hae-pot2-alustarivit
+SELECT
+    pot2a.id as "pot2a_id",
+    pot2a.tr_numero,
+    pot2a.tr_alkuetaisyys,
+    pot2a.tr_alkuosa,
+    pot2a.tr_loppuetaisyys,
+    pot2a.tr_loppuosa,
+    pot2a.tr_ajorata,
+    pot2a.tr_kaista,
+    pot2a.toimenpide,
+    pot2a.toimenpide_tiedot,
+    pot2a.materiaali
+  FROM pot2_alusta pot2a
+ WHERE pot2_id = :pot2_id;
 
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT

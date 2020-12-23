@@ -227,18 +227,30 @@
   Käyttää PO1:n kohdeosat-avaimen tietoja pohjana, ja yhdistää ne kulutuskerros-avaimen alle pot2_paallystekerros taulussa
   oleviin tietoihin."
   [db paallystysilmoitus]
-  (let [kulutuskerros
-        (mapv (fn [kohdeosa]
-                (let [kulutuskerros (first
-                                      (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
-                                                                                   :kohdeosa_id (:id kohdeosa)}))
-                      rivi (select-keys (merge kohdeosa kulutuskerros
-                                               ;; kohdeosan id on aina läsnä YLLAPITOKOHDEOSA-taulussa, mutta pot2_paallystekerros-taulun
-                                               ;; riviä ei välttämättä ole tässä kohti vielä olemassa (jos INSERT)
-                                               {:kohdeosa-id (:id kohdeosa)}) pot2-kulutuskerroksen-avaimet)]
-                  rivi))
-              (:kohdeosat paallystysilmoitus))]
-    (assoc paallystysilmoitus :kulutuskerros kulutuskerros)))
+  (mapv (fn [kohdeosa]
+          (let [kulutuskerros (first
+                                (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
+                                                                             :kohdeosa_id (:id kohdeosa)}))
+                rivi (select-keys (merge kohdeosa kulutuskerros
+                                         ;; kohdeosan id on aina läsnä YLLAPITOKOHDEOSA-taulussa, mutta pot2_paallystekerros-taulun
+                                         ;; riviä ei välttämättä ole tässä kohti vielä olemassa (jos INSERT)
+                                         {:kohdeosa-id (:id kohdeosa)}) pot2-kulutuskerroksen-avaimet)]
+            rivi))
+        (:kohdeosat paallystysilmoitus)))
+
+
+(defn- pot2-alusta
+  "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
+  [db paallystysilmoitus]
+  (into []
+        (q/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})))
+
+(defn- pot2-kulutuskerros-ja-alusta
+  "Hakee pot2-spesifiset tiedot lomakkeelle, kuten kulutuskerros ja alusta"
+  [db paallystysilmoitus]
+  (assoc paallystysilmoitus :kulutuskerros (pot2-kulutuskerros db paallystysilmoitus)
+                            :alusta (when (onko-pot2? paallystysilmoitus)
+                                      (pot2-alusta db paallystysilmoitus))))
 
 (defn- pot1-kohdeosat [paallystysilmoitus]
   (first (konversio/sarakkeet-vektoriin
@@ -270,9 +282,9 @@
                                    {:paallystyskohde paallystyskohde-id}))
         paallystysilmoitus (pot1-kohdeosat paallystysilmoitus)
         paallystysilmoitus (if (or (onko-pot2? paallystysilmoitus)
-                                   ;; jos paallystysilmoitus puuttuu vielä, täytyy siltä palauttaa kulutuskerroksen kohdeosat!
+                                   ;; jos paallystysilmoitus puuttuu vielä, täytyy silti palauttaa kulutuskerroksen kohdeosat!
                                    (nil? (:pot-versio paallystysilmoitus)))
-                             (pot2-kulutuskerros db paallystysilmoitus)
+                             (pot2-kulutuskerros-ja-alusta db paallystysilmoitus)
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
