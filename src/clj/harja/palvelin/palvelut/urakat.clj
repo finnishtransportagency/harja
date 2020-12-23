@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.sopimukset :as sopimukset-q]

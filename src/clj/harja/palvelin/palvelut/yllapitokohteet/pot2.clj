@@ -6,6 +6,7 @@
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
 
+            [harja.kyselyt.pot2 :as pot2-q]
             [harja.domain
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
@@ -18,10 +19,9 @@
             [specql.core :as specql]
             [jeesql.core :refer [defqueries]]))
 
-
 (defn hae-urakan-pot2-massat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [_ (println "hae-urakan-pot2-massat :: urakka-id" (pr-str urakka-id))
+  (let [_ (log/debug "hae-urakan-pot2-massat :: urakka-id" (pr-str urakka-id))
         massat
         (fetch db
                ::pot2-domain/pot2-massa
@@ -61,7 +61,7 @@
                                                                 :lisaaine/pitoisuus}
                                                               {:pot2-massa/id (:pot2-massa/id %)}))
                     massat)
-        _ (println "hae-urakan-pot2-massat :: massat" (pr-str massat) )]
+        _ (log/debug "hae-urakan-pot2-massat :: massat" (pr-str massat) )]
     massat))
 
 (defn hae-pot2-koodistot [db user {:keys []}]
@@ -187,10 +187,10 @@
   (jdbc/with-db-transaction
     [db db]
     (let [massa-id (:pot2-massa/id tiedot)
-          _ (println (str "" (if massa-id "UPDATE" "INSERT") " massa-id  " (pr-str massa-id)))
-          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
-          _ (println "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
-          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet" (pr-str lisaaineet))
+          _ (log/debug (str "" (if massa-id "UPDATE" "INSERT") " massa-id  " (pr-str massa-id)))
+          _ (log/debug "tallenna-urakan-paallystysmassa :: runkoaineet" (pr-str runkoaineet))
+          _ (log/debug "tallenna-urakan-paallystysmassa :: sideaineet" (pr-str sideaineet))
+          _ (log/debug "tallenna-urakan-paallystysmassa :: lisaaineet" (pr-str lisaaineet))
           massa (upsert! db ::pot2-domain/pot2-massa
                          (merge
                            (if massa-id
@@ -207,19 +207,31 @@
                                                 ::pot2-domain/kuulamyllyluokka
                                                 ::pot2-domain/litteyslukuluokka
                                                 ::pot2-domain/dop-nro])))
-          _ (println "tallenna-urakan-paallystysmassa :: massa" (pr-str massa))
+          _ (log/debug "tallenna-urakan-paallystysmassa :: massa" (pr-str massa))
           massa-id (:pot2-massa/id massa)
           runkoaineet-kannasta (tallenna-runkoaineet db runkoaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet-kannasta" (pr-str runkoaineet-kannasta))
+          _ (log/debug "tallenna-urakan-paallystysmassa :: runkoaineet-kannasta" (pr-str runkoaineet-kannasta))
 
           sideaineet-kannasta (tallenna-sideaineet db sideaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: sideaineet-kannasta" (pr-str sideaineet-kannasta))
+          _ (log/debug "tallenna-urakan-paallystysmassa :: sideaineet-kannasta" (pr-str sideaineet-kannasta))
 
           lisaaineet-kannasta (tallenna-lisaaineet db lisaaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet-kannasta" (pr-str lisaaineet-kannasta))]
+          _ (log/debug "tallenna-urakan-paallystysmassa :: lisaaineet-kannasta" (pr-str lisaaineet-kannasta))]
       (assoc massa :harja.domain.pot2/runkoaineet runkoaineet
                    :harja.domain.pot2/sideaineet sideaineet
                    :harja.domain.pot2/lisaaineet lisaaineet))))
+
+
+(defn hae-kohteen-pot2-tiedot [db user {::pot2-domain/keys [yllapitokohde-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user yllapitokohde-id)
+  (let [_ (log/debug "hae-kohteen-pot2-tiedot" (pr-str yllapitokohde-id))
+        perustiedot (first (pot2-q/hae-kohteen-pot2-tiedot db {:kohde_id yllapitokohde-id}))
+
+        ;; TODO: Tähän tulee myöh. erilliset kyselyt:
+        ;; 1. Kkulutuskerroksen rivit
+        ;; 2. Alustan rivit
+        _ (log/debug "hae-urakan-pot2-massat :: massat" (pr-str perustiedot))]
+    {:perustiedot perustiedot}))
 
 
 (defrecord POT2 []
@@ -239,6 +251,11 @@
       (julkaise-palvelu http :tallenna-urakan-pot2-massa
                         (fn [user tiedot]
                           (tallenna-urakan-paallystysmassa db user tiedot)))
+
+      ;; POT2 palvelut tänne
+      (julkaise-palvelu http :hae-kohteen-pot2-tiedot
+                        (fn [user tiedot]
+                          (hae-kohteen-pot2-tiedot db user tiedot)))
       this))
 
   (stop [this]

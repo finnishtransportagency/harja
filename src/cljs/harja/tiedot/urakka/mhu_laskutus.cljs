@@ -507,7 +507,8 @@
   ;; FAIL
 
   KutsuEpaonnistui
-  (process-event [{{:keys [ei-async-laskuria]} :parametrit} app]
+  (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
+    (when viesti (harja.ui.viesti/nayta! viesti :danger))
     (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
 
   ;; HAUT
@@ -519,11 +520,13 @@
                          {:urakka-id (:id hakuparametrit)}
                          {:onnistui           ->ToimenpidehakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
+                          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
                           :paasta-virhe-lapi? true})
       (tuck-apurit/post! :hae-urakan-maksuerat
                          (:id hakuparametrit)
                          {:onnistui           ->MaksueraHakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
+                          :epaonnistui-parametrit [{:viesti "Urakan maksuerien haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 2))
   HaeUrakanLaskut
@@ -536,6 +539,7 @@
                                                              :loppupvm loppupvm))
                        {:onnistui           ->LaskuhakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Urakan laskujen haku epäonnistui"}]
                         :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
   HaeUrakanToimenpiteetJaTehtavaryhmat
@@ -545,6 +549,7 @@
                        {:urakka-id urakka}
                        {:onnistui           ->ToimenpidehakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Urakan toimenpiteiden ja tehtäväryhmien haku epäonnistui"}]
                         :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
   AvaaLasku
@@ -598,6 +603,7 @@
                                                                                     :aliurakoitsija (:id aliurakoitsija)
                                                                                     :suorittaja-nimi (:nimi aliurakoitsija))))))}]
                         :epaonnistui         ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]
                         :paasta-virhe-lapi?  true})
     (update-in app [:parametrit :haetaan] inc))
   PaivitaAliurakoitsija
@@ -616,7 +622,8 @@
                                                                                       as)
                                                                                     (conj as paivitetty-aliurakoitsija)
                                                                                     (sort-by :id as)))))}]
-                        :epaonnistui         ->KutsuEpaonnistui})
+                        :epaonnistui         ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan päivittäminen epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
   TallennaKulu
   (process-event
@@ -663,7 +670,8 @@
                                                                                             (formatoi-tulos (:kulut a)))
                                                                                 :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
-                            :epaonnistui         ->KutsuEpaonnistui}))
+                            :epaonnistui         ->KutsuEpaonnistui
+                            :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
       (cond-> app
               true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
               (true? validi?) (update-in [:parametrit :haetaan] inc))))
@@ -691,7 +699,8 @@
                        {:urakka-id (-> @tila/yleiset :urakka :id)
                         :id        id}
                        {:onnistui    ->PoistoOnnistui
-                        :epaonnistui ->KutsuEpaonnistui})
+                        :epaonnistui ->KutsuEpaonnistui
+                        :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
   AsetaHakuparametri
   (process-event

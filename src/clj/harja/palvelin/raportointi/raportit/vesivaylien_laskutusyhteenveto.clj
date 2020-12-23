@@ -131,7 +131,7 @@
                                    (map :toteutunut-maara (vals (:kokonaishintaiset tiedot))))))])
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (println "suorita urakka id " urakka-id " hallintayksikkö id " hallintayksikko-id)
+  (log/debug "suorita urakka id " urakka-id " hallintayksikkö id " hallintayksikko-id)
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :urakka)

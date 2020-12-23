@@ -2,28 +2,23 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as xml-zip]
-            [clojure.data.zip :as zip]))
+            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
 
 (def kayttaja "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :sonja (feikki-sonja)
+    :itmf (feikki-jms "itmf")
     :tloik (component/using
             (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat])
+             [:db :itmf :integraatioloki])
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik])))
+                       [:http-palvelin :db :integraatioloki :tloik])))
 
 (use-fixtures :once jarjestelma-fixture)
 

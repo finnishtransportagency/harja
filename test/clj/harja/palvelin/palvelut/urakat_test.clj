@@ -24,7 +24,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :tallenna-urakan-sopimustyyppi (component/using
                                                          (->Urakat)
                                                          [:http-palvelin :db])))))

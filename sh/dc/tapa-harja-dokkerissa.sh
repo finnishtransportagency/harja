@@ -12,9 +12,9 @@ export BRANCH;
 aja-yhteisessa-voluumissa() {
   if [[ -n $(docker ps | grep harja_harja-app_1) ]]
   then
-    sudo docker exec -e BRANCH harja_harja-app_1 /bin/bash -c "cd \$\{DC_JAETTU_KANSIO\}; $1"
+    docker exec -e BRANCH harja_harja-app_1 /bin/bash -c "cd \$\{DC_JAETTU_KANSIO\}; $1"
   else
-    sudo docker run -e BRANCH --rm --volume=harja_yhteiset_tiedostot:/yt solita/harja-app:latest /bin/bash -c "cd /yt; $1"
+    docker run -e BRANCH --rm --volume=harja_yhteiset_tiedostot:/yt solita/harja-app:latest /bin/bash -c "cd /yt; $1"
   fi
 }
 
@@ -40,4 +40,4 @@ then
 fi
 
 echo "SAMMUTETAAN DOCKER COMPOSE"
-sudo docker-compose --env-file "${HARJA_DIR}/yhdistetty_dc_env" down
+docker-compose --env-file "${HARJA_DIR}/yhdistetty_dc_env" down

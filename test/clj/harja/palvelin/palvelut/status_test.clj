@@ -1,79 +1,114 @@
-(ns harja.palvelin.palvelut.status-test
+(ns ^:integraatio harja.palvelin.palvelut.status-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
+            [cheshire.core :as cheshire]
+            [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.testi :refer :all]
+            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.integraatio :as integraatio]
+            [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
             [harja.palvelin.palvelut.status :as status]
-            [harja.kyselyt.jarjestelman-tila :as j-t]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
+            [clojure.core.async :as async]
+            [harja.palvelin.komponentit.itmf :as itmf]))
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea
-    "ei-ole-kayttajalle-tarvestsa"
-    :status (component/using
-              (status/luo-status true)
-              ;; Ei varsinaisesti tarvitse sonjaa, mutta vaaditaan se tässä, jotta
-              ;; voidaan varmistua siitä, että sonja komponentti on lähtenyt hyrräämään
-              ;; ennen kuin sen statusta aletaan seuraamaan
-              [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
-    :sonja (component/using
-             (sonja/luo-oikea-sonja {:url "tcp://localhost:61617"
-                                     :kayttaja ""
-                                     :salasana ""
-                                     :tyyppi :activemq})
-             [:db])))
+  (laajenna-integraatiojarjestelmafixturea +kayttaja-jvh+
+                                           :komponenttien-tila (komponenttien-tila/komponentin-tila {:sonja {:paivitystiheys-ms (:paivitystiheys-ms integraatio/sonja-asetukset)}
+                                                                                                     :itmf {:paivitystiheys-ms (:paivitystiheys-ms integraatio/itmf-asetukset)}
+                                                                                                     :db {:paivitystiheys-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :paivitystiheys-ms])
+                                                                                                          :kyselyn-timeout-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :kyselyn-timeout-ms])}
+                                                                                                     :db-replica {:paivitystiheys-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :paivitystiheys-ms])
+                                                                                                                  :replikoinnin-max-viive-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :kyselyn-timeout-ms])}})
+                                           :status (component/using
+                                                     (status/luo-status true)
+                                                     [:http-palvelin :komponenttien-tila])
+                                           :sonja (component/using
+                                                    (sonja/luo-oikea-sonja integraatio/sonja-asetukset)
+                                                    [:db])
+                                           :itmf (component/using
+                                                   (itmf/luo-oikea-itmf integraatio/itmf-asetukset)
+                                                   [:db])
+                                           :tloik (component/using
+                                                    (luo-tloik-komponentti)
+                                                    [:db :itmf :integraatioloki])))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each (fn [testit]
+                      (binding [*aloitettavat-jmst* #{"sonja"}
+                                *kaynnistyksen-jalkeen-hook*
+                                (fn []
+                                  (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+                                         (fn [tila]
+                                           (-> tila
+                                               (assoc-in [tapahtuma-apurit/host-nimi :harja :kaikki-ok?] true)
+                                               (assoc-in [tapahtuma-apurit/host-nimi :db :kaikki-ok?] true)
+                                               (assoc-in [tapahtuma-apurit/host-nimi :db-replica :kaikki-ok?] true)
+                                               (assoc-in [tapahtuma-apurit/host-nimi :sonja :kaikki-ok?] true)
+                                               (assoc-in [tapahtuma-apurit/host-nimi :itmf :kaikki-ok?] true)
+                                               (assoc-in ["testihost" :harja :kaikki-ok?] true)
+                                               (assoc-in ["testihost" :harja :viesti] "kaik kivast")
+                                               (assoc-in ["testihost" :db :kaikki-ok?] true)
+                                               (assoc-in ["testihost" :db-replica :kaikki-ok?] true)
+                                               (assoc-in ["testihost" :sonja :kaikki-ok?] true)
+                                               (assoc-in ["testihost" :itmf :kaikki-ok?] true)))))
+                                *ennen-sulkemista-hook* (fn []
+                                                          (reset! (-> jarjestelma :komponenttien-tila :komponenttien-tila) nil))]
+                        ;; Testatessa ei ole replicaa käytössä, niin sen tilaa ei voi oikein testata. Harjan tila nyt on muutenkin
+                        ;; ok, jos testiin asti päästään
+                        (with-redefs [status/harjan-tila-ok? (fn [& args] (async/go true))
+                                      status/replikoinnin-tila-ok? (fn [& args] (async/go true))]
+                          (jarjestelma-fixture testit)))))
 
 (deftest toimiiko-dbn-testaus
-  (let [db (:db jarjestelma)
-        status-komponentti (:status jarjestelma)]
-    (testing "Kaikki hienosti"
-      (is (true? (get (status/tietokannan-tila! status-komponentti db) :yhteys-master-kantaan-ok?)))
-      (is (= (get-in @(:status status-komponentti) [:db :status]) 200)))
-    (testing "Kanta ei ole ok"
-      (is (false? (with-redefs [status/dbn-tila-ok? (constantly false)]
-                    (get (status/tietokannan-tila! status-komponentti db) :yhteys-master-kantaan-ok?))))
-      (is (= (get-in @(:status status-komponentti) [:db :status]) 503)))
-    (testing "Kanta palautuu"
-      (status/tietokannan-tila! status-komponentti db)
-      (is (= (get-in @(:status status-komponentti) [:db :status]) 200)))))
-
-(deftest toimiiko-replikoinnin-testaus
-  (let [db-replica (:db-replica jarjestelma)
-        status-komponentti (:status jarjestelma)]
-    (testing "Kaikki hienosti"
-      (is (true? (get (status/replikoinnin-tila! status-komponentti db-replica) :replikoinnin-tila-ok?)))
-      (is (= (get-in @(:status status-komponentti) [:db-replica :status]) 200)))
-    (testing "Replikointi ei ole ok"
-      (is (false? (with-redefs [status/replikoinnin-tila-ok? (constantly false)]
-                    (get (status/replikoinnin-tila! status-komponentti db-replica) :replikoinnin-tila-ok?))))
-      (is (= (get-in @(:status status-komponentti) [:db-replica :status]) 503)))
-    (testing "Replikointi palautuu"
-      (status/replikoinnin-tila! status-komponentti db-replica)
-      (is (= (get-in @(:status status-komponentti) [:db-replica :status]) 200)))))
-
-(deftest toimiiko-sonjan-testaus
-  (let [db (:db jarjestelma)
-        status-komponentti (:status jarjestelma)
-        ok-palautus-kannasta (constantly [{:tila (doto (org.postgresql.util.PGobject.)
-                                                   (.setType "json")
-                                                   (.setValue "{\"olioiden-tilat\": {\"istunnot\": [{\"jonot\": [{\"jono1\": {\"tuottaja\": {\"virheet\": null, \"tuottajan-tila\": \"ACTIVE\"}, \"vastaanottaja\": null}}],
-                                                                                     \"jarjestelma\": \"istunto-jono1\",
-                                                                                     \"istunnon-tila\": \"ACTIVE\"},
-                                                                                    {\"jonot\": [{\"jono2\": {\"tuottaja\": null, \"vastaanottaja\": {\"virheet\": null, \"vastaanottajan-tila\": \"ACTIVE\"}}}],
-                                                                                     \"jarjestelma\": \"istunto-jono2\",
-                                                                                     \"istunnon-tila\": \"ACTIVE\"}],
-                                                                    \"yhteyden-tila\": \"ACTIVE\"}}"))
-                                           :paivitetty (pvm/nyt)}])]
-    (with-redefs [j-t/sonjan-tila ok-palautus-kannasta]
-      (testing "Kaikki hienosti"
-        (is (true? (get (status/sonja-yhteyden-tila! status-komponentti db true) :sonja-yhteys-ok?)))
-        (is (= (get-in @(:status status-komponentti) [:sonja :status]) 200)))
-      (testing "Replikointi ei ole ok"
-        (is (false? (with-redefs [status/sonja-yhteyden-tila-ok? (constantly false)]
-                      (get (status/sonja-yhteyden-tila! status-komponentti db true) :sonja-yhteys-ok?))))
-        (is (= (get-in @(:status status-komponentti) [:sonja :status]) 503)))
-      (testing "Replikointi palautuu"
-        (status/sonja-yhteyden-tila! status-komponentti db true)
-        (is (= (get-in @(:status status-komponentti) [:sonja :status]) 200))))))
+  (testing "Kaikki hienosti"
+    (let [vastaus (tyokalut/get-kutsu ["/status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+             {:viesti ""
+              :harja-ok? true
+              :sonja-yhteys-ok? true
+              :itmf-yhteys-ok? true
+              :yhteys-master-kantaan-ok? true
+              :replikoinnin-tila-ok? true}))
+      (is (= (get vastaus :status) 200))))
+  (testing "harja ei ole ok"
+    (with-redefs [status/harjan-tila-ok? (fn [& _] (async/go false))]
+      (println (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+                      (fn [tila]
+                        (-> tila
+                            (assoc-in [tapahtuma-apurit/host-nimi :harja :kaikki-ok?] false)
+                            (assoc-in [tapahtuma-apurit/host-nimi :harja :viesti] "poks")))))
+      (let [vastaus (tyokalut/get-kutsu ["/status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+        (is (= (-> vastaus :body (cheshire/decode true))
+               {:viesti (format "HOST: %s\nVIESTI: poks\nHOST: testihost\nVIESTI: kaik kivast" tapahtuma-apurit/host-nimi)
+                :harja-ok? false
+                :sonja-yhteys-ok? true
+                :itmf-yhteys-ok? true
+                :yhteys-master-kantaan-ok? true
+                :replikoinnin-tila-ok? true}))
+        (is (= (get vastaus :status) 503)))
+      (println (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
+                      assoc-in
+                      [tapahtuma-apurit/host-nimi :harja :kaikki-ok?]
+                      true))))
+  (testing "kanta ei ole ok"
+    (with-redefs [status/dbn-tila-ok? (fn [& _] (async/go false))]
+      (let [vastaus (tyokalut/get-kutsu ["/status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+        (is (= (-> vastaus :body (cheshire/decode true))
+               {:viesti (str "Ei saatu yhteyttä kantaan 10 sekunnin kuluessa.")
+                :harja-ok? true
+                :sonja-yhteys-ok? true
+                :itmf-yhteys-ok? true
+                :yhteys-master-kantaan-ok? false
+                :replikoinnin-tila-ok? true}))
+        (is (= (get vastaus :status) 503)))))
+  (testing "Kanta palautuu"
+    (let [vastaus (tyokalut/get-kutsu ["/status"] +kayttaja-jvh+ nil {:timeout 1000} portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+             {:viesti ""
+              :harja-ok? true
+              :sonja-yhteys-ok? true
+              :itmf-yhteys-ok? true
+              :yhteys-master-kantaan-ok? true
+              :replikoinnin-tila-ok? true}))
+      (is (= (get vastaus :status) 200)))))

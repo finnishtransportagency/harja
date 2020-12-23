@@ -6,21 +6,23 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [clojure.core.async :refer [<!! timeout]]
             [clojure.string :as str]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat])
+  (:import (org.postgresql.util PSQLException PSQLState))
   (:use org.httpkit.fake))
 
 (def kayttaja-paallystys "skanska")
@@ -35,7 +37,7 @@
     :vkm (component/using
            (vkm/->VKM +testi-vkm+)
            [:db :integraatioloki])
-    :sonja (feikki-sonja)
+    :sonja (feikki-jms "sonja")
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"
@@ -426,7 +428,7 @@
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-paivittyy
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow]
@@ -453,7 +455,7 @@
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-ekaa-kertaa
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow]
@@ -472,7 +474,7 @@
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)
         viestit (atom nil)]
-    (sonja/kuuntele! (:sonja jarjestelma)
+    (jms/kuuntele! (:sonja jarjestelma)
                     "harja-to-email"
                     (fn [viesti]
                       (reset! viestit (conj @viestit (sanomat/lue-sahkoposti (.getText viesti))))
@@ -816,7 +818,6 @@
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
         tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)
         tarkastus (first tarkastukset-kirjauksen-jalkeen)]
-
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
     (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")))
     (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
@@ -855,16 +856,9 @@
         tarkastukset-ennen-kirjausta (hae-tarkastukset)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
         kutsudata (slurp "test/resurssit/api/usean-yllapitokohteen-tarkastuksen-kirjaus-request.json")
-        ;; Transaktion toiminnan testaaminen overridaamalla mapv funktion on vähän huono,
-        ;; koska tämä nyt riippuu siitä, että harja.palvelin.integraatiot.api.kasittely.tarkastukset/luo-tai-paivita-tarkastukset
-        ;; transaction sisällä käytetään mapv funktiota usean tarkastuksen tallentamiseen eikä mitään muuta looppia.
-        vastaus (with-redefs [mapv (fn [annettu-fn args]
-                                     (vec (map-indexed
-                                            #(if (and (= (-> %2 :tarkastus :tunniste :id) 1337)
-                                                      (= (-> %2 :tarkastus :tarkastaja :etunimi) "Taneli"))
-                                               (throw (org.postgresql.util.PSQLException. "Foo" (org.postgresql.util.PSQLState/DATA_ERROR)))
-                                               (annettu-fn %2))
-                                            args)))]
+        vastaus (with-redefs [sijainnit/hae-tierekisteriosoite (fn [db alkusijainti loppusijainti]
+                                                                 (when (= (:x alkusijainti) 443673.469)
+                                                                   (throw (PSQLException. "Foo" (PSQLState/DATA_ERROR)))))]
                   (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata))
         tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)]
     (is (= 500 (:status vastaus)))

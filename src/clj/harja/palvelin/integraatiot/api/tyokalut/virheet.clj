@@ -66,7 +66,7 @@
 (defn heita-sisainen-kasittelyvirhe-poikkeus
   ([virheet] (heita-sisainen-kasittelyvirhe-poikkeus virheet nil))
   ([virheet parametrit]
-   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet)))
+   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet parametrit)))
 
 (defn heita-ulkoinen-kasittelyvirhe-poikkeus
   ([virheet] (heita-ulkoinen-kasittelyvirhe-poikkeus virheet nil))

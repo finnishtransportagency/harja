@@ -59,19 +59,20 @@ Harja repon hakemistorakenne:
 
 Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
 Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
-Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa asetukset.edn filussa 
-`[:http-palvelin :salli-oletuskayttaja?]` poluussa olevan arvon true:ksi, ja restartoida backend, 
-tekemällä `lein repl` uudestaan.
+Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
+ja restartoida backend `lein repl` kommennolla. 
 
 8. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6. ja 7.
 askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
 
-`sh kaynnista_cypress.sh`
+    `sh kaynnista_cypress.sh`
 
 #### Docker compose
 
 1. Asenna docker ja docker compose
-2. aja `bash sh/dc/aja-harja-dokkerissa.sh`
+2. Jos olet linuxilla, niin lisää itsesi `docker` ryhmään, jos näin ei jo ole. Lisää tietoja
+   [täältä](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
+3. Aja `bash sh/dc/aja-harja-dokkerissa.sh`
 
 ## Kirjautuminen ja ModHeader
 

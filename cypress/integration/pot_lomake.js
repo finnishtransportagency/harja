@@ -9,6 +9,30 @@ let valitseVuosi = function (vuosi) {
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
+let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila) {
+    cy.visit("/")
+    cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
+    cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: 10000}).click()
+    cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
+    cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
+    cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
+    cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
+    valitseVuosi(vuosi)
+    cy.get('[data-cy=paallystysilmoitukset-grid]')
+        .gridOtsikot().then(($gridOtsikot) => {
+        cy.wrap($gridOtsikot.grid.find('tbody')).contains(kohteenNimi).parentsUntil('tbody').then(($rivi) => {
+            expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain(kohteenTila)
+        })
+    })
+    cy.get('[data-cy=paallystysilmoitukset-grid] tr')
+        .contains(kohteenNimi)
+        .parentsUntil('tbody')
+        .contains('button', 'Päällystysilmoitus').click({force: true})
+    cy.get('div.paallystysilmoitukset')
+}
+
 // TODO: Tänne voisi tehdä vielä testit rivin poistamisesta ison rivimäärän kanssa. Lisäksi voisi testata
 // 'Kumoa' napin painelemista. Myös alustatoimille pitäisi kirjoitella testejä
 
@@ -503,27 +527,9 @@ describe('Aloita päällystysilmoitus uusi', function () {
                 kaista: 11
             })
     })
-    it('Avaa uusi POT-lomake', function () {
-
-        cy.visit("/")
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
-        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
-        cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
-        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
-        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
-        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
-        cy.get('[data-cy=paallystysilmoitukset-grid]')
-            .gridOtsikot().then(($gridOtsikot) => {
-            cy.wrap($gridOtsikot.grid.find('tbody')).contains('Nakkilan ramppi').parentsUntil('tbody').then(($rivi) => {
-                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('Valmis käsiteltäväksi')
-            })
-        })
-        cy.get('[data-cy=paallystysilmoitukset-grid] tr')
-            .contains('Nakkilan ramppi')
-            .parentsUntil('tbody')
-            .contains('button', 'Päällystysilmoitus').click({force: true})
+    it('Avaa uusi POT-lomake mutta ei pot2 jos vuosi on 2020', function () {
+        avaaPaallystysIlmoitus(2020, 'Muhoksen päällystysurakka', 'Nakkilan ramppi', 'Valmis käsiteltäväksi')
+        cy.get('div.pot2-lomake').should('not.exist')
     })
     it('Oikeat aloitustiedot', function () {
         // Tierekisteritaulukon tienumeroa, ajorataa ja kaistaa ei pitäisi pystyä muutamaan
@@ -537,5 +543,26 @@ describe('Aloita päällystysilmoitus uusi', function () {
             valitseInput(0, 'Kaista')
             valitseInput(0, 'Tienumero')
         })
+    })
+})
+
+describe("POT2", function() {
+    before(function () {
+        cy.POTTestienAlustus(
+            {
+                yllapitoluokka: null,
+                ajorata: null,
+                kaista: null,
+                vuosi: 2018,
+                kvl: null
+            },
+            {
+                ajorata: 1,
+                kaista: 11
+            })
+    })
+    it('Avaa POT2-lomake jos vuosi on 2021', function () {
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Aloitettu')
+        cy.get('div.pot2-lomake')
     })
 })

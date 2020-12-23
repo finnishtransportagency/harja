@@ -18,10 +18,10 @@
             [harja.domain.skeema :as skeema]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
@@ -39,14 +39,13 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
+                        :sonja (feikki-jms "sonja")
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"
@@ -451,6 +450,23 @@
                                                :sopimus-id sopimus-id
                                                :vuosi 2017})]
     (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
+
+(deftest hae-paallystysilmoitukset-utajarvi-2021-pot2
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        pot2-aloitusvuosi 2021
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi pot2-aloitusvuosi})
+        tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
+    (is (= (count paallystysilmoitukset) 2) "Päällystysilmoituksia löytyi vuodelle 2021")
+    (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
+    (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
+    (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
+    (is (nil? (:paatos-tekninen-osa tarkea-kohde)) "Päätös")
+    (is (= 2 (count (:kohdeosat tarkea-kohde))) "Kohdeosien lkm")))
 
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
   ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa
@@ -927,7 +943,7 @@
         sahkoposti-valitetty (atom false)
         sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
+    (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
                                                              (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
                                                                                                     .getText
                                                                                                     xml/lue

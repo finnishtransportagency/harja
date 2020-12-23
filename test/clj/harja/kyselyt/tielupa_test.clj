@@ -6,7 +6,7 @@
             [harja.domain.tielupa :as tielupa]
             [harja.kyselyt.tielupa :as tielupa-q]))
 
-(use-fixtures :each urakkatieto-fixture)
+(use-fixtures :each (compose-fixtures urakkatieto-fixture tietokantakomponentti-fixture))
 
 (def testiluvan-ulkoinen-tunniste 666123)
 
@@ -60,20 +60,20 @@
    ::tielupa/urakoitsija-nimi "Puulaaki Oy"})
 
 (deftest hae-tieluvat
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         haettu-osasto "Osasto 123"
         vastaus (tielupa-q/hae-tieluvat db {::tielupa/hakija-osasto haettu-osasto})]
     (is (every? #(= haettu-osasto (::tielupa/hakija-osasto %)) vastaus) "Jokainen löytynyt tietue vastaa hakuehtoa")))
 
 (deftest onko-olemassa-ulkoisella-tunnisteella
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]
+  (let [db (:db jarjestelma)]
     (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db nil)))
     (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666)))
     (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 2345)))
     (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db "foo")))))
 
 (deftest tallenna-tielupa
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         hae-maara #(ffirst (q "select count (id) from tielupa;"))
         maara-alussa (hae-maara)
         maara-luonnin-jalkeen (+ maara-alussa 1)]
@@ -103,7 +103,7 @@
       (is (not (nil? (::muokkaustiedot/muokattu paivitetty)))))))
 
 (deftest tallenna-tielupa-ilman-sijaintia
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         hae-maara #(ffirst (q "select count (id) from tielupa;"))
         maara-alussa (hae-maara)
         maara-luonnin-jalkeen (+ maara-alussa 1)
