@@ -825,9 +825,7 @@ VALUES (10006, (SELECT id
 -- Utajärven päällystysurakka
 ----------------------------
 
--- Päällystyskohteet 2019
-
-
+-- Päällystyskohteet 2020 (vielä pot1)
 INSERT INTO yllapitokohde
 (urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,
@@ -843,7 +841,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    111, 'L11', 'Ouluntie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13371,
-   22, 12, 4336, 12, 9477, NULL, NULL, NULL, ARRAY[(SELECT date_part('year', now()))::INTEGER], FALSE),
+   22, 12, 4336, 12, 9477, NULL, NULL, NULL, '{2020}', FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -854,7 +852,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    112, 'L12', 'Kirkkotie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13372,
-   18642, 1, 13, 1, 493, NULL, NULL, NULL, ARRAY[(SELECT date_part('year', now()))::INTEGER], FALSE),
+   18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2020}', FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -888,6 +886,7 @@ VALUES
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
     22, 13, 0, 13, 3888, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE),
+  -- Päällystyskohteet 2021 (pot2)
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
