@@ -254,17 +254,19 @@
                    :harja.domain.pot2/sideaineet sideaineet
                    :harja.domain.pot2/lisaaineet lisaaineet))))
 
-(defn- validoi-murske [db murske]
+(defn- validoi-murske [db murske poistettu?]
   (let [muun-tyypin-id (::pot2-domain/koodi
                          (first (fetch db
                                        ::pot2-domain/pot2-mk-mursketyyppi
                                        #{::pot2-domain/koodi}
                                        {::pot2-domain/nimi "Muu"})))]
-    (assert (or (not= muun-tyypin-id (::pot2-domain/tyyppi murske))
-                (and (= muun-tyypin-id (::pot2-domain/tyyppi murske))
-                     (some? (::pot2-domain/tyyppi-tarkenne murske)))) "Tyyppi annettu tai muulla tyypillä tarkenne")
-    (assert (or (not= "Muu" (::pot2-domain/rakeisuus murske))
-                (some? (::pot2-domain/rakeisuus-tarkenne murske))) "Rakeisuus annettu tai muulla rakeisuudella tarkenne")))
+    ;; poistettua ei haluta validoida koska se joka tapauksessa poistetaan
+    (when-not poistettu?
+      (assert (or (not= muun-tyypin-id (::pot2-domain/tyyppi murske))
+                  (and (= muun-tyypin-id (::pot2-domain/tyyppi murske))
+                       (some? (::pot2-domain/tyyppi-tarkenne murske)))) "Tyyppi annettu tai muulla tyypillä tarkenne")
+      (assert (or (not= "Muu" (::pot2-domain/rakeisuus murske))
+                  (some? (::pot2-domain/rakeisuus-tarkenne murske))) "Rakeisuus annettu tai muulla rakeisuudella tarkenne"))))
 
 (defn- mursketyypin-sarakkeet [db tyyppi]
   (let [mursketyypit (fetch db ::pot2-domain/pot2-mk-mursketyyppi
@@ -274,20 +276,19 @@
     (pot2-domain/mursketyypin-lyhenne->sarakkeet lyhenne)))
 
 (defn tallenna-urakan-murske
-  [db user {::pot2-domain/keys [urakka-id] :as tiedot}]
+  [db user {::pot2-domain/keys [urakka-id poistettu? murske-id] :as tiedot}]
   (println "tallenna-urakan-murske: "(pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (validoi-murske db tiedot)
+  (validoi-murske db tiedot poistettu?)
   (jdbc/with-db-transaction
     [db db]
-    (let [murske-id (::pot2-domain/murske-id tiedot)
-          murske (upsert! db ::pot2-domain/pot2-mk-urakan-murske
+    (let [murske (upsert! db ::pot2-domain/pot2-mk-urakan-murske
                          (merge
                            (if murske-id
                              {::pot2-domain/murske-id murske-id
                               ::muokkaustiedot/muokattu (pvm/nyt)
                               ::muokkaustiedot/muokkaaja-id (:id user)
-                              ::pot2-domain/poistettu? (boolean (::pot2-domain/poistettu? tiedot))}
+                              ::pot2-domain/poistettu? (boolean poistettu?)}
                              {::muokkaustiedot/luotu (pvm/nyt)
                               ::muokkaustiedot/luoja-id (:id user)})
                            (select-keys tiedot (mursketyypin-sarakkeet db (::pot2-domain/tyyppi tiedot)))))
