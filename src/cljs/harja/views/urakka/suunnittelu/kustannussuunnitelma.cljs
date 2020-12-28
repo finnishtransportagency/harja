@@ -22,6 +22,7 @@
             [harja.domain.palvelut.budjettisuunnittelu :as bj]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.tyokalut.vieritys :as vieritys]
             [goog.dom :as dom])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
                    [harja.ui.taulukko.grid :refer [defsolu]]
@@ -2577,6 +2578,8 @@
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma
+           [:div {:on-click (vieritys/vierita ::hallinnolliset-toimenpiteet)} "keep rollin"]
+           [:div {:on-click (vieritys/vierita ::hankintakustannukset)} "keep rollin 2"]
            [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten. Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa." ]
                   [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä kuluna Sampon maksuerään."[:br]
                    "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lasketaan mukaan maksueriin eräpäivän mukaan."]
@@ -2606,6 +2609,7 @@
             [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
             [:div "**) Kuukausisummat syöttää urakanvalvoja. Kuukausisuunnitelmista muodostuu Sampoon lähetettävä kustannussuunnitelman summa. Ks. Kulut > Maksuerät."]]
            [:span.viiva-alas]
+           [vieritys/majakka ::hankintakustannukset]
            [hankintakustannukset-taulukot
             (get-in app [:domain :kirjoitusoikeus?])
             (get-in app [:domain :indeksit])
@@ -2617,6 +2621,7 @@
             (:kantahaku-valmis? app)
             suodattimet]
            [:span.viiva-alas]
+           [vieritys/majakka ::hallinnolliset-toimenpiteet]
            [hallinnolliset-toimenpiteet-sisalto
             (get-in app [:domain :indeksit])
             (get-in app [:domain :kuluva-hoitokausi])
