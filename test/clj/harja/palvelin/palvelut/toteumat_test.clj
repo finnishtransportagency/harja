@@ -311,13 +311,16 @@
              :tyyppi :kokonaishintainen
              :toteuma-id nil
              :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
-        lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
-                                 +kayttaja-jvh+ {:toteuma tyo
-                                                 :hakuparametrit {:urakka-id urakka-id
-                                                                  :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-                                                                  :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
-                                                                  :toimenpide nil :tehtava nil}}))]
+        kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                               +kayttaja-jvh+ {:toteuma tyo
+                                               :hakuparametrit {:urakka-id urakka-id
+                                                                :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+                                                                :alkupvm hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                :toimenpide nil :tehtava nil}})
+        lisatty (first kaikki)
+        _ (println "*********************************")
+        _ (println (pr-str kaikki))]
     (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false) )
