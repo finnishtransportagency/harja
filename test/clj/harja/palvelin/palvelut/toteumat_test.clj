@@ -635,16 +635,17 @@
              :lisatieto             "Tämä on käsin tekaistu juttu"
              :toteuma-id            toteuma-id
              :tehtavat              [{:toimenpidekoodi 1368 :maara 444 :tehtava-id toteuma-tehtava-id}]}
-        lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
-                                       +kayttaja-jvh+ {:toteuma        tyo
-                                                       :hakuparametrit {:urakka-id  urakka-id
-                                                                        :sopimus-id sopimus-id
-                                                                        :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
-                                                                        :toimenpide nil :tehtava nil}}))
+        kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                               +kayttaja-jvh+ {:toteuma        tyo
+                                               :hakuparametrit {:urakka-id  urakka-id
+                                                                :sopimus-id sopimus-id
+                                                                :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                :toimenpide nil :tehtava nil}})
+        lisatty (first kaikki)
         toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
         _ (println "*********************************")
-        _ (println toteuma-id (pr-str lisatty))]
+        _ (println toteuma-id (pr-str kaikki))]
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
