@@ -642,7 +642,7 @@
                                                                 :sopimus-id sopimus-id
                                                                 :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
                                                                 :toimenpide nil :tehtava nil}})
-        lisatty (some #(when (= (:toimenpidekoodi %) 1368) ) kaikki)
+        lisatty (some #(when (= (:toimenpidekoodi %) 1368) %) kaikki)
         toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
