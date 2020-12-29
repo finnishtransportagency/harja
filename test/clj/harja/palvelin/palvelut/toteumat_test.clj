@@ -318,9 +318,7 @@
                                                       :hakuparametrit {:urakka-id  urakka-id
                                                                        :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
                                                                        :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
-                                                                       :toimenpide nil :tehtava nil}}))
-        _ (println "*********************************")
-        _ (println (pr-str lisatty))]
+                                                                       :toimenpide nil :tehtava nil}}))]
     (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
     (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
@@ -644,7 +642,9 @@
                                                                         :sopimus-id sopimus-id
                                                                         :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
                                                                         :toimenpide nil :tehtava nil}}))
-        toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
+        toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
+        _ (println "*********************************")
+        _ (println toteuma-id (pr-str lisatty))]
     (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
     (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
     (is (=marginaalissa? (get-in lisatty [:pituus]) 3707.390462) "Tallennetun työn paattynyt pvm")
