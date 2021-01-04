@@ -2501,6 +2501,26 @@
                  Tämän avulla tarkastetaan, että taulukkojen tila on ok."}
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
+(defn osionavigointi
+  [avaimet nykyinen]
+  (loop [edellinen nil
+         jaljella avaimet]
+    (if (or (= nykyinen (first jaljella))
+            (nil? (first jaljella)))
+      [:div
+       [:span {:on-click (vieritys/vierita-ylos)} "Alkuun"]
+       (when edellinen [:span {:on-click (vieritys/vierita edellinen)} "Edellinen"])
+       (when (second jaljella) [:span {:on-click (vieritys/vierita (second jaljella))} "Seuraava"])]
+      (recur (first jaljella)
+             (rest jaljella)))))
+
+(defn navigointivalikko
+  [avaimet]
+  [:div "valikko"
+   (for [a avaimet]
+     [:span {:on-click (vieritys/vierita a)}
+      (name a)])])
+
 (defn kustannussuunnitelma*
   [_ app]
   (let [nakyman-setup (cljs.core/atom {:lahdetty-nakymasta? false})]
@@ -2586,7 +2606,8 @@
              [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
                                               (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
            (vieritys/vieritettava-osio
-             {}
+             {:osionavigointikomponentti osionavigointi
+              :menukomponentti navigointivalikko}
              ::tavoite-ja-kattohinta
              [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
              [haitari-laatikko
@@ -2623,31 +2644,31 @@
               (get-in app [:gridit :rahavaraukset :grid])
               (get-in app [:yhteenvedot :hankintakustannukset])
               (:kantahaku-valmis? app)
-              suodattimet])
+              suodattimet]
+             [:span.viiva-alas]
 
+             ::hallinnolliset-toimenpiteet
+             [hallinnolliset-toimenpiteet-sisalto
+              (get-in app [:domain :indeksit])
+              (get-in app [:domain :kuluva-hoitokausi])
+              (dissoc suodattimet :hankinnat)
+              (get-in app [:gridit :erillishankinnat :grid])
+              (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
+              (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+              (get-in app [:gridit :toimistokulut :grid])
+              (get-in app [:gridit :hoidonjohtopalkkio :grid])
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+              (:kantahaku-valmis? app)]
+             [:span.viiva-alas.sininen]
 
-
-           [:span.viiva-alas]
-           [vieritys/majakka ::hallinnolliset-toimenpiteet]
-           [hallinnolliset-toimenpiteet-sisalto
-            (get-in app [:domain :indeksit])
-            (get-in app [:domain :kuluva-hoitokausi])
-            (dissoc suodattimet :hankinnat)
-            (get-in app [:gridit :erillishankinnat :grid])
-            (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
-            (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-            (get-in app [:gridit :toimistokulut :grid])
-            (get-in app [:gridit :hoidonjohtopalkkio :grid])
-            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
-            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
-            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
-            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
-            (:kantahaku-valmis? app)]
-           [:span.viiva-alas.sininen]
-           [tilaajan-varaukset
-            (get-in app [:gridit :tilaajan-varaukset :grid])
-            (dissoc suodattimet :hankinnat)
-            (:kantahaku-valmis? app)]])))))
+             ::tilaajan-varaukset
+             [tilaajan-varaukset
+              (get-in app [:gridit :tilaajan-varaukset :grid])
+              (dissoc suodattimet :hankinnat)
+              (:kantahaku-valmis? app)])])))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
