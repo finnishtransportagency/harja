@@ -37,7 +37,8 @@
              [maaramuutokset :as maaramuutokset]
              [yleiset :as yy]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.tyokalut.html :refer [sanitoi]]))
+            [harja.tyokalut.html :refer [sanitoi]]
+            [clojure.set :as set]))
 
 (defn onko-pot2?
   "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
@@ -556,15 +557,23 @@
 
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
-  (doseq [rivi (->> paallystysilmoitus
-                    :alusta
-                    (filter (comp not :poistettu)))]
-    (let [params (merge rivi
-                        {:pot2_id pot2-id})]
-      (println "tallenna-pot2-alustarivit rivi" rivi)
-      (if (:pot2a_id rivi)
-        (q/paivita-pot2-alusta<! db params)
-        (q/luo-pot2-alusta<! db params)))))
+  (try
+    (let [alustarivit (:alusta paallystysilmoitus)
+          idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+          hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
+          poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
+
+      (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
+      (doseq [rivi (->> paallystysilmoitus
+                        :alusta
+                        (filter (comp not :poistettu)))]
+        (let [params (merge rivi
+                            {:pot2_id pot2-id})]
+          (if (:pot2a_id rivi)
+            (q/paivita-pot2-alusta<! db params)
+            (q/luo-pot2-alusta<! db params)))))
+    (catch Throwable t
+      (throw (IllegalArgumentException. (cheshire/encode t))))))
 
 
 (defn tallenna-paallystysilmoitus

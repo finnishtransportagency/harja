@@ -164,7 +164,7 @@ SELECT
     pot2a.toimenpide_tiedot,
     pot2a.materiaali
   FROM pot2_alusta pot2a
- WHERE pot2_id = :pot2_id;
+ WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
 
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
@@ -493,3 +493,8 @@ UPDATE pot2_alusta
 -- name: luo-pot2-alusta<!
 INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, materiaali, pot2_id)
 VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys, :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :materiaali, :pot2_id);
+
+-- name: poista-pot2-alustarivit!
+UPDATE pot2_alusta
+   SET poistettu = TRUE
+ WHERE id IN (:pot2a_idt);

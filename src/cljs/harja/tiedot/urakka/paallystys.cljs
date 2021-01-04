@@ -263,6 +263,8 @@
 (defn rivita-virheet
   "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
    [vastaus]
+  (println "rivita-virheet vastaus " (pr-str vastaus))
+  (println "rivita-virheet response virhe " (pr-str (get-in vastaus [:response :virhe])))
   [(reduce-kv (fn [m k v]
                 (assoc m k (distinct
                              (flatten

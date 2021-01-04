@@ -25,17 +25,11 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-
-
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
    {:keys [murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
-  (println "ALUSTA RENDER, app " (pr-str app))
-  (println "ALUSTA RENDER, murskeet " (pr-str murskeet))
-  (println "ALUSTA RENDER, @alustarivit-atom " (pr-str @alustarivit-atom))
-  (let [voi-muokata? true
-        perusleveys 2
+  (let [perusleveys 2
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
      {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true
@@ -48,15 +42,15 @@
       :luomisen-jalkeen (fn [grid-state]
                           (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))
       :tyhja (if (nil? @alustarivit-atom) [ajax-loader "Haetaan kohdeosia..."]
-                                        [:div
-                                         [:div {:style {:display "inline-block"}} "Ei alustarivejä"]
-                                         (when (and kirjoitusoikeus? voi-muokata?)
-                                           [:div {:style {:display "inline-block"
-                                                          :float "right"}}
-                                            [napit/yleinen-ensisijainen "Lisää osa"
-                                             #(reset! alustarivit-atom (yllapitokohteet/lisaa-uusi-kohdeosa @alustarivit-atom 1 (get-in app [:perustiedot :tr-osoite])))
-                                             {:ikoni (ikonit/livicon-arrow-down)
-                                              :luokka "btn-xs"}]])])
+                                          [:div
+                                           [:div {:style {:display "inline-block"}} "Ei alustarivejä"]
+                                           (when kirjoitusoikeus?
+                                             [:div {:style {:display "inline-block"
+                                                            :float "right"}}
+                                              [napit/yleinen-ensisijainen "Lisää osa"
+                                               #(reset! alustarivit-atom (yllapitokohteet/lisaa-uusi-kohdeosa @alustarivit-atom 1 (get-in app [:perustiedot :tr-osoite])))
+                                               {:ikoni (ikonit/livicon-arrow-down)
+                                                :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys perusleveys
        :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
@@ -91,6 +85,6 @@
        :valinta-nayta (fn [rivi]
                         (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string))}
       {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
-       :tasaa :keskita :komponentti-args [e! app voi-muokata? alustarivit-atom]
+       :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      alustarivit-atom]))

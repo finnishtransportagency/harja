@@ -33,3 +33,5 @@ UPDATE pot2_mk_mursketyyppi
 UPDATE pot2_mk_mursketyyppi
    SET lyhenne = 'SrM'
  WHERE nimi = 'Soramurske';
+
+ALTER TABLE pot2_alusta ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE;

@@ -57,8 +57,7 @@
   "Alikohteiden päällysteiden kulutuskerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
    {:keys [massat massatyypit materiaalikoodistot validointi]} kohdeosat-atom]
-  (let [voi-muokata? true
-        perusleveys 2
+  (let [perusleveys 2
         kulutuskerros-toimenpiteet (:kulutuskerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
@@ -74,7 +73,7 @@
       :tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                         [:div
                                          [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
-                                         (when (and kirjoitusoikeus? voi-muokata?)
+                                         (when kirjoitusoikeus?
                                            [:div {:style {:display "inline-block"
                                                           :float "right"}}
                                             [napit/yleinen-ensisijainen "Lisää osa"
@@ -125,6 +124,6 @@
       {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                                   (boolean (:piennar rivi)))}
       {:otsikko "" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
-       :tasaa :keskita :komponentti-args [e! app voi-muokata? kohdeosat-atom]
+       :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))
