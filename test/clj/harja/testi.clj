@@ -1541,6 +1541,27 @@
   (let [testattava_ (gensym "testattava")
         f_ (gensym "f")
         loput_ (gensym "loput")]
+    `(let [~testattava_ ~testattava]
+       (println "petar uradio uslov")
+       ~@(loop [[f_ & loput_] fn-listat
+                iss# []]
+           (if (nil? f_)
+             iss#
+             (let [msg?# (string? (first loput_))
+                   is-lause# (if msg?#
+                               `(is (list ~f_ ~testattava_) ~(first loput_))
+                               `(is (list ~f_ ~testattava_)))]
+               (recur (if msg?#
+                        (rest loput_)
+                        loput_)
+                      (conj iss# is-lause#))))))))
+
+(defmacro petar-old-version-is->
+  [testattava & fn-listat]
+  (print "petar stari")
+  (let [testattava_ (gensym "testattava")
+        f_ (gensym "f")
+        loput_ (gensym "loput")]
      `(list
        ~@(let [testattava_ testattava]
           (loop [[f_ & loput_] fn-listat

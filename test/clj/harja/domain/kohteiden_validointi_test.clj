@@ -14,8 +14,6 @@
     (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
           virheet)))
 
-
-
 (deftest jarjesta-yllapitokohteet
   (let [yllapitokohteet [{:tunniste {:id 4}
                           :sijainti {:tie 20
@@ -466,7 +464,16 @@
             (fn [virheviestit]
               (= (into #{} (keys virheviestit))
                  #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(= 1 0)                                        ; petar, tämä pitäisi feilaa!
             #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tien 22 osalla 3 ei ole ajorataa 1"
+                                                                    "Kohteenosa on päällekkäin toisen osan kanssa"
+                                                                    "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"]))
+            ;; Kohteen alikohteissa vikaa (100% päällekkäin) - petar
+            (fn [virheviestit]
+              (println "petar viherviesti" (pr-str virheviestit))
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla petar blabla "
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tien 22 osalla 3 ei ole ajorataa 1 blabla"
                                                                     "Kohteenosa on päällekkäin toisen osan kanssa"
                                                                     "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"])))
       ;; Kohteen oma alikohde merkattu usealle osalle, eikä kaikilla osilla ole tarvittavaa ajorataa ja kaistaa

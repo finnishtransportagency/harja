@@ -635,16 +635,40 @@
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-alkuosa
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
-                               (assoc-in [:kulutuskerros 0 :tr-alkuetaisyys] 2))]
+                               (assoc-in [:kulutuskerros 0 :tr-alkuosa] 2))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Kaista 11 ajoradalla 1 ei kata koko osaa 3 blabla ")))
+                                       "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-loppuosa
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:kulutuskerros 0 :tr-loppuetaisyys] 6000))]
-    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
-                                       "(aet: 3, let: 6000)")))
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
+                                       "Alikohde ei voi olla pääkohteen ulkopuolella")))
+
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-paallekkain
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc-in [:kulutuskerros 2] {:kohdeosa-id 14,
+                                                             :tr-kaista 12,
+                                                             :tr-ajorata 1,
+                                                             :jarjestysnro 1,
+                                                             :tr-loppuosa 3,
+                                                             :tr-alkuosa 3,
+                                                             :tr-loppuetaisyys 5000000,
+                                                             :nimi "Kohdeosa kaista 12",
+                                                             :tr-alkuetaisyys 3,
+                                                             :tr-numero 20,
+                                                             :toimenpide 21,
+                                                             :leveys 3,
+                                                             :kokonaismassamaara 2,
+                                                             :pinta_ala 1,
+                                                             :massamenekki 2,
+                                                             :materiaali 1}))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
+                                       "Alikohde ei voi olla pääkohteen ulkopuolella")))
+
+
 
 
 
