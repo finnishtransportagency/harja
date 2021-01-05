@@ -3,7 +3,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-IMAGE=solita/harjadb:centos-12
+IMAGE=solita/harjadb:postgis-3.1
 
 if ! docker image list --filter=reference=${IMAGE} | tail -n +2 >> /dev/null; then
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."

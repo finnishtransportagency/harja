@@ -10,7 +10,7 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.palvelut.toteumat :refer [paivita-toteuman-reitti]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [com.stuartsierra.component :as component]))

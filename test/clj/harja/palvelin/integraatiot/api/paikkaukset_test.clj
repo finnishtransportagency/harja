@@ -26,7 +26,7 @@
                                [:db :integraatioloki])
     :api-paikkaukset (component/using
                        (api-paikkaukset/->Paikkaukset)
-                       [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :yha-paikkauskomponentti])))
+                       [:http-palvelin :db :integraatioloki :yha-paikkauskomponentti])))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))

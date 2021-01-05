@@ -28,7 +28,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :vv-hinnoittelut (component/using
                                            (hin/->Hinnoittelut)
                                            [:db :http-palvelin])))))

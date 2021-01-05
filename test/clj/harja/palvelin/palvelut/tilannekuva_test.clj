@@ -157,6 +157,11 @@
                                             transit/clj->transit
                                             (java.net.URLEncoder/encode))}}))))
 
+(deftest hae-tietyoilmoitukset
+  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]    
+    ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
+    (is (= (count (:tietyoilmoitukset vastaus)) 4))))
+
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
     (is (= (count (:toteumat vastaus)) 2))

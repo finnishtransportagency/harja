@@ -175,12 +175,12 @@ def ajaTestiserverinApp(stagenNimi, buildNumber) {
     try {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/testing/inventory',
-			 playbook    : 'playbooks/nightly.yml',
-			 vaultCredentialsId: 'Vault',
-                         extraVars   : [
-                jenkins_build_number: buildNumber,
-                jenkins_job_name: env.JOB_BASE_NAME
-            ]])
+			             playbook    : 'playbooks/nightly.yml',
+			             vaultCredentialsId: 'Vault',
+                                     extraVars   : [
+                            jenkins_build_number: buildNumber,
+                            jenkins_job_name: env.JOB_BASE_NAME
+                        ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
     } catch (e) {
         hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
@@ -229,6 +229,7 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/staging/inventory',
                          playbook    : 'playbooks/staging.yml',
+                         vaultCredentialsId: 'Vault',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
@@ -264,6 +265,7 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/production/inventory',
                          playbook    : 'playbooks/production.yml',
+                         vaultCredentialsId: 'Vault',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME

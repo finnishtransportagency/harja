@@ -4,6 +4,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (defn tee-paivystys [vastuuhenkilo varahenkilo yhteyshenkilo urakka]
   (u (format "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, yhteyshenkilo, urakka, alku, loppu)
   VALUES (%s, %s, %s, %s, (SELECT now() - INTERVAL '1 day'), (SELECT now() + INTERVAL '1 day'));"
@@ -20,7 +22,7 @@
        (= (nth oletettu-paivystaja 5) (:sahkoposti paivystaja))))
 
 (deftest tarkista-taman-hetkisen-paivystajan-haku
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         urakka (first (first (q "SELECT id FROM urakka WHERE nimi = 'Pudasjärven alueurakka 2007-2012';")))
         yhteyshenkilot (q "SELECT id, etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti FROM yhteyshenkilo LIMIT 3;")]
 

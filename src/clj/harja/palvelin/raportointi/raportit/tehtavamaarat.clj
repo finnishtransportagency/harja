@@ -14,10 +14,12 @@
   (and (= (:nimi e) (:nimi t))
        (= (:hallintayksikko e) (:hallintayksikko t))))
 
-(defn- laske-yhteen
+(defn laske-yhteen
   [e t]
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
-           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))))
+           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
+           :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e 0) 0)
+                                          (or (:toteutunut-materiaalimaara t 0) 0))))
 
 (defn kombota-samat-tehtavat
   ([rivit]
@@ -63,7 +65,7 @@
 
 (defn- laske-toteuma-%                                      ;:TODO voisko olla sql:ssä?
   [rivi]
-  (let [[_ _ suunniteltu toteuma] rivi
+  (let [[_ _ suunniteltu toteuma toteutunut-materiaalimaara] rivi
         valiotsikko? (-> rivi
                          count
                          (> 1))
@@ -71,9 +73,11 @@
                     (cond
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
-                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))]
-    (keep identity
-          (conj (into [] rivi) toteuma-%))))
+                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))
+        rivi-toteumaprosentilla (filter some?
+                                        (conj (into [] (take 4 rivi)) toteuma-% toteutunut-materiaalimaara))]
+
+    rivi-toteumaprosentilla))
 
 (defn- null->0
   [kvp]
@@ -86,9 +90,10 @@
 
 (defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
   [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
+
   (if-let [valiotsikkorivi? (= 1 (count (keys rivi)))]
     rivi
-    (let [rivi (select-keys rivi [:nimi :toteuma :yksikko])]
+    (let [rivi (select-keys rivi [:nimi :toteuma :yksikko :toteutunut-materiaalimaara])]
       (if (= yksikko suunnitteluyksikko)
         (assoc rivi :suunniteltu suunniteltu)
         (assoc rivi :suunniteltu 0)))))
@@ -97,17 +102,23 @@
   [m]
   (vals
     (select-keys m
-                 [:nimi :yksikko :suunniteltu :toteuma])))
+                 [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara])))
 
 (defn- muodosta-otsikot
-  [hyt m]
+  [vemtr? hyt m]
   (cond
     (and (= 1 (count (keys m)))
          (some #(= (first m) %) hyt))
-    {:rivi (conj (vec m) "" "" "" "") :korosta? true :lihavoi? true}
+    {:rivi (concat (vec m)
+                   (mapv (fn [_] "")
+                         (take (if vemtr? 5 6)
+                               (range)))) :korosta? true :lihavoi? true}
 
     (= 1 (count (keys m)))
-    {:rivi (conj (vec m) "" "" "" "") :korosta-hennosti? true :lihavoi? true}
+    {:rivi (concat (vec m)
+                   (mapv (fn [_] "")
+                         (take (if vemtr? 5 6)
+                               (range)))) :korosta-hennosti? true :lihavoi? true}
 
     :else (vec m)))
 
@@ -128,10 +139,20 @@
                                         haut-muunnoksilla))]
     (haku-fn db params)))
 
+(defn- vemtrille-puuttuvat-tyhjat-sarakkeet
+  [vemtr? r]
+  (if (and vemtr?
+           (> (count r) 1))
+    (concat r [0])
+    r))
+
+(declare db-haku-fn)
+
 (defn muodosta-taulukko
   [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
-  (log/debug "muodosta-taulukko: parametrit" parametrit)
+  ;; (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
+        vemtr? (not= kysely-fn db-haku-fn)
         raportin-taustatiedot (apply taustatiedot
                                      db
                                      parametrit
@@ -184,19 +205,25 @@
                         (map null-arvot-nollaksi-rivilla)
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
-                        (map (partial muodosta-otsikot (map :nimi raportin-taustatiedot))))
+                        (map (partial vemtrille-puuttuvat-tyhjat-sarakkeet
+                                      vemtr?))
+                        (map (partial muodosta-otsikot
+                                      vemtr?
+                                      (map :nimi raportin-taustatiedot))))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit   rivit
      :debug   suunnitellut-ryhmissa
-     :otsikot [{:otsikko "Tehtävä" :leveys 6}
-               {:otsikko "Yksikkö" :leveys 1}
-               {:otsikko (str "Suunniteltu määrä "
-                              (if (> (count hoitokaudet) 1)
-                                (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
-                                (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
-                :leveys  2 :fmt :numero}
-               {:otsikko "Toteuma" :leveys 2 :fmt :numero}
-               {:otsikko "Toteuma-%" :leveys 2}]}))
+     :otsikot (take (if vemtr? 6 5)
+                    [{:otsikko "Tehtävä" :leveys 6}
+                     {:otsikko "Yksikkö" :leveys 1}
+                     {:otsikko (str "Suunniteltu määrä "
+                                    (if (> (count hoitokaudet) 1)
+                                      (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
+                                      (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
+                      :leveys  1 :fmt :numero}
+                     {:otsikko "Toteuma" :leveys 1 :fmt :numero}
+                     {:otsikko "Toteuma-%" :leveys 1}
+                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1}])}))
 
 (defn db-haku-fn
   [db params]
