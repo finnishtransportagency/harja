@@ -23,7 +23,9 @@ SELECT tpi.id                                    AS toimenpideinstanssi_id,
        kt.tyyppi::TEXT                           AS maksutyyppi,
        CASE
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankinta'
-           ELSE 'rahavaraus'
+           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'akillinen-hoitotyo'
+           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'vahinkojen-korjaukset'
+           ELSE 'muut-rahavaraukset'
            END                                   AS toimenpideryhma,
        tk_tehtava.nimi                           AS tehtava_nimi,
        CASE
@@ -205,9 +207,12 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
        lk.summa                AS toteutunut_summa,
        lk.maksueratyyppi::TEXT AS maksutyyppi,
        CASE
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' THEN 'hankinta'
+           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi != 'Tilaajan rahavaraus (T3)' THEN 'hankinta'
+           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)'  THEN 'tilaajan-rahavaraus'
+           WHEN lk.maksueratyyppi::TEXT = 'yksikkohintainen' THEN 'hankinta'
+           WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'akillinen-hoitotyo'
            WHEN lk.maksueratyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
-           ELSE 'rahavaraus'
+           ELSE 'muut-rahavaraukset'
            END                 AS toimenpideryhma,
        tr.nimi                 AS tehtava_nimi, -- oli tk_tehtava.nimi
        CASE
