@@ -4,6 +4,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (deftest tarkista-reittipisteiden-aikojen-tarkistus
   (let [reitti [{:reittipiste {:aika "2014-02-02T12:00:00Z"}}
                 {:reittipiste {:aika "2014-02-02T13:00:00Z"}}]]
@@ -30,7 +32,7 @@
         "Poikkeusta ei heitetty epävalidista reittipisteestä, kun reittipiste on kirjattu toteuman päättymisen jälkeen.")))
 
 (deftest tarkiasta-toteuman-tehtavien-tarkistus
-         (let [db (tietokanta/luo-tietokanta testitietokanta)]
+         (let [db (:db jarjestelma)]
               (let [tehtavat [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]]
                    (is (thrown? Exception (validointi/tarkista-tehtavat db @oulun-alueurakan-2005-2010-id tehtavat "kokonaishintainen"))
                        "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla"))

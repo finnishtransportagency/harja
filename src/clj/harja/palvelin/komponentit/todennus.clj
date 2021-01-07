@@ -10,7 +10,6 @@
              [oikeudet :as oikeudet]]
             [harja.kyselyt
              [kayttajat :as q]]
-            [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
             [slingshot.slingshot :refer [throw+ try+]]
             [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.net BCodec)))
@@ -169,7 +168,7 @@ ja palauttaa käyttäjätiedot"
        :as headerit}]
 
   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
-  (println "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
+  (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
     (let [roolit (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)

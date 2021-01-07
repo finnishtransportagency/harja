@@ -22,13 +22,16 @@
               :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana "harja"}
+              :salasana "harja"
+              :julkaise-tila? true}
  :tietokanta-replica {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
                       :tietokanta "harja"
                       :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana "harja"}
+                      :salasana "harja"
+                      :julkaise-tila? true}
+ :tarkkailija {:loop-odotus 100}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -47,6 +50,10 @@
        ;;         :vastaanottaja [;;"sinunmailisi@example.org"
        ;;                         ]}
        :testidata? true
+       :ei-logiteta #{"http-palvelin"
+                      "ajastettu-geometriapaivitys"
+                      "komponentti-event"
+                      "sillat"}
        }
 
  :sonja
@@ -56,14 +63,25 @@
                  (harja.tyokalut.env/env "HARJA_SONJA_BROKER_PORT" 61616)))
   :kayttaja ""
   :salasana ""
-  :tyyppi :activemq}
+  :tyyppi :activemq
+  :julkaise-tila? true}
+
+ :itmf
+ {:url #=(eval (str "tcp://"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                 ":"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+  :kayttaja ""
+  :salasana ""
+  :tyyppi :activemq
+  :julkaise-tila? true}
 
 
  ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
  ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
  ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
  ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
- ;        :paivittainen-lahetysaika [16 44 0 ]}
+ ;        :paivittainen-lahetysaika [16 44 0]}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
  ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
@@ -193,6 +211,8 @@
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
+                               :sonja-uudelleen-kaynnistys
+                               :itmf-uudelleen-kaynnistys
                                :ais-data
                                :reittitarkistukset
                                :tiedostopesula}
@@ -228,4 +248,11 @@
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
+
+ :komponenttien-tila {:sonja {:paivitystiheys-ms 10000}
+                      :itmf {:paivitystiheys-ms 10000}
+                      :db {:paivitystiheys-ms 10000
+                           :kyselyn-timeout-ms 20000}
+                      :db-replica {:paivitystiheys-ms 10000
+                                   :replikoinnin-max-viive-ms 100000}}
  }

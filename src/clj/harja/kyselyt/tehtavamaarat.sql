@@ -13,8 +13,7 @@ WHERE ut.urakka = :urakka
 -- Raportin hakuhimmeli
 with urakat as (select u.id
                 from urakka u
-                where (:alkupvm between u.alkupvm and u.loppupvm
-                  or :loppupvm between u.alkupvm and u.loppupvm)
+                where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
                   and case
                         when :urakka::integer is not null then
                           u.id = :urakka
@@ -28,12 +27,11 @@ with urakat as (select u.id
                          tt.poistettu,
                          tt.urakka_id
                   from toteuma t
-                         join toteuma_tehtava tt on tt.toteuma = t.id and tt.poistettu = false
+                           join toteuma_tehtava tt on tt.toteuma = t.id and t.urakka = tt.urakka_id and tt.poistettu = false
                     and tt.urakka_id in (select id from urakat)
-                  where --t.lahde = 'harja-ui'
-                    :alkupvm <= t.paattynyt
-                    and case when :urakka::integer is not null then t.urakka = :urakka else true end
-                    and :loppupvm >= t.alkanut
+                  where
+                      case when :urakka::integer is not null then t.urakka = :urakka else true end
+                    and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
                     and t.poistettu = false
                   group by tt.toimenpidekoodi, tt.poistettu, tt.urakka_id),
      suunnitelmat as (select sum(ut.maara) as "maara",

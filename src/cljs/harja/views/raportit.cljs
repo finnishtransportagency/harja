@@ -77,13 +77,9 @@
                 (sort-by raportin-sort-avain
                          (into []
                                (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                                     (filter #(do
-                                                (println "voiko lukea" % "->" (oikeudet/voi-lukea?
-                                                 (oikeudet/raporttioikeudet (:kuvaus %))
-                                                 (:id v-ur)))
-                                                (oikeudet/voi-lukea?
-                                                 (oikeudet/raporttioikeudet (:kuvaus %))
-                                                 (:id v-ur)))))
+                                     (filter #(oikeudet/voi-lukea?
+                                               (oikeudet/raporttioikeudet (:kuvaus %))
+                                               (:id v-ur))))
                                urakkatyypin-raportit))))))
 
 (def valittu-raporttityyppi
