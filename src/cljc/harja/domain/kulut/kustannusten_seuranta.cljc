@@ -64,14 +64,17 @@
                                    tehtava))
                                tehtavat)
         toimistotehtavat (filter (fn [tehtava]
-                                   (when (= "toimistokulut" (:toimenpideryhma tehtava))
+                                   (when (and
+                                           (= "toimistokulut" (:toimenpideryhma tehtava))
+                                           (not= "lisatyo" (:maksutyyppi tehtava)))
                                      tehtava))
                                  tehtavat)
         toteutuneet-palkat (filter
                              (fn [tehtava]
                                (when (and
                                        (not= "hjh" (:toteutunut tehtava))
-                                       (not= "budjetointi" (:toteutunut tehtava)))
+                                       (not= "budjetointi" (:toteutunut tehtava))
+                                       (not= "lisatyo" (:maksutyyppi tehtava)))
                                  tehtava))
                              palkkatehtavat)
         toteutuneet-toimistotehtavat (filter

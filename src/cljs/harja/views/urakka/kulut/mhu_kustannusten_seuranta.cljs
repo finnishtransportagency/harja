@@ -40,11 +40,13 @@
 ; spekseistä laskettu
 (def leveydet {:caret-paaryhma "2%"
                :paaryhma-vari "2%"
-               :tehtava "46%"
+               :tehtava "41%"
                :budjetoitu "15%"
                :toteuma "15%"
-               :erotus "10%"
+               :erotus "15%"
                :prosentti "10%"})
+
+(def row-index-atom (r/atom 0))
 
 (defn formatoi-naytolle->big
   ([arvo] (formatoi-naytolle->big arvo false))
@@ -57,6 +59,7 @@
 
 (defn- rivita-lisatyot [e! app lisatyot]
   (for [l lisatyot]
+    ^{:key (str (hash l))}
     [:tr.bottom-border
      [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
      [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
@@ -175,16 +178,16 @@
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (rivita-lisatyot e! app (:lisatyot rivit-paaryhmittain))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
-        monesko-hoitovuosi (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero (pvm/vuosi (pvm/nyt)))
-        hoitovuotta-jaljella (if (= hoitovuosi-nro monesko-hoitovuosi)
+        valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
+        hoitovuosi-nro-menossa (kustannusten-seuranta-tiedot/kuluva-hoitokausi-nro (pvm/nyt))
+        hoitovuotta-jaljella (if (= valittu-hoitovuosi-nro hoitovuosi-nro-menossa)
                                (pvm/montako-paivaa-valissa
                                  (pvm/nyt)
                                  (pvm/->pvm (str "30.09." (inc valittu-hoitokauden-alkuvuosi))))
                                nil)]
     [:div.col-xs-12 {:style {:padding-top "24px"}}
      [:div
-      [:h4 "Hoitovuosi: " hoitovuosi-nro " (1.10." valittu-hoitokauden-alkuvuosi " - 09.30." (inc valittu-hoitokauden-alkuvuosi) ")"]
+      [:h4 "Hoitovuosi: " valittu-hoitovuosi-nro " (1.10." valittu-hoitokauden-alkuvuosi " - 09.30." (inc valittu-hoitokauden-alkuvuosi) ")"]
       (when hoitovuotta-jaljella
         [:span "Hoitovuotta on jäljellä " hoitovuotta-jaljella " päivää."])]
      [:div.table-default {:style {:padding-top "24px"}}
@@ -325,9 +328,9 @@
 
 (defn yhteenveto-laatikko [e! app data]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
-        hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
-        tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta hoitovuosi-nro app) 0))
-        kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta hoitovuosi-nro app) 0))
+        valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
+        tavoitehinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0))
+        kattohinta (big/->big (or (kustannusten-seuranta-tiedot/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0))
         toteuma (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))]
     [:div.col-xs-12
      [:div.yhteenveto
