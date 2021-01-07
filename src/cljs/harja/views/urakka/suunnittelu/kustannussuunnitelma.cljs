@@ -2481,9 +2481,28 @@
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-   [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
-   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
-   [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]])
+   [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]])
+
+(defn johto-ja-hallintokorvaus-osio
+  [johto-ja-hallintokorvaus-grid
+   johto-ja-hallintokorvaus-yhteenveto-grid
+   toimistokulut-grid
+   suodattimet
+   johto-ja-hallintokorvaukset-yhteensa
+   toimistokulut-yhteensa
+   kuluva-hoitokausi
+   indeksit
+   kantahaku-valmis?]
+  [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
+
+(defn hoidonjohtopalkkio-osio
+  [hoidonjohtopalkkio-grid
+   hoidonjohtopalkkio-yhteensa
+   indeksit
+   kuluva-hoitokausi
+   suodattimet
+   kantahaku-valmis?]
+  [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
 
 
 (defn tilaajan-varaukset [tilaajan-varaukset-grid suodattimet kantahaku-valmis?]
@@ -2507,19 +2526,61 @@
          jaljella avaimet]
     (if (or (= nykyinen (first jaljella))
             (nil? (first jaljella)))
-      [:div
+      [:div {:style {:background-color "#ff0000"}}
        [:span {:on-click (vieritys/vierita-ylos)} "Alkuun"]
        (when edellinen [:span {:on-click (vieritys/vierita edellinen)} "Edellinen"])
        (when (second jaljella) [:span {:on-click (vieritys/vierita (second jaljella))} "Seuraava"])]
       (recur (first jaljella)
              (rest jaljella)))))
 
+(defn- summa-komp
+  [m]
+  [:div
+   [:div {:style {:margin-left "auto"}} (str (or (:summa m)
+                                                 0))]
+   [:div {:style {:margin-left "auto"}} (str "Indeksikorjattu "
+                                             (or (* (:summa m) (or (:indeksikerroin m)
+                                                                   1))
+                                                 0))]])
+
 (defn navigointivalikko
-  [avaimet]
-  [:div "valikko"
-   (for [a avaimet]
-     [:span {:on-click (vieritys/vierita a)}
-      (name a)])])
+  [tiedot]
+  (fn [avaimet]
+    [:div
+     (for [a avaimet]
+       (let [{:keys [nimi suunnitelma-ok? summat] :as tieto} (a tiedot)]
+         (vec
+           (keep identity
+                 (concat
+                   [:div {:class    "flex-row"
+                          :on-click (vieritys/vierita a)}
+                    [:div
+                     [:div (str nimi)]
+                     [:div (str suunnitelma-ok?)]]]
+                   (when summat
+                     (mapv #(-> (summa-komp %))
+                           summat))
+                   (when-not summat
+                     [(summa-komp tieto)]))))))]))
+
+(defn laske-hankintakustannukset
+  [hoitokausi suunnitellut laskutus varaukset]
+  (let [indeksi (dec hoitokausi)
+        _ (println "1. s" suunnitellut "l" laskutus "v" varaukset "k" (concat (mapcat vals #{suunnitellut laskutus}) (mapcat vals (vals varaukset))))
+        kaikki (concat (mapcat vals #{suunnitellut laskutus})
+                       (mapcat vals (vals varaukset)))]
+    (println "2. s" suunnitellut "l" laskutus "v" varaukset "k" kaikki)
+    (reduce #(+ %1 (nth %2 indeksi)) 0 kaikki)
+    #_(reduce #(+ %1
+                (reduce
+                  (fn [summa vuodet]
+                    (+ (nth vuodet indeksi) summa))
+                  0
+                  (vals %2)))
+            (reduce #(+ %1 (nth %2 indeksi))
+                    0
+                    (mapcat vals (vals varaukset)))
+            (list suunnitellut laskutus))))
 
 (defn kustannussuunnitelma*
   [_ app]
@@ -2605,24 +2666,49 @@
            (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
              [yleiset/virheviesti-sailio (str "Urakasta puuttuu toimenpideinstansseja, jotka täytyy siirtää urakkaan Samposta. Toimenpideinstansseja on urakassa nyt "
                                               (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
-           (vieritys/vieritettava-osio
+           #_(vieritys/vieritettava-osio
              {:osionavigointikomponentti osionavigointi
-              :menukomponentti navigointivalikko}
-             ::tavoite-ja-kattohinta
-             [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
-             [haitari-laatikko
-              "Tavoite- ja kattohinta lasketaan automaattisesti"
-              {:alussa-auki? true
-               :id           "tavoite-ja-kattohinta"}
-              [tavoite-ja-kattohinta-sisalto
-               (get app :yhteenvedot)
-               (get-in app [:domain :kuluva-hoitokausi])
-               (get-in app [:domain :indeksit])]
-              [:span#tavoite-ja-kattohinta-huomio
-               "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
-             [:span.viiva-alas]
+              :menukomponentti           (if (:kantahaku-valmis? app)
+                                           (let [hoitokausi (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])
+                                                 indeksikerroin (get-in app [:domain :indeksit (dec hoitokausi) :indeksikerroin])
+                                                 {{:keys [suunnitellut-hankinnat
+                                                          laskutukseen-perustuvat-hankinnat
+                                                          rahavaraukset] :as _summat} :summat :as _hankintakustannukset} (get-in app [:yhteenvedot :hankintakustannukset])]
+                                             (navigointivalikko
+                                               {::suunnitelmien-tila          {:nimi            "Debug"
+                                                                               :summa           _summat
+                                                                               :indeksikerroin  indeksikerroin
+                                                                               :suunnitelma-ok? false}
+                                                ::hankintakustannukset        {:nimi            "Hankintakustannukset"
+                                                                               :summa           (laske-hankintakustannukset
+                                                                                                  hoitokausi
+                                                                                                  suunnitellut-hankinnat
+                                                                                                  laskutukseen-perustuvat-hankinnat
+                                                                                                  rahavaraukset)
+                                                                               :indeksikerroin  indeksikerroin
+                                                                               :suunnitelma-ok? false}
+                                                ::tavoite-ja-kattohinta       {:nimi            "Tavoite- ja kattohinta"
+                                                                               :suunnitelma-ok? true
+                                                                               :summat          [{:summa          555
+                                                                                                  :indeksikerroin indeksikerroin}
+                                                                                                 {:summa          888
+                                                                                                  :indeksikerroin indeksikerroin}]}
+                                                ::hallinnolliset-toimenpiteet {:nimi           "Hallinnolliset toimenpiteet"
+                                                                               :summa          hoitokausi
+                                                                               :indeksikerroin indeksikerroin}
+                                                ::johto-ja-hallintokorvaukset {:nimi           "Johto- ja hallintokorvaukset"
+                                                                               :summa          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset (dec hoitokausi)])
+                                                                               :indeksikerroin indeksikerroin}
+                                                ::hoidonjohtopalkkio          {:nimi           "Hoidonjohtopalkkio"
+                                                                               :summa          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio (dec hoitokausi)])
+                                                                               :indeksikerroin indeksikerroin}
+                                                ::tilaajan-varaukset          {:nimi           "Tilaajan varaukset"
+                                                                               :summa          1
+                                                                               :indeksikerroin indeksikerroin}}))
+                                           (fn []
+                                             [:div "Haku käynnissä"]))}
 
-             ::suunnitelmien-tila
+             ;::suunnitelmien-tila
              [haitari-laatikko
               "Suunnitelmien tila"
               {:alussa-auki?      true
@@ -2634,7 +2720,7 @@
               [:div "**) Kuukausisummat syöttää urakanvalvoja. Kuukausisuunnitelmista muodostuu Sampoon lähetettävä kustannussuunnitelman summa. Ks. Kulut > Maksuerät."]]
              [:span.viiva-alas]
 
-             ::hankintakustannukset
+             ;::hankintakustannukset
              [hankintakustannukset-taulukot
               (get-in app [:domain :kirjoitusoikeus?])
               (get-in app [:domain :indeksit])
@@ -2647,7 +2733,7 @@
               suodattimet]
              [:span.viiva-alas]
 
-             ::hallinnolliset-toimenpiteet
+             ;::hallinnolliset-toimenpiteet
              [hallinnolliset-toimenpiteet-sisalto
               (get-in app [:domain :indeksit])
               (get-in app [:domain :kuluva-hoitokausi])
@@ -2664,11 +2750,128 @@
               (:kantahaku-valmis? app)]
              [:span.viiva-alas.sininen]
 
-             ::tilaajan-varaukset
+             ;::johto-ja-hallintokorvaukset
+             [johto-ja-hallintokorvaus-osio
+              (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
+              (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+              (get-in app [:gridit :toimistokulut :grid])
+              (dissoc suodattimet :hankinnat)
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+              (get-in app [:domain :kuluva-hoitokausi])
+              (get-in app [:domain :indeksit])
+              (:kantahaku-valmis? app)]
+
+             ;::hoidonjohtopalkkio
+             [hoidonjohtopalkkio-osio
+              (get-in app [:gridit :hoidonjohtopalkkio :grid])
+              (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+              (get-in app [:domain :indeksit])
+              (get-in app [:domain :kuluva-hoitokausi])
+              (dissoc suodattimet :hankinnat)
+              (:kantahaku-valmis? app)]
+
+             ;::tavoite-ja-kattohinta
+             [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
+             [haitari-laatikko
+              "Tavoite- ja kattohinta lasketaan automaattisesti"
+              {:alussa-auki? true
+               :id           "tavoite-ja-kattohinta"}
+              [tavoite-ja-kattohinta-sisalto
+               (get app :yhteenvedot)
+               (get-in app [:domain :kuluva-hoitokausi])
+               (get-in app [:domain :indeksit])]
+              [:span#tavoite-ja-kattohinta-huomio
+               "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
+             [:span.viiva-alas]
+
+             ;::tilaajan-varaukset
              [tilaajan-varaukset
               (get-in app [:gridit :tilaajan-varaukset :grid])
               (dissoc suodattimet :hankinnat)
-              (:kantahaku-valmis? app)])])))))
+              (:kantahaku-valmis? app)])
+           ;::suunnitelmien-tila
+           [haitari-laatikko
+            "Suunnitelmien tila"
+            {:alussa-auki?      true
+             :otsikko-elementti :h2}
+            [suunnitelmien-tila
+             (get-in app [:gridit :suunnitelmien-tila :grid])
+             (:kantahaku-valmis? app)]
+            [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
+            [:div "**) Kuukausisummat syöttää urakanvalvoja. Kuukausisuunnitelmista muodostuu Sampoon lähetettävä kustannussuunnitelman summa. Ks. Kulut > Maksuerät."]]
+           [:span.viiva-alas]
+
+           ;::hankintakustannukset
+           [hankintakustannukset-taulukot
+            (get-in app [:domain :kirjoitusoikeus?])
+            (get-in app [:domain :indeksit])
+            (get-in app [:domain :kuluva-hoitokausi])
+            (get-in app [:gridit :suunnittellut-hankinnat :grid])
+            (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
+            (get-in app [:gridit :rahavaraukset :grid])
+            (get-in app [:yhteenvedot :hankintakustannukset])
+            (:kantahaku-valmis? app)
+            suodattimet]
+           [:span.viiva-alas]
+
+           ;::hallinnolliset-toimenpiteet
+           [hallinnolliset-toimenpiteet-sisalto
+            (get-in app [:domain :indeksit])
+            (get-in app [:domain :kuluva-hoitokausi])
+            (dissoc suodattimet :hankinnat)
+            (get-in app [:gridit :erillishankinnat :grid])
+            (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
+            (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+            (get-in app [:gridit :toimistokulut :grid])
+            (get-in app [:gridit :hoidonjohtopalkkio :grid])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+            (:kantahaku-valmis? app)]
+           [:span.viiva-alas.sininen]
+
+           ;::johto-ja-hallintokorvaukset
+           [johto-ja-hallintokorvaus-osio
+            (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
+            (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+            (get-in app [:gridit :toimistokulut :grid])
+            (dissoc suodattimet :hankinnat)
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+            (get-in app [:domain :kuluva-hoitokausi])
+            (get-in app [:domain :indeksit])
+            (:kantahaku-valmis? app)]
+
+           ;::hoidonjohtopalkkio
+           [hoidonjohtopalkkio-osio
+            (get-in app [:gridit :hoidonjohtopalkkio :grid])
+            (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+            (get-in app [:domain :indeksit])
+            (get-in app [:domain :kuluva-hoitokausi])
+            (dissoc suodattimet :hankinnat)
+            (:kantahaku-valmis? app)]
+
+           ;::tavoite-ja-kattohinta
+           [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
+           [haitari-laatikko
+            "Tavoite- ja kattohinta lasketaan automaattisesti"
+            {:alussa-auki? true
+             :id           "tavoite-ja-kattohinta"}
+            [tavoite-ja-kattohinta-sisalto
+             (get app :yhteenvedot)
+             (get-in app [:domain :kuluva-hoitokausi])
+             (get-in app [:domain :indeksit])]
+            [:span#tavoite-ja-kattohinta-huomio
+             "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
+           [:span.viiva-alas]
+
+           ;::tilaajan-varaukset
+           [tilaajan-varaukset
+            (get-in app [:gridit :tilaajan-varaukset :grid])
+            (dissoc suodattimet :hankinnat)
+            (:kantahaku-valmis? app)]])))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
