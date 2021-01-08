@@ -35,6 +35,49 @@
       0
       (* 100 (* 100 (with-precision 4 (/ tot bud)))))))
 
+(defn- kokoa-toimenpiteen-alle [toimenpide tehtavat toimenpideryhma yht-toteuma]
+  (concat
+    (when (and (= "hankintakustannukset" (:paaryhma toimenpide))
+               (> (count tehtavat) 0))
+      [{:paaryhma nil
+        :toimenpide nil
+        :tehtava_nimi toimenpideryhma
+        :toteutunut_summa yht-toteuma
+        :budjetoitu_summa nil
+        :erotus nil
+        :prosentti nil
+        :lihavoi? true}])
+    (when (and
+            (= "hankintakustannukset" (:paaryhma toimenpide))
+            (> (count tehtavat) 0))
+      (mapcat
+        (fn [rivi]
+          (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
+            [{:paaryhma nil
+              :toimenpide nil
+              :tehtava_nimi (:tehtava_nimi rivi)
+              :toteutunut_summa toteutunut-summa
+              :budjetoitu_summa nil
+              :erotus nil
+              :prosentti nil
+              :lihavoi? false}]))
+        tehtavat))))
+
+(defn- listaa-pelkat-tehtavat [tehtavat]
+  (mapcat
+    (fn [rivi]
+      (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
+        (concat
+          [{:paaryhma nil
+            :toimenpide nil
+            :tehtava_nimi (:tehtava_nimi rivi)
+            :toteutunut_summa toteutunut-summa
+            :budjetoitu_summa nil
+            :erotus nil
+            :prosentti nil
+            :lihavoi? false}])))
+    tehtavat))
+
 (defn- rivita-toimenpiteet [toimenpiteet paaryhma]
   (let [toimenpide-rivit
         (mapcat (fn [toimenpide]
@@ -42,7 +85,26 @@
                         toimenpide-bud (:toimenpide-budjetoitu-summa toimenpide)
                         erotus (when (not= 0 toimenpide-bud) (- toimenpide-bud toimenpide-tot))
                         hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
-                        tilaajan-rahavaraus-tehtavat (filter #(= "tilaajan-rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))]
+                        hankinta-toteuma (reduce (fn [summa rivi]
+                                                   (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
+                                                 0
+                                                 hankinta-tehtavat)
+                        vahinkojenkorvaus-tehtavat (filter #(= "vahinkojen-korjaukset" (:toimenpideryhma %)) (:tehtavat toimenpide))
+                        vahinko-toteuma (reduce (fn [summa rivi]
+                                                  (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
+                                                0
+                                                vahinkojenkorvaus-tehtavat)
+                        akilliset-tehtavat (filter #(= "akillinen-hoitotyo" (:toimenpideryhma %)) (:tehtavat toimenpide))
+                        akilliset-toteumat (reduce (fn [summa rivi]
+                                                     (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
+                                                   0
+                                                   akilliset-tehtavat)
+                        tilaajan-rahavaraus-tehtavat (filter #(= "tilaajan-rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
+                        raha-toteumat (reduce (fn [summa rivi]
+                                                (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
+                                              0
+                                              tilaajan-rahavaraus-tehtavat)
+                        toimistokulu-tehtavat (filter #(= "toimistokulut" (:toimenpideryhma %)) (:tehtavat toimenpide))]
                     (concat [{:paaryhma paaryhma
                               :toimenpide (:toimenpide toimenpide)
                               :tehtava_nimi nil
@@ -51,63 +113,25 @@
                               :erotus erotus
                               :prosentti (laske-prosentti toimenpide-tot toimenpide-bud)
                               :lihavoi? true}]
-                            (when (= "hankintakustannukset" (:paaryhma toimenpide))
-                              [{:paaryhma paaryhma
-                                :toimenpide nil
-                                :tehtava_nimi "Hankinnat"
-                                :toteutunut_summa nil
-                                :budjetoitu_summa nil
-                                :erotus nil
-                                :prosentti nil
-                                :lihavoi? true}])
-                            (mapcat
-                              (fn [rivi]
-                                (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
-                                  [{:paaryhma paaryhma
-                                    :toimenpide nil
-                                    :tehtava_nimi (:tehtava_nimi rivi)
-                                    :toteutunut_summa toteutunut-summa
-                                    :budjetoitu_summa nil
-                                    :erotus nil
-                                    :prosentti nil
-                                    :lihavoi? false}]))
-                              (if (= "hankintakustannukset" (:paaryhma toimenpide))
-                                hankinta-tehtavat
-                                (:tehtavat toimenpide)))
-                            (when (and
-                                    (= "hankintakustannukset" (:paaryhma toimenpide))
-                                    (> (count tilaajan-rahavaraus-tehtavat) 0))
-                              [{:paaryhma paaryhma
-                                :toimenpide nil
-                                :tehtava_nimi "Tilaajan rahavaraukset"
-                                :toteutunut_summa nil
-                                :budjetoitu_summa nil
-                                :erotus nil
-                                :prosentti nil
-                                :lihavoi? true}])
-                            (when (= "hankintakustannukset" (:paaryhma toimenpide))
-                              (mapcat
-                                (fn [rivi]
-                                  (let [toteutunut-summa (or (:toteutunut_summa rivi) 0)]
-                                    [{:paaryhma paaryhma
-                                      :toimenpide nil
-                                      :tehtava_nimi (:tehtava_nimi rivi)
-                                      :toteutunut_summa toteutunut-summa
-                                      :budjetoitu_summa nil
-                                      :erotus nil
-                                      :prosentti nil
-                                      :lihavoi? false}]))
-                                tilaajan-rahavaraus-tehtavat)))))
+                            (listaa-pelkat-tehtavat toimistokulu-tehtavat)
+                            (kokoa-toimenpiteen-alle toimenpide hankinta-tehtavat "Hankinnat" hankinta-toteuma)
+                            (kokoa-toimenpiteen-alle toimenpide vahinkojenkorvaus-tehtavat "Vahinkojen korjaukset" vahinko-toteuma)
+                            (kokoa-toimenpiteen-alle toimenpide akilliset-tehtavat "Äkilliset hoitotyöt" akilliset-toteumat)
+                            (kokoa-toimenpiteen-alle toimenpide tilaajan-rahavaraus-tehtavat "Tilaajan rahavaraukset" raha-toteumat))))
                 toimenpiteet)
         toimenpide-toteutumat (reduce (fn [summa rivi]
-                                        (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
+                                        (if-not (nil? (:toimenpide rivi))
+                                          (+ (or summa 0) (or (:toteutunut_summa rivi) 0))
+                                          summa))
                                       0
                                       toimenpide-rivit)
         toimenpide-budjetoidut (reduce (fn [summa rivi]
-                                         (+ (or summa 0) (or (:budjetoitu_summa rivi) 0)))
+                                         (if-not (nil? (:toimenpide rivi))
+                                          (+ (or summa 0) (or (:budjetoitu_summa rivi) 0))
+                                          summa))
                                        0
                                        toimenpide-rivit)
-        toimenpide-erotus (when (not= 0 toimenpide-toteutumat) (- toimenpide-budjetoidut toimenpide-toteutumat))
+        toimenpide-erotus (when (not= 0 toimenpide-toteutumat) (- toimenpide-toteutumat toimenpide-budjetoidut))
         yhteenvetorivi [{:paaryhma paaryhma
                          :toimenpide nil
                          :tehtava_nimi nil
