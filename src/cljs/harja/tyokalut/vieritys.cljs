@@ -23,7 +23,7 @@
           parametrit (js-obj "behavior" "smooth")]
       (.scrollIntoView elementti parametrit))))
 
-(defn- tee-majakat
+(defn tee-majakat
   [es]
   (let [tulos (concat
     []
@@ -94,4 +94,4 @@
                      [majakka ::top]
                      (when alkuvalikko [alkuvalikko avaimet])])
         osiot-majakoineen (into [] luo-osiot osiot)]
-    (concat pohja osiot-majakoineen)))
+    (vec (concat pohja osiot-majakoineen))))
