@@ -23,7 +23,8 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.tyokalut.vieritys :as vieritys]
-            [goog.dom :as dom])
+            [goog.dom :as dom]
+            [harja.ui.debug :as debug])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
                    [harja.ui.taulukko.grid :refer [defsolu]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -2547,21 +2548,23 @@
   [tiedot]
   (fn [avaimet]
     (into [:<>]
-          (for [a avaimet]
-            (let [{:keys [nimi suunnitelma-ok? summat] :as tieto} (a tiedot)]
-              (vec
-                (keep identity
-                      (concat
-                        [:div {:class    "flex-row"
-                               :on-click (vieritys/vierita a)}
-                         [:div
-                          [:div (str nimi)]
-                          [:div (str suunnitelma-ok?)]]]
-                        (when summat
-                          (mapv #(-> (summa-komp %))
-                                summat))
-                        (when-not summat
-                          [(summa-komp tieto)])))))))))
+          (keep identity
+                (for [a avaimet]
+                  (let [{:keys [nimi suunnitelma-ok? summat] :as tieto} (a tiedot)]
+                    (when tieto
+                      (vec
+                        (keep identity
+                              (concat
+                                [:div {:class    "flex-row"
+                                       :on-click (vieritys/vierita a)}
+                                 [:div
+                                  [:div (str nimi)]
+                                  [:div (str suunnitelma-ok?)]]]
+                                (when summat
+                                  (mapv #(-> (summa-komp %))
+                                        summat))
+                                (when-not summat
+                                  [(summa-komp tieto)])))))))))))
 
 (defn laske-hankintakustannukset
   [hoitokausi suunnitellut laskutus varaukset]
@@ -2661,42 +2664,50 @@
                                                  indeksikerroin (get-in app [:domain :indeksit (dec hoitokausi) :indeksikerroin])
                                                  {{:keys [suunnitellut-hankinnat
                                                           laskutukseen-perustuvat-hankinnat
-                                                          rahavaraukset] :as _summat} :summat :as _hankintakustannukset} (get-in app [:yhteenvedot :hankintakustannukset])]
+                                                          rahavaraukset] :as _summat} :summat :as _hankintakustannukset} (get-in app [:yhteenvedot :hankintakustannukset])
+                                                 hankintakustannukset-summa (laske-hankintakustannukset
+                                                                              hoitokausi
+                                                                              suunnitellut-hankinnat
+                                                                              laskutukseen-perustuvat-hankinnat
+                                                                              rahavaraukset)
+                                                 erillishankinnat-summa (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat (dec hoitokausi)])
+                                                 johto-ja-hallintokorvaukset-summa (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset (dec hoitokausi)])
+                                                 hoidonjohtopalkkio-summa (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio (dec hoitokausi)])
+                                                 tavoitehinta-summa (+ hankintakustannukset-summa erillishankinnat-summa johto-ja-hallintokorvaukset-summa hoidonjohtopalkkio-summa)
+                                                 kattohinta-summa (* tavoitehinta-summa 1.1)
+                                                 tilaajan-varaukset-summa (get-in app [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset (dec hoitokausi)])]
                                              (navigointivalikko
-                                               {::suunnitelmien-tila          {:nimi            "Debug"
-                                                                               :summa           _summat
+                                               {::hankintakustannukset        {:nimi            "Hankintakustannukset"
+                                                                               :summa           hankintakustannukset-summa
                                                                                :indeksikerroin  indeksikerroin
-                                                                               :suunnitelma-ok? false}
-                                                ::hankintakustannukset        {:nimi            "Hankintakustannukset"
-                                                                               :summa           (laske-hankintakustannukset
-                                                                                                  hoitokausi
-                                                                                                  suunnitellut-hankinnat
-                                                                                                  laskutukseen-perustuvat-hankinnat
-                                                                                                  rahavaraukset)
-                                                                               :indeksikerroin  indeksikerroin
-                                                                               :suunnitelma-ok? false}
-                                                ::tavoite-ja-kattohinta       {:nimi            "Tavoite- ja kattohinta"
-                                                                               :suunnitelma-ok? true
-                                                                               :summat          [{:summa          555
-                                                                                                  :indeksikerroin indeksikerroin}
-                                                                                                 {:summa          888
-                                                                                                  :indeksikerroin indeksikerroin}]}
-                                                ::hallinnolliset-toimenpiteet {:nimi           "Hallinnolliset toimenpiteet"
-                                                                               :summa          hoitokausi
+                                                                               :suunnitelma-ok? false #_(get-in app [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet])}
+                                                ::erillishankinnat            {:nimi           "Erillishankinnat"
+                                                                               :summa          erillishankinnat-summa
+                                                                               :suunnitelma-ok? false
                                                                                :indeksikerroin indeksikerroin}
                                                 ::johto-ja-hallintokorvaukset {:nimi           "Johto- ja hallintokorvaukset"
-                                                                               :summa          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset (dec hoitokausi)])
+                                                                               :summa          johto-ja-hallintokorvaukset-summa
+                                                                               :suunnitelma-ok? false
                                                                                :indeksikerroin indeksikerroin}
                                                 ::hoidonjohtopalkkio          {:nimi           "Hoidonjohtopalkkio"
-                                                                               :summa          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio (dec hoitokausi)])
+                                                                               :summa          hoidonjohtopalkkio-summa
+                                                                               :suunnitelma-ok? false
                                                                                :indeksikerroin indeksikerroin}
+                                                ::tavoite-ja-kattohinta       {:nimi            "Tavoite- ja kattohinta"
+                                                                               :suunnitelma-ok? false #_(get-in app [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet])
+                                                                               :summat          [{:summa          tavoitehinta-summa
+                                                                                                  :indeksikerroin indeksikerroin}
+                                                                                                 {:summa          kattohinta-summa
+                                                                                                  :indeksikerroin indeksikerroin}]}
                                                 ::tilaajan-varaukset          {:nimi           "Tilaajan varaukset"
-                                                                               :summa          1
-                                                                               :indeksikerroin indeksikerroin}}))
+                                                                               :summa          tilaajan-varaukset-summa
+                                                                               :indeksikerroin indeksikerroin
+                                                                               :suunnitelma-ok? false}}))
                                            (fn []
                                              [:div "Haku käynnissä"]))}
 
              ::suunnitelmien-tila
+             [debug/debug app]
              [haitari-laatikko
               "Suunnitelmien tila"
               {:alussa-auki?      true
@@ -2721,7 +2732,7 @@
               suodattimet]
              [:span.viiva-alas]
 
-             ::hallinnolliset-toimenpiteet
+             ::erillishankinnat
              [hallinnolliset-toimenpiteet-sisalto
               (get-in app [:domain :indeksit])
               (get-in app [:domain :kuluva-hoitokausi])
@@ -2777,8 +2788,7 @@
              [tilaajan-varaukset
               (get-in app [:gridit :tilaajan-varaukset :grid])
               (dissoc suodattimet :hankinnat)
-              (:kantahaku-valmis? app)])
-           ])))))
+              (:kantahaku-valmis? app)])])))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
