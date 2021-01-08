@@ -415,9 +415,10 @@ yllapitoluokkanimi->numero
   "Testaa onko tr-2 tr-1:n kanssa päällekkäin. Jos kolmas argumentti on true, testaa onko tr-2 kokonaan tr-1 sisällä"
   ([tr-1 tr-2] (tr-valit-paallekkain? tr-1 tr-2 false))
   ([tr-1 tr-2 kokonaan-sisalla?]
-   (println "petar evo sta uporedjuje " (pr-str tr-1) (pr-str tr-2))
    (and
-     (= (:jarjestysnro tr-1) (:jarjestysnro tr-2))
+     (not (and (contains? tr-1 :jarjestysnro)
+               (contains? tr-1 :jarjestysnro)
+               (not= (:jarjestysnro tr-1) (:jarjestysnro tr-2))))
      (let [tr-osoitteet [tr-1 tr-2]
            tr-spekista #(mapv (fn [spectulos]
                                 (loop [[savain stulos] spectulos]
