@@ -239,3 +239,9 @@
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :laskuerittely lasku-muu})]))
+
+(deftest paivita-lasku-pvm-testi
+  (let [_lasku-ensimmainen-paiva
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely (assoc uusi-lasku :erapaiva #inst "2021-12-01T00:00:00.000+02:00")})]))
