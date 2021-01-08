@@ -411,50 +411,53 @@ yllapitoluokkanimi->numero
   ([tr tr-spec]
    (s/explain-data tr-spec tr)))
 
-(defn tr-valit-paallekkain?
+(defn tr-valit-paallekkain?                                 ; petar korjaus täällä!
   "Testaa onko tr-2 tr-1:n kanssa päällekkäin. Jos kolmas argumentti on true, testaa onko tr-2 kokonaan tr-1 sisällä"
   ([tr-1 tr-2] (tr-valit-paallekkain? tr-1 tr-2 false))
   ([tr-1 tr-2 kokonaan-sisalla?]
-   (let [tr-osoitteet [tr-1 tr-2]
-         tr-spekista #(mapv (fn [spectulos]
-                              (loop [[savain stulos] spectulos]
-                                (if (or (nil? savain) (map? stulos))
-                                  stulos
-                                  (recur stulos))))
-                            %)]
-     (s/valid?
-       (s/and
-         ;; Ovathan molemmat valideja tr-osotteita
-         (if kokonaan-sisalla?
-           (s/tuple ::tr-vali ::tr)
-           (s/tuple ::tr ::tr))
-         ;; Sama tienumero, ajorata ja kaista?
-         #(let [[tr-1 tr-2] (tr-spekista %)]
-            (and (= (:tr-numero tr-1) (:tr-numero tr-2))
-                 ;; Ideana tässä se, että tr-1 voi olla pääkohde, jolloinka sillä ei ole ajorataa ja
-                 ;; tr-2 voi olla alikohde, jolloinka sillä on ajorata. Nämä voi kumminkin olla päällekkäin.
-                 (or (nil? (:tr-ajorata tr-1))
-                     (= (:tr-ajorata tr-1) (:tr-ajorata tr-2)))
-                 (or (nil? (:tr-kaista tr-1))
-                     (= (:tr-kaista tr-1) (:tr-kaista tr-2)))))
-         ;; Ovatko tierekisterit päällekkäin?
-         #(let [[tr-1 tr-2 :as trt] (map (fn [tr]
-                                           (with-meta tr
-                                                      {:tyyppi (if (s/valid? ::tr-vali tr)
-                                                                 :tr-vali
-                                                                 :tr-piste)}))
-                                         (tr-spekista %))]
-            (case (count (filter (fn [tr]
-                                   (-> tr meta :tyyppi (= :tr-piste)))
-                                 trt))
-              ;; molemmat tr-välejä
-              0 (tr-paaluvali-tr-paaluvalin-sisalla? tr-1 tr-2 kokonaan-sisalla?)
-              ;; toinen tr-piste
-              1 (let [[tr-piste tr-vali] (sort-by ::tr-vali trt)]
-                  (tr-paalupiste-tr-paaluvalin-sisalla? tr-piste tr-vali))
-              ;; molemmat tr-pisteitä
-              2 (= tr-1 tr-2))))
-       tr-osoitteet))))
+   (println "petar evo sta uporedjuje " (pr-str tr-1) (pr-str tr-2))
+   (and
+     (= (:jarjestysnro tr-1) (:jarjestysnro tr-2))
+     (let [tr-osoitteet [tr-1 tr-2]
+           tr-spekista #(mapv (fn [spectulos]
+                                (loop [[savain stulos] spectulos]
+                                  (if (or (nil? savain) (map? stulos))
+                                    stulos
+                                    (recur stulos))))
+                              %)]
+       (s/valid?
+         (s/and
+           ;; Ovathan molemmat valideja tr-osotteita
+           (if kokonaan-sisalla?
+             (s/tuple ::tr-vali ::tr)
+             (s/tuple ::tr ::tr))
+           ;; Sama tienumero, ajorata ja kaista?
+           #(let [[tr-1 tr-2] (tr-spekista %)]
+              (and (= (:tr-numero tr-1) (:tr-numero tr-2))
+                   ;; Ideana tässä se, että tr-1 voi olla pääkohde, jolloinka sillä ei ole ajorataa ja
+                   ;; tr-2 voi olla alikohde, jolloinka sillä on ajorata. Nämä voi kumminkin olla päällekkäin.
+                   (or (nil? (:tr-ajorata tr-1))
+                       (= (:tr-ajorata tr-1) (:tr-ajorata tr-2)))
+                   (or (nil? (:tr-kaista tr-1))
+                       (= (:tr-kaista tr-1) (:tr-kaista tr-2)))))
+           ;; Ovatko tierekisterit päällekkäin?
+           #(let [[tr-1 tr-2 :as trt] (map (fn [tr]
+                                             (with-meta tr
+                                                        {:tyyppi (if (s/valid? ::tr-vali tr)
+                                                                   :tr-vali
+                                                                   :tr-piste)}))
+                                           (tr-spekista %))]
+              (case (count (filter (fn [tr]
+                                     (-> tr meta :tyyppi (= :tr-piste)))
+                                   trt))
+                ;; molemmat tr-välejä
+                0 (tr-paaluvali-tr-paaluvalin-sisalla? tr-1 tr-2 kokonaan-sisalla?)
+                ;; toinen tr-piste
+                1 (let [[tr-piste tr-vali] (sort-by ::tr-vali trt)]
+                    (tr-paalupiste-tr-paaluvalin-sisalla? tr-piste tr-vali))
+                ;; molemmat tr-pisteitä
+                2 (= tr-1 tr-2))))
+         tr-osoitteet)))))
 
 (defn validoi-paikka
   ([kohde kohteen-tiedot] (validoi-paikka kohde kohteen-tiedot true))
@@ -510,7 +513,6 @@ yllapitoluokkanimi->numero
                                                      (concat toiset-alikohteet urakan-toiset-kohdeosat eri-urakoiden-alikohteet)))
          ;; Alikohteen tulee olla pääkohteen sisällä
          validoitu-paakohteenpaallekkyys (when (empty? validoitu-muoto)
-                                           (println "petar da li ikada dolazi ovde " paakohde alikohde)
                                            (tr-valit-paallekkain? paakohde alikohde true))
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alikohde osien-tiedot false))]
@@ -935,7 +937,7 @@ yllapitoluokkanimi->numero
   Parametri muiden-kohteiden-tiedot sisältää muita kohteita vastaava tiedot validoinnissa käytetystä csv-tiedostosta."
   [tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
    vuosi alikohteet muutkohteet alustatoimet urakan-toiset-kohdeosat eri-urakoiden-alikohteet]
-  (println "petar alikohteet " alikohteet)
+  (println "petar sad validiram sve! alikohteet " alikohteet)
   (let [kohde-validoitu (validoi-kohde
                           tr-osoite kohteen-tiedot {:vuosi vuosi})
         alikohteet-validoitu (keep identity

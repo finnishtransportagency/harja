@@ -255,6 +255,7 @@
   "Tarkistaa, että alikohde on kokonaisuudessaan pääkohteen sisällä.
    Olettaa, että molemmat osoitteet ovat samalla tiellä."
   [paakohde alikohde]
+  (println "petar uporedjivanje " (pr-str paakohde) " ali = " (pr-str alikohde))
   (let [{paa-alkuosa :tr-alkuosa
          paa-alkuetaisyys :tr-alkuetaisyys
          paa-loppuosa :tr-loppuosa
@@ -288,6 +289,7 @@
 
    Olettaa, että tr-välit ovat samalla tiellä (ja kaistalla ja ajoradalla)."
   [tr-vali1 tr-vali2]
+  (println "petar hajde da vidimo da li dolazi ovde")
   (let [tr-vali1 (tr-osoite-kasvusuuntaan tr-vali1)
         tr-vali2 (tr-osoite-kasvusuuntaan tr-vali2)
         ;; Väli 2 ei varmasti leikkaa väliä 1, jos se päättyy ennen välin 1 alkua tai alkaa välin 2 jälkeen

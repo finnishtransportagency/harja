@@ -438,6 +438,19 @@
     (testing "validoi-kaikki toimii"
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
+    (testing "validoi-kaikki ei kaksi samalaista kohteenosaa"
+      (println "petar sad sam u mom")
+      (let [tulos (harja.domain.yllapitokohde/tr-valit-paallekkain? {:tr-numero 22, :tr-alkuosa 3, :tr-alkuetaisyys 0, :tr-loppuosa 3, :tr-loppuetaisyys 1000, :tr-ajorata 0, :tr-kaista 1}
+                                                                    {:tr-numero 22, :tr-alkuosa 3, :tr-alkuetaisyys 1000, :tr-loppuosa 3, :tr-loppuetaisyys 1003, :tr-ajorata 0, :tr-kaista 1})]
+        (println "petar tulos = " (pr-str tulos)))
+
+
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi
+                                                         (conj kohteen-alikohteet (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000))
+                                                         muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
+        (is (= "petar jotain virheesta" virheviestit)))
+      (println "petar prosao sam moj"))
     (testing "Epätäydelliset kohteen tiedot"
       (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite (remove #(and (= (:tr-numero %) 22)
                                                                                  (= (:tr-osa %) 3)) kohteiden-tiedot)
@@ -454,6 +467,14 @@
                                                          urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
         (is (= #{:muukohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
         (is (= ["Kohteenosa on päällekkäin toisen osan kanssa"] (->> virheviestit vals flatten (mapcat vals) flatten distinct))))
+      (testing "PETAR validoi-kaikki ottaa järjestysnro huomioon kun laske onko päällekkäin tai ei"
+        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                           vuosi
+                                                           (conj kohteen-alikohteet
+                                                                 (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 900
+                                                                                  :jarjestysnro 5))
+                                                           muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
+          (is (= "petar jotain virheesta" virheviestit) "Ei saa olla virheviestiä koska kohteenosa on eri järjestelmänro:lla")))
       (testing "validoi-kaikki huomauttaa kohdeosien päällekkkyydestä"
         ;; Kohteen omissa alikohteissa vikaa
         (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
@@ -462,25 +483,10 @@
                                                                      (assoc-in [1 :nimi] "Foo-kohde")
                                                                      (conj (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1500 :tr-loppuetaisyys 2000)))
                                                            muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-
           (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
           (is (= ["Tien 22 osalla 3 ei ole ajorataa 1"
                   "Kohteenosa on päällekkäin toisen osan kanssa"
                   "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct)))
-          ;; Kohteen alikohteissa vikaa (100% päällekkäin) - petar
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla petar blabla ")
-          (is (= ["Tien 22 osalla 3 ei ole ajorataa 1 blabla"
-                  "Kohteenosa on päällekkäin toisen osan kanssa"
-                  "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct))))
-        ;; Kohteen oma alikohde merkattu usealle osalle, eikä kaikilla osilla ole tarvittavaa ajorataa ja kaistaa
-        (let [virheviestit (yllapitokohteet/validoi-kaikki (assoc tr-osoite :tr-alkuosa 1) kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-loppuosa 5 :tr-loppuetaisyys 1000)]
-                                                           muutkohteet [] urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Ajorata 0 ei päätä osaa 1"
-                  "Tien 22 osalla 4 ei ole ajorataa 0"]
                  (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
       (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
         (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet

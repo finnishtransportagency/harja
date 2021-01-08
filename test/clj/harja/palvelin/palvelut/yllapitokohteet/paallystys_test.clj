@@ -695,7 +695,6 @@
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :kohdeosa-id] kohdeosa-id))
             - (println "petar novi ilmoitus " (pr-str uusi-paallystysilmoitus))
             [_ _ vastaus paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
-        (println "petar izasao je iz apdejta i vratio " (pr-str paivitetty-yllapitokohdeosadata))
         (is (nil? (:virhe vastaus)))
         (is (= paivitetty-yllapitokohdeosadata
                #{{:nimi            "Uusi Tie 22"
