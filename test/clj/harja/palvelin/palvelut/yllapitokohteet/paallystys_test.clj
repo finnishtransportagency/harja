@@ -668,10 +668,32 @@
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
-
-
-
-
+(deftest tallenna-pot2-paallystysilmoitus-jos-paallekkain-mutta-eri-jarjestysnro ; Petar ovde
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc-in [:kulutuskerros 2] {:kohdeosa-id 14,
+                                                             :tr-kaista 12,
+                                                             :tr-ajorata 1,
+                                                             :jarjestysnro 2,
+                                                             :tr-loppuosa 3,
+                                                             :tr-alkuosa 3,
+                                                             :tr-loppuetaisyys 500,
+                                                             :nimi "Kohdeosa kaista 12",
+                                                             :tr-alkuetaisyys 3,
+                                                             :tr-numero 20,
+                                                             :toimenpide 21,
+                                                             :leveys 3,
+                                                             :kokonaismassamaara 2,
+                                                             :pinta_ala 1,
+                                                             :massamenekki 2,
+                                                             :materiaali 1}))
+        maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+        [urakka-id sopimus-id vastaus yllapitokohdeosadata] (tallenna-testipaallystysilmoitus
+                                                              paallystysilmoitus
+                                                              paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
+    (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
+      (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+      (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
 (deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
   (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
