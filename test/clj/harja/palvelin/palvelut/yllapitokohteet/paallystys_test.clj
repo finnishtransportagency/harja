@@ -369,7 +369,7 @@
                                                :sopimus-id sopimus-id
                                                :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain})
         tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
-    (is (= (count paallystysilmoitukset) 2) "Päällystysilmoituksia löytyi vuodelle 2021")
+    (is (= (count paallystysilmoitukset) 4) "Päällystysilmoituksia löytyi vuodelle 2021")
     (is (= (:pot-versio tarkea-kohde) 2))
 
   (println "petar prosao je test verzije")
@@ -514,8 +514,8 @@
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
 
-      (is (= (count (:yllapitokohteet vastaus)) 4))
-      (is (= (count (:paallystysilmoitukset vastaus)) 4))
+      (is (= (count (:yllapitokohteet vastaus)) 2))
+      (is (= (count (:paallystysilmoitukset vastaus)) 2))
 
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -742,8 +742,8 @@
                                                                 paallystysilmoitus
                                                                 paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
-      (is (= (count (:yllapitokohteet vastaus)) 2))
-      (is (= (count (:paallystysilmoitukset vastaus)) 2))
+      (is (= (count (:yllapitokohteet vastaus)) 4))
+      (is (= (count (:paallystysilmoitukset vastaus)) 4))
 
       (is (= yllapitokohdeosadata
              #{{:nimi "Kohdeosa kaista 12",
