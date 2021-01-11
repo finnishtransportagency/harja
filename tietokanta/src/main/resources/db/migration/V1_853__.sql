@@ -35,3 +35,5 @@ UPDATE pot2_mk_mursketyyppi
  WHERE nimi = 'Soramurske';
 
 ALTER TABLE pot2_alusta ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE pot2_alusta DROP CONSTRAINT pot2_alusta_tr_ajorata_check;
+ALTER TABLE pot2_alusta ADD CONSTRAINT pot2_alusta_tr_ajorata_check CHECK (tr_ajorata >= 0);
