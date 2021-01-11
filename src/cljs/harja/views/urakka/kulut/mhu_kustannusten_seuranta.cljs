@@ -175,8 +175,8 @@
               [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma paaryhma-avain))
                                              :key paaryhma}
                [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
-                (if
-                  (= paaryhma-avain (get-in app [:valittu-rivi :paaryhma]))
+                (if (and (> (count toimenpiteet) 0)
+                         (= paaryhma-avain (get-in app [:valittu-rivi :paaryhma])))
                   [:img {:alt "Expander" :src "images/expander-down.svg"}]
                   (when (> (count toimenpiteet) 0)
                     [:img {:alt "Expander" :src "images/expander.svg"}]))]
@@ -219,102 +219,104 @@
                                  (pvm/nyt)
                                  (pvm/->pvm (str "30.09." (inc valittu-hoitokauden-alkuvuosi))))
                                nil)]
-    [:div.col-xs-12 {:style {:padding-top "24px"}}
-     [:div
+    [:div.row.sivuelementti
+     [:div.col-xs-12
       [:h4 "Hoitovuosi: " valittu-hoitovuosi-nro " (1.10." valittu-hoitokauden-alkuvuosi " - 09.30." (inc valittu-hoitokauden-alkuvuosi) ")"]
       (when hoitovuotta-jaljella
-        [:span "Hoitovuotta on jäljellä " hoitovuotta-jaljella " päivää."])]
-     [:div.table-default {:style {:padding-top "24px"}}
-      [:table.table-default-header-valkoinen
-       [:thead
-        [:tr.bottom-border {:style {:text-transform "uppercase"}}
-         [:th.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
-         [:th.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-         [:th {:style {:width (:tehtava leveydet)}} "Toimenpide"]
-         [:th {:style {:width (:budjetoitu leveydet) :text-align "right"}} "Budjetti €"]
-         [:th {:style {:width (:toteuma leveydet) :text-align "right"}} "Toteuma €"]
-         [:th {:style {:width (:erotus leveydet) :text-align "right"}} "Erotus €"]
-         [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
-       [:tbody
-        (paaryhma-taulukkoon e! app "Hankintakustannukset" :hankintakustannukset
-                             hankintakustannusten-toimenpiteet hankintakustannukset-negatiivinen?
-                             (fmt->big (:hankintakustannukset-budjetoitu rivit-paaryhmittain))
-                             (fmt->big (:hankintakustannukset-toteutunut rivit-paaryhmittain))
-                             (fmt->big (- (:hankintakustannukset-toteutunut rivit-paaryhmittain)
-                                          (:hankintakustannukset-budjetoitu rivit-paaryhmittain)))
-                             (muotoile-prosentti
-                               (big/->big (or (:hankintakustannukset-toteutunut rivit-paaryhmittain) 0))
-                               (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0))
-                               hankintakustannukset-negatiivinen?))
-        (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus
-                             jjhk-toimenpiteet hallintakorvaus-negatiivinen?
-                             (fmt->big (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain))
-                             (fmt->big (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain))
-                             (fmt->big (- (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain)
-                                          (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain)))
-                             (muotoile-prosentti
-                               (big/->big (or (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain) 0))
-                               (big/->big (or (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0))
-                               hallintakorvaus-negatiivinen?))
-        (paaryhma-taulukkoon e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio
-                             nil hoidonjohdonpalkkio-negatiivinen?
-                             (fmt->big (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain))
-                             (fmt->big (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain))
-                             (fmt->big (- (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain)
-                                          (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain)))
-                             (muotoile-prosentti
-                               (big/->big (or (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain) 0))
-                               (big/->big (or (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0))
-                               hoidonjohdonpalkkio-negatiivinen?))
-        (paaryhma-taulukkoon e! app "Erillishankinnat" :erillishankinnat
-                             nil erillishankinnat-negatiivinen?
-                             (fmt->big (:erillishankinnat-budjetoitu rivit-paaryhmittain))
-                             (fmt->big (:erillishankinnat-toteutunut rivit-paaryhmittain))
-                             (fmt->big (- (:erillishankinnat-toteutunut rivit-paaryhmittain)
-                                          (:erillishankinnat-budjetoitu rivit-paaryhmittain)))
-                             (muotoile-prosentti
-                               (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
-                               (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
-                               erillishankinnat-negatiivinen?))
-        ; Näytä yhteensä rivi
-        [:tr.bottom-border
-         [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
-         [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-         [:td {:style {:width (:tehtava leveydet)
-                       :font-weight "700"}}
-          (get-in app [:kustannukset-yhteensa :toimenpide])]
+        [:span "Hoitovuotta on jäljellä " hoitovuotta-jaljella " päivää."])]]
+    [:div.row.sivuelementti
+     [:div.col-xs-12.col-md-9
+      [:div.table-default
+       [:table.table-default-header-valkoinen
+        [:thead
+         [:tr.bottom-border {:style {:text-transform "uppercase"}}
+          [:th.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+          [:th.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+          [:th {:style {:width (:tehtava leveydet)}} "Toimenpide"]
+          [:th {:style {:width (:budjetoitu leveydet) :text-align "right"}} "Budjetti €"]
+          [:th {:style {:width (:toteuma leveydet) :text-align "right"}} "Toteuma €"]
+          [:th {:style {:width (:erotus leveydet) :text-align "right"}} "Erotus €"]
+          [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
+        [:tbody
+         (paaryhma-taulukkoon e! app "Hankintakustannukset" :hankintakustannukset
+                              hankintakustannusten-toimenpiteet hankintakustannukset-negatiivinen?
+                              (fmt->big (:hankintakustannukset-budjetoitu rivit-paaryhmittain))
+                              (fmt->big (:hankintakustannukset-toteutunut rivit-paaryhmittain))
+                              (fmt->big (- (:hankintakustannukset-toteutunut rivit-paaryhmittain)
+                                           (:hankintakustannukset-budjetoitu rivit-paaryhmittain)))
+                              (muotoile-prosentti
+                                (big/->big (or (:hankintakustannukset-toteutunut rivit-paaryhmittain) 0))
+                                (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0))
+                                hankintakustannukset-negatiivinen?))
+         (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus
+                              jjhk-toimenpiteet hallintakorvaus-negatiivinen?
+                              (fmt->big (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain))
+                              (fmt->big (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain))
+                              (fmt->big (- (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain)
+                                           (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain)))
+                              (muotoile-prosentti
+                                (big/->big (or (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain) 0))
+                                (big/->big (or (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0))
+                                hallintakorvaus-negatiivinen?))
+         (paaryhma-taulukkoon e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio
+                              nil hoidonjohdonpalkkio-negatiivinen?
+                              (fmt->big (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain))
+                              (fmt->big (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain))
+                              (fmt->big (- (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain)
+                                           (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain)))
+                              (muotoile-prosentti
+                                (big/->big (or (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain) 0))
+                                (big/->big (or (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0))
+                                hoidonjohdonpalkkio-negatiivinen?))
+         (paaryhma-taulukkoon e! app "Erillishankinnat" :erillishankinnat
+                              nil erillishankinnat-negatiivinen?
+                              (fmt->big (:erillishankinnat-budjetoitu rivit-paaryhmittain))
+                              (fmt->big (:erillishankinnat-toteutunut rivit-paaryhmittain))
+                              (fmt->big (- (:erillishankinnat-toteutunut rivit-paaryhmittain)
+                                           (:erillishankinnat-budjetoitu rivit-paaryhmittain)))
+                              (muotoile-prosentti
+                                (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
+                                (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
+                                erillishankinnat-negatiivinen?))
+         ; Näytä yhteensä rivi
+         [:tr.bottom-border
+          [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+          [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+          [:td {:style {:width (:tehtava leveydet)
+                        :font-weight "700"}}
+           (get-in app [:kustannukset-yhteensa :toimenpide])]
 
-         [:td.numero {:style {:width (:budjetoitu leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]))]
-         [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
-         [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
-               :style {:width (:erotus leveydet)}} (str (when yht-negatiivinen? "+ ") (fmt->big (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
-                                                                                                   (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]))))]
-         [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
-               :style {:width (:prosentti leveydet)}} (muotoile-prosentti
-                                                        (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
-                                                        (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0))
-                                                        yht-negatiivinen?)]]]]
-      ;; Lisätyöt
-      [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
-       [:tbody
-        [:tr.bottom-border.selectable {:key "Lisätyöt"
-                                       :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :lisatyot))}
-         [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
-          (if (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
-            [:img {:alt "Expander" :src "images/expander-down.svg"}]
-            (when (> (count lisatyot) 0)
-              [:img {:alt "Expander" :src "images/expander.svg"}]))]
-         [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-         [:td {:style {:width (:tehtava leveydet) :font-weight "700"}} "Lisätyöt"]
-         [:td.numero {:style {:width (:budjetoitu leveydet)}}]
-         [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (:lisatyot-summa rivit-paaryhmittain))]
-         [:td {:style {:width (:erotus leveydet)}}]
-         [:td {:style {:width (:prosentti leveydet)}}]]
-        (when (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
-          (doall
-            (for [l lisatyot]
-              ^{:key (hash l)}
-              l)))]]]]))
+          [:td.numero {:style {:width (:budjetoitu leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]))]
+          [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
+          [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
+                :style {:width (:erotus leveydet)}} (str (when yht-negatiivinen? "+ ") (fmt->big (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
+                                                                                                    (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]))))]
+          [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
+                :style {:width (:prosentti leveydet)}} (muotoile-prosentti
+                                                         (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
+                                                         (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0))
+                                                         yht-negatiivinen?)]]]]
+       ;; Lisätyöt
+       [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
+        [:tbody
+         [:tr.bottom-border.selectable {:key "Lisätyöt"
+                                        :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :lisatyot))}
+          [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
+           (if (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+             [:img {:alt "Expander" :src "images/expander-down.svg"}]
+             (when (> (count lisatyot) 0)
+               [:img {:alt "Expander" :src "images/expander.svg"}]))]
+          [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+          [:td {:style {:width (:tehtava leveydet) :font-weight "700"}} "Lisätyöt"]
+          [:td.numero {:style {:width (:budjetoitu leveydet)}}]
+          [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (:lisatyot-summa rivit-paaryhmittain))]
+          [:td {:style {:width (:erotus leveydet)}}]
+          [:td {:style {:width (:prosentti leveydet)}}]]
+         (when (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+           (doall
+             (for [l lisatyot]
+               ^{:key (hash l)}
+               l)))]]]]]))
 
 (defn yhteenveto-laatikko [e! app data]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -346,37 +348,43 @@
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         taulukon-rivit (:kustannukset app)
-        valittu-hoitokausi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
+        valittu-hoitokausi (if (nil? (:hoitokauden-alkuvuosi app))
                              2019
-                             (get-in app [:hoitokauden-alkuvuosi]))
+                             (:hoitokauden-alkuvuosi app))
         valittu-kuukausi (:valittu-kuukausi app)
+        fin-hk-alkupvm "01.10."
+        fin-hk-loppupvm "30.09."
+        db-hk-alkupvm "-10-01"
+        db-hk-loppupvm "-09-30"
         hoitokauden-kuukaudet (pvm/aikavalin-kuukausivalit
-                                [(pvm/->pvm (str "01.10." valittu-hoitokausi))
-                                 (pvm/->pvm (str "30.09." (inc valittu-hoitokausi)))])
+                                [(pvm/->pvm (str fin-hk-alkupvm valittu-hoitokausi))
+                                 (pvm/->pvm (str fin-hk-loppupvm (inc valittu-hoitokausi)))])
         haun-alkupvm (if valittu-kuukausi
                        (first valittu-kuukausi)
-                       (str valittu-hoitokausi "-10-01"))
+                       (str valittu-hoitokausi db-hk-alkupvm))
         haun-loppupvm (if valittu-kuukausi
                         (second valittu-kuukausi)
-                        (str (inc valittu-hoitokausi) "-09-30"))]
+                        (str (inc valittu-hoitokausi) db-hk-loppupvm))]
     [:div.kustannusten-seuranta
      [debug/debug app]
      [:div
-      [:div.col-xs-12.header {:style {:padding-top "1rem"}}
-       [:h1 "Kustannusten seuranta"]
-       [:p.urakka (:nimi @nav/valittu-urakka)]
-       [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
-     Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]
-      [:div.row {:style {:padding-top "24px"}}
-       [:div.col-xs-6.col-md-3 {:style {:height "61px"}}
+      [:div.row.header
+       [:div.col-xs-12
+        [:h1 "Kustannusten seuranta"]
+        [:p.urakka (:nimi @nav/valittu-urakka)]
+        [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
+     Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]]
+
+      [:div.row.filtterit-container
+       [:div.col-xs-6.col-md-3.filtteri
         [:span.alasvedon-otsikko "Hoitokausi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                      :format-fn #(str "1.10." % "-30.9." (inc %))
+                                      :format-fn #(str fin-hk-alkupvm % "-" fin-hk-loppupvm (inc %))
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]
-       [:div.col-xs-6.col-md-3 {:style {:height "61px"}}
+       [:div.col-xs-6.col-md-3.filtteri
         [:span.alasvedon-otsikko "Kuukausi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                       :vayla-tyyli? true
@@ -388,7 +396,7 @@
                                                     "Koko hoitokausi")
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokauden-kuukaudet]]
-       [:div.col-xs-6.col-md-3 {:style {:height "61px" :padding-top "21px"}}
+       [:div.col-xs-6.col-md-3.filtteri {:style {:padding-top "21px"}}
         ^{:key "raporttixls"}
         [:form {:style {:margin-left "auto"}
                 :target "_blank" :method "POST"

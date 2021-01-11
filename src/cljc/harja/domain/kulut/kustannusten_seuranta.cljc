@@ -177,7 +177,7 @@
                            (summaa-paaryhman-toimenpiteet 1 jjhallinnan-toimenpiteet)
                            (summaa-tehtavat hoidonjohdonpalkkiot 2)
                            (summaa-tehtavat erillishankinnat 3))
-        ;; TODO: meander - Ryhmittelyyn sopiva kirjasto, tutustuppa
+
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-toteutunut"))))

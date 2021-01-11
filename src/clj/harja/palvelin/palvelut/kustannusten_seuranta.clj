@@ -83,7 +83,7 @@
         (mapcat (fn [toimenpide]
                   (let [toimenpide-tot (:toimenpide-toteutunut-summa toimenpide)
                         toimenpide-bud (:toimenpide-budjetoitu-summa toimenpide)
-                        erotus (when (not= 0 toimenpide-bud) (- toimenpide-bud toimenpide-tot))
+                        erotus (when (not= 0 toimenpide-bud) (- toimenpide-tot toimenpide-bud))
                         hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
                         hankinta-toteuma (reduce (fn [summa rivi]
                                                    (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
@@ -194,7 +194,7 @@
 (defn- luo-excel-rivi-hoidonjohdolle [kustannusdata]
   (let [bud (get-in kustannusdata [:taulukon-rivit :hoidonjohdonpalkkio-budjetoitu])
         tot (get-in kustannusdata [:taulukon-rivit :hoidonjohdonpalkkio-toteutunut])
-        erotus (- bud tot)
+        erotus (- tot bud)
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
                     (laske-prosentti tot bud))]
@@ -203,7 +203,7 @@
 (defn- luo-excel-rivi-erillishankinnoille [kustannusdata]
   (let [bud (get-in kustannusdata [:taulukon-rivit :erillishankinnat-budjetoitu])
         tot (get-in kustannusdata [:taulukon-rivit :erillishankinnat-toteutunut])
-        erotus (- bud tot)
+        erotus (- tot bud)
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
                     (laske-prosentti tot bud))]
@@ -212,7 +212,7 @@
 (defn- luo-excel-rivi-yhteensa [kustannusdata]
   (let [bud (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa])
         tot (get-in kustannusdata [:yhteensa :yht-toteutunut-summa])
-        erotus (when (not= 0 bud) (- bud tot))
+        erotus (when (not= 0 bud) (- tot bud))
         prosentti (if (or (= 0M tot) (= 0M bud))
                     0
                     (laske-prosentti tot bud))]
@@ -244,6 +244,7 @@
                    {:otsikko "Budjetti €" :fmt :raha} {:otsikko "Toteuma €" :fmt :raha}
                    {:otsikko "Erotus €" :fmt :raha} {:otsikko "%" :fmt :prosentti}]
         optiot {:nimi urakka-nimi
+                :sheet-nimi urakka-nimi
                 :tyhja (if (empty? kustannukset-tehtavittain) "Ei kustannuksia valitulla aikavälillä.")}
         ;; Raporttiin laitetaan otsikot aina pääryhmän yläpuolelle ja tästä syystä tämä :taulukko lisätään raporttiin monta kertaa
         taulukot [[:taulukko optiot sarakkeet
