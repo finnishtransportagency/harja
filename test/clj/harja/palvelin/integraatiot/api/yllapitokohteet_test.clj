@@ -292,7 +292,8 @@
                                              v)
                                        v)))
                         {} ilmoitustiedot-kannassa)
-             {:osoitteet [{
+             {:versio 1
+              :osoitteet [{
 	                   :lisaaineet "lisäaineet"
 	                   :leveys 1.2
 	                   :kokonaismassamaara 12.3

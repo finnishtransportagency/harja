@@ -286,7 +286,8 @@
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
-  {:osoitteet paallystysilmoitus-osoitteet
+  {:versio schema/Int
+   :osoitteet paallystysilmoitus-osoitteet
    :alustatoimet paallystysilmoitus-alustatoimet})
 
 (def +vanha-paallystysilmoitus+

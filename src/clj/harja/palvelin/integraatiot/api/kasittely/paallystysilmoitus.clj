@@ -24,7 +24,8 @@
   (log/debug "Luodaan uusi päällystysilmoitus")
   (q-paallystys/luo-paallystysilmoitus<!
     db
-    {:paallystyskohde kohde-id
+    {:versio 1
+     :paallystyskohde kohde-id
      :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
              valmis-kasiteltavaksi false)
      :ilmoitustiedot ilmoitustiedot-json
