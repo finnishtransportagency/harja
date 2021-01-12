@@ -603,7 +603,7 @@
                                                      db
                                                      {:paallystyskohde paallystyskohde-id}))))
 
-          vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
+          vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
       (when-not (nil? vanha-paallystysilmoitus)
         (let [versio-pyynnossa (:pot-versio paallystysilmoitus)
               oikea-versio (:pot-versio vanha-paallystysilmoitus)]
