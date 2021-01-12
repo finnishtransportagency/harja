@@ -328,7 +328,7 @@
                            WHERE yk.vuodet[1] >= 2019
                              AND pi.versio = 1")]
     (doseq [[ilmoitusosa] ilmoitustiedot]
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus-ilmoitustiedot+
                           (konv/jsonb->clojuremap ilmoitusosa))))))
 
 (deftest hae-paallystysilmoitukset-1

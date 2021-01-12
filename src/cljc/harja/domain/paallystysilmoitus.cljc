@@ -285,9 +285,8 @@
       vector))
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
-(def +paallystysilmoitus+
-  {:versio schema/Int
-   :osoitteet paallystysilmoitus-osoitteet
+(def +paallystysilmoitus-ilmoitustiedot+
+  {:osoitteet paallystysilmoitus-osoitteet
    :alustatoimet paallystysilmoitus-alustatoimet})
 
 (def +vanha-paallystysilmoitus+

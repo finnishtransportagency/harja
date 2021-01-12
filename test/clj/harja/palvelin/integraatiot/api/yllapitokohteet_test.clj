@@ -131,7 +131,7 @@
       (is (= (+ paallystysilmoitusten-maara-kannassa-ennen 1) paallystysilmoitusten-maara-kannassa-jalkeen))
 
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus-ilmoitustiedot+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (tarkista-map-arvot {:alustatoimet [{:kasittelymenetelma 1
@@ -282,18 +282,10 @@
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus-ilmoitustiedot+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= (reduce-kv (fn [m k v]
-                          (assoc m k (if (= k :osoitteet)
-                                       (mapv (fn [tiedot]
-                                               (dissoc tiedot :kohdeosa-id))
-                                             v)
-                                       v)))
-                        {} ilmoitustiedot-kannassa)
-             {:versio 1
-              :osoitteet [{
+      (is (= {:osoitteet [{
 	                   :lisaaineet "lisäaineet"
 	                   :leveys 1.2
 	                   :kokonaismassamaara 12.3
@@ -324,7 +316,7 @@
 	                   :rc% 54
 	                   :paallystetyyppi 11
 	                   :km-arvo "testi2"}]
-	      :alustatoimet [{:tr-kaista 11
+  	      :alustatoimet [{:tr-kaista 11
 	                      :verkkotyyppi 1
 	                      :tr-ajorata 1
 	                      :verkon-tarkoitus 5
@@ -336,7 +328,14 @@
 	                      :tr-alkuetaisyys 1
 	                      :tr-numero 22
 	                      :paksuus 1
-	                      :verkon-sijainti 1}]}))
+	                      :verkon-sijainti 1}]}
+        (reduce-kv (fn [m k v]
+                    (assoc m k (if (= k :osoitteet)
+                                 (mapv (fn [tiedot]
+                                         (dissoc tiedot :kohdeosa-id))
+                                       v)
+                                 v)))
+                  {} ilmoitustiedot-kannassa)))
 
       (is (= (dissoc kohdeosa-1-kannassa :id)
              {:yllapitokohde 22

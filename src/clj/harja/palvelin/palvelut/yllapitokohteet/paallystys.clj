@@ -291,12 +291,12 @@
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (cond
-              (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
+              (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus-ilmoitustiedot+ ilmoitustiedot)
               ;; Vuonna 2018 käytettiin uutta ja vanhaa mallia
               (some #(>= % 2018) (:vuodet paallystysilmoitus)) (try
                                                                  (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)
                                                                  (catch Exception e
-                                                                   (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)))
+                                                                   (skeema/validoi pot-domain/+paallystysilmoitus-ilmoitustiedot+ ilmoitustiedot)))
               :else (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
@@ -338,13 +338,13 @@
                          (->> ilmoitustiedot
                               (poista-ilmoitustiedoista-alikohteen-tiedot)
                               (muunna-ilmoitustiedot-tallennusmuotoon)
-                              (skeema/validoi pot-domain/+paallystysilmoitus+)
+                              (skeema/validoi pot-domain/+paallystysilmoitus-ilmoitustiedot+)
                               (cheshire/encode)))]
     (:id (q/luo-paallystysilmoitus<!
            db
            {:paallystyskohde paallystyskohde-id
             :tila tila
-            :versio pot-versio
+            :pot-versio pot-versio
             :ilmoitustiedot ilmoitustiedot
             :takuupvm (konversio/sql-date takuupvm)
             :kayttaja (:id user)}))))
@@ -417,7 +417,7 @@
                                (->> ilmoitustiedot
                                     (poista-ilmoitustiedoista-alikohteen-tiedot)
                                     (muunna-ilmoitustiedot-tallennusmuotoon)
-                                    (skeema/validoi pot-domain/+paallystysilmoitus+)
+                                    (skeema/validoi pot-domain/+paallystysilmoitus-ilmoitustiedot+)
                                     (cheshire/encode)))]
           (q/paivita-paallystysilmoitus<!
             db

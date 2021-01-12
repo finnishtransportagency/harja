@@ -47,10 +47,9 @@
     (:alustatoimenpiteet paallystysilmoitus)))
 
 (defn rakenna [paallystysilmoitus]
-  (let [data {:versio (:versio paallystysilmoitus)
-              :osoitteet (rakenna-alikohteet paallystysilmoitus)
+  (let [data {:osoitteet (rakenna-alikohteet paallystysilmoitus)
               :alustatoimet (rakenna-alustatoimet paallystysilmoitus)}
-        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus-ilmoitustiedot+
                           data)
         encoodattu-ilmoitustiedot (cheshire/encode data)]
     encoodattu-ilmoitustiedot))
