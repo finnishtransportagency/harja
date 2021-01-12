@@ -338,10 +338,10 @@
   ;; nil kohde aiheuttaa ongelmia
   (is (-> (yllapitokohteet/validoi-kohde nil tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
   ;; Kun alkuetäisyys on osan ulkopuolella, tulee ongelmia
-  (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
-            (yllapitokohteet/validoi-kohde tr-tieto)
-            :validoitu-paikka)
-        #(-> % :kohteen-tiedot count (= 1)))
+  (let [tulos (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
+                  (yllapitokohteet/validoi-kohde tr-tieto)
+                  :validoitu-paikka)]
+        (is (= 5 (-> tulos :kohteen-tiedot count))))
   ;; Testataan, että jokaisella kohteen paaluvälikentällä tulee olla arvo
   (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
                                       :tr-loppuosa nil :tr-loppuetaisyys nil)
