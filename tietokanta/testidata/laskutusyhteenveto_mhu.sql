@@ -183,12 +183,12 @@ $$
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
         tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
         tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
-        vuosi := (SELECT extract(YEAR FROM NOW()));
+        vuosi := (SELECT extract(YEAR FROM NOW()) - 1);
         ennen_urakkaa := FALSE;
 
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu,
                                               "toimenkuva-id")
-            VALUES (urakka_id, 5, 41.25, vuosi, 3, ennen_urakkaa, NOW(),
+            VALUES (urakka_id, 5, 40, vuosi, 1, ennen_urakkaa, NOW(),
                     (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
 
         -- Bonukset - 10/2019

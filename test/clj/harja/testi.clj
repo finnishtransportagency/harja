@@ -9,7 +9,7 @@
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.sonja :as sonja]
+    [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.komponentit.liitteet :as liitteet]
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
@@ -24,7 +24,6 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-    [harja.palvelin.integraatiot.jms :as jms]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
@@ -48,11 +47,11 @@
 (Locale/setDefault (Locale. "fi" "FI"))
 
 (def ^{:dynamic true
-       :doc "Jos käytössä on oikea Sonja komponentti, pitää se aloittaa ennen testien ajoa"} *aloita-sonja?* false)
+       :doc "Jos käytössä on oikea JMS komponentti, pitää se aloittaa ennen testien ajoa. Anna lista JMS clienttejä"} *aloitettavat-jmst* nil)
 (def ^{:dynamic true
        :doc "Jos halutaan testissä lisätä kuuntelijoita, pitää ne lisätä ennen kunntelun aloitusta."} *lisattavia-kuuntelijoita?* false)
 (def ^{:dynamic true
-       :doc "Callback sen jälkeen kun on sonja käynnistetty. Hyvä paikka purgeta jonoja."} *sonja-kaynnistetty-fn* nil)
+       :doc "Callback sen jälkeen kun on jms(t) käynnistetty. Hyvä paikka purgeta jonoja."} *jms-kaynnistetty-fn* nil)
 (def ^{:dynamic true
        :doc "Tänne mapissa kanavan nimi funktio pareja, joiden pitäs olla testissä käytössä.
              Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
@@ -258,19 +257,27 @@
   ([f n] (yrita-querya f n true nil))
   ([f n log?] (yrita-querya f n log? nil))
   ([f n log? param?]
-   (dotimes [n-kierros n]
-     (try+
-       (if param?
-         (f n-kierros)
-         (f))
-       (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
-         (Thread/sleep 500)
-         (when log?
-           (log/warn viesti)))
-       (catch PSQLException e
-         (Thread/sleep 500)
-         (when log?
-           (log/warn e "- yritetään uudelleen, yritys" n-kierros)))))))
+   (loop [n-kierros 0]
+     (if (= n-kierros n)
+       (throw (Exception. "Queryn yrittäminen epäonnistui"))
+       (let [tulos (try+
+                      (if param?
+                        (f n-kierros)
+                        (f))
+                      (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+                        (Thread/sleep 500)
+                        (when log?
+                          (log/warn viesti))
+                        ::virhe)
+                      (catch PSQLException e
+                        (Thread/sleep 500)
+                        (when log?
+                          (log/warn e "- yritetään uudelleen, yritys" n-kierros))
+                        ::virhe))
+             virhe? (= tulos ::virhe)]
+         (if virhe?
+           (recur (inc n-kierros))
+           tulos))))))
 
 (defonce ^:private testikannan-luonti-lukko (Object.))
 
@@ -283,10 +290,13 @@
 
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
-      (yrita-querya (fn [] 
+      (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-                    5))
+                    5
+                    true
+                    true))
     (luo-kannat-uudelleen)
     (odota-etta-kanta-pystyssa {:datasource db})
     (odota-etta-kanta-pystyssa {:datasource temppidb})))
@@ -1289,28 +1299,38 @@
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija)
                         :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
-                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}} (atom nil))
+                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}
+                                                                                                :itmf {:paivitystiheys-ms (* 1000 10)}}
+                                                                                               (atom nil))
                                                  (reify component/Lifecycle
                                                    (start [this]
                                                      this)
                                                    (stop [this]
                                                      this))))))))
 
-(defn sonja-kasittely [kuuntelijoiden-lopettajat]
-  (when *aloita-sonja?*
-    (let [sonja-kaynnistaminen! (fn []
-                                  (<!! (jms/aloita-sonja jarjestelma))
-                                  (when *sonja-kaynnistetty-fn*
-                                    (*sonja-kaynnistetty-fn*)))]
+(defn jms-kasittely [kuuntelijoiden-lopettajat]
+  (when *aloitettavat-jmst*
+    (let [jms-kaynnistaminen! (fn []
+                                  (when (contains? *aloitettavat-jmst* "sonja")
+                                    (<!! (jms/aloita-jms (:sonja jarjestelma))))
+                                  (when (contains? *aloitettavat-jmst* "itmf")
+                                    (<!! (jms/aloita-jms (:itmf jarjestelma))))
+                                  (when *jms-kaynnistetty-fn*
+                                    (*jms-kaynnistetty-fn*)))]
       (if *lisattavia-kuuntelijoita?*
         (reset! sonja-aloitus-go
-                (go (let [[kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
-                                                  (timeout 5000)])]
-                      (when (and kuuntelijat (map? kuuntelijat))
-                        (doseq [[kanava f] kuuntelijat]
-                          (swap! kuuntelijoiden-lopettajat conj (sonja/kuuntele! (:sonja jarjestelma) kanava f))))
-                      (sonja-kaynnistaminen!))))
-        (sonja-kaynnistaminen!)))))
+                (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
+                                                  (timeout 5000)])
+                          sonja-kuuntelijat (get jms-kuuntelijat "sonja")
+                          itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
+                      (when (and sonja-kuuntelijat (map? sonja-kuuntelijat))
+                        (doseq [[kanava f] sonja-kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:sonja jarjestelma) kanava f))))
+                      (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
+                        (doseq [[kanava f] itmf-kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
+                      (jms-kaynnistaminen!))))
+        (jms-kaynnistaminen!)))))
 
 (defn tietokantakomponentti-fixture [testit]
   #_(pystyta-harja-tarkkailija!)
@@ -1362,7 +1382,7 @@
      ;; aloita-sonja palauttaa kanavan.
      (binding [*lisattavat-kuuntelijat* (chan)]
        (let [kuuntelijoiden-lopettajat# (atom [])]
-         (sonja-kasittely kuuntelijoiden-lopettajat#)
+         (jms-kasittely kuuntelijoiden-lopettajat#)
          (testit#)
          (when (not (empty? @kuuntelijoiden-lopettajat#))
            (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]

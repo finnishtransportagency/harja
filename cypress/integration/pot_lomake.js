@@ -327,10 +327,10 @@ describe('Aloita päällystysilmoitus vanha', function () {
 
 describe('Käsittele päällystysilmoitus', function () {
     it('Palaa lomakkeelle', function () {
-        // TODO: Tässä on sellainen bugi, että joskus 2017 jää valituksi ja toisinaan oletusvuosi on otettu takaisin
+        // joskus 2017 jää valituksi; varmistetaan että 2017 tulee valituksi
         cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
-            if ($valinta.find('.valittu').text().trim() === '2020') {
+            if ($valinta.find('.valittu').text().trim() === new Date().getFullYear().toString()) {
                 cy.get('[data-cy=piilota-kartta]').click({force: true})
                 cy.get('img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
                 valitseVuosi(2017)

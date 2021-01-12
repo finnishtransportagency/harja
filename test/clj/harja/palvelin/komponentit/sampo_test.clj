@@ -6,14 +6,14 @@
             [harja.testi :refer :all]
             [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo
              [tyokalut :as sampo-tk]
              [sampo-komponentti :as sampo]
              [vienti :as vienti]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.integraatiot.jms :as jms]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
+            [harja.palvelin.integraatiot.jms.tyokalut :as s-tk]
             [harja.data.hoito.kustannussuunnitelma :as ks-data]
             [harja.pvm :as pvm]))
 
@@ -43,7 +43,7 @@
                                                                  (:paivittainen-lahetysaika sampo)))
                                                 [:sonja :db :integraatioloki])))))
   ;; aloita-sonja palauttaa kanavan.
-  (<!! (jms/aloita-sonja jarjestelma))
+  (<!! (jms/aloita-jms (:sonja jarjestelma)))
   ;; Merkataan kaikki kannassa oleva testidata lähetetyksi ennen testien ajoa ja purgetaan jono.
   ;; Mikäli joku testi riippuu siitä, että testidataa ei olla merkattu lähetetyksi, tämä aiheuttaa
   ;; sen epäonnistumisen

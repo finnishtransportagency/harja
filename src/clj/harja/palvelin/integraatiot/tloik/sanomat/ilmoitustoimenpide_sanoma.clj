@@ -47,7 +47,7 @@
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
-      (let [virheviesti (format "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia. XML: %s." xml)]
+      (let [virheviesti "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia."]
         (log/error virheviesti)
         (throw+ {:type virheet/+invalidi-xml+
                  :virheet [{:koodi :invalidi-ilmoitustoimenpide-xml

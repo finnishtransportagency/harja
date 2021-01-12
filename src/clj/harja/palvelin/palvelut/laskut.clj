@@ -144,7 +144,7 @@
         sisalla?-fn (lasku/koontilaskun-kuukauden-sisalla?-fn koontilaskun-kuukausi
                                                               (pvm/joda-timeksi alkupvm)
                                                               (pvm/joda-timeksi loppupvm))]
-    (when-not (sisalla?-fn (pvm/joda-timeksi erapaiva))
+    (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
       (throw (IllegalArgumentException.
                (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
                     " sisällä. Urakka id = " urakka-id))))))

@@ -1102,7 +1102,7 @@ FROM toteuma t
 WHERE
   t.urakka = :urakka
   AND (:toteuma :: INTEGER IS NULL OR t.id = :toteuma)
-  AND (:pvm :: DATE IS NULL OR t.alkanut :: DATE = :pvm :: DATE)
+  AND (:pvm :: DATE IS NULL OR t.alkanut >= :pvm::DATE AND t.alkanut < :pvm::DATE + interval '1 day')
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tt.toimenpidekoodi = :toimenpidekoodi);
 
 -- name: hae-varustetoteuma

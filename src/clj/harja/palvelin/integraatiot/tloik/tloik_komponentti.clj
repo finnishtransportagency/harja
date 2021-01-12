@@ -11,7 +11,6 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.integraatiot.jms :as jms-util]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
@@ -32,15 +31,15 @@
 (defn tee-lokittaja [this integraatio]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
 
-(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja] :as this}
+(defn tee-ilmoitusviestikuuntelija [{:keys [db itmf] :as this}
                                     ilmoitusviestijono ilmoituskuittausjono ilmoitusasetukset
                                     jms-lahettaja kehitysmoodi?]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
-    (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
-    (sonja/kuuntele!
-      sonja ilmoitusviestijono
+    (log/debug "Käynnistetään T-LOIK:n ITMF viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
+    (jms-util/kuuntele!
+      itmf ilmoitusviestijono
       (with-meta (partial ilmoitukset/vastaanota-ilmoitus
-                          sonja (tee-lokittaja this "ilmoituksen-kirjaus")
+                          itmf (tee-lokittaja this "ilmoituksen-kirjaus")
                           ilmoitusasetukset db ilmoituskuittausjono
                           jms-lahettaja kehitysmoodi?)
                  {:jms-kuuntelija :tloik-ilmoitusviesti}))))
@@ -48,7 +47,7 @@
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
     (jms/kuittausjonokuuntelija
-      (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) toimenpidekuittausjono
+      (tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) toimenpidekuittausjono
       (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
       :viesti-id
       #(and (not (:virhe %)) (not (= "virhe" (:kuittaustyyppi %))))
@@ -56,9 +55,9 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
       {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat! [{:keys [sonja labyrintti db sonja-sahkoposti] :as this} jonot]
+(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db sonja-sahkoposti] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
-                                         sonja (:toimenpideviestijono jonot))]
+                                         itmf (:toimenpideviestijono jonot))]
     (when-let [labyrintti labyrintti]
       (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
       (sms/rekisteroi-kuuntelija! labyrintti
@@ -79,7 +78,7 @@
               (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
-  (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
+  (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (:toimenpideviestijono asetukset)))
 
 
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this toimenpide-jms-lahettaja aikavali]
@@ -104,14 +103,14 @@
                                     :email sonja-sahkoposti})
           toimenpide-jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (assoc this
-        :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija
+        :itmf-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija
                                           this
                                           ilmoitusviestijono
                                           ilmoituskuittausjono
                                           ilmoitusasetukset
                                           toimenpide-jms-lahettaja
                                           kehitysmoodi?)
-        :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
+        :itmf-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
                                               this
                                               toimenpidekuittausjono)
         :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
@@ -119,8 +118,8 @@
                                         toimenpide-jms-lahettaja
                                         uudelleenlahetysvali-minuuteissa))))
   (stop [this]
-    (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
-                       :sonja-toimenpidekuittauskuuntelija]
+    (let [kuuntelijat [:itmf-ilmoitusviestikuuntelija
+                       :itmf-toimenpidekuittauskuuntelija]
           ajastetut [:paivittainen-lahetys-tehtava]
           lahettajat (select-keys asetukset [:ilmoituskuittausjono :toimenpideviestijono])]
       (doseq [kuuntelija kuuntelijat
@@ -134,7 +133,7 @@
           (when-not (poista-ajastettu-fn)
             (log/error (str "Ajastetun tehtava: " ajastettu " lopetus epäonnistui")))))
       (doseq [[_ lahettajan-nimi] lahettajat]
-        (sonja/kasky (:sonja this) {:poista-lahettaja [(jms-util/oletusjarjestelmanimi lahettajan-nimi) lahettajan-nimi]}))
+        (jms-util/kasky (:itmf this) {:poista-lahettaja [(jms-util/oletusjarjestelmanimi lahettajan-nimi) lahettajan-nimi]}))
       (as-> this $
             (apply dissoc $ kuuntelijat)
             (apply dissoc $ ajastetut))))
@@ -150,21 +149,21 @@
           lahettajajonot (vals (select-keys asetukset [:ilmoituskuittausjono :toimenpideviestijono]))
           kuuntelijajonojen-tila (reduce (fn [jonojen-tila jonon-nimi]
                                            (merge jonojen-tila
-                                                  {jonon-nimi (jms-util/jms-jono-ok? (:sonja this) jonon-nimi)}))
+                                                  {jonon-nimi (jms-util/jms-jono-ok? (:itmf this) jonon-nimi)}))
                                          {}
                                          kuuntelijajonot)
           lahetysjonojen-tilat (reduce (fn [jonojen-tila jonon-nimi]
                                          (merge jonojen-tila
-                                                {jonon-nimi (or (not (jms-util/jms-jono-olemassa? (:sonja this) jonon-nimi))
-                                                                (jms-util/jms-jono-ok? (:sonja this) jonon-nimi))}))
+                                                {jonon-nimi (or (not (jms-util/jms-jono-olemassa? (:itmf this) jonon-nimi))
+                                                                (jms-util/jms-jono-ok? (:itmf this) jonon-nimi))}))
                                        {}
                                        lahettajajonot)
           ilmoitusviestijonon-kuuntelija-ok? (or (nil? (:ilmoitusviestijono asetukset))
-                                                 (jms-util/jms-jonolla-kuuntelija? (:sonja this)
+                                                 (jms-util/jms-jonolla-kuuntelija? (:itmf this)
                                                                                    (:ilmoitusviestijono asetukset)
                                                                                    :tloik-ilmoitusviesti))
           toimenpidekuittausjonon-kuuntelija-ok? (or (nil? (:toimenpidekuittausjono asetukset))
-                                                     (jms-util/jms-jonolla-kuuntelija? (:sonja this)
+                                                     (jms-util/jms-jonolla-kuuntelija? (:itmf this)
                                                                                        (:toimenpidekuittausjono asetukset)
                                                                                        :tloik-toimenpidekuittaus))]
       {::kp/kaikki-ok? (and (every? (fn [[_ ok?]] ok?) kuuntelijajonojen-tila)
