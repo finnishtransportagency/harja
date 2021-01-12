@@ -22,9 +22,7 @@
                    :url s/Str
                    (s/optional-key :threads) s/Int
                    (s/optional-key :max-body-size) s/Int
-                   (s/optional-key :anti-csrf-token) s/Str
-                   (s/optional-key :salli-oletuskayttaja?) s/Bool
-                   (s/optional-key :dev-resources-path) s/Str}
+                   (s/optional-key :anti-csrf-token) s/Str}
    :kehitysmoodi Boolean
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
