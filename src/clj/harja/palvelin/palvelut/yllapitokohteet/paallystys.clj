@@ -259,7 +259,7 @@
            {:kohdeosa :kohdeosat}
            :id)))
 
-(defn hae-urakan-paallystysilmoitus-paallystyskohteella     ; petar
+(defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
    Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohdeosa-taulusta ja liitetään mukaan ilmoitukseen.
@@ -289,9 +289,7 @@
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
-        - (println "petar hajde da vidimo sta je vratio " (pr-str paallystysilmoitus))
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-            (println "petar OVDE NISAM SME DA UDJEM za POT2")
             (cond
               (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
               ;; Vuonna 2018 käytettiin uutta ja vanhaa mallia
@@ -527,7 +525,6 @@
 
 (defn- ilmoituksen-kohdeosat
   [paallystysilmoitus pot2?]
-  (println "petar evo ovde izdvajam slojeve " (pr-str paallystysilmoitus))
   (if pot2?
     (->> paallystysilmoitus
          :kulutuskerros
@@ -537,7 +534,6 @@
          :osoitteet
          (filter (comp not :poistettu)))))
 
-;; petar da li treba ovde nesto
 (defn- tallenna-pot2-paallystekerros
   [db paallystysilmoitus pot2-id paivitetyt-kohdeosat]
   (doseq [rivi (->> paallystysilmoitus
@@ -608,8 +604,6 @@
                                                      {:paallystyskohde paallystyskohde-id}))))
 
           vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
-          - (println "petar i nasao sam ovo " (pr-str vanha-paallystysilmoitus))
-          - (println "petar a novi koji hocu da upisem je " (pr-str paallystysilmoitus))]
       (when-not (nil? vanha-paallystysilmoitus)
         (let [versio-pyynnossa (:pot-versio paallystysilmoitus)
               oikea-versio (:pot-versio vanha-paallystysilmoitus)]

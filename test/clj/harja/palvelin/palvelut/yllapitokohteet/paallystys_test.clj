@@ -371,8 +371,6 @@
         tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
     (is (= (count paallystysilmoitukset) 4) "Päällystysilmoituksia löytyi vuodelle 2021")
     (is (= (:pot-versio tarkea-kohde) 2))
-
-  (println "petar prosao je test verzije")
     (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
     (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
     (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
@@ -468,10 +466,9 @@
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
-    (is (= 2 (count kohdeosat)))))   ; petar ehkä myös varmista että data tuli pot2_ tauluista
+    (is (= 2 (count kohdeosat)))))   ; TODO ehkä myös varmista että data tuli pot2_ tauluista
 
 (defn- hae-yllapitokohdeosadata [yllapitokohde-id]
-  (println "petar evo sad gledam delove " yllapitokohde-id)
   (set (q-map (str "SELECT nimi, paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide
                         FROM yllapitokohdeosa WHERE NOT poistettu AND yllapitokohde = " yllapitokohde-id))))
 
@@ -668,7 +665,7 @@
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
-(deftest tallenna-pot2-paallystysilmoitus-jos-paallekkain-mutta-eri-jarjestysnro ; Petar ovde
+(deftest tallenna-pot2-paallystysilmoitus-jos-paallekkain-mutta-eri-jarjestysnro
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:kulutuskerros 2] {:kohdeosa-id 14,
@@ -715,7 +712,6 @@
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :nimi] "Uusi Tie 22")
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :toimenpide] "Freude")
                                         (assoc-in [:ilmoitustiedot :osoitteet 0 :kohdeosa-id] kohdeosa-id))
-            - (println "petar novi ilmoitus " (pr-str uusi-paallystysilmoitus))
             [_ _ vastaus paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
         (is (nil? (:virhe vastaus)))
         (is (= paivitetty-yllapitokohdeosadata
@@ -833,7 +829,7 @@
                                                                                          :vuosi              paallystysilmoitus-domain/pot2-vuodesta-eteenpain
                                                                                          :paallystysilmoitus paallystysilmoitus-pot2}))))))
 
-(deftest ei-saa-paivittaa-jos-ei-ole-versiota               ; petar tämä on valmis testi, implementaatio puuttuu
+(deftest ei-saa-paivittaa-jos-ei-ole-versiota
     (let [paallystysilmoitus-pot2 (-> pot-testidata
                                       (dissoc :pot-versio)
                                       (assoc :paallystyskohde-id 123))]

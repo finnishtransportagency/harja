@@ -391,7 +391,6 @@
                                           paallystetyyppi raekoko tyomenetelma massamaara]}
                                   pot-versio]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
-  (println "================ petar insertujem nimi=" nimi " tunnus=" tunnus " tr-numero=" tr-numero)
   (when-not poistettu
     (let [insert-komento (if (= 2 pot-versio)
                            q/luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
@@ -425,7 +424,6 @@
                                   :as kohdeosa}
                                  pot-versio]
   (log/debug "Päivitetään ylläpitokohdeosa")
-  (println "====================== petar update id = " id " alkuosa=" tr-alkuosa)
   (let [update-komento (if (= 2 pot-versio)
                           q/paivita-yllapitokohdeosa-pot2<!
                           q/paivita-yllapitokohdeosa<!)]
@@ -459,7 +457,6 @@
 
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi pot-versio] :as tiedot}]
-  (println "petar 123 " (pr-str osat))
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
@@ -493,7 +490,6 @@
 
               (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
               (doseq [osa osat]
-                (println "petar --------------- osa " (pr-str osa))
                 (if (id-olemassa? (:id osa))
                   (paivita-yllapitokohdeosa db user urakka-id osa pot-versio)
                   (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa pot-versio)))

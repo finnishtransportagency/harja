@@ -411,7 +411,7 @@ yllapitoluokkanimi->numero
   ([tr tr-spec]
    (s/explain-data tr-spec tr)))
 
-(defn tr-valit-paallekkain?                                 ; petar korjaus täällä!
+(defn tr-valit-paallekkain?
   "Testaa onko tr-2 tr-1:n kanssa päällekkäin. Jos kolmas argumentti on true, testaa onko tr-2 kokonaan tr-1 sisällä"
   ([tr-1 tr-2] (tr-valit-paallekkain? tr-1 tr-2 false))
   ([tr-1 tr-2 kokonaan-sisalla?]
@@ -938,7 +938,6 @@ yllapitoluokkanimi->numero
   Parametri muiden-kohteiden-tiedot sisältää muita kohteita vastaava tiedot validoinnissa käytetystä csv-tiedostosta."
   [tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
    vuosi alikohteet muutkohteet alustatoimet urakan-toiset-kohdeosat eri-urakoiden-alikohteet]
-  (println "petar sad validiram sve! alikohteet " alikohteet)
   (let [kohde-validoitu (validoi-kohde
                           tr-osoite kohteen-tiedot {:vuosi vuosi})
         alikohteet-validoitu (keep identity
@@ -972,7 +971,6 @@ yllapitoluokkanimi->numero
    (defn validoi-kaikki-backilla
      ([db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet] (validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet nil))
      ([db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet urakan-toiset-kohdeosat]
-      (println "petar da vidimo sta ce da proba " (pr-str ali-ja-muut-kohteet))
       (let [;; Otetaan tarkastukseen ne kohdeosat, jotka ovat jonkun sellaisen kohteen
             ;; alikohteita, mikä kuuluu tähän urakkaan
             urakan-toiset-kohdeosat (or urakan-toiset-kohdeosat
@@ -1026,7 +1024,6 @@ yllapitoluokkanimi->numero
             muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
                                                         (verrattavat-kohteet toiset-kohteet (:id muukohde) urakka-id))
                                                       muutkohteet yhden-vuoden-muut-kohteet)]
-        (println "petar ali " alikohteet)
         (validoi-kaikki tr-osoite kohteen-tiedot
                         muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                         vuosi alikohteet muutkohteet alustatoimet

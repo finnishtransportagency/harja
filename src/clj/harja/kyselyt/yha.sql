@@ -141,7 +141,7 @@ SET
 WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!
--- petar ehkä versio pitäisi tulla parametrina
+-- TODO ehkä versio pitäisi tulla parametrina
 INSERT INTO paallystysilmoitus
 (paallystyskohde, ilmoitustiedot, luotu, luoja, versio)
 VALUES (:paallystyskohde, :ilmoitustiedot :: JSONB, NOW(), :luoja, 1);
