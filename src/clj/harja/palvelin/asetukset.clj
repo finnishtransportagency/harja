@@ -13,7 +13,8 @@
                  :portti s/Int
                  (s/optional-key :yhteyspoolin-koko) s/Int
                  :kayttaja s/Str
-                 :salasana s/Str})
+                 :salasana s/Str
+                 :julkaise-tila? s/Bool})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
   {(s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
@@ -21,11 +22,14 @@
                    :url s/Str
                    (s/optional-key :threads) s/Int
                    (s/optional-key :max-body-size) s/Int
-                   (s/optional-key :anti-csrf-token) s/Str}
+                   (s/optional-key :anti-csrf-token) s/Str
+                   (s/optional-key :salli-oletuskayttaja?) s/Bool
+                   (s/optional-key :dev-resources-path) s/Str}
    :kehitysmoodi Boolean
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
    :tietokanta-replica Tietokanta
+   :tarkkailija {:loop-odotus s/Int}
    :fim {:url s/Str
          (s/optional-key :tiedosto) s/Str}
    :log {(s/optional-key :gelf) {:palvelin s/Str
@@ -46,12 +50,14 @@
          (s/optional-key :email) {:taso s/Keyword
                                   :palvelin s/Str
                                   :vastaanottaja [s/Str]}
-         (s/optional-key :testidata?) s/Bool}
+         (s/optional-key :testidata?) s/Bool
+         (s/optional-key :ei-logiteta) #{s/Str}}
    (s/optional-key :integraatiot) {:paivittainen-lokin-puhdistusaika [s/Num]}
    (s/optional-key :sonja) {:url s/Str
                             :kayttaja s/Str
                             :salasana s/Str
-                            (s/optional-key :tyyppi) s/Keyword}
+                            (s/optional-key :tyyppi) s/Keyword
+                            :julkaise-tila? s/Bool}
    (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
                                        (s/optional-key :suora?) s/Bool
                                        (s/optional-key :palvelin) s/Str
@@ -67,6 +73,11 @@
                             :lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
+   (s/optional-key :itmf) {:url s/Str
+                           :kayttaja s/Str
+                           :salasana s/Str
+                           (s/optional-key :tyyppi) s/Keyword
+                           :julkaise-tila? s/Bool}
    (s/optional-key :tloik) {:ilmoitusviestijono s/Str
                             :ilmoituskuittausjono s/Str
                             :toimenpideviestijono s/Str
@@ -188,7 +199,13 @@
    (s/optional-key :ais-data) {:url s/Str
                                :sekunnin-valein s/Int}
 
-   (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}})
+   (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
+   :komponenttien-tila {:sonja {:paivitystiheys-ms s/Int}
+                        :itmf {:paivitystiheys-ms s/Int}
+                        :db {:paivitystiheys-ms s/Int
+                             :kyselyn-timeout-ms s/Int}
+                        :db-replica {:paivitystiheys-ms s/Int
+                                     :replikoinnin-max-viive-ms s/Int}}})
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
