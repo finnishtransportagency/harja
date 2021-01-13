@@ -143,6 +143,8 @@
                                          )]
           [:div.pot2-lomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+           [:p {:style {:color "red"}}
+            "Tämä on työn alla oleva uusi versio päällystysilmoituksesta, joka tullee käyttöön kesällä 2021. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."]
            [otsikkotiedot perustiedot]
            (when (= :lukittu tila)
              [pot-yhteinen/poista-lukitus e! urakka])
