@@ -45,7 +45,7 @@
   #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
     :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
-    :valmispvm-kohde :takuupvm :valmispvm-paallystys :pot-versio})
+    :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio})
 
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
@@ -480,7 +480,7 @@
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
-                               (assoc :pot-versio 1)
+                               (assoc :versio 1)
                                (update :ilmoitustiedot dissoc :virheet)
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)

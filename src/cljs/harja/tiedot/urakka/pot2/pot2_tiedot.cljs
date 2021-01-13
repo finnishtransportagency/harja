@@ -74,7 +74,7 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
-                               (assoc :pot-versio 2)
+                               (assoc :versio 2)
                                (update :ilmoitustiedot dissoc :virheet)
                                (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
                                                                 (into (sorted-map)

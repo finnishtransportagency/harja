@@ -5,7 +5,7 @@ SELECT
   pi.id,
   ypk.tr_numero                 AS "tr-numero",
   pi.tila,
-  pi.versio                     AS "pot-versio",
+  pi.versio                     AS "versio",
   nimi,
   kohdenumero,
   yhaid,
@@ -72,7 +72,7 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
-  pi.versio                     AS "pot-versio",
+  pi.versio                     AS "versio",
   tila,
   ypka.kohde_alku               AS "aloituspvm",
   ypka.kohde_valmis             AS "valmispvm-kohde",
@@ -169,7 +169,7 @@ SELECT
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
   id,
-  versio                     AS "pot-versio",
+  versio                     AS "versio",
   tila,
   ilmoitustiedot,
   paatos_tekninen_osa        AS "tekninen-osa_paatos",
@@ -235,7 +235,7 @@ VALUES (:paallystyskohde,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
-        :kayttaja, FALSE, :pot-versio);
+        :kayttaja, FALSE, :versio);
 
 -- name: hae-paallystysilmoituksen-kommentit
 -- Hakee annetun päällystysilmoituksen kaikki kommentit (joita ei ole poistettu) sekä

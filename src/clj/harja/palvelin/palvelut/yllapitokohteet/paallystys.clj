@@ -43,7 +43,7 @@
 (defn onko-pot2?
   "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
   [paallystysilmoitus]
-  (= (:pot-versio paallystysilmoitus) 2))
+  (= (:versio paallystysilmoitus) 2))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -284,7 +284,7 @@
         paallystysilmoitus (pot1-kohdeosat paallystysilmoitus)
         paallystysilmoitus (if (or (onko-pot2? paallystysilmoitus)
                                    ;; jos paallystysilmoitus puuttuu vielä, täytyy silti palauttaa kulutuskerroksen kohdeosat!
-                                   (nil? (:pot-versio paallystysilmoitus)))
+                                   (nil? (:versio paallystysilmoitus)))
                              (pot2-kulutuskerros-ja-alusta db paallystysilmoitus)
                              paallystysilmoitus)
         paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
@@ -325,7 +325,7 @@
     paallystysilmoitus))
 
 (defn- luo-paallystysilmoitus [db user urakka-id
-                               {:keys [paallystyskohde-id ilmoitustiedot perustiedot pot-versio]
+                               {:keys [paallystyskohde-id ilmoitustiedot perustiedot versio]
                                 :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
@@ -344,7 +344,7 @@
            db
            {:paallystyskohde paallystyskohde-id
             :tila tila
-            :pot-versio pot-versio
+            :versio versio
             :ilmoitustiedot ilmoitustiedot
             :takuupvm (konversio/sql-date takuupvm)
             :kayttaja (:id user)}))))
@@ -586,7 +586,7 @@
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
 
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
-  (when-not (contains? paallystysilmoitus :pot-versio)
+  (when-not (contains? paallystysilmoitus :versio)
     (throw (IllegalArgumentException. "Pyynnöstä puuttuu versio. Ota yhteyttä Harjan tukeen.")))
   (jdbc/with-db-transaction [db db]
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
@@ -605,8 +605,8 @@
 
           vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
       (when-not (nil? vanha-paallystysilmoitus)
-        (let [versio-pyynnossa (:pot-versio paallystysilmoitus)
-              oikea-versio (:pot-versio vanha-paallystysilmoitus)]
+        (let [versio-pyynnossa (:versio paallystysilmoitus)
+              oikea-versio (:versio vanha-paallystysilmoitus)]
           (when-not (= versio-pyynnossa oikea-versio)
             (throw (IllegalArgumentException. (str "Väärä POT versio. Pyynnössä on " versio-pyynnossa
                                                    ", pitäisi olla " oikea-versio
@@ -625,7 +625,7 @@
       (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                    db user {:urakka-id urakka-id :sopimus-id sopimus-id
                                             :vuosi vuosi
-                                            :pot-versio (:pot-versio paallystysilmoitus)
+                                            :versio (:versio paallystysilmoitus)
                                             :yllapitokohde-id paallystyskohde-id
                                             :osat (map #(assoc % :id (:kohdeosa-id %))
                                                        (ilmoituksen-kohdeosat paallystysilmoitus pot2?))})

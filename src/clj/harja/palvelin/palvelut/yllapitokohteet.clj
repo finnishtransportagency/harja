@@ -456,7 +456,7 @@
    tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
 
    Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi pot-versio] :as tiedot}]
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi versio] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
@@ -491,8 +491,8 @@
               (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
               (doseq [osa osat]
                 (if (id-olemassa? (:id osa))
-                  (paivita-yllapitokohdeosa db user urakka-id osa pot-versio)
-                  (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa pot-versio)))
+                  (paivita-yllapitokohdeosa db user urakka-id osa versio)
+                  (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa versio)))
               (yy/paivita-yllapitourakan-geometria db urakka-id)
               (let [yllapitokohdeosat (hae-kaikki-osat)]
                 (log/debug "Tallennus suoritettu. Uudet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))

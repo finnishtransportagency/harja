@@ -69,7 +69,7 @@
               jarjestelma-fixture)
 
 (def pot-testidata
-  {:pot-versio 1
+  {:versio 1
    :perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
                  :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
                  :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
@@ -162,7 +162,7 @@
 
 (def pot2-testidata
   {:paallystyskohde-id 28,
-   :pot-versio 2,
+   :versio 2,
    :perustiedot {:tila nil,
                  :tr-kaista nil,
                  :kohdenimi "Aloittamaton kohde mt20",
@@ -370,7 +370,7 @@
                                                :vuosi paallystysilmoitus-domain/pot2-vuodesta-eteenpain})
         tarkea-kohde (first (filter #(= (:nimi %) "Tärkeä kohde mt20") paallystysilmoitukset))]
     (is (= (count paallystysilmoitukset) 4) "Päällystysilmoituksia löytyi vuodelle 2021")
-    (is (= (:pot-versio tarkea-kohde) 2))
+    (is (= (:versio tarkea-kohde) 2))
     (is (= :aloitettu (:tila tarkea-kohde)) "Tila")
     (is (= false (:lahetys-onnistunut tarkea-kohde)) "Lähetys")
     (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
@@ -410,7 +410,7 @@
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     ;; Päällystysilmoituksen perustiedot OK
     (is (not (nil? paallystysilmoitus-kannassa)))
-    (is (= (:pot-versio paallystysilmoitus-kannassa) 1))
+    (is (= (:versio paallystysilmoitus-kannassa) 1))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
     (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
     (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 7043.95))
@@ -465,7 +465,7 @@
                                                                     :paallystyskohde-id paallystyskohde-id})
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
-    (is (= (:pot-versio paallystysilmoitus-kannassa) 2))
+    (is (= (:versio paallystysilmoitus-kannassa) 2))
     (is (= 2 (count kohdeosat)))))   ; TODO ehkä myös varmista että data tuli pot2_ tauluista
 
 (defn- hae-yllapitokohdeosadata [yllapitokohde-id]
@@ -741,8 +741,7 @@
       (is (= (count (:yllapitokohteet vastaus)) 4))
       (is (= (count (:paallystysilmoitukset vastaus)) 4))
 
-      (is (= yllapitokohdeosadata
-             #{{:nimi "Kohdeosa kaista 12",
+      (is (= #{{:nimi "Kohdeosa kaista 12",
                 :paallystetyyppi nil,
                 :raekoko nil,
                 :tyomenetelma nil,
@@ -753,7 +752,8 @@
                 :raekoko nil,
                 :tyomenetelma nil,
                 :massamaara nil,
-                :toimenpide "Wut"}}))
+                :toimenpide "Wut"}}
+             yllapitokohdeosadata))
       (let [[tallennettu-versio ilmoitustiedot] (first (q "SELECT versio, ilmoitustiedot FROM paallystysilmoitus
                                                            WHERE paallystyskohde = " paallystyskohde-id))]
         (is (= tallennettu-versio 2))
@@ -831,7 +831,7 @@
 
 (deftest ei-saa-paivittaa-jos-ei-ole-versiota
     (let [paallystysilmoitus-pot2 (-> pot-testidata
-                                      (dissoc :pot-versio)
+                                      (dissoc :versio)
                                       (assoc :paallystyskohde-id 123))]
       (is (thrown-with-msg? IllegalArgumentException #"Pyynnöstä puuttuu versio. Ota yhteyttä Harjan tukeen."
                             (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -847,7 +847,7 @@
 
 
 (def pot2-alustatestien-ilmoitus
-  '{:perustiedot {:tila :aloitettu, :tr-kaista nil, :kohdenimi "Tärkeä kohde mt20", :kohdenumero "L42", :tr-ajorata nil, :kommentit [], :tr-loppuosa 1, :valmispvm-kohde #inst "2021-06-23T21:00:00.000-00:00", :tunnus nil, :tr-alkuosa 1, :pot-versio 2, :tr-loppuetaisyys 3827, :aloituspvm #inst "2021-06-18T21:00:00.000-00:00", :takuupvm #inst "2024-12-30T22:00:00.000-00:00", :tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :tr-alkuetaisyys 1066, :tr-numero 20}, :asiatarkastus {:lisatiedot nil, :hyvaksytty nil, :tarkastusaika nil, :tarkastaja nil}, :tr-alkuetaisyys 1066, :tr-numero 20, :tekninen-osa {:paatos nil, :kasittelyaika nil, :perustelu nil}, :valmispvm-paallystys #inst "2021-06-20T21:00:00.000-00:00"}, :paallystyskohde-id 27, :pot-versio 2, :ilmoitustiedot nil, :kulutuskerros ({:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}), :alusta ({:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :materiaali 1, :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1})})
+  '{:perustiedot {:tila :aloitettu, :tr-kaista nil, :kohdenimi "Tärkeä kohde mt20", :kohdenumero "L42", :tr-ajorata nil, :kommentit [], :tr-loppuosa 1, :valmispvm-kohde #inst "2021-06-23T21:00:00.000-00:00", :tunnus nil, :tr-alkuosa 1, :versio 2, :tr-loppuetaisyys 3827, :aloituspvm #inst "2021-06-18T21:00:00.000-00:00", :takuupvm #inst "2024-12-30T22:00:00.000-00:00", :tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :tr-alkuetaisyys 1066, :tr-numero 20}, :asiatarkastus {:lisatiedot nil, :hyvaksytty nil, :tarkastusaika nil, :tarkastaja nil}, :tr-alkuetaisyys 1066, :tr-numero 20, :tekninen-osa {:paatos nil, :kasittelyaika nil, :perustelu nil}, :valmispvm-paallystys #inst "2021-06-20T21:00:00.000-00:00"}, :paallystyskohde-id 27, :versio 2, :ilmoitustiedot nil, :kulutuskerros ({:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}), :alusta ({:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :materiaali 1, :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1})})
 
 (deftest tallenna-pot2-poista-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
@@ -874,7 +874,7 @@
         alustarivit-ennen (:alusta paallystysilmoitus-kannassa-ennen)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)]
     (is (not (nil? paallystysilmoitus-kannassa-ennen)))
-    (is (= (:pot-versio paallystysilmoitus-kannassa-ennen) 2))
+    (is (= (:versio paallystysilmoitus-kannassa-ennen) 2))
     (is (= 2 (count alustarivit-ennen)))
     (is (= 1 (count alustarivit-jalkeen)))
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 1) "alusta id:llä 1 löytyy")
@@ -911,7 +911,7 @@
         alustarivit-ennen (:alusta paallystysilmoitus-kannassa-ennen)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)]
     (is (not (nil? paallystysilmoitus-kannassa-ennen)))
-    (is (= (:pot-versio paallystysilmoitus-kannassa-ennen) 2))
+    (is (= (:versio paallystysilmoitus-kannassa-ennen) 2))
     (is (= 2 (count alustarivit-ennen)))
     (is (= 4 (count alustarivit-jalkeen)))
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 1) "alusta id:llä 1 löytyy")
