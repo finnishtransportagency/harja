@@ -3,7 +3,7 @@
 
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
-  ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat"])
+  ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "varaukset", "bonukset"])
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -19,9 +19,10 @@
   (mapv
     (fn [toimenpide]
       (let [toimenpiteen-tehtavat (second toimenpide)
-            ;; Toimenpiteet mäpissä on budjetoidut, toteutuneet ja lisätyö toimenpiteet
-            ;; UI:lla budjetointi lasketaan yhteen, toteutuneet kustannukset näytetään
-            ;; rivikohtaisesti ja lisätyöt erotellaan omaksi rivikseen.
+            ;; Toimenpiteet listassa on budjetoidut ja toteutuneet tehtävät
+            ;; UI:lla budjetointi lasketaan yhteen toimenpideryhmän perusteella (esim. hankinnat) ja toimenpiteen perusteella (esim. talvihoito)
+            ;; Toteutuneet kustannukset näytetään tehtävittäin ryhmiteltynä.
+            ;; Lisätyöt erotellaan omaksi pääryhmäkseen, koska tietokantahaku ei tee siitä omaa pääryhmää automaattisesti.
             ;; Poistetaan siis budjetointiin liittyvät tehtävät :toteutunut = budjetoitu tai hth ja lasketaan lisätyöt yhteen.
             toteutuneet-tehtavat (filter
                                    (fn [tehtava]
@@ -143,7 +144,7 @@
                                      toimenpiteet))
       (assoc :lisatyot (reduce (fn [kaikki toimenpide]
                                  (concat kaikki
-                                       (:lisatyot toimenpide)))
+                                         (:lisatyot toimenpide)))
                                (:lisatyot taulukko-rivit)
                                toimenpiteet))))
 
@@ -160,13 +161,18 @@
         jjhallinta-kustannukset (get paaryhmat (nth raportin-paaryhmat 1)) ;; johto-ja hallinta..
         hoidonjohdonpalkkiot (get paaryhmat (nth raportin-paaryhmat 2))
         erillishankinnat (get paaryhmat (nth raportin-paaryhmat 3))
-
+        varaukset (get paaryhmat (nth raportin-paaryhmat 4))
+        bonukset (get paaryhmat (nth raportin-paaryhmat 5))
 
         ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
         hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
         hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
         jjhallinnan-toimenpiteet (summaa-hoito-ja-hallinta-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
         jjhallinnan-toimenpiteet (sort-by :jarjestys jjhallinnan-toimenpiteet)
+        varaukset (group-by :toimenpide varaukset)
+        varaus-toimenpiteet (summaa-toimenpidetaso varaukset (nth raportin-paaryhmat 4))
+        bonukset (group-by :toimenpide bonukset)
+        bonus-toimenpiteet (summaa-toimenpidetaso bonukset (nth raportin-paaryhmat 5))
 
         taulukon-rivit (-> {}
                            ;; Aseta pääryhmän avaimelle toimenpiteet
@@ -176,7 +182,11 @@
                            (assoc (keyword (nth raportin-paaryhmat 1)) jjhallinnan-toimenpiteet)
                            (summaa-paaryhman-toimenpiteet 1 jjhallinnan-toimenpiteet)
                            (summaa-tehtavat hoidonjohdonpalkkiot 2)
-                           (summaa-tehtavat erillishankinnat 3))
+                           (summaa-tehtavat erillishankinnat 3)
+                           (assoc (keyword (nth raportin-paaryhmat 4)) varaus-toimenpiteet)
+                           (summaa-paaryhman-toimenpiteet 4 varaus-toimenpiteet)
+                           (assoc (keyword (nth raportin-paaryhmat 5)) bonus-toimenpiteet)
+                           (summaa-paaryhman-toimenpiteet 5 bonus-toimenpiteet))
 
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]

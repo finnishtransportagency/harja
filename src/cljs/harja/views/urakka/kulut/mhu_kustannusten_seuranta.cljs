@@ -77,13 +77,17 @@
 (defn- kokoa-toimenpiteen-alle [toimenpide tehtavat toimenpideryhma yht-toteuma]
   (let [row-index (r/atom 0)]
     (concat
-      (when (and (= "hankintakustannukset" (:paaryhma toimenpide))
+      ;; Toimenpiteen alle kootaan vain jos pääryhmänä on hankintakustannukset tai varaukset
+      ;; Tosin, tarkista, että tarvitaanko tätä enää kun uusi rahavaraukset pääryhmä avattiin
+      (when (and (or (= "hankintakustannukset" (:paaryhma toimenpide))
+                     (= "varaukset" (:paaryhma toimenpide)))
                  (> (count tehtavat) 0))
         [^{:key (str toimenpideryhma "-" (hash toimenpide) "-" (hash tehtavat))}
          (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "8px" :font-weight "bold"}} toimenpideryhma]
                                         (fmt->big yht-toteuma false))])
       (when (and
-              (= "hankintakustannukset" (:paaryhma toimenpide))
+              (or (= "hankintakustannukset" (:paaryhma toimenpide))
+                  (= "varaukset" (:paaryhma toimenpide)))
               (> (count tehtavat) 0))
         (mapcat
           (fn [rivi]
@@ -110,26 +114,10 @@
   (map
     (fn [toimenpide]
       (let [hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
-            hankinta-toteuma (reduce (fn [summa rivi]
-                                       (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                     0
-                                     hankinta-tehtavat)
-            vahinkojenkorvaus-tehtavat (filter #(= "vahinkojen-korjaukset" (:toimenpideryhma %)) (:tehtavat toimenpide))
-            vahinko-toteuma (reduce (fn [summa rivi]
-                                      (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                    0
-                                    vahinkojenkorvaus-tehtavat)
-            akilliset-tehtavat (filter #(= "akillinen-hoitotyo" (:toimenpideryhma %)) (:tehtavat toimenpide))
-            akilliset-toteumat (reduce (fn [summa rivi]
-                                         (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                       0
-                                       akilliset-tehtavat)
-            ;muut-tehtavat (filter #(= "muut-rahavaraukset" (:toimenpideryhma %)) (:tehtavat toimenpide))
-            tilaajan-rahavaraus-tehtavat (filter #(= "tilaajan-rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
-            raha-toteumat (reduce (fn [summa rivi]
-                                    (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                  0
-                                  tilaajan-rahavaraus-tehtavat)
+            rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
+            ;; Todo: Lisää vielä bonukset tietokantahakuun
+            bonus-tehtavat (filter #(= "bonus" (:toimenpideryhma %)) (:tehtavat toimenpide))
+
             toimistokulu-tehtavat (filter #(= "toimistokulut" (:toimenpideryhma %)) (:tehtavat toimenpide))
             negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
                                   (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
@@ -138,10 +126,8 @@
                                    nil
                                    (concat
                                      (listaa-pelkat-tehtavat toimenpide toimistokulu-tehtavat)
-                                     (kokoa-toimenpiteen-alle toimenpide hankinta-tehtavat "Hankinnat" hankinta-toteuma)
-                                     (kokoa-toimenpiteen-alle toimenpide vahinkojenkorvaus-tehtavat "Vahinkojen korjaukset" vahinko-toteuma)
-                                     (kokoa-toimenpiteen-alle toimenpide akilliset-tehtavat "Äkilliset hoitotyöt" akilliset-toteumat)
-                                     (kokoa-toimenpiteen-alle toimenpide tilaajan-rahavaraus-tehtavat "Tilaajan rahavaraukset" raha-toteumat)))]
+                                     (listaa-pelkat-tehtavat toimenpide hankinta-tehtavat)
+                                     (listaa-pelkat-tehtavat toimenpide rahavaraus-tehtavat)))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
                         [:tr.bottom-border
                          (merge
@@ -211,6 +197,13 @@
                                   (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (rivita-lisatyot e! app (:lisatyot rivit-paaryhmittain))
+        varaukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:varaukset rivit-paaryhmittain))
+        varaus-negatiivinen? (big/gt (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
+                                              (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0)))
+        bonus-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:bonukset rivit-paaryhmittain))
+        ;_ (js/console.log "bonus-toimenpiteet" (pr-str bonus-toimenpiteet))
+        bonus-negatiivinen? (big/gt (big/->big (or (:bonus-toteutunut rivit-paaryhmittain) 0))
+                                              (big/->big (or (:bonus-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         hoitovuosi-nro-menossa (kustannusten-seuranta-tiedot/kuluva-hoitokausi-nro (pvm/nyt))
@@ -248,6 +241,16 @@
                                 (big/->big (or (:hankintakustannukset-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0))
                                 hankintakustannukset-negatiivinen?))
+         (paaryhma-taulukkoon e! app "Rahavaraukset" :varaukset
+                                varaukset-toimenpiteet varaus-negatiivinen?
+                                (fmt->big (:varaukset-budjetoitu rivit-paaryhmittain))
+                                (fmt->big (:varaukset-toteutunut rivit-paaryhmittain))
+                                (fmt->big (- (:varaukset-toteutunut rivit-paaryhmittain)
+                                             (:varaukset-budjetoitu rivit-paaryhmittain)))
+                                (muotoile-prosentti
+                                  (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
+                                  (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0))
+                                  varaus-negatiivinen?))
          (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus
                               jjhk-toimenpiteet hallintakorvaus-negatiivinen?
                               (fmt->big (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain))
@@ -278,6 +281,17 @@
                                 (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
                                 erillishankinnat-negatiivinen?))
+
+         #_(paaryhma-taulukkoon e! app "Bonukset" :bonukset
+                                bonus-toimenpiteet bonus-negatiivinen?
+                                (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
+                                (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
+                                (fmt->big (- (:bonukset-toteutunut rivit-paaryhmittain)
+                                             (:bonukset-budjetoitu rivit-paaryhmittain)))
+                                (muotoile-prosentti
+                                  (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
+                                  (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
+                                  tilaajan-varaus-negatiivinen?))
          ; Näytä yhteensä rivi
          [:tr.bottom-border
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
@@ -302,7 +316,8 @@
          [:tr.bottom-border.selectable {:key "Lisätyöt"
                                         :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :lisatyot))}
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
-           (if (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+           (if (and (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+                    (> (count lisatyot) 0))
              [:img {:alt "Expander" :src "images/expander-down.svg"}]
              (when (> (count lisatyot) 0)
                [:img {:alt "Expander" :src "images/expander.svg"}]))]
