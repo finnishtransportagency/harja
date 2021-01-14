@@ -169,7 +169,7 @@
         hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
         jjhallinnan-toimenpiteet (summaa-hoito-ja-hallinta-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
         jjhallinnan-toimenpiteet (sort-by :jarjestys jjhallinnan-toimenpiteet)
-        varaukset (group-by :toimenpide varaukset)
+        varaukset (sort-by toimenpide-jarjestys (group-by :toimenpide varaukset))
         varaus-toimenpiteet (summaa-toimenpidetaso varaukset (nth raportin-paaryhmat 4))
         bonukset (group-by :toimenpide bonukset)
         bonus-toimenpiteet (summaa-toimenpidetaso bonukset (nth raportin-paaryhmat 5))
