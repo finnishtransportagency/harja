@@ -1047,7 +1047,10 @@
   (u (str "DELETE FROM pot2_paallystekerros
             WHERE pot2_id = (SELECT id FROM paallystysilmoitus
                               WHERE paallystyskohde = " paallystyskohde-id ");"))
-  (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))  (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))) ; TODO pot2:ssa tulee muita tauluja
+  (u (str "DELETE FROM pot2_alusta
+            WHERE pot2_id = (SELECT id FROM paallystysilmoitus
+                              WHERE paallystyskohde = " paallystyskohde-id ");"))
+  (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";")))
 
 (defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero

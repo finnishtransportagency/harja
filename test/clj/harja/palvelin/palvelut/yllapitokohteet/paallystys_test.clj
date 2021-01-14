@@ -692,6 +692,27 @@
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
       (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
+(deftest tallenna-pot2-paallystysilmoitus-jossa-alikohde-muulla-tiella
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        muu-tr-numero 5555
+        paallystysilmoitus (-> pot2-testidata
+                               (assoc-in [:kulutuskerros 1 :tr-numero] muu-tr-numero))
+        maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+        [urakka-id sopimus-id _ _] (tallenna-testipaallystysilmoitus
+                                                              paallystysilmoitus
+                                                              paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
+    (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
+      (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä"))
+    (let [paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :urakan-paallystysilmoitus-paallystyskohteella
+                                                      +kayttaja-jvh+ {:urakka-id          urakka-id
+                                                                      :sopimus-id         sopimus-id
+                                                                      :paallystyskohde-id paallystyskohde-id})
+          kulutuskerros (:kulutuskerros paallystysilmoitus-kannassa)]
+      (is (= 2 (count kulutuskerros)))
+      (is (= #{20 muu-tr-numero} (set (map #(:tr-numero %) kulutuskerros)))))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
   (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
         _ (is (some? paallystyskohde-id))
@@ -847,7 +868,53 @@
 
 
 (def pot2-alustatestien-ilmoitus
-  '{:perustiedot {:tila :aloitettu, :tr-kaista nil, :kohdenimi "Tärkeä kohde mt20", :kohdenumero "L42", :tr-ajorata nil, :kommentit [], :tr-loppuosa 1, :valmispvm-kohde #inst "2021-06-23T21:00:00.000-00:00", :tunnus nil, :tr-alkuosa 1, :versio 2, :tr-loppuetaisyys 3827, :aloituspvm #inst "2021-06-18T21:00:00.000-00:00", :takuupvm #inst "2024-12-30T22:00:00.000-00:00", :tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :tr-alkuetaisyys 1066, :tr-numero 20}, :asiatarkastus {:lisatiedot nil, :hyvaksytty nil, :tarkastusaika nil, :tarkastaja nil}, :tr-alkuetaisyys 1066, :tr-numero 20, :tekninen-osa {:paatos nil, :kasittelyaika nil, :perustelu nil}, :valmispvm-paallystys #inst "2021-06-20T21:00:00.000-00:00"}, :paallystyskohde-id 27, :versio 2, :ilmoitustiedot nil, :kulutuskerros ({:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}), :alusta ({:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :materiaali 1, :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1})})
+  {:perustiedot {:tila :aloitettu,
+                 :tr-kaista nil,
+                 :kohdenimi "Tärkeä kohde mt20",
+                 :kohdenumero "L42",
+                 :tr-ajorata nil,
+                 :kommentit [],
+                 :tr-loppuosa 1,
+                 :valmispvm-kohde #inst "2021-06-23T21:00:00.000-00:00",
+                 :tunnus nil,
+                 :tr-alkuosa 1,
+                 :versio 2,
+                 :tr-loppuetaisyys 3827,
+                 :aloituspvm #inst "2021-06-18T21:00:00.000-00:00",
+                 :takuupvm #inst "2024-12-30T22:00:00.000-00:00",
+                 :tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                             :tr-alkuetaisyys 1066, :tr-numero 20},
+                 :asiatarkastus {:lisatiedot nil, :hyvaksytty nil, :tarkastusaika nil, :tarkastaja nil},
+                 :tr-alkuetaisyys 1066, :tr-numero 20,
+                 :tekninen-osa {:paatos nil, :kasittelyaika nil, :perustelu nil},
+                 :valmispvm-paallystys #inst "2021-06-20T21:00:00.000-00:00"},
+   :paallystyskohde-id 27,
+   :versio 2,
+   :ilmoitustiedot nil,
+   :kulutuskerros [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
+                    :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
+                    :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11",
+                    :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1}
+                   {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000,
+                    :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
+                    :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12",
+                    :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}],
+   :alusta [{:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :materiaali 1,
+             :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}]})
+
+(def pot2-alusta-esimerkki
+  [{:tr-kaista       11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 11...",
+    :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}
+   {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 12...",
+    :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 2}
+   {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2000,
+    :materiaali      1, :pituus 500, :toimenpide_tiedot "",
+    :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11}
+   {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
+    :materiaali      1, :pituus 500, :toimenpide_tiedot "",
+    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1}])
 
 (deftest tallenna-pot2-poista-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
@@ -880,7 +947,8 @@
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 1) "alusta id:llä 1 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 2) "alusta id:llä 2 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 1) "alusta id:llä 1 löytyy")
-    (is (not (alustarivi-idlla-loytyy? alustarivit-jalkeen 2)) "alusta id:llä 2 ei saa löytyä")))
+    (is (not (alustarivi-idlla-loytyy? alustarivit-jalkeen 2)) "alusta id:llä 2 ei saa löytyä")
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
@@ -891,11 +959,7 @@
                                                           +kayttaja-jvh+ {:urakka-id urakka-id
                                                                           :sopimus-id sopimus-id
                                                                           :paallystyskohde-id paallystyskohde-id})
-        paallystysilmoitus (assoc pot2-alustatestien-ilmoitus :alusta
-                                                              [{:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500, :materiaali 1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}
-                                                               {:tr-kaista 12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500, :materiaali 1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 12...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 2}
-                                                               {:tr-kaista 12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2000, :materiaali 1, :pituus 500, :toimenpide_tiedot "", :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11}
-                                                               {:tr-kaista 12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500, :materiaali 1, :pituus 500, :toimenpide_tiedot "", :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1}])
+        paallystysilmoitus (assoc pot2-alustatestien-ilmoitus :alusta pot2-alusta-esimerkki)
         ;; Tehdään tallennus joka lisää kaksi alustariviä
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
@@ -921,7 +985,48 @@
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 1) "alusta id:llä 1 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 2) "alusta id:llä 2 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 3) "alusta id:llä 3 löytyy")
-    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 4) "alusta id:llä 4 löytyy")))
+    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 4) "alusta id:llä 4 löytyy")
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        muu-tr-numero 7777
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (assoc-in [:kulutuskerros 1 :tr-numero] muu-tr-numero)
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (assoc-in [:alusta 3 :tr-numero] muu-tr-numero))
+        ;; Tehdään tallennus joka lisää kaksi alustariviä
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                       :sopimus-id sopimus-id
+                                                                       :vuosi pot-domain/pot2-vuodesta-eteenpain
+                                                                       :paallystysilmoitus paallystysilmoitus})
+        paallystysilmoitus-kannassa-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                            :urakan-paallystysilmoitus-paallystyskohteella
+                                                            +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                            :sopimus-id sopimus-id
+                                                                            :paallystyskohde-id paallystyskohde-id})
+        alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)]
+    (is (= 4 (count alustarivit-jalkeen)))
+    (is (= #{{:pot2a_id 1 :tr-numero 20}
+             {:pot2a_id 2 :tr-numero 20}
+             {:pot2a_id 3 :tr-numero 20}
+             {:pot2a_id 4 :tr-numero muu-tr-numero}}
+           (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alikohde-on-tiella-joka-ei-loydy-kulutuskerroksissa
+  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        muu-tr-numero 7777
+        vaara-tr-numero 8888
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (assoc-in [:kulutuskerros 1 :tr-numero] muu-tr-numero)
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (assoc-in [:alusta 3 :tr-numero] vaara-tr-numero))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
+                                       "Väärä tr-numero alikohteella")))
 
 (deftest uuden-paallystysilmoituksen-tallennus-eri-urakkaan-ei-onnistu
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
