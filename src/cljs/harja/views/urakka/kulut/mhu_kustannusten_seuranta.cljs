@@ -68,7 +68,7 @@
    [:td.numero {:style {:width (:erotus leveydet)}}]
    [:td.numero {:style {:width (:prosentti leveydet)}}]])
 
-(defn- rivita-lisatyot [e! app lisatyot]
+(defn- rivita-lisatyot [lisatyot]
   (for [l lisatyot]
     ^{:key (str (hash l))}
     (lisaa-taulukkoon-tehtava-rivi (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))
@@ -196,7 +196,7 @@
         yht-negatiivinen? (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                                   (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
-        lisatyot (rivita-lisatyot e! app (:lisatyot rivit-paaryhmittain))
+        lisatyot (rivita-lisatyot (:lisatyot rivit-paaryhmittain))
         varaukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:varaukset rivit-paaryhmittain))
         varaus-negatiivinen? (big/gt (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0)))
