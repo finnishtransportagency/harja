@@ -16,16 +16,14 @@ WITH urakan_toimenpideinstanssi_23150 AS
             AND m.toimenpideinstanssi = tpi.id
             AND tpk2.koodi = '23150')
 -- Haetaan budjetoidut hankintakustannukset kustannusarvioitu-työ taulusta
-SELECT tpi.id                                    AS toimenpideinstanssi_id,
-       tk.nimi                                   AS toimenpidekoodi_nimi,
-       kt.summa                                  AS budjetoitu_summa,
+SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
        kt.tyyppi::TEXT                           AS maksutyyppi,
        CASE
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankinta'
            WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'akillinen-hoitotyo'
            WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'vahinkojen-korjaukset'
-           ELSE 'muut-rahavaraukset'
+           ELSE 'hankinta'
            END                                   AS toimenpideryhma,
        tk_tehtava.nimi                           AS tehtava_nimi,
        CASE
@@ -68,9 +66,7 @@ UNION ALL
 -- kiinteahintainen_tyo taulusta haetaan osa suunnitelluista kustannuksista eli hankinnat. Tämä on siis vain budejetointi sarakkeeseen.
 -- Kiinteät suunnitellut kustannukset tallennetaan KIINTEAHINTAINEN_TYO-tauluun.
 -- Hinta on kiinteä, kun se on sopimuksessa sovittu, yleensä kuukausille jaettava könttäsumma.
-SELECT tpi.id                                    AS toimenpideinstanssi_id,
-       tk.nimi                                   AS toimenpidekoodi_nimi,
-       kt.summa                                  AS budjetoitu_summa,
+SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
@@ -105,9 +101,7 @@ WHERE tpi.urakka = :urakka
     )
 UNION ALL
 -- Budjetoidut Erillishankinnat - toimenpide_koodi = '23150' - haetaan mukaan budjettiin kustannusarvioitu_työ taulusta, kun toimenpidekoodi on 23150
-SELECT tpi.id                                    AS toimenpideinstanssi_id,
-       tk.nimi                                   AS toimenpidekoodi_nimi,
-       kt.summa                                  AS budjetoitu_summa,
+SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
@@ -130,9 +124,7 @@ WHERE s.urakka = :urakka
   AND tpi.toimenpide = tk.id
 UNION ALL
 -- Budjetoidut Hoidonjohdon palkkiot - toimenpide_koodi = '23150' - haetaan mukaan budjettiin kustannusarvioitu_työ taulusta, kun toimenpidekoodi on 23150
-SELECT tpi.id                                    AS toimenpideinstanssi_id,
-       tk.nimi                                   AS toimenpidekoodi_nimi,
-       kt.summa                                  AS budjetoitu_summa,
+SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'hankinta'                                AS toimenpideryhma,
@@ -156,9 +148,7 @@ WHERE s.urakka = :urakka
   AND tpi.toimenpide = tk.id
 UNION ALL
 -- Budjetoidut Johto- ja hallintakorvaus haetaan johto_ja_hallintakorvaus taulusta
-SELECT 0                                           AS toimenpideinstanssi_id,
-       jjht.toimenkuva                             AS toimenpidekoodi_nimi,
-       (hjh.tunnit * hjh.tuntipalkka)              AS budjetoitu_summa,
+SELECT (hjh.tunnit * hjh.tuntipalkka)              AS budjetoitu_summa,
        0                                           AS toteutunut_summa,
        'kiinteahintainen'                          AS maksutyyppi,
        'palkat'                                    AS toimenpideryhma,
@@ -177,9 +167,7 @@ UNION ALL
 -- Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta, koska muut kulut on toimistotarvikemateriaaleja
 -- ja ne tallentuu sinne.
 -- Nämä on budjetoituja kustannuksia.
-SELECT tpi.id                                    AS toimenpideinstanssi_id,
-       tk.nimi                                   AS toimenpidekoodi_nimi,
-       kt.summa                                  AS budjetoitu_summa,
+SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS toteutunut_summa,
        'kiinteahintainen'                        AS maksutyyppi,
        'toimistokulut'                           AS toimenpideryhma,
@@ -205,11 +193,9 @@ UNION ALL
 -- Toteutuneet kustannukset haetaan lasku_kohdistus taulusta. Nämäkin on ryhmitelty vastaavasti kuten
 -- budjetoidut kustannukset eli Hankintakustannukset, Johto- ja hallintokorvaus, Hoidonjohdonpalkkio sekä Erillishankinnat
 -- Ensimmäisenä haetaan pelkästään Hankintakustannukset
-SELECT tpi.id                  AS toimenpideinstanssi_id,
-       tk.nimi                 AS toimenpidekoodi_nimi,
-       0                       AS budjetoitu_summa,
-       lk.summa                AS toteutunut_summa,
-       lk.maksueratyyppi::TEXT AS maksutyyppi,
+SELECT 0                          AS budjetoitu_summa,
+       SUM(lk.summa)              AS toteutunut_summa,
+       lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi != 'Tilaajan rahavaraus (T3)' THEN 'hankinta'
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)'
@@ -219,8 +205,8 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'rahavaraus' -- muu = vahinkojen-korjaukset
            WHEN lk.maksueratyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            ELSE 'hankinta'
-           END                 AS toimenpideryhma,
-       tr.nimi                 AS tehtava_nimi, -- oli tk_tehtava.nimi
+           END                    AS toimenpideryhma,
+       COALESCE(tr.nimi, tk.nimi) AS tehtava_nimi,
        CASE
            WHEN tk.koodi = '23104' THEN 'Talvihoito'
            WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
@@ -228,16 +214,17 @@ SELECT tpi.id                  AS toimenpideinstanssi_id,
            WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
            WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
-           END                 AS toimenpide,
-       lk.luotu                AS luotu,
-       l.erapaiva::TEXT        AS ajankohta,
-       'toteutunut'            AS toteutunut,
-       tk_tehtava.jarjestys AS jarjestys,
+           END                    AS toimenpide,
+       MIN(lk.luotu)              AS luotu,
+       MIN(l.erapaiva)::TEXT      AS ajankohta,
+       'toteutunut'               AS toteutunut,
+       tk_tehtava.jarjestys       AS jarjestys,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'varaukset'
            WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'varaukset' -- muu = vahinkojen-korjaukset
+           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)' THEN 'varaukset'
            ELSE 'hankintakustannukset'
-           END              AS paaryhma
+           END                    AS paaryhma
 FROM lasku_kohdistus lk
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
@@ -246,6 +233,7 @@ FROM lasku_kohdistus lk
      lasku l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND l.poistettu IS NOT TRUE
   AND lk.lasku = l.id
   AND lk.toimenpideinstanssi = tpi.id
   AND lk.poistettu IS NOT TRUE
@@ -254,12 +242,11 @@ WHERE l.urakka = :urakka
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
+GROUP BY tr.nimi, tk.nimi ,lk.maksueratyyppi,tk.koodi, tk_tehtava.jarjestys
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio ja johto- ja hallintakorvaukset lasku_kohdistus taulusta.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
-SELECT tpi.id                  AS toimenpideinstanssi_id,
-       tk.nimi                 AS toimenpidekoodi_nimi,
-       0                       AS budjetoitu_summa,
+SELECT 0                       AS budjetoitu_summa,
        lk.summa                AS toteutunut_summa,
        lk.maksueratyyppi::TEXT AS maksutyyppi,
        CASE
@@ -295,7 +282,9 @@ FROM lasku_kohdistus lk
      lasku l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND l.poistettu IS NOT TRUE
   AND lk.lasku = l.id
+  AND lk.poistettu IS NOT TRUE
   AND lk.toimenpideinstanssi = tpi.id
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
@@ -304,38 +293,36 @@ UNION ALL
 -- Osa toteutuneista erillishankinnoista, hoidonjohdonpalkkioista ja johdon- hallintakorvauksesta
 -- siirretään kustannusarvoitu_tyo taulusta toteutunut_tyo tauluun aina kuukauden viimeisenä päivänä.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
-SELECT tpi.id                                  AS toimenpideinstanssi_id,
-       tk.nimi                                 AS toimenpidekoodi_nimi,
-       0                                       AS budjetoitu_summa,
-       (SELECT korotettuna
+SELECT 0                                           AS budjetoitu_summa,
+       SUM((SELECT korotettuna
         FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
                                             (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
                                             coalesce(t.summa, 0)::NUMERIC,
-                                            (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC))
-                                               AS toteutunut_summa,
-       'kokonaishintainen'                     AS maksutyyppi,
+                                            (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC)))
+                                                   AS toteutunut_summa,
+       'kokonaishintainen'                         AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
            WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
-           END                                 AS toimenpideryhma,
-       tr.nimi                                 AS tehtava_nimi,
+           END                                      AS toimenpideryhma,
+       coalesce(tr.nimi, tk_tehtava.nimi)           AS tehtava_nimi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
            WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
-           END                                 AS toimenpide,
-       t.luotu                                 AS luotu,
-       concat(t.vuosi, '-', t.kuukausi, '-01') AS ajankohta,
-       tr.nimi                                 AS toteutunut,
-       tk_tehtava.jarjestys                    AS jarjestys,
+           END                                      AS toimenpide,
+       MIN(t.luotu)                                 AS luotu,
+       MIN(concat(t.vuosi, '-', t.kuukausi, '-01')) AS ajankohta,
+       tr.nimi                                      AS toteutunut,
+       MIN(tk_tehtava.jarjestys)                    AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
            WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
-           END                                 AS paaryhma
+           END                                      AS paaryhma
 FROM toteutunut_tyo t
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
@@ -345,6 +332,7 @@ WHERE t.urakka_id = :urakka
   AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND t.toimenpideinstanssi = tpi.id
   AND tpi.toimenpide = tk.id
-  -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
+  -- Rajataan vain hoidon johto toimenpiteeseen
   AND tk.koodi = '23151'
+GROUP BY tehtava_nimi, toimenpideryhma,paaryhma, tr.nimi,  tk.yksiloiva_tunniste, tk_tehtava.yksiloiva_tunniste
 ORDER BY jarjestys ASC, ajankohta asc;
