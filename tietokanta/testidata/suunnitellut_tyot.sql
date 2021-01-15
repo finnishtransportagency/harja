@@ -554,11 +554,11 @@ $$
 
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES (2020, 2, 234, 'laskutettava-tyo'::TOTEUMATYYPPI, null,
-                (select id from tehtavaryhma where nimi = 'Erillishankinnat erillishinnoin'),
+                (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)'),
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), sopimus_id);
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null,
-                (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaukset'),
+                (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'),
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), sopimus_id);
     END
 $$;
