@@ -893,12 +893,12 @@
    :ilmoitustiedot nil,
    :kulutuskerros [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
                     :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
-                    :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11",
+                    :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 1500, :nimi "Tärkeä kohdeosa kaista 11",
                     :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1}
-                   {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000,
+                   #_({:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000,
                     :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
                     :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12",
-                    :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}],
+                    :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2})],
    :alusta [{:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :materiaali 1,
              :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}]})
 
@@ -906,15 +906,15 @@
   [{:tr-kaista       11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
     :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 11...",
     :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}
-   {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+   #_({:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
     :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 12...",
-    :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 2}
-   {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2000,
+    :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32, :pot2a_id 2}
+   {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys (- 2000 1),
     :materiaali      1, :pituus 500, :toimenpide_tiedot "",
     :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
     :materiaali      1, :pituus 500, :toimenpide_tiedot "",
-    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1}])
+    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1})])
 
 (deftest tallenna-pot2-poista-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
