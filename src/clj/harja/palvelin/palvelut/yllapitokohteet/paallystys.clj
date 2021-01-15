@@ -564,7 +564,9 @@
                         :alusta
                         (filter (comp not :poistettu)))]
         (let [params (merge rivi
-                            {:pot2_id pot2-id})]
+                            {:pot2_id pot2-id})
+              _ 1                                           ; petar validoi alustarivi tässä?
+              ]
           (if (:pot2a_id rivi)
             (q/paivita-pot2-alusta<! db params)
             (q/luo-pot2-alusta<! db params)))))
@@ -616,10 +618,10 @@
                                                      (-> paallystysilmoitus :kulutuskerros)
                                                      (-> paallystysilmoitus :ilmoitustiedot :osoitteet)))
             alustatoimet (if pot2?
-                           nil
+                           (-> paallystysilmoitus :alusta)
                            (-> paallystysilmoitus :ilmoitustiedot :alustatoimet))
             kohde-id (:paallystyskohde-id paallystysilmoitus)
-            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
+            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)] ; petar
         (when (seq virheviestit)
           (throw (IllegalArgumentException. (cheshire/encode virheviestit)))))
       (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat

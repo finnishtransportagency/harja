@@ -4,6 +4,7 @@
     [harja.tyokalut.spec-apurit :as spec-apurit]
     [clojure.string :as str]
     [clojure.set :as clj-set]
+    [harja.domain.paallystysilmoitus :as pot-domain]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.domain.nil :as nil-ns]
     [clojure.spec.alpha :as s]
@@ -14,6 +15,7 @@
          [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
 
          [harja.pvm :as pvm]
+         [clojure.data :as data]
          [clj-time.core :as t]
          [taoensso.timbre :as log]
          [clj-time.coerce :as c]
@@ -545,7 +547,8 @@ yllapitoluokkanimi->numero
   "Olettaa, että annetut alikohteet ovat oikein. Alikohde voi olla myös muukohde."
   ([alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot] (validoi-alustatoimenpide alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot (pvm/vuosi (pvm/nyt))))
   ([alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot vuosi]
-   (let [tr-vali-spec (cond
+   (let [pot2? (boolean (>= vuosi pot-domain/pot2-vuodesta-eteenpain))
+         tr-vali-spec (cond
                         (>= vuosi 2019) (s/and ::tr-paaluvali
                                                (s/keys :req-un [::tr-ajorata
                                                                 ::tr-kaista]))
@@ -554,16 +557,25 @@ yllapitoluokkanimi->numero
          validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
          validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
                                                       (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
-                                                                    (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))
+                                                                    (if pot2?
+                                                                      (= (:toimenpide alustatoimenpide) (:toimenpide %))
+                                                                      (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
                                                               toiset-alustatoimenpiteet))
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen sisällä
          validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
                                          (keep (fn [alikohde]
+                                                 (println "petar uporedjivacu ")
+                                                 (clojure.pprint/pprint (data/diff alikohde alustatoimenpide))
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
+                                                   (println "petar USAO")
                                                    alikohde))
                                                alikohteet))
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alustatoimenpide osien-tiedot false))]
+     (println "petar validoitu bla bla 1" (pr-str validoitu-alustatoimenpiteiden-paallekkyys))
+     (println "petar validoitu bla bla 2" (pr-str validoitu-alikohdepaallekkyys))
+     (println "petar validoitu bla bla 3" (pr-str validoitu-muoto))
+     (println "petar validoitu bla bla 4" (pr-str validoitu-paikka))
      (cond-> nil
              (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
              (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
