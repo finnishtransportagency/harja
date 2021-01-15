@@ -335,4 +335,85 @@ WHERE t.urakka_id = :urakka
   -- Rajataan vain hoidon johto toimenpiteeseen
   AND tk.koodi = '23151'
 GROUP BY tehtava_nimi, toimenpideryhma,paaryhma, tr.nimi,  tk.yksiloiva_tunniste, tk_tehtava.yksiloiva_tunniste
+UNION ALL
+-- Budjetoidut bonukset eli tilaajan varaukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
+-- toimenpidekoodia 23150 ja otetaan sen emon emolta id. Eli super simppeli ja looginen. Eix jeh.
+SELECT kt.summa                                  AS budjetoitu_summa,
+       0                                         AS toteutunut_summa,
+       kt.tyyppi::TEXT                           AS maksutyyppi,
+       'bonus'                                   AS toimenpideryhma,
+       'Tilaajan varaus'                         AS tehtava_nimi,
+       'MHU Hoidonjohto'                         AS toimenpide,
+       kt.luotu                                  AS luotu,
+       concat(kt.vuosi, '-', kt.kuukausi, '-01') AS ajankohta,
+       'bonus'                                   AS toteutunut,
+       0                                         AS jarjestys,
+       'bonukset'                                AS paaryhma
+FROM kustannusarvioitu_tyo kt,
+     sopimus s
+WHERE s.urakka = :urakka
+  AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+  AND kt.tehtava IS NULL
+  -- Tämä kovakoodattu tehtäväryhmä on nimeltään - Johto- ja hallintokorvaus (J). Se on päätetty
+  -- tulkita Bonuksien alle tulevaksi Tilaajan varaukseksi Kustannusten suunnittelu sivulla, koska sen toimenpideinstanssin
+  -- kautta saatava tuotekoodi on 23150.
+  AND kt.tehtavaryhma = (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
+  AND kt.sopimus = s.id
+  AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+UNION ALL
+-- Toteutuneet bonukset eli tilaajan varaukset - toteutunut_tyo taulusta. Osa toteutuneista bonuksista tulee
+-- suoraan erillishankinnat taulusta. Mutta toteutunut_tyo tauluun siirretään budjetoidut kustannukset automaattisesti
+-- niin meidän on tehtävä sinne kanssa haku, joka rajataan toimenpideinstanssin ja tehtäväryhmän perusteella
+SELECT 0                                         AS budjetoitu_summa,
+       t.summa                                   AS toteutunut_summa,
+       t.tyyppi::TEXT                            AS maksutyyppi,
+       'bonus'                                   AS toimenpideryhma,
+       'Tilaajan varaus'                         AS tehtava_nimi,
+       'MHU Hoidonjohto'                         AS toimenpide,
+       t.luotu                                   AS luotu,
+       concat(t.vuosi, '-', t.kuukausi, '-01')   AS ajankohta,
+       'bonus'                                   AS toteutunut,
+       0                                         AS jarjestys,
+       'bonukset'                                AS paaryhma
+FROM harja.public.toteutunut_tyo t
+WHERE t.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+  AND t.tehtava IS NULL
+  -- Tämä kovakoodattu tehtäväryhmä on nimeltään - Johto- ja hallintokorvaus (J). Se on päätetty
+  -- tulkita Bonuksien alle tulevaksi Tilaajan varaukseksi Kustannusten suunnittelu sivulla, koska sen toimenpideinstanssin
+  -- kautta saatava tuotekoodi on 23150.
+  AND t.tehtavaryhma = (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
+  AND t.urakka_id = :urakka
+  AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+UNION ALL
+-- Toteutuneet erilliskustannukset eli bonukset
+-- Toteutuneita bonuksia voidaan lisätä erilliskustannusnäytötä ja ne menee erilliskustannuksiksi
+-- Tässä ei ole siis mukana kustannusarvoitu_tyo tauluun tallennetut "Tilaajan varaukset" jotka pohjimmiltaan on
+-- budjetoituja bonuksia ja jotka haetaan sitten erikseen toteutunut_tyo taulusta, koska sinne siirretään kaikki toteutuneet
+-- kustannusarvoidut_työt
+SELECT 0               AS budjetoitu_summa,
+       CASE
+           WHEN ek.tyyppi::TEXT = 'lupausbonus' OR ek.tyyppi::TEXT = 'asiakastyytyvaisyysbonus'
+               THEN (SELECT korotettuna
+                     FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
+                                                         (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
+                                                         coalesce(ek.rahasumma, 0)::NUMERIC,
+                                                         (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC))
+           ELSE ek.rahasumma
+           END         AS toteutunut_summa,
+       'bonus'         AS maksutyyppi,
+       'bonus'         AS toimenpideryhma,
+       ek.tyyppi::TEXT AS tehtava_nimi,
+       'bonus'         AS toimenpide,
+       ek.luotu        AS luotu,
+       ek.pvm::TEXT    AS ajankohta,
+       'bonus'         as toteutunut,
+       0               AS jarjestys,
+       'bonukset'      AS paaryhma
+FROM erilliskustannus ek,
+     sopimus s
+WHERE s.urakka = :urakka
+  AND ek.sopimus = s.id
+  AND ek.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+  AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND ek.poistettu IS NOT TRUE
 ORDER BY jarjestys ASC, ajankohta asc;

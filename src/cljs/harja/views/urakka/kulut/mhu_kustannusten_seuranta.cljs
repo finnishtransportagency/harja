@@ -200,8 +200,6 @@
         varaukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:varaukset rivit-paaryhmittain))
         varaus-negatiivinen? (big/gt (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0)))
-        bonus-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:bonukset rivit-paaryhmittain))
-        ;_ (js/console.log "bonus-toimenpiteet" (pr-str bonus-toimenpiteet))
         bonus-negatiivinen? (big/gt (big/->big (or (:bonus-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:bonus-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -281,9 +279,8 @@
                                 (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
                                 erillishankinnat-negatiivinen?))
-
-         #_(paaryhma-taulukkoon e! app "Bonukset" :bonukset
-                                bonus-toimenpiteet bonus-negatiivinen?
+         (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
+                                nil bonus-negatiivinen?
                                 (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
                                 (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
                                 (fmt->big (- (:bonukset-toteutunut rivit-paaryhmittain)
@@ -291,7 +288,7 @@
                                 (muotoile-prosentti
                                   (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
                                   (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
-                                  tilaajan-varaus-negatiivinen?))
+                                  bonus-negatiivinen?))
          ; Näytä yhteensä rivi
          [:tr.bottom-border
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
