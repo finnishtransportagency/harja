@@ -375,7 +375,7 @@ SELECT 0                                         AS budjetoitu_summa,
        'bonus'                                   AS toteutunut,
        0                                         AS jarjestys,
        'bonukset'                                AS paaryhma
-FROM harja.public.toteutunut_tyo t
+FROM toteutunut_tyo t
 WHERE t.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
   AND t.tehtava IS NULL
   -- Tämä kovakoodattu tehtäväryhmä on nimeltään - Johto- ja hallintokorvaus (J). Se on päätetty
