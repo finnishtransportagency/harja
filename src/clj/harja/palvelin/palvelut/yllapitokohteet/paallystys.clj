@@ -325,7 +325,7 @@
     paallystysilmoitus))
 
 (defn- luo-paallystysilmoitus [db user urakka-id
-                               {:keys [paallystyskohde-id ilmoitustiedot perustiedot versio]
+                               {:keys [paallystyskohde-id ilmoitustiedot perustiedot lisatiedot versio]
                                 :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
@@ -347,7 +347,8 @@
             :versio versio
             :ilmoitustiedot ilmoitustiedot
             :takuupvm (konversio/sql-date takuupvm)
-            :kayttaja (:id user)}))))
+            :kayttaja (:id user)
+            :lisatiedot lisatiedot}))))
 
 (defn- tarkista-paallystysilmoituksen-lukinta [paallystysilmoitus-kannassa]
   (log/debug "Tarkistetaan onko POT lukittu...")
@@ -402,7 +403,7 @@
 
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id
-   {:keys [paallystyskohde-id ilmoitustiedot perustiedot] :as paallystysilmoitus}]
+   {:keys [paallystyskohde-id ilmoitustiedot perustiedot lisatiedot] :as paallystysilmoitus}]
   (if (oikeudet/voi-kirjoittaa?
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
         urakka-id
@@ -425,6 +426,7 @@
              :takuupvm (konversio/sql-date takuupvm)
              :ilmoitustiedot ilmoitustiedot
              :muokkaaja (:id user)
+             :lisatiedot lisatiedot
              :id paallystyskohde-id
              :urakka urakka-id})))
     (log/debug "Ei oikeutta päivittää perustietoja.")))

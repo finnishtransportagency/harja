@@ -17,6 +17,7 @@
 (defonce pot2-nakymassa? (atom false))
 (defonce kohdeosat-atom (atom nil))
 (defonce alustarivit-atom (atom nil))
+(defonce lisatiedot-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -24,6 +25,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
+(defrecord LisaaAlustaToimenpide [])
 
 (extend-protocol tuck/Event
 
@@ -55,7 +57,8 @@
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                                   (:id urakka))
                       :kulutuskerros kulutuskerros
-                      :alusta alusta}]
+                      :alusta alusta
+                      :lisatiedot (:lisatiedot vastaus)}]
       (-> app
           (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
@@ -74,7 +77,8 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
-                               (assoc :versio 2)
+                               (assoc :lisatiedot @lisatiedot-atom
+                                      :versio 2)
                                (update :ilmoitustiedot dissoc :virheet)
                                (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
                                                                 (into (sorted-map)
@@ -91,5 +95,10 @@
                          {:onnistui paallystys/->TallennaPaallystysilmoitusOnnistui
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
+
+  LisaaAlustaToimenpide
+  (process-event [_ app]
+    (println "Lisa_AlustanToimenpide " )
+    (assoc app :tarjoa-alustatoimenpide true))
 
   )

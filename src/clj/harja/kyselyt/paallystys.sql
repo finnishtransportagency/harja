@@ -73,6 +73,7 @@ WHERE paallystyskohde = :paallystyskohde;
 SELECT
   pi.id,
   pi.versio                     AS "versio",
+  pi.lisatiedot,
   tila,
   ypka.kohde_alku               AS "aloituspvm",
   ypka.kohde_valmis             AS "valmispvm-kohde",
@@ -192,7 +193,8 @@ SET
   takuupvm       = :takuupvm,
   muokattu       = NOW(),
   muokkaaja      = :muokkaaja,
-  poistettu      = FALSE
+  poistettu      = FALSE,
+  lisatiedot     = :lisatiedot
 WHERE paallystyskohde = :id
       AND paallystyskohde IN (SELECT id
                               FROM yllapitokohde
@@ -229,13 +231,13 @@ WHERE paallystyskohde = :id
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu, versio)
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu, versio, lisatiedot)
 VALUES (:paallystyskohde,
         :tila :: PAALLYSTYSTILA,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
-        :kayttaja, FALSE, :versio);
+        :kayttaja, FALSE, :versio, :lisatiedot);
 
 -- name: hae-paallystysilmoituksen-kommentit
 -- Hakee annetun päällystysilmoituksen kaikki kommentit (joita ei ole poistettu) sekä

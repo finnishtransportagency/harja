@@ -2,3 +2,4 @@
 ALTER TABLE paallystysilmoitus ADD COLUMN versio INTEGER;
 UPDATE paallystysilmoitus SET versio = 1;
 ALTER TABLE paallystysilmoitus ALTER COLUMN versio SET NOT NULL;
+ALTER TABLE paallystysilmoitus ADD COLUMN lisatiedot TEXT;

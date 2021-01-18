@@ -163,6 +163,7 @@
 (def pot2-testidata
   {:paallystyskohde-id 28,
    :versio 2,
+   :lisatiedot "POT2 lisätieto"
    :perustiedot {:tila nil,
                  :tr-kaista nil,
                  :kohdenimi "Aloittamaton kohde mt20",

@@ -22,7 +22,8 @@
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.alusta :as alusta]
     [harja.views.urakka.pot2.kulutuskerros :as kulutuskerros]
-    [harja.views.urakka.pot-yhteinen :as pot-yhteinen])
+    [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
+    [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -89,16 +90,21 @@
 
 (defn- toimenpiteet-ja-materiaalit-otsikkorivi
   "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"
-  [e! app]
+  [e!]
   [:div
-   [:h2 {:style {:display "inline-block"}}
-    "Toimenpiteet ja materiaalit"]
    [napit/nappi "Muokkaa urakan materiaaleja *)"
     #(e! (mk-tiedot/->NaytaModal true))
     {:ikoni (ikonit/livicon-pen)
      :luokka "napiton-nappi"
      :style {:background-color "#fafafa"
-             :margin-left "2rem"}}]])
+             :margin-left "0"}}]])
+
+(defn lisatiedot
+  [lisatiedot-atom]
+  [:span
+   [:h6 "Lisätiedot ja huomautukset"]
+   [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]}
+    (r/wrap @lisatiedot-atom #(reset! lisatiedot-atom %))]])
 
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
@@ -124,6 +130,7 @@
                              (-> (:alusta paallystysilmoitus-lomakedata)
                                  (yllapitokohteet-domain/jarjesta-yllapitokohteet)
                                  (yllapitokohteet-domain/indeksoi-kohdeosat)))
+                     (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
@@ -152,15 +159,19 @@
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
            [:hr]
-           [toimenpiteet-ja-materiaalit-otsikkorivi e! app]
-
+           [toimenpiteet-ja-materiaalit-otsikkorivi e!]
+           [yleiset/valitys-vertical]
            [kulutuskerros/kulutuskerros e! kulutuskerros-app {:massat massat
                                                               :materiaalikoodistot materiaalikoodistot
                                                               :validointi (:kulutuskerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+           [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)}
             pot2-tiedot/alustarivit-atom]
+           [yleiset/valitys-vertical]
+           [lisatiedot pot2-tiedot/lisatiedot-atom]
+           [yleiset/valitys-vertical]
            [tallenna e! tallenna-app {:kayttaja kayttaja
                                       :urakka-id (:id urakka)
                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
