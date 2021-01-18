@@ -11,15 +11,15 @@
 (defn muodosta-henkilo [data]
   (when data
     [:henkilo
-     [:etunimi (merkkijono/leikkaa 32 (:etunimi data))]
-     [:sukunimi (merkkijono/leikkaa 32 (:sukunimi data))]
+     [:etunimi (merkkijono/leikkaa 32 (escape-xml-varten (:etunimi data)))]
+     [:sukunimi (merkkijono/leikkaa 32 (escape-xml-varten (:sukunimi data)))]
      [:matkapuhelin (merkkijono/leikkaa 32 (:matkapuhelin data))]
      [:sahkoposti (merkkijono/leikkaa 64 (:sahkoposti data))]]))
 
 (defn muodosta-organisaatio [data]
   (when data
     [:organisaatio
-     [:nimi (:organisaatio data)]
+     [:nimi (escape-xml-varten (:organisaatio data))]
      [:ytunnus (:ytunnus data)]]))
 
 (defn muodosta-vapaateksti [vakiofraasi vapaateksti]
