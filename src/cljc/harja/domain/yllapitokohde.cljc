@@ -419,7 +419,7 @@ yllapitoluokkanimi->numero
   ([tr-1 tr-2 kokonaan-sisalla?]
    (and
      (not (and (contains? tr-1 :jarjestysnro)
-               (contains? tr-1 :jarjestysnro)
+               (contains? tr-2 :jarjestysnro)
                (not= (:jarjestysnro tr-1) (:jarjestysnro tr-2))))
      (let [tr-osoitteet [tr-1 tr-2]
            tr-spekista #(mapv (fn [spectulos]
@@ -564,18 +564,11 @@ yllapitoluokkanimi->numero
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen sisällä
          validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
                                          (keep (fn [alikohde]
-                                                 (println "petar uporedjivacu ")
-                                                 (clojure.pprint/pprint (data/diff alikohde alustatoimenpide))
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
-                                                   (println "petar USAO")
                                                    alikohde))
                                                alikohteet))
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alustatoimenpide osien-tiedot false))]
-     (println "petar validoitu bla bla 1" (pr-str validoitu-alustatoimenpiteiden-paallekkyys))
-     (println "petar validoitu bla bla 2" (pr-str validoitu-alikohdepaallekkyys))
-     (println "petar validoitu bla bla 3" (pr-str validoitu-muoto))
-     (println "petar validoitu bla bla 4" (pr-str validoitu-paikka))
      (cond-> nil
              (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
              (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
