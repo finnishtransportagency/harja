@@ -2,20 +2,20 @@
 -- single?: true
 SELECT count(*) as maara
   FROM toteutunut_tyo tt
-WHERE tt.vuosi = :vuosi
-  AND tt.kuukausi = :kuukausi;
+ WHERE tt.vuosi = :vuosi
+   AND tt.kuukausi = :kuukausi;
 
 -- name: siirra-kustannusarvoidut-tyot-toteutumiin!
-INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, urakka_id, luotu)
+INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus_id, urakka_id, luotu)
 SELECT k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma, k.toimenpideinstanssi, k.sopimus,
        (select s.urakka FROM sopimus s where s.id = k.sopimus) as "urakka-id", NOW()
-  FROM kustannusarvioitu_tyo k
- WHERE k.kuukausi = :kuukausi
-   AND k.vuosi = :vuosi
+FROM kustannusarvioitu_tyo k
+WHERE k.kuukausi = :kuukausi
+  AND k.vuosi = :vuosi
 ON CONFLICT DO NOTHING ;
 
 -- name: siirra-johto-ja-hallintokorvaukset-toteutumiin!
-INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, urakka_id, luotu)
+INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus_id, urakka_id, luotu)
 SELECT j.vuosi, j.kuukausi, (j.tunnit * j.tuntipalkka) AS summa, 'laskutettava-tyo' AS tyyppi, null as tehtava,
        (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
        (SELECT tpi.id AS id
@@ -34,6 +34,6 @@ SELECT j.vuosi, j.kuukausi, (j.tunnit * j.tuntipalkka) AS summa, 'laskutettava-t
        j."urakka-id",
        NOW()
 FROM johto_ja_hallintokorvaus j
-WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) <
-      date_trunc('month', current_date)
+WHERE j.kuukausi = :kuukausi
+  AND j.vuosi = :vuosi
 ON CONFLICT DO NOTHING ;

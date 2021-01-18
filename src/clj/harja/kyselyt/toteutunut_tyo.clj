@@ -7,4 +7,3 @@
 
 (defqueries "harja/kyselyt/toteutunut_tyo.sql"
             {:positional? true})
-
