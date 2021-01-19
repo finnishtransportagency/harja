@@ -545,8 +545,9 @@ yllapitoluokkanimi->numero
 
 (defn validoi-alustatoimenpide
   "Olettaa, että annetut alikohteet ovat oikein. Alikohde voi olla myös muukohde."
-  ([alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot] (validoi-alustatoimenpide alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot (pvm/vuosi (pvm/nyt))))
-  ([alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot vuosi]
+  ([alikohteet muutkohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot muiden-kohteiden-osien-tiedot]
+   (validoi-alustatoimenpide alikohteet muutkohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot muiden-kohteiden-osien-tiedot (pvm/vuosi (pvm/nyt))))
+  ([alikohteet muutkohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot muiden-kohteiden-osien-tiedot vuosi]
    (let [pot2? (boolean (>= vuosi pot-domain/pot2-vuodesta-eteenpain))
          tr-vali-spec (cond
                         (>= vuosi 2019) (s/and ::tr-paaluvali
@@ -561,14 +562,15 @@ yllapitoluokkanimi->numero
                                                                       (= (:toimenpide alustatoimenpide) (:toimenpide %))
                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
                                                               toiset-alustatoimenpiteet))
-         ;; Alustatoimenpiteen pitäisi olla jonku alikohteen sisällä
+         ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
          validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
                                          (keep (fn [alikohde]
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
                                                    alikohde))
-                                               alikohteet))
+                                               (concat alikohteet muutkohteet)))
+         kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
          validoitu-paikka (when (empty? validoitu-muoto)
-                            (validoi-paikka alustatoimenpide osien-tiedot false))]
+                            (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
      (cond-> nil
              (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
              (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
@@ -965,7 +967,7 @@ yllapitoluokkanimi->numero
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet
                                            :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]
-                                       (validoi-alustatoimenpide alikohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot vuosi)))]
+                                       (validoi-alustatoimenpide alikohteet muutkohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot muiden-kohteiden-tiedot vuosi)))]
     (cond-> {}
             (not (empty? kohde-validoitu)) (assoc :paakohde [(validoitu-kohde-tekstit kohde-validoitu true)])
             (not (empty? alikohteet-validoitu)) (assoc :alikohde (map #(validoitu-kohde-tekstit % false) alikohteet-validoitu))

@@ -907,16 +907,16 @@
 
 (def pot2-alusta-esimerkki
   [{:tr-kaista       11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
-    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 11...",
-    :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}
+    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 11... #1",
+    :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32,}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
-    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 12...",
-    :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32, :pot2a_id 2}
+    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 12... #2",
+    :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32,}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys (- 2000 1),
-    :materiaali      1, :pituus 500, :toimenpide_tiedot "",
+    :materiaali      1, :pituus 500, :toimenpide_tiedot "Lisätietoa kaistalta 12... #3",
     :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
-    :materiaali      1, :pituus 500, :toimenpide_tiedot "",
+    :materiaali      1, :pituus 500, :toimenpide_tiedot "Lisätietoa kaistalta 12... #4",
     :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1}])
 
 (deftest tallenna-pot2-poista-alustarivi
@@ -1006,8 +1006,8 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (assoc-in [:alusta 4]
                                          {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 10, :tr-alkuosa 10, :tr-loppuetaisyys 1500,
-                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta",
-                                          :tr-alkuetaisyys 1066, :tr-numero muu-tr-numero, :toimenpide 32, :pot2a_id 1}))
+                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta #4 muu tie",
+                                          :tr-alkuetaisyys 1066, :tr-numero muu-tr-numero, :toimenpide 32}))
         ;; Tehdään tallennus joka lisää kaksi alustariviä
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
@@ -1020,11 +1020,17 @@
                                                                             :sopimus-id sopimus-id
                                                                             :paallystyskohde-id paallystyskohde-id})
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)]
-    (is (= 4 (count alustarivit-jalkeen)))
-    (is (= #{{:pot2a_id 1 :tr-numero 20}
-             {:pot2a_id 2 :tr-numero 20}
-             {:pot2a_id 3 :tr-numero 20}
-             {:pot2a_id 4 :tr-numero muu-tr-numero}}
+    (is (= 5 (count alustarivit-jalkeen)))
+    (is (= #{{:pot2a_id 3
+              :tr-numero 20}
+             {:pot2a_id 4
+              :tr-numero 20}
+             {:pot2a_id 5
+              :tr-numero 20}
+             {:pot2a_id 6
+              :tr-numero 20}
+             {:pot2a_id 7
+              :tr-numero muu-tr-numero}}
            (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
