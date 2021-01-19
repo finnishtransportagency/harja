@@ -555,19 +555,21 @@ yllapitoluokkanimi->numero
                                                                 ::tr-kaista]))
                         (= vuosi 2018) ::tr-vali
                         (<= vuosi 2017) ::tr-paaluvali)
-         validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
-         validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
-                                                      (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
-                                                                    (if pot2?
-                                                                      (= (:toimenpide alustatoimenpide) (:toimenpide %))
-                                                                      (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
-                                                              toiset-alustatoimenpiteet))
          kaikki-kohteet (concat alikohteet muutkohteet)
          sallitut-tienumerot (into #{}
                                    (map :tr-numero kaikki-kohteet))
          kielletty-tienumero (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
                                (:tr-numero alustatoimenpide))
          _ (println "ONKO! 0  Minkä tien alusta?" (:tr-numero alustatoimenpide) kielletty-tienumero)
+         validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
+         validoitu-alustatoimenpiteiden-paallekkyys (when (and (empty? validoitu-muoto)
+                                                               (nil? kielletty-tienumero))
+                                                      (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
+                                                                    (if pot2?
+                                                                      (= (:toimenpide alustatoimenpide) (:toimenpide %))
+                                                                      (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
+                                                              toiset-alustatoimenpiteet))
+         _ (println "ONKO! 1  Minkä alustatoimenpiteiden päällekkyys?" validoitu-alustatoimenpiteiden-paallekkyys)
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
          validoitu-alikohdepaallekkyys (when (and (empty? validoitu-muoto)
                                                   (nil? kielletty-tienumero))
@@ -576,9 +578,9 @@ yllapitoluokkanimi->numero
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
                                                    alikohde))
                                                kaikki-kohteet))
-         _ (println "ONKO! 1  validoitu-alikohdepaallekkyys" validoitu-alikohdepaallekkyys)
+         _ (println "ONKO! 2  validoitu-alikohdepaallekkyys" validoitu-alikohdepaallekkyys)
          kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
-         _ (println "ONKO! 2 muiden-kohteiden-osien-tiedot" muiden-kohteiden-osien-tiedot)
+         _ (println "ONKO! 3 muiden-kohteiden-osien-tiedot" muiden-kohteiden-osien-tiedot)
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
      ;; ONKO TIEREKISTERISSÄ tie 5555, jolla osa 1 kaista 11, jne .
@@ -587,7 +589,7 @@ yllapitoluokkanimi->numero
              (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
              (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
              (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)
-             (not (nil? kielletty-tienumero)) (assoc :muoto {:tr-numero :tienumero-ei-alikohteissa})))))
+             (not (nil? kielletty-tienumero)) (assoc :alustatoimenpide-kieletty-tienumero {:tr-numero :tienumero-ei-alikohteissa})))))
 
 ;;;;;;;; Virhetekstien pohjia ;;;;;;;;;;
 ;; "tr-osa" on tierekisteriosa, kun taas "osa" on ajoradan osa.
