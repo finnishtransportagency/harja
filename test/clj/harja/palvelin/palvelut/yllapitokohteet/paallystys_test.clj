@@ -997,15 +997,15 @@
         paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         muu-tr-numero 7777
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
-                               (assoc-in [:kulutuskerros 0 :tr-numero] muu-tr-numero
-#_(                                         {:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
-                                          :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
-                                          :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 2000, :nimi "Muu tie",
-                                          :materiaali 2, :tr-alkuetaisyys 1000, :piennar false,
-                                          :tr-numero muu-tr-numero, :toimenpide 23, :pot2p_id 3}))
-                               (assoc :alusta [])
-                               (assoc-in [:alusta 0]
-                                         {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+                               (assoc-in [:kulutuskerros 2]
+                                         {:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
+                                          :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 10, :jarjestysnro 1,
+                                          :tr-alkuosa 10, :massamenekki 333, :tr-loppuetaisyys 1500, :nimi "Muu tie",
+                                          :materiaali 2, :tr-alkuetaisyys 1066, :piennar false,
+                                          :tr-numero muu-tr-numero, :toimenpide 23, :pot2p_id 3})
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (assoc-in [:alusta 4]
+                                         {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 10, :tr-alkuosa 10, :tr-loppuetaisyys 1500,
                                           :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta",
                                           :tr-alkuetaisyys 1066, :tr-numero muu-tr-numero, :toimenpide 32, :pot2a_id 1}))
         ;; Tehdään tallennus joka lisää kaksi alustariviä
@@ -1031,16 +1031,19 @@
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alikohde-on-tiella-joka-ei-loydy-kulutuskerroksissa
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         muu-tr-numero 7777
-        vaara-tr-numero 8888
+        vaara-tr-numero 5555
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
-                               (assoc-in [:kulutuskerros 0]
+                               (assoc-in [:kulutuskerros 2]
                                          {:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
-                                          :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
-                                          :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 2000, :nimi "Muu tie",
+                                          :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 10, :jarjestysnro 1,
+                                          :tr-alkuosa 10, :massamenekki 333, :tr-loppuetaisyys 2000, :nimi "Muu tie",
                                           :materiaali 2, :tr-alkuetaisyys 1000, :piennar false,
                                           :tr-numero muu-tr-numero, :toimenpide 23, :pot2p_id 3})
-                               (assoc :alusta pot2-alusta-esimerkki)
-                               (assoc-in [:alusta 3 :tr-numero] vaara-tr-numero))]
+                               (assoc :alusta [])
+                               (assoc-in [:alusta 0]
+                                         {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta",
+                                          :tr-alkuetaisyys 1066, :tr-numero vaara-tr-numero, :toimenpide 32, :pot2a_id 1}))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Väärä tr-numero alikohteella")))
 
