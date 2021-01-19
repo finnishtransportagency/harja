@@ -113,7 +113,10 @@
 (defn- rivita-toimenpiteet-paaryhmalle [e! app toimenpiteet]
   (map
     (fn [toimenpide]
-      (let [hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
+      (let [paaryhma (:paaryhma toimenpide)
+            toimenpide-nimi (:toimenpide toimenpide)
+            rivi-avain (keyword (str paaryhma "-" toimenpide-nimi))
+            hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
             rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
             ;; Todo: Lisää vielä bonukset tietokantahakuun
             bonus-tehtavat (filter #(= "bonus" (:toimenpideryhma %)) (:tehtavat toimenpide))
@@ -122,22 +125,23 @@
             negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
                                   (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
 
-            muodostetut-tehtavat (if-not (= (get-in app [:valittu-rivi :toimenpide]) toimenpide)
+            muodostetut-tehtavat (if-not (contains? (:avatut-rivit app) rivi-avain)
                                    nil
                                    (concat
                                      (listaa-pelkat-tehtavat toimenpide toimistokulu-tehtavat)
                                      (listaa-pelkat-tehtavat toimenpide hankinta-tehtavat)
-                                     (listaa-pelkat-tehtavat toimenpide rahavaraus-tehtavat)))]
+                                     (listaa-pelkat-tehtavat toimenpide rahavaraus-tehtavat)
+                                     (listaa-pelkat-tehtavat toimenpide bonus-tehtavat)))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
                         [:tr.bottom-border
                          (merge
                            (when (> (count (:tehtavat toimenpide)) 0)
                              {:class "selectable"
-                              :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :toimenpide toimenpide))}))
+                              :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi rivi-avain))}))
                          [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
                          [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}
                           (when (> (count (:tehtavat toimenpide)) 0)
-                            (if (= (get-in app [:valittu-rivi :toimenpide]) toimenpide)
+                            (if (contains? (:avatut-rivit app) rivi-avain)
                               [:img {:alt "Expander" :src "images/expander-down.svg"}]
                               [:img {:alt "Expander" :src "images/expander.svg"}]))]
                          [:td {:style {:width (:tehtava leveydet)}} (:toimenpide toimenpide)]
@@ -158,11 +162,11 @@
   (let [row-index (r/atom 0)]
     (doall (concat
              [^{:key (str paaryhma "-" (hash toimenpiteet))}
-              [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma paaryhma-avain))
+              [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))
                                              :key paaryhma}
                [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
                 (if (and (> (count toimenpiteet) 0)
-                         (= paaryhma-avain (get-in app [:valittu-rivi :paaryhma])))
+                         (contains? (:avatut-rivit app) paaryhma-avain))
                   [:img {:alt "Expander" :src "images/expander-down.svg"}]
                   (when (> (count toimenpiteet) 0)
                     [:img {:alt "Expander" :src "images/expander.svg"}]))]
@@ -176,7 +180,7 @@
                [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
                      :style {:width (:prosentti leveydet)}} prosentti]]]
 
-             (when (= paaryhma-avain (get-in app [:valittu-rivi :paaryhma]))
+             (when (contains? (:avatut-rivit app) paaryhma-avain)
                (mapcat (fn [rivi]
                          (let [_ (reset! row-index (inc @row-index))]
                            [^{:key (str @row-index "-" (hash rivi))}
@@ -189,6 +193,7 @@
                                                    (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0)))
         hallintakorvaus-negatiivinen? (big/gt (big/->big (or (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0)))
+        hoidonjohdonpalkkio-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:hoidonjohdonpalkkio rivit-paaryhmittain))
         hoidonjohdonpalkkio-negatiivinen? (big/gt (big/->big (or (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain) 0))
                                                   (big/->big (or (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0)))
         erillishankinnat-negatiivinen? (big/gt (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
@@ -260,7 +265,7 @@
                                 (big/->big (or (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0))
                                 hallintakorvaus-negatiivinen?))
          (paaryhma-taulukkoon e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio
-                              nil hoidonjohdonpalkkio-negatiivinen?
+                              hoidonjohdonpalkkio-toimenpiteet hoidonjohdonpalkkio-negatiivinen?
                               (fmt->big (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain))
                               (fmt->big (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain))
                               (fmt->big (- (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain)
@@ -311,9 +316,9 @@
        [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
         [:tbody
          [:tr.bottom-border.selectable {:key "Lisätyöt"
-                                        :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :paaryhma :lisatyot))}
+                                        :on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi :lisatyot))}
           [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
-           (if (and (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+           (if (and (contains? (:avatut-rivit app) :lisatyot)
                     (> (count lisatyot) 0))
              [:img {:alt "Expander" :src "images/expander-down.svg"}]
              (when (> (count lisatyot) 0)
@@ -324,7 +329,7 @@
           [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (:lisatyot-summa rivit-paaryhmittain))]
           [:td {:style {:width (:erotus leveydet)}}]
           [:td {:style {:width (:prosentti leveydet)}}]]
-         (when (= :lisatyot (get-in app [:valittu-rivi :paaryhma]))
+         (when (contains? (:avatut-rivit app) :lisatyot)
            (doall
              (for [l lisatyot]
                ^{:key (hash l)}
@@ -389,7 +394,7 @@
 
       [:div.row.filtterit-container
        [:div.col-xs-6.col-md-3.filtteri
-        [:span.alasvedon-otsikko "Hoitokausi"]
+        [:span.alasvedon-otsikko "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
@@ -405,7 +410,7 @@
                                                     (let [[alkupvm _] %
                                                           kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
                                                       (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
-                                                    "Koko hoitokausi")
+                                                    "Kaikki")
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokauden-kuukaudet]]
        [:div.col-xs-6.col-md-3.filtteri {:style {:padding-top "21px"}}

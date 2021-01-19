@@ -23,7 +23,7 @@
 (defrecord HaeBudjettitavoite [])
 (defrecord HaeBudjettitavoiteHakuOnnistui [vastaus])
 (defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
-(defrecord AvaaRivi [tyyppi avain])
+(defrecord AvaaRivi [avain])
 (defrecord ValitseHoitokausi [urakka vuosi])
 (defrecord ValitseKuukausi [urakka kuukausi vuosi])
 
@@ -90,12 +90,15 @@
     (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
     app)
 
-  ;; Vain yksi rivi voi olla avattuna kerralla, joten tallennetaan avain app-stateen tai poistetaan se, jos se oli jo valittuna
+  ;; Monta riviä voi olla avattuna kerrallaan
   AvaaRivi
-  (process-event [{tyyppi :tyyppi avain :avain} app]
-    (if (= avain (get-in app [:valittu-rivi tyyppi]))
-      (assoc-in app [:valittu-rivi tyyppi] nil)
-      (assoc-in app [:valittu-rivi tyyppi] avain)))
+  (process-event [{avain :avain} app]
+    (let [app (if (nil? (:avatut-rivit app))
+                (assoc app :avatut-rivit #{})
+                app)]
+      (if (contains? (:avatut-rivit app) avain)
+        (assoc app :avatut-rivit (disj (:avatut-rivit app) avain))
+        (assoc app :avatut-rivit (merge (:avatut-rivit app) avain)))))
 
   ValitseHoitokausi
   (process-event [{urakka :urakka vuosi :vuosi} app]
