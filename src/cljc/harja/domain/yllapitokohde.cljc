@@ -563,21 +563,22 @@ yllapitoluokkanimi->numero
                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
                                                               toiset-alustatoimenpiteet))
          kaikki-kohteet (concat alikohteet muutkohteet)
+         sallitut-tienumerot (into #{}
+                                   (map :tr-numero kaikki-kohteet))
+         kielletty-tienumero (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
+                               (:tr-numero alustatoimenpide))
+         _ (println "ONKO! 0  Minkä tien alusta?" (:tr-numero alustatoimenpide) kielletty-tienumero)
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
-         validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
+         validoitu-alikohdepaallekkyys (when (and (empty? validoitu-muoto)
+                                                  (nil? kielletty-tienumero))
                                          (keep (fn [alikohde]
                                                  ;; validoi tässä väärä tienumero?
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
                                                    alikohde))
                                                kaikki-kohteet))
-         _ (println "ONKO! 0  Minkä tien alusta?" (:tr-numero alustatoimenpide))
          _ (println "ONKO! 1  validoitu-alikohdepaallekkyys" validoitu-alikohdepaallekkyys)
          kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
          _ (println "ONKO! 2 muiden-kohteiden-osien-tiedot" muiden-kohteiden-osien-tiedot)
-         sallitut-tienumerot (into #{}
-                                   (map :tr-numero kaikki-kohteet))
-         kielletty-tienumero (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
-                               (:tr-numero alustatoimenpide))
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
      ;; ONKO TIEREKISTERISSÄ tie 5555, jolla osa 1 kaista 11, jne .
