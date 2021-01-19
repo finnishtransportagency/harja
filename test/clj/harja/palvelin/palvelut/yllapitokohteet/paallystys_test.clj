@@ -1034,22 +1034,22 @@
            (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
-(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alikohde-on-tiella-joka-ei-loydy-kulutuskerroksissa
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivi-on-tiella-joka-ei-loydy-kulutuskerroksesta
+  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         muu-tr-numero 7777
         vaara-tr-numero 5555
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc-in [:kulutuskerros 2]
                                          {:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
                                           :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 10, :jarjestysnro 1,
-                                          :tr-alkuosa 10, :massamenekki 333, :tr-loppuetaisyys 2000, :nimi "Muu tie",
-                                          :materiaali 2, :tr-alkuetaisyys 1000, :piennar false,
+                                          :tr-alkuosa 10, :massamenekki 333, :tr-loppuetaisyys 1500, :nimi "Muu tie",
+                                          :materiaali 2, :tr-alkuetaisyys 1066, :piennar false,
                                           :tr-numero muu-tr-numero, :toimenpide 23, :pot2p_id 3})
-                               (assoc :alusta [])
-                               (assoc-in [:alusta 0]
-                                         {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
-                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta",
-                                          :tr-alkuetaisyys 1066, :tr-numero vaara-tr-numero, :toimenpide 32, :pot2a_id 1}))]
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (assoc-in [:alusta 4]
+                                         {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 10, :tr-alkuosa 10, :tr-loppuetaisyys 1500,
+                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta #4 muu tie",
+                                          :tr-alkuetaisyys 1066, :tr-numero vaara-tr-numero, :toimenpide 32}))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Väärä tr-numero alikohteella")))
 

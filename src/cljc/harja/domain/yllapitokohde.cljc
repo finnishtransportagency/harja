@@ -562,20 +562,31 @@ yllapitoluokkanimi->numero
                                                                       (= (:toimenpide alustatoimenpide) (:toimenpide %))
                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
                                                               toiset-alustatoimenpiteet))
+         kaikki-kohteet (concat alikohteet muutkohteet)
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
          validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
                                          (keep (fn [alikohde]
+                                                 ;; validoi tässä väärä tienumero?
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
                                                    alikohde))
-                                               (concat alikohteet muutkohteet)))
+                                               kaikki-kohteet))
+         _ (println "ONKO! 0  Minkä tien alusta?" (:tr-numero alustatoimenpide))
+         _ (println "ONKO! 1  validoitu-alikohdepaallekkyys" validoitu-alikohdepaallekkyys)
          kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
+         _ (println "ONKO! 2 muiden-kohteiden-osien-tiedot" muiden-kohteiden-osien-tiedot)
+         sallitut-tienumerot (into #{}
+                                   (map :tr-numero kaikki-kohteet))
+         kielletty-tienumero (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
+                               (:tr-numero alustatoimenpide))
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
+     ;; ONKO TIEREKISTERISSÄ tie 5555, jolla osa 1 kaista 11, jne .
      (cond-> nil
              (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
              (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
              (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
-             (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
+             (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)
+             (not (nil? kielletty-tienumero)) (assoc :muoto {:tr-numero :tienumero-ei-alikohteissa})))))
 
 ;;;;;;;; Virhetekstien pohjia ;;;;;;;;;;
 ;; "tr-osa" on tierekisteriosa, kun taas "osa" on ajoradan osa.
@@ -619,29 +630,30 @@ yllapitoluokkanimi->numero
                   (str "Tiellä " tr-numero-tieto " ei ole osaa " tr-osa-annettu))}})
 
 (def muoto-virhetekstit
-  {:tr-numero        {:ei-arvoa "Anna tienumero"}
-   :tr-ajorata       {:ei-arvoa          "Tarkista ajorata"
-                      :ei-saa-olla-arvoa "Ei saa olla ajorataa"}
-   :tr-kaista        {:ei-arvoa          "Tarkista kaista"
-                      :ei-saa-olla-arvoa "Ei saa olla kaistaa"}
-   :tr-alkuosa       {:ei-arvoa    #?(:clj  "Anna alkuosa"
-                                      :cljs "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
-                      :vaarin-pain #?(:clj  "Alkuosa ei voi olla loppuosan jälkeen"
-                                      :cljs "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen")}
-   :tr-alkuetaisyys  {:ei-arvoa    #?(:clj  "Anna alkuetaisyys"
-                                      :cljs "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys")
-                      :vaarin-pain #?(:clj  "Alkuetaisyys ei voi olla loppuetäisyyden jälkeen"
-                                      :cljs "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")}
-   :tr-loppuosa      {:ei-arvoa          #?(:clj  "Anna loppuosa"
-                                            :cljs "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
-                      :ei-saa-olla-arvoa "Ei saa olla loppuosaa"
-                      :vaarin-pain       #?(:clj  "Loppuosa ei voi olla alkuosaa ennen"
-                                            :cljs "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")}
-   :tr-loppuetaisyys {:ei-arvoa          #?(:clj  "Anna loppuetaisyys"
-                                            :cljs "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")
+  {:tr-numero {:ei-arvoa "Anna tienumero"
+               :tienumero-ei-alikohteissa "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista."}
+   :tr-ajorata {:ei-arvoa "Tarkista ajorata"
+                :ei-saa-olla-arvoa "Ei saa olla ajorataa"}
+   :tr-kaista {:ei-arvoa "Tarkista kaista"
+               :ei-saa-olla-arvoa "Ei saa olla kaistaa"}
+   :tr-alkuosa {:ei-arvoa #?(:clj  "Anna alkuosa"
+                             :cljs "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
+                :vaarin-pain #?(:clj  "Alkuosa ei voi olla loppuosan jälkeen"
+                                :cljs "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen")}
+   :tr-alkuetaisyys {:ei-arvoa #?(:clj  "Anna alkuetaisyys"
+                                  :cljs "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys")
+                     :vaarin-pain #?(:clj  "Alkuetaisyys ei voi olla loppuetäisyyden jälkeen"
+                                     :cljs "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")}
+   :tr-loppuosa {:ei-arvoa #?(:clj  "Anna loppuosa"
+                              :cljs "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
+                 :ei-saa-olla-arvoa "Ei saa olla loppuosaa"
+                 :vaarin-pain #?(:clj  "Loppuosa ei voi olla alkuosaa ennen"
+                                 :cljs "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")}
+   :tr-loppuetaisyys {:ei-arvoa #?(:clj  "Anna loppuetaisyys"
+                                   :cljs "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")
                       :ei-saa-olla-arvoa "Ei saa olla loppuetaisyytta"
-                      :vaarin-pain       #?(:clj  "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"
-                                            :cljs "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")}})
+                      :vaarin-pain #?(:clj  "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"
+                                      :cljs "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")}})
 
 (def paallekkaisyys-virhetekstit
   {:alikohde         {:paakohteen-ulkopuolella                      "Alikohde ei voi olla pääkohteen ulkopuolella"
