@@ -41,7 +41,11 @@ SELECT k.vuosi,
        NOW()
 FROM kustannusarvioitu_tyo k
 WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) <
-      date_trunc('month', current_date);
+      date_trunc('month', current_date)
+  AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma where nimi = 'Erillishankinta (W)')
+        OR k.tehtava = 3054 -- 3055,"Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
+        OR k.tehtava = 3055 -- 3054, "Hoitourakan työnjohto"
+      );
 
 -- Siirretään kaikki olemassaolevat rivit johto_ja_hallintakorvaus taulusta toteutunut_tyo tauluun
 do
