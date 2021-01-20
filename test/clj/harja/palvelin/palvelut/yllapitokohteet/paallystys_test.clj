@@ -1051,7 +1051,7 @@
                                           :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta #4 muu tie",
                                           :tr-alkuetaisyys 1066, :tr-numero vaara-tr-numero, :toimenpide 32}))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Väärä tr-numero alikohteella")))
+                                       "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista. Tienumero 5555 ei ole.")))
 
 (deftest uuden-paallystysilmoituksen-tallennus-eri-urakkaan-ei-onnistu
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]

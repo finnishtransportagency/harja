@@ -559,7 +559,7 @@ yllapitoluokkanimi->numero
          sallitut-tienumerot (into #{}
                                    (map :tr-numero kaikki-kohteet))
          alustan-tie-ei-alikohteissa (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
-                               (:tr-numero alustatoimenpide))]
+                                       (:tr-numero alustatoimenpide))]
      (if (nil? alustan-tie-ei-alikohteissa)
        (let [validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
              validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
@@ -583,7 +583,7 @@ yllapitoluokkanimi->numero
                  (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
                  (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
                  (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))
-       {:alustatoimenpide-alustan-tie-ei-alikohteissa {:tr-numero :tienumero-ei-alikohteissa}}))))
+       {:alustatoimenpide-alustan-tie-ei-alikohteissa {:tr-numero alustan-tie-ei-alikohteissa}}))))
 
 ;;;;;;;; Virhetekstien pohjia ;;;;;;;;;;
 ;; "tr-osa" on tierekisteriosa, kun taas "osa" on ajoradan osa.
@@ -628,7 +628,8 @@ yllapitoluokkanimi->numero
 
 (def muoto-virhetekstit
   {:tr-numero {:ei-arvoa "Anna tienumero"
-               :tienumero-ei-alikohteissa "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista."}
+               :tienumero-ei-alikohteissa (fn [tienumero]
+                                            (str "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista. Tienumero " tienumero " ei ole."))}
    :tr-ajorata {:ei-arvoa "Tarkista ajorata"
                 :ei-saa-olla-arvoa "Ei saa olla ajorataa"}
    :tr-kaista {:ei-arvoa "Tarkista kaista"
@@ -845,6 +846,9 @@ yllapitoluokkanimi->numero
   (let [{:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
                 muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys
                 alustatoimenpide-alustan-tie-ei-alikohteissa]} validoitu-kohde
+        tr-ei-alikohteissa (when alustatoimenpide-alustan-tie-ei-alikohteissa
+                             [((get-in muoto-virhetekstit [:tr-numero :tienumero-ei-alikohteissa])
+                                    (:tr-numero alustatoimenpide-alustan-tie-ei-alikohteissa))])
         paikka-vaarin (when validoitu-paikka
                         (validoidun-paikan-teksti validoitu-paikka paakohde?))
         tr-numero-vaarin (when muoto
@@ -887,7 +891,7 @@ yllapitoluokkanimi->numero
                   (let [v (keep identity v)]
                     (when-not (empty? v)
                       [k v]))))
-          {:tr-numero        (filter some? [tr-numero-vaarin 9999999])
+          {:tr-numero        (filter some? [tr-numero-vaarin tr-ei-alikohteissa])
            :tr-ajorata       (concat tr-ajorata-vaarin
                                      paikka-vaarin
                                      alikohteet-paallekkain
@@ -928,9 +932,7 @@ yllapitoluokkanimi->numero
                                      paakohde-paallekkain)})))
 
 (defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
-  (println "petar tekst " (pr-str validoitu-alustatoimenpide))
   (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false)
-        _ (println "petar da li je nasao tekst " (pr-str kohdetekstit))
         {:keys [paallekkaiset-alikohteet alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
         paallekkaisyysteksti-alikohde (when-not (nil? paallekkaiset-alikohteet)
                                         (if (empty? paallekkaiset-alikohteet)
