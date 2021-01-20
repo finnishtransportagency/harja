@@ -255,13 +255,13 @@
                                        kommentit]))))]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                     takuupvm pot-versio] :as perustiedot-nyt}
+                     takuupvm versio] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu?
          muokkaa!
          validoinnit huomautukset]
-      (let [pot2? (= 2 pot-versio)
+      (let [pot2? (= 2 versio)
             nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
