@@ -53,3 +53,18 @@ WHERE "urakka-id" = :urakka-id
 INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id")
 VALUES (:toimenkuva, :urakka-id)
 RETURNING id
+
+-- name: hae-suunnitelman-tilat
+select * from suunnitelma_kustannussuunnitelman_tila skt where skt.urakka = :urakka;
+
+-- name: lisaa-suunnitelmalle-tila
+insert into suunnitelma_kustannussuunnitelman_tila (urakka, kategoria, hoitovuosi, luoja) values (:urakka, :kategoria, :hoitovuosi, :luoja) returning id;
+
+-- name: vahvista-suunnitelman-osa-hoitovuodelle
+update suunnitelma_kustannussuunnitelman_tila
+set vahvistettu = true
+    muokattu = now()
+    muokkaaja = :muokkaaja
+    vahvistaja = :vahvistaja
+    vahvistus_pvm = now()
+where urakka = :urakka and kategoria = :kategoria and hoitovuosi = :hoitovuosi;

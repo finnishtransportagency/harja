@@ -2664,7 +2664,8 @@
                                                                                (t/->FiltereidenAloitusarvot)
                                                                                (t/->YleisSuodatinArvot)
                                                                                (t/->Oikeudet)
-                                                                               (t/->HaeKustannussuunnitelma)]]
+                                                                               (t/->HaeKustannussuunnitelma)
+                                                                               (t/->HaeKustannussuunnitelmanTilat)]]
                                                         (when (and (not (:lahdetty-nakymasta? @nakyman-setup))
                                                                    (not (nil? event)))
                                                           (e! event)
@@ -2729,7 +2730,7 @@
            (vieritys/vieritettava-osio
              {:osionavigointikomponentti osionavigointi
               :menukomponentti           (tee-menukomponentti app)}
-             
+
              ::hankintakustannukset
              [debug/debug (get-in app [:gridit :suunnitelmien-tila])]
              [hankintakustannukset-taulukot

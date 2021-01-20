@@ -88,6 +88,20 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
+(defn hae-urakan-suunnitelman-tilat
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (q/hae-suunnitelman-tilat db {:urakka urakka-id}))
+
+(defn vahvista-suunnitelman-osa-hoitovuodelle
+  [db user {:keys [urakka-id hoitovuosi]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (q/vahvista-suunnitelman-osa-hoitovuodelle db {:urakka urakka-id
+                                                 :hoitovuosi hoitovuosi
+                                                 :kategoria "hankintakustannukset"
+                                                 :muokkaaja (:id user)
+                                                 :vahvistaja (:id user)}))
+
 (defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -541,6 +555,14 @@
             {:kysely-spec  ::bs-p/tallenna-kustannusarvioitu-tyo-kysely
              :vastaus-spec ::bs-p/tallenna-kustannusarvioitu-tyo-vastaus})
           (julkaise-palvelu
+            :vahvista-kustannussuunnitelman-osa-vuodella
+            (fn [user tiedot]
+              (vahvista-suunnitelman-osa-hoitovuodelle db user tiedot)))
+          (julkaise-palvelu
+            :hae-suunnitelman-tilat
+            (fn [user tiedot]
+              (hae-urakan-suunnitelman-tilat db user tiedot)))
+          (julkaise-palvelu
             :tallenna-toimenkuva
             (fn [user tiedot]
               (tallenna-toimenkuva db user tiedot))
@@ -553,6 +575,8 @@
                      :budjetoidut-tyot
                      :budjettitavoite
                      :budjettisuunnittelun-indeksit
+                     :hae-suunnitelman-tilat
+                     :vahvista-kustannussuunnitelman-osa-vuodella
                      :tallenna-budjettitavoite
                      :tallenna-kiinteahintaiset-tyot
                      :tallenna-johto-ja-hallintokorvaukset
