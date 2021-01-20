@@ -94,20 +94,17 @@
             rivi-avain (keyword (str paaryhma "-" toimenpide-nimi))
             hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
             rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
-            ;; Todo: Lisää vielä bonukset tietokantahakuun
-            bonus-tehtavat (filter #(= "bonus" (:toimenpideryhma %)) (:tehtavat toimenpide))
-
             toimistokulu-tehtavat (filter #(= "toimistokulut" (:toimenpideryhma %)) (:tehtavat toimenpide))
+            palkka-tehtavat (filter #(= "palkat" (:toimenpideryhma %)) (:tehtavat toimenpide))
             negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
                                   (big/->big (or (:toimenpide-budjetoitu-summa toimenpide) 0)))
-
             muodostetut-tehtavat (if-not (contains? (:avatut-rivit app) rivi-avain)
                                    nil
                                    (concat
                                      (taulukoi-toimenpiteen-tehtavat toimenpide toimistokulu-tehtavat)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide palkka-tehtavat)
                                      (taulukoi-toimenpiteen-tehtavat toimenpide hankinta-tehtavat)
-                                     (taulukoi-toimenpiteen-tehtavat toimenpide rahavaraus-tehtavat)
-                                     (taulukoi-toimenpiteen-tehtavat toimenpide bonus-tehtavat)))]
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide rahavaraus-tehtavat)))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
                         [:tr.bottom-border
                          (merge
@@ -184,8 +181,8 @@
         varaus-negatiivinen? (big/gt (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0)))
         bonukset (taulukoi-paaryhman-tehtavat (:tehtavat (:bonukset rivit-paaryhmittain)))
-        bonus-negatiivinen? (big/gt (big/->big (or (:bonus-toteutunut rivit-paaryhmittain) 0))
-                                              (big/->big (or (:bonus-budjetoitu rivit-paaryhmittain) 0)))
+        bonus-negatiivinen? (big/gt (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
+                                              (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (kustannusten-seuranta-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi)
         hoitovuosi-nro-menossa (kustannusten-seuranta-tiedot/kuluva-hoitokausi-nro (pvm/nyt))

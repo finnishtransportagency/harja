@@ -223,7 +223,6 @@
 
                            (assoc (keyword (nth raportin-paaryhmat 5)) bonus-tehtavat)
                            (summaa-tehtavat bonus-tehtavat 5))
-
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-toteutunut"))))
