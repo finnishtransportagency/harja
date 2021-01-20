@@ -15,9 +15,9 @@ FROM kustannusarvioitu_tyo k
 WHERE k.kuukausi = :kuukausi
   AND k.vuosi = :vuosi
   AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma where nimi = 'Erillishankinta (W)')
-      OR k.tehtava = 3054 -- 3055,"Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-      OR k.tehtava = 3055 -- 3054,Hoitourakan työnjohto
-      )
+        OR k.tehtava = (select id from toimenpidekoodi t where t.nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.') -- 3055,"Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
+        OR k.tehtava = (select id from toimenpidekoodi t where t.nimi = 'Hoitourakan työnjohto') -- Hoitourakan työnjohto
+    )
 ON CONFLICT DO NOTHING ;
 
 -- name: siirra-johto-ja-hallintokorvaukset-toteutumiin!
