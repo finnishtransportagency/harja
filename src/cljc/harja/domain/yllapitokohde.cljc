@@ -559,32 +559,31 @@ yllapitoluokkanimi->numero
          sallitut-tienumerot (into #{}
                                    (map :tr-numero kaikki-kohteet))
          kielletty-tienumero (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
-                               (:tr-numero alustatoimenpide))
-         validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
-         validoitu-alustatoimenpiteiden-paallekkyys (when (and (empty? validoitu-muoto)
-                                                               (nil? kielletty-tienumero))
-                                                      (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
-                                                                    (if pot2?
-                                                                      (= (:toimenpide alustatoimenpide) (:toimenpide %))
-                                                                      (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
-                                                              toiset-alustatoimenpiteet))
-         ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
-         validoitu-alikohdepaallekkyys (when (and (empty? validoitu-muoto)
-                                                  (nil? kielletty-tienumero))
-                                         (keep (fn [alikohde]
-                                                 ;; validoi tässä väärä tienumero?
-                                                 (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
-                                                   alikohde))
-                                               kaikki-kohteet))
-         kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
-         validoitu-paikka (when (empty? validoitu-muoto)
-                            (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
-     (cond-> nil
-             (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
-             (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
-             (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
-             (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)
-             (not (nil? kielletty-tienumero)) (assoc :alustatoimenpide-kieletty-tienumero {:tr-numero :tienumero-ei-alikohteissa})))))
+                               (:tr-numero alustatoimenpide))]
+     (if (nil? kielletty-tienumero)
+       (let [validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
+             validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
+                                                          (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
+                                                                        (if pot2?
+                                                                          (= (:toimenpide alustatoimenpide) (:toimenpide %))
+                                                                          (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
+                                                                  toiset-alustatoimenpiteet))
+             ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
+             validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
+                                             (keep (fn [alikohde]
+                                                     ;; validoi tässä väärä tienumero?
+                                                     (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
+                                                       alikohde))
+                                                   kaikki-kohteet))
+             kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
+             validoitu-paikka (when (empty? validoitu-muoto)
+                                (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
+         (cond-> nil
+                 (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
+                 (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
+                 (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
+                 (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))
+       {:alustatoimenpide-kieletty-tienumero {:tr-numero :tienumero-ei-alikohteissa}}))))
 
 ;;;;;;;; Virhetekstien pohjia ;;;;;;;;;;
 ;; "tr-osa" on tierekisteriosa, kun taas "osa" on ajoradan osa.
@@ -844,7 +843,8 @@ yllapitoluokkanimi->numero
 
 (defn validoitu-kohde-tekstit [validoitu-kohde paakohde?]
   (let [{:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
-                muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys]} validoitu-kohde
+                muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys
+                alustatoimenpide-kieletty-tienumero]} validoitu-kohde
         paikka-vaarin (when validoitu-paikka
                         (validoidun-paikan-teksti validoitu-paikka paakohde?))
         tr-numero-vaarin (when muoto
@@ -928,6 +928,7 @@ yllapitoluokkanimi->numero
                                      paakohde-paallekkain)})))
 
 (defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
+  (println "petar tekst " (pr-str validoitu-alustatoimenpide))
   (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false)
         {:keys [paallekkaiset-alikohteet alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
         paallekkaisyysteksti-alikohde (when-not (nil? paallekkaiset-alikohteet)
