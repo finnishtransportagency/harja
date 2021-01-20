@@ -54,6 +54,37 @@
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}))
     toimenpiteet))
 
+(defn- summaa-paaryhman-tehtavat [tehtavat paaryhmaotsikko]
+  (let [toteutuneet-tehtavat (filter
+                               (fn [tehtava]
+                                 (when (and
+                                         (not= "hjh" (:toteutunut tehtava))
+                                         (not= "budjetointi" (:toteutunut tehtava))
+                                         (not= "lisatyo" (:maksutyyppi tehtava)))
+                                   tehtava))
+                               tehtavat)
+        tehtava-map
+        {:paaryhma paaryhmaotsikko
+         :toimenpide (:toimenpide (first tehtavat))
+         :jarjestys (:jarjestys (first tehtavat))
+         (keyword (str paaryhmaotsikko "-toteutunut")) (reduce (fn [summa tehtava]
+                                                                 (+ summa (:toteutunut_summa tehtava)))
+                                                               0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
+         (keyword (str paaryhmaotsikko "-budjetoitu")) (reduce (fn [summa tehtava]
+                                                                 (+ summa (:budjetoitu_summa tehtava)))
+                                                               0 tehtavat)
+         :lisatyot-summa (reduce (fn [summa tehtava]
+                                   (if (= "lisatyo" (:maksutyyppi tehtava))
+                                     (+ summa (:toteutunut_summa tehtava))
+                                     summa))
+                                 0 tehtavat)
+         :lisatyot (filter (fn [tehtava]
+                             (when (= "lisatyo" (:maksutyyppi tehtava))
+                               true))
+                           tehtavat)
+         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)}]
+    tehtava-map))
+
 (defn- summaa-hoito-ja-hallinta-tehtavat [tehtavat paaryhmaotsikko]
   (let [;; Toimenpiteet mäpissä on budjetoidut ja toteutuneet toimenpiteet
         ;; UI:lla budjetointi lasketaan yhteen  ja toteutuneet kustannukset näytetään
@@ -117,16 +148,13 @@
                              toimistotehtavat)
            :tehtavat toteutuneet-toimistotehtavat}])))
 
-(defn- summaa-tehtavat [taulukko-rivit tehtavat indeksi]
-  (-> taulukko-rivit
-      (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
-             (apply + (map (fn [rivi]
-                             (:budjetoitu_summa rivi))
-                           tehtavat)))
-      (assoc (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
-             (apply + (map (fn [rivi]
-                             (:toteutunut_summa rivi))
-                           tehtavat)))))
+(defn- summaa-tehtavat [taulukko-rivit paaryhma indeksi]
+  (let [bud-key (keyword (str (nth raportin-paaryhmat indeksi) "-budjetoitu"))
+        tot-key (keyword (str (nth raportin-paaryhmat indeksi) "-toteutunut"))
+        rivit (-> taulukko-rivit
+                  (assoc bud-key (bud-key paaryhma))
+                  (assoc tot-key (tot-key paaryhma)))]
+    rivit))
 
 (defn- summaa-paaryhman-toimenpiteet [taulukko-rivit indeksi toimenpiteet]
   (-> taulukko-rivit
@@ -171,22 +199,30 @@
         jjhallinnan-toimenpiteet (sort-by :jarjestys jjhallinnan-toimenpiteet)
         varaukset (sort-by toimenpide-jarjestys (group-by :toimenpide varaukset))
         varaus-toimenpiteet (summaa-toimenpidetaso varaukset (nth raportin-paaryhmat 4))
-        bonukset (group-by :toimenpide bonukset)
-        bonus-toimenpiteet (summaa-toimenpidetaso bonukset (nth raportin-paaryhmat 5))
+        hoidonjohdonpalkkiot (summaa-paaryhman-tehtavat hoidonjohdonpalkkiot (nth raportin-paaryhmat 2))
+        bonus-tehtavat (summaa-paaryhman-tehtavat bonukset (nth raportin-paaryhmat 5))
+        erillishankinta-tehtavat (summaa-paaryhman-tehtavat erillishankinnat (nth raportin-paaryhmat 3))
 
         taulukon-rivit (-> {}
                            ;; Aseta pääryhmän avaimelle toimenpiteet
                            (assoc (keyword (nth raportin-paaryhmat 0)) hankintakustannusten-toimenpiteet)
                            ;; Aseta pääryhmän avaimaille budjetoitu summa ja toteutunut summa
                            (summaa-paaryhman-toimenpiteet 0 hankintakustannusten-toimenpiteet)
+
                            (assoc (keyword (nth raportin-paaryhmat 1)) jjhallinnan-toimenpiteet)
                            (summaa-paaryhman-toimenpiteet 1 jjhallinnan-toimenpiteet)
+
+                           (assoc (keyword (nth raportin-paaryhmat 2)) hoidonjohdonpalkkiot)
                            (summaa-tehtavat hoidonjohdonpalkkiot 2)
-                           (summaa-tehtavat erillishankinnat 3)
+
+                           (assoc (keyword (nth raportin-paaryhmat 3)) erillishankinta-tehtavat)
+                           (summaa-tehtavat erillishankinta-tehtavat 3)
+
                            (assoc (keyword (nth raportin-paaryhmat 4)) varaus-toimenpiteet)
                            (summaa-paaryhman-toimenpiteet 4 varaus-toimenpiteet)
-                           (assoc (keyword (nth raportin-paaryhmat 5)) bonus-toimenpiteet)
-                           (summaa-paaryhman-toimenpiteet 5 bonus-toimenpiteet))
+
+                           (assoc (keyword (nth raportin-paaryhmat 5)) bonus-tehtavat)
+                           (summaa-tehtavat bonus-tehtavat 5))
 
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]

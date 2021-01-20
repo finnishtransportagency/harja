@@ -68,38 +68,14 @@
    [:td.numero {:style {:width (:erotus leveydet)}}]
    [:td.numero {:style {:width (:prosentti leveydet)}}]])
 
-(defn- rivita-lisatyot [lisatyot]
-  (for [l lisatyot]
+(defn- taulukoi-paaryhman-tehtavat [tehtavat]
+  (for [l tehtavat]
     ^{:key (str (hash l))}
-    (lisaa-taulukkoon-tehtava-rivi (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))
-                                   (fmt->big (:toteutunut_summa l) false))))
+    (lisaa-taulukkoon-tehtava-rivi
+      [:span.taso2  (or (:tehtava_nimi l) (:toimenpidekoodi_nimi l))]
+      (fmt->big (:toteutunut_summa l) false))))
 
-(defn- kokoa-toimenpiteen-alle [toimenpide tehtavat toimenpideryhma yht-toteuma]
-  (let [row-index (r/atom 0)]
-    (concat
-      ;; Toimenpiteen alle kootaan vain jos pääryhmänä on hankintakustannukset tai varaukset
-      ;; Tosin, tarkista, että tarvitaanko tätä enää kun uusi rahavaraukset pääryhmä avattiin
-      (when (and (or (= "hankintakustannukset" (:paaryhma toimenpide))
-                     (= "varaukset" (:paaryhma toimenpide)))
-                 (> (count tehtavat) 0))
-        [^{:key (str toimenpideryhma "-" (hash toimenpide) "-" (hash tehtavat))}
-         (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "8px" :font-weight "bold"}} toimenpideryhma]
-                                        (fmt->big yht-toteuma false))])
-      (when (and
-              (or (= "hankintakustannukset" (:paaryhma toimenpide))
-                  (= "varaukset" (:paaryhma toimenpide)))
-              (> (count tehtavat) 0))
-        (mapcat
-          (fn [rivi]
-            (let [toteutunut-summa (big/->big (or (:toteutunut_summa rivi) 0))
-                  _ (reset! row-index (inc @row-index))]
-              (concat
-                [^{:key (str @row-index "-" toimenpideryhma "-" (hash rivi))}
-                 (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (:tehtava_nimi rivi)]
-                                                (fmt->big toteutunut-summa false))])))
-          tehtavat)))))
-
-(defn- listaa-pelkat-tehtavat [toimenpide tehtavat]
+(defn- taulukoi-toimenpiteen-tehtavat [toimenpide tehtavat]
   (when tehtavat
     (mapcat
       (fn [rivi]
@@ -128,10 +104,10 @@
             muodostetut-tehtavat (if-not (contains? (:avatut-rivit app) rivi-avain)
                                    nil
                                    (concat
-                                     (listaa-pelkat-tehtavat toimenpide toimistokulu-tehtavat)
-                                     (listaa-pelkat-tehtavat toimenpide hankinta-tehtavat)
-                                     (listaa-pelkat-tehtavat toimenpide rahavaraus-tehtavat)
-                                     (listaa-pelkat-tehtavat toimenpide bonus-tehtavat)))]
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide toimistokulu-tehtavat)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide hankinta-tehtavat)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide rahavaraus-tehtavat)
+                                     (taulukoi-toimenpiteen-tehtavat toimenpide bonus-tehtavat)))]
         (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
                         [:tr.bottom-border
                          (merge
@@ -144,7 +120,8 @@
                             (if (contains? (:avatut-rivit app) rivi-avain)
                               [:img {:alt "Expander" :src "images/expander-down.svg"}]
                               [:img {:alt "Expander" :src "images/expander.svg"}]))]
-                         [:td {:style {:width (:tehtava leveydet)}} (:toimenpide toimenpide)]
+                         [:td {:style {:width (:tehtava leveydet)
+                                       :padding-left "32px"}} (:toimenpide toimenpide)]
                          [:td.numero {:style {:width (:budjetoitu leveydet)}} (fmt->big (:toimenpide-budjetoitu-summa toimenpide))]
                          [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (:toimenpide-toteutunut-summa toimenpide))]
                          [:td {:class (if negatiivinen? "negatiivinen-numero" "numero")
@@ -193,18 +170,20 @@
                                                    (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0)))
         hallintakorvaus-negatiivinen? (big/gt (big/->big (or (:johto-ja-hallintakorvaus-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0)))
-        hoidonjohdonpalkkio-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:hoidonjohdonpalkkio rivit-paaryhmittain))
+        hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
         hoidonjohdonpalkkio-negatiivinen? (big/gt (big/->big (or (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain) 0))
                                                   (big/->big (or (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0)))
+        erillishankinnat (taulukoi-paaryhman-tehtavat (:tehtavat (:erillishankinnat rivit-paaryhmittain)))
         erillishankinnat-negatiivinen? (big/gt (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
                                                (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0)))
         yht-negatiivinen? (big/gt (big/->big (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0))
                                   (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
-        lisatyot (rivita-lisatyot (:lisatyot rivit-paaryhmittain))
+        lisatyot (taulukoi-paaryhman-tehtavat (:lisatyot rivit-paaryhmittain))
         varaukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:varaukset rivit-paaryhmittain))
         varaus-negatiivinen? (big/gt (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0)))
+        bonukset (taulukoi-paaryhman-tehtavat (:tehtavat (:bonukset rivit-paaryhmittain)))
         bonus-negatiivinen? (big/gt (big/->big (or (:bonus-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:bonus-budjetoitu rivit-paaryhmittain) 0)))
         valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -265,7 +244,7 @@
                                 (big/->big (or (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain) 0))
                                 hallintakorvaus-negatiivinen?))
          (paaryhma-taulukkoon e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio
-                              hoidonjohdonpalkkio-toimenpiteet hoidonjohdonpalkkio-negatiivinen?
+                              hoidonjohdonpalkkiot hoidonjohdonpalkkio-negatiivinen?
                               (fmt->big (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain))
                               (fmt->big (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain))
                               (fmt->big (- (:hoidonjohdonpalkkio-toteutunut rivit-paaryhmittain)
@@ -275,7 +254,7 @@
                                 (big/->big (or (:hoidonjohdonpalkkio-budjetoitu rivit-paaryhmittain) 0))
                                 hoidonjohdonpalkkio-negatiivinen?))
          (paaryhma-taulukkoon e! app "Erillishankinnat" :erillishankinnat
-                              nil erillishankinnat-negatiivinen?
+                              erillishankinnat erillishankinnat-negatiivinen?
                               (fmt->big (:erillishankinnat-budjetoitu rivit-paaryhmittain))
                               (fmt->big (:erillishankinnat-toteutunut rivit-paaryhmittain))
                               (fmt->big (- (:erillishankinnat-toteutunut rivit-paaryhmittain)
@@ -285,7 +264,7 @@
                                 (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
                                 erillishankinnat-negatiivinen?))
          (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
-                                nil bonus-negatiivinen?
+                                bonukset bonus-negatiivinen?
                                 (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
                                 (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
                                 (fmt->big (- (:bonukset-toteutunut rivit-paaryhmittain)

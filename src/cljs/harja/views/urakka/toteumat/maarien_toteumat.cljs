@@ -241,7 +241,7 @@
         hoitokaudet]]
       [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
-        "Lisaa toteuma"
+        "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
         {:vayla-tyyli? true
          :luokka "suuri"}]]]
