@@ -6,15 +6,22 @@ SELECT count(*) as maara
    AND tt.kuukausi = :kuukausi;
 
 -- name: siirra-kustannusarvoidut-tyot-toteutumiin!
+-- Automaattisesti toteumaksi lasketaan tehtäväryhmä: Erillishankinnat (W)
+-- Ja tehtävät: 3054 ja 3055
 INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus_id, urakka_id, luotu)
 SELECT k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma, k.toimenpideinstanssi, k.sopimus,
        (select s.urakka FROM sopimus s where s.id = k.sopimus) as "urakka-id", NOW()
 FROM kustannusarvioitu_tyo k
 WHERE k.kuukausi = :kuukausi
   AND k.vuosi = :vuosi
+  AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma where nimi = 'Erillishankinta (W)')
+      OR k.tehtava = 3054 -- 3055,"Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
+      OR k.tehtava = 3055 -- 3054,Hoitourakan työnjohto
+      )
 ON CONFLICT DO NOTHING ;
 
 -- name: siirra-johto-ja-hallintokorvaukset-toteutumiin!
+-- Tästä taulusta siirretään kaikki rivit
 INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus_id, urakka_id, luotu)
 SELECT j.vuosi, j.kuukausi, (j.tunnit * j.tuntipalkka) AS summa, 'laskutettava-tyo' AS tyyppi, null as tehtava,
        (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)'),

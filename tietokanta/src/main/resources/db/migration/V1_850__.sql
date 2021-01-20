@@ -1,4 +1,4 @@
--- toteutunut_tyo tauluun siirretään mhurakoiden suunnitellut kustannukset aina kuukauden viimeinen päivä.
+-- toteutunut_tyo tauluun siirretään kustannuksia, yksinkertaistamaan toteutuneiden kustannusten seurantaa
 
 CREATE TABLE toteutunut_tyo
 (
@@ -23,17 +23,10 @@ create index toteutunut_tyo_urakka_index
 
 
 COMMENT ON table toteutunut_tyo IS
-    E'Kustannusarvioitu_tyo taulusta siirretään kuukauden viimeisenä päivänä (teiden-hoito, eli mh-urakoiden) tiedot
-      tähän toteutunut_tyo tauluun, josta voidaan hakea toteutuneen työn kustannukset raportteihin ja kustannuksiin.
-      Toteutumia tulee neljälle erityyppiselle kululle:
-      - laskutettava-tyo
-      - akillinen-hoitotyo
-      - muutostyo
-      - muut-rahavaraukset';
+    E'Kustannusarvioitu_tyo taulusta siirretään kuukauden viimeisenä päivänä mikäli tehtäväryhmä: Erillishankinnat (W) tai tehtävät: 3054 ja 3055
+      tähän toteutunut_tyo tauluun, josta voidaan hakea toteutuneen työn kustannukset raportteihin ja kustannuksiin.';
 
--- Siirretään kaikki olemassaolevat rivit kustannusarvoidut_tyot taulusta toteutunut_tyo tauluun, mikäli kuukausi on eri kuin kuluva kuukausi.
--- Kuluvan kuukauden kustannusarvoidut_tyot siirretään vasta kuukauden viimeisenä päivänä
-
+-- Siirrä kustannusarvoitu_tyo taulusta mikäli tehtäväryhmä: Erillishankinnat (W) tai tehtävät: 3054 ja 3055
 INSERT INTO toteutunut_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus_id,
                             urakka_id, luotu)
 SELECT k.vuosi,
@@ -48,11 +41,13 @@ SELECT k.vuosi,
        NOW()
 FROM kustannusarvioitu_tyo k
 WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) <
-      date_trunc('month', current_date);
+      date_trunc('month', current_date)
+  AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma where nimi = 'Erillishankinta (W)')
+        OR k.tehtava = 3054 -- 3055,"Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
+        OR k.tehtava = 3055 -- 3054, "Hoitourakan työnjohto"
+      );
 
--- Siirretään kaikki olemassaolevat rivit johto_ja_hallintakorvaus taulusta toteutunut_tyo tauluun, mikäli kuukausi on eri kuin kuluva kuukausi.
--- Kuluvan kuukauden tiedot siirretään vasta kuukauden viimeisenä päivänä
-
+-- Siirretään kaikki olemassaolevat rivit johto_ja_hallintakorvaus taulusta toteutunut_tyo tauluun
 do
 $$
     declare
