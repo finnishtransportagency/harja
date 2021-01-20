@@ -83,10 +83,22 @@
                                            :tr-alkuetaisyys :tr-alkuetaisyys
                                            :tr-loppuosa :tr-loppuosa
                                            :tr-loppuetaisyys :tr-loppuetaisyys}}]}
-   :alusta {:rivi [{:fn (fn [] (println "TODO"))
-                    :sarakkeet {}}]
-            :taulukko [{:fn (fn [] (println "TODO"))
-                        :sarakkeet {}}]}})
+   :alusta {:rivi [{:fn alusta/alustan-validointi
+                    :sarakkeet {:tr-numero :tr-numero
+                                :tr-ajorata :tr-ajorata
+                                :tr-kaista :tr-kaista
+                                :tr-alkuosa :tr-alkuosa
+                                :tr-alkuetaisyys :tr-alkuetaisyys
+                                :tr-loppuosa :tr-loppuosa
+                                :tr-loppuetaisyys :tr-loppuetaisyys}}]
+            :taulukko [{:fn #(println "todo") ;Mietitään myöhemmin, otetaanko taulukkovalidointia tässä käyttöön. POT1:ssä se aiheutti valtavaa hitautta, backend validointi ehkä riittää niihin ja hyvä vikaviestin raportointi
+                        :sarakkeet {:tr-numero :tr-numero
+                                    :tr-ajorata :tr-ajorata
+                                    :tr-kaista :tr-kaista
+                                    :tr-alkuosa :tr-alkuosa
+                                    :tr-alkuetaisyys :tr-alkuetaisyys
+                                    :tr-loppuosa :tr-loppuosa
+                                    :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
 
 (defn- toimenpiteet-ja-materiaalit-otsikkorivi
   "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"

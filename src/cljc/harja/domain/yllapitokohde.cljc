@@ -560,7 +560,6 @@ yllapitoluokkanimi->numero
                                    (map :tr-numero kaikki-kohteet))
          kielletty-tienumero (when-not (sallitut-tienumerot (:tr-numero alustatoimenpide))
                                (:tr-numero alustatoimenpide))
-         _ (println "ONKO! 0  Minkä tien alusta?" (:tr-numero alustatoimenpide) kielletty-tienumero)
          validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
          validoitu-alustatoimenpiteiden-paallekkyys (when (and (empty? validoitu-muoto)
                                                                (nil? kielletty-tienumero))
@@ -569,7 +568,6 @@ yllapitoluokkanimi->numero
                                                                       (= (:toimenpide alustatoimenpide) (:toimenpide %))
                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
                                                               toiset-alustatoimenpiteet))
-         _ (println "ONKO! 1  Minkä alustatoimenpiteiden päällekkyys?" validoitu-alustatoimenpiteiden-paallekkyys)
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen tai muun kohteen sisällä
          validoitu-alikohdepaallekkyys (when (and (empty? validoitu-muoto)
                                                   (nil? kielletty-tienumero))
@@ -578,12 +576,9 @@ yllapitoluokkanimi->numero
                                                  (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
                                                    alikohde))
                                                kaikki-kohteet))
-         _ (println "ONKO! 2  validoitu-alikohdepaallekkyys" validoitu-alikohdepaallekkyys)
          kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
-         _ (println "ONKO! 3 muiden-kohteiden-osien-tiedot" muiden-kohteiden-osien-tiedot)
          validoitu-paikka (when (empty? validoitu-muoto)
                             (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
-     ;; ONKO TIEREKISTERISSÄ tie 5555, jolla osa 1 kaista 11, jne .
      (cond-> nil
              (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
              (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)

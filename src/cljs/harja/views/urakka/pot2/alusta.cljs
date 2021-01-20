@@ -49,6 +49,13 @@
      (when (:tarjoa-alustatoimenpide app)
        [komponenttien-lista e! alusta-toimenpiteet])]))
 
+(defn alustan-validointi [rivi taulukko]
+  (let [{:keys [ilmoitustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
+        alikohteet (vals (:osoitteet ilmoitustiedot))
+        vuosi (first vuodet)
+        validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [] vuosi)]
+    (yllapitokohteet-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
+
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
@@ -86,7 +93,7 @@
        :rivi-klikattu #(log "click")}
       [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys perusleveys
         :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
-        :valinta-nayta ::pot2-domain/lyhenne}
+        :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys perusleveys
@@ -115,7 +122,8 @@
        {:otsikko "Murske *)" :nimi :materiaali :leveys 3
         :tyyppi :valinta :valinnat murskeet :valinta-arvo ::pot2-domain/murske-id
         :valinta-nayta (fn [rivi]
-                         (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string))}
+                         (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string))
+        :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

@@ -624,9 +624,8 @@
         alustatoimen-validointi (fn [rivi taulukko]
                                   (let [{:keys [ilmoitustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
                                         alikohteet (vals (:osoitteet ilmoitustiedot))
-
                                         vuosi (first vuodet)
-                                        validoitu (yllapitokohde-domain/validoi-alustatoimenpide alikohteet rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi)]
+                                        validoitu (yllapitokohde-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [[]] vuosi)]
                                     (yllapitokohde-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
         arvo-valilta (fn [min-arvo max-arvo data _ _]
                        (when-not (<= min-arvo data max-arvo)

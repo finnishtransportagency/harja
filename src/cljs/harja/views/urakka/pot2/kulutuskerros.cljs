@@ -83,20 +83,20 @@
       :rivi-klikattu #(log "click")}
      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys perusleveys
        :tyyppi :valinta :valinnat kulutuskerros-toimenpiteet :valinta-arvo ::pot2-domain/koodi
-       :valinta-nayta ::pot2-domain/lyhenne}
+       :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
       {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys perusleveys
        :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
-       :tasaa :oikea :kokonaisluku? true}
+       :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys perusleveys
        :valinnat pot/+kaistat+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi]
                         (if rivi
                           (:nimi rivi)
                           "- Valitse kaista -"))
-       :tasaa :oikea :kokonaisluku? true}
+       :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys perusleveys :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
       {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
@@ -108,19 +108,19 @@
       {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
        :muokattava? (constantly false)
        :hae #(paallystys/rivin-kohteen-pituus
-               (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) }
+               (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Pääl\u00ADlyste *)" :nimi :materiaali :leveys 3
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :valinta-nayta (fn [rivi]
-                        (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string))}
+                        (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string)) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys perusleveys}
+       :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys perusleveys}
+       :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys perusleveys}
+       :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
-       :leveys perusleveys}
+       :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                                   (boolean (:piennar rivi)))}
       {:otsikko "" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
