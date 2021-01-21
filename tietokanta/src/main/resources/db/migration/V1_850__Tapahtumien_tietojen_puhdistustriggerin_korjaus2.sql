@@ -4,12 +4,18 @@ DROP TRIGGER tg_poista_vanhat_tapahtumat ON tapahtuman_tiedot;
 
 -- Säilytetään saman kanavan viimeisin viesti. Tällöin tieto esim. app1 käynnistyksestä jää kantaan, mikäli app2
 -- käynnistetään uudelleen yli 10min päästä app1 käynnistymisestä.
--- TODO: Pitääkö urakan tapahtumat ja ilmoitusten viestit poistaa kanavasta huolimatta? Niiden viimeiset viestit jäävät kummittelemaan tämän muutoksen myötä.
-CREATE OR REPLACE FUNCTION poista_vanhat_tapahtumat() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION poista_vanhat_tapahtumat() RETURNS TRIGGER AS $$
 BEGIN
-    DELETE FROM tapahtuman_tiedot
-     WHERE luotu < NOW() - interval '11 minutes' AND kanava = NEW.kanava;
-    RETURN NEW;
+    DELETE
+      FROM tapahtuman_tiedot
+     WHERE luotu < NOW() - INTERVAL '10 minutes'
+       AND (kanava = new.kanava
+         OR kanava IN (SELECT tt.kanava
+                         FROM tapahtuman_tiedot tt
+                                  JOIN tapahtumatyyppi t ON t.kanava = tt.kanava
+                        WHERE t.nimi ILIKE 'urakan_%'
+                           OR t.nimi ILIKE 'ilmoitus_%'));
+    RETURN new;
 END;
 $$ LANGUAGE plpgsql;
 
