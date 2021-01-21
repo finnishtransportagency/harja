@@ -692,7 +692,6 @@
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                         kayttaja-paallystys portti
                                         payload)]
-    (println "vastaus " vastaus)
     (is (= 200 (:status vastaus)))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
@@ -925,15 +924,15 @@
                       (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
 
                       (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-                            oletettu-tr-osoite {:numero 20
-                                                :aosa 1
-                                                :aet 1
-                                                :losa 4
-                                                :loppuet 100
+                            oletettu-tr-osoite {:aet 0
                                                 :ajorata 1
-                                                :kaista 11}
-                            odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 11, :ajorata 1}
-                            odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 11, :ajorata 1}
+                                                :aosa 1
+                                                :kaista 11
+                                                :loppuet 100
+                                                :losa 1
+                                                :numero 20}
+                            odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 0, :losa 1, :loppuet 90, :kaista 11, :ajorata 1}
+                            odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 90, :losa 1, :loppuet 100, :kaista 11, :ajorata 1}
                             alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
 
                         (println "-----> " alikohteiden-tr-osoitteet)
