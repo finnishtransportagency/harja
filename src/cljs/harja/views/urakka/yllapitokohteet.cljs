@@ -398,18 +398,6 @@
                         :tayta-alas-toistuvasti? tayta-alas?-fn
                         :tayta-toistuvasti-fn tayta-toimenpide-toistuvasti-fn})]))))))
 
-(defn hae-osan-pituudet [grid-state osan-pituudet-teille-atom]
-  (let [tiet (into #{} (map (comp :tr-numero second)) grid-state)]
-    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
-      (go
-        (let [pituudet (<! (vkm/tieosien-pituudet tie))]
-          (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
-          (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
-
-
-(defn indeksoi-kohdeosat [kohdeosat]
-  (into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) kohdeosat))))
-
 (defn kohdeosien-tallennusvirheet [virheet]
   [:div
    [:p "Virheet kohdeosien tiedoissa:"]
@@ -424,7 +412,7 @@
       (do (viesti/nayta! "Kohdeosat tallennettu!" :success)
           (tallennettu-fn vastaus)
           (reset! kohdeosat-atom
-                  (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet yllapitokohteet))))
+                  (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet yllapitokohteet))))
       (do (viesti/nayta! "Kohdeosien tallennuksessa virheitä!" :danger)
           (modal/nayta!
             {:otsikko "Kohdeosien tallennus epäonnistui!"
@@ -636,9 +624,7 @@
         rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
-        osan-pituudet-teille (atom nil)
-        tien-osat-riville (fn [rivi]
-                            (get @osan-pituudet-teille (:tr-numero rivi)))
+        osan-pituudet-teille paallystys-tiedot/tr-osien-tiedot
         kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -646,9 +632,6 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
-        hae-fn (fn [rivi]
-                 ;; TODO vaihda tämä käyttämään paallystys-tiedot/tr-osien-tiedot dataa
-                 (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
@@ -657,7 +640,10 @@
       (let [skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                                  :muokattava-tie? muokattava-tie?
                                                  :vain-nama-validoinnit? true
-                                                 :hae-fn hae-fn
+                                                 :hae-fn (fn [rivi]
+                                                           (paallystys-tiedot/rivin-kohteen-pituus
+                                                             (paallystys-tiedot/tien-osat-riville rivi osan-pituudet-teille)
+                                                             rivi))
                                                  :dissoc-cols dissoc-cols
                                                  :aikataulu? aikataulu?})
             muokkaa-kohdeosat! (fn [uudet-osat]
@@ -691,7 +677,7 @@
           :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
           :virhe-viesti virhe-viesti
           :muutos (fn [grid]
-                    (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
+                    (paallystys-tiedot/hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
           :otsikko otsikko
           :id "yllapitokohdeosat"
           :data-cy (str "yllapitokohdeosat-" otsikko)
@@ -708,7 +694,7 @@
                               :tr-ajorata (:tr-ajorata yllapitokohde)
                               :tr-kaista (:tr-kaista yllapitokohde)))
           :luomisen-jalkeen (fn [grid-state]
-                              (hae-osan-pituudet grid-state osan-pituudet-teille))
+                              (paallystys-tiedot/hae-osan-pituudet grid-state osan-pituudet-teille))
           :paneelikomponentit
           [(fn []
              (when tallenna-fn
@@ -864,9 +850,9 @@
                                             kohde))
                                         @kohteet-atom))))
         kohdeosat (:kohdeosat rivi)
-        kohteen-osat (atom (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+        kohteen-osat (atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                  (filter #(= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
-        muut-osat (atom (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+        muut-osat (atom (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                               (filter #(not= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
         osa-kohteen-ulkopuolella (fn [_ kohteen-osan-rivi _]
                                    (when (= (:tr-numero rivi) (:tr-numero kohteen-osan-rivi))
@@ -885,7 +871,7 @@
         (fn [{:keys [rivi]}]
           ;; Jos pääkohde päivittyy, palvelin saattaa tehdä automaattisia korjauksia kohdeosiin.
           ;; Täten kohteen osat -atomi tulee resetoida vastaamaan päivitettyjä osia.
-          (reset! kohteen-osat (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+          (reset! kohteen-osat (yllapitokohteet-domain/indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                      (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
 
       (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]

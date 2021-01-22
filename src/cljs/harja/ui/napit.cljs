@@ -123,7 +123,7 @@
    teksti-nappi?              Tekstimuotoinen ei borderia tai taustaa -nappi"
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
-                            sticky? ikoninappi? title style] :as optiot}]
+                            sticky? ikoninappi? title style ikoni-oikealle?] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -151,7 +151,8 @@
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
                                     (r/dom-node %)))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
+                                    ikoni-oikealle?] :as optiot}]
          [:button
           (merge
             {:class     (str (when disabled "disabled ")
@@ -179,7 +180,9 @@
 
           (if (and ikoni
                    (not tallennus-kaynnissa?))
-            [ikonit/ikoni-ja-teksti ikoni teksti]
+            (if ikoni-oikealle?
+              [ikonit/teksti-ja-ikoni teksti ikoni]
+              [ikonit/ikoni-ja-teksti ikoni teksti])
             teksti)])))))
 
 (defn takaisin

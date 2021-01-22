@@ -742,3 +742,9 @@ jatkon."
                    ^{:key i}
                    [tooltip-kentta avain arvo])
                  (partition 2 avaimet-ja-arvot))])
+
+(defn valitys-vertical
+  ([]
+   (valitys-vertical "2rem"))
+  ([korkeus]
+   [:div {:style {:margin-top (or korkeus "2rem")}}]))
