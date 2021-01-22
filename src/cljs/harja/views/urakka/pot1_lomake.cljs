@@ -81,22 +81,6 @@
        :virheviesti "Tallentaminen epäonnistui"}]]))
 
 
-(defn poista-lukitus [e! urakka]
-  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))]
-    [:div
-     [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
-     [napit/palvelinkutsu-nappi
-      "Avaa lukitus"
-      #(go
-         (e! (paallystys/->AvaaPaallystysilmoituksenLukitus)))
-      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
-       :id "poista-paallystysilmoituksen-lukitus"
-       :disabled (not paatosoikeus?)
-       :ikoni (ikonit/livicon-wrench)
-       :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
-
 (defn tayta-fn [avain]
   (fn [toistettava-rivi tama-rivi]
     (assoc tama-rivi avain (avain toistettava-rivi))))
@@ -611,15 +595,6 @@
         muokkaa! (fn [f & args]
                    (e! (paallystys/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                     (apply f vanha-arvo args)))))
-        paakohteen-validointi (fn [_ rivi taulukko]
-                                (let [{:keys [vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
-                                      paakohde (select-keys (:tr-osoite rivi) #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-                                      vuosi (first vuodet)
-                                      ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
-                                      ;; myös toisilla riveillä olevat validoinnit.
-                                      validoitu (yllapitokohde-domain/validoi-kohde paakohde (get tr-osien-tiedot (get-in rivi [:tr-osoite :tr-numero])) {:vuosi vuosi})]
-                                  (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu true))))))
-
         alikohteen-validointi (fn [rivi taulukko]
                                 (let [{:keys [perustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
                                       paakohde (select-keys perustiedot tr/paaluvali-avaimet)
@@ -649,9 +624,8 @@
         alustatoimen-validointi (fn [rivi taulukko]
                                   (let [{:keys [ilmoitustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
                                         alikohteet (vals (:osoitteet ilmoitustiedot))
-
                                         vuosi (first vuodet)
-                                        validoitu (yllapitokohde-domain/validoi-alustatoimenpide alikohteet rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi)]
+                                        validoitu (yllapitokohde-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [[]] vuosi)]
                                     (yllapitokohde-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
         arvo-valilta (fn [min-arvo max-arvo data _ _]
                        (when-not (<= min-arvo data max-arvo)
@@ -740,20 +714,9 @@
                                                                                        :tr-alkuetaisyys :tr-alkuetaisyys
                                                                                        :tr-loppuosa :tr-loppuosa
                                                                                        :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
-                           :perustiedot {:tr-osoite [{:fn paakohteen-validointi}]}}
-              ;; Tarkista pitäisikö näiden olla ihan virheitä
-              huomautukset {:perustiedot {:tekninen-osa {:kasittelyaika (if (:paatos tekninen-osa)
-                                                                          [[:ei-tyhja "Anna käsittelypvm"]
-                                                                           [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                            "Käsittely ei voi olla ennen valmistumista"]]
-                                                                          [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                            "Käsittely ei voi olla ennen valmistumista"]])
-                                                         :paatos [[:ei-tyhja "Anna päätös"]]
-                                                         :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
-                                          :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
-                                                                          [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Tarkastus ei voi olla ennen valmistumista"]]
-                                                          :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}}
+                           :perustiedot paallystys/perustietojen-validointi}
+
+              huomautukset (paallystys/perustietojen-huomautukset tekninen-osa valmispvm-kohde)
               valmis-tallennettavaksi? (and
                                          (not (= tila :lukittu))
                                          (empty? (flatten (keep vals virheet)))
@@ -768,7 +731,7 @@
 
            [:h1 "Päällystysilmoitus"]
            (when (= :lukittu tila)
-             [poista-lukitus e! urakka])
+             [pot-yhteinen/poista-lukitus e! urakka])
 
            [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
 

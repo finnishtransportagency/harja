@@ -17,7 +17,7 @@
       "numero": 20,
       "aosa": 1,
       "aet": 0,
-      "losa": 3,
+      "losa": 1,
       "let": 100,
       "ajr": 1,
       "kaista": 11,
@@ -35,7 +35,7 @@
             "aosa": 1,
             "aet": 0,
             "losa": 1,
-            "let": 500,
+            "let": 90,
             "ajr": 1,
             "kaista": 11,
             "karttapvm": "2017-01-01T00:00:00+03"
@@ -52,9 +52,9 @@
           "sijainti": {
             "numero": 20,
             "aosa": 1,
-            "aet": 500,
+            "aet": 90,
             "losa": 1,
-            "let": 1000,
+            "let": 100,
             "ajr": 1,
             "kaista": 11,
             "karttapvm": "2017-01-01T00:00:00+03"
