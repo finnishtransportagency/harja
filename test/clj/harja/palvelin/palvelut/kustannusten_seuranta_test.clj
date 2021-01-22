@@ -75,7 +75,7 @@
           AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');"))
 
 (defn erilliskustannusten-toteumat-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
-  (let [query (str "SELECT
+  (let [haku-str (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM lasku_kohdistus lk
@@ -99,7 +99,7 @@
                                             (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
                                                AS toteutunut_summa,
         0 AS budjetoitu_summa
-        FROM toteutunut_tyo t
+        FROM toteutuneet_kustannukset t
               JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'Erillishankinnat (W)',
              toimenpideinstanssi tpi,
              toimenpidekoodi tk
@@ -108,7 +108,7 @@
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')")]
-    query))
+    haku-str))
 
 (defn- hoidonjohdonpalkkio-budjetoidut-sql-haku [urakka alkupvm loppupvm]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
@@ -129,7 +129,7 @@
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
 (defn- hoidonjohdonpalkkio-toteumat-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
-  (let [query (str "SELECT
+  (let [haku-str (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM lasku_kohdistus lk
@@ -154,7 +154,7 @@
                                             (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
                                                AS toteutunut_summa,
         0 AS budjetoitu_summa
-        FROM toteutunut_tyo t
+        FROM toteutuneet_kustannukset t
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
               LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
              toimenpideinstanssi tpi,
@@ -165,30 +165,31 @@
           AND tpi.toimenpide = tk.id
           AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744')
           AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
-    query))
+    haku-str))
 
 (defn- johto-ja-hallintokorvaukset-budjetoidut-sql-haku [urakka alkupvm loppupvm]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
-         (SELECT tpi.id AS id
-          FROM toimenpideinstanssi tpi
-                   JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                   JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
-               maksuera m
-          WHERE tpi.urakka = " urakka "
-            AND m.toimenpideinstanssi = tpi.id
-            AND tpk2.koodi = '23150')
+               (SELECT tpi.id AS id
+                FROM toimenpideinstanssi tpi
+                         JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                         JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                     maksuera m
+                WHERE tpi.urakka = " urakka "
+                  AND m.toimenpideinstanssi = tpi.id
+                  AND tpk2.koodi = '23150')
         SELECT (hjh.tunnit * hjh.tuntipalkka) as summa
-        FROM johto_ja_hallintokorvaus hjh
-         LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht on hjh.\"toimenkuva-id\" = jjht.id
-        WHERE hjh.\"urakka-id\" = " urakka "
-        AND (concat(hjh.vuosi, '-', hjh.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
+          FROM johto_ja_hallintokorvaus hjh
+         WHERE hjh.\"urakka-id\" = " urakka "
+           AND (concat(hjh.vuosi, '-', hjh.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
+
         UNION ALL
+
         SELECT kt.summa as summa
-        FROM kustannusarvioitu_tyo kt
-        WHERE kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-          AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)')
-               OR kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
-               )
+          FROM kustannusarvioitu_tyo kt, sopimus s
+          WHERE s.urakka = " urakka "
+          AND kt.sopimus = s.id
+          AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+            AND kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
 (defn- johto-ja-hallintokorvaukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
@@ -217,7 +218,7 @@
                                             (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
                                                AS toteutunut_summa,
         0 AS budjetoitu_summa
-        FROM toteutunut_tyo t
+        FROM toteutuneet_kustannukset t
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
               LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
              toimenpideinstanssi tpi,
@@ -286,7 +287,7 @@ UNION ALL
       )"))
 
 (defn- hankintakustannukset-toteutuneet-sql-haku [urakka alkupvm loppupvm]
-  (str "SELECT lk.summa AS toteutunut_summa,
+  (let [haku-str (str "SELECT lk.summa AS toteutunut_summa,
        0 AS budjetoitu_summa,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' THEN 'hankinta'
@@ -309,15 +310,20 @@ UNION ALL
        WHERE l.urakka = " urakka "
          AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
          AND lk.lasku = l.id
+         AND l.poistettu IS NOT TRUE
          AND lk.toimenpideinstanssi = tpi.id
+         AND lk.poistettu IS NOT TRUE
          AND tpi.toimenpide = tk.id
+         AND lk.maksueratyyppi::TEXT = 'kokonaishintainen'
+         AND tr.nimi != 'Tilaajan rahavaraus (T3)'
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
-       tk.koodi = '14301')"))
+       tk.koodi = '14301')")]
+    haku-str))
 
 (defn- lisatyot-sql-haku [urakka alkupvm loppupvm]
-  (str "SELECT lk.summa AS toteutunut_summa,
+  (let [haku-str (str "SELECT lk.summa AS toteutunut_summa,
              0 AS budjetoitu_summa,
              CASE
                  WHEN tk.koodi = '23104' THEN 'Talvihoito'
@@ -336,10 +342,13 @@ UNION ALL
              lasku l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
+          AND l.poistettu IS NOT TRUE
           AND lk.maksueratyyppi = 'lisatyo'
           AND lk.lasku = l.id
+          AND lk.poistettu IS NOT TRUE
           AND lk.toimenpideinstanssi = tpi.id
-          AND tpi.toimenpide = tk.id")
+          AND tpi.toimenpide = tk.id")]
+    haku-str)
   )
 
 (deftest hae-olemattomia-kustannuksia
@@ -477,7 +486,12 @@ UNION ALL
                                #(when (= "hankintakustannukset" (:paaryhma %))
                                   true)
                                vastaus)
-        h-summa (apply + (map #(:toteutunut_summa %) hankintakustannukset))
+        ;; Filtteröidään vielä lisätyöt pois
+        h-summa (apply + (map (fn [rivi]
+                                (if (not= "lisatyo" (:toimenpideryhma rivi))
+                                  (:toteutunut_summa rivi)
+                                  0))
+                           hankintakustannukset))
         h-sql (q (hankintakustannukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm))
         sql-summa (apply + (map #(first %) h-sql))]
     (is (= h-summa sql-summa))))

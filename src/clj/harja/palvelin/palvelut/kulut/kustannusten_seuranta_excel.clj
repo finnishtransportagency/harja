@@ -186,7 +186,7 @@
     {:rivi ["Lisätyöt" (:toimenpide rivi) (:tehtava_nimi rivi) nil (:toteutunut_summa rivi) nil nil] :lihavoi? true}
     [nil (:toimenpide rivi) (:tehtava_nimi rivi) nil (:toteutunut_summa rivi) nil nil]))
 
-(defn- kustannukset-excel
+(defn kustannukset-excel
   [db workbook user {:keys [urakka-id urakka-nimi hoitokauden-alkuvuosi alkupvm loppupvm] :as tiedot}]
   (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
   (let [kustannukset-tehtavittain (kustannusten-seuranta-q/listaa-kustannukset-paaryhmittain

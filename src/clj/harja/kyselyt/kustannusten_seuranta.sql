@@ -169,11 +169,9 @@ WHERE hjh."urakka-id" = :urakka
   AND (concat(hjh.vuosi, '-', hjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
 GROUP BY tehtava_nimi
 UNION ALL
--- Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta,
+-- Budjetoidut - Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta,
 -- Toimistotarvikkeet saadaan yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'
 -- ja Johto- ja hallintokorvaus (J) - tehtäväryhmältä
--- ja ne tallentuu sinne.
--- Nämä on budjetoituja kustannuksia.
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        0                                              AS toteutunut_summa,
        'kiinteahintainen'                             AS maksutyyppi,
@@ -300,7 +298,7 @@ WHERE l.urakka = :urakka
 GROUP BY tehtava_nimi, lk.maksueratyyppi, toimenpideryhma, toimenpide, paaryhma, tk.yksiloiva_tunniste
 UNION ALL
 -- Osa toteutuneista erillishankinnoista, hoidonjohdonpalkkioista ja johdon- hallintakorvauksesta
--- siirretään kustannusarvoitu_tyo taulusta toteutunut_tyo tauluun aina kuukauden viimeisenä päivänä.
+-- siirretään kustannusarvoitu_tyo taulusta toteutuneet_kustannukset tauluun aina kuukauden viimeisenä päivänä.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT 0                                           AS budjetoitu_summa,
        SUM((SELECT korotettuna
@@ -332,7 +330,7 @@ SELECT 0                                           AS budjetoitu_summa,
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
            END                                      AS paaryhma
-FROM toteutunut_tyo t
+FROM toteutuneet_kustannukset t
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
      toimenpideinstanssi tpi,
@@ -374,7 +372,7 @@ UNION ALL
 -- Toteutuneet erilliskustannukset eli bonukset
 -- Toteutuneita bonuksia voidaan lisätä erilliskustannusnäytötä ja ne menee erilliskustannuksiksi
 -- Tässä ei ole siis mukana kustannusarvoitu_tyo tauluun tallennetut "Tilaajan varaukset" jotka pohjimmiltaan on
--- budjetoituja bonuksia ja jotka haetaan sitten erikseen toteutunut_tyo taulusta, koska sinne siirretään kaikki toteutuneet
+-- budjetoituja bonuksia ja jotka haetaan sitten erikseen toteutuneet_kustannukset taulusta, koska sinne siirretään kaikki toteutuneet
 -- kustannusarvoidut_työt
 SELECT 0                    AS budjetoitu_summa,
        CASE
