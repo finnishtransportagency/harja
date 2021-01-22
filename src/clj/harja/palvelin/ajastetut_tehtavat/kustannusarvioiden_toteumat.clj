@@ -63,11 +63,11 @@
                                            "kustannusarvoidun_tyon_siirto"
                                            #(siirra-kustannukset db)))))
 
-(defrecord KustannusarvoidenToteumat []
+(defrecord KustannusarvioidenToteumat []
   component/Lifecycle
   (start [{db :db :as this}]
-    (assoc this :kustannusarvoiduntyontoteumien-ajastus
+    (assoc this :kustannusarvioiduntyontoteumien-ajastus
                 (ajasta db)))
-  (stop [{poista :kustannusarvoiduntyontoteumien-ajastus :as this}]
+  (stop [{poista :kustannusarvioiduntyontoteumien-ajastus :as this}]
     (poista)
-    (dissoc this :kustannusarvoiduntyontoteumien-ajastus)))
+    (dissoc this :kustannusarvioiduntyontoteumien-ajastus)))
