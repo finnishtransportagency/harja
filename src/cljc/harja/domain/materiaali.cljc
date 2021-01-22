@@ -15,6 +15,7 @@
     "Hiekoitushiekan suola" 7
     "Kaliumformiaatti" 8
     "Natriumformiaatti" 9
+    "Natriumformiaatti 2" 9.5
     "Kesäsuola (pölynsidonta)" 10
     "Kesäsuola (sorateiden kevätkunnostus)" 11
     "Hiekoitushiekka" 12
