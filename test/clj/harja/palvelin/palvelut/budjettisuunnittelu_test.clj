@@ -358,7 +358,7 @@
                                                                             (nil? tehtava)
                                                                             (nil? tehtavaryhma))
                                     :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
-                                                             (= tr_yt "a6614475-1950-4a61-82c6-fda0fd19bb54")
+                                                             (= tr_yt "a6614475-1950-4a61-82c6-fda0fd19bb54") ;guid on tehtäväryhmälle Johto- ja hallintokorvaus, tilaajan varaus on eri asia
                                                              (nil? tehtava))))
         tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
         paivitettava-data (mapv (fn [data]
