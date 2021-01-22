@@ -1,7 +1,7 @@
 (ns harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat
-  "Ajastettu tehtävä toteutuneiden kustannusten muodostamiseksi valmiiksi toteutunut_tyo tauluun"
+  "Ajastettu tehtävä toteutuneiden kustannusten muodostamiseksi valmiiksi toteutuneet_kustannukset tauluun"
   (:require [com.stuartsierra.component :as component]
-            [harja.kyselyt.toteutunut-tyo :as q]
+            [harja.kyselyt.toteutuneet_kustannukset :as q]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [taoensso.timbre :as log]
@@ -46,7 +46,7 @@
                               (not onko-kuukauden-viimeinen-paiva?))
                        edellinen-kuukausi
                        nyt-kuukausi)]
-    (log/info "Siirretään kustannusarvoitu_tyo taulusta toteutunut_tyo tauluun, jos on viimeinen päivä ja jos siirtoa ei ole vielä tehty.")
+    (log/info "Siirretään kustannusarvoitu_tyo taulusta toteutueet_kustannukset tauluun, jos on viimeinen päivä ja jos siirtoa ei ole vielä tehty.")
     (if (not onko-siirto-tehty?)
       (do
         ;; Siirrä kustannusarvioidut työt
@@ -59,8 +59,8 @@
       (log/info "Ei tehdä toista kertaa."))))
 
 (defn- ajasta [db]
-  (log/info "Ajastetaan kustannusarvoidun_tyon siirto toteutunut_tyo tauluun joka päivä.")
-  (ajastettu-tehtava/ajasta-paivittain [2 40 0]
+  (log/info "Ajastetaan kustannusarvoidun_tyon siirto toteutuneet_kustannukset tauluun joka päivä.")
+  (ajastettu-tehtava/ajasta-paivittain [1 40 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db
