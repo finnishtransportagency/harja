@@ -555,26 +555,29 @@
 
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
-  (try
-    (let [alustarivit (:alusta paallystysilmoitus)
-          idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
-          hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
-          poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
+  (let [alustarivit (:alusta paallystysilmoitus)
+        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+        hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
+        poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
 
-      (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
-      (doseq [rivi (->> paallystysilmoitus
-                        :alusta
-                        (filter (comp not :poistettu)))]
-        (let [params (merge rivi
-                            {:pot2_id pot2-id})
-              _ 1                                           ; petar validoi alustarivi tässä?
-              ]
-          (if (:pot2a_id rivi)
-            (q/paivita-pot2-alusta<! db params)
-            (q/luo-pot2-alusta<! db params)))))
-    (catch Throwable t
-      (throw (IllegalArgumentException. (cheshire/encode t))))))
-
+    (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
+    (doseq [rivi (->> paallystysilmoitus
+                      :alusta
+                      (filter (comp not :poistettu)))]
+      (let [params (merge rivi
+                          {:pot2_id pot2-id})
+            verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
+            verkko-params (select-keys params verkko-avaimet)
+            verkko-params-maara (count verkko-params)
+            params-ja-verkko-params (merge params
+                                           (cond
+                                             (= verkko-params-maara 3) verkko-params
+                                             (= verkko-params-maara 0) (zipmap verkko-avaimet (repeat nil))
+                                             :else (throw (IllegalArgumentException. (str "Alustassa väärä verkko tiedot "
+                                                                                          (pr-str params))))))]
+        (if (:pot2a_id rivi)
+          (q/paivita-pot2-alusta<! db params)
+          (q/luo-pot2-alusta<! db params-ja-verkko-params))))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.

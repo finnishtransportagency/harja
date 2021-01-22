@@ -163,7 +163,10 @@ SELECT
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
     pot2a.toimenpide_tiedot,
-    pot2a.materiaali
+    pot2a.materiaali,
+    pot2a.verkon_tyyppi AS "verkon-tyyppi",
+    pot2a.verkon_tarkoitus AS "verkon-tarkoitus",
+    pot2a.verkon_sijainti AS "verkon-sijainti"
   FROM pot2_alusta pot2a
  WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
 
@@ -493,8 +496,12 @@ UPDATE pot2_alusta
  WHERE id = :pot2a_id;
 
 -- name: luo-pot2-alusta<!
-INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, materiaali, pot2_id)
-VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys, :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :materiaali, :pot2_id);
+INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,
+                         tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, materiaali,
+                         verkon_tyyppi, verkon_tarkoitus, verkon_sijainti, pot2_id)
+VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
+        :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :materiaali,
+        :verkon-tyyppi, :verkon-tarkoitus, :verkon-sijainti, :pot2_id);
 
 -- name: poista-pot2-alustarivit!
 UPDATE pot2_alusta
