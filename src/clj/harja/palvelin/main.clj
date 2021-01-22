@@ -728,7 +728,7 @@
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
         [:db  :http-palvelin :integraatioloki])
-      
+
       :kustannusarvioiduntyontoteumien-ajastus
       (component/using (kustannusarvioiden-toteumat/->KustannusarvioidenToteumat)
         [:http-palvelin :db])
