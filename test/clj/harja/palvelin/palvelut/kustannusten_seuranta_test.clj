@@ -351,6 +351,57 @@ UNION ALL
     haku-str)
   )
 
+(defn- bonukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+  (str " SELECT CASE
+                WHEN ek.tyyppi::TEXT = 'lupausbonus' OR ek.tyyppi::TEXT = 'asiakastyytyvaisyysbonus'
+                THEN SUM((SELECT korotettuna
+                                 FROM laske_kuukauden_indeksikorotus("hoitokauden-alkuvuosi"::INTEGER, 9::INTEGER,
+                                                                      (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = "urakka")::VARCHAR,
+                                                                      coalesce(ek.rahasumma, 0)::NUMERIC,
+                                                                      (SELECT indeksilaskennan_perusluku("urakka"::INTEGER))::NUMERIC)))
+                ELSE SUM(ek.rahasumma)
+                END        AS toteutunut_summa,
+                0          AS budjetoitu_summa,
+                'bonus'    AS toimenpideryhma,
+                'bonukset' AS paaryhma
+           FROM erilliskustannus ek,
+                  sopimus s
+          WHERE s.urakka = 35
+            AND ek.sopimus = s.id
+            AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
+                                            FROM toimenpideinstanssi tpi
+                                                 JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                                                 JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                                 maksuera m
+                                           WHERE tpi.urakka = "urakka"
+                                             AND m.toimenpideinstanssi = tpi.id
+                                             AND tpk2.koodi = '23150')
+            AND ek.pvm BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
+            AND ek.poistettu IS NOT TRUE
+          GROUP BY ek.tyyppi"))
+
+(defn- bonukset-budjetoitu-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+  (str "SELECT kt.summa                                  AS budjetoitu_summa,
+         0                                              AS toteutunut_summa,
+         'bonus'                                        AS toimenpideryhma,
+         'bonukset'                                     AS paaryhma
+         FROM kustannusarvioitu_tyo kt,
+         sopimus s
+         WHERE s.urakka = "urakka"
+         AND kt.toimenpideinstanssi = (SELECT tpi.id AS id
+                                         FROM toimenpideinstanssi tpi
+                                              JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                                              JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                              maksuera m
+                                        WHERE tpi.urakka = "urakka"
+                                          AND m.toimenpideinstanssi = tpi.id
+                                           AND tpk2.koodi = '23150')
+         AND kt.tehtava IS NULL
+         AND kt.tehtavaryhma = (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
+         AND kt.sopimus = s.id
+         AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE)")
+  )
+
 (deftest hae-olemattomia-kustannuksia
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
     (is (thrown? Exception (hae-kustannukset urakka-id nil nil nil)))))
@@ -546,6 +597,35 @@ UNION ALL
     ;; Vertaillaan lisätöiksi määriteltyjen tehtävien määrää
     (is (= (count lisatyot) (count l-sql)))
     (is (= (count luotu-lisatyo) 1))))
+
+;; Budjetoidut bonukset
+(deftest bonukset-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        bonukset (filter
+                   #(when (= "bonukset" (:paaryhma %))
+                      true)
+                   vastaus)
+        ;; Filtteröidään vielä lisätyöt pois
+        bonus-toteutuneet (apply + (map (fn [rivi]
+                                (if (not= "lisatyo" (:toimenpideryhma rivi))
+                                  (:toteutunut_summa rivi)
+                                  0))
+                                        bonukset))
+        bonus-budjetoitu (apply + (map (fn [rivi]
+                                    (if (not= "lisatyo" (:toimenpideryhma rivi))
+                                      (:budjetoitu_summa rivi)
+                                      0))
+                                       bonukset))
+        bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        bonukset-budjetoitu-sql (q (bonukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        bonukset-sql-toteutunut-summa (apply + (map #(first %) bonukset-toteutuneet-sql))
+        bonukset-sql-budjetoitu-summa (apply + (map #(first %) bonukset-budjetoitu-sql))]
+    (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))
+    (is (= bonus-budjetoitu bonukset-sql-budjetoitu-summa))))
 
 ;; Testataan, että backendistä voidaan kutsua excelin luontia ja excel ladataan.
 ;; Excelin sisältöä ei valitoida
