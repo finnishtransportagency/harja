@@ -141,11 +141,11 @@
                                      (if (= "lisatyo" (:maksutyyppi tehtava))
                                        (+ summa (:toteutunut_summa tehtava))
                                        summa))
-                                   0 toimistotehtavat)
+                                   0 tehtavat)
            :lisatyot (filter (fn [tehtava]
                                (when (= "lisatyo" (:maksutyyppi tehtava))
                                  true))
-                             toimistotehtavat)
+                             tehtavat)
            :tehtavat toteutuneet-toimistotehtavat}])))
 
 (defn- summaa-tehtavat [taulukko-rivit paaryhma indeksi]
