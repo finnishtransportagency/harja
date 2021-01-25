@@ -252,6 +252,8 @@
    AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
    AND kt.toimenpideinstanssi = tpi.id
    AND tpi.toimenpide = tk.id
+   AND kt.tyyppi::TEXT != 'akillinen-hoitotyo'
+   AND kt.tyyppi::TEXT != 'vahinkojen-korjaukset'
    AND (tk.koodi = '23104' -- talvihoito
      OR tk.koodi = '23116' -- liikenneympariston-hoito
      OR tk.koodi = '23124' -- sorateiden-hoito
@@ -516,14 +518,17 @@ UNION ALL
         loppupvm "2020-09-30"
         hoitokauden-alkuvuosi 2019
         vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+
         hankintakustannukset (filter
-                               #(when (= "hankintakustannukset" (:paaryhma %))
+                               #(when (and
+                                        (= "hankintakustannukset" (:paaryhma %))
+                                        (not= "lisatyo" (:toimenpideryhma %)))
                                   true)
                                vastaus)
-        h-summa (apply + (map #(:budjetoitu_summa %) hankintakustannukset))
+        hankintakustannukset-budjetoitu (apply + (map #(:budjetoitu_summa %) hankintakustannukset))
         h-sql (q (hankintakustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
         sql-summa (apply + (map #(first %) h-sql))]
-    (is (= h-summa sql-summa))))
+    (is (= hankintakustannukset-budjetoitu sql-summa))))
 
 ;; Testataan/vertaillaan Hankintakustannusten toteutuneita summia
 ;; Hankintakustannusten alle tulee toimenpideryhmät kuten talvihoito, liikenneympäristöhoito, yms.
@@ -589,13 +594,11 @@ UNION ALL
                            #(when (= (bigdec laskun-summa) (:toteutunut_summa %))
                               true)
                            lisatyot)
-        l-summa (apply + (map #(:toteutunut_summa %) lisatyot))
-        l-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) l-sql))]
+        lisatyot-summa (apply + (map #(:toteutunut_summa %) lisatyot))
+        lisatyot-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
+        sql-summa (apply + (map #(first %) lisatyot-sql))]
     ;; Vertaillaan summaa
-    (is (= l-summa sql-summa))
-    ;; Vertaillaan lisätöiksi määriteltyjen tehtävien määrää
-    (is (= (count lisatyot) (count l-sql)))
+    (is (= lisatyot-summa sql-summa))
     (is (= (count luotu-lisatyo) 1))))
 
 ;; Budjetoidut bonukset
