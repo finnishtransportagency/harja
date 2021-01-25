@@ -10,6 +10,7 @@
             [hiccup.core :refer [html]]
 
             [clojure.set :as clj-set]
+            [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
 
             [harja.kyselyt
@@ -38,7 +39,8 @@
              [yleiset :as yy]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
-            [clojure.set :as set]))
+            [clojure.set :as set])
+  (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
   "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
@@ -575,9 +577,14 @@
                                              (= verkko-params-maara 0) (zipmap verkko-avaimet (repeat nil))
                                              :else (throw (IllegalArgumentException. (str "Alustassa väärä verkko tiedot "
                                                                                           (pr-str params))))))]
-        (if (:pot2a_id rivi)
-          (q/paivita-pot2-alusta<! db params)
-          (q/luo-pot2-alusta<! db params-ja-verkko-params))))))
+        (try
+          (if (:pot2a_id rivi)
+            (q/paivita-pot2-alusta<! db params)
+            (q/luo-pot2-alusta<! db params-ja-verkko-params))
+          (catch PSQLException pe
+            (throw (if (s/includes? (.getMessage pe) "violates foreign key constraint")
+                     (IllegalArgumentException. "Koodisto tai muu referenssi virhe pyynnössä" pe)
+                     pe))))))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
