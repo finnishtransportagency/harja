@@ -568,15 +568,17 @@
                       (filter (comp not :poistettu)))]
       (let [params (merge rivi
                           {:pot2_id pot2-id})
-            verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
-            verkko-params (select-keys params verkko-avaimet)
-            verkko-params-maara (count verkko-params)
-            params-ja-verkko-params (merge params
-                                           (cond
-                                             (= verkko-params-maara 3) verkko-params
-                                             (= verkko-params-maara 0) (zipmap verkko-avaimet (repeat nil))
-                                             :else (throw (IllegalArgumentException. (str "Alustassa väärä verkko tiedot "
-                                                                                          (pr-str params))))))]
+            lisaa-oikeat-verkko-params (fn [params]
+                                         (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
+                                               verkko-params (select-keys params verkko-avaimet)
+                                               verkko-params-maara (count verkko-params)]
+                                           (merge params
+                                                  (cond
+                                                    (= verkko-params-maara 3) verkko-params
+                                                    (= verkko-params-maara 0) (zipmap verkko-avaimet (repeat nil))
+                                                    :else (throw (IllegalArgumentException. (str "Alustassa väärä verkko tiedot "
+                                                                                                 (pr-str params))))))))
+            params-ja-verkko-params (lisaa-oikeat-verkko-params params)]
         (try
           (if (:pot2a_id rivi)
             (q/paivita-pot2-alusta<! db params-ja-verkko-params)
