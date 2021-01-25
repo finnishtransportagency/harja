@@ -154,7 +154,7 @@
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
-    :kustannusarvoiduntyontoteumien-ajastus
+    :kustannusarvioiduntyontoteumien-ajastus
     :komponenttien-tila
     :itmf})
 
@@ -209,7 +209,7 @@
     :tiedostopesula
     :tieluvat
     :paikkaukset
-    :kustannusarvoiduntyontoteumien-ajastus
+    :kustannusarvioiduntyontoteumien-ajastus
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2})
