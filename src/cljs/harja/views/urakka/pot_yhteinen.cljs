@@ -19,7 +19,29 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.kentat :as kentat]
-            [harja.ui.grid :as grid]))
+            [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit])
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]
+                   [harja.atom :refer [reaction<!]]))
+
+
+(defn poista-lukitus [e! urakka]
+  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id urakka))]
+    [:div
+     [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
+     [napit/palvelinkutsu-nappi
+      "Avaa lukitus"
+      #(when paatosoikeus?
+         (go
+           (e! (paallystys/->AvaaPaallystysilmoituksenLukitus))))
+      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
+       :id "poista-paallystysilmoituksen-lukitus"
+       :disabled (not paatosoikeus?)
+       :ikoni (ikonit/livicon-wrench)
+       :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
@@ -47,10 +69,11 @@
                                                                 arvo tr-alkuosa)
                                                               (if (= :tr-loppuosa kentta)
                                                                 arvo tr-loppuosa)))
-                           ;; TODO: POT2 ei halua tehdä Tierekisteriosoitteiden ja
-                           ;; Alustalle tehtyjen toimien validointeja tässä! Testattava voiko poistaa
-                           (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat))
-                           (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat)))))))]
+                           ;; when-kääreet koska kyseessä POT1-spesifiset validoinnit
+                           (when (:tierekisteriosoitteet ohjauskahvat)
+                             (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))
+                           (when (:alustalle-tehdyt-toimet ohjauskahvat)
+                             (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat))))))))]
     [:table
      [:thead
       [:tr
@@ -232,13 +255,14 @@
                                        kommentit]))))]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                     takuupvm] :as perustiedot-nyt}
+                     takuupvm versio] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu?
          muokkaa!
          validoinnit huomautukset]
-      (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
+      (let [pot2? (= 2 versio)
+            nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
                                       kirjoitusoikeus?))]
@@ -280,16 +304,15 @@
             {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
              :varoita [tarkista-takuu-pvm]}
-            {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
             {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
              :tyyppi :pvm :muokattava? false-fn}
-            {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
-             :hae toteuman-kokonaishinta-hae-fn
-             :fmt fmt/euro-opt :tyyppi :numero
-             :muokattava? false-fn
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
+            (when-not pot2?
+              {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
+               :hae toteuman-kokonaishinta-hae-fn
+               :fmt fmt/euro-opt :tyyppi :numero
+               :muokattava? false-fn
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when (and (not= :valmis tila)
                        (not= :lukittu tila))
               {:otsikko "Käsittely"

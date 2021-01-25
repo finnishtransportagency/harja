@@ -999,6 +999,16 @@
                    WHERE
                    nimi = 'Nakkilan ramppi';"))))
 
+(defn hae-yllapitokohde-kirkkotie []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Kirkkotie';"))))
+
+(defn hae-yllapitokohde-aloittamaton []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Aloittamaton kohde mt20';"))))
+
 (defn hae-yllapitokohde-oulaisten-ohitusramppi []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
@@ -1028,6 +1038,19 @@
 (defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
+
+(defn hae-yllapitokohde-tarkea-kohde-pot2 []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = 'Tärkeä kohde mt20';"))))
+
+(defn poista-paallystysilmoitus-paallystyskohtella [paallystyskohde-id]
+  (u (str "DELETE FROM pot2_paallystekerros
+            WHERE pot2_id = (SELECT id FROM paallystysilmoitus
+                              WHERE paallystyskohde = " paallystyskohde-id ");"))
+  (u (str "DELETE FROM pot2_alusta
+            WHERE pot2_id = (SELECT id FROM paallystysilmoitus
+                              WHERE paallystyskohde = " paallystyskohde-id ");"))
+  (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";")))
 
 (defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero
@@ -1521,17 +1544,16 @@
   (let [testattava_ (gensym "testattava")
         f_ (gensym "f")
         loput_ (gensym "loput")]
-     `(list
-       ~@(let [testattava_ testattava]
-          (loop [[f_ & loput_] fn-listat
-                 iss# []]
-            (if (nil? f_)
-              iss#
-              (let [msg?# (string? (first loput_))
-                    is-lause# (if msg?#
-                                `(is (list ~f_ ~testattava_) (first '~loput_))
-                                `(is (list ~f_ ~testattava_)))]
-                (recur (if msg?#
-                         (rest loput_)
-                         loput_)
-                       (conj iss# is-lause#)))))))))
+    `(let [~testattava_ ~testattava]
+       ~@(loop [[f_ & loput_] fn-listat
+                iss# []]
+           (if (nil? f_)
+             iss#
+             (let [msg?# (string? (first loput_))
+                   is-lause# (if msg?#
+                               `(is (~f_ ~testattava_) ~(first loput_))
+                               `(is (~f_ ~testattava_)))]
+               (recur (if msg?#
+                        (rest loput_)
+                        loput_)
+                      (conj iss# is-lause#))))))))

@@ -5,6 +5,7 @@ SELECT
   pi.id,
   ypk.tr_numero                 AS "tr-numero",
   pi.tila,
+  pi.versio                     AS "versio",
   nimi,
   kohdenumero,
   yhaid,
@@ -71,6 +72,8 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
+  pi.versio                     AS "versio",
+  pi.lisatiedot,
   tila,
   ypka.kohde_alku               AS "aloituspvm",
   ypka.kohde_valmis             AS "valmispvm-kohde",
@@ -133,9 +136,41 @@ GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paally
   ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,
   u.id;
 
+-- name: hae-kohdeosan-pot2-paallystekerrokset
+SELECT
+  pot2p.id as "pot2p_id",
+  pot2p.kohdeosa_id as "kohdeosa-id",
+  pot2p.toimenpide,
+  pot2p.materiaali,
+  pot2p.leveys,
+  pot2p.massamenekki,
+  pot2p.pinta_ala,
+  pot2p.kokonaismassamaara,
+  pot2p.piennar,
+  pot2p.lisatieto
+FROM pot2_paallystekerros pot2p
+WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
+
+-- name: hae-pot2-alustarivit
+SELECT
+    pot2a.id as "pot2a_id",
+    pot2a.tr_numero AS "tr-numero",
+    pot2a.tr_alkuosa AS "tr-alkuosa",
+    pot2a.tr_alkuetaisyys AS "tr-alkuetaisyys",
+    pot2a.tr_loppuosa AS "tr-loppuosa",
+    pot2a.tr_loppuetaisyys AS "tr-loppuetaisyys",
+    pot2a.tr_ajorata AS "tr-ajorata",
+    pot2a.tr_kaista AS "tr-kaista",
+    pot2a.toimenpide,
+    pot2a.toimenpide_tiedot,
+    pot2a.materiaali
+  FROM pot2_alusta pot2a
+ WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
+
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
   id,
+  versio                     AS "versio",
   tila,
   ilmoitustiedot,
   paatos_tekninen_osa        AS "tekninen-osa_paatos",
@@ -146,7 +181,8 @@ SELECT
   asiatarkastus_hyvaksytty   AS "asiatarkastus_hyvaksytty",
   asiatarkastus_lisatiedot   AS "asiatarkastus_lisatiedot"
 FROM paallystysilmoitus pi
-WHERE paallystyskohde = :paallystyskohde;
+WHERE paallystyskohde = :paallystyskohde
+  AND NOT poistettu;
 
 -- name: paivita-paallystysilmoitus<!
 -- Päivittää päällystysilmoituksen tiedot (ei käsittelyä tai asiatarkastusta, päivitetään erikseen)
@@ -157,7 +193,8 @@ SET
   takuupvm       = :takuupvm,
   muokattu       = NOW(),
   muokkaaja      = :muokkaaja,
-  poistettu      = FALSE
+  poistettu      = FALSE,
+  lisatiedot     = :lisatiedot
 WHERE paallystyskohde = :id
       AND paallystyskohde IN (SELECT id
                               FROM yllapitokohde
@@ -194,13 +231,13 @@ WHERE paallystyskohde = :id
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu)
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu, versio, lisatiedot)
 VALUES (:paallystyskohde,
         :tila :: PAALLYSTYSTILA,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
-        :kayttaja, FALSE);
+        :kayttaja, FALSE, :versio, :lisatiedot);
 
 -- name: hae-paallystysilmoituksen-kommentit
 -- Hakee annetun päällystysilmoituksen kaikki kommentit (joita ei ole poistettu) sekä
@@ -419,3 +456,47 @@ WHERE id = :id
 SELECT nimi, tunnus, kohdenumero, yhaid
 FROM yllapitokohde
 WHERE yhaid IN (:ulkoiset-idt);
+
+-- name: paivita-pot2-paallystekerros<!
+UPDATE pot2_paallystekerros
+   SET kohdeosa_id = :kohdeosa_id,
+       toimenpide = :toimenpide,
+       materiaali = :materiaali,
+       leveys = :leveys,
+       massamenekki = :massamenekki,
+       pinta_ala = :pinta_ala,
+       kokonaismassamaara = :kokonaismassamaara,
+       piennar = :piennar,
+       lisatieto = :lisatieto,
+       pot2_id = :pot2_id
+ WHERE id = :pot2p_id;
+
+-- name: luo-pot2-paallystekerros<!
+INSERT INTO pot2_paallystekerros
+    (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki,
+     pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id)
+     VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
+             :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id);
+
+-- name: paivita-pot2-alusta<!
+UPDATE pot2_alusta
+   SET tr_numero = :tr-numero,
+       tr_alkuetaisyys = :tr-alkuetaisyys,
+       tr_alkuosa = :tr-alkuosa,
+       tr_loppuetaisyys = :tr-loppuetaisyys,
+       tr_loppuosa = :tr-loppuosa,
+       tr_ajorata = :tr-ajorata,
+       tr_kaista = :tr-kaista,
+       toimenpide = :toimenpide,
+       materiaali = :materiaali,
+       pot2_id = :pot2_id
+ WHERE id = :pot2a_id;
+
+-- name: luo-pot2-alusta<!
+INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, materiaali, pot2_id)
+VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys, :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :materiaali, :pot2_id);
+
+-- name: poista-pot2-alustarivit!
+UPDATE pot2_alusta
+   SET poistettu = TRUE
+ WHERE id IN (:pot2a_idt);
