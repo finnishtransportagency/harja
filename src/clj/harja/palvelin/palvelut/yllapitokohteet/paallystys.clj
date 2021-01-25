@@ -579,7 +579,7 @@
                                                                                           (pr-str params))))))]
         (try
           (if (:pot2a_id rivi)
-            (q/paivita-pot2-alusta<! db params)
+            (q/paivita-pot2-alusta<! db params-ja-verkko-params)
             (q/luo-pot2-alusta<! db params-ja-verkko-params))
           (catch PSQLException pe
             (throw (if (s/includes? (.getMessage pe) "violates foreign key constraint")

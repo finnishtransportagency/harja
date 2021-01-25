@@ -492,6 +492,9 @@ UPDATE pot2_alusta
        tr_kaista = :tr-kaista,
        toimenpide = :toimenpide,
        materiaali = :materiaali,
+       verkon_tyyppi = :verkon-tyyppi,
+       verkon_tarkoitus = :verkon-tarkoitus,
+       verkon_sijainti = :verkon-sijainti,
        pot2_id = :pot2_id
  WHERE id = :pot2a_id;
 

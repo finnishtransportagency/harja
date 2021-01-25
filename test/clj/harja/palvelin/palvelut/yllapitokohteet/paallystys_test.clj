@@ -1059,6 +1059,29 @@
     (is (= verkon-tiedot (select-keys alustarivi-6 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
+(deftest tallenna-pot2-paivittaa-alustarivi-jossa-on-verkko-tiedot
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        alkuperaiset-verkon-tiedot {:verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (update-in [:alusta 3] merge alkuperaiset-verkon-tiedot))
+        [_ paallystysilmoitus-kannassa-uusi] (tallenna-pot2-testi-paallystysilmoitus
+                                                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
+        alustarivit-uudet (:alusta paallystysilmoitus-kannassa-uusi)
+        paivitetyt-verkon-tiedot {:verkon-tyyppi 9 :verkon-tarkoitus 1 :verkon-sijainti 2}
+        paivitetty-paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                                          (assoc :alusta alustarivit-uudet)
+                                          (update-in [:alusta 3] merge paivitetyt-verkon-tiedot))
+        [_ paallystysilmoitus-kannassa-paivitetty] (tallenna-pot2-testi-paallystysilmoitus
+                                                  urakka-id sopimus-id paallystyskohde-id paivitetty-paallystysilmoitus)
+        alustarivit-paivitetyt (:alusta paallystysilmoitus-kannassa-paivitetty)
+        paivitetty-alustarivi-6 (alustarivi-idlla alustarivit-paivitetyt 6)]
+    (is (some? paivitetty-alustarivi-6) "alusta id:llä 6 löytyy")
+    (is (= paivitetyt-verkon-tiedot (select-keys paivitetty-alustarivi-6 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         muu-tr-numero 7777
