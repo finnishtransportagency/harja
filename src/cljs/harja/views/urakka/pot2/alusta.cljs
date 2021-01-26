@@ -47,7 +47,8 @@
        :luokka "nappi-toissijainen"
        :style {}}]
      (when (:tarjoa-alustatoimenpide app)
-       [komponenttien-lista e! alusta-toimenpiteet])]))
+       (println "jarno  alusta-toimenpiteet " (pr-str alusta-toimenpiteet))
+       #_[komponenttien-lista e! alusta-toimenpiteet])]))
 
 (defn alustan-validointi [rivi taulukko]
   (let [{:keys [ilmoitustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
@@ -56,13 +57,86 @@
         validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [] vuosi)]
     (yllapitokohteet-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
 
+(defn alustalomake-nakyma
+  [e! {:keys [alustalomake alusta-toimenpiteet murskeet]}]
+  (let [verkko? (pot2-tiedot/onko-toimenpide-verkko? alusta-toimenpiteet (:toimenpide alustalomake))]
+    [lomake/lomake-overlay {}
+     (fn []
+       [lomake/lomake
+        {:otsikko-komp (fn []
+                         [:div.col-xs-3 {:style {:margin-top "40px"}}
+                          [:span.harmaa-tumma-teksti
+                           "Toimenpide"]
+                          [:div.fontti-20
+                           {:style {:margin-top "4px"
+                                    :margin-bottom "24px"}}
+                           (pot2-domain/ainetyypin-koodi->nimi alusta-toimenpiteet (:toimenpide alustalomake))]])
+         :muokkaa! #(e! (pot2-tiedot/->PaivitaAlustalomake %))
+         :ei-borderia? true
+         :footer-fn (fn [data]
+                      [:span
+                       [napit/nappi "Lisää taulukkoon"
+                        #(e! (pot2-tiedot/->TallennaAlustalomake data))
+                        {:disabled false
+                         :luokka "nappi-myonteinen"
+                         :ikoni (ikonit/check)}] ;; todo: validointi oltava kunnossa
+                       [napit/peruuta "Peruuta"
+                        #(e! (pot2-tiedot/->SuljeAlustalomake))
+                        {:disabled false}]])}
+        [(lomake/rivi
+          {:nimi :tr-numero
+           :palstoja 1
+           :otsikko "Tie"
+           :tyyppi :positiivinen-numero :kokonaisluku? true}
+          {:nimi :tr-ajorata
+           :palstoja 1
+           :otsikko "Ajorata"
+           :tyyppi :positiivinen-numero :kokonaisluku? true}
+          {:nimi :tr-kaista
+           :palstoja 1
+           :otsikko "Kaista"
+           :tyyppi :positiivinen-numero :kokonaisluku? true})
+        (lomake/rivi
+          {:nimi :tr-alkuosa
+           :palstoja 1
+           :otsikko "Aosa"
+           :tyyppi :positiivinen-numero :kokonaisluku? true}
+          {:nimi :tr-alkuetaisyys
+           :palstoja 1
+           :otsikko "Aet"
+           :tyyppi :positiivinen-numero :kokonaisluku? true}
+          {:nimi :tr-loppuosa
+           :palstoja 1
+           :otsikko "Losa"
+           :tyyppi :positiivinen-numero :kokonaisluku? true}
+          {:nimi :tr-loppuetaisyys
+           :palstoja 1
+           :otsikko "Let"
+           :tyyppi :positiivinen-numero :kokonaisluku? true})
+        (when verkko?
+          (lomake/rivi {:otsikko "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
+                        ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
+                        :valinnat ["A" "B" "C"]}))
+        (when verkko?
+          (lomake/rivi {:otsikko "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
+                        ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
+                        ;; :valinta-arvo ::koodi
+
+                        :valinnat ["A" "B" "C"]}))]
+       alustalomake])]))
+
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake] :as app}
    {:keys [murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
   (let [perusleveys 2
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
+    (println "alustalomake " (pr-str alustalomake))
     [:div
+     (when alustalomake
+       [alustalomake-nakyma e! {:alustalomake alustalomake
+                                :alusta-toimenpiteet alusta-toimenpiteet
+                                :murskeet murskeet}])
      [grid/muokkaus-grid
       {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true
        :uusi-rivi (fn [rivi]
@@ -74,9 +148,14 @@
                          [:div {:style {:margin-top "1rem"}}
 
                           [lisaa-toimenpide-nappi e! app
-                                {:keys [murskeet mursketyypit materiaalikoodistot validointi]}
-                                alustarivit-atom
-                                g]])
+                           {:keys [murskeet mursketyypit materiaalikoodistot validointi]}
+                           alustarivit-atom
+                           g]
+                          [yleiset/pudotusvalikko "Lisää toimenpide"
+                           {:valinta ::pot2-domain/koodi
+                            :format-fn ::pot2-domain/nimi
+                            :valitse-fn #(e! (pot2-tiedot/->ValitseAlustatoimenpide (::pot2-domain/koodi %)))}
+                           (:alusta-toimenpiteet materiaalikoodistot)]])
        ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
        :luomisen-jalkeen (fn [grid-state]
                            (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))

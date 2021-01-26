@@ -26,6 +26,15 @@
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
 (defrecord LisaaAlustaToimenpide [])
+(defrecord ValitseAlustatoimenpide [toimenpide])
+(defrecord PaivitaAlustalomake [alustalomake])
+(defrecord TallennaAlustalomake [alustalomake])
+(defrecord SuljeAlustalomake [])
+
+
+(defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
+  (clojure.string/includes? (pot2-domain/ainetyypin-koodi->nimi alustatoimenpiteet koodi)
+                            "Verkko"))
 
 (extend-protocol tuck/Event
 
@@ -98,7 +107,29 @@
 
   LisaaAlustaToimenpide
   (process-event [_ app]
-    (println "Lisa_AlustanToimenpide " )
+    (println "LisaaAlustaToimenpide " )
     (assoc app :tarjoa-alustatoimenpide true))
+
+  ValitseAlustatoimenpide
+  (process-event [{toimenpide :toimenpide} app]
+    (println "ValitseAlustatoimenpide " (pr-str toimenpide))
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
+              {:toimenpide toimenpide}))
+
+  PaivitaAlustalomake
+  (process-event [{alustalomake :alustalomake} app]
+    (println "PaivitaAlustalomake " (pr-str alustalomake))
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
+              alustalomake))
+
+  TallennaAlustalomake
+  (process-event [{alustalomake :alustalomake} app]
+    (println "TallennaAlustalomake " (pr-str alustalomake))
+    app)
+
+  SuljeAlustalomake
+  (process-event [_ app]
+    (println "SuljeAlustalomake " (pr-str alustalomake))
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
   )

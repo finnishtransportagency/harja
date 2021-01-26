@@ -147,7 +147,7 @@
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
-              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta})
+              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
               kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :kulutuskerros})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila})
