@@ -91,4 +91,4 @@
                                        :verkon-sijainti 1
                                        :verkon-tarkoitus 2}]}]
     (is (= odotettu-data ilmoitusdata))
-    (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitusdata))))
+    (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus-ilmoitustiedot+ ilmoitusdata))))

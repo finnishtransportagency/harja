@@ -83,12 +83,10 @@ SELECT paivita_pohjavesialueet();
 -- Muutoshintaiset työt
 \i testidata/muutoshintaiset_tyot.sql
 
--- Päällystyskohteet & -ilmoitukset
+-- Päällystyskohteet & -ilmoitukset (POT1 ja POT2), materiaalikirjasto
 \i testidata/yllapito/paallystys.sql
-\i testidata/yllapito/pot2.sql
-
--- Päällystysmassat
 \i testidata/yllapito/paallystysmassat.sql
+\i testidata/yllapito/pot2.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
