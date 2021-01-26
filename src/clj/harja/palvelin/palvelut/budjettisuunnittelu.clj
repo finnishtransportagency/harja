@@ -88,19 +88,44 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
+(def ^{:private true} tyyppi->kategoria
+  {:johto-ja-hallintokorvaus "johto-ja-hallintokorvaus"
+   :erillishankinnat "erillishankinnat"
+   :tavoite-ja-kattohinta "tavoite-ja-kattohinta"
+   :hoidonjohtopalkkio "hoidonjohtopalkkio"
+   :hankintakustannukset "hankintakustannukset"
+   :tilaajan-varaukset "tilaajan-vararahastot"})
+
+(defn- redusoi-tilat
+  [tilat tila]
+  (let [{:keys [hoitovuosi kategoria vahvistettu]} tila
+        kategoria (keyword kategoria)]
+    (assoc-in tilat [kategoria hoitovuosi] vahvistettu)))
+
 (defn hae-urakan-suunnitelman-tilat
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (q/hae-suunnitelman-tilat db {:urakka urakka-id}))
+  (let [tilat (q/hae-suunnitelman-tilat db {:urakka urakka-id})
+        tilat (reduce redusoi-tilat {} tilat)]
+    tilat))
 
 (defn vahvista-suunnitelman-osa-hoitovuodelle
-  [db user {:keys [urakka-id hoitovuosi]}]
+  [db user {:keys [urakka-id hoitovuosi tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/vahvista-suunnitelman-osa-hoitovuodelle db {:urakka urakka-id
                                                  :hoitovuosi hoitovuosi
-                                                 :kategoria "hankintakustannukset"
+                                                 :kategoria (tyyppi tyyppi->kategoria)
                                                  :muokkaaja (:id user)
                                                  :vahvistaja (:id user)}))
+
+(defn tallenna-suunnitelman-osalle-tila
+  [db user {:keys [urakka-id hoitovuodet]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (doseq [hv hoitovuodet]
+    (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
+                                     :hoitovuosi hv
+                                     :kategoria "hankintakustannukset"
+                                     :luoja (:id user)}) ))
 
 (defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]
@@ -563,6 +588,10 @@
             (fn [user tiedot]
               (hae-urakan-suunnitelman-tilat db user tiedot)))
           (julkaise-palvelu
+            :tallenna-suunnitelman-osalle-tila
+            (fn [user tiedot]
+              (tallenna-suunnitelman-osalle-tila db user tiedot)))
+          (julkaise-palvelu
             :tallenna-toimenkuva
             (fn [user tiedot]
               (tallenna-toimenkuva db user tiedot))
@@ -577,6 +606,7 @@
                      :budjettisuunnittelun-indeksit
                      :hae-suunnitelman-tilat
                      :vahvista-kustannussuunnitelman-osa-vuodella
+                     :tallenna-suunnitelman-osalle-tila
                      :tallenna-budjettitavoite
                      :tallenna-kiinteahintaiset-tyot
                      :tallenna-johto-ja-hallintokorvaukset

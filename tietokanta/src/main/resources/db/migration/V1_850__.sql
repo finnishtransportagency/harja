@@ -17,7 +17,7 @@ alter table kiinteahintainen_tyo add column indeksikorjattu_summa numeric;
 --   :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"
 --   :tilaajan-varaukset "a6614475-1950-4a61-82c6-fda0fd19bb54"})
 
-create type suunnittelu_kategoriat as enum ('hankintakustannukset', 'erillishankinnat', 'johto- ja hallintokorvaus', 'hoidonjohtopalkkio', 'tavoite- ja kattohinta', 'tilaajan vararahastot');
+create type suunnittelu_kategoriat as enum ('hankintakustannukset', 'erillishankinnat', 'johto-ja-hallintokorvaus', 'hoidonjohtopalkkio', 'tavoite-ja-kattohinta', 'tilaajan-vararahastot');
 
 create table suunnittelu_kustannussuunnitelman_tila (
 id serial primary key,

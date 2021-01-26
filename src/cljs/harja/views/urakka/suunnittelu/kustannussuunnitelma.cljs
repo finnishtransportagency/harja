@@ -2552,7 +2552,10 @@
               [:button
                {:on-click #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] hk))}
                (str hk (when (= hoitokausi hk) " <--"))])]
-           [:div "suunnitelma vahvistamatta tai vahvistettu"]]
+           [:div "suunnitelma vahvistamatta tai vahvistettu"
+            [:button
+             {:on-click #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:hoitovuosi hoitokausi}))}
+             "Vahvista"]]]
           (keep identity
                 (for [a avaimet]
                   (let [{:keys [nimi suunnitelma-ok? summat] :as tieto} (a tiedot)]
@@ -2597,12 +2600,12 @@
           tavoitehinta-summa (+ hankintakustannukset-summa erillishankinnat-summa johto-ja-hallintokorvaukset-summa hoidonjohtopalkkio-summa)
           kattohinta-summa (* tavoitehinta-summa 1.1)
           tilaajan-varaukset-summa (get-in app [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset (dec hoitokausi)])
-          {hankintakustannukset :hankintakustannukset
+          {hankintakustannukset         :hankintakustannukset
            {:keys [erillishankinnat
                    hoidonjohtopalkkio
                    johto-ja-hallintokorvaus
                    tilaajan-varaukset]} :hallinnolliset-toimenpiteet
-           :as _suunnitelmien-tilat} (get-in app [:gridit :suunnitelmien-tila])
+           :as                          _suunnitelmien-tilat} (get-in app [:gridit :suunnitelmien-tila])
           hoidonjohtopalkkio-ok? (= :valmis (:kuluva-hoitokausi hoidonjohtopalkkio))
           johto-ja-hallintokorvaus-ok? (= :valmis (:kuluva-hoitokausi johto-ja-hallintokorvaus))
           erillishankinnat-ok? (= :valmis (:kuluva-hoitokausi erillishankinnat))
@@ -2732,7 +2735,7 @@
               :menukomponentti           (tee-menukomponentti app)}
 
              ::hankintakustannukset
-             [debug/debug (get-in app [:gridit :suunnitelmien-tila])]
+             [debug/debug (get-in app [:domain])]
              [hankintakustannukset-taulukot
               (get-in app [:domain :kirjoitusoikeus?])
               (get-in app [:domain :indeksit])

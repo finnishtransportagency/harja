@@ -55,16 +55,18 @@ VALUES (:toimenkuva, :urakka-id)
 RETURNING id
 
 -- name: hae-suunnitelman-tilat
-select * from suunnitelma_kustannussuunnitelman_tila skt where skt.urakka = :urakka;
+select * from suunnittelu_kustannussuunnitelman_tila skt where skt.urakka = :urakka;
 
 -- name: lisaa-suunnitelmalle-tila
-insert into suunnitelma_kustannussuunnitelman_tila (urakka, kategoria, hoitovuosi, luoja) values (:urakka, :kategoria, :hoitovuosi, :luoja) returning id;
+insert into suunnittelu_kustannussuunnitelman_tila (urakka, kategoria, hoitovuosi, luoja) values (:urakka, :kategoria::suunnittelu_kategoriat, :hoitovuosi, :luoja)
+on conflict do nothing
+returning id;
 
 -- name: vahvista-suunnitelman-osa-hoitovuodelle
-update suunnitelma_kustannussuunnitelman_tila
-set vahvistettu = true
-    muokattu = now()
-    muokkaaja = :muokkaaja
-    vahvistaja = :vahvistaja
-    vahvistus_pvm = now()
-where urakka = :urakka and kategoria = :kategoria and hoitovuosi = :hoitovuosi;
+update suunnittelu_kustannussuunnitelman_tila
+set vahvistettu = true,
+    muokattu = current_timestamp,
+    muokkaaja = :muokkaaja,
+    vahvistaja = :vahvistaja,
+    vahvistus_pvm = current_timestamp
+where urakka = :urakka and kategoria = :kategoria::suunnittelu_kategoriat and hoitovuosi = :hoitovuosi;
