@@ -13,7 +13,7 @@
             [harja.views.urakka.aikataulu :as aikataulu]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
-            [harja.views.urakka.yllapitokohteet.paikkaukset-kohdeluettelo :as paikkaukset]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo :as paikkaukset]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka :as u]

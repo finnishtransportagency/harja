@@ -1,4 +1,4 @@
-(ns harja.views.urakka.paikkaukset-toteumat
+(ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat
   (:require [cljs.core.async :refer [<! timeout]]
             [reagent.core :as r]
             [tuck.core :as tuck]
@@ -18,7 +18,7 @@
 
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
 
             [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]

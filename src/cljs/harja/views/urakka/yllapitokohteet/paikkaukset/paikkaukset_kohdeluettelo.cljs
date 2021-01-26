@@ -1,9 +1,10 @@
-(ns harja.views.urakka.yllapitokohteet.paikkaukset-kohdeluettelo
+(ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.paikkaukset-toteumat :as toteumat]
-            [harja.views.urakka.paikkaukset-kustannukset :as kustannukset]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat :as toteumat]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kustannukset :as kustannukset]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as paikkauskohteet]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]))
@@ -36,5 +37,5 @@
         :paikkauskohteet
         ;TODO: Lisää luvat roolit.xlxs
         (when true #_(oikeudet/urakat-paikkaukset-paikkauskohteeet (:id ur))
-          #_[paikkauskohteet/paikkauskohteet ur]
-          [:div])]])))
+          [paikkauskohteet/paikkauskohteet ur]
+          )]])))
