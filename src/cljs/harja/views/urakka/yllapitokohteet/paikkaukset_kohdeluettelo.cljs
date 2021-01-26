@@ -30,4 +30,11 @@
         "Kustannukset"
         :kustannukset
         (when (oikeudet/urakat-paikkaukset-kustannukset (:id ur))
-          [kustannukset/kustannukset ur])]])))
+          [kustannukset/kustannukset ur])
+
+        "Paikkauskohtet"
+        :paikkauskohteet
+        ;TODO: Lisää luvat roolit.xlxs
+        (when true #_(oikeudet/urakat-paikkaukset-paikkauskohteeet (:id ur))
+          #_[paikkauskohteet/paikkauskohteet ur]
+          [:div])]])))
