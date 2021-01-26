@@ -141,7 +141,7 @@
                             :toimenpide (:toimenpide alustalomake)
                             :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
                             :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
-                            :verkon-tarkoitus (:verkon-tarkoitukset materiaalikoodistot)})
+                            :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
    alustalomake])
 
 (defn alusta

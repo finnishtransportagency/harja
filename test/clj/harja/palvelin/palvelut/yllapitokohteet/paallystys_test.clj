@@ -869,7 +869,7 @@
   (boolean (some? (first (filter #(= id (:pot2a_id %)) alustarivit)))))
 
 (defn- alustarivi-idlla
-  "Palauttaa booleanin, löytyykö annetulla pot2a_id:llä riviä"
+  "Palauttaa rivi, annetulla pot2a_id:llä"
   [alustarivit id]
   (first (filter #(= id (:pot2a_id %)) alustarivit)))
 
