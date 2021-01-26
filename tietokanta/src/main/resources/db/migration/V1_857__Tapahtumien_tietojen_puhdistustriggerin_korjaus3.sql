@@ -7,8 +7,8 @@ BEGIN
     DELETE
       FROM tapahtuman_tiedot
      WHERE luotu < NOW() - INTERVAL '10 minutes'
-       AND (kanava = new.kanava
-         AND palvelin = new.palvelin
+       AND ((kanava = new.kanava
+         AND palvelin = new.palvelin)
          OR kanava IN (SELECT tt.kanava
                          FROM tapahtuman_tiedot tt
                                   JOIN tapahtumatyyppi t ON t.kanava = tt.kanava
