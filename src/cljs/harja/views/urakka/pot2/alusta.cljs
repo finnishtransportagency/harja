@@ -57,7 +57,7 @@
         validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [] vuosi)]
     (yllapitokohteet-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
 
-(defn- alustalomekkeen-kentat [{:keys [alusta-toimenpiteet
+(defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
                                        toimenpide
                                        verkon-sijainnit
                                        verkon-tyypit
@@ -137,10 +137,10 @@
                   [napit/peruuta "Peruuta"
                    #(e! (pot2-tiedot/->SuljeAlustalomake))
                    {:disabled false}]])}
-   (alustalomekkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
-                            :toimenpide (:toimenpide alustalomake)
-                            :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
-                            :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
+   (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
+                            :toimenpide          (:toimenpide alustalomake)
+                            :verkon-sijainnit    (:verkon-sijainnit materiaalikoodistot)
+                            :verkon-tyypit       (:verkon-tyypit materiaalikoodistot)
                             :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
    alustalomake])
 
