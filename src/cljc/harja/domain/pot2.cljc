@@ -181,6 +181,19 @@
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
+  ["pot2_verkon_sijainti" ::pot2-verkon-sijainti
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+  ["pot2_verkon_tarkoitus" ::pot2-verkon-tarkoitus
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+  ["pot2_verkon_tyyppi" ::pot2-verkon-tyyppi
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+
   ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_alusta" ::pot2-alusta]
   ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi]

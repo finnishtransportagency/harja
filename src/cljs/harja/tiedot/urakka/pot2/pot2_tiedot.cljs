@@ -129,7 +129,7 @@
 
   SuljeAlustalomake
   (process-event [_ app]
-    (println "SuljeAlustalomake " (pr-str alustalomake))
+    (println "SuljeAlustalomake ")
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
   )
