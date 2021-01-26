@@ -98,7 +98,7 @@
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkillinen hoitotyö (l.ymp.hoito)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
                       :tehtava             nil}]
    :liitteet        []
    :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
@@ -116,7 +116,7 @@
                       :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
                       :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                      :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Talvihoito (T2)Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
+                      :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
                       :tehtava             nil}]
    :liitteet        []
    :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
@@ -227,18 +227,22 @@
                                      "Palvelun :tallenna-lasku kysely ei ole validi")))
 
 (deftest paivita-maksuera-testi
-  (let [lasku-kokonaishintainen-tyo
+  (let [vastaus-lasku-kokonaishintainen-tyo
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :laskuerittely (assoc uusi-lasku :viite "1413418")})
-        lasku-akillinen-hoitotyo
+        vastaus-lasku-akillinen-hoitotyo
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :laskuerittely lasku-akillinen-hoitotyo})
-        lasku-muu
+        vastausllasku-muu
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :laskuerittely lasku-muu})]))
+                              :laskuerittely lasku-muu})]
+
+    (is (= (:maksueratyyppi (first (:kohdistukset vastaus-lasku-kokonaishintainen-tyo))) "kokonaishintainen"))
+    (is (= (:maksueratyyppi (first (:kohdistukset vastaus-lasku-akillinen-hoitotyo))) "akillinen-hoitotyo"))
+    (is (= (:maksueratyyppi (first (:kohdistukset vastausllasku-muu))) "muu"))))
 
 (deftest paivita-lasku-pvm-testi
   (let [_lasku-ensimmainen-paiva
