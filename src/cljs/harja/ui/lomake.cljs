@@ -526,7 +526,7 @@ ja kaikki pakolliset kentät on täytetty"
                            (atom (validoi-avaimet skeema)))]
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
-    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
+    (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
                  voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
@@ -571,6 +571,8 @@ ja kaikki pakolliset kentät on täytetty"
                [:div.row header])
              (when otsikko
                [:h3.lomake-otsikko otsikko])
+             (when otsikko-komp
+               [otsikko-komp])
              (doall
                (map-indexed
                  (fn [i skeemat]
@@ -643,3 +645,12 @@ ja kaikki pakolliset kentät on täytetty"
                          :let [{:keys [otsikko] :as s}
                                (first (filter #(= puuttuva-nimi (:nimi %)) skeema))]]
                      otsikko)))])))
+
+(defn lomake-overlay
+  [{:keys [leveys korkeus top luokka] :as opts} komponentti]
+  [:div {:class (or luokka "overlay-oikealla")
+         :style {:width (or leveys "400px")
+                 :height (or korkeus "100%")
+                 :top (or top "0px")}}
+   [komponentti]])
+
