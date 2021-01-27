@@ -61,6 +61,7 @@
         kulutuskerros-toimenpiteet (:kulutuskerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
+      :voi-kumota? false :lisaa-rivi " Lisää toimenpide"
       :uusi-rivi (fn [rivi]
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))

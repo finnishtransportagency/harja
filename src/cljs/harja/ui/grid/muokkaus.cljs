@@ -21,19 +21,24 @@
               vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
-            [harja.ui.grid.yleiset :as grid-yleiset])
+            [harja.ui.grid.yleiset :as grid-yleiset]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
-                                virhe-viesti]}]
+                                virhe-viesti custom-toiminto]}]
   [:div.panel-heading
    (when otsikko [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
+      (when custom-toiminto
+        [napit/nappi (:teksti custom-toiminto)
+         (:toiminto custom-toiminto)
+         (:opts custom-toiminto)])
       (when (not= false voi-kumota?)
         [:button.nappi-toissijainen
          {:disabled (empty? @historia)
@@ -412,7 +417,7 @@
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
-           rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus] :as opts}
+           rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -553,7 +558,7 @@
        (fn [{:keys [otsikko yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
-                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy] :as opts} skeema muokatut]
+                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -579,7 +584,7 @@
                                 :varoituket varoitukset :huomautukset huomautukset
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
-                                :virhe-viesti virhe-viesti}])
+                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto}])
             [:div.panel-body
              [:table.grid
               [gridin-otsikot skeema rivinumerot? piilota-toiminnot?]

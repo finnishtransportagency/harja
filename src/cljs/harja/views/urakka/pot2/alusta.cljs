@@ -25,30 +25,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn komponenttien-lista [e! komponentit]
-  (fn [komponentit]
-    [:div.haku-lista.container
-     [:ul.haku-lista
-      (map-indexed
-        (fn [i komp]
-          ^{:key (str i (hash komp))}
-          [komp])
-        komponentit)]]))
-
-(defn lisaa-toimenpide-nappi
-  [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
-   {:keys [murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom grid-ohjauskahva]
-  (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot) ]
-    [:div.haku
-     [napit/nappi "Lisää toimenpide"
-      #(e! (pot2-tiedot/->LisaaAlustaToimenpide))
-      {:ikoni (ikonit/livicon-chevron-down)
-       :ikoni-oikealle? true
-       :luokka "nappi-toissijainen"
-       :style {}}]
-     (when (:tarjoa-alustatoimenpide app)
-       (println "jarno  alusta-toimenpiteet " (pr-str alusta-toimenpiteet))
-       #_[komponenttien-lista e! alusta-toimenpiteet])]))
 
 (defn alustan-validointi [rivi taulukko]
   (let [{:keys [ilmoitustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
@@ -62,8 +38,6 @@
                                        verkon-sijainnit
                                        verkon-tyypit
                                        verkon-tarkoitukset]}]
-  (println "verkon sijainnit " (pr-str verkon-sijainnit))
-  (println "verkon-tarkoitukset " (pr-str verkon-tarkoitukset))
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
                             :valinta-nayta ::pot2-domain/nimi}]
@@ -155,23 +129,13 @@
                                 :materiaalikoodistot materiaalikoodistot}])
      [grid/muokkaus-grid
       {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true
-       :uusi-rivi (fn [rivi]
-                    (assoc rivi
-                      :tr-numero (:tr-numero perustiedot)))
+       :voi-kumota? false :voi-lisata? false
+       :custom-toiminto {:teksti "Lisää toimenpide"
+                         :toiminto #(e! (pot2-tiedot/->LisaaAlustaToimenpide))
+                         :opts {:ikoni (ikonit/livicon-plus)
+                                :luokka "nappi-toissijainen"}}
        :rivi-validointi (:rivi validointi)
        :taulukko-validointi (:taulukko validointi)
-       :muokkaa-footer (fn [g]
-                         [:div {:style {:margin-top "1rem"}}
-
-                          [lisaa-toimenpide-nappi e! app
-                           {:keys [murskeet mursketyypit materiaalikoodistot validointi]}
-                           alustarivit-atom
-                           g]
-                          [yleiset/pudotusvalikko "Lisää toimenpide"
-                           {:valinta ::pot2-domain/koodi
-                            :format-fn ::pot2-domain/nimi
-                            :valitse-fn #(e! (pot2-tiedot/->ValitseAlustatoimenpide (::pot2-domain/koodi %)))}
-                           (:alusta-toimenpiteet materiaalikoodistot)]])
        ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet
        :luomisen-jalkeen (fn [grid-state]
                            (paallystys/hae-osan-pituudet grid-state paallystys/tr-osien-tiedot))

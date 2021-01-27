@@ -33,8 +33,9 @@
 
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
-  (clojure.string/includes? (pot2-domain/ainetyypin-koodi->nimi alustatoimenpiteet koodi)
-                            "Verkko"))
+  (when koodi
+    (clojure.string/includes? (pot2-domain/ainetyypin-koodi->nimi alustatoimenpiteet koodi)
+                              "Verkko")))
 
 (extend-protocol tuck/Event
 
@@ -108,7 +109,7 @@
   LisaaAlustaToimenpide
   (process-event [_ app]
     (println "LisaaAlustaToimenpide " )
-    (assoc app :tarjoa-alustatoimenpide true))
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] {}))
 
   ValitseAlustatoimenpide
   (process-event [{toimenpide :toimenpide} app]
