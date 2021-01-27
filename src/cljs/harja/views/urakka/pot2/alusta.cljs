@@ -64,7 +64,10 @@
                                        verkon-tarkoitukset]}]
   (println "verkon sijainnit " (pr-str verkon-sijainnit))
   (println "verkon-tarkoitukset " (pr-str verkon-tarkoitukset))
-  (let [tr-kentat [(lomake/rivi
+  (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
+                            :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
+                            :valinta-nayta ::pot2-domain/nimi}]
+        tr-kentat [(lomake/rivi
                      {:nimi :tr-numero
                       :palstoja 1
                       :otsikko "Tie"
@@ -104,27 +107,21 @@
                                      :valinnat verkon-tarkoitukset
                                      :palstoja 3})]]
     (vec
-      (concat tr-kentat (cond
+      (concat toimenpide-kentta
+              tr-kentat (cond
                           (pot2-tiedot/onko-toimenpide-verkko? alusta-toimenpiteet toimenpide)
                           verkon-kentat
 
                           ;; TODO: Figmasta kaikkien muiden toimenpidetyyypien kentät
 
                           :else
-                         [])))))
+                          [])))))
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
   [lomake/lomake
    {:luokka " overlay-oikealla"
-    :otsikko-komp (fn []
-                    [:div.col-xs-12 {:style {:margin-top "40px"}}
-                     [:span.harmaa-tumma-teksti
-                      "Toimenpide"]
-                     [:div.fontti-20
-                      {:style {:margin-top "4px"
-                               :margin-bottom "24px"}}
-                      (pot2-domain/ainetyypin-koodi->nimi alusta-toimenpiteet (:toimenpide alustalomake))]])
+    :otsikko "Toimenpiteen tiedot"
     :muokkaa! #(e! (pot2-tiedot/->PaivitaAlustalomake %))
     :ei-borderia? true
     :footer-fn (fn [data]
