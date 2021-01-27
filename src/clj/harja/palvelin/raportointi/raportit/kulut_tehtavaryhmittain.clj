@@ -52,6 +52,10 @@
              conj
              k)))))
 
+(defn- hae-hoidonjohdot
+  [db {:keys [alkupvm urakka-id loppupvm]}]
+  )
+
 (defn- kulut-urakalle
   [db {:keys [alkupvm urakka-id loppupvm]}]
   (let [kuukausi-valittu? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
@@ -150,44 +154,6 @@
      :yhteensa yhteensa
      :rivit    rivit}))
 
-(defn- kulut-hallintayksikolle
-  [db {:keys [hallintayksikko-id alkupvm loppupvm]}]
-  (let [otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-                 {:leveys 1 :otsikko "Hoitokauden alusta"}
-                 {:leveys 1 :otsikko "Tässä kuussa"}]
-        rivit (mapv
-                #(->
-                   [(:tehtavaryhma %) () (:summa %)])
-                (kulut-q/hae-hallintayksikon-kulut-raporttiin-aikavalilla db {:alkupvm         alkupvm
-                                                                              :loppupvm        loppupvm
-                                                                              :hallintayksikko hallintayksikko-id}))]
-    {:otsikot otsikot
-     :rivit   rivit}))
-
-(defn- kulut-koko-maalle
-  [db {:keys [alkupvm loppupvm] :as opts}]
-  (let [otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-                 {:leveys 1 :otsikko "Hoitokauden alusta"}
-                 {:leveys 1 :otsikko "Tässä kuussa"}]
-        rivit (mapv
-                #(->
-                   [(:tehtavaryhma %) (:hallintayksikko %) (:summa %)])
-                (let [hallintayksikoittain? (get opts "Hallintayksiköittäin eroteltuna?")]
-                  (if hallintayksikoittain?
-                    (kulut-q/hae-koko-maan-kulut-raporttiin-aikavalilla-hallintayksikoittain db {:alkupvm  alkupvm
-                                                                                                 :loppupvm loppupvm})
-                    (kulut-q/hae-koko-maan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm
-                                                                            :loppupvm loppupvm}))))]
-    {:otsikot otsikot
-     :rivit   rivit}))
-
-(defn- kulut-tehtavaryhmittain
-  [db {:keys [urakka-id hallintayksikko-id] :as opts}]
-  (cond
-    urakka-id (kulut-urakalle db opts)
-    hallintayksikko-id (kulut-hallintayksikolle db opts)
-    :default (kulut-koko-maalle db opts)))
-
 (defn- hae-tavoitehinta
   [db {:keys [urakka-id alkupvm loppupvm] :as opts}]
   (cond
@@ -197,7 +163,7 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm testiversio?] :as parametrit}]
-  (let [{:keys [otsikot rivit yhteensa debug]} (kulut-tehtavaryhmittain db parametrit)
+  (let [{:keys [otsikot rivit yhteensa debug]} (kulut-urakalle db parametrit)
         tavoitehinta (hae-tavoitehinta db parametrit)
         yhteensa-hoitokauden-alusta (second yhteensa)]
     [:raportti {:nimi (str "Kulut tehtäväryhmittäin" (when testiversio? " - TESTIVERSIO"))}
