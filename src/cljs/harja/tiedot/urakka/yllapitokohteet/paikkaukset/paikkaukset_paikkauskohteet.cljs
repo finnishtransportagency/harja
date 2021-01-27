@@ -32,3 +32,12 @@
                                    :testisijainti "23423/121231"
                                    :testiaikataulu "1.6. - 14.6.2021"}]}))
 
+(defrecord AvaaLomake [rivi])
+
+(extend-protocol tuck/Event
+  AvaaLomake
+  (process-event [_rivi app]
+    (do
+      (js/console.log "Avaa lomake" app)
+      app)))
+

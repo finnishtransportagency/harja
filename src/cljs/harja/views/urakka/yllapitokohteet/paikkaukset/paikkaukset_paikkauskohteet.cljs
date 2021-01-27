@@ -5,10 +5,10 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
+            [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]))
 
-
-(defn- paikkauskohteet-taulukko [app]
+(defn- paikkauskohteet-taulukko [e! app]
   (let [skeema [{:otsikko "NRO"
                  :leveys 1
                  :nimi :testinro}
@@ -30,7 +30,9 @@
         paikkauskohteet (:paikkauskohteet app)]
     [grid/grid
      {:otsikko "Paikkauskohteet"
-      :tyhja "Ei tietoja"}
+      :tyhja "Ei tietoja"
+      :rivi-klikattu #(e! (t-paikkauskohteet/->AvaaLomake %))
+      :tunniste :testinro}
      skeema
      paikkauskohteet]))
 
@@ -38,8 +40,13 @@
   [:div
    [:div "Tänne paikkauskohteet"]
    [:div "Tähän kartta"]
-   [paikkauskohteet-taulukko app]]
+   [paikkauskohteet-taulukko e! app]]
   )
+
+(defn paikkauslomake [e!]
+  [lomake/lomake-overlay {}
+   (fn []
+     [:div "Tänne lomake"])])
 
 (defn paikkauskohteet* [e! app]
   (komp/luo
@@ -52,6 +59,7 @@
         [:div {:id ""}
          [:div
           [debug/debug app]
+          [paikkauslomake e!]
           [kohteet e! app]]]))))
 
 (defn paikkauskohteet [ur]
