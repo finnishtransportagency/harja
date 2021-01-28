@@ -1,0 +1,100 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "title": "The root schema",
+    "description": "The root schema comprises the entire JSON document.",
+    "default": {},
+    "examples": [
+        {
+            "viestiId": "21EC2020-3AEA-4069-A2DD-08002B30309D",
+            "lahettaja": "harja@vayla.fi",
+            "otsikko": "Testiviesti",
+            "sisalto": "Tämä on testi",
+            "vastaanottajat": [
+                "erkki.esimerkki@example.com",
+                "markku.jalkimerkki@example.com"
+            ]
+        }
+    ],
+    "required": [
+        "viestiId",
+        "lahettaja",
+        "otsikko",
+        "sisalto",
+        "vastaanottajat"
+    ],
+    "properties": {
+        "viestiId": {
+            "$id": "#/properties/viestiId",
+            "type": "string",
+            "title": "The viestiId schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "21EC2020-3AEA-4069-A2DD-08002B30309D"
+            ]
+        },
+        "lahettaja": {
+            "$id": "#/properties/lahettaja",
+            "type": "string",
+            "title": "The lahettaja schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "harja@vayla.fi"
+            ]
+        },
+        "otsikko": {
+            "$id": "#/properties/otsikko",
+            "type": "string",
+            "title": "The otsikko schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "Testiviesti"
+            ]
+        },
+        "sisalto": {
+            "$id": "#/properties/sisalto",
+            "type": "string",
+            "title": "The sisalto schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "Tämä on testi"
+            ]
+        },
+        "vastaanottajat": {
+            "$id": "#/properties/vastaanottajat",
+            "type": "array",
+            "title": "The vastaanottajat schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": [],
+            "examples": [
+                [
+                    "erkki.esimerkki@example.com",
+                    "markku.jalkimerkki@example.com"
+                ]
+            ],
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/vastaanottajat/items",
+                "anyOf": [
+                    {
+                        "$id": "#/properties/vastaanottajat/items/anyOf/0",
+                        "type": "string",
+                        "title": "The first anyOf schema",
+                        "description": "An explanation about the purpose of this instance.",
+                        "default": "",
+                        "examples": [
+                            "erkki.esimerkki@example.com",
+                            "markku.jalkimerkki@example.com"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "additionalProperties": true
+}
