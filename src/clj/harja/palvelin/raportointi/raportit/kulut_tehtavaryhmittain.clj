@@ -100,20 +100,32 @@
           (pvm/sama-tai-ennen? loppupvm (pvm/nyt))
           loppupvm)
 
-        rivit-hoitokauden-alusta (mapv #(->
-                                          [(:jarjestys %)
-                                           (:nimi %)
-                                           (:summa %)])
-                                       (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
-                                                                                            :loppupvm loppupvm-hoitokausi
-                                                                                            :urakka   urakka-id}))
-        rivit-tassa-kuussa (mapv #(->
-                                    [(:jarjestys %)
-                                     (:nimi %)
-                                     (:summa %)])
-                                 (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
-                                                                                      :loppupvm loppupvm-valittu-kuu-tai-vali
-                                                                                      :urakka   urakka-id}))
+        kaikki-rivit-alusta (group-by :nimi
+                                      (concat
+                                        (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
+                                                                                                :loppupvm loppupvm-hoitokausi
+                                                                                                :urakka   urakka-id})
+                                        (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
+                                                                                             :loppupvm loppupvm-hoitokausi
+                                                                                             :urakka   urakka-id})))
+        kaikki-rivit-kuussa (group-by :nimi
+                                      (concat
+                                        (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
+                                                                                                :loppupvm loppupvm-valittu-kuu-tai-vali
+                                                                                                :urakka   urakka-id})
+                                        (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
+                                                                                             :loppupvm loppupvm-valittu-kuu-tai-vali
+                                                                                             :urakka   urakka-id})))
+        rivin-muodostaja (comp
+                           (map #(let [summa (reduce + 0 (keep :summa (second %)))]
+                                   (assoc (first (second %)) :summa summa)))
+                           (map #(->
+                                   [(:jarjestys %)
+                                    (:nimi %)
+                                    (:summa %)])))
+        rivit-hoitokauden-alusta (into [] rivin-muodostaja kaikki-rivit-alusta)
+        rivit-tassa-kuussa (into [] rivin-muodostaja kaikki-rivit-kuussa)
+
         otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
                  {:leveys 1 :otsikko (str "Hoitokauden alusta " (pvm/pvm alkupvm-hoitokausi) "-" (pvm/pvm loppupvm-hoitokausi))}
                  {:leveys 1 :otsikko (cond
@@ -179,8 +191,8 @@
        :viimeinen-rivi-yhteenveto? true}
       [{:leveys 1 :otsikko ""} {:leveys 1 :otsikko ""}]
       (map #(transduce piste->pilkku
-                      conj
-                      %)
+                       conj
+                       %)
            [["Urakkavuoden alusta tav.hintaan kuuluvia: " (str yhteensa-hoitokauden-alusta)]
             ["Tavoitehinta: " (if (some? tavoitehinta)
                                 (str tavoitehinta)
