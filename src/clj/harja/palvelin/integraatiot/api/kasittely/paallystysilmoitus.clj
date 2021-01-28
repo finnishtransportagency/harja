@@ -18,22 +18,24 @@
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
-                               {:keys [perustiedot] :as paallystysilmoitus}
+                               {:keys [perustiedot lisatiedot] :as paallystysilmoitus}
                                valmis-kasiteltavaksi
                                ilmoitustiedot-json]
   (log/debug "Luodaan uusi päällystysilmoitus")
   (q-paallystys/luo-paallystysilmoitus<!
     db
-    {:paallystyskohde kohde-id
+    {:versio 1
+     :paallystyskohde kohde-id
      :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
              valmis-kasiteltavaksi false)
      :ilmoitustiedot ilmoitustiedot-json
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
-     :kayttaja (:id kayttaja)}))
+     :kayttaja (:id kayttaja)
+     :lisatiedot lisatiedot}))
 
 (defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
-                                   {:keys [perustiedot] :as paallystysilmoitus}
+                                   {:keys [perustiedot lisatiedot] :as paallystysilmoitus}
                                    paallystysilmoitus-kannassa
                                    valmis-kasiteltavaksi
                                    ilmoitustiedot-json]
@@ -49,6 +51,7 @@
        :takuupvm (json/aika-string->java-sql-date
                    (:takuupvm perustiedot))
        :muokkaaja (:id kayttaja)
+       :lisatiedot lisatiedot
        :id kohde-id
        :urakka urakka-id})
     (virheet/heita-poikkeus virheet/+paallystysilmoitus-lukittu+

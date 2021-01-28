@@ -293,7 +293,9 @@ BEGIN
                               FROM kustannusarvioitu_tyo kt
                               WHERE kt.toimenpideinstanssi = t_instanssi
                                 AND kt.sopimus = sopimus_id
-                                AND kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
+                                AND (kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
+                                        OR
+                                     kt.tehtavaryhma = tehtavaryhma_id) -- Tietokantaan saa myös 'Johto- ja hallintokorvaus (J)' tehtäväryhmälle suunniteltua kuluja
                                 AND (SELECT (date_trunc('MONTH',
                                                         format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
 
