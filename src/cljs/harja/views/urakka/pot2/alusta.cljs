@@ -40,6 +40,7 @@
                                        verkon-tarkoitukset]}]
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
+                            :pakollinen? true
                             :valinta-nayta ::pot2-domain/nimi}]
         tr-kentat [(lomake/rivi
                      {:nimi :tr-numero
@@ -93,6 +94,7 @@
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
+  (println "petar unutar komponente " (pr-str alustalomake))
   [lomake/lomake
    {:luokka " overlay-oikealla"
     :otsikko "Toimenpiteen tiedot"
@@ -100,11 +102,16 @@
     :ei-borderia? true
     :footer-fn (fn [data]
                  [:span
-                  [napit/nappi "Lisää taulukkoon"
-                   #(e! (pot2-tiedot/->TallennaAlustalomake data))
+                  [napit/nappi "Valmis"
+                   #(e! (pot2-tiedot/->TallennaAlustalomake data false))
                    {:disabled false
                     :luokka "nappi-myonteinen"
                     :ikoni (ikonit/check)}] ;; todo: validointi oltava kunnossa
+                  [napit/nappi "Lisää seuraava"
+                   #(e! (pot2-tiedot/->TallennaAlustalomake data true))
+                   {:disabled false
+                    :luokka "nappi-toissijainen"
+                    :ikoni (ikonit/check)}]
                   [napit/peruuta "Peruuta"
                    #(e! (pot2-tiedot/->SuljeAlustalomake))
                    {:disabled false}]])}
@@ -123,6 +130,7 @@
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
     [:div
      (when alustalomake
+       (println "petar sta je u formi " (pr-str alustalomake))
        [alustalomake-nakyma e! {:alustalomake alustalomake
                                 :alusta-toimenpiteet alusta-toimenpiteet
                                 :murskeet murskeet

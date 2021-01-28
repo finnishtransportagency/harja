@@ -6,6 +6,7 @@
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
+    [harja.ui.lomake :as lomake]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus])
@@ -28,7 +29,7 @@
 (defrecord LisaaAlustaToimenpide [])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
-(defrecord TallennaAlustalomake [alustalomake])
+(defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
 
 
@@ -124,9 +125,19 @@
               alustalomake))
 
   TallennaAlustalomake
-  (process-event [{alustalomake :alustalomake} app]
-    (println "TallennaAlustalomake " (pr-str alustalomake))
-    app)
+  (process-event [{alustalomake :alustalomake
+                   jatka? :jatka?} app]
+    (println "TallennaAlustalomake " (pr-str alustalomake jatka?))
+    (let [idt (keys @alustarivit-atom)
+          pienin-id (apply min idt)
+          uusi-id (if (pos? pienin-id)
+                    -1
+                    (dec pienin-id))
+          uusi-rivi {uusi-id alustalomake}]
+      (println "petar idt " (pr-str idt))
+      (println "petar atom " (pr-str @alustarivit-atom))
+      (swap! alustarivit-atom conj uusi-rivi))
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
 
   SuljeAlustalomake
   (process-event [_ app]

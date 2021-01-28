@@ -252,6 +252,7 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentan-input
   "Määritellään kentän input"
   [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? {:keys [vayla-tyyli?] :as kentta-opts}]
+  (println "petar po svemu sudeci ovde bi morao da udje " (pr-str data))
   (let [{:keys [nimi hae aseta kentan-arvon-luokka]} s
         hae (or hae #(if (vector? nimi)
                        (get-in % nimi)
@@ -350,6 +351,7 @@ ja kaikki pakolliset kentät on täytetty"
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia?] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli?] :as opts}]
+  (println "petar polje " (pr-str nimi) (pr-str data))
   [:div.form-group {:class (str (or
                                   ;; salli skeeman ylikirjoittaa ns-avaimella
                                   (::col-luokka s)
@@ -423,6 +425,7 @@ ja kaikki pakolliset kentät on täytetty"
   "UI yhdelle riville"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
    muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia?] :as rivi-opts}]
+  (println "petar rivi " (pr-str data))
   (let [rivi? (-> skeemat meta :rivi?)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
