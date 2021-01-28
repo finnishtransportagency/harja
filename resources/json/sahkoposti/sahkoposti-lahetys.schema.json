@@ -14,7 +14,9 @@
             "vastaanottajat": [
                 "erkki.esimerkki@example.com",
                 "markku.jalkimerkki@example.com"
-            ]
+            ],
+            "liitePdfData": "ZGFkYQo=",
+            "liitePdfNimi": "liite.pdf"
         }
     ],
     "required": [
@@ -22,7 +24,9 @@
         "lahettaja",
         "otsikko",
         "sisalto",
-        "vastaanottajat"
+        "vastaanottajat",
+        "liitePdfData",
+        "liitePdfNimi"
     ],
     "properties": {
         "viestiId": {
@@ -94,6 +98,26 @@
                     }
                 ]
             }
+        },
+        "liitePdfData": {
+            "$id": "#/properties/liitePdfData",
+            "type": "string",
+            "title": "The liitePdfData schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "ZGFkYQo="
+            ]
+        },
+        "liitePdfNimi": {
+            "$id": "#/properties/liitePdfNimi",
+            "type": "string",
+            "title": "The liitePdfNimi schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "liite.pdf"
+            ]
         }
     },
     "additionalProperties": true
