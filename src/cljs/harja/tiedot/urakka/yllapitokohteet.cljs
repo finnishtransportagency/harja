@@ -93,8 +93,7 @@
                    :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
                    :tr-ajorata (:tr-ajorata rivi)
                    :tr-kaista (:tr-kaista rivi)
-                   :toimenpide nil
-                   :toimenpide_tiedot ""}]
+                   :toimenpide nil}]
     (if (empty? kohdeosat)
       {key uusi-rivi}
       (-> kohdeosat

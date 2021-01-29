@@ -35,6 +35,15 @@
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
   (= koodi 667))
 
+(defn toimenpiteen-tiedot [rivi]
+  (println " toimenpiteen-tiedot " (pr-str rivi))
+  "TODO")
+
+(defn materiaalin-tiedot [rivi]
+  (println " materiaalin-tiedot " (pr-str rivi))
+  "TODO")
+
+
 (extend-protocol tuck/Event
 
   MuutaTila

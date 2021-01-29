@@ -907,20 +907,20 @@
                     :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12",
                     :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}],
    :alusta [{:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500, :materiaali 1,
-             :toimenpide_tiedot "Lisätietoa kaistalta 11...", :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}]})
+             :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1}]})
 
 (def pot2-alusta-esimerkki
   [{:tr-kaista       11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
-    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 11... #1",
+    :materiaali      1, :pituus 434,
     :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32,}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
-    :materiaali      1, :pituus 434, :toimenpide_tiedot "Lisätietoa kaistalta 12... #2",
+    :materiaali      1, :pituus 434,
     :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32,}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys (- 2000 1),
-    :materiaali      1, :pituus 500, :toimenpide_tiedot "Lisätietoa kaistalta 12... #3",
+    :materiaali      1, :pituus 500,
     :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
-    :materiaali      1, :pituus 500, :toimenpide_tiedot "Lisätietoa kaistalta 12... #4",
+    :materiaali      1, :pituus 500,
     :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1}])
 
 (defn- tallenna-pot2-testi-paallystysilmoitus
@@ -999,7 +999,7 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (assoc-in [:alusta 4]
                                          {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 10, :tr-alkuosa 10, :tr-loppuetaisyys 1500,
-                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta #4 muu tie",
+                                          :materiaali 1, :pituus 434,
                                           :tr-alkuetaisyys 1066, :tr-numero muu-tr-numero, :toimenpide 32}))
         ;; Tehdään tallennus joka lisää kaksi alustariviä
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
@@ -1033,7 +1033,7 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (assoc-in [:alusta 4]
                                          {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 10, :tr-alkuosa 10, :tr-loppuetaisyys 1500,
-                                          :materiaali 1, :pituus 434, :toimenpide_tiedot "Muu tie alusta #4 muu tie",
+                                          :materiaali 1, :pituus 434,
                                           :tr-alkuetaisyys 1066, :tr-numero vaara-tr-numero, :toimenpide 32}))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista. Tienumero 5555 ei ole.")))
