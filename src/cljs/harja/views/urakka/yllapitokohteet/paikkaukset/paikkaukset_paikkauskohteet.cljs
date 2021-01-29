@@ -6,6 +6,7 @@
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
             [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]))
 
 (defn- paikkauskohteet-taulukko [e! app]
@@ -31,7 +32,7 @@
     [grid/grid
      {:otsikko "Paikkauskohteet"
       :tyhja "Ei tietoja"
-      :rivi-klikattu #(e! (if (:lomake app) (t-paikkauskohteet/->SuljeLomake) (t-paikkauskohteet/->AvaaLomake %)))
+      :rivi-klikattu #(e! (t-paikkauskohteet/->AvaaLomake %))
       :tunniste :testinro}
      skeema
      paikkauskohteet]))
@@ -40,13 +41,20 @@
   [:div
    [:div "Tänne paikkauskohteet"]
    [:div "Tähän kartta"]
+   [:div {:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
+    ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+    [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+    [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+    [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+    [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake nil))]]
    [paikkauskohteet-taulukko e! app]]
   )
 
 (defn paikkauslomake [e!]
   [lomake/lomake-overlay {}
    (fn []
-     [:div "Tänne lomake"])])
+     [:div "Tänne lomake"]
+     [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))])])
 
 (defn paikkauskohteet* [e! app]
   (komp/luo
