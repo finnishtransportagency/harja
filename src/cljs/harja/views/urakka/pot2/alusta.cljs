@@ -73,7 +73,11 @@
                       :palstoja 1
                       :otsikko "Let"
                       :tyyppi :positiivinen-numero :kokonaisluku? true})]
-        verkon-kentat [(lomake/rivi {:otsikko "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
+        verkon-kentat [(lomake/rivi {:otsikko "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
+                                     :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                     :valinnat verkon-tyypit
+                                     :palstoja 3})
+                       (lomake/rivi {:otsikko "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
                                      :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
                                      :valinnat verkon-sijainnit
                                      :palstoja 3})
