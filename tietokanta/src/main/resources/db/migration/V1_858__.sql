@@ -7,7 +7,7 @@ ALTER TABLE pot2_alusta ADD COLUMN kasittelysyvyys INTEGER;
 ALTER TABLE pot2_alusta ADD COLUMN leveys INTEGER;
 ALTER TABLE pot2_alusta ADD COLUMN pinta_ala INTEGER;
 ALTER TABLE pot2_alusta ADD COLUMN kokonaismassamaara INTEGER;
-ALTER TABLE pot2_alusta ADD COLUMN massa INTEGER REFERENCES pot2_mk_massatyyppi (koodi);
-ALTER TABLE pot2_alusta ADD COLUMN sideaine INTEGER REFERENCES  pot2_mk_massan_sideaine (id);
+ALTER TABLE pot2_alusta ADD COLUMN massa INTEGER REFERENCES pot2_mk_urakan_massa (id);
+ALTER TABLE pot2_alusta ADD COLUMN sideaine INTEGER REFERENCES  pot2_mk_sideainetyyppi (koodi);
 ALTER TABLE pot2_alusta ADD COLUMN sideainepitoisuus NUMERIC(10, 1);
 ALTER TABLE pot2_alusta ADD COLUMN seosaine INTEGER; -- puuttuu koodisto taulukko

@@ -105,7 +105,7 @@
                   [napit/nappi "Valmis"
                    #(e! (pot2-tiedot/->TallennaAlustalomake data false))
                    {:disabled false
-                    :luokka "nappi-myonteinen"
+                    :luokka "nappi-toissijainen"
                     :ikoni (ikonit/check)}] ;; todo: validointi oltava kunnossa
                   [napit/nappi "Lisää seuraava"
                    #(e! (pot2-tiedot/->TallennaAlustalomake data true))
@@ -116,9 +116,9 @@
                    #(e! (pot2-tiedot/->SuljeAlustalomake))
                    {:disabled false}]])}
    (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
-                            :toimenpide          (:toimenpide alustalomake)
-                            :verkon-sijainnit    (:verkon-sijainnit materiaalikoodistot)
-                            :verkon-tyypit       (:verkon-tyypit materiaalikoodistot)
+                            :toimenpide (:toimenpide alustalomake)
+                            :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
+                            :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
                             :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
    alustalomake])
 
