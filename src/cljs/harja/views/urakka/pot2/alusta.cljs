@@ -186,7 +186,7 @@
         :muokattava? (constantly false)
         :hae #(paallystys/rivin-kohteen-pituus
                 (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
-       {:otsikko "Murske *)" :nimi :materiaali :leveys 3
+       {:otsikko "Murske *)" :nimi :murske :leveys 3
         :tyyppi :valinta :valinnat murskeet :valinta-arvo ::pot2-domain/murske-id
         :valinta-nayta (fn [rivi]
                          (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string))
