@@ -43,21 +43,6 @@
 (defn alustamenetelma-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
 
-(def +verkkotyypit+
-  "Verkkotyypit POT-lomake Excelistä"
-  [{:nimi "Teräsverkko" :koodi 1}
-   {:nimi "Lasikuituverkko" :koodi 2}
-   {:nimi "Muu" :koodi 9}])
-
-(def +verkkotyypit-ja-nil+
-  (conj +verkkotyypit+ {:nimi "Ei verkkotyyppiä" :koodi nil}))
-
-(def +verkkotyyppi-tai-nil+ "Verkkotyypin valinta koodilla"
-  (apply schema/enum (map :koodi +verkkotyypit-ja-nil+)))
-
-(defn verkkotyyppi-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit-ja-nil+))))
-
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
   [{:nimi "Rakentaminen" :koodi 1}
@@ -108,54 +93,6 @@
    {:nimi "28" :koodi 28}
    {:nimi "29" :koodi 29}
    {:nimi "31" :koodi 31}])
-
-(def +verkon-tarkoitukset+
-  [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
-   {:nimi "Muiden routavaurioiden ehkäisy" :koodi 2}
-   {:nimi "Levennyksen tukeminen" :koodi 3}
-   {:nimi "Painumien ehkäisy" :koodi 4}
-   {:nimi "Moniongelmaisen tukeminen" :koodi 5}
-   {:nimi "Muu tarkoitus" :koodi 9}])
-
-(def +verkon-tarkoitukset-ja-nil+
-  (conj +verkon-tarkoitukset+ {:nimi "Ei tarkoitusta" :koodi nil}))
-
-(def +verkon-tarkoitus-tai-nil+
-  "Verkon tarkoituksen valinta koodilla"
-  (apply schema/enum (map :koodi +verkon-tarkoitukset-ja-nil+)))
-
-(defn verkon-tarkoitus-koodi-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset-ja-nil+))))
-
-(def +verkon-sijainnit+
-  [{:nimi "Päällysteessä" :koodi 1}
-   {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
-   {:nimi "Kantavassa kerroksessa" :koodi 3}
-   {:nimi "Kantavan kerroksen alapinnassa" :koodi 4}
-   {:nimi "Muu sijainti" :koodi 9}])
-
-(def +verkon-sijainnit-ja-nil+
-  (conj +verkon-sijainnit+ {:nimi "Ei sijaintia" :koodi nil}))
-
-(def +verkon-sijainti-tai-nil+
-  "Verkon sijainnin valinta koodilla"
-  (apply schema/enum (map :koodi +verkon-sijainnit-ja-nil+)))
-
-(defn verkon-sijainti-koodi-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit-ja-nil+))))
-
-(def +paallystystyon-tyypit+
-  "Päällystystyön tyypit"
-  [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste}
-   {:nimi "Pienaluetyöt" :koodi :pienaluetyot}
-   {:nimi "Tasaukset" :koodi :tasaukset}
-   {:nimi "Jyrsinnät" :koodi :jyrsinnat}
-   {:nimi "Muut" :koodi :muut}])
-
-(defn paallystystyon-tyypin-nimi-koodilla [koodi]
-  (:nimi (first (filter
-                  #(= koodi (:koodi %))
-                  +paallystystyon-tyypit+))))
 
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
