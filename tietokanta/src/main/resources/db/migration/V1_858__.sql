@@ -14,6 +14,7 @@ ALTER TABLE pot2_alusta ADD COLUMN seosaine INTEGER; -- puuttuu koodisto taulukk
 
 -- kaikissa alustariveissä ei välttämättä ole mursketta
 ALTER TABLE pot2_alusta DROP COLUMN materiaali;
+ALTER TABLE pot2_alusta DROP COLUMN toimenpide_tiedot;
 
 DELETE FROM pot2_mk_alusta_toimenpide
 where nimi ilike 'Verkko%';

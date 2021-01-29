@@ -162,7 +162,6 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.toimenpide_tiedot,
     pot2a.murske,
     pot2a.massa,
     pot2a.verkon_tyyppi AS "verkon-tyyppi",
