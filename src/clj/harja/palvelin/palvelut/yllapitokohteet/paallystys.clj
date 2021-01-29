@@ -567,7 +567,12 @@
                       :alusta
                       (filter (comp not :poistettu)))]
       (let [params (merge rivi
-                          {:pot2_id pot2-id})
+                          {:pot2_id pot2-id
+                           ;; Todo: tämä murske-hack on vain väliaikainen, siihen asti että alle implementoidaan
+                           ;; lisäparametrien resolvaaminen toimenpiteen perusteella,
+                           ;; esim. (pot2-domain/toimenpidespesifit-avaimet (:toimenpide rivi))
+                           ;; koska ei saa kyselylle viedä riviä josta puuttuu avain kokonaan
+                           :murske (:murske rivi)})
             lisaa-oikeat-verkko-params (fn [params]
                                          (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
                                                verkko-params (select-keys params verkko-avaimet)

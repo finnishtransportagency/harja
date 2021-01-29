@@ -135,7 +135,6 @@
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
     [:div
      (when alustalomake
-       (println "petar sta je u formi " (pr-str alustalomake))
        [alustalomake-nakyma e! {:alustalomake alustalomake
                                 :alusta-toimenpiteet alusta-toimenpiteet
                                 :murskeet murskeet

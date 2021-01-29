@@ -6,7 +6,6 @@
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
-    [harja.ui.lomake :as lomake]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus])
@@ -131,9 +130,7 @@
           uusi-id (if (pos? pienin-id)
                     -1
                     (dec pienin-id))
-          uusi-rivi {uusi-id alustalomake}]
-      (println "petar idt " (pr-str idt))
-      (println "petar atom " (pr-str @alustarivit-atom))
+          uusi-rivi {uusi-id (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)}]
       (swap! alustarivit-atom conj uusi-rivi))
       (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
 
