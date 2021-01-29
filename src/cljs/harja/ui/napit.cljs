@@ -380,3 +380,28 @@
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)
                              :ikoni  (ikonit/eye-open)})]))
+
+(defn laheta
+  ([teksti toiminto] (laheta teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka   (str (cond
+                                              (and vayla-tyyli?
+                                                   teksti-nappi?) "button-primary-text"
+                                              vayla-tyyli? "button-primary-default"
+                                              :else "nappi-ensisijainen") " " luokka)
+                             :ikoni    (ikonit/livicon-upload)
+                             :disabled disabled})]))
+(defn lataa
+  ([teksti toiminto] (laheta teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka disabled vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka   (str (cond
+                                              (and vayla-tyyli?
+                                                   teksti-nappi?) "button-primary-text"
+                                              vayla-tyyli? "button-primary-default"
+                                              :else "nappi-ensisijainen") " " luokka)
+                             :ikoni    (ikonit/livicon-download)
+                             :disabled disabled})]))
