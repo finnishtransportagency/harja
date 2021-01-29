@@ -34,9 +34,7 @@
 
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
-  (when koodi
-    (clojure.string/includes? (pot2-domain/ainetyypin-koodi->nimi alustatoimenpiteet koodi)
-                              "Verkko")))
+  (= koodi 667))
 
 (extend-protocol tuck/Event
 
