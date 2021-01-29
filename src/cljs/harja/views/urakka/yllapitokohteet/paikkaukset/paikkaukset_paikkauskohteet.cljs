@@ -31,7 +31,7 @@
     [grid/grid
      {:otsikko "Paikkauskohteet"
       :tyhja "Ei tietoja"
-      :rivi-klikattu #(e! (t-paikkauskohteet/->AvaaLomake %))
+      :rivi-klikattu #(e! (if (:lomake app) (t-paikkauskohteet/->SuljeLomake) (t-paikkauskohteet/->AvaaLomake %)))
       :tunniste :testinro}
      skeema
      paikkauskohteet]))
@@ -59,7 +59,8 @@
         [:div {:id ""}
          [:div
           [debug/debug app]
-          [paikkauslomake e!]
+          (when (:lomake app)
+            [paikkauslomake e!])
           [kohteet e! app]]]))))
 
 (defn paikkauskohteet [ur]
