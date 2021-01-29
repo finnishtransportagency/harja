@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.status
-  (:require [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+  (:require [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [com.stuartsierra.component :as component]
@@ -169,10 +170,13 @@
                           (itmf-yhteyden-tila komponenttien-tila)
                           (harjan-tila komponenttien-tila)])
                 {:keys [status] :as lahetettava-viesti} (koko-status testit)]
-            {:status status
-             :headers {"Content-Type" "application/json; charset=UTF-8"}
-             :body (encode
-                    (dissoc lahetettava-viesti :status))})))
+            (do
+              (when (not (= status 200))
+                (log/error "Status palauttaa virheen, viesti:\n" lahetettava-viesti))
+              {:status status
+               :headers {"Content-Type" "application/json; charset=UTF-8"}
+               :body (encode
+                       (dissoc lahetettava-viesti :status))}))))
     (http-palvelin/julkaise-reitti
       http :app-status
       (GET "/app_status" _
