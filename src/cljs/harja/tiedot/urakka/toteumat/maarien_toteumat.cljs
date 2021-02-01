@@ -192,7 +192,7 @@
     (let [{{:keys [tehtava]} ::t/tehtava} (first toteumat)]
       (cond
         (re-find #"ahavarau" tehtava) :tilaajan-varaukset
-        (re-find #"korjaukset" tehtava) :vahinkojen-korjaukset
+        (re-find #"vahinkojen korjaaminen" tehtava) :vahinkojen-korjaukset
         :else t))
     t))
 
