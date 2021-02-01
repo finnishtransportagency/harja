@@ -491,20 +491,40 @@ UPDATE pot2_alusta
        tr_ajorata = :tr-ajorata,
        tr_kaista = :tr-kaista,
        toimenpide = :toimenpide,
+       lisatty_paksuus = :lisatty-paksuus,
+       massamaara = :massamaara,
        murske = :murske,
+       kasittelysyvyys = :kasittelysyvyys,
+       leveys = :leveys,
+       pinta_ala = :pinta-ala,
+       kokonaismassamaara = :kokonaismassamaara,
+       massa = :massa,
+       sideaine = :sideaine,
+       sideainepitoisuus = :sideainepitoisuus,
+       seosaine = :seosaine,
        verkon_tyyppi = :verkon-tyyppi,
-       verkon_tarkoitus = :verkon-tarkoitus,
        verkon_sijainti = :verkon-sijainti,
+       verkon_tarkoitus = :verkon-tarkoitus,
        pot2_id = :pot2_id
  WHERE id = :pot2a_id;
 
 -- name: luo-pot2-alusta<!
 INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,
-                         tr_loppuosa, tr_ajorata, tr_kaista, toimenpide, murske,
-                         verkon_tyyppi, verkon_tarkoitus, verkon_sijainti, pot2_id)
+                         tr_loppuosa, tr_ajorata, tr_kaista, toimenpide,
+                         lisatty_paksuus, massamaara, murske,
+                         kasittelysyvyys, leveys, pinta_ala,
+                         kokonaismassamaara, massa, sideaine,
+                         sideainepitoisuus, seosaine,
+                         verkon_tyyppi, verkon_sijainti, verkon_tarkoitus,
+                         pot2_id)
 VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
-        :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide, :murske,
-        :verkon-tyyppi, :verkon-tarkoitus, :verkon-sijainti, :pot2_id);
+        :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide,
+        :lisatty-paksuus, :massamaara, :murske,
+        :kasittelysyvyys, :leveys, :pinta-ala,
+        :kokonaismassamaara, :massa, :sideaine,
+        :sideainepitoisuus, :seosaine,
+        :verkon-tyyppi, :verkon-sijainti, :verkon-tarkoitus,
+        :pot2_id);
 
 -- name: poista-pot2-alustarivit!
 UPDATE pot2_alusta
