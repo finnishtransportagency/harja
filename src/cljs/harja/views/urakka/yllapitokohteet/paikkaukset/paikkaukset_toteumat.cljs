@@ -17,6 +17,7 @@
             [harja.tiedot.istunto :as istunto]
 
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-yhteinen :as yhteinen-view]
 
@@ -392,6 +393,8 @@
 
 (defn toteumat [ur]
   (komp/luo
-    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (komp/sisaan #(do
+                    (yhteiset-tiedot/nakyman-urakka ur)
+                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)))
     (fn [_]
       [tuck/tuck tiedot/app toteumat*])))

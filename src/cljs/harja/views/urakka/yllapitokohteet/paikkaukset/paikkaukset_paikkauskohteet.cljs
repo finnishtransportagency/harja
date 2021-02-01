@@ -3,6 +3,10 @@
             [reagent.core :as r]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
+            [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as kartta-tasot]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
             [harja.ui.lomake :as lomake]
@@ -18,7 +22,16 @@
                  :nimi :testinimi}
                 {:otsikko "Tila"
                  :leveys 1
-                 :nimi :testitila}
+                 :nimi :testitila
+                 :fmt (fn [arvo]
+                        [:span
+                         [:span {:class (str "circle "
+                                                   (cond
+                                                     (= "Tilattu" arvo) "tila-tilattu"
+                                                     (= "Ehdotettu" arvo) "tila-ehdotettu"
+                                                     (= "Valmis" arvo) "tila-valmis"
+                                                     :default "tila-ehdotettu"
+                                                     ))}] (str arvo " jee")])}
                 {:otsikko "Menetelmä"
                  :leveys 1
                  :nimi :testimenetelma}
@@ -38,16 +51,16 @@
      paikkauskohteet]))
 
 (defn kohteet [e! app]
-  [:div
-   [:div "Tänne paikkauskohteet"]
-   [:div "Tähän kartta"]
-   [:div {:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
-    ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-    [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]
-   [paikkauskohteet-taulukko e! app]]
+  (let [_ (js/console.log "kohteet:")]
+    [:div
+     [:div "Tänne paikkauskohteet"]
+     [:div {:style {:display "flex"}}                       ;TODO: tähän class, mistä ja mikä?
+      ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+      [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+      [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+      [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+      [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]
+     [paikkauskohteet-taulukko e! app]])
   )
 
 (defn uusi-paikkauskohde-lomake
@@ -68,20 +81,33 @@
        :testilomake [testilomake e! lomake]
        [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))])
 
+(defn- paikkauskohteet-sivu [e! app]
+  (let [_ (js/console.log "paikkauskohteet-sivu ::  Karttataso näkyvissä?" (pr-str @t-paikkauskohteet-kartalle/karttataso-nakyvissa?))]
+    [:div
+     [kartta/kartan-paikka]
+     [debug/debug app]
+     (when (:lomake app)
+       [paikkauslomake e! (:lomake app)])
+     [kohteet e! app]]))
+
 (defn paikkauskohteet* [e! app]
   (komp/luo
-    (komp/piirretty (fn [this]
-                      (do
-                        ;; TODO: Hae kamat bäkkäristä
-                        )))
+    (komp/sisaan #(do
+                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)
+                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                   (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
+                   ;(kartta-tasot/taso-paalle! :organisaatio)
+                   ;(kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
+                   ;; TODO: Hae kamat bäkkäristä
+                   ))
+    (komp/ulos #(do
+                  (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+                  (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
+                  ))
     (fn [e! app]
-      (let [_ (js/console.log " paikkauskohteet*  ")]
+      (let [_ (js/console.log " paikkauskohteet* ")]
         [:div {:id ""}
-         [:div
-          [debug/debug app]
-          (when (:lomake app)
-            [paikkauslomake e! (:lomake app)])
-          [kohteet e! app]]]))))
+         [paikkauskohteet-sivu e! app]]))))
 
 (defn paikkauskohteet [ur]
   [tuck/tuck t-paikkauskohteet/app paikkauskohteet*])
