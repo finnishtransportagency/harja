@@ -32,14 +32,14 @@
                                    :testisijainti "23423/121231"
                                    :testiaikataulu "1.6. - 14.6.2021"}]}))
 
-(defrecord AvaaLomake [rivi])
+(defrecord AvaaLomake [lomake])
 (defrecord SuljeLomake [])
 
 (extend-protocol tuck/Event
   AvaaLomake
-  (process-event [_rivi app]
+  (process-event [lomake app]
     (-> app
-        (assoc :lomake :testi-lomake)))
+        (assoc :lomake (:lomake lomake))))
 
   SuljeLomake
   (process-event [_ app]

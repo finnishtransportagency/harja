@@ -32,7 +32,7 @@
     [grid/grid
      {:otsikko "Paikkauskohteet"
       :tyhja "Ei tietoja"
-      :rivi-klikattu #(e! (t-paikkauskohteet/->AvaaLomake %))
+      :rivi-klikattu #(e! (t-paikkauskohteet/->AvaaLomake (merge % {:tyyppi :testilomake})))
       :tunniste :testinro}
      skeema
      paikkauskohteet]))
@@ -46,15 +46,27 @@
     [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
     [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
     [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake nil))]]
+    [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]
    [paikkauskohteet-taulukko e! app]]
   )
 
-(defn paikkauslomake [e!]
+(defn uusi-paikkauskohde-lomake
+  [e!]
+  [:div "Tänne lomake uudelle kohteelle"
+   [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
+
+(defn testilomake
+  [e! _lomake]
+  [:div "Kuvittele tähän hieno lomake"
+   [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
+
+(defn paikkauslomake [e! lomake]
   [lomake/lomake-overlay {}
    (fn []
-     [:div "Tänne lomake"]
-     [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))])])
+     (case (:tyyppi lomake)
+       :uusi-paikkauskohde [uusi-paikkauskohde-lomake e!]
+       :testilomake [testilomake e! lomake]
+       [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))])
 
 (defn paikkauskohteet* [e! app]
   (komp/luo
@@ -68,7 +80,7 @@
          [:div
           [debug/debug app]
           (when (:lomake app)
-            [paikkauslomake e!])
+            [paikkauslomake e! (:lomake app)])
           [kohteet e! app]]]))))
 
 (defn paikkauskohteet [ur]
