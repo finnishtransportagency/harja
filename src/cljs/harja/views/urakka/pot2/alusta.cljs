@@ -190,9 +190,11 @@
         :hae #(paallystys/rivin-kohteen-pituus
                 (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 3 :muokattava? (constantly false)
-        :tyyppi :string :hae (fn [rivi] (pot2-tiedot/toimenpiteen-tiedot rivi))}
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       [pot2-tiedot/toimenpiteen-tiedot rivi materiaalikoodistot])}
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3 :muokattava? (constantly false)
-        :tyyppi :string :hae (fn [rivi] (pot2-tiedot/materiaalin-tiedot rivi))}
+        :tyyppi :string :hae (fn [rivi] [pot2-tiedot/materiaalin-tiedot rivi])}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

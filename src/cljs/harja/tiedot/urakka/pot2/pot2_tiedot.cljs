@@ -35,13 +35,38 @@
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
   (= koodi 667))
 
-(defn toimenpiteen-tiedot [rivi]
-  (println " toimenpiteen-tiedot " (pr-str rivi))
-  "TODO")
+(defn- fmt-toimenpide-verkko [rivi materiaalikoodistot]
+ [:span
+   (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
+        ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
+        ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
-(defn materiaalin-tiedot [rivi]
-  (println " materiaalin-tiedot " (pr-str rivi))
-  "TODO")
+(defn toimenpiteen-tiedot
+  [rivi materiaalikoodistot]
+  (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
+        toimenpide (:toimenpide rivi)
+        {:keys [alusta-toimenpiteet verkon-tarkoitukset verkon-tyypit verkon-sijainnit]} materiaalikoodistot]
+    (fn [rivi materiaalikoodistot]
+      [:div.pot2-toimenpiteen-tiedot
+       (cond
+         (onko-toimenpide-verkko? alusta-toimenpiteet toimenpide)
+         (fmt-toimenpide-verkko (select-keys rivi verkko-avaimet) materiaalikoodistot)
+
+         :else
+         [:span "Ei tietoja"])])))
+;; TODO: tänne domain puolelta käyttöön palvelinpuolen kanssa yhteinen logiikka päätellä
+;; eri toimenpidetyyppien kentät
+
+(defn materiaalin-tiedot [rivi materiaalikoodistot]
+  (println "jarno matsku: " (pr-str (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (:murske rivi))))
+  (fn [rivi materiaalikoodistot]
+    [:div.pot2-materiaalin-tiedot
+     (cond
+       (some? (:murske rivi))
+       (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (:murske rivi))
+
+       (some? (:massa rivi))
+       (pot2-domain/ainetyypin-koodi->nimi (:massatyypit materiaalikoodistot) (:massa rivi)))]))
 
 
 (extend-protocol tuck/Event
