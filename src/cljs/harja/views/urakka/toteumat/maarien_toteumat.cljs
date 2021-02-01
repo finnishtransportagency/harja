@@ -72,6 +72,7 @@
 
     (or (= (:tyyppi rivi) "lisatyo")
         (= (:tyyppi rivi) "akillinen-hoitotyo")
+        (= (:tyyppi rivi) "vahinkojen-korjaukset")
         (= (:tyyppi rivi) "muut-rahavaraukset"))
     "kpl"
 
