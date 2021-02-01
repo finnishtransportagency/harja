@@ -118,7 +118,7 @@ FROM toimenpidekoodi tk,
      sopimus s
 WHERE s.urakka = :urakka
   AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-  AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)')
+  AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat (W)
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND tpi.toimenpide = tk.id

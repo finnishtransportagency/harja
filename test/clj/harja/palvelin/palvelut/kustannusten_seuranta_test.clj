@@ -69,8 +69,10 @@
             AND m.toimenpideinstanssi = tpi.id
             AND tpk2.koodi = '23150')
         SELECT kt.summa as summa
-        FROM kustannusarvioitu_tyo kt
-        WHERE kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+        FROM kustannusarvioitu_tyo kt, sopimus s
+        WHERE s.urakka = "urakka"
+          AND kt.sopimus = s.id
+          AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');"))
 
@@ -424,10 +426,10 @@ UNION ALL
                            #(when (= "erillishankinnat" (:paaryhma %))
                               true)
                            vastaus)
-        eh-summa (apply + (map #(:budjetoitu_summa %) erillishankinnat))
-        erillishankinnat-sql (q (erilliskustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) erillishankinnat-sql))]
-    (is (= eh-summa sql-summa))))
+        ehankinnat-summa (apply + (map #(:budjetoitu_summa %) erillishankinnat))
+        ehankinnat-sql (q (erilliskustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
+        ehankinnat-sql-summa (apply + (map #(first %) ehankinnat-sql))]
+    (is (= ehankinnat-summa ehankinnat-sql-summa))))
 
 ;; Testataan/vertaillaan erillishankintojen toteutumia
 (deftest toteutuneet-erillishankinnat-test
@@ -609,24 +611,27 @@ UNION ALL
         hoitokauden-alkuvuosi 2019
         vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         bonukset (filter
-                   #(when (= "bonukset" (:paaryhma %))
+                   #(when (and
+                            (= "bonukset" (:paaryhma %))
+                            ;; Filtteröidään vielä lisätyöt pois
+                            (not= "lisatyo" (:toimenpideryhma %)))
                       true)
                    vastaus)
-        ;; Filtteröidään vielä lisätyöt pois
-        bonus-toteutuneet (apply + (map (fn [rivi]
-                                (if (not= "lisatyo" (:toimenpideryhma rivi))
-                                  (:toteutunut_summa rivi)
-                                  0))
-                                        bonukset))
-        bonus-budjetoitu (apply + (map (fn [rivi]
-                                    (if (not= "lisatyo" (:toimenpideryhma rivi))
-                                      (:budjetoitu_summa rivi)
-                                      0))
-                                       bonukset))
+
+        bonus-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
+        bonus-budjetoitu (apply + (map (fn [rivi] (:budjetoitu_summa rivi)) bonukset))
         bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
         bonukset-budjetoitu-sql (q (bonukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
-        bonukset-sql-toteutunut-summa (apply + (map #(first %) bonukset-toteutuneet-sql))
-        bonukset-sql-budjetoitu-summa (apply + (map #(first %) bonukset-budjetoitu-sql))]
+        bonukset-sql-toteutunut-summa (reduce  (fn [summa b]
+                                                 (if b
+                                                   (+ summa b)
+                                                   summa))
+                                              0M (map #(first %) bonukset-toteutuneet-sql))
+        bonukset-sql-budjetoitu-summa (reduce (fn [summa b]
+                                                (if b
+                                                  (+ summa b)
+                                                  summa))
+                                              0M (map #(first %) bonukset-budjetoitu-sql))]
     (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))
     (is (= bonus-budjetoitu bonukset-sql-budjetoitu-summa))))
 
