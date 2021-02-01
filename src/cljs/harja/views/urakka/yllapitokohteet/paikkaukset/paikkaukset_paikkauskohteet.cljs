@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
+            [harja.geo :as geo]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
@@ -45,7 +46,15 @@
     [grid/grid
      {:otsikko "Paikkauskohteet"
       :tyhja "Ei tietoja"
-      :rivi-klikattu #(e! (t-paikkauskohteet/->AvaaLomake (merge % {:tyyppi :testilomake})))
+      :rivi-klikattu (fn [kohde]
+                       (do
+                         (js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
+                         ;; Näytä valittu rivi kartalla
+                         (when (not (nil? (:sijainti kohde)))
+                           (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
+                           (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:testinro kohde)}))
+                         ;; avaa lomake
+                         (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :testilomake})))))
       :tunniste :testinro}
      skeema
      paikkauskohteet]))
