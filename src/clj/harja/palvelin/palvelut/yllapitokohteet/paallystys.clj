@@ -566,28 +566,26 @@
     (doseq [rivi (->> paallystysilmoitus
                       :alusta
                       (filter (comp not :poistettu)))]
-      (let [params (merge rivi
-                          {:pot2_id pot2-id
-                           ;; Todo: tämä murske-hack on vain väliaikainen, siihen asti että alle implementoidaan
-                           ;; lisäparametrien resolvaaminen toimenpiteen perusteella,
-                           ;; esim. (pot2-domain/toimenpidespesifit-avaimet (:toimenpide rivi))
-                           ;; koska ei saa kyselylle viedä riviä josta puuttuu avain kokonaan
-                           :murske (:murske rivi)})
-            lisaa-oikeat-verkko-params (fn [params]
-                                         (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
-                                               verkko-params (select-keys params verkko-avaimet)
-                                               verkko-params-maara (count verkko-params)]
-                                           (merge params
-                                                  (cond
-                                                    (= verkko-params-maara 3) verkko-params
-                                                    (= verkko-params-maara 0) (zipmap verkko-avaimet (repeat nil))
-                                                    :else (throw (IllegalArgumentException. (str "Alustassa väärä verkko tiedot "
-                                                                                                 (pr-str params))))))))
-            params-ja-verkko-params (lisaa-oikeat-verkko-params params)]
+      (let [keep-some (fn [params]
+                        (into {} (filter
+                                   (fn [[_ arvo]] (some? arvo))
+                                   params)))
+            lisaparams (select-keys rivi pot2-domain/alusta-toimenpide-kaikki-lisaavaimet)
+            annetut-lisaparams (keep-some lisaparams)
+            toimenpidespesifit-avaimet (pot2-domain/alusta-toimenpide-lisaavaimet (:toimenpide rivi))
+            rivi-ja-kaikki-lisaparametrit (if (= (-> annetut-lisaparams keys set) (set toimenpidespesifit-avaimet))
+                                            (merge rivi
+                                                   {:pot2_id pot2-id}
+                                                   (zipmap pot2-domain/alusta-toimenpide-kaikki-lisaavaimet (repeat nil))
+                                                   annetut-lisaparams)
+                                            (throw (IllegalArgumentException.
+                                                     (str "Alustassa väärä lisätiedot. Odotettu: "
+                                                          (pr-str toimenpidespesifit-avaimet) " tuli: "
+                                                          (pr-str annetut-lisaparams)))))]
         (try
-          (if (:pot2a_id rivi)
-            (q/paivita-pot2-alusta<! db params-ja-verkko-params)
-            (q/luo-pot2-alusta<! db params-ja-verkko-params))
+          (if (:pot2a_id rivi-ja-kaikki-lisaparametrit)
+            (q/paivita-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit)
+            (q/luo-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit))
           (catch PSQLException pe
             (throw (if (s/includes? (.getMessage pe) "violates foreign key constraint")
                      (IllegalArgumentException. "Koodisto tai muu referenssi virhe pyynnössä" pe)

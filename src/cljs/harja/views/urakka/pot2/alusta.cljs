@@ -99,7 +99,6 @@
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
-  (println "petar unutar komponente " (pr-str alustalomake))
   [lomake/lomake
    {:luokka " overlay-oikealla"
     :otsikko "Toimenpiteen tiedot"

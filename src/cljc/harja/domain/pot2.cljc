@@ -43,6 +43,31 @@
 (defn alustamenetelma-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
 
+(def alusta-toimenpide-kaikki-lisaavaimet
+  [:lisatty-paksuus
+   :massamaara
+   :murske
+   :kasittelysyvyys
+   :leveys
+   :pinta-ala
+   :kokonaismassamaara
+   :massa
+   :sideaine
+   :sideainepitoisuus
+   :seosaine
+   :verkon-tyyppi
+   :verkon-sijainti
+   :verkon-tarkoitus])
+
+(def alusta-toimenpidespesifit-lisaavaimet
+  {667 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]})
+
+(defn alusta-toimenpide-lisaavaimet
+  [toimenpide]
+  (if-let [avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)]
+    avaimet
+    []))
+
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
   [{:nimi "Rakentaminen" :koodi 1}

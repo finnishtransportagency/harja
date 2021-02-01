@@ -921,7 +921,7 @@
     :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
     :materiaali      1, :pituus 500,
-    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 1}])
+    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 667}])
 
 (defn- tallenna-pot2-testi-paallystysilmoitus
   [urakka-id sopimus-id paallystyskohde-id paallystysilmoitus]
@@ -1084,19 +1084,24 @@
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
-        muu-tr-numero 7777
-        vaara-tr-numero 5555
         verkon-tiedot {:verkon-tyyppi 1 :verkon-sijainti 3}
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] merge verkon-tiedot))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärä verkko tiedot")))
+                                       "Alustassa väärä lisätiedot.")))
+
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-lisatiedot
+  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        verkon-tiedot {:verkon-tyyppi 1 :verkon-sijainti 3 :verkon-tarkoitus 1 :massamaara 1}
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (update-in [:alusta 3] merge verkon-tiedot))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
+                                       "Alustassa väärä lisätiedot. sdf")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
-        muu-tr-numero 7777
-        vaara-tr-numero 5555
         verkon-tiedot {:verkon-tyyppi 1 :verkon-tarkoitus 333 :verkon-sijainti 3}
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)

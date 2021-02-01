@@ -252,7 +252,6 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentan-input
   "Määritellään kentän input"
   [s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? {:keys [vayla-tyyli?] :as kentta-opts}]
-  (println "petar po svemu sudeci ovde bi morao da udje " (pr-str data))
   (let [{:keys [nimi hae aseta kentan-arvon-luokka]} s
         hae (or hae #(if (vector? nimi)
                        (get-in % nimi)
