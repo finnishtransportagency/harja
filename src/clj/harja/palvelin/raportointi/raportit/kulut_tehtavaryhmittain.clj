@@ -117,6 +117,9 @@
                                                                                              :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                              :urakka   urakka-id})))
         rivin-muodostaja (comp
+                           (map #(do (println %)
+                                     (println (keep :summa (second %)))
+                                     %))
                            (map #(let [summa (reduce + 0 (keep :summa (second %)))]
                                    (assoc (first (second %)) :summa summa)))
                            (map #(->

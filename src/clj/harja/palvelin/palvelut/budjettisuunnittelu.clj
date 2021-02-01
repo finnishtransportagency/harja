@@ -57,20 +57,24 @@
    :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
    :akilliset-hoitotyot                        "akillinen-hoitotyo"
    :toimenpiteen-maaramitattavat-tyot          "laskutettava-tyo"
-   :tilaajan-varaukset "laskutettava-tyo"})
+   :tilaajan-varaukset                         "laskutettava-tyo"})
 
 (defn- tyyppi->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tyyppi v))
 
-(def ^{:private true} tallennettava-asia->tehtava
-  {:hoidonjohtopalkkio                         "c9712637-fbec-4fbd-ac13-620b5619c744"
-   :toimistokulut                              "8376d9c4-3daf-4815-973d-cd95ca3bb388"
-   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito               "49b7388b-419c-47fa-9b1b-3797f1fab21d"
-                                                :liikenneympariston-hoito "63a2585b-5597-43ea-945c-1b25b16a06e2"
-                                                :sorateiden-hoito         "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
-   :akilliset-hoitotyot                        {:talvihoito               "1f12fe16-375e-49bf-9a95-4560326ce6cf"
-                                                :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
-                                                :sorateiden-hoito         "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
+;UPDATE tehtavaryhma SET yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68' WHERE nimi = 'Hoidonjohtopalkkio (G) ;
+
+    ;UPDATE toimenpidekoodi SET yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' WHERE nimi = 'Hoidonjohtopalkkio';
+
+    (def ^{:private true} tallennettava-asia->tehtava
+      {:hoidonjohtopalkkio                         "53647ad8-0632-4dd3-8302-8dfae09908c8" ;"c9712637-fbec-4fbd-ac13-620b5619c744"
+       :toimistokulut                              "8376d9c4-3daf-4815-973d-cd95ca3bb388"
+       :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito               "49b7388b-419c-47fa-9b1b-3797f1fab21d"
+                                                    :liikenneympariston-hoito "63a2585b-5597-43ea-945c-1b25b16a06e2"
+                                                    :sorateiden-hoito         "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+       :akilliset-hoitotyot                        {:talvihoito               "1f12fe16-375e-49bf-9a95-4560326ce6cf"
+                                                    :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
+                                                    :sorateiden-hoito         "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
 
 (defn- tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
@@ -78,7 +82,7 @@
 (def ^{:private true} tallennettava-asia->tehtavaryhma
   {:erillishankinnat        "37d3752c-9951-47ad-a463-c1704cf22f4c"
    :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"
-   :tilaajan-varaukset "a6614475-1950-4a61-82c6-fda0fd19bb54"})
+   :tilaajan-varaukset      "a6614475-1950-4a61-82c6-fda0fd19bb54"})
 
 (defn- tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
@@ -107,7 +111,7 @@
                                                                      (remove (fn [{:keys [vuosi]}]
                                                                                (>= vuosi urakan-loppuvuosi)))
                                                                      (map (fn [{:keys [arvo vuosi]}]
-                                                                            {:vuosi vuosi
+                                                                            {:vuosi          vuosi
                                                                              :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
                                                                (i-q/hae-indeksi db {:nimi indeksi}))
                                   urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
@@ -116,11 +120,11 @@
                                 (mapv (fn [index]
                                         (if (empty? indeksiluvut-urakan-aikana)
                                           ;; VHAR-2484 urakoille, jotka eivät ole vielä alkaneet, indeksikertoimeksi 1
-                                          {:vuosi (+ urakan-alkuvuosi index)
+                                          {:vuosi          (+ urakan-alkuvuosi index)
                                            :indeksikerroin 1.00}
                                           (if (> (inc index) urakan-indeksien-maara)
-                                           (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
-                                           (nth indeksiluvut-urakan-aikana index))))
+                                            (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
+                                            (nth indeksiluvut-urakan-aikana index))))
                                       (range 0 5))))))
 
 (defn tallenna-urakan-tavoite
@@ -217,16 +221,16 @@
 
 (defn kasittele-urakan-johto-ja-hallintokorvauksien-haku! [db urakka-id]
   (jdbc/with-db-transaction [db db]
-    (let [jh-korvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)
-          omat-jh-korvaukset (hae-urakan-omat-johto-ja-hallintokorvaukset db urakka-id)
-          urakan-omat-jh-korvaukset (q/hae-urakan-omat-jh-korvaukset db {:urakka-id urakka-id})
-          jh-korvausten-omiariveja-lkm 2
-          luotujen-toimenkuvien-idt (when (> jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset))
-                                      (for [_ (range 0 (- jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset)))]
-                                        (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db {:toimenkuva nil :urakka-id urakka-id}))))]
-      {:vakiot jh-korvaukset
-       :omat omat-jh-korvaukset
-       :omat-toimenkuvat (vec (concat urakan-omat-jh-korvaukset (map #(identity {:toimenkuva-id % :toimenkuva nil}) luotujen-toimenkuvien-idt)))})))
+                            (let [jh-korvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)
+                                  omat-jh-korvaukset (hae-urakan-omat-johto-ja-hallintokorvaukset db urakka-id)
+                                  urakan-omat-jh-korvaukset (q/hae-urakan-omat-jh-korvaukset db {:urakka-id urakka-id})
+                                  jh-korvausten-omiariveja-lkm 2
+                                  luotujen-toimenkuvien-idt (when (> jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset))
+                                                              (for [_ (range 0 (- jh-korvausten-omiariveja-lkm (count urakan-omat-jh-korvaukset)))]
+                                                                (:id (q/lisaa-oma-johto-ja-hallintokorvaus-toimenkuva<! db {:toimenkuva nil :urakka-id urakka-id}))))]
+                              {:vakiot           jh-korvaukset
+                               :omat             omat-jh-korvaukset
+                               :omat-toimenkuvat (vec (concat urakan-omat-jh-korvaukset (map #(identity {:toimenkuva-id % :toimenkuva nil}) luotujen-toimenkuvien-idt)))})))
 
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
@@ -334,9 +338,9 @@
                                                                                                                                   :koodi  (toimenpide-avain->toimenpide :mhu-johto)})))
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
                                                               #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi ::bs/ennen-urakkaa}
-                                                              {::bs/urakka-id urakka-id
+                                                              {::bs/urakka-id     urakka-id
                                                                ::bs/toimenkuva-id toimenkuva-id
-                                                               ::bs/vuosi (op/in (distinct (map :vuosi jhk-tiedot)))
+                                                               ::bs/vuosi         (op/in (distinct (map :vuosi jhk-tiedot)))
                                                                ::bs/ennen-urakkaa ennen-urakkaa?})
                                   olemassa-olevat-jhkt (filter (fn [{::bs/keys [vuosi kuukausi] :as jhk}]
                                                                  (some #(when (and (= vuosi (:vuosi %))
@@ -381,16 +385,16 @@
                                 (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
                                   (insert! db
                                            ::bs/johto-ja-hallintokorvaus
-                                           {::bs/urakka-id urakka-id
-                                            ::bs/toimenkuva-id toimenkuva-id
-                                            ::bs/tunnit tunnit
-                                            ::bs/tuntipalkka tuntipalkka
-                                            ::bs/kuukausi kuukausi
-                                            ::bs/vuosi vuosi
-                                            ::bs/ennen-urakkaa ennen-urakkaa?
+                                           {::bs/urakka-id       urakka-id
+                                            ::bs/toimenkuva-id   toimenkuva-id
+                                            ::bs/tunnit          tunnit
+                                            ::bs/tuntipalkka     tuntipalkka
+                                            ::bs/kuukausi        kuukausi
+                                            ::bs/vuosi           vuosi
+                                            ::bs/ennen-urakkaa   ennen-urakkaa?
                                             ::bs/osa-kuukaudesta osa-kuukaudesta
-                                            ::bs/luotu (pvm/nyt)
-                                            ::bs/luoja (:id user)})))
+                                            ::bs/luotu           (pvm/nyt)
+                                            ::bs/luoja           (:id user)})))
                               {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
@@ -492,7 +496,7 @@
   (let [paivitettyjen-rivien-maara (update! db
                                             ::bs/johto-ja-hallintokorvaus-toimenkuva
                                             {::bs/toimenkuva toimenkuva}
-                                            {::bs/id toimenkuva-id
+                                            {::bs/id        toimenkuva-id
                                              ::bs/urakka-id urakka-id})]
     (if (= 0 paivitettyjen-rivien-maara)
       {:virhe "Yhtään riviä ei päivitetty"}

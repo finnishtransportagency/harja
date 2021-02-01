@@ -12,20 +12,40 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-johto-ja-hallintokorvaus-raporttiin-aikavalilla
+-- select * from
+
 -- name: hae-urakan-hj-kulut-raporttiin-aikavalilla
-select tr.nimi as "nimi",
-       tr.id as "tehtavaryhma",
-       tr.jarjestys as "jarjestys",
-       sum(kt.summa) as "summa"
-from kustannusarvioitu_tyo kt
-  join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
-  join toimenpidekoodi tpk
-  join tehtavaryhma tr on tpk.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('a6614475-1950-4a61-82c6-fda0fd19bb54',
-                                                                                 '37d3752c-9951-47ad-a463-c1704cf22f4c')
-  on tpk.id = kt.tehtava
-where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm
-group by tr.nimi, tr.id, tr.jarjestys
-order by tr.jarjestys;
+select rs.nimi as "nimi",
+       rs.jarjestys as "jarjestys",
+       rs.tehtavaryhma as "tehtavaryhma",
+       sum(rs.summa) as "summa"
+from (select tr.nimi      as "nimi",
+             tr.id        as "tehtavaryhma",
+             tr.jarjestys as "jarjestys",
+             kt.summa     as "summa"
+      from kustannusarvioitu_tyo kt
+             join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
+             join toimenpidekoodi tpk
+             join tehtavaryhma tr on tr.id = tpk.tehtavaryhma
+                  on tpk.id = kt.tehtava and tpk.nimi = 'Hoidonjohtopalkkio'
+      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm
+      union all
+      select tr.nimi      as "nimi",
+             tr.id        as "tehtavaryhma",
+             tr.jarjestys as "jarjestys",
+             kt.summa     as "summa"
+      from kustannusarvioitu_tyo kt
+             join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
+             join toimenpidekoodi tpk
+             join tehtavaryhma tr
+                  on tpk.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('a6614475-1950-4a61-82c6-fda0fd19bb54',
+                                                                            '37d3752c-9951-47ad-a463-c1704cf22f4c')
+                  on tpk.id = kt.tehtava
+      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm) rs
+group by rs.nimi, rs.tehtavaryhma, rs.jarjestys
+order by rs.jarjestys;
+
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
