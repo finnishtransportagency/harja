@@ -62,6 +62,7 @@
                             :pakollinen? true
                             :valinta-nayta #(when %
                                               (str (::pot2-domain/lyhenne %)
+                                                   ;; Verkolle ei ole mielekästä lyhennettä, niin ei näytetä Verkko (verkko)
                                                    (when-not (= "Verkko" (::pot2-domain/nimi %))
                                                      (str " ("
                                                           (clojure.string/lower-case (::pot2-domain/nimi %))
