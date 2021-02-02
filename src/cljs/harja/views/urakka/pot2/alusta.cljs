@@ -61,12 +61,10 @@
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
                             :pakollinen? true
                             :valinta-nayta #(when %
-                                              (str (::pot2-domain/lyhenne %)
-                                                   ;; Verkolle ei ole mielekästä lyhennettä, niin ei näytetä Verkko (verkko)
-                                                   (when-not (= "Verkko" (::pot2-domain/nimi %))
-                                                     (str " ("
-                                                          (clojure.string/lower-case (::pot2-domain/nimi %))
-                                                          ")"))))}]
+                                              ;; Jos toimenpiteellä on lyhenne, näytetään LYHENNE (NIMI), muuten vain NIMI
+                                              (str (or (::pot2-domain/lyhenne %) (::pot2-domain/nimi %))
+                                                   (when (::pot2-domain/lyhenne %)
+                                                     (str " (" (clojure.string/lower-case (::pot2-domain/nimi %)) ")"))))}]
         tr-kentat [(lomake/rivi
                      {:nimi :tr-numero :otsikko "Tie"
                       :tyyppi :positiivinen-numero :kokonaisluku? true :pakollinen? true}

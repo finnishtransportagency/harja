@@ -20,4 +20,4 @@ DELETE FROM pot2_mk_alusta_toimenpide
 where nimi ilike 'Verkko%';
 
 INSERT INTO pot2_mk_alusta_toimenpide (nimi, lyhenne, koodi)
-VALUES ('Verkko', 'Verkko', 667);
+VALUES ('Verkko', null, 667);
