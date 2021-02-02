@@ -102,6 +102,9 @@
 
         kaikki-rivit-alusta (group-by :nimi
                                       (concat
+                                        (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
+                                                                                                                :loppupvm loppupvm-hoitokausi
+                                                                                                                :urakka   urakka-id})
                                         (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
                                                                                                 :loppupvm loppupvm-hoitokausi
                                                                                                 :urakka   urakka-id})
@@ -110,6 +113,9 @@
                                                                                              :urakka   urakka-id})))
         kaikki-rivit-kuussa (group-by :nimi
                                       (concat
+                                        (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
+                                                                                                                :loppupvm loppupvm-valittu-kuu-tai-vali
+                                                                                                                :urakka   urakka-id})
                                         (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
                                                                                                 :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                                 :urakka   urakka-id})

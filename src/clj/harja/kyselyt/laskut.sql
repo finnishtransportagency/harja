@@ -12,8 +12,17 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
--- name: hae-johto-ja-hallintokorvaus-raporttiin-aikavalilla
--- select * from
+-- name: hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla
+select tr.nimi as "nimi",
+       tr.id as "tehtavaryhma",
+       tr.jarjestys as "jarjestys",
+       jhk."toimenkuva-id",
+       sum(jhk.tuntipalkka * jhk.tunnit) as "summa"
+from johto_ja_hallintokorvaus jhk
+  join tehtavaryhma tr on tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
+where jhk."urakka-id" = :urakka
+  and format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE between :alkupvm and :loppupvm
+group by jhk."toimenkuva-id", tr.nimi, tr.id, tr.jarjestys
 
 -- name: hae-urakan-hj-kulut-raporttiin-aikavalilla
 select rs.nimi as "nimi",
