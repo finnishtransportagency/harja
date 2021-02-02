@@ -34,11 +34,29 @@
         validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [] vuosi)]
     (yllapitokohteet-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
 
+(defn- alustalomakkeen-lisakentat
+  [{:keys [toimenpide
+           verkon-sijainnit
+           verkon-tyypit
+           verkon-tarkoitukset]}]
+  (let [kaikki-lisakentat {:verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
+                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                              :valinnat     verkon-tyypit
+                                              :palstoja     3}
+                           :verkon-sijainti  {:otsikko      "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
+                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                              :valinnat     verkon-sijainnit
+                                              :palstoja     3}
+                           :verkon-tarkoitus {:otsikko      "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
+                                              ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
+                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                              :valinnat     verkon-tarkoitukset
+                                              :palstoja     3}}
+        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)]
+    (map #(lomake/rivi (get kaikki-lisakentat %)) toimenpidespesifit-lisakentat)))
+
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
-                                       toimenpide
-                                       verkon-sijainnit
-                                       verkon-tyypit
-                                       verkon-tarkoitukset]}]
+                                       toimenpide] :as alusta}]
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
                             :pakollinen? true
@@ -73,29 +91,11 @@
                       :palstoja 1
                       :otsikko "Let"
                       :tyyppi :positiivinen-numero :kokonaisluku? true})]
-        verkon-kentat [(lomake/rivi {:otsikko "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
-                                     :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                     :valinnat verkon-tyypit
-                                     :palstoja 3})
-                       (lomake/rivi {:otsikko "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
-                                     :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                     :valinnat verkon-sijainnit
-                                     :palstoja 3})
-                       (lomake/rivi {:otsikko "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
-                                     ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
-                                     :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                     :valinnat verkon-tarkoitukset
-                                     :palstoja 3})]]
+        lisakentat (alustalomakkeen-lisakentat alusta)]
     (vec
       (concat toimenpide-kentta
-              tr-kentat (cond
-                          (pot2-tiedot/onko-toimenpide-verkko? alusta-toimenpiteet toimenpide)
-                          verkon-kentat
-
-                          ;; TODO: Figmasta kaikkien muiden toimenpidetyyypien kentät
-
-                          :else
-                          [])))))
+              tr-kentat
+              lisakentat))))
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
