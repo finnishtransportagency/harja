@@ -60,42 +60,46 @@
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
                             :pakollinen? true
-                            :valinta-nayta ::pot2-domain/nimi}]
+                            :valinta-nayta #(when %
+                                              (str (::pot2-domain/lyhenne %)
+                                                   (when-not (= "Verkko" (::pot2-domain/nimi %))
+                                                     (str " ("
+                                                          (clojure.string/lower-case (::pot2-domain/nimi %))
+                                                          ")"))))}]
         tr-kentat [(lomake/rivi
-                     {:nimi :tr-numero
-                      :palstoja 1
-                      :otsikko "Tie"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true}
-                     {:nimi :tr-ajorata
-                      :palstoja 1
-                      :otsikko "Ajorata"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true}
-                     {:nimi :tr-kaista
-                      :palstoja 1
-                      :otsikko "Kaista"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true})
+                     {:nimi :tr-numero :otsikko "Tie"
+                      :tyyppi :positiivinen-numero :kokonaisluku? true :pakollinen? true}
+                     {:otsikko "Ajorata" :nimi :tr-ajorata :pakollinen? true :tyyppi :valinta
+                      :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
+                      :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))}
+                     {:otsikko "Kaista" :nimi :tr-kaista :pakollinen? true :tyyppi :valinta
+                      :valinnat pot/+kaistat+ :valinta-arvo :koodi
+                      :valinta-nayta (fn [rivi]
+                                       (if rivi
+                                         (:nimi rivi)
+                                         "- Valitse kaista -"))})
                    (lomake/rivi
                      {:nimi :tr-alkuosa
                       :palstoja 1
                       :otsikko "Aosa"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true}
+                      :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
                      {:nimi :tr-alkuetaisyys
                       :palstoja 1
                       :otsikko "Aet"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true}
+                      :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
                      {:nimi :tr-loppuosa
                       :palstoja 1
                       :otsikko "Losa"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true}
+                      :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
                      {:nimi :tr-loppuetaisyys
                       :palstoja 1
                       :otsikko "Let"
-                      :tyyppi :positiivinen-numero :kokonaisluku? true})]
+                      :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true})]
         lisakentat (alustalomakkeen-lisakentat alusta)]
     (vec
       (concat toimenpide-kentta
-              tr-kentat
-              lisakentat))))
+              (when toimenpide tr-kentat)
+              (when toimenpide lisakentat)))))
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
