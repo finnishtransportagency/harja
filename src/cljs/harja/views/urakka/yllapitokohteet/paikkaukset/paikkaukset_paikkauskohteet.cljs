@@ -19,28 +19,28 @@
                  :leveys 1
                  :nimi :testinro}
                 {:otsikko "Nimi"
-                 :leveys 1
+                 :leveys 4
                  :nimi :testinimi}
                 {:otsikko "Tila"
-                 :leveys 1
+                 :leveys 2
                  :nimi :testitila
                  :fmt (fn [arvo]
                         [:span
                          [:span {:class (str "circle "
-                                                   (cond
-                                                     (= "Tilattu" arvo) "tila-tilattu"
-                                                     (= "Ehdotettu" arvo) "tila-ehdotettu"
-                                                     (= "Valmis" arvo) "tila-valmis"
-                                                     :default "tila-ehdotettu"
-                                                     ))}] (str arvo " jee")])}
+                                             (cond
+                                               (= "Tilattu" arvo) "tila-tilattu"
+                                               (= "Ehdotettu" arvo) "tila-ehdotettu"
+                                               (= "Valmis" arvo) "tila-valmis"
+                                               :default "tila-ehdotettu"
+                                               ))}] arvo])}
                 {:otsikko "Menetelmä"
-                 :leveys 1
+                 :leveys 2
                  :nimi :testimenetelma}
                 {:otsikko "Sijainti"
-                 :leveys 1
+                 :leveys 4
                  :nimi :testisijainti}
                 {:otsikko "Aikataulu"
-                 :leveys 1
+                 :leveys 4
                  :nimi :testiaikataulu}]
         paikkauskohteet (:paikkauskohteet app)]
     [grid/grid
@@ -55,12 +55,21 @@
                            (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:testinro kohde)}))
                          ;; avaa lomake
                          (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :testilomake})))))
-      :tunniste :testinro}
+      :tunniste :testinro
+      :rivi-jalkeen-fn (fn [rivit]
+                         (let [_ (js/console.log "rivi-jalkeen-fn")]
+                           ^{:luokka "yhteenveto"}
+                           [{:teksti "Yht."}
+                            {:teksti (str (count paikkauskohteet) " kohdetta")}
+                            {:teksti ""}
+                            {:teksti ""}
+                            {:teksti ""}
+                            {:teksti ""}]))}
      skeema
      paikkauskohteet]))
 
 (defn kohteet [e! app]
-  (let [_ (js/console.log "kohteet:")]
+  (let [_ (js/console.log "View - kohteet:" )]
     [:div
      [:div "Tänne paikkauskohteet"]
      [:div {:style {:display "flex"}}                       ;TODO: tähän class, mistä ja mikä?
