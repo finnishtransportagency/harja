@@ -164,8 +164,10 @@
           uusi-id (if (pos? pienin-id)
                     -1
                     (dec pienin-id))
-          uusi-rivi {uusi-id (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)}]
-      (swap! alustarivit-atom conj uusi-rivi))
+          uusi-rivi {uusi-id (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)}
+          uusi-rivi-ilman-ylimaaraisia (apply
+                                         dissoc uusi-rivi (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet uusi-rivi))]
+      (swap! alustarivit-atom conj uusi-rivi-ilman-ylimaaraisia))
       (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
 
   SuljeAlustalomake

@@ -36,24 +36,32 @@
 
 (defn- alustalomakkeen-lisakentat
   [{:keys [toimenpide
+           murskeet
            verkon-sijainnit
            verkon-tyypit
            verkon-tarkoitukset]}]
-  (let [kaikki-lisakentat {:verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
+  (let [kaikki-lisakentat {:lisatty-paksuus  {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
+                                              :valinta-arvo ::pot2-domain/murske-id :valinta-nayta ::pot2-domain/murske-id ;; mitä haluamme näyttää?
+                                              :valinnat     murskeet}
+                           :verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-tyypit
-                                              :palstoja     3}
+                                              :valinnat     verkon-tyypit}
                            :verkon-sijainti  {:otsikko      "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-sijainnit
-                                              :palstoja     3}
+                                              :valinnat     verkon-sijainnit}
                            :verkon-tarkoitus {:otsikko      "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
                                               ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
                                               :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-tarkoitukset
-                                              :palstoja     3}}
-        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)]
-    (map #(lomake/rivi (get kaikki-lisakentat %)) toimenpidespesifit-lisakentat)))
+                                              :valinnat     verkon-tarkoitukset}}
+        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
+        lisakentta-generaattori (fn [kentta]
+                                  (lomake/rivi (merge (get kaikki-lisakentat kentta)
+                                              {:palstoja 3 :pakollinen? true})))]
+    (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
                                        toimenpide] :as alusta}]
@@ -124,6 +132,7 @@
                    {:disabled false}]])}
    (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
                             :toimenpide (:toimenpide alustalomake)
+                            :murskeet murskeet
                             :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
                             :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
                             :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})

@@ -7,6 +7,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
+            [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
@@ -60,13 +61,34 @@
    :verkon-tarkoitus])
 
 (def alusta-toimenpidespesifit-lisaavaimet
-  {667 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]})
+  {23 [:lisatty-paksuus :massamaara :murske]
+   667 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]})
 
 (defn alusta-toimenpide-lisaavaimet
   [toimenpide]
   (if-let [avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)]
     avaimet
     []))
+
+(defn alusta-kaikki-lisaparams
+  "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
+  [alusta]
+  (let [keep-some (fn [params]
+                    (into {} (filter
+                               (fn [[_ arvo]] (some? arvo))
+                               params)))
+        lisaparams (select-keys alusta alusta-toimenpide-kaikki-lisaavaimet)
+        annetut-lisaparams (keep-some lisaparams)]
+    annetut-lisaparams))
+
+(defn alusta-ylimaaraiset-lisaparams-avaimet
+  "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen"
+  [{:keys [toimenpide] :as alusta}]
+  (let [annettu-lisaparams (alusta-kaikki-lisaparams alusta)
+        ylimaaraiset-avaimet (set/difference
+                               (set (keys annettu-lisaparams))
+                               (set (alusta-toimenpide-lisaavaimet toimenpide)))]
+    (vec ylimaaraiset-avaimet)))
 
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"

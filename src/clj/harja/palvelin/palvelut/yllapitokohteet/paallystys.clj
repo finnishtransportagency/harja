@@ -566,12 +566,7 @@
     (doseq [rivi (->> paallystysilmoitus
                       :alusta
                       (filter (comp not :poistettu)))]
-      (let [keep-some (fn [params]
-                        (into {} (filter
-                                   (fn [[_ arvo]] (some? arvo))
-                                   params)))
-            lisaparams (select-keys rivi pot2-domain/alusta-toimenpide-kaikki-lisaavaimet)
-            annetut-lisaparams (keep-some lisaparams)
+      (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
             toimenpidespesifit-avaimet (pot2-domain/alusta-toimenpide-lisaavaimet (:toimenpide rivi))
             rivi-ja-kaikki-lisaparametrit (if (= (-> annetut-lisaparams keys set) (set toimenpidespesifit-avaimet))
                                             (merge rivi
