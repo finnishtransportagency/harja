@@ -7,6 +7,15 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn tila->vari [tila]
+  (let [vari (case tila
+               "Ehdotettu" "#f1b371"
+               "Tilattu" "#274ac6"
+               "Valmis" "#58a006"
+               :default "#f1b371")
+        _ (js/console.log "vari->tila saatiin" (pr-str tila) "annettiin väri:" (pr-str vari))]
+    vari))
+
 (def karttataso-paikkauskohteet (atom {:paikkauskohteet [{:id 1
                                                           :testinro "14566"
                                                           :testinimi "Kaislajärven suora"
@@ -18,7 +27,7 @@
                                                           :sijainti {:type :multiline
                                                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
                                                                      :stroke {:width 8
-                                                                              :color "magenta"}
+                                                                              :color (tila->vari "Ehdotettu")}
                                                                      :infopaneelin-tiedot {:nimi "Kaislajärven suora"}
                                                                      :ikonit {:tyyppi :merkki
                                                                               :paikka [:loppu]
@@ -26,8 +35,8 @@
                                                                               :img (pinni-ikoni "sininen")}
 
                                                                      :lines [{:type :line,
-                                                                              :points [[505011.25093926466 7253055.999241401]
-                                                                                       [515012.2494422446 7353055.94454406]]}]}}
+                                                                              :points [[454011.25093926466 7253055.999241401]
+                                                                                       [459012.2494422446 7273055.94454406]]}]}}
                                                          {:id 2
                                                           :testinro "14567"
                                                           :testinimi "Mount Utajärvi VT1"
@@ -38,7 +47,7 @@
                                                           :sijainti {:type :multiline,
                                                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
                                                                      :stroke {:width 8
-                                                                              :color "blue"}
+                                                                              :color (tila->vari "Tilattu")}
                                                                      :infopaneelin-tiedot {:nimi "Mount Utajärvi VT1"}
                                                                      :lines [{:type :line
                                                                               :points [[449367.5486456644 7225602.7854130855] [449375.5789999999 7225606.495999999] [449426.18099999987 7225629.328000002] [449521.94600000046 7225673.467]
@@ -58,7 +67,7 @@
                                                           :sijainti {:type :multiline,
                                                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
                                                                      :stroke {:width 8
-                                                                              :color "red"}
+                                                                              :color (tila->vari "Valmis")}
                                                                      :ikonit [{:tyyppi :merkki
                                                                                :paikka [:loppu]
                                                                                ;:scale (laske-skaala valittu?)

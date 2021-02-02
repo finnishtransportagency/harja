@@ -7,6 +7,7 @@
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.geo :as geo]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
@@ -112,15 +113,16 @@
   (komp/luo
     (komp/sisaan #(do
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)
-                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                   (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                   ;(kartta-tasot/taso-paalle! :organisaatio)
-                   ;(kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
-                   ;; TODO: Hae kamat bäkkäristä
-                   ))
+                    (reset! t-paikkauskohteet-kartalle/karttataso-paikkauskohteet app)
+                    ;(kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
+                    ;(kartta-tasot/taso-paalle! :organisaatio)
+                    (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
+                    ;; TODO: Hae kamat bäkkäristä
+                    ))
     (komp/ulos #(do
-                  (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                  (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
+                  ;(kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+                  ;(reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
                   ))
     (fn [e! app]
       (let [_ (js/console.log " paikkauskohteet* ")]
@@ -128,4 +130,5 @@
          [paikkauskohteet-sivu e! app]]))))
 
 (defn paikkauskohteet [ur]
-  [tuck/tuck t-paikkauskohteet/app paikkauskohteet*])
+  (let [_ (reset! tila/paikkauskohteet t-paikkauskohteet/dummy-app-state)]
+    [tuck/tuck tila/paikkauskohteet paikkauskohteet*]))

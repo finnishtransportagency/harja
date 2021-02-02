@@ -203,6 +203,8 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}})
 
+(def paikkaus-default-arvot {:paikkauskohteet {}})
+
 (defonce toteumanakyma (atom toteumat-default-arvot))
 
 
@@ -222,7 +224,10 @@
                      :laskutus    laskutus-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
-                     :toteumat    toteumat-default-arvot}))
+                     :toteumat    toteumat-default-arvot
+                     :paikkaukset paikkaus-default-arvot}))
+
+(defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 
 (defonce pot2 (atom pot2-default-arvot))
 
