@@ -1071,7 +1071,7 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] dissoc :verkon-sijainti))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärä lisätiedot.")))
+                                       "Alustassa väärät lisätiedot.")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-lisatiedot
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
@@ -1080,7 +1080,7 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] merge verkon-tiedot))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärä lisätiedot.")))
+                                       "Alustassa väärät lisätiedot.")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)

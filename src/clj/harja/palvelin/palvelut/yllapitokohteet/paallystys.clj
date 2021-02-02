@@ -579,7 +579,7 @@
                                                    (zipmap pot2-domain/alusta-toimenpide-kaikki-lisaavaimet (repeat nil))
                                                    annetut-lisaparams)
                                             (throw (IllegalArgumentException.
-                                                     (str "Alustassa väärä lisätiedot. Odotettu: "
+                                                     (str "Alustassa väärät lisätiedot. Odotettu: "
                                                           (pr-str toimenpidespesifit-avaimet) " tuli: "
                                                           (pr-str annetut-lisaparams)))))]
         (try
