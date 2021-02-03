@@ -162,11 +162,16 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.murske,
+
+    -- toimenpidespesifiset kentät
     pot2a.massa,
+    pot2a.murske,
     pot2a.verkon_tyyppi AS "verkon-tyyppi",
     pot2a.verkon_tarkoitus AS "verkon-tarkoitus",
-    pot2a.verkon_sijainti AS "verkon-sijainti"
+    pot2a.verkon_sijainti AS "verkon-sijainti",
+    pot2a.kasittelysyvyys,
+    pot2a.lisatty_paksuus,
+    pot2a.massamaara
   FROM pot2_alusta pot2a
  WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
 

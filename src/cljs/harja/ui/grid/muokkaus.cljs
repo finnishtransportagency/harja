@@ -61,10 +61,10 @@
                      paneelikomponentit))])])
 
 (defn ei-muokattava-elementti
-  [tasaus-luokka fmt arvo]
+  [luokat fmt arvo]
   (let [fmt (or fmt str)
         arvo (fmt arvo)]
-    [:td {:class (str "ei-muokattava " tasaus-luokka)}
+    [:td {:class luokat}
      arvo]))
 
 (defn- muokkauselementin-tila
@@ -153,10 +153,13 @@
                tayta-alas (:tayta-alas? sarake)
                elementin-id (str rivi-index elementin-id)]
            (if (or (nil? muokattava?) (muokattava? rivi i))
-             [:td {:class (str "muokattava " tasaus-luokka (cond
-                                                             (not (empty? kentan-virheet)) " sisaltaa-virheen"
-                                                             (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                                             (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
+             [:td {:class (y/luokat "muokattava"
+                                    tasaus-luokka
+                                    (grid-yleiset/tiivis-tyyli skeema)
+                                    (cond
+                                      (not (empty? kentan-virheet)) " sisaltaa-virheen"
+                                      (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
+                                      (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
               (when (case nayta-virheet?
                       :fokus @fokus?
                       :aina true)
@@ -206,7 +209,15 @@
                                         arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
-             [ei-muokattava-elementti tasaus-luokka fmt arvo])))})))
+             (if (= tyyppi :komponentti)
+               [:td.ei-muokattava {:class (y/luokat "ei-muokattava"
+                                                    tasaus-luokka
+                                                    (grid-yleiset/tiivis-tyyli skeema))}
+                (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
+               [ei-muokattava-elementti (y/luokat "ei-muokattava"
+                                                  tasaus-luokka
+                                                  (grid-yleiset/tiivis-tyyli skeema))
+                fmt arvo]))))})))
 
 (defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
                           {:keys [ohjaus vetolaatikot id tulevat-rivit i] :as elementin-asetukset}
@@ -228,7 +239,8 @@
                                   "parillinen "
                                   "pariton ")
                                 (when rivi-disabloitu? "disabloitu-rivi"))}
-     (when rivinumerot? [:td.rivinumero (+ i 1)])
+     (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
+                         (+ i 1)])
      (doall
        (map-indexed
          (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
@@ -358,8 +370,12 @@
       (fn [i {:keys [otsikko yksikko leveys nimi tasaa]}]
         ^{:key (str i nimi)}
         [:th.rivinumero {:width (or leveys "5%")
-                         :class (y/tasaus-luokka tasaa)} otsikko (when yksikko
-                                                                   [:span.kentan-yksikko yksikko])]) skeema)
+
+                         :class (y/luokat (y/tasaus-luokka tasaa)
+                                          (grid-yleiset/tiivis-tyyli skeema))}
+         otsikko
+         (when yksikko
+           [:span.kentan-yksikko yksikko])]) skeema)
     (when-not piilota-toiminnot?
       [:th.toiminnot {:width "40px"} " "])]])
 

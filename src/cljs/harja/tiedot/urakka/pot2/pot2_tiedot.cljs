@@ -8,7 +8,8 @@
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
-    [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus])
+    [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -37,8 +38,7 @@
 
 (defn- fmt-toimenpide-verkko [rivi materiaalikoodistot]
  [:span
-   (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
-        ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
+   (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
         ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
 (defn toimenpiteen-tiedot
@@ -57,16 +57,15 @@
 ;; TODO: tänne domain puolelta käyttöön palvelinpuolen kanssa yhteinen logiikka päätellä
 ;; eri toimenpidetyyppien kentät
 
-(defn materiaalin-tiedot [rivi materiaalikoodistot]
-  (println "jarno matsku: " (pr-str (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (:murske rivi))))
-  (fn [rivi materiaalikoodistot]
-    [:div.pot2-materiaalin-tiedot
-     (cond
-       (some? (:murske rivi))
-       (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (:murske rivi))
+(defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
+  [:div.pot2-materiaalin-tiedot
+   (cond
+     (some? (:murske materiaali))
+     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti]
 
-       (some? (:massa rivi))
-       (pot2-domain/ainetyypin-koodi->nimi (:massatyypit materiaalikoodistot) (:massa rivi)))]))
+     (some? (:massa materiaali))
+     [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti]
+     )])
 
 
 (extend-protocol tuck/Event

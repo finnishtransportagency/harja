@@ -142,10 +142,14 @@
                             :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
    alustalomake])
 
+(defn materiaali [massat-tai-murskeet koodi]
+  (first (filter #(= (::pot2-domain/koodi %) koodi)
+                 massat-tai-murskeet)))
+
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake] :as app}
-   {:keys [murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
+   {:keys [massat murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
   (let [perusleveys 2
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
     [:div
@@ -177,21 +181,23 @@
                                                 {:ikoni (ikonit/livicon-arrow-down)
                                                  :luokka "btn-xs"}]])])
        :rivi-klikattu #(log "click")}
-      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys perusleveys
-        :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
-        :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
+      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys 3 :muokattava? (constantly false)
+        :tyyppi :string
+        :hae (fn [rivi]
+               (if (pot2-tiedot/onko-toimenpide-verkko? alusta-toimenpiteet (:toimenpide rivi))
+                 (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
+                 (pot2-domain/ainetyypin-koodi->lyhenne alusta-toimenpiteet (:toimenpide rivi))))
+        :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
-       {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys perusleveys
+       {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys perusleveys :elementin-id "alustan-ajor"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
         :tasaa :oikea :kokonaisluku? true}
-       {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys perusleveys
+       {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys perusleveys :elementin-id "alustan-kaista"
         :valinnat pot/+kaistat+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi]
-                         (if rivi
-                           (:nimi rivi)
-                           "- Valitse kaista -"))
+                         (if rivi (:nimi rivi) "- Valitse kaista -"))
         :tasaa :oikea :kokonaisluku? true}
        {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys perusleveys :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
@@ -202,15 +208,26 @@
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys perusleveys :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
        {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
-        :muokattava? (constantly false)
         :hae #(paallystys/rivin-kohteen-pituus
                 (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
-       {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 3 :muokattava? (constantly false)
-        :tyyppi :komponentti
+       {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 4
+        :tyyppi :komponentti :muokattava? (constantly false)
+
         :komponentti (fn [rivi]
                        [pot2-tiedot/toimenpiteen-tiedot rivi materiaalikoodistot])}
-       {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3 :muokattava? (constantly false)
-        :tyyppi :string :hae (fn [rivi] [pot2-tiedot/materiaalin-tiedot rivi])}
+       {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
+        :tyyppi :komponentti :muokattava? (constantly false)
+        :komponentti (fn [rivi]
+                       [pot2-tiedot/materiaalin-tiedot (cond
+                                                         (:massa rivi)
+                                                         (materiaali massat (:massa rivi))
+
+                                                         (:murske rivi)
+                                                         (materiaali murskeet (:murske rivi))
+
+                                                         :else
+                                                         [])
+                        {:materiaalikoodistot materiaalikoodistot}])}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

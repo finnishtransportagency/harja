@@ -1,4 +1,6 @@
 .pvm-valinta {
+  border: 1px solid @harmaa-vaalea;
+  padding: 0;
   position: absolute;
   z-index: 2000;
   text-align: center;
@@ -19,9 +21,14 @@
     cursor: pointer;
   }
 
-  .pvm-paiva {
+  td.pvm-paiva {
+    border: 1px solid @harmaa-vaalea;
+    padding: 0;
     &:hover {
       background-color: wheat;
+    }
+    &.pvm-tanaan {
+      background-color: yellow;
     }
   }
 
@@ -32,19 +39,16 @@
   .pvm-viikonpaivat {
     font-size: 85%;
     background-color: @sininen6;
+    td {
+      padding: 0;
+    }
   }
 
   .pvm-disabloitu {
     background-color: @harmaa6;
   }
-
-  border: solid 1px black;
-  border-top: none;
 }
 
-.pvm-tanaan {
-  background-color: yellow;
-}
 
 .kalenteri-kontti {
   display: flex;
