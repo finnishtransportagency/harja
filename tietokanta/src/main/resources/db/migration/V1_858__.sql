@@ -14,7 +14,7 @@ VALUES
   (3, 'Muoviverkko'),
   (4, 'Lujitekangas'),
   (5, 'Suodatinkangas'),
-  (9, 'Muu');
+  (9, 'Muu verkko');
 
 CREATE TABLE pot2_verkon_tarkoitus (
     koodi   INTEGER PRIMARY KEY NOT NULL,
