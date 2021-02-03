@@ -164,10 +164,15 @@
           uusi-id (if (pos? pienin-id)
                     -1
                     (dec pienin-id))
-          uusi-rivi {uusi-id (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)}
-          uusi-rivi-ilman-ylimaaraisia (apply
-                                         dissoc uusi-rivi (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet uusi-rivi))]
-      (swap! alustarivit-atom conj uusi-rivi-ilman-ylimaaraisia))
+          alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
+          ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
+          alusta-params-ilman-ylimaaraisia (apply
+                                         dissoc alusta-params ylimaaraiset-avaimet)
+          uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
+      (println "petar da vidimo sve parameter " (pr-str alusta-params))
+      (println "petar prekobrojni " (pr-str ylimaaraiset-avaimet))
+      (println "petar da vidimo procisceno " (pr-str alusta-params-ilman-ylimaaraisia))
+      (swap! alustarivit-atom conj uusi-rivi))
       (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
 
   SuljeAlustalomake
