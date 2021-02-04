@@ -62,25 +62,22 @@
 (defn- tyyppi->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tyyppi v))
 
-;UPDATE tehtavaryhma SET yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68' WHERE nimi = 'Hoidonjohtopalkkio (G) ;
-
-    ;UPDATE toimenpidekoodi SET yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' WHERE nimi = 'Hoidonjohtopalkkio';
-
-    (def ^{:private true} tallennettava-asia->tehtava
-      {:hoidonjohtopalkkio                         "53647ad8-0632-4dd3-8302-8dfae09908c8" ;"c9712637-fbec-4fbd-ac13-620b5619c744"
-       :toimistokulut                              "8376d9c4-3daf-4815-973d-cd95ca3bb388"
-       :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito               "49b7388b-419c-47fa-9b1b-3797f1fab21d"
-                                                    :liikenneympariston-hoito "63a2585b-5597-43ea-945c-1b25b16a06e2"
-                                                    :sorateiden-hoito         "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
-       :akilliset-hoitotyot                        {:talvihoito               "1f12fe16-375e-49bf-9a95-4560326ce6cf"
-                                                    :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
-                                                    :sorateiden-hoito         "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
+(def ^{:private true} tallennettava-asia->tehtava
+  {:hoidonjohtopalkkio                         "53647ad8-0632-4dd3-8302-8dfae09908c8" ;"c9712637-fbec-4fbd-ac13-620b5619c744"
+   :toimistokulut                              "8376d9c4-3daf-4815-973d-cd95ca3bb388"
+   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito               "49b7388b-419c-47fa-9b1b-3797f1fab21d"
+                                                :liikenneympariston-hoito "63a2585b-5597-43ea-945c-1b25b16a06e2"
+                                                :sorateiden-hoito         "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+   :akilliset-hoitotyot                        {:talvihoito               "1f12fe16-375e-49bf-9a95-4560326ce6cf"
+                                                :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
+                                                :sorateiden-hoito         "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
 
 (defn- tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
 
 (def ^{:private true} tallennettava-asia->tehtavaryhma
   {:erillishankinnat        "37d3752c-9951-47ad-a463-c1704cf22f4c"
+   :hoidonjohtopalkkio      "0ef0b97e-1390-4d6c-bbc4-b30536be8a68"
    :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"
    :tilaajan-varaukset      "a6614475-1950-4a61-82c6-fda0fd19bb54"})
 
