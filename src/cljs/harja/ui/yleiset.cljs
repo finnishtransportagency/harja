@@ -219,8 +219,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
      (if ryhmissa?
        (for [ryhma nayta-ryhmat]
          ^{:key ryhma}
-         [:div.harja-alasvetolista-ryhma
-          [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
+         [:div.haku-lista-ryhma
+          [:div.haku-lista-ryhman-otsikko (ryhman-otsikko ryhma)]
           (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
             ^{:key (hash vaihtoehto)}
             [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
