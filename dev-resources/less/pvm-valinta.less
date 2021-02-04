@@ -1,3 +1,5 @@
+@import "grid";
+
 .pvm-valinta {
   border: 1px solid @harmaa-vaalea;
   padding: 0;
@@ -9,8 +11,13 @@
 
   background-color: #ffffff;
 
-  .pvm-controllit {
-    background-color: #fafafa;
+  .pvm-kontrollit, .pvm-paivat {
+    tr {
+      td, th {
+        height: @livitaulukon-rivi-korkeus;
+      }
+      height: @livitaulukon-rivi-korkeus;
+    }
   }
 
   .pvm-valittu {
@@ -23,7 +30,7 @@
 
   td.pvm-paiva {
     border: 1px solid @harmaa-vaalea;
-    padding: 0;
+    padding: @livi-taulukon-padding-tiivis;
     &:hover {
       background-color: wheat;
     }
@@ -38,7 +45,6 @@
 
   .pvm-viikonpaivat {
     font-size: 85%;
-    background-color: @sininen6;
     td {
       padding: 0;
     }
