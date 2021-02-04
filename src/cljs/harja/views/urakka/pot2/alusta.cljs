@@ -62,9 +62,10 @@
                                               :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
                                               :valinnat     verkon-tarkoitukset}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
-        lisakentta-generaattori (fn [kentta]
-                                  (lomake/rivi (merge (get kaikki-lisakentat kentta)
-                                              {:palstoja 3 :pakollinen? true})))]
+        lisakentta-generaattori (fn [kentta-metadata]
+                                  (lomake/rivi (merge (get kaikki-lisakentat (:name kentta-metadata))
+                                                      {:palstoja 3
+                                                       :pakollinen? (:pakollinen? kentta-metadata)})))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet

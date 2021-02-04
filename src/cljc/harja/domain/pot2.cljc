@@ -60,15 +60,18 @@
    :verkon-sijainti
    :verkon-tarkoitus])
 
-(def alusta-toimenpidespesifit-lisaavaimet
-  {23 [:lisatty-paksuus :massamaara :murske]
-   667 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]})
-
 (defn alusta-toimenpide-lisaavaimet
   [toimenpide]
-  (if-let [avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)]
-    avaimet
-    []))
+  "Palauta alusta toimenpide metadata lisäkenteistä"
+  (let [alusta-toimenpidespesifit-lisaavaimet {23 [:lisatty-paksuus :massamaara :murske]
+                                               667 [:verkon-tyyppi :verkon-sijainti
+                                                    {:name :verkon-tarkoitus :pakollinen? false}]}
+        avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
+        luo-metadata (fn [avain]
+                       (if (keyword? avain)
+                         {:name avain :pakollinen? true}
+                         avain))]
+    (map luo-metadata avaimet)))
 
 (defn alusta-kaikki-lisaparams
   "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
@@ -85,9 +88,10 @@
   "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen"
   [{:keys [toimenpide] :as alusta}]
   (let [annettu-lisaparams (alusta-kaikki-lisaparams alusta)
+        sallitut-lisaavaimet (map #(:name %) (alusta-toimenpide-lisaavaimet toimenpide))
         ylimaaraiset-avaimet (set/difference
                                (set (keys annettu-lisaparams))
-                               (set (alusta-toimenpide-lisaavaimet toimenpide)))]
+                               (set sallitut-lisaavaimet))]
     (vec ylimaaraiset-avaimet)))
 
 (def +tekniset-toimenpiteet+

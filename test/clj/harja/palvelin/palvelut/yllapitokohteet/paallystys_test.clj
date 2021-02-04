@@ -988,6 +988,21 @@
            (select-keys alustarivi-6 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
+(deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-verkko-tiedot
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (update-in [:alusta 3] dissoc :verkon-tarkoitus))
+        [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
+                                                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
+        alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
+        alustarivi-6 (alustarivi-idlla alustarivit-jalkeen 6)]
+    (is (= {:verkon-tyyppi 1 :verkon-tarkoitus nil :verkon-sijainti 3}
+           (select-keys alustarivi-6 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
@@ -1065,7 +1080,7 @@
     (is (= paivitetyt-verkon-tiedot (select-keys paivitetty-alustarivi-6 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
-(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-verkontiedot
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-pakolliset-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)

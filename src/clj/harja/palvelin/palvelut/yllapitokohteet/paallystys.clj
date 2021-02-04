@@ -568,7 +568,12 @@
                       (filter (comp not :poistettu)))]
       (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
             toimenpidespesifit-avaimet (pot2-domain/alusta-toimenpide-lisaavaimet (:toimenpide rivi))
-            rivi-ja-kaikki-lisaparametrit (if (= (-> annetut-lisaparams keys set) (set toimenpidespesifit-avaimet))
+            pakolliset-avaimet (->> toimenpidespesifit-avaimet
+                                    (filter #(:pakollinen? %))
+                                    (map #(:name %))
+                                    set)
+            rivi-ja-kaikki-lisaparametrit (if (and (empty? (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi))
+                                                   (set/subset? pakolliset-avaimet (-> annetut-lisaparams keys set)))
                                             (merge rivi
                                                    {:pot2_id pot2-id}
                                                    (zipmap pot2-domain/alusta-toimenpide-kaikki-lisaavaimet (repeat nil))
