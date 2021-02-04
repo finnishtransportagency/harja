@@ -845,6 +845,7 @@ yllapitoluokkanimi->numero
 (defn validoitu-kohde-tekstit [validoitu-kohde paakohde?]
   (let [{:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
                 muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys
+                alustatoimenpide-paallekkyys
                 alustatoimenpide-alustan-tie-ei-alikohteissa]} validoitu-kohde
         tr-ei-alikohteissa (when alustatoimenpide-alustan-tie-ei-alikohteissa
                              [((get-in muoto-virhetekstit [:tr-numero :tienumero-ei-alikohteissa])
@@ -885,7 +886,10 @@ yllapitoluokkanimi->numero
         muutkohteet-paallekkain (when muukohde-paallekkyys
                                   ;; Otetaan alikohteesta, koska sama teksti
                                   (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))
-                                        muukohde-paallekkyys))]
+                                        muukohde-paallekkyys))
+        alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
+                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))
+                                               alustatoimenpide-paallekkyys))]
     (into {}
           (keep (fn [[k v]]
                   (let [v (keep identity v)]
@@ -896,11 +900,13 @@ yllapitoluokkanimi->numero
                                      paikka-vaarin
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
+                                     alustatoimenpiteet-paallekkain
                                      paakohde-paallekkain)
            :tr-kaista        (concat tr-kaista-vaarin
                                      paikka-vaarin
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
+                                     alustatoimenpiteet-paallekkain
                                      paakohde-paallekkain)
            :tr-alkuosa       (concat tr-alkuosa-vaarin
                                      alikohde-ulkopuolella
@@ -908,6 +914,7 @@ yllapitoluokkanimi->numero
                                      paikka-vaarin
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
+                                     alustatoimenpiteet-paallekkain
                                      paakohde-paallekkain)
            :tr-alkuetaisyys  (concat tr-alkuetaisyys-vaarin
                                      alikohde-ulkopuolella
@@ -915,6 +922,7 @@ yllapitoluokkanimi->numero
                                      paikka-vaarin
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
+                                     alustatoimenpiteet-paallekkain
                                      paakohde-paallekkain)
            :tr-loppuosa      (concat tr-loppuosa-vaarin
                                      alikohde-ulkopuolella
@@ -922,6 +930,7 @@ yllapitoluokkanimi->numero
                                      paikka-vaarin
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
+                                     alustatoimenpiteet-paallekkain
                                      paakohde-paallekkain)
            :tr-loppuetaisyys (concat tr-loppuetaisyys-vaarin
                                      alikohde-ulkopuolella
@@ -929,6 +938,7 @@ yllapitoluokkanimi->numero
                                      paikka-vaarin
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
+                                     alustatoimenpiteet-paallekkain
                                      paakohde-paallekkain)})))
 
 (defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
