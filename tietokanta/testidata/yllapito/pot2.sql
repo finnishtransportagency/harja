@@ -20,7 +20,7 @@ BEGIN
     kohdeosaid_kaista21 = (SELECT id FROM yllapitokohdeosa WHERE nimi = 'Tärkeä kohdeosa kaista 12');
     massa1_id = (SELECT id from pot2_mk_urakan_massa WHERE dop_nro = '1234567' and urakka_id = urakkaid);
     massa2_id = (SELECT id from pot2_mk_urakan_massa WHERE dop_nro = '987654331-2' and urakka_id = urakkaid);
-    murskeen_toimenpide_id = (SELECT koodi from pot2_mk_alusta_toimenpide WHERE nimi = 'Massatasaus');
+    murskeen_toimenpide_id = (SELECT koodi from pot2_mk_alusta_toimenpide WHERE nimi = 'Murske');
     murske1_id = (SELECT id from pot2_mk_urakan_murske WHERE dop_nro = '1234567-dop' and urakka_id = urakkaid);
 
 INSERT INTO paallystysilmoitus(
@@ -54,9 +54,9 @@ INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, le
 INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, massamenekki, pinta_ala, kokonaismassamaara, piennar, lisatieto, pot2_id) VALUES (kohdeosaid_kaista21, 23, massa2_id, 3, 333, 15000, 5000, false, null, paallystysilmoituksen_id);
 
 
-INSERT INTO pot2_alusta (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, toimenpide_tiedot, materiaali, pot2_id)
-VALUES (20, 1, 1066, 1, 3827, 1, 11, murskeen_toimenpide_id, 'Lisätietoa kaistalta 11...', murske1_id, paallystysilmoituksen_id),
-       (20, 1, 1066, 1, 3827, 1, 12, murskeen_toimenpide_id, 'Lisätietoa kaistalta 12...', murske1_id, paallystysilmoituksen_id);
+INSERT INTO pot2_alusta (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, murske, lisatty_paksuus, massamaara, pot2_id)
+VALUES (20, 1, 1066, 1, 3827, 1, 11, murskeen_toimenpide_id, murske1_id, 10, 100, paallystysilmoituksen_id),
+       (20, 1, 1066, 1, 3827, 1, 12, murskeen_toimenpide_id, murske1_id, 10, 100, paallystysilmoituksen_id);
 
 
 END;

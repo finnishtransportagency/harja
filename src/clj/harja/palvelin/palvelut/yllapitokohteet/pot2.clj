@@ -111,6 +111,15 @@
         kulutuskerros-toimenpiteet (fetch db ::pot2-domain/pot2-mk-kulutuskerros-toimenpide
                                           (specql/columns ::pot2-domain/pot2-mk-kulutuskerros-toimenpide)
                                           {})
+        verkon-sijainnit (fetch db ::pot2-domain/pot2-verkon-sijainti
+                                          (specql/columns ::pot2-domain/pot2-verkon-sijainti)
+                                          {})
+        verkon-tarkoitukset (fetch db ::pot2-domain/pot2-verkon-tarkoitus
+                                (specql/columns ::pot2-domain/pot2-verkon-tarkoitus)
+                                {})
+        verkon-tyypit (fetch db ::pot2-domain/pot2-verkon-tyyppi
+                                (specql/columns ::pot2-domain/pot2-verkon-tyyppi)
+                                {})
         koodistot {:massatyypit massatyypit
                    :mursketyypit mursketyypit
                    :runkoainetyypit runkoainetyypit
@@ -118,6 +127,9 @@
                    :lisaainetyypit lisaainetyypit
                    :alusta-toimenpiteet alusta-toimenpiteet
                    :kulutuskerros-toimenpiteet kulutuskerros-toimenpiteet
+                   :verkon-sijainnit verkon-sijainnit
+                   :verkon-tarkoitukset verkon-tarkoitukset
+                   :verkon-tyypit verkon-tyypit
                    }]
     koodistot))
 
