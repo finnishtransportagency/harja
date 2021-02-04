@@ -75,7 +75,7 @@
 
             [:td {:class (y/luokat "muokattava"
                                    tasaus-luokka
-                                   ;(grid-yleiset/tiivis-tyyli skeema)
+                                   (grid-yleiset/tiivis-tyyli skeema)
                                    (cond
                                      (not (empty? kentan-virheet)) " sisaltaa-virheen"
                                      (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
