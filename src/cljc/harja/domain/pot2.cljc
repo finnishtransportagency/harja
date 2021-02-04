@@ -55,7 +55,7 @@
    :massa
    :sideaine
    :sideainepitoisuus
-   :seosaine
+   :sideaine2
    :verkon-tyyppi
    :verkon-sijainti
    :verkon-tarkoitus])

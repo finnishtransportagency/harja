@@ -506,7 +506,7 @@ UPDATE pot2_alusta
        massa = :massa,
        sideaine = :sideaine,
        sideainepitoisuus = :sideainepitoisuus,
-       seosaine = :seosaine,
+       sideaine2 = :sideaine2,
        verkon_tyyppi = :verkon-tyyppi,
        verkon_sijainti = :verkon-sijainti,
        verkon_tarkoitus = :verkon-tarkoitus,
@@ -519,7 +519,7 @@ INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyy
                          lisatty_paksuus, massamaara, murske,
                          kasittelysyvyys, leveys, pinta_ala,
                          kokonaismassamaara, massa, sideaine,
-                         sideainepitoisuus, seosaine,
+                         sideainepitoisuus, sideaine2,
                          verkon_tyyppi, verkon_sijainti, verkon_tarkoitus,
                          pot2_id)
 VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
@@ -527,7 +527,7 @@ VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
         :lisatty-paksuus, :massamaara, :murske,
         :kasittelysyvyys, :leveys, :pinta-ala,
         :kokonaismassamaara, :massa, :sideaine,
-        :sideainepitoisuus, :seosaine,
+        :sideainepitoisuus, :sideaine2,
         :verkon-tyyppi, :verkon-sijainti, :verkon-tarkoitus,
         :pot2_id);
 
