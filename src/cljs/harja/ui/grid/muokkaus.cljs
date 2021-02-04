@@ -220,12 +220,14 @@
                 fmt arvo]))))})))
 
 (defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
-                          {:keys [ohjaus vetolaatikot id tulevat-rivit i] :as elementin-asetukset}
+                          {:keys [ohjaus vetolaatikot id tulevat-rivit i skeema] :as elementin-asetukset}
                           rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset tulevat-elementit]
   (let [elementin-asetukset (dissoc elementin-asetukset :vetolaatikot :tulevat-rivit)]
     (if (= :vetolaatikon-tila tyyppi)
       ^{:key (str "vetolaatikontila" id)}
-      [vetolaatikon-tila ohjaus vetolaatikot id]
+      [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                          "klikattava"
+                                                          (grid-yleiset/tiivis-tyyli skeema))]
       ^{:keys (str i "-" nimi)}
       [muokkauselementin-tila sarake elementin-asetukset rivi-disabloitu? kentan-virheet
        kentan-varoitukset kentan-huomautukset tulevat-elementit])))

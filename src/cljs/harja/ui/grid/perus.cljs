@@ -138,7 +138,9 @@
                                                    skeema)]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
-              [vetolaatikon-tila ohjaus vetolaatikot id]
+              [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                  "klikattava"
+                                                                  (grid-yleiset/tiivis-tyyli skeema))]
               ^{:key (str nimi)}
               [muokkauselementti sarake asetukset skeema rivi index])))
    (when-not piilota-toiminnot?
@@ -212,7 +214,9 @@
                                   (get rivi nimi))]
                 (if (= :vetolaatikon-tila tyyppi)
                   ^{:key (str "vetolaatikontila" id)}
-                  [vetolaatikon-tila ohjaus vetolaatikot id]
+                  [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                      "klikattava"
+                                                                      (grid-yleiset/tiivis-tyyli skeema))]
                   ^{:key (str i nimi)}
                   ;; Solu
                   [:td {:on-click (when solu-klikattu
