@@ -7,6 +7,7 @@
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.geo :as geo]
+            [harja.pvm :as pvm]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.debug :as debug]
@@ -42,7 +43,7 @@
                  :nimi :testisijainti}
                 {:otsikko "Aikataulu"
                  :leveys 4
-                 :nimi :testiaikataulu}]
+                 :nimi :formatoitu-aikataulu}]
         paikkauskohteet (:paikkauskohteet app)]
     [grid/grid
      {:otsikko "Paikkauskohteet"

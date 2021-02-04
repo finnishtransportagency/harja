@@ -367,6 +367,12 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
+(defn fmt-kuukausi-ja-vuosi-lyhyt [aika]
+  (formatoi (luo-format "d.M.") aika))
+
+(defn fmt-p-k-v-lyhyt [aika]
+  (formatoi (luo-format "d.M.yy") aika))
+
 #?(:clj (def pgobject-format
           (luo-format "yyyy-MM-dd HH:mm:ss")))
 
