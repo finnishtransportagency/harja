@@ -10,7 +10,7 @@ ALTER TABLE pot2_alusta ADD COLUMN kokonaismassamaara NUMERIC;
 ALTER TABLE pot2_alusta ADD COLUMN massa INTEGER REFERENCES pot2_mk_urakan_massa (id);
 ALTER TABLE pot2_alusta ADD COLUMN sideaine INTEGER REFERENCES  pot2_mk_sideainetyyppi (koodi);
 ALTER TABLE pot2_alusta ADD COLUMN sideainepitoisuus NUMERIC(10, 1);
-ALTER TABLE pot2_alusta ADD COLUMN seosaine INTEGER; -- puuttuu koodisto taulukko
+ALTER TABLE pot2_alusta ADD COLUMN sideaine2 INTEGER REFERENCES  pot2_mk_sideainetyyppi (koodi);
 
 -- kaikissa alustariveissä ei välttämättä ole mursketta
 ALTER TABLE pot2_alusta DROP COLUMN materiaali;
