@@ -7,6 +7,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
+            [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
@@ -43,20 +44,51 @@
 (defn alustamenetelma-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
 
-(def +verkkotyypit+
-  "Verkkotyypit POT-lomake Excelistä"
-  [{:nimi "Teräsverkko" :koodi 1}
-   {:nimi "Lasikuituverkko" :koodi 2}
-   {:nimi "Muu" :koodi 9}])
+(def alusta-toimenpide-kaikki-lisaavaimet
+  [:lisatty-paksuus
+   :massamaara
+   :murske
+   :kasittelysyvyys
+   :leveys
+   :pinta-ala
+   :kokonaismassamaara
+   :massa
+   :sideaine
+   :sideainepitoisuus
+   :sideaine2
+   :verkon-tyyppi
+   :verkon-sijainti
+   :verkon-tarkoitus])
 
-(def +verkkotyypit-ja-nil+
-  (conj +verkkotyypit+ {:nimi "Ei verkkotyyppiä" :koodi nil}))
+(def alusta-toimenpidespesifit-lisaavaimet
+  {23 [:lisatty-paksuus :massamaara :murske]
+   667 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]})
 
-(def +verkkotyyppi-tai-nil+ "Verkkotyypin valinta koodilla"
-  (apply schema/enum (map :koodi +verkkotyypit-ja-nil+)))
+(defn alusta-toimenpide-lisaavaimet
+  [toimenpide]
+  (if-let [avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)]
+    avaimet
+    []))
 
-(defn verkkotyyppi-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit-ja-nil+))))
+(defn alusta-kaikki-lisaparams
+  "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
+  [alusta]
+  (let [keep-some (fn [params]
+                    (into {} (filter
+                               (fn [[_ arvo]] (some? arvo))
+                               params)))
+        lisaparams (select-keys alusta alusta-toimenpide-kaikki-lisaavaimet)
+        annetut-lisaparams (keep-some lisaparams)]
+    annetut-lisaparams))
+
+(defn alusta-ylimaaraiset-lisaparams-avaimet
+  "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen"
+  [{:keys [toimenpide] :as alusta}]
+  (let [annettu-lisaparams (alusta-kaikki-lisaparams alusta)
+        ylimaaraiset-avaimet (set/difference
+                               (set (keys annettu-lisaparams))
+                               (set (alusta-toimenpide-lisaavaimet toimenpide)))]
+    (vec ylimaaraiset-avaimet)))
 
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
@@ -109,54 +141,6 @@
    {:nimi "29" :koodi 29}
    {:nimi "31" :koodi 31}])
 
-(def +verkon-tarkoitukset+
-  [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
-   {:nimi "Muiden routavaurioiden ehkäisy" :koodi 2}
-   {:nimi "Levennyksen tukeminen" :koodi 3}
-   {:nimi "Painumien ehkäisy" :koodi 4}
-   {:nimi "Moniongelmaisen tukeminen" :koodi 5}
-   {:nimi "Muu tarkoitus" :koodi 9}])
-
-(def +verkon-tarkoitukset-ja-nil+
-  (conj +verkon-tarkoitukset+ {:nimi "Ei tarkoitusta" :koodi nil}))
-
-(def +verkon-tarkoitus-tai-nil+
-  "Verkon tarkoituksen valinta koodilla"
-  (apply schema/enum (map :koodi +verkon-tarkoitukset-ja-nil+)))
-
-(defn verkon-tarkoitus-koodi-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset-ja-nil+))))
-
-(def +verkon-sijainnit+
-  [{:nimi "Päällysteessä" :koodi 1}
-   {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
-   {:nimi "Kantavassa kerroksessa" :koodi 3}
-   {:nimi "Kantavan kerroksen alapinnassa" :koodi 4}
-   {:nimi "Muu sijainti" :koodi 9}])
-
-(def +verkon-sijainnit-ja-nil+
-  (conj +verkon-sijainnit+ {:nimi "Ei sijaintia" :koodi nil}))
-
-(def +verkon-sijainti-tai-nil+
-  "Verkon sijainnin valinta koodilla"
-  (apply schema/enum (map :koodi +verkon-sijainnit-ja-nil+)))
-
-(defn verkon-sijainti-koodi-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit-ja-nil+))))
-
-(def +paallystystyon-tyypit+
-  "Päällystystyön tyypit"
-  [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste}
-   {:nimi "Pienaluetyöt" :koodi :pienaluetyot}
-   {:nimi "Tasaukset" :koodi :tasaukset}
-   {:nimi "Jyrsinnät" :koodi :jyrsinnat}
-   {:nimi "Muut" :koodi :muut}])
-
-(defn paallystystyon-tyypin-nimi-koodilla [koodi]
-  (:nimi (first (filter
-                  #(= koodi (:koodi %))
-                  +paallystystyon-tyypit+))))
-
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
   (cond
@@ -181,6 +165,19 @@
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
+  ["pot2_verkon_sijainti" ::pot2-verkon-sijainti
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+  ["pot2_verkon_tarkoitus" ::pot2-verkon-tarkoitus
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+  ["pot2_verkon_tyyppi" ::pot2-verkon-tyyppi
+   {"koodi" ::koodi
+    "nimi" ::nimi
+    "lyhenne" ::lyhenne}]
+
   ["pot2_paallystekerros" ::pot2-paallystekerros]
   ["pot2_alusta" ::pot2-alusta]
   ["pot2_mk_massatyyppi" ::pot2-mk-massatyyppi]

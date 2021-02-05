@@ -1127,9 +1127,9 @@
             (into []
                   (concat
                     [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
-                     {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
+                     {:otsikko "Koh\u00ADde\u00ADnro" :nimi :kohdenumero
                       :tyyppi :string :leveys id-leveys}
-                     {:otsikko "Tunnus" :nimi :tunnus
+                     {:otsikko "Tun\u00ADnus" :nimi :tunnus
                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
@@ -1181,8 +1181,7 @@
                       :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
                      {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
-                     {:otsikko (str "Ko\u00ADko\u00ADnais\u00ADhinta"
-                                    " (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)")
+                     {:otsikko (str "Kok.\u00ADhinta (sis. ind.")
                       :muokattava? (constantly false)
                       :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :komponentti :leveys yhteensa-leveys
                       :tasaa :oikea
@@ -1266,7 +1265,7 @@
        :leveys bitumi-indeksi-leveys :tasaa :oikea}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea}
-      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta
+      {:otsikko "Kok.\u00ADhinta (sis. ind.)" :nimi :kokonaishinta
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
        (fn [rivi]
