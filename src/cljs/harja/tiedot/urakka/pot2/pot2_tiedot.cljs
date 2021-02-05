@@ -8,7 +8,8 @@
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
-    [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus])
+    [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -26,6 +27,46 @@
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
 (defrecord LisaaAlustaToimenpide [])
+(defrecord ValitseAlustatoimenpide [toimenpide])
+(defrecord PaivitaAlustalomake [alustalomake])
+(defrecord TallennaAlustalomake [alustalomake jatka?])
+(defrecord SuljeAlustalomake [])
+
+
+(defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
+  (= koodi 667))
+
+(defn- fmt-toimenpide-verkko [rivi materiaalikoodistot]
+ [:span
+   (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
+        ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
+
+(defn toimenpiteen-tiedot
+  [rivi materiaalikoodistot]
+  (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
+        toimenpide (:toimenpide rivi)
+        {:keys [alusta-toimenpiteet verkon-tarkoitukset verkon-tyypit verkon-sijainnit]} materiaalikoodistot]
+    (fn [rivi materiaalikoodistot]
+      [:div.pot2-toimenpiteen-tiedot
+       (cond
+         (onko-toimenpide-verkko? alusta-toimenpiteet toimenpide)
+         (fmt-toimenpide-verkko (select-keys rivi verkko-avaimet) materiaalikoodistot)
+
+         :else
+         [:span "Ei tietoja"])])))
+;; TODO: tänne domain puolelta käyttöön palvelinpuolen kanssa yhteinen logiikka päätellä
+;; eri toimenpidetyyppien kentät
+
+(defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
+  [:div.pot2-materiaalin-tiedot
+   (cond
+     (some? (:murske materiaali))
+     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti]
+
+     (some? (:massa materiaali))
+     [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti]
+     )])
+
 
 (extend-protocol tuck/Event
 
@@ -98,7 +139,41 @@
 
   LisaaAlustaToimenpide
   (process-event [_ app]
-    (println "Lisa_AlustanToimenpide " )
-    (assoc app :tarjoa-alustatoimenpide true))
+    (println "LisaaAlustaToimenpide " )
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] {}))
+
+  ValitseAlustatoimenpide
+  (process-event [{toimenpide :toimenpide} app]
+    (println "ValitseAlustatoimenpide " (pr-str toimenpide))
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
+              {:toimenpide toimenpide}))
+
+  PaivitaAlustalomake
+  (process-event [{alustalomake :alustalomake} app]
+    (println "PaivitaAlustalomake " (pr-str alustalomake))
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
+              alustalomake))
+
+  TallennaAlustalomake
+  (process-event [{alustalomake :alustalomake
+                   jatka? :jatka?} app]
+    (println "TallennaAlustalomake " (pr-str alustalomake jatka?))
+    (let [idt (keys @alustarivit-atom)
+          pienin-id (apply min idt)
+          uusi-id (if (pos? pienin-id)
+                    -1
+                    (dec pienin-id))
+          alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
+          ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
+          alusta-params-ilman-ylimaaraisia (apply
+                                         dissoc alusta-params ylimaaraiset-avaimet)
+          uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
+      (swap! alustarivit-atom conj uusi-rivi))
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
+
+  SuljeAlustalomake
+  (process-event [_ app]
+    (println "SuljeAlustalomake ")
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
   )

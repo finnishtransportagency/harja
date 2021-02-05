@@ -393,7 +393,7 @@ ja kaikki pakolliset kentät on täytetty"
   ;; bootstrap col-luokilla, pitäisi tehdä siten, että rivi on aina saman
   ;; määrän colleja kuin 2 palstaa ja sen sisällä on jaettu osien width 100%/(count skeemat)
   {2 "col-xs-6 col-md-5 col-lg-3"
-   3 "col-xs-3 col-sm-2 col-md-3 col-lg-2"
+   3 "col-xs-3 col-sm-2 col-md-3"
    4 "col-xs-3"
    5 "col-xs-1"})
 
