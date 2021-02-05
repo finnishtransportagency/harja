@@ -64,7 +64,8 @@
               kentan-huomautukset (get rivin-huomautukset nimi)
               tasaus-luokka (y/tasaus-luokka tasaa)
               tayta-alas (:tayta-alas? sarake)
-              fokus-id [id nimi]]
+              fokus-id [id nimi]
+              elementin-id (str rivi-index)]
 
           ;; muokattava? -> voiko muokata yksittäistä saraketta
           ;; voi-muokata-riviä? -> voiko muokata yksittäistä riviä
@@ -72,10 +73,13 @@
                    (or (nil? voi-muokata-rivia?) (voi-muokata-rivia? rivi index))
                    (or (nil? muokattava?) (muokattava? rivi index)))
 
-            [:td {:class (str "muokattava " tasaus-luokka (cond
-                                                            (not (empty? kentan-virheet)) " sisaltaa-virheen"
-                                                            (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                                            (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
+            [:td {:class (y/luokat "muokattava"
+                                   tasaus-luokka
+                                   (grid-yleiset/tiivis-tyyli skeema)
+                                   (cond
+                                     (not (empty? kentan-virheet)) " sisaltaa-virheen"
+                                     (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
+                                     (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
                   :col-span (if-let [leveys (get (:colspan rivi) nimi)]
                               leveys
                               1)}
@@ -107,7 +111,8 @@
                 [tee-kentta (assoc sarake
                                    :focus (= fokus fokus-id)
                                    :on-focus #(aseta-fokus! fokus-id)
-                                   :pituus-max (:pituus-max sarake))
+                                   :pituus-max (:pituus-max sarake)
+                                   :elementin-id elementin-id)
                  (r/wrap
                   arvo
                   (fn [uusi]
@@ -116,7 +121,7 @@
                                      (aseta rivi uusi)))
                       (muokkaa! id assoc nimi uusi))))]])]
 
-            [:td {:class (str "ei-muokattava " tasaus-luokka)}
+            [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema))}
              ((or fmt str) (hae rivi))])))})))
 
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
@@ -133,7 +138,9 @@
                                                    skeema)]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
-              [vetolaatikon-tila ohjaus vetolaatikot id]
+              [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                  "klikattava"
+                                                                  (grid-yleiset/tiivis-tyyli skeema))]
               ^{:key (str nimi)}
               [muokkauselementti sarake asetukset skeema rivi index])))
    (when-not piilota-toiminnot?
@@ -207,7 +214,9 @@
                                   (get rivi nimi))]
                 (if (= :vetolaatikon-tila tyyppi)
                   ^{:key (str "vetolaatikontila" id)}
-                  [vetolaatikon-tila ohjaus vetolaatikot id]
+                  [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                      "klikattava"
+                                                                      (grid-yleiset/tiivis-tyyli skeema))]
                   ^{:key (str i nimi)}
                   ;; Solu
                   [:td {:on-click (when solu-klikattu
@@ -222,6 +231,7 @@
                                  (y/tasaus-luokka tasaa)
                                  (when pakota-rivitys? "grid-pakota-rivitys")
                                  (when solu-klikattu "klikattava")
+                                 (grid-yleiset/tiivis-tyyli skeema)
                                  (case reunus
                                    :ei "grid-reunus-ei"
                                    :vasen "grid-reunus-vasen"
@@ -434,7 +444,8 @@
       (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]}]
         ^{:key (str i nimi)}
         [:th {:class (y/luokat otsikkorivi-luokka
-                               (y/tasaus-luokka tasaa))
+                               (y/tasaus-luokka tasaa)
+                               (grid-yleiset/tiivis-tyyli skeema))
               :width (or leveys "5%")}
          otsikko]) skeema)
     (when (or nayta-toimintosarake?
