@@ -40,16 +40,17 @@
            verkon-sijainnit
            verkon-tyypit
            verkon-tarkoitukset]}]
+  (println "petar murkseet " (pr-str murskeet))
   (let [kaikki-lisakentat {:lisatty-paksuus  {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/murske-id
-                                              :valinta-nayta (str ::pot2-domain/nimen-tarkenne " "
-                                                                  ::pot2-domain/rakeisuus " "
-                                                                  ::pot2-domain/iskunkestavyys " "
-                                                                  ::pot2-domain/esiintyma) ;; todo: mitä haluamme näyttää?
+                                              :valinta-nayta #(str (::pot2-domain/nimen-tarkenne %) " "
+                                                                   (::pot2-domain/rakeisuus %) " "
+                                                                   (::pot2-domain/iskunkestavyys %) " "
+                                                                   (::pot2-domain/esiintyma %)) ;; todo: mitä haluamme näyttää?
                                               :valinnat     murskeet}
                            :verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
