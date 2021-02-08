@@ -45,8 +45,7 @@
           :uusi-rivi aseta-hoitokausi
           :muutos (when virheet
                     #(reset! virheet (grid/hae-virheet %)))
-          :jarjesta (comp :nimi :materiaali)
-          }
+          :jarjesta (comp :nimi :materiaali) :piilota-toiminnot? true}
 
          [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
            :muokattava? (constantly false)
