@@ -48,7 +48,11 @@
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/murske-id
-                                              :valinta-nayta #(pot2-domain/mursken-rikastettu-nimi mursketyypit %)
+                                              :valinta-nayta (fn [murske]
+                                                               (let [[a b] (pot2-domain/mursken-rikastettu-nimi
+                                                                             mursketyypit
+                                                                             murske)]
+                                                                 (str a b)))
                                               :valinnat     murskeet}
                            :verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi

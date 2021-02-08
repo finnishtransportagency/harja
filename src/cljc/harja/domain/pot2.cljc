@@ -342,6 +342,7 @@
 
 (defn mursken-rikastettu-nimi [mursketyypit murske]
   ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
+  (println "petar murske tostring " (pr-str mursketyypit murske))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
                   (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))
         tarkennukset (rivin-avaimet->str murske #{::rakeisuus ::iskunkestavyys} ", ")
