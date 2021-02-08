@@ -15,35 +15,6 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(def +alustamenetelmat+
-  "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä ja
-   :koodi 24 on asiakkaan jälkeenpäin pyytämä."
-  [{:nimi "Massanvaihto" :lyhenne "MV" :koodi 1}
-   {:nimi "Bitumiemusiostabilointi" :lyhenne "BEST" :koodi 11}
-   {:nimi "Vaahtobitumistabilointi" :lyhenne "VBST" :koodi 12}
-   {:nimi "Remix-stabilointi" :lyhenne "REST" :koodi 13}
-   {:nimi "Sementtistabilointi" :lyhenne "SST" :koodi 14}
-   {:nimi "Masuunihiekkastabilointi" :lyhenne "MHST" :koodi 15}
-   {:nimi "Komposiittistabilointi" :lyhenne "KOST" :koodi 16}
-   {:nimi "Kantavan kerroksen AB" :lyhenne "ABK" :koodi 21}
-   {:nimi "Sidekerroksen AB" :lyhenne "ABS" :koodi 22}
-   {:nimi "Murske" :lyhenne "MS" :koodi 23}
-   {:nimi "Sekoitusjyrsintä" :lyhenne "SJYR" :koodi 24}
-   {:nimi "Kuumennustasaus" :lyhenne "TASK" :koodi 31}
-   {:nimi "Massatasaus" :lyhenne "TAS" :koodi 32}
-   {:nimi "Tasausjyrsintä" :lyhenne "TJYR" :koodi 41}
-   {:nimi "Laatikkojyrsintä" :lyhenne "LJYR" :koodi 42}
-   {:nimi "Reunajyrsintä" :lyhenne "RJYR" :koodi 43}])
-
-(def +alustamenetelmat-ja-nil+
-  (conj +alustamenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
-
-(def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
-  (apply schema/enum (map :koodi +alustamenetelmat-ja-nil+)))
-
-(defn alustamenetelma-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
-
 (def alusta-toimenpide-kaikki-lisaavaimet
   [:lisatty-paksuus
    :massamaara
@@ -93,57 +64,6 @@
                                (set (keys annettu-lisaparams))
                                (set sallitut-lisaavaimet))]
     (vec ylimaaraiset-avaimet)))
-
-(def +tekniset-toimenpiteet+
-  "Tekniset toimenpidetyypit POT-lomake Excelistä"
-  [{:nimi "Rakentaminen" :koodi 1}
-   {:nimi "Suuntauksen parantaminen" :koodi 2}
-   {:nimi "Raskas rakenteen parantaminen" :koodi 3}
-   {:nimi "Kevyt rakenteen parantaminen" :koodi 4}])
-
-(def +tekniset-toimenpiteet-ja-nil+
-  (conj +tekniset-toimenpiteet+ {:nimi "Ei toimenpidettä" :koodi nil}))
-
-(def +tekninen-toimenpide-tai-nil+ "Teknisen toimenpiteen valinta koodilla"
-  (apply schema/enum (map :koodi +tekniset-toimenpiteet-ja-nil+)))
-
-(defn tekninentoimenpide-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet-ja-nil+))))
-
-(def +ajoradat-tekstina+
-  "Ajoratavalinnat"
-  [{:nimi "Yksiajoratainen" :koodi 0}
-   {:nimi "Kaksiajorataisen ensimmäinen" :koodi 1}
-   {:nimi "Kaksiajorataisen toinen ajorata" :koodi 2}])
-
-(def +ajoradat-numerona+
-  "Ajoratavalinnat"
-  [{:nimi "0" :koodi 0}
-   {:nimi "1" :koodi 1}
-   {:nimi "2" :koodi 2}])
-
-(def +kaistat+
-  "Kaistavalinnat"
-  [{:nimi "1" :koodi 1}
-   {:nimi "11" :koodi 11}
-   {:nimi "12" :koodi 12}
-   {:nimi "13" :koodi 13}
-   {:nimi "21" :koodi 21}
-   {:nimi "22" :koodi 22}
-   {:nimi "23" :koodi 23}
-   {:nimi "14" :koodi 14}
-   {:nimi "15" :koodi 15}
-   {:nimi "16" :koodi 16}
-   {:nimi "17" :koodi 17}
-   {:nimi "18" :koodi 18}
-   {:nimi "19" :koodi 19}
-   {:nimi "24" :koodi 24}
-   {:nimi "25" :koodi 25}
-   {:nimi "26" :koodi 26}
-   {:nimi "27" :koodi 27}
-   {:nimi "28" :koodi 28}
-   {:nimi "29" :koodi 29}
-   {:nimi "31" :koodi 31}])
 
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
@@ -342,7 +262,6 @@
 
 (defn mursken-rikastettu-nimi [mursketyypit murske]
   ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
-  (println "petar murske tostring " (pr-str mursketyypit murske))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
                   (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))
         tarkennukset (rivin-avaimet->str murske #{::rakeisuus ::iskunkestavyys} ", ")
