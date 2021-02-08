@@ -40,8 +40,10 @@
            mursketyypit
            verkon-sijainnit
            verkon-tyypit
-           verkon-tarkoitukset]}]
-  (let [kaikki-lisakentat {:lisatty-paksuus  {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
+           verkon-tarkoitukset]}]                           ; [:kasittelysyvyys :lisatty-paksuus :murske :massamaara]
+  (let [kaikki-lisakentat {:kasittelysyvyys  {:nimi   :kasittelysyvyys :otsikko "Käsittelysyvyys"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :lisatty-paksuus  {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
