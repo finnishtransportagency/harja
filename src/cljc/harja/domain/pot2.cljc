@@ -342,8 +342,8 @@
 
 (defn mursken-rikastettu-nimi [mursketyypit murske]
   ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
-  (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi murske)) " "
-                  (rivin-avaimet->str murske #{::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
-        tarkennukset (rivin-avaimet->str murske #{::pot2-domain/rakeisuus ::pot2-domain/iskunkestavyys} ", ")
+  (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
+                  (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))
+        tarkennukset (rivin-avaimet->str murske #{::rakeisuus ::iskunkestavyys} ", ")
         tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))
