@@ -527,7 +527,7 @@ ja kaikki pakolliset kentät on täytetty"
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia?] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -562,6 +562,7 @@ ja kaikki pakolliset kentät on täytetty"
              (merge
                {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
                             luokka)}
+               (when overlay {:style {:width (or (:leveys overlay) "400px")}})
                (when data-cy
                  {:data-cy data-cy}))
              (when-let [header (if header-fn
@@ -594,9 +595,9 @@ ja kaikki pakolliset kentät on täytetty"
                                   #(muokkaa-kenttaa-fn (:nimi %))
                                   {:vayla-tyyli? vayla-tyyli?
                                    :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
-                     (if otsikko
+                     (if otsikko ;;pitaisiko olla mieluummin ryhma
                        ^{:key (str otsikko "-" i)}
-                       [:span
+                       [:div {:class (:ryhman-luokka otsikko)}
                         [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}

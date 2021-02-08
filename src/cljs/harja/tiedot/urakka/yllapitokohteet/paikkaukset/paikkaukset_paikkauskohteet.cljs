@@ -88,15 +88,28 @@
 
 (defrecord AvaaLomake [lomake])
 (defrecord SuljeLomake [])
+(defrecord PaivitaLomake [lomake])
+(defrecord TallennaUusiPaikkauskohde [lomake])
 
 (extend-protocol tuck/Event
   AvaaLomake
-  (process-event [lomake app]
+  (process-event [{:keys [lomake]} app]
     (-> app
-        (assoc :lomake (:lomake lomake))))
+        (assoc :lomake lomake)))
 
   SuljeLomake
   (process-event [_ app]
+    (dissoc app :lomake))
+
+  PaivitaLomake
+  (process-event [params app]
+    (do
+      (js/console.log params)
+      (assoc app :lomake (:lomake params))))
+
+  TallennaUusiPaikkauskohde
+  (process-event [{:keys [lomake]} app]
+    (js/console.log "Kuvittele että lomake on nyt tallennettu")
     (dissoc app :lomake))
   )
 
