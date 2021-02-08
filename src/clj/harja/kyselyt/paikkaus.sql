@@ -97,16 +97,14 @@ SELECT id
 
 --name: paikkauskohteet-urakalle
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
-SELECT pk.id          AS id,
-       pk.nimi        AS nimi,
-       pk.luotu       AS luotu,
-       pk."urakka-id" AS urakka_id,
-       p.tyomenetelma AS menetelma,
-       p.sijainti     AS sijainti,
-       p.alkuaika     AS alkuaika,
-       p.loppuaika    AS loppuaika
-       --p.tila,
-       --p.virhe
-FROM paikkauskohde pk
-         LEFT JOIN paikkaus p ON p."paikkauskohde-id" = pk.id
-WHERE p."urakka-id" = :urakka-id;
+SELECT pk.id                     AS id,
+       pk.nimi                   AS nimi,
+       pk.luotu                  AS luotu,
+       pk."urakka-id"            AS urakka_id,
+       pk.tyomenetelma           AS menetelma,
+       pk.tierekisteriosoite     AS tierekisteriosoite,
+       pk.alkuaika               AS alkuaika,
+       pk.loppuaika              AS loppuaika,
+       pk."paikkauskohteen-tila" AS "paikkauskohteen-tila"
+  FROM paikkauskohde pk
+ WHERE pk."urakka-id" = :urakka-id;
