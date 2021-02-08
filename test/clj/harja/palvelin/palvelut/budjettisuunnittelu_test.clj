@@ -331,7 +331,7 @@
         tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma tk_yt tr_yt]}]
                                   (case tallennettava-asia
                                     :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
-                                                             (= tk_yt "c9712637-fbec-4fbd-ac13-620b5619c744")
+                                                             (= tk_yt "53647ad8-0632-4dd3-8302-8dfae09908c8")
                                                              (nil? tehtavaryhma))
                                     :toimistokulut (and (= tyyppi "laskutettava-tyo")
                                                         (= tk_yt "8376d9c4-3daf-4815-973d-cd95ca3bb388")
