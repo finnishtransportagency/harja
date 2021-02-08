@@ -415,7 +415,7 @@ WHERE ypk.poistettu IS NOT TRUE
 SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
+  pi."yhalahetyksen-tila"               AS "paallystysilmoitus-tila",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",

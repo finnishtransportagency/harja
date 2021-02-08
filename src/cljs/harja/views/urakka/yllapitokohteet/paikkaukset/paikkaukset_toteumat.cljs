@@ -190,7 +190,7 @@
   (let [paikkaus (first paikkaukset)
         paikkauskohde (::paikkaus/paikkauskohde paikkaus)
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
-        lahetyksen-tila (::paikkaus/tila paikkauskohde)
+        lahetyksen-tila (::paikkaus/yhalahetyksen-tila paikkauskohde)
         ilmoitettu-virhe (::paikkaus/ilmoitettu-virhe paikkauskohde)
         tarkistettu (::paikkaus/tarkistettu paikkauskohde)
         urakoitsija-kayttajana? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
