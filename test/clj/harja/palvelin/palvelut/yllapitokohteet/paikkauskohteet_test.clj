@@ -27,11 +27,12 @@
                       urakkatieto-fixture))
 
 (deftest paikkauskohteet-urakalle-testi
-  (let [urakka-id @oulun-alueurakan-2014-2019-id
+  (let [_ (hae-kemin-alueurakan-2019-2023-id)
+        urakka-id @kemin-alueurakan-2019-2023-id
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :paikkauskohteet-urakalle
                                         +kayttaja-jvh+
                                         {:urakka-id urakka-id})
-        _ (println "löydettiin paikkauskohteet" (pr-str paikkauskohteet))]
+        _ (println "Löydettiin paikkauskohteet" (pr-str paikkauskohteet))]
     (is (> (count paikkauskohteet) 0))))
 

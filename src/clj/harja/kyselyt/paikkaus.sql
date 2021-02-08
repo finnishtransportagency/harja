@@ -101,10 +101,23 @@ SELECT pk.id                     AS id,
        pk.nimi                   AS nimi,
        pk.luotu                  AS luotu,
        pk."urakka-id"            AS urakka_id,
-       pk.tyomenetelma           AS menetelma,
+       pk.tyomenetelma           AS tyomenetelma,
        pk.tierekisteriosoite     AS tierekisteriosoite,
        pk.alkuaika               AS alkuaika,
        pk.loppuaika              AS loppuaika,
-       pk."paikkauskohteen-tila" AS "paikkauskohteen-tila"
-  FROM paikkauskohde pk
- WHERE pk."urakka-id" = :urakka-id;
+       pk."paikkauskohteen-tila" AS "paikkauskohteen-tila",
+       (pk.tierekisteriosoite).tie AS tie,
+       CASE
+           WHEN pk.tierekisteriosoite IS NOT NULL THEN
+               (SELECT *
+                FROM tierekisteriosoitteelle_viiva(
+                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
+                        CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
+                        CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
+           ELSE NULL
+           END                   AS geometria
+FROM paikkauskohde pk
+ WHERE pk."urakka-id" = :urakka-id
+   AND pk.poistettu = false
+   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
+   AND pk."paikkauskohteen-tila" IS NOT NULL;

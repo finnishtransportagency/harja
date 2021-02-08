@@ -7,6 +7,7 @@ ALTER TABLE paikkauskohde
     ADD COLUMN alkuaika timestamp,
     ADD COLUMN loppuaika timestamp,
     ADD COLUMN tyomenetelma TEXT,
+    ADD COLUMN tyomenetelma_kuvaus TEXT,
     ADD COLUMN tierekisteriosoite tr_osoite,
     ADD COLUMN "paikkauskohteen-tila" paikkauskohteen_tila;
 
