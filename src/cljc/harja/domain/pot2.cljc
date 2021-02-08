@@ -332,3 +332,18 @@
 
 (defn ainetyypin-koodi->nimi [ainetyypit koodi]
   (::nimi (ainetyyppi-koodilla ainetyypit koodi)))
+
+
+(defn rivin-avaimet->str
+  ([rivi avaimet] (rivin-avaimet->str rivi avaimet " "))
+  ([rivi avaimet separator]
+   (str/join separator
+             (remove nil? (mapv val (select-keys rivi avaimet))))))
+
+(defn mursken-rikastettu-nimi [mursketyypit murske]
+  ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
+  (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi murske)) " "
+                  (rivin-avaimet->str murske #{::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
+        tarkennukset (rivin-avaimet->str murske #{::pot2-domain/rakeisuus ::pot2-domain/iskunkestavyys} ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+    [ydin tarkennukset-teksti]))

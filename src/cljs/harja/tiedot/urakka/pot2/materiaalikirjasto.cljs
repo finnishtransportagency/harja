@@ -61,18 +61,12 @@
                                             runkoaineet))]
       (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
 
-(defn- rivin-avaimet->str
-  ([rivi avaimet] (rivin-avaimet->str rivi avaimet " "))
-  ([rivi avaimet separator]
-   (str/join separator
-             (remove nil? (mapv val (select-keys rivi avaimet))))))
-
 (defn- massan-murskeen-nimen-komp [ydin tarkennukset fmt]
   (if (= :komponentti fmt)
    [:span
     [:span.bold ydin]
-    [:span (when-not (empty? tarkennukset) (str " (" tarkennukset ")"))]]
-   (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))))
+    [:span tarkennukset]]
+   (str ydin tarkennukset)))
 
 (defn massan-rikastettu-nimi
   "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
@@ -80,24 +74,23 @@
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
   (let [massa (assoc massa ::pot2-domain/rc% (massan-rc-pitoisuus massa))
         ydin (str (pot2-domain/ainetyypin-koodi->lyhenne massatyypit (::pot2-domain/tyyppi massa))
-                  (rivin-avaimet->str massa [::pot2-domain/max-raekoko
+                  (pot2-domain/rivin-avaimet->str massa [::pot2-domain/max-raekoko
                                              ::pot2-domain/nimen-tarkenne
                                              ::pot2-domain/dop-nro]))
 
-        tarkennukset (rivin-avaimet->str massa [::pot2-domain/kuulamyllyluokka
-                                                ::pot2-domain/rc%] ", ")]
+        tarkennukset (pot2-domain/rivin-avaimet->str massa [::pot2-domain/kuulamyllyluokka
+                                                ::pot2-domain/rc%] ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
     ;; vähän huonoksi ehkä meni tämän kanssa. Toinen funktiota kutsuva tarvitsee komponenttiwrapperin ja toinen ei
     ;; pitänee refaktoroida... fixme jos ehdit
     (if (= fmt :komponentti)
-      [massan-murskeen-nimen-komp ydin tarkennukset fmt]
-      (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
+      [massan-murskeen-nimen-komp ydin tarkennukset-teksti fmt]
+      (massan-murskeen-nimen-komp ydin tarkennukset-teksti fmt))))
 
 (defn murskeen-rikastettu-nimi [mursketyypit murske fmt]
   ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
   ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
-  (let [ydin (str (pot2-domain/ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi murske)) " "
-                  (rivin-avaimet->str murske #{::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
-        tarkennukset (rivin-avaimet->str murske #{::pot2-domain/rakeisuus ::pot2-domain/iskunkestavyys} ", ")]
+  (let [[ydin tarkennukset]  (pot2-domain/mursken-rikastettu-nimi mursketyypit murske)]
     (if (= fmt :komponentti)
       [massan-murskeen-nimen-komp ydin tarkennukset fmt]
       (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
