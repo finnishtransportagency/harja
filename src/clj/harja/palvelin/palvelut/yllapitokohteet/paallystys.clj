@@ -570,7 +570,7 @@
             toimenpidespesifit-avaimet (pot2-domain/alusta-toimenpide-lisaavaimet (:toimenpide rivi))
             pakolliset-avaimet (->> toimenpidespesifit-avaimet
                                     (filter #(:pakollinen? %))
-                                    (map #(:name %))
+                                    (map #(:nimi %))
                                     set)
             rivi-ja-kaikki-lisaparametrit (if (and (empty? (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi))
                                                    (set/subset? pakolliset-avaimet (-> annetut-lisaparams keys set)))

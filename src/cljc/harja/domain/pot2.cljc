@@ -36,18 +36,18 @@
   "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
-                                                {:name :massamaara :pakollinen? false}]
+                                                {:nimi :massamaara :pakollinen? false}]
                                                23           ;; MS
                                                [:lisatty-paksuus
-                                                {:name :massamaara :pakollinen? false}
+                                                {:nimi :massamaara :pakollinen? false}
                                                 :murske]
                                                667          ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
-                                                {:name :verkon-tarkoitus :pakollinen? false}]}
+                                                {:nimi :verkon-tarkoitus :pakollinen? false}]}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
         luo-metadata (fn [avain]
                        (if (keyword? avain)
-                         {:name avain :pakollinen? true}
+                         {:nimi avain :pakollinen? true}
                          avain))]
     (map luo-metadata avaimet)))
 
@@ -66,7 +66,7 @@
   "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen"
   [{:keys [toimenpide] :as alusta}]
   (let [annettu-lisaparams (alusta-kaikki-lisaparams alusta)
-        sallitut-lisaavaimet (map #(:name %) (alusta-toimenpide-lisaavaimet toimenpide))
+        sallitut-lisaavaimet (map #(:nimi %) (alusta-toimenpide-lisaavaimet toimenpide))
         ylimaaraiset-avaimet (set/difference
                                (set (keys annettu-lisaparams))
                                (set sallitut-lisaavaimet))]
