@@ -108,8 +108,8 @@
         alusta-toimenpiteet (fetch db ::pot2-domain/pot2-mk-alusta-toimenpide
                                           (specql/columns ::pot2-domain/pot2-mk-alusta-toimenpide)
                                           {})
-        kulutuskerros-toimenpiteet (fetch db ::pot2-domain/pot2-mk-kulutuskerros-toimenpide
-                                          (specql/columns ::pot2-domain/pot2-mk-kulutuskerros-toimenpide)
+        paallystekerros-toimenpiteet (fetch db ::pot2-domain/pot2-mk-paallystekerros-toimenpide
+                                          (specql/columns ::pot2-domain/pot2-mk-paallystekerros-toimenpide)
                                           {})
         verkon-sijainnit (fetch db ::pot2-domain/pot2-verkon-sijainti
                                           (specql/columns ::pot2-domain/pot2-verkon-sijainti)
@@ -126,7 +126,7 @@
                    :sideainetyypit sideainetyypit
                    :lisaainetyypit lisaainetyypit
                    :alusta-toimenpiteet alusta-toimenpiteet
-                   :kulutuskerros-toimenpiteet kulutuskerros-toimenpiteet
+                   :paallystekerros-toimenpiteet paallystekerros-toimenpiteet
                    :verkon-sijainnit verkon-sijainnit
                    :verkon-tarkoitukset verkon-tarkoitukset
                    :verkon-tyypit verkon-tyypit

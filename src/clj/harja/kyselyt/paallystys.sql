@@ -147,7 +147,8 @@ SELECT
   pot2p.pinta_ala,
   pot2p.kokonaismassamaara,
   pot2p.piennar,
-  pot2p.lisatieto
+  pot2p.lisatieto,
+  pot2p.jarjestysnro
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 

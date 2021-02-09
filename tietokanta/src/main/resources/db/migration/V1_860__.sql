@@ -1,0 +1,1 @@
+ALTER TABLE pot2_mk_kulutuskerros_toimenpide RENAME TO pot2_mk_paallystekerros_toimenpide;

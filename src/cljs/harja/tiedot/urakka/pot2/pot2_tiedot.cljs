@@ -32,6 +32,18 @@
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
 
+(defn- paallystekerroksen-osat-jarjestysnrolla
+  "Palauttaa päällystekerroksen osat järjestysnumerolla"
+  [rivit jarjestysnro]
+  )
+
+(defn kulutuskerroksen-osat
+  [rivit]
+  (paallystekerroksen-osat-jarjestysnrolla rivit 1))
+
+(defn alemman-paallystekerroksen-osat
+  [rivit]
+  (paallystekerroksen-osat-jarjestysnrolla rivit 2))
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
   (= koodi 667))
@@ -90,14 +102,14 @@
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
-          kulutuskerros (:kulutuskerros vastaus)
+          kulutuskerros (:paallystekerros vastaus)
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
                       :perustiedot (merge perustiedot
                                           {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)})
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                                   (:id urakka))
-                      :kulutuskerros kulutuskerros
+                      :paallystekerros kulutuskerros
                       :alusta alusta
                       :lisatiedot (:lisatiedot vastaus)}]
       (-> app
@@ -121,7 +133,7 @@
                                (assoc :lisatiedot @lisatiedot-atom
                                       :versio 2)
                                (update :ilmoitustiedot dissoc :virheet)
-                               (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
+                               (assoc :paallystekerros (gridin-muokkaus/filteroi-uudet-poistetut
                                                                 (into (sorted-map)
                                                                       @kohdeosat-atom)))
                                (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
