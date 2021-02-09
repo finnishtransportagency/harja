@@ -13,11 +13,12 @@
   Oletus on lähtökohtaisesti niin, että jos yksikin siirto on tehty, kaikki siirrot on tehty.
   Joka aiheuttaa sen ongelman, että jos on mahdollista muokata menneisyyden budjetteja, niin niitä ei ikinä
   siirretä toteutuneiksi."
-  [db vuosi kuukausi]
-  (let [toteutuneet-siirrot (q/hae-toteutuneiden-siirtojen-maara db {:kuukausi kuukausi :vuosi vuosi})]
-    (if (> toteutuneet-siirrot 0)
-      true
-      false)))
+  [db]
+  (let [siirtamattomat (q/hae-siirtamattomat-kustannukset db)
+        _ (log/debug "Näin monta riviä on vielä siirtämättä: " (pr-str siirtamattomat))]
+    (if (> siirtamattomat 0)
+      false
+      true)))
 
 (defn- siirra-kustannukset
   "Kustannukset siirretään aina kuukauden ensimmäisenä päivänä, jotta saadaan edellisen kuukauden kaikki
@@ -41,16 +42,13 @@
                              ;; Kuukauden ensimmäisenä päivänä tehdään aina siirto
                              false
                              ;; Tarkista onko siirto tehty
-                             (onko-toteumat-jo-siirretty? db vuosi edellinen-kuukausi))]
+                             (onko-toteumat-jo-siirretty? db))]
     (log/info "Siirretään kustannusarvoitu_tyo taulusta toteutueet_kustannukset tauluun, jos on kuukauden ensimmäinen päivä tai jos siirtoa ei ole vielä tehty.")
     (if (not onko-siirto-tehty?)
       (do
-        ;; Siirrä kustannusarvioidut työt
-        (q/siirra-kustannusarvoidut-tyot-toteutumiin! db {:kuukausi edellinen-kuukausi
-                                                          :vuosi vuosi})
-        ;; Siirrä johto ja hallintokorvaukset
-        (q/siirra-johto-ja-hallintokorvaukset-toteutumiin! db {:kuukausi edellinen-kuukausi
-                                                               :vuosi vuosi})
+        ;; Siirrä rivit
+        (q/siirra-budjetoidut-tyot-toteutumiin db)
+
         (println "Siirto valamis!"))
       (log/info "Ei tehdä toista kertaa."))))
 
