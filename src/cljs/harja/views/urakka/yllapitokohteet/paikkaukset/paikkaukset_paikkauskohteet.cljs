@@ -98,7 +98,7 @@
                     [:div
                      [napit/tallenna
                       "Tallenna"
-                      #(e! (t-paikkauskohteet/->TallennaUusiPaikkauskohde lomake))]
+                      #(e! (t-paikkauskohteet/->TallennaUusiPaikkauskohde (lomake/ilman-lomaketietoja lomake)))]
                      [napit/yleinen-toissijainen
                       "Peruuta"
                       #(e! (t-paikkauskohteet/->SuljeLomake))]])}

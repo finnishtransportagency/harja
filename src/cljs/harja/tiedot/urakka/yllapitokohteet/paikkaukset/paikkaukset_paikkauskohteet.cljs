@@ -27,6 +27,10 @@
 (defrecord HaePaikkauskohteet [])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
+(defrecord PaivitaLomake [lomake])
+(defrecord TallennaUusiPaikkauskohde [paikkauskohde])
+(defrecord TallennaUusiPaikkauskohdeOnnistui [vastaus])
+(defrecord TallennaUusiPaikkauskohdeEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   AvaaLomake
@@ -68,5 +72,33 @@
     (do
       (js/console.log "Haku epäonnistui, vastaus " vastaus)
       app))
+
+  PaivitaLomake
+  (process-event [{lomake :lomake} app]
+    (assoc app :lomake lomake))
+
+  TallennaUusiPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (do
+      (println "Lähetetään paikkauskohde" (pr-str paikkauskohde))
+      (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
+                         {:paikkaukohde paikkauskohde}
+                         {:onnistui ->TallennaUusiPaikkauskohdeOnnistui
+                          :epaonnistui ->TallennaUusiPaikkauskohdeEpaonnistui
+                          :paasta-virhe-lapi? true})
+      app))
+
+  TallennaUusiPaikkauskohdeOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (println "Paikkauskohteen tallennus onnistui" vastaus)
+      (dissoc app :lomake)))
+
+  TallennaUusiPaikkauskohdeEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (println "Paikkauskohteen tallennus epäonnistui" vastaus)
+      (harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
+      (dissoc app :lomake)))
   )
 
