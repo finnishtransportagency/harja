@@ -47,6 +47,10 @@
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :leveys           {:nimi   :leveys :otsikko "Leveys"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :pinta-ala        {:nimi   :pinta-ala :otsikko "Pinta-ala"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/murske-id
                                               :valinta-nayta (fn [murske]
