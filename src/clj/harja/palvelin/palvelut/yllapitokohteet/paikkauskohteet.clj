@@ -1,21 +1,10 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet
   (:require [com.stuartsierra.component :as component]
-            [clojure.java.jdbc :as jdbc]
-            [specql.op :as op]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.konversio :as konv]
+            [harja.geo :as geo]
             [harja.kyselyt.paikkaus :as q]
-            [harja.kyselyt.tieverkko :as tv]
-            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
-            [taoensso.timbre :as log]
-            [slingshot.slingshot :refer [try+]]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]))
+            [taoensso.timbre :as log]))
 
 
 
@@ -23,7 +12,14 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         urakan-paikkauskohteet (q/paikkauskohteet-urakalle db {:urakka-id urakka-id})
-        _ (println "urakan-paikkauskohteet: " (pr-str urakan-paikkauskohteet))]
+        _ (println "urakan-paikkauskohteet alkup: " (pr-str urakan-paikkauskohteet))
+        urakan-paikkauskohteet (map (fn [p]
+                                      (-> p
+                                          (assoc :sijainti (geo/pg->clj (:geometria p)))
+                                          (dissoc :geometria))
+                                      ) urakan-paikkauskohteet)
+        _ (println "urakan-paikkauskohteet: " (pr-str urakan-paikkauskohteet))
+        _ (println "urakan-paikkauskohteet geometria siivottu: " (pr-str urakan-paikkauskohteet))]
     urakan-paikkauskohteet))
 
 (defrecord Paikkauskohteet []
