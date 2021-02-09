@@ -34,13 +34,16 @@
 (defn alusta-toimenpide-lisaavaimet
   [toimenpide]
   "Palauta alusta toimenpide metadata lisäkenteistä"
-  (let [alusta-toimenpidespesifit-lisaavaimet {1 [:kasittelysyvyys :lisatty-paksuus :murske
-                                                  {:name :massamaara :pakollinen? false}]
-                                               23 [:lisatty-paksuus
-                                                   {:name :massamaara :pakollinen? false}
-                                                   :murske]
-                                               667 [:verkon-tyyppi :verkon-sijainti
-                                                    {:name :verkon-tarkoitus :pakollinen? false}]}
+  (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
+                                               [:kasittelysyvyys :lisatty-paksuus :murske
+                                                {:name :massamaara :pakollinen? false}]
+                                               23           ;; MS
+                                               [:lisatty-paksuus
+                                                {:name :massamaara :pakollinen? false}
+                                                :murske]
+                                               667          ;; Verkko
+                                               [:verkon-tyyppi :verkon-sijainti
+                                                {:name :verkon-tarkoitus :pakollinen? false}]}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
         luo-metadata (fn [avain]
                        (if (keyword? avain)
