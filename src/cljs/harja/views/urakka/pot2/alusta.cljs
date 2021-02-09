@@ -36,43 +36,55 @@
 
 (defn- alustalomakkeen-lisakentat
   [{:keys [toimenpide
+           massat
+           massatyypit
            murskeet
            mursketyypit
            verkon-sijainnit
            verkon-tyypit
-           verkon-tarkoitukset]}]                           ; [:kasittelysyvyys :lisatty-paksuus :murske :massamaara]
-  (let [kaikki-lisakentat {:kasittelysyvyys  {:nimi   :kasittelysyvyys :otsikko "Käsittelysyvyys"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :lisatty-paksuus  {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :leveys           {:nimi   :leveys :otsikko "Leveys"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :pinta-ala        {:nimi   :pinta-ala :otsikko "Pinta-ala"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
-                                              :valinta-arvo ::pot2-domain/murske-id
-                                              :valinta-nayta (fn [murske]
-                                                               (let [[a b] (pot2-domain/mursken-rikastettu-nimi
-                                                                             mursketyypit
-                                                                             murske)]
-                                                                 (str a b)))
-                                              :valinnat     murskeet}
-                           :verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
-                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-tyypit}
-                           :verkon-sijainti  {:otsikko      "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
-                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-sijainnit}
-                           :verkon-tarkoitus {:otsikko      "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
-                                              ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
-                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-tarkoitukset}}
+           verkon-tarkoitukset]}]
+  (let [kaikki-lisakentat {:kasittelysyvyys    {:nimi   :kasittelysyvyys :otsikko "Käsittelysyvyys"
+                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :lisatty-paksuus    {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
+                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :massamaara         {:nimi   :massamaara :otsikko "Massamäärä"
+                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :kokonaismassamaara {:nimi   :kokonaismassamaara :otsikko "Kokonaismassamäärä"
+                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :leveys             {:nimi   :leveys :otsikko "Leveys"
+                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :pinta-ala          {:nimi   :pinta-ala :otsikko "Pinta-ala"
+                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :murske             {:otsikko       "Murske" :nimi :murske :tyyppi :valinta
+                                                :valinta-arvo  ::pot2-domain/murske-id
+                                                :valinta-nayta (fn [murske]
+                                                                 (let [[a b] (pot2-domain/mursken-rikastettu-nimi
+                                                                               mursketyypit
+                                                                               murske)]
+                                                                   (str a b)))
+                                                :valinnat      murskeet}
+                           :massa              {:otsikko       "Massa" :nimi :massa :tyyppi :valinta
+                                                :valinta-arvo  ::pot2-domain/massa-id
+                                                :valinta-nayta (fn [massa]
+                                                                 (let [[a b] (pot2-domain/massan-rikastettu-nimi
+                                                                               massatyypit
+                                                                               massa)]
+                                                                   (str a b)))
+                                                :valinnat      massat}
+                           :verkon-tyyppi      {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
+                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                                :valinnat     verkon-tyypit}
+                           :verkon-sijainti    {:otsikko      "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
+                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                                :valinnat     verkon-sijainnit}
+                           :verkon-tarkoitus   {:otsikko      "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
+                                                ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
+                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                                :valinnat     verkon-tarkoitukset}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
         lisakentta-generaattori (fn [kentta-metadata]
                                   (lomake/rivi (merge (get kaikki-lisakentat (:nimi kentta-metadata))
-                                                      {:palstoja 3
+                                                      {:palstoja    3
                                                        :pakollinen? (:pakollinen? kentta-metadata)})))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
@@ -122,7 +134,7 @@
               (when toimenpide lisakentat)))))
 
 (defn alustalomake-nakyma
-  [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
+  [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
   [lomake/lomake
    {:luokka " overlay-oikealla"
     :otsikko "Toimenpiteen tiedot"
@@ -145,7 +157,9 @@
                    {:disabled false}]])}
    (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
                             :toimenpide (:toimenpide alustalomake)
+                            :massat massat
                             :murskeet murskeet
+                            :massatyypit (:massatyypit materiaalikoodistot)
                             :mursketyypit (:mursketyypit materiaalikoodistot)
                             :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
                             :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
@@ -166,6 +180,7 @@
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
                                 :alusta-toimenpiteet alusta-toimenpiteet
+                                :massat massat
                                 :murskeet murskeet
                                 :materiaalikoodistot materiaalikoodistot}])
      [grid/muokkaus-grid

@@ -50,6 +50,8 @@
                                                [:kasittelysyvyys :leveys :pinta-ala]
                                                43           ;; RJYR
                                                []
+                                               666          ;; REM-TAS
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                667          ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]}
@@ -269,7 +271,6 @@
 (defn ainetyypin-koodi->nimi [ainetyypit koodi]
   (::nimi (ainetyyppi-koodilla ainetyypit koodi)))
 
-
 (defn rivin-avaimet->str
   ([rivi avaimet] (rivin-avaimet->str rivi avaimet " "))
   ([rivi avaimet separator]
@@ -281,5 +282,30 @@
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
                   (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))
         tarkennukset (rivin-avaimet->str murske #{::rakeisuus ::iskunkestavyys} ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+    [ydin tarkennukset-teksti]))
+
+(def asfalttirouheen-tyypin-id 2)
+
+(defn massan-rc-pitoisuus
+  "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
+  [rivi]
+  (when-let [runkoaineet (::runkoaineet rivi)]
+    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
+                                            runkoaineet))]
+      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
+
+(defn massan-rikastettu-nimi
+  "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
+  [massatyypit massa]
+  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
+  (let [massa (assoc massa ::rc% (massan-rc-pitoisuus massa))
+        ydin (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi massa))
+                  (rivin-avaimet->str massa [::max-raekoko
+                                             ::nimen-tarkenne
+                                             ::dop-nro]))
+
+        tarkennukset (rivin-avaimet->str massa [::kuulamyllyluokka
+                                                ::rc%] ", ")
         tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))

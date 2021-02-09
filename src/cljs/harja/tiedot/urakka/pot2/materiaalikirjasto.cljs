@@ -51,16 +51,6 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
-(def asfalttirouheen-tyypin-id 2)
-
-(defn massan-rc-pitoisuus
-  "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
-  [rivi]
-  (when-let [runkoaineet (::pot2-domain/runkoaineet rivi)]
-    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
-                                            runkoaineet))]
-      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
-
 (defn- massan-murskeen-nimen-komp [ydin tarkennukset fmt]
   (if (= :komponentti fmt)
    [:span
@@ -72,20 +62,12 @@
   "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
   [massatyypit massa fmt]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (let [massa (assoc massa ::pot2-domain/rc% (massan-rc-pitoisuus massa))
-        ydin (str (pot2-domain/ainetyypin-koodi->lyhenne massatyypit (::pot2-domain/tyyppi massa))
-                  (pot2-domain/rivin-avaimet->str massa [::pot2-domain/max-raekoko
-                                             ::pot2-domain/nimen-tarkenne
-                                             ::pot2-domain/dop-nro]))
-
-        tarkennukset (pot2-domain/rivin-avaimet->str massa [::pot2-domain/kuulamyllyluokka
-                                                ::pot2-domain/rc%] ", ")
-        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+  (let [[ydin tarkennukset] (pot2-domain/massan-rikastettu-nimi massatyypit massa)]
     ;; vähän huonoksi ehkä meni tämän kanssa. Toinen funktiota kutsuva tarvitsee komponenttiwrapperin ja toinen ei
     ;; pitänee refaktoroida... fixme jos ehdit
     (if (= fmt :komponentti)
-      [massan-murskeen-nimen-komp ydin tarkennukset-teksti fmt]
-      (massan-murskeen-nimen-komp ydin tarkennukset-teksti fmt))))
+      [massan-murskeen-nimen-komp ydin tarkennukset fmt]
+      (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
 
 (defn murskeen-rikastettu-nimi [mursketyypit murske fmt]
   ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
