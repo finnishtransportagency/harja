@@ -14,7 +14,8 @@
             [harja.loki :refer [log]]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [clojure.string :as str]))
 
 (defn- paikkauskohteet-taulukko [e! app]
   (let [skeema [{:otsikko "NRO"
@@ -30,11 +31,11 @@
                         [:span
                          [:span {:class (str "circle "
                                              (cond
-                                               (= "Tilattu" arvo) "tila-tilattu"
-                                               (= "Ehdotettu" arvo) "tila-ehdotettu"
-                                               (= "Valmis" arvo) "tila-valmis"
+                                               (= "tilattu" arvo) "tila-tilattu"
+                                               (= "ehdotettu" arvo) "tila-ehdotettu"
+                                               (= "valmis" arvo) "tila-valmis"
                                                :default "tila-ehdotettu"
-                                               ))}] arvo])}
+                                               ))}] (str/capitalize arvo)])}
                 {:otsikko "Menetelmä"
                  :leveys 2
                  :nimi :tyomenetelma}
@@ -54,8 +55,9 @@
                          ;(js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
                          ;; Näytä valittu rivi kartalla
                          (when (not (nil? (:sijainti kohde)))
+                           (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
                            (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
-                           (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)}))
+                           )
                          ;; avaa lomake
                          (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :testilomake})))))
       :rivi-jalkeen-fn (fn [rivit]
@@ -125,6 +127,7 @@
 (defn paikkauskohteet [ur]
   (komp/luo
     (komp/sisaan #(do
+                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
                     (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [_]
