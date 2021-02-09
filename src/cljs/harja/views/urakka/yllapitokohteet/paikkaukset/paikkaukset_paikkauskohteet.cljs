@@ -19,13 +19,13 @@
 (defn- paikkauskohteet-taulukko [e! app]
   (let [skeema [{:otsikko "NRO"
                  :leveys 1
-                 :nimi :testinro}
+                 :nimi :nro}
                 {:otsikko "Nimi"
                  :leveys 4
-                 :nimi :testinimi}
+                 :nimi :nimi}
                 {:otsikko "Tila"
                  :leveys 2
-                 :nimi :testitila
+                 :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
                         [:span
                          [:span {:class (str "circle "
@@ -37,41 +37,40 @@
                                                ))}] arvo])}
                 {:otsikko "Menetelmä"
                  :leveys 2
-                 :nimi :testimenetelma}
+                 :nimi :tyomenetelma}
                 {:otsikko "Sijainti"
                  :leveys 4
-                 :nimi :testisijainti}
+                 :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
                  :leveys 4
                  :nimi :formatoitu-aikataulu}]
         paikkauskohteet (:paikkauskohteet app)]
     [grid/grid
      {:otsikko "Paikkauskohteet"
+      :tunniste :id
       :tyhja "Ei tietoja"
       :rivi-klikattu (fn [kohde]
                        (do
-                         (js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
+                         ;(js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
                          ;; Näytä valittu rivi kartalla
                          (when (not (nil? (:sijainti kohde)))
                            (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
-                           (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:testinro kohde)}))
+                           (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)}))
                          ;; avaa lomake
                          (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :testilomake})))))
-      :tunniste :testinro
       :rivi-jalkeen-fn (fn [rivit]
-                         (let [_ (js/console.log "rivi-jalkeen-fn")]
-                           ^{:luokka "yhteenveto"}
-                           [{:teksti "Yht."}
-                            {:teksti (str (count paikkauskohteet) " kohdetta")}
-                            {:teksti ""}
-                            {:teksti ""}
-                            {:teksti ""}
-                            {:teksti ""}]))}
+                         ^{:luokka "yhteenveto"}
+                         [{:teksti "Yht."}
+                          {:teksti (str (count paikkauskohteet) " kohdetta")}
+                          {:teksti ""}
+                          {:teksti ""}
+                          {:teksti ""}
+                          {:teksti ""}])}
      skeema
      paikkauskohteet]))
 
 (defn kohteet [e! app]
-  (let [_ (js/console.log "View - kohteet:" )]
+  (let [_ (js/console.log "View - kohteet:")]
     [:div
      [:div "Tänne paikkauskohteet"]
      [:div {:style {:display "flex"}}                       ;TODO: tähän class, mistä ja mikä?
@@ -102,34 +101,31 @@
        [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))])
 
 (defn- paikkauskohteet-sivu [e! app]
-  (let [_ (js/console.log "paikkauskohteet-sivu ::  Karttataso näkyvissä?" (pr-str @t-paikkauskohteet-kartalle/karttataso-nakyvissa?))]
-    [:div
-     [kartta/kartan-paikka]
-     [debug/debug app]
-     (when (:lomake app)
-       [paikkauslomake e! (:lomake app)])
-     [kohteet e! app]]))
+  [:div
+   [kartta/kartan-paikka]
+   [debug/debug app]
+   (when (:lomake app)
+     [paikkauslomake e! (:lomake app)])
+   [kohteet e! app]])
 
 (defn paikkauskohteet* [e! app]
   (komp/luo
-    (komp/sisaan #(do
-                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)
-                    (reset! t-paikkauskohteet-kartalle/karttataso-paikkauskohteet app)
-                    ;(kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
-                    ;(kartta-tasot/taso-paalle! :organisaatio)
-                    (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
-                    ;; TODO: Hae kamat bäkkäristä
-                    ))
-    (komp/ulos #(do
-                  ;(kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                  ;(reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
-                  ))
+    (komp/sisaan-ulos #(do
+                         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                         (kartta-tasot/taso-paalle! :organisaatio)
+                         (e! (t-paikkauskohteet/->HaePaikkauskohteet))
+                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true))
+                      #(do
+                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [e! app]
-      (let [_ (js/console.log " paikkauskohteet* ")]
-        [:div {:id ""}
-         [paikkauskohteet-sivu e! app]]))))
+      [:div {:id ""}
+       [paikkauskohteet-sivu e! app]])))
 
 (defn paikkauskohteet [ur]
-  (let [_ (reset! tila/paikkauskohteet t-paikkauskohteet/dummy-app-state)]
-    [tuck/tuck tila/paikkauskohteet paikkauskohteet*]))
+  (komp/luo
+    (komp/sisaan #(do
+                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
+                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
+    (fn [_]
+      [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))

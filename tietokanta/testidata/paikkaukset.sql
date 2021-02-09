@@ -372,6 +372,6 @@ insert into paikkauskohde (nimi, luotu, "urakka-id", alkuaika, loppuaika, "paikk
 
 insert into paikkauskohde (nimi, luotu, "urakka-id", alkuaika, loppuaika, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite) VALUES
-('Kaislajärven suora osa 2', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+('Kaislajärven suora osa 1', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
  '2021-01-01 00:00:00', '2021-01-13 00:00:00', 'valmis', 000, 'SIPU', 'kuvaus sipusta',
  ROW (926, 7, 3164, 8, 3264, NULL) :: TR_OSOITE);
