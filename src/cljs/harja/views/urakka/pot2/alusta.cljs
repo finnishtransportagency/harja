@@ -47,6 +47,10 @@
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
                                               :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :leveys           {:nimi   :leveys :otsikko "Leveys"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :pinta-ala        {:nimi   :pinta-ala :otsikko "Pinta-ala"
+                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
                                               :valinta-arvo ::pot2-domain/murske-id
                                               :valinta-nayta (fn [murske]
@@ -67,7 +71,7 @@
                                               :valinnat     verkon-tarkoitukset}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
         lisakentta-generaattori (fn [kentta-metadata]
-                                  (lomake/rivi (merge (get kaikki-lisakentat (:name kentta-metadata))
+                                  (lomake/rivi (merge (get kaikki-lisakentat (:nimi kentta-metadata))
                                                       {:palstoja 3
                                                        :pakollinen? (:pakollinen? kentta-metadata)})))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
