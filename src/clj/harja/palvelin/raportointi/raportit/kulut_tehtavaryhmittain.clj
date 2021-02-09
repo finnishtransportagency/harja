@@ -52,10 +52,6 @@
              conj
              k)))))
 
-(defn- hae-hoidonjohdot
-  [db {:keys [alkupvm urakka-id loppupvm]}]
-  )
-
 (defn- kulut-urakalle
   [db {:keys [alkupvm urakka-id loppupvm]}]
   (let [kuukausi-valittu? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
@@ -123,10 +119,9 @@
                                                                                              :loppupvm loppupvm-valittu-kuu-tai-vali
                                                                                              :urakka   urakka-id})))
         rivin-muodostaja (comp
-                           (map #(do (println %)
-                                     (println (keep :summa (second %)))
-                                     %))
-                           (map #(let [summa (reduce + 0 (keep :summa (second %)))]
+                           (map #(let [summa (reduce +
+                                                     0
+                                                     (keep :summa (second %)))]
                                    (assoc (first (second %)) :summa summa)))
                            (map #(->
                                    [(:jarjestys %)
