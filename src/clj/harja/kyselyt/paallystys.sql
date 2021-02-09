@@ -170,7 +170,7 @@ SELECT
     pot2a.verkon_tarkoitus AS "verkon-tarkoitus",
     pot2a.verkon_sijainti AS "verkon-sijainti",
     pot2a.kasittelysyvyys,
-    pot2a.lisatty_paksuus,
+    pot2a.lisatty_paksuus AS "lisatty-paksuus",
     pot2a.massamaara
   FROM pot2_alusta pot2a
  WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
