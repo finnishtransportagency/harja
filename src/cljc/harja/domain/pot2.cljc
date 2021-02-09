@@ -44,8 +44,12 @@
                                                24           ;; SJYR
                                                [:kasittelysyvyys
                                                 {:nimi :murske :pakollinen? false}]
+                                               41           ;; TJYR
+                                               []
                                                42           ;; LJYR
                                                [:kasittelysyvyys :leveys :pinta-ala]
+                                               43           ;; RJYR
+                                               []
                                                667          ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]}
