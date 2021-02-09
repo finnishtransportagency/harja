@@ -102,13 +102,16 @@ SELECT pk.id                     AS id,
        pk.luotu                  AS luotu,
        pk."urakka-id"            AS urakka_id,
        pk.tyomenetelma           AS tyomenetelma,
-       pk.tierekisteriosoite     AS tierekisteriosoite,
        pk.alkuaika               AS alkuaika,
        pk.loppuaika              AS loppuaika,
        pk."paikkauskohteen-tila" AS "paikkauskohteen-tila",
        (pk.tierekisteriosoite).tie AS tie,
+       (pk.tierekisteriosoite).aosa AS aosa,
+       (pk.tierekisteriosoite).aet AS aet,
+       (pk.tierekisteriosoite).losa AS losa,
+       (pk.tierekisteriosoite).let AS let,
        CASE
-           WHEN pk.tierekisteriosoite IS NOT NULL THEN
+           WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
                (SELECT *
                 FROM tierekisteriosoitteelle_viiva(
                         CAST((pk.tierekisteriosoite).tie AS INTEGER),
