@@ -44,6 +44,8 @@
                                                24           ;; SJYR
                                                [:kasittelysyvyys
                                                 {:nimi :murske :pakollinen? false}]
+                                               31           ;; TASK
+                                               []
                                                32           ;; TAS
                                                [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                41           ;; TJYR
