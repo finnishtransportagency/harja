@@ -3,7 +3,7 @@
 SELECT SUM(m.maara) as maara FROM (
 SELECT count(*) as maara
   FROM kustannusarvioitu_tyo kt
- WHERE kt."siirrety?" = false
+ WHERE kt."siirretty?" = false
    AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat (W)
      OR kt.tehtava in (SELECT id
                       FROM toimenpidekoodi t
@@ -15,7 +15,7 @@ SELECT count(*) as maara
  UNION ALL
 SELECT count(*) as maara
   FROM johto_ja_hallintokorvaus jjh
-WHERE jjh."siirrety?" = false
+WHERE jjh."siirretty?" = false
  AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', jjh.vuosi, jjh.kuukausi, 1)::DATE))) <
       date_trunc('month', current_date)) AS m;
 

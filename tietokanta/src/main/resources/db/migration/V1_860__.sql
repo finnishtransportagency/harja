@@ -1,10 +1,10 @@
 -- Merkitään kustannusarvioitu_tyo ja johto_ja_hallintakorvaus tauluihin tieto, että onko
 -- kyseinen rivi jo siirretty toteutuneet_kustannukset tauluun.
 ALTER TABLE kustannusarvioitu_tyo
-    ADD COLUMN "siirrety?" BOOLEAN NOT NULL DEFAULT false;
+    ADD COLUMN "siirretty?" BOOLEAN NOT NULL DEFAULT false;
 
 ALTER TABLE johto_ja_hallintokorvaus
-    ADD COLUMN "siirrety?" BOOLEAN NOT NULL DEFAULT false;
+    ADD COLUMN "siirretty?" BOOLEAN NOT NULL DEFAULT false;
 
 -- Luodaan tauluun toteutuneet_kustannukset kenttä, johon merkitään, että
 -- mistä taulusta kyseinen rivi on siirretty, koska siirrettyjä tietoja voidaan muokata ja muokkausten
@@ -165,7 +165,7 @@ BEGIN
     FROM kustannusarvioitu_tyo k
     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) <
           date_trunc('month', current_date)
-      AND k."siirrety?" = false
+      AND k."siirretty?" = false
       AND (k.tehtavaryhma = (SELECT id
                              FROM tehtavaryhma
                              WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat (W)
@@ -207,15 +207,15 @@ BEGIN
     FROM johto_ja_hallintokorvaus j
     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) <
           date_trunc('month', current_date)
-      AND j."siirrety?" = false
+      AND j."siirretty?" = false
     ON CONFLICT DO NOTHING;
 
     -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirrety
     UPDATE kustannusarvioitu_tyo k
-    SET "siirrety?" = true
+    SET "siirretty?" = true
     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) <
           date_trunc('month', current_date)
-      AND k."siirrety?" = false
+      AND k."siirretty?" = false
       AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c')
         OR k.tehtava in (SELECT id
                          FROM toimenpidekoodi t
@@ -225,10 +225,10 @@ BEGIN
 
     -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirrety
     UPDATE johto_ja_hallintokorvaus j
-    SET "siirrety?" = true
+    SET "siirretty?" = true
     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) <
           date_trunc('month', current_date)
-      AND j."siirrety?" = false;
+      AND j."siirretty?" = false;
 
 END;
 $$ LANGUAGE plpgsql;
