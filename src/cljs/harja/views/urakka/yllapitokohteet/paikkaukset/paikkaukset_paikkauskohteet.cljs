@@ -75,8 +75,9 @@
   (let [_ (js/console.log "View - kohteet:")]
     [:div
      [:div "Tänne paikkauskohteet"]
-     [:div {:style {:display "flex"}}                       ;TODO: tähän class, mistä ja mikä?
+     [:div {:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
       ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+      ;TODO: Napeista puuttuu myös kulmien pyöristys
       [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
       [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
       [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
@@ -84,10 +85,101 @@
      [paikkauskohteet-taulukko e! app]])
   )
 
-(defn uusi-paikkauskohde-lomake
-  [e!]
-  [:div "Tänne lomake uudelle kohteelle"
-   [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
+(defn uusi-paikkauskohde-lomake [e! lomake]
+  (fn [e! lomake]
+    [:div
+     [lomake/lomake
+      {:luokka " overlay-oikealla"
+       :overlay {:leveys "600px"}
+       :ei-borderia? true
+       :otsikko "Ehdota paikkauskohdetta"
+       :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+       :footer-fn (fn [lomake]
+                    [:div
+                     [napit/tallenna
+                      "Tallenna"
+                      #(e! (t-paikkauskohteet/->TallennaUusiPaikkauskohde lomake))]
+                     [napit/yleinen-toissijainen
+                      "Peruuta"
+                      #(e! (t-paikkauskohteet/->SuljeLomake))]])}
+      [
+       {:otsikko "Numero"
+        :tyyppi :numero
+        :nimi :numero
+        ::lomake/col-luokka "col-sm-4"}
+       {:otsikko "Nimi"
+        :tyyppi :string
+        :nimi :nimi
+        :pakollinen? true
+        ::lomake/col-luokka "col-sm-8"}
+       {:otsikko "Työmenetelmä"
+        :tyyppi :valinta
+        :nimi :tyomenetelma
+        :valinnat ["MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"]
+        :pakolinen? true}
+       (lomake/ryhma
+         {:otsikko "Sijainti"
+          :uusi-rivi? true
+          :ryhman-luokka "lomakeryhman-border"}
+         (lomake/rivi
+           {:otsikko "Tie"
+            :tyyppi :string
+            :nimi :tie
+            :pakolinen? true}
+           {:otsikko "Ajorata"
+            :tyyppi :valinta
+            :valinnat [0 1 2 3] ; TODO: Hae jostain?
+            :nimi :ajorata
+            :pakolinen? false})
+         (lomake/rivi
+           {:otsikko "A-osa"
+            :tyyppi :string
+            :pakollinen? true
+            :nimi :aosa}
+           {:otsikko "A-et."
+            :tyyppi :string
+            :pakollinen? true
+            :nimi :aet}
+           {:otsikko "L-osa."
+            :tyyppi :string
+            :pakollinen? true
+            :nimi :losa}
+           {:otsikko "L-et."
+            :tyyppi :string
+            :pakollinen? true
+            :nimi :let}))
+       (lomake/ryhma
+         {:otsikko "Alustava suunnitelma"}
+         (lomake/rivi
+           {:otsikko "Arv. aloitus"
+            :tyyppi :pvm
+            :nimi :aloitus
+            :pakollinen? true
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Arv. lopetus"
+            :tyyppi :pvm
+            :nimi :lopetus
+            :pakollinen? true
+            ::lomake/col-luokka "col-sm-6"})
+         (lomake/rivi
+           {:otsikko "Suunniteltu määrä"
+            :tyyppi :positiivinen-numero
+            :nimi :maara
+            :pakollinen? true
+            ::lomake/col-luokka "col-sm-6"}
+           {:otsikko "Yksikkö"
+            :tyyppi :valinta
+            :valinnat ["m²" "t" "kpl" "jm"]
+            :nimi :yksikko
+            :pakollinen? true
+            ::lomake/col-luokka "col-sm-6"})
+         )
+       {:otsikko "Suunniteltu hinta"
+        :tyyppi :positiivinen-numero
+        :nimi :suunniteltu-hinta
+        ::lomake/col-luokka "col-sm-12"
+        :yksikko "€"}]
+      lomake]]))
 
 (defn testilomake
   [e! _lomake]
@@ -95,12 +187,11 @@
    [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
 
 (defn paikkauslomake [e! lomake]
-  [lomake/lomake-overlay {}
-   (fn []
-     (case (:tyyppi lomake)
-       :uusi-paikkauskohde [uusi-paikkauskohde-lomake e!]
-       :testilomake [testilomake e! lomake]
-       [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))])
+  (fn [e! lomake]
+    (case (:tyyppi lomake)
+      :uusi-paikkauskohde [uusi-paikkauskohde-lomake e! lomake]
+      :testilomake [testilomake e! lomake]
+      [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
