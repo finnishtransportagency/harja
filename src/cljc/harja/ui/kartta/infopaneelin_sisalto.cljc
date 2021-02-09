@@ -839,7 +839,7 @@
      :otsikko (str "Paikkauskohde: " (:nimi (:infopaneelin-tiedot kohde))) ;; Laita tähän vaikka päivämäärä
      :tiedot [{:otsikko "Nro" :tyyppi :string :nimi :nro}
               {:otsikko "Nimi" :tyyppi :string :nimi :nimi}
-              {:otsikko "Tila" :tyyppi :string :nimi :tila}
+              {:otsikko "Tila" :tyyppi :string :nimi :paikkauskohteen-tila}
               {:otsikko "Menetelmä" :tyyppi :string :nimi :menetelma}
               {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}
               ]

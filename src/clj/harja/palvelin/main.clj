@@ -65,6 +65,7 @@
     [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
+    [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
@@ -432,6 +433,9 @@
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
                      [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
+      :paikkauskohteet (component/using
+                         (paikkauskohteet/->Paikkauskohteet)
+                         [:http-palvelin :db])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))

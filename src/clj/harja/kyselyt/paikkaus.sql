@@ -93,4 +93,34 @@ WHERE (tr1).tie = (tr2).tie;
 --single?: true
 SELECT id
   FROM paikkauskohde
- WHERE "ulkoinen-id" = :ulkoinen-id
+ WHERE "ulkoinen-id" = :ulkoinen-id;
+
+--name: paikkauskohteet-urakalle
+-- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
+SELECT pk.id                     AS id,
+       pk.nimi                   AS nimi,
+       pk.luotu                  AS luotu,
+       pk."urakka-id"            AS urakka_id,
+       pk.tyomenetelma           AS tyomenetelma,
+       pk.alkuaika               AS alkuaika,
+       pk.loppuaika              AS loppuaika,
+       pk."paikkauskohteen-tila" AS "paikkauskohteen-tila",
+       (pk.tierekisteriosoite).tie AS tie,
+       (pk.tierekisteriosoite).aosa AS aosa,
+       (pk.tierekisteriosoite).aet AS aet,
+       (pk.tierekisteriosoite).losa AS losa,
+       (pk.tierekisteriosoite).let AS let,
+       CASE
+           WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
+               (SELECT *
+                FROM tierekisteriosoitteelle_viiva(
+                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
+                        CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
+                        CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
+           ELSE NULL
+           END                   AS geometria
+FROM paikkauskohde pk
+ WHERE pk."urakka-id" = :urakka-id
+   AND pk.poistettu = false
+   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
+   AND pk."paikkauskohteen-tila" IS NOT NULL;

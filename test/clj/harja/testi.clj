@@ -535,6 +535,7 @@
 (def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
 (def muhoksen-paikkausurakan-id (atom nil))
 (def muhoksen-paikkausurakan-paasopimuksen-id (atom nil))
+(def kemin-alueurakan-2019-2023-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
 
@@ -767,6 +768,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
+
+(defn hae-kemin-alueurakan-2019-2023-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Kemin päällystysurakka'"))))
 
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
@@ -1148,6 +1154,7 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-alueurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))

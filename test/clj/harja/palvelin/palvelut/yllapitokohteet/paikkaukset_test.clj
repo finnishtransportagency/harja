@@ -295,7 +295,7 @@
         paikkauskohteet (for [x (:paikkauskohteet kustannukset)] (dissoc x
                                                                          ::paikkaus/tarkistaja-id
                                                                          ::paikkaus/tarkistettu
-                                                                         ::paikkaus/tila
+                                                                         ::paikkaus/yhalahetyksen-tila
                                                                          ::paikkaus/ilmoitettu-virhe
                                                                          ::muokkaustiedot/luotu
                                                                          ::muokkaustiedot/muokattu))]

@@ -63,7 +63,7 @@
   #{::id
     ::ulkoinen-id
     ::nimi
-    ::tila
+    ::yhalahetyksen-tila
     ::virhe
     ::tarkistettu
     ::tarkistaja-id
