@@ -195,7 +195,7 @@
                                 :perustelu nil},
                  :valmispvm-paallystys nil},
    :ilmoitustiedot nil,
-   :kulutuskerros [{:kohdeosa-id 13,
+   :paallystekerros [{:kohdeosa-id 13,
                     :tr-kaista 11,
                     :tr-ajorata 1,
                     :jarjestysnro 1,
@@ -633,21 +633,21 @@
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-alkuosa
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
-                               (assoc-in [:kulutuskerros 0 :tr-alkuosa] 2))]
+                               (assoc-in [:paallystekerros 0 :tr-alkuosa] 2))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-loppuosa
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
-                               (assoc-in [:kulutuskerros 0 :tr-loppuetaisyys] 6000))]
+                               (assoc-in [:paallystekerros 0 :tr-loppuetaisyys] 6000))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-paallekkain
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
-                               (assoc-in [:kulutuskerros 2] {:kohdeosa-id 14,
+                               (assoc-in [:paallystekerros 2] {:kohdeosa-id 14,
                                                              :tr-kaista 12,
                                                              :tr-ajorata 1,
                                                              :jarjestysnro 1,
@@ -669,7 +669,7 @@
 (deftest tallenna-pot2-paallystysilmoitus-jos-paallekkain-mutta-eri-jarjestysnro
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         paallystysilmoitus (-> pot2-testidata
-                               (assoc-in [:kulutuskerros 2] {:kohdeosa-id 14,
+                               (assoc-in [:paallystekerros 2] {:kohdeosa-id 14,
                                                              :tr-kaista 12,
                                                              :tr-ajorata 1,
                                                              :jarjestysnro 2,
@@ -697,7 +697,7 @@
   (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
         muu-tr-numero 5555
         paallystysilmoitus (-> pot2-testidata
-                               (assoc-in [:kulutuskerros 1 :tr-numero] muu-tr-numero))
+                               (assoc-in [:paallystekerros 1 :tr-numero] muu-tr-numero))
         maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
         [urakka-id sopimus-id _ _] (tallenna-testipaallystysilmoitus
                                                               paallystysilmoitus
@@ -709,7 +709,7 @@
                                                       +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                       :sopimus-id         sopimus-id
                                                                       :paallystyskohde-id paallystyskohde-id})
-          kulutuskerros (:kulutuskerros paallystysilmoitus-kannassa)]
+          kulutuskerros (:paallystekerros paallystysilmoitus-kannassa)]
       (is (= 2 (count kulutuskerros)))
       (is (= #{20 muu-tr-numero} (set (map #(:tr-numero %) kulutuskerros)))))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
@@ -820,7 +820,7 @@
                 :massamaara nil,
                 :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty")
       (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
-                                        (assoc-in [:kulutuskerros 0 :nimi] "Uusi uudistettu tie 22"))
+                                        (assoc-in [:paallystekerros 0 :nimi] "Uusi uudistettu tie 22"))
             [_ _ _ paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
         (is (= paivitetty-yllapitokohdeosadata
                #{{:nimi "Kohdeosa kaista 12",
@@ -898,7 +898,7 @@
    :versio 2,
    :lisatiedot "POT2 alustatesti ilmoitus"
    :ilmoitustiedot nil,
-   :kulutuskerros [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
+   :paallystekerros [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
                     :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 1, :jarjestysnro 1,
                     :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 1500, :nimi "Tärkeä kohdeosa kaista 11",
                     :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1}
@@ -1009,7 +1009,7 @@
         paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         muu-tr-numero 7777
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
-                               (assoc-in [:kulutuskerros 2]
+                               (assoc-in [:paallystekerros 2]
                                          {:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
                                           :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 10, :jarjestysnro 1,
                                           :tr-alkuosa 10, :massamenekki 333, :tr-loppuetaisyys 1500, :nimi "Muu tie",
@@ -1043,7 +1043,7 @@
         muu-tr-numero 7777
         vaara-tr-numero 5555
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
-                               (assoc-in [:kulutuskerros 2]
+                               (assoc-in [:paallystekerros 2]
                                          {:kohdeosa-id 13, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000,
                                           :tr-ajorata 1, :pinta_ala 15000, :tr-loppuosa 10, :jarjestysnro 1,
                                           :tr-alkuosa 10, :massamenekki 333, :tr-loppuetaisyys 1500, :nimi "Muu tie",

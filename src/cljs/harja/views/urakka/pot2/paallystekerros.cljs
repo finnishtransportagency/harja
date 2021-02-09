@@ -1,5 +1,5 @@
-(ns harja.views.urakka.pot2.kulutuskerros
-  "POT2-lomakkeen kulutuskerros"
+(ns harja.views.urakka.pot2.paallystekerros
+  "POT2-lomakkeen päällystekerros"
   (:require
     [reagent.core :refer [atom] :as r]
     [harja.domain.oikeudet :as oikeudet]
@@ -26,9 +26,9 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn validoi-kulutuskerros
+(defn validoi-paallystekerros
   [rivi taulukko]
-  (println "validoi-kulutuskerros rivi" (pr-str rivi))
+  (println "validoi-paallystekerros rivi" (pr-str rivi))
   (let [{:keys [perustiedot tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
         paakohde (select-keys perustiedot tr/paaluvali-avaimet)
         vuosi 2021 ;; riittää pot2:lle aina
@@ -53,12 +53,12 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
-(defn kulutuskerros
-  "Alikohteiden päällysteiden kulutuskerroksen rivien muokkaus"
+(defn paallystekerros
+  "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
    {:keys [massat massatyypit materiaalikoodistot validointi]} kohdeosat-atom]
   (let [perusleveys 2
-        kulutuskerros-toimenpiteet (:kulutuskerros-toimenpiteet materiaalikoodistot)]
+        paallystekerros-toimenpiteet (:paallystekerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :voi-kumota? false :lisaa-rivi " Lisää toimenpide"
@@ -83,7 +83,7 @@
                                               :luokka "btn-xs"}]])])
       :rivi-klikattu #(log "click")}
      [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys perusleveys
-       :tyyppi :valinta :valinnat kulutuskerros-toimenpiteet :valinta-arvo ::pot2-domain/koodi
+       :tyyppi :valinta :valinnat paallystekerros-toimenpiteet :valinta-arvo ::pot2-domain/koodi
        :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
@@ -124,7 +124,7 @@
        :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                                   (boolean (:piennar rivi)))}
-      {:otsikko "" :nimi :kulutuskerros-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
+      {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
      kohdeosat-atom]))

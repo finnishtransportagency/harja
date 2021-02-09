@@ -415,7 +415,7 @@
                            :sideainetyypit
                            :lisaainetyypit
                            :alusta-toimenpiteet
-                           :kulutuskerros-toimenpiteet
+                           :paallystekerros-toimenpiteet
                            :verkon-sijainnit
                            :verkon-tarkoitukset
                            :verkon-tyypit}]
@@ -433,7 +433,7 @@
     (is (= (some #(= :harja.domain.pot2{:nimi "Massanvaihto", :lyhenne "MV", :koodi 1}  %)
                  (:alusta-toimenpiteet vastaus))))
     (is (= (some #(= :harja.domain.pot2 {:nimi "Paksuudeltaan vakio laatta", :lyhenne "LTA", :koodi 12}  %)
-                 (:kulutuskerros-toimenpiteet vastaus))))
+                 (:paallystekerros-toimenpiteet vastaus))))
 
 
     (is (= (count (:massatyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_massatyyppi"))))
@@ -442,7 +442,7 @@
     (is (= (count (:sideainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_sideainetyyppi"))))
     (is (= (count (:lisaainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_lisaainetyyppi"))))
     (is (= (count (:alusta-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_alusta_toimenpide"))))
-    (is (= (count (:kulutuskerros-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_kulutuskerros_toimenpide"))))
+    (is (= (count (:paallystekerros-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_kulutuskerros_toimenpide"))))
     (is (= (count (:verkon-sijainnit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_sijainti"))))
     (is (= (count (:verkon-tarkoitukset vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tarkoitus"))))
     (is (= (count (:verkon-tyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tyyppi"))))

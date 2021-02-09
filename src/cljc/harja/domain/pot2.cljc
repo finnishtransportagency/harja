@@ -99,7 +99,7 @@
   (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
 
 (define-tables
-  ["pot2_mk_kulutuskerros_toimenpide" ::pot2-mk-kulutuskerros-toimenpide
+  ["pot2_mk_paallystekerros_toimenpide" ::pot2-mk-paallystekerros-toimenpide
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
