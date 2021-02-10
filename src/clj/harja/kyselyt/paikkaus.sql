@@ -100,8 +100,9 @@ SELECT id
 SELECT pk.id                     AS id,
        pk.nimi                   AS nimi,
        pk.luotu                  AS luotu,
-       pk."urakka-id"            AS urakka_id,
+       pk."urakka-id"            AS "urakka-id",
        pk.tyomenetelma           AS tyomenetelma,
+       pk.tyomenetelma_kuvaus    AS "tyomenetelma-kuvaus",
        pk.alkuaika               AS alkuaika,
        pk.loppuaika              AS loppuaika,
        pk."paikkauskohteen-tila" AS "paikkauskohteen-tila",
@@ -124,3 +125,45 @@ FROM paikkauskohde pk
    AND pk.poistettu = false
    -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
    AND pk."paikkauskohteen-tila" IS NOT NULL;
+
+--name:paivita-paikkauskohde!
+UPDATE paikkauskohde
+SET "ulkoinen-id"          = :ulkoinen-id,
+    nimi                   = :nimi,
+    poistettu              = :poistettu,
+    "muokkaaja-id"         = :muokkaaja-id,
+    muokattu               = :muokattu,
+    "yhalahetyksen-tila"   = :yhalahetyksen-tila,
+    virhe                  = :virhe,
+    tarkistettu            = :tarkistettu,
+    "tarkistaja-id"        = :tarkistaja-id,
+    "ilmoitettu-virhe"     = :ilmoitettu-virhe,
+    nro                    = :nro,
+    alkuaika               = :alkuaika::TIMESTAMP,
+    loppuaika              = :loppuaika::TIMESTAMP,
+    tyomenetelma           = :tyomenetelma,
+    tyomenetelma_kuvaus    = :tyomenetelma-kuvaus,
+    tierekisteriosoite = ROW(:tie, :aosa, :losa, :aet, :let, NULL)::tr_osoite,
+    "paikkauskohteen-tila" = :paikkauskohteen-tila::paikkauskohteen_tila
+WHERE id = :id RETURNING id;
+
+--name: luo-uusi-paikkauskohde!
+INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
+                           "yhalahetyksen-tila", virhe, nro, alkuaika, loppuaika, tyomenetelma,
+                           "tyomenetelma_kuvaus", tierekisteriosoite, "paikkauskohteen-tila", "urakka-id")
+VALUES (:luoja-id,
+        :ulkoinen-id,
+        :nimi,
+        false,
+        :luotu,
+        :yhalahetyksen-tila,
+        :virhe,
+        :nro,
+        :alkuaika::TIMESTAMP,
+        :loppuaika::TIMESTAMP,
+        :tyomenetelma,
+        :tyomenetelma-kuvaus,
+        ROW(:tie, :aosa,:losa, :aet, :let, NULL)::tr_osoite,
+        :paikkauskohteen-tila::paikkauskohteen_tila,
+        :urakka-id)
+        RETURNING id;
