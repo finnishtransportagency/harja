@@ -37,6 +37,9 @@
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
                                                 {:nimi :massamaara :pakollinen? false}]
+                                               11           ;; BEST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false} :massamaara]
                                                23           ;; MS
                                                [:lisatty-paksuus
                                                 {:nimi :massamaara :pakollinen? false}

@@ -40,6 +40,8 @@
            massatyypit
            murskeet
            mursketyypit
+           sideainetyypit
+           sidotun-kantavan-kerroksen-sideaine
            verkon-sijainnit
            verkon-tyypit
            verkon-tarkoitukset]}]
@@ -55,6 +57,8 @@
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :pinta-ala          {:nimi   :pinta-ala :otsikko "Pinta-ala"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
+                           :sideainepitoisuus  {:nimi   :sideainepitoisuus :otsikko "Sideainepitoisuus"
+                                                :tyyppi :positiivinen-numero :desimaalien-maara 1}
                            :murske             {:otsikko       "Murske" :nimi :murske :tyyppi :valinta
                                                 :valinta-arvo  ::pot2-domain/murske-id
                                                 :valinta-nayta (fn [murske]
@@ -71,6 +75,12 @@
                                                                                massa)]
                                                                    (str a b)))
                                                 :valinnat      massat}
+                           :sideaine           {:otsikko      "Sideaine" :nimi :sideaine :tyyppi :valinta
+                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                                :valinnat     sideainetyypit}
+                           :sideaine2          {:otsikko      "Sideaine 2" :nimi :sideaine2 :tyyppi :valinta
+                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
+                                                :valinnat     sidotun-kantavan-kerroksen-sideaine}
                            :verkon-tyyppi      {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
                                                 :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
                                                 :valinnat     verkon-tyypit}
@@ -161,6 +171,8 @@
                             :murskeet murskeet
                             :massatyypit (:massatyypit materiaalikoodistot)
                             :mursketyypit (:mursketyypit materiaalikoodistot)
+                            :sideainetyypit (:sideainetyypit materiaalikoodistot)
+                            :sidotun-kantavan-kerroksen-sideaine (:sidotun-kantavan-kerroksen-sideaine materiaalikoodistot)
                             :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
                             :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
                             :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
