@@ -73,7 +73,7 @@
                     (cond
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
-                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))
+                      :default (* (.divide toteuma suunniteltu 2 RoundingMode/HALF_UP) 100)))
         rivi-toteumaprosentilla (filter some?
                                         (conj (into [] (take 4 rivi)) toteuma-% toteutunut-materiaalimaara))]
 
