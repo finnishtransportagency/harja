@@ -19,7 +19,7 @@ select tr.nimi as "nimi",
        jhk."toimenkuva-id",
        sum(jhk.tuntipalkka * jhk.tunnit) as "summa"
 from johto_ja_hallintokorvaus jhk
-  join tehtavaryhma tr on tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
+  join tehtavaryhma tr on tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- johto- ja hallintokorvaus-tehtäväryhmän yksilöivä tunniste, näitä on muutamilla tehtäväryhmillä ja toimenpidekoodeilla, niin jos nimet muuttuu niin näillä ne löytyy luotettavasti
 where jhk."urakka-id" = :urakka
   and format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE between :alkupvm and :loppupvm
 group by jhk."toimenkuva-id", tr.nimi, tr.id, tr.jarjestys
@@ -48,7 +48,7 @@ from (select tr.nimi      as "nimi",
              join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
              join toimenpidekoodi tpk
              join tehtavaryhma tr
-                  on tpk.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('a6614475-1950-4a61-82c6-fda0fd19bb54')
+                  on tpk.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('a6614475-1950-4a61-82c6-fda0fd19bb54') -- Tilaajan varaukset -tehtäväryhmän yksilöivä tunniste
                   on tpk.id = kt.tehtava
       where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm
   union all
@@ -59,7 +59,7 @@ from (select tr.nimi      as "nimi",
       from kustannusarvioitu_tyo kt
              join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
              join tehtavaryhma tr
-                  on kt.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('37d3752c-9951-47ad-a463-c1704cf22f4c')
+                  on kt.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat -tehtäväryhmän yksilöivä tunniste
       where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm) rs
 group by rs.nimi, rs.tehtavaryhma, rs.jarjestys
 order by rs.jarjestys;
