@@ -40,6 +40,21 @@
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false} :massamaara]
+                                               12           ;; VBST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                               13           ;; REST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                               14           ;; SST
+                                               [:kasittelysyvyys :sideainepitoisuus :sideaine2
+                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                               15           ;; MHST
+                                               [:kasittelysyvyys :sideainepitoisuus :sideaine2
+                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                               16           ;; KOST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus :sideaine2
+                                                {:nimi :murske :pakollinen? false} :massamaara]
                                                23           ;; MS
                                                [:lisatty-paksuus
                                                 {:nimi :massamaara :pakollinen? false}
