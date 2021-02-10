@@ -6,19 +6,16 @@ with urakat as (select id, hallintayksikko
                   and u.poistettu = false
                   and (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)),
      toteumat as (select sum(tt.maara) as "maara", tpk.id as "toimenpidekoodi", o.id as "hallintayksikko", sum(tm.maara) as "materiaalimaara"
-                  from toteuma t
-                         LEFT JOIN toteuma_materiaali tm
-                            ON t.id = tm.toteuma AND tm.poistettu = FALSE
-                         join urakka u
-                         join organisaatio o on u.hallintayksikko = o.id
-                              on t.urakka = u.id
-
+                    from toteuma t
+                         LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu = FALSE
+                         join urakat u
+                         join organisaatio o on u.hallintayksikko = o.id on t.urakka = u.id
                          join toteuma_tehtava tt on tt.toteuma = t.id AND tt.urakka_id = t.urakka AND tt.poistettu = false
                          join toimenpidekoodi tpk on tt.toimenpidekoodi = tpk.id
-
-                  where t.urakka in (select id from urakat)
-                  and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-                  group by o.id, tpk.id),
+                   where t.urakka in (select id from urakat)
+                     and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                     and t.poistettu = false
+                   group by o.id, tpk.id),
      tyot as (select sum(yt.maara) as "maara", yt.tehtava as "tehtava", yt.urakka as "urakka"
               from yksikkohintainen_tyo yt
               where yt.urakka in (select id from urakat)
@@ -43,6 +40,7 @@ select toteumat.maara             as toteuma,
           WHEN emo.koodi = '20191' THEN 5
           WHEN emo.koodi = '14301' THEN 6
           WHEN emo.koodi = '23151' THEN 7
+          ELSE 8
          END)                 AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
        join urakka u on tpi.urakka = u.id
@@ -54,3 +52,4 @@ from toimenpideinstanssi tpi
 where tpi.urakka in (select id from urakat)
 group by o.nimi, o.id, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, toteumat.maara, toteumat.materiaalimaara, tyot.maara, tpi.urakka, tehtava.jarjestys, emo.koodi
 having coalesce(toteumat.maara, tyot.maara) >= 0
+order by "toimenpide-jarjestys" ASC, tehtava.jarjestys ASC;
