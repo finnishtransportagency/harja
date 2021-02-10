@@ -1,11 +1,6 @@
 @import "livi_tyylit";
 /* Geneerinen editoitava gridi */
 
-/*
-font: #191919
-border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa background-even: #e1e1e1
-*/
-
 .virhe-tai-varoitus-grid (@taustavari, @vari) {
   background-color: @taustavari;
   bottom: 5px;
@@ -15,19 +10,16 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   width: 100%;
 }
 
-@livitaulukon-input-korkeus: 22px;
-@livitaulukon-rivi-korkeus: 24px;
-@livi-taulukon-padding: 3px;
-@livi-taulukon-padding-muokatessa: 0;
+@livitaulukon-rivi-korkeus: 36px;
+@livitaulukon-input-korkeus: @livitaulukon-rivi-korkeus;
+@livi-taulukon-padding: 0 16px;
+@livi-taulukon-padding-tiivis: 0 2px;
+@livi-taulukon-padding-melko-tiivis: 0 4px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: #dee7fb;
 
 .vihje-hento-korostus {
   background-color: @hento-korostusvari;
-}
-
-.livi-taulukon-reunat {
-  border: 1px solid @harmaa7;
 }
 
 .livi-grid {
@@ -93,8 +85,17 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     }
 
     thead {
-      background-color: @harmaa8;
+      background-color: @harmaa13;
       word-break: normal;
+      > tr {
+        height: @livitaulukon-rivi-korkeus;
+      }
+    }
+    tbody {
+      > tr {
+        border-bottom: 1px solid @harmaa-vaalea;
+        height: @livitaulukon-rivi-korkeus;
+      }
     }
 
     td:hover {
@@ -144,7 +145,12 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
   tr, td, th {
     padding: @livi-taulukon-padding;
-    .livi-taulukon-reunat;
+    &.tiivis {
+      padding: @livi-taulukon-padding-tiivis;
+    }
+    &.melko-tiivis {
+      padding: @livi-taulukon-padding-melko-tiivis;
+    }
     .pvm-aika-kentta td {
       padding: 0;
     }
@@ -173,7 +179,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     margin-bottom: 1px;
   }
   .muokkaustoiminnot {
-    margin-bottom: 1px;
+    margin-bottom: 4px;
     button {
       margin-right: 1em;
     }
@@ -220,12 +226,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   div.pvm {
     position: relative;
   }
-  tr.parillinen {
-    background-color: @harmaa10;
-  }
-  tr.pariton {
-    background-color: @harmaa15;
-  }
   tr.rivi-valittu {
     color: @valkoinen;
     background-color: @harmaa7;
@@ -252,9 +252,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
   tr.muokataan {
     height: @livitaulukon-rivi-korkeus;
-    padding: @livi-taulukon-padding-muokatessa;
+    padding: @livi-taulukon-padding-tiivis;
     &.parillinen {
-      background-color: @harmaa10;
       input[disabled].disabled {
         background-color: @harmaa10;
       }
@@ -268,7 +267,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
     }
     &.pariton {
-      background-color: @harmaa13;
       input[disabled].disabled {
         background-color: @harmaa13;
       }
@@ -282,23 +280,48 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
     }
     td {
+      background-color: @valkoinen;
       &.ei-muokattava {
-        padding-left: @livi-taulukon-padding;
+        background-color: @harmaa15;
+        padding: @livi-taulukon-padding;
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
+        &.melko-tiivis {
+          padding: @livi-taulukon-padding-melko-tiivis;
+        }
       }
       &.ei-muokattava.tasaa-oikealle {
-        padding-right: @livi-taulukon-padding;
+        padding: @livi-taulukon-padding;
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
+        &.melko-tiivis {
+          padding: @livi-taulukon-padding-melko-tiivis;
+        }
       }
       &.muokattava > input {
-        padding: 0 0 0 @livi-taulukon-padding;
+        padding: 0 0 0 3px;
       }
       &.muokattava.tasaa-oikealle > input {
-        padding: 0 @livi-taulukon-padding 0 0;
+        padding: 0 3px 0 0;
       }
       &.muokattava.tasaa-oikealle > span.grid-kentta-wrapper > input {
-        padding: 0 @livi-taulukon-padding 0 0;
+        padding: 0;
       }
-      padding: @livi-taulukon-padding-muokatessa;
-      .livi-taulukon-reunat;
+      .alasveto-gridin-kentta.tasaa-oikealle {
+        .nappi-alasveto {
+          padding: 0;
+          text-align: right;
+          .valittu {
+            padding-right: 30px;
+            text-align: right;
+          }
+          .livicon-chevron-down, .livicon-chevron-up {
+            right: 0;
+          }
+        }
+      }
       > input {
         border: none;
       }
@@ -310,6 +333,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
       .pvm-aika-kentta td {
         padding: 0;
+      }
+      &.toiminnot {
+        padding: @livi-taulukon-padding-tiivis;
       }
     }
     .checkbox-rivina {
@@ -411,7 +437,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .nappi-toissijainen.nappi-tayta {
-  height: @livitaulukon-input-korkeus;
+  height: 24px;
+  top: 16px;
   margin: 0;
   padding: 1px 4px;
   z-index: 1;

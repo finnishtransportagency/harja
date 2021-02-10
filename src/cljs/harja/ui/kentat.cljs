@@ -630,7 +630,7 @@
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta
-  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo
+  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data]
@@ -639,7 +639,7 @@
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
     (let [nykyinen-arvo @data
           valinnat (or valinnat (valinnat-fn rivi))]
-      [livi-pudotusvalikko {:class                 (str "alasveto-gridin-kentta " alasveto-luokka)
+      [livi-pudotusvalikko {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa))
                             :valinta               (if valinta-arvo
                                                      (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                                                      nykyinen-arvo)
