@@ -725,5 +725,5 @@
              :ei-oikeutta-virhe)))))
 
 (deftest palvelun-validointi-ja-palvelu-sama
-  (is (= (into #{} (keys (var-get #'harja.palvelin.palvelut.budjettisuunnittelu/toimenpide-avain->toimenpide)))
+  (is (= (into #{} (keys mhu/toimenpide-avain->toimenpide))
          bs-p/toimenpide-avaimet)))
