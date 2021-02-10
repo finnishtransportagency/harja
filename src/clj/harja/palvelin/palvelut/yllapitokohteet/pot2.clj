@@ -6,7 +6,6 @@
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
 
-            [harja.kyselyt.pot2 :as pot2-q]
             [harja.domain
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
@@ -102,6 +101,9 @@
         sideainetyypit (fetch db ::pot2-domain/pot2-mk-sideainetyyppi
                           (specql/columns ::pot2-domain/pot2-mk-sideainetyyppi)
                           {})
+        sidotun-kantavan-kerroksen-sideaine (fetch db ::pot2-domain/pot2-mk-sidotun-kantavan-kerroksen-sideaine
+                                                   (specql/columns ::pot2-domain/pot2-mk-sidotun-kantavan-kerroksen-sideaine)
+                                                   {})
         lisaainetyypit (fetch db ::pot2-domain/pot2-mk-lisaainetyyppi
                               (specql/columns ::pot2-domain/pot2-mk-lisaainetyyppi)
                               {})
@@ -124,13 +126,13 @@
                    :mursketyypit mursketyypit
                    :runkoainetyypit runkoainetyypit
                    :sideainetyypit sideainetyypit
+                   :sidotun-kantavan-kerroksen-sideaine sidotun-kantavan-kerroksen-sideaine
                    :lisaainetyypit lisaainetyypit
                    :alusta-toimenpiteet alusta-toimenpiteet
                    :paallystekerros-toimenpiteet paallystekerros-toimenpiteet
                    :verkon-sijainnit verkon-sijainnit
                    :verkon-tarkoitukset verkon-tarkoitukset
-                   :verkon-tyypit verkon-tyypit
-                   }]
+                   :verkon-tyypit verkon-tyypit}]
     koodistot))
 
 (defn- tallenna-runkoaineet

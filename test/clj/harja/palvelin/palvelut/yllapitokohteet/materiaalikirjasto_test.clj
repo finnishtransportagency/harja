@@ -413,6 +413,7 @@
                            :mursketyypit
                            :runkoainetyypit
                            :sideainetyypit
+                           :sidotun-kantavan-kerroksen-sideaine
                            :lisaainetyypit
                            :alusta-toimenpiteet
                            :paallystekerros-toimenpiteet
@@ -420,6 +421,7 @@
                            :verkon-tarkoitukset
                            :verkon-tyypit}]
     (is (every? #(contains? vastaus %) odotetut-avaimet))
+    (is (= (count (keys vastaus)) (count odotetut-avaimet)) "Koodistojen määrä ei täsmää odotettujen määrään.")
     (is (= (some #(= :harja.domain.pot2 {:nimi "Kovat asfalttibetonit", :lyhenne "Kovat asfalttibetonit", :koodi 10} %)
                  (:massatyypit vastaus))))
     (is (= (some #(= :harja.domain.pot2 {:nimi " Kalliomurske", :lyhenne "KaM", :koodi 1} %)
@@ -428,6 +430,7 @@
                  (:runkoainetyypit vastaus))))
     (is (= (some #(= :harja.domain.pot2 {:nimi "Bitumi, 20/30", :lyhenne " Bitumi, 20/30", :koodi 1} %)
                  (:sideainetyypit vastaus))))
+    (is (= (list #:harja.domain.pot2{:nimi "(UUSIO) CEM I", :koodi 1} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-S", :koodi 2} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/B-S", :koodi 3} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-D", :koodi 4} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-V", :koodi 5} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/B-V", :koodi 6} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-L", :koodi 7} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-LL", :koodi 8} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-M", :koodi 9} #:harja.domain.pot2{:nimi "(UUSIO) CEM III/A", :koodi 10} #:harja.domain.pot2{:nimi "(UUSIO) CEM III/B", :koodi 11} #:harja.domain.pot2{:nimi "Masuuni- tms kuona", :koodi 12}) (:sidotun-kantavan-kerroksen-sideaine vastaus)))
     (is (= (some #(= :harja.domain.pot2 {:nimi "Kuitu", :lyhenne "Kuitu", :koodi 1}  %)
                  (:lisaainetyypit vastaus))))
     (is (= (some #(= :harja.domain.pot2{:nimi "Massanvaihto", :lyhenne "MV", :koodi 1}  %)

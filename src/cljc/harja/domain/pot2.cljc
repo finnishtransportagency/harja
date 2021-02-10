@@ -131,6 +131,7 @@
   ["pot2_mk_runkoainetyyppi" ::pot2-mk-runkoainetyyppi]
   ["pot2_mk_sideainetyyppi" ::pot2-mk-sideainetyyppi]
   ["pot2_mk_lisaainetyyppi" ::pot2-mk-lisaainetyyppi]
+  ["pot2_mk_sidotun_kantavan_kerroksen_sideaine" ::pot2-mk-sidotun-kantavan-kerroksen-sideaine]
   ["pot2_mk_massan_runkoaine" ::pot2-mk-massan-runkoaine
    {"id" :runkoaine/id
     "pot2_massa_id" ::massa-id
