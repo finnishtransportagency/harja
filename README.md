@@ -382,3 +382,7 @@ Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
 kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 > for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
+
+
+x
+
