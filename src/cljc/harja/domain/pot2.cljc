@@ -47,10 +47,10 @@
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false} :massamaara]
                                                14           ;; SST
-                                               [:kasittelysyvyys :sideainepitoisuus :sideaine2
+                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false} :massamaara]
                                                15           ;; MHST
-                                               [:kasittelysyvyys :sideainepitoisuus :sideaine2
+                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false} :massamaara]
                                                16           ;; KOST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus :sideaine2
