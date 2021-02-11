@@ -47,11 +47,17 @@
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false} :massamaara]
                                                14           ;; SST
-                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                               [:kasittelysyvyys
+                                                {:nimi :sideaine2 :otsikko "Sideaine"}
+                                                :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                :massamaara]
                                                15           ;; MHST
-                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                               [:kasittelysyvyys
+                                                {:nimi :sideaine2 :otsikko "Sideaine"}
+                                                :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                :massamaara]
                                                16           ;; KOST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus :sideaine2
                                                 {:nimi :murske :pakollinen? false} :massamaara]
@@ -80,7 +86,7 @@
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
         luo-metadata (fn [avain]
                        (if (keyword? avain)
-                         {:nimi avain :pakollinen? true}
+                         {:nimi avain}
                          avain))]
     (map luo-metadata avaimet)))
 
