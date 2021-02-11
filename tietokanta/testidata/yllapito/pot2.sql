@@ -62,7 +62,7 @@ INSERT INTO public.pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, le
 
 INSERT INTO pot2_alusta (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, murske, lisatty_paksuus, massamaara, verkon_tyyppi, verkon_sijainti, verkon_tarkoitus, pot2_id)
 VALUES (20, 1, 1066, 1, 3827, 1, 11, murskeen_toimenpide_id, murske1_id, 10, 100, null, null, null, paallystysilmoituksen_id),
-       (20, 1, 1066, 1, 3827, 1, 12, verkon_toimenpide_id, null, 10, 100, 1, 1, 1, paallystysilmoituksen_id);
+       (20, 1, 1066, 1, 3827, 1, 12, verkon_toimenpide_id, null, null, null, 1, 1, 1, paallystysilmoituksen_id);
 
 
 END;
