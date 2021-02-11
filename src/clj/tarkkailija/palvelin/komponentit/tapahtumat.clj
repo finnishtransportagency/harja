@@ -156,7 +156,8 @@
                                                                         (tapahtuman-data-ok?! tapahtuman-tiedot tapahtuma))
                                                                       tapahtuman-tiedot)
                                                           (mapv (fn [tapahtuman-tiedot]
-                                                                  {::data (tapahtuman-tiedot-clj-dataksi tapahtuman-tiedot)
+                                                                  {::data (with-meta (tapahtuman-tiedot-clj-dataksi tapahtuman-tiedot)
+                                                                                     {:alustus? true})
                                                                    ::tapahtumadatan-id (:id tapahtuman-tiedot)})
                                                                 tapahtuman-tiedot))))))
 
@@ -354,13 +355,14 @@
     (fn
       ([] (xf))
       ([tulos] (xf tulos))
-      ([tulos {::keys [tapahtumadatan-id] :as td}]
+      ([tulos {::keys [tapahtumadatan-id data] :as td}]
        (let [id @edellinen-id]
-         (if (< id tapahtumadatan-id)
-           (do
+         (cond
+           (< id tapahtumadatan-id) (do
              (vreset! edellinen-id tapahtumadatan-id)
              (xf tulos td))
-           tulos))))))
+           (-> data meta :alustus?) (xf tulos td)
+           :else tulos))))))
 
 (defonce start-lukko (Object.))
 
