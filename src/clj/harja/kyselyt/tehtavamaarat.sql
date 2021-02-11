@@ -74,7 +74,7 @@ from toimenpideinstanssi tpi
                  on toteumat.toimenpidekoodi = tpk.id
                    and toteumat.urakka_id = tpi.urakka
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
-where tpi.urakka in (select id from urakat)
+where tpi.urakka in (select id from urakat) AND tpk.yksikko NOT ilike 'euro%'
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
          u.hallintayksikko, suunnitelmat.maara, toteumat.maara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
