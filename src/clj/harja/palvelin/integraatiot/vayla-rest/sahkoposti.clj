@@ -5,14 +5,38 @@
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
             [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
             [harja.pvm :as pvm]
+            [org.httpkit.client :as htclient]
+            [clojure.data.json :as json]
             [taoensso.timbre :as log])
   (:import (java.util UUID)))
 
 ;; mietittävää: rest-lähetysrajapinnasta tulossa synkroninen, eli kutsu voi kestää - ok blokata jutsuja siksi aikaa vai tehdäänkö esim futurella?
 
+;; mietittävää 2: kuuntelijat. säilytetäänkö tämä api?
+;;  - aloitetaan samalla, jos ei tule syytä esim yksinkertaisuuden takia muuttaa.
+;;  - kuuntelija-systeemi:
+;;     - komponentin kuuntelijat-parametri on atomi jonka sisällä on joukko callback-funktioita, ne saa "viestin" parametriksi johon pitää sitten osata vastata ilman muita kontekstia antavia parametreja. eli käytännössä aika paljon kontekstia tulee sulkeuman kontekstista, joka on kuuntelijaa rekisteröidessä määritelty
+;;     - integraatiopisteet.jms/kuittauskuuntelija tekee callbackin joka kuittaa jms-viestejä esim
+
+
+
 
 (defn lokittaja [{il :integraatioloki db :db} nimi]
   (integraatioloki/lokittaja il db "vayla-rest" nimi))
+
+
+(defn laheta-sahkoposti [{:keys [otsikko leipateksti url]}]
+  (let [opts {:as :text
+              :body (json/encode {... (ks json schemasta)})
+              ;; :basic-auth ["user" "pass"]
+              :user-agent "Harja"
+              
+              }
+        resp-promise (htclient/post url opts)
+        resp (deref resp-promise)
+        ]
+    ))
+
 
 (defrecord VaylaRestSahkoposti [vastausosoite jonot kuuntelijat kuittaus-kuuntelijat]
   component/Lifecycle
