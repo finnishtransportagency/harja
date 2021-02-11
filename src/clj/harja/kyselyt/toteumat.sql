@@ -892,7 +892,7 @@ WHERE
   AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
-  AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
+  AND ST_Distance84(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
   AND t.tyyppi = :tyyppi :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
@@ -1102,7 +1102,7 @@ FROM toteuma t
 WHERE
   t.urakka = :urakka
   AND (:toteuma :: INTEGER IS NULL OR t.id = :toteuma)
-  AND (:pvm :: DATE IS NULL OR t.alkanut :: DATE = :pvm :: DATE)
+  AND (:pvm :: DATE IS NULL OR t.alkanut >= :pvm::DATE AND t.alkanut < :pvm::DATE + interval '1 day')
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tt.toimenpidekoodi = :toimenpidekoodi);
 
 -- name: hae-varustetoteuma

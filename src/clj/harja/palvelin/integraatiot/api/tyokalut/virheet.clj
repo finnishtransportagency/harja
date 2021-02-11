@@ -58,6 +58,8 @@
                :virheet virheet}
               parametrit)))))
 
+;; TODO tämä ei heitä IllegalArgumentException, vaikka pitäisi
+
 (defn heita-viallinen-apikutsu-poikkeus
   ([virheet] (heita-viallinen-apikutsu-poikkeus virheet nil))
   ([virheet parametrit]
@@ -66,7 +68,7 @@
 (defn heita-sisainen-kasittelyvirhe-poikkeus
   ([virheet] (heita-sisainen-kasittelyvirhe-poikkeus virheet nil))
   ([virheet parametrit]
-   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet)))
+   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet parametrit)))
 
 (defn heita-ulkoinen-kasittelyvirhe-poikkeus
   ([virheet] (heita-ulkoinen-kasittelyvirhe-poikkeus virheet nil))

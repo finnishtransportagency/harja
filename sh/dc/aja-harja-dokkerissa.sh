@@ -61,9 +61,9 @@ fi
 
 if [[ -n "$(echo "$@" | grep clean)" ]]
 then
-    lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'"
+    lisaa_env_muuttuja LEININGEN_CLEAN "'with-profile +dev-container clean'" local
 else
-    lisaa_env_muuttuja LEININGEN_CLEAN ''
+    lisaa_env_muuttuja LEININGEN_CLEAN '' local
 fi
 
 lisaa_env_muuttuja BRANCH "$(git branch --show-current)" local
@@ -79,7 +79,7 @@ touch -f "${HARJA_DIR}/yhdistetty_dc_env"
 } > "${HARJA_DIR}/yhdistetty_dc_env"
 
 echo "Käynnistetään compose ja ohjataan output ${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log tiedostoon ..."
-sudo docker-compose --env-file "${HARJA_DIR}/yhdistetty_dc_env" up > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
+docker-compose --env-file "${HARJA_DIR}/yhdistetty_dc_env" up > "${HARJA_DIR}/dev-resources/tmp/dc_kaynnistys.log" 2>&1 &
 
 DOCKER_COMPOSE_PID=$!
 FRONTEND_REPL_PORT="$(awk -F "=" '/FRONTEND_REPL_PORT/ { print $2 }' "${COMPOSE_ENV_FILE}")"

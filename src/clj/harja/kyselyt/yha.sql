@@ -141,9 +141,10 @@ SET
 WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!
+-- TODO ehkä versio pitäisi tulla parametrina
 INSERT INTO paallystysilmoitus
-(paallystyskohde, ilmoitustiedot, luotu, luoja)
-VALUES (:paallystyskohde, :ilmoitustiedot :: JSONB, NOW(), :luoja);
+(paallystyskohde, ilmoitustiedot, luotu, luoja, versio)
+VALUES (:paallystyskohde, :ilmoitustiedot :: JSONB, NOW(), :luoja, 1);
 
 -- name: lukitse-urakan-yha-sidonta<!
 UPDATE yhatiedot

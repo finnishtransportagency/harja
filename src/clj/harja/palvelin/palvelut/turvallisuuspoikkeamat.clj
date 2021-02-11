@@ -15,8 +15,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [clj-time.core :as t]
             [harja.id :refer [id-olemassa?]]
+            [harja.palvelin.asetukset :as asetukset]
             [clj-time.coerce :as c]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
             [harja.pvm :as pvm])
   (:import (java.util Date)))
 
@@ -252,7 +252,7 @@
       (when turi
         ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
         (turi/laheta-turvallisuuspoikkeama turi id)
-        (when (and (ominaisuudet/ominaisuus-kaytossa? :urakan-tyotunnit) urakan-tyotunnit)
+        (when (and (asetukset/ominaisuus-kaytossa? :urakan-tyotunnit) urakan-tyotunnit)
           (let [kolmannes (urakan-tyotunnit-d/kuluva-vuosikolmannes)]
             (turi/laheta-urakan-vuosikolmanneksen-tyotunnit
               turi

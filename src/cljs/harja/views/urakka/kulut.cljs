@@ -183,6 +183,7 @@
                       {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
                        :disabled      disabled
                        :vayla-tyyli?  true
+                       :elementin-id  (str indeksi)
                        :valinta       valittu-asia
                        :skrollattava? true
                        :valitse-fn    (if lisatyo?

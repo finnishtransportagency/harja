@@ -27,7 +27,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :vv-alukset (component/using
                                       (vv-alukset/->Alukset)
                                       [:db :http-palvelin])))))

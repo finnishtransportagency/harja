@@ -494,8 +494,8 @@ INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, teht
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 6, 500, 'akillinen-hoitotyo'::TOTEUMATYYPPI, (select id from toimenpidekoodi where nimi = 'Äkillinen hoitotyö (l.ymp.hoito)' and emo = (select id from toimenpidekoodi where koodi = '23116')), null, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'));
 
 
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 234, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Erillishankinnat erillishinnoin'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaukset'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
+INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 234, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
+INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
 
 
 -- Rovaniemen MHU-urakka

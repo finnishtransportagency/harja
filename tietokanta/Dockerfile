@@ -1,7 +1,7 @@
 FROM centos:7
 
 ENV POSTGRESQL_VERSION=12
-ENV POSTGIS_VERSION=2.5
+ENV POSTGIS_VERSION=3.1
 # Asennetaan riippuvuudet
 RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm; \
     yum install -y postgresql${POSTGRESQL_VERSION}; \

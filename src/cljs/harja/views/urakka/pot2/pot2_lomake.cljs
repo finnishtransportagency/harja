@@ -1,44 +1,189 @@
 (ns harja.views.urakka.pot2.pot2-lomake
-
+"POT2-lomake"
   (:require
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [reagent.core :refer [atom] :as r]
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.domain.paallystysilmoitus :as pot]
+    [harja.domain.pot2 :as pot2-domain]
+    [harja.domain.tierekisteri :as tr]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [harja.loki :refer [log]]
+    [harja.ui.debug :refer [debug]]
+    [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
+    [harja.ui.lomake :as lomake]
     [harja.ui.napit :as napit]
-    [harja.views.urakka.pot-yhteinen :as pot-yhteinen]))
-
-
-(defn- alusta [e! app]
-  [:div "Alustatiedot"])
-
-(defn- kulutuskerros [e! app]
-  [:div "Kulutuskerroksen tiedot"])
-
-(defn- muokkaa-fn [tila]
-  tila)
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.paallystys :as paallystys]
+    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.views.urakka.pot2.alusta :as alusta]
+    [harja.views.urakka.pot2.kulutuskerros :as kulutuskerros]
+    [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
+    [harja.ui.kentat :as kentat])
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]
+                   [harja.atom :refer [reaction<!]]))
 
 (defn- otsikkotiedot [{:keys [tila] :as perustiedot}]
   [:span
    [:h1 (str "Päällystysilmoitus - "
                    (pot-yhteinen/paallystyskohteen-fmt perustiedot))]
    [:div
-    [:div.inline-block.pot-tila {:class (name tila)}
-     tila]]])
+    [:div.inline-block.pot-tila {:class (when tila (name tila))}
+     (if-not tila "Aloittamatta" tila)]]])
+
+(defn tallenna
+  [e! {:keys [tekninen-osa tila]}
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
+  (let [paatos-tekninen-osa (:paatos tekninen-osa)
+        huomautusteksti
+        (cond (and (not= :lukittu tila)
+                   (= :hyvaksytty paatos-tekninen-osa))
+              "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
+              :default nil)]
+
+    [:div.pot-tallennus
+     (when huomautusteksti
+       (lomake/yleinen-huomautus huomautusteksti))
+
+     [napit/palvelinkutsu-nappi
+      "Tallenna"
+      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
+      #(go
+         (e! (pot2-tiedot/->TallennaPot2Tiedot)))
+      {:luokka "nappi-ensisijainen"
+       :data-cy "pot-tallenna"
+       :id "tallenna-paallystysilmoitus"
+       :disabled (or (false? valmis-tallennettavaksi?)
+                     (not (oikeudet/voi-kirjoittaa?
+                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                            urakka-id kayttaja)))
+       :ikoni (ikonit/tallenna)
+       :virheviesti "Tallentaminen epäonnistui"}]]))
+
+(def pot2-validoinnit
+  {:perustiedot paallystys/perustietojen-validointi
+   :kulutuskerros {:rivi [{:fn kulutuskerros/validoi-kulutuskerros
+                           :sarakkeet {:tr-numero :tr-numero
+                                       :tr-ajorata :tr-ajorata
+                                       :tr-kaista :tr-kaista
+                                       :tr-alkuosa :tr-alkuosa
+                                       :tr-alkuetaisyys :tr-alkuetaisyys
+                                       :tr-loppuosa :tr-loppuosa
+                                       :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                   :taulukko [{:fn (r/partial kulutuskerros/kohde-toisten-kanssa-paallekkain-validointi true)
+                               :sarakkeet {:tr-numero :tr-numero
+                                           :tr-ajorata :tr-ajorata
+                                           :tr-kaista :tr-kaista
+                                           :tr-alkuosa :tr-alkuosa
+                                           :tr-alkuetaisyys :tr-alkuetaisyys
+                                           :tr-loppuosa :tr-loppuosa
+                                           :tr-loppuetaisyys :tr-loppuetaisyys}}]}
+   :alusta {:rivi [{:fn alusta/alustan-validointi
+                    :sarakkeet {:tr-numero :tr-numero
+                                :tr-ajorata :tr-ajorata
+                                :tr-kaista :tr-kaista
+                                :tr-alkuosa :tr-alkuosa
+                                :tr-alkuetaisyys :tr-alkuetaisyys
+                                :tr-loppuosa :tr-loppuosa
+                                :tr-loppuetaisyys :tr-loppuetaisyys}}]
+            :taulukko [{:fn #(println "todo") ;Mietitään myöhemmin, otetaanko taulukkovalidointia tässä käyttöön. POT1:ssä se aiheutti valtavaa hitautta, backend validointi ehkä riittää niihin ja hyvä vikaviestin raportointi
+                        :sarakkeet {:tr-numero :tr-numero
+                                    :tr-ajorata :tr-ajorata
+                                    :tr-kaista :tr-kaista
+                                    :tr-alkuosa :tr-alkuosa
+                                    :tr-alkuetaisyys :tr-alkuetaisyys
+                                    :tr-loppuosa :tr-loppuosa
+                                    :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
+
+(defn- toimenpiteet-ja-materiaalit-otsikkorivi
+  "Toimenpiteiden ja materiaalien otsikkorivi, jossa joitakin toimintoja"
+  [e!]
+  [:div
+   [napit/nappi "Muokkaa urakan materiaaleja"
+    #(e! (mk-tiedot/->NaytaModal true))
+    {:ikoni (ikonit/livicon-pen)
+     :luokka "napiton-nappi"
+     :style {:background-color "#fafafa"
+             :margin-left "0"}}]])
+
+(defn lisatiedot
+  [lisatiedot-atom]
+  [:span
+   [:h6 "Lisätiedot ja huomautukset"]
+   [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]}
+    (r/wrap @lisatiedot-atom #(reset! lisatiedot-atom %))]])
 
 (defn pot2-lomake
-  [e! {yllapitokohde-id :yllapitokohde-id
-       perustiedot      :perustiedot
-       :as              lomakedata-nyt}
+  [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
+       :as              app}
    lukko urakka kayttaja]
-  (komp/luo
-    (komp/lippu pot2-tiedot/pot2-nakymassa?)
-    (komp/piirretty (fn [this]
-                      (println "component did mount")))
-    (fn [e! app]
-      (let [perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})]
-        [:div.pot2-lomake
-         [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
-         [otsikkotiedot perustiedot]
-         [:hr]
-         [pot-yhteinen/paallystysilmoitus-perustiedot
-          e! perustiedot-app urakka false (fn [] (println "do nothing")) [] []]]))))
+  ;; Toistaiseksi ei käytetä lukkoa POT2-näkymässä
+  (let [muokkaa! (fn [f & args]
+                   (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
+                                                                                     (apply f vanha-arvo args)))))
+        {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
+    (println "paallystysilmoitus-lomakedata kulutuskerros" (pr-str (:kulutuskerros paallystysilmoitus-lomakedata)))
+    (komp/luo
+      (komp/lippu pot2-tiedot/pot2-nakymassa?)
+      (komp/sisaan (fn [this]
+                     (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
+                     (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
+                     (reset! pot2-tiedot/kohdeosat-atom
+                             (-> (:kulutuskerros paallystysilmoitus-lomakedata)
+                                 (pot2-domain/lisaa-paallystekerroksen-jarjestysnro 1)
+                                 (yllapitokohteet-domain/jarjesta-yllapitokohteet)
+                                 (yllapitokohteet-domain/indeksoi-kohdeosat)))
+                     (reset! pot2-tiedot/alustarivit-atom
+                             (-> (:alusta paallystysilmoitus-lomakedata)
+                                 (yllapitokohteet-domain/jarjesta-yllapitokohteet)
+                                 (yllapitokohteet-domain/indeksoi-kohdeosat)))
+                     (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
+                     (nav/vaihda-kartan-koko! :S)))
+      (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot] :as app}]
+        (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+              perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
+              kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :kulutuskerros})
+              tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
+                                        #{:tekninen-osa :tila})
+              {:keys [tila]} perustiedot
+              huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot-app)
+                                                                  (:valmispvm-kohde perustiedot-app))
+              virheet (conj []
+                            (-> perustiedot ::lomake/virheet))
+              valmis-tallennettavaksi? (and
+                                         (not= tila :lukittu)
+                                         (empty? (flatten (keep vals virheet)))
+                                         )]
+          [:div.pot2-lomake
+           [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+           [:p {:style {:color "red"}}
+            "Tämä on työn alla oleva uusi versio päällystysilmoituksesta, joka tullee käyttöön kesällä 2021. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."]
+           [otsikkotiedot perustiedot]
+           (when (= :lukittu tila)
+             [pot-yhteinen/poista-lukitus e! urakka])
+           [:hr]
+           [pot-yhteinen/paallystysilmoitus-perustiedot
+            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
+           [:hr]
+           [toimenpiteet-ja-materiaalit-otsikkorivi e!]
+           [yleiset/valitys-vertical]
+           [kulutuskerros/kulutuskerros e! kulutuskerros-app {:massat massat
+                                                              :materiaalikoodistot materiaalikoodistot
+                                                              :validointi (:kulutuskerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+           [yleiset/valitys-vertical]
+           [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
+                                         :materiaalikoodistot materiaalikoodistot
+                                         :validointi (:alusta pot2-validoinnit)}
+            pot2-tiedot/alustarivit-atom]
+           [yleiset/valitys-vertical]
+           [lisatiedot pot2-tiedot/lisatiedot-atom]
+           [yleiset/valitys-vertical]
+           [tallenna e! tallenna-app {:kayttaja kayttaja
+                                      :urakka-id (:id urakka)
+                                      :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))

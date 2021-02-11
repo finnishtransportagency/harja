@@ -167,7 +167,7 @@ def ajaTestiserverinKanta(stagenNimi) {
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen")
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -175,12 +175,12 @@ def ajaTestiserverinApp(stagenNimi, buildNumber) {
     try {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/testing/inventory',
-			 playbook    : 'playbooks/nightly.yml',
-			 vaultCredentialsId: 'Vault',
-                         extraVars   : [
-                jenkins_build_number: buildNumber,
-                jenkins_job_name: env.JOB_BASE_NAME
-            ]])
+			             playbook    : 'playbooks/nightly.yml',
+			             vaultCredentialsId: 'Vault',
+                                     extraVars   : [
+                            jenkins_build_number: buildNumber,
+                            jenkins_job_name: env.JOB_BASE_NAME
+                        ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
     } catch (e) {
         hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
@@ -220,7 +220,7 @@ def ajaStagingserverinKanta(stagenNimi) {
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -229,6 +229,7 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/staging/inventory',
                          playbook    : 'playbooks/staging.yml',
+                         vaultCredentialsId: 'Vault',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
@@ -253,7 +254,7 @@ def ajaTuotantoserverinKanta(stagenNimi) {
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -264,6 +265,7 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/production/inventory',
                          playbook    : 'playbooks/production.yml',
+                         vaultCredentialsId: 'Vault',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME

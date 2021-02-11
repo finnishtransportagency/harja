@@ -1,7 +1,9 @@
 #!/bin/bash
 set -eu
 
-LESS_WATCH_PID="$( pgrep -f [t]arkkaile_less_muutoksia.sh )"
+source "$( dirname "${BASH_SOURCE[0]}" )/harja_dir.sh" || exit
+
+LESS_WATCH_PID="$( pgrep -f [t]arkkaile_less_muutoksia.sh || echo '' )"
 
 if [ -n "$LESS_WATCH_PID" ];
 then
@@ -13,4 +15,4 @@ then
 fi
 
 echo "Generoidaan less -> CSS taustalla..."
-bash tarkkaile_less_muutoksia.sh "${1:-''}" &
+bash ${HARJA_DIR}/sh/tarkkaile_less_muutoksia.sh "${1:-''}" &
