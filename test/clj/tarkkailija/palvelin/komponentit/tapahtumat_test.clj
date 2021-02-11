@@ -526,3 +526,25 @@
       (tapahtumat-p/lopeta-tarkkailu! tapahtumat-k tarkkailija)
       (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma-a a-payload (:nimi harja-tarkkailija))
       (is (thrown? TimeoutException (<!!-timeout odota-tapahtuma default-odottelu))))))
+
+(deftest viimeisin-per-palvelin-tyyppi-toimii
+  (alter-var-root #'toinen-harja-tarkkailija (partial luo-harja-tarkkailija "tarkkailija-b"))
+  (alter-var-root #'toinen-jarjestelma luo-jarjestelma)
+
+  (testing "Tarkkailija saa viimeisimmät eventit"
+    (let [tapahtumat-k (:klusterin-tapahtumat harja-tarkkailija)
+          toinen-tapahtumat-k (:klusterin-tapahtumat toinen-harja-tarkkailija)
+          data 1
+          toinen-data 2]
+      (tapahtumat-p/julkaise! tapahtumat-k :tapahtuma data (:nimi harja-tarkkailija))
+      (tapahtumat-p/julkaise! toinen-tapahtumat-k :tapahtuma toinen-data (:nimi toinen-harja-tarkkailija))
+      (let [tarkkailija (async/<!! (tapahtumat-p/tarkkaile! toinen-tapahtumat-k :tapahtuma :viimeisin-per-palvelin))
+            saatu-data-1 (<!!-timeout tarkkailija 1000)
+            saatu-data-2 (<!!-timeout tarkkailija 1000)]
+        (is (#{data toinen-data} (:payload saatu-data-1)))
+        (is (#{data toinen-data} (:payload saatu-data-2))))))
+
+  (try (alter-var-root #'toinen-jarjestelma component/stop)
+       (catch Exception e (println "saatiin poikkeus toisen komponentin sammutuksessa: " e)))
+  (try (alter-var-root #'toinen-harja-tarkkailija component/stop)
+       (catch Exception e (println "saatiin poikkeus toisen harja-tarkkailija systeemin sammutuksessa: " e))))
