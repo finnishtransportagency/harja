@@ -179,7 +179,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn lista-item
   [{:keys [li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-           vaihtoehto disabled-vaihtoehdot valittu-arvo vayla-tyyli? auki?]}]
+           vaihtoehto disabled-vaihtoehdot valittu-arvo vayla-tyyli? auki?] :as kaka}]
   (let [disabled? (and disabled-vaihtoehdot
                        (contains? disabled-vaihtoehdot vaihtoehto))
         linkin-cond (cond
@@ -194,6 +194,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [linkki-jossa-valittu-checked
                                  teksti toiminto
                                  (= valittu-arvo vaihtoehto)])))]
+    (println "petar unutar jednog polja " (pr-str kaka) " cudno polje = " (pr-str linkin-cond))
+
     [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
      (if-not vayla-tyyli?
        linkin-cond
@@ -205,7 +207,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasvetolista
   [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
            li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-           vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo]}]
+           vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
+           pakollinen?] :as kaka}]
+  (println "petar unutar liste 2 " (pr-str kaka))
   [:ul (if vayla-tyyli?
          {:style (merge {:display (if @auki?
                                     "block"
@@ -216,6 +220,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          {:class "dropdown-menu livi-alasvetolista"
           :style {:max-height valinta-ul-max-korkeus-px}})
    (doall
+     (when (false? pakollinen?)
+       (println "petar sada kobajagi ubacujem praznu vrednost")
+       ^{:key (hash "ei-arvoa")}
+       [lista-item  {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn str :valitse-fn valitse-fn
+                     :vaihtoehto {} :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo nil :vayla-tyyli? vayla-tyyli? :auki? auki?}])
      (if ryhmissa?
        (for [ryhma nayta-ryhmat]
          ^{:key ryhma}
@@ -296,7 +305,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   {:tarkista-komponentti? true})
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
+                   pakollinen?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -335,6 +345,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
+                                  :pakollinen? pakollinen?
                                   :valittu-arvo valinta
                                   :auki?     auki?})]])))))
 

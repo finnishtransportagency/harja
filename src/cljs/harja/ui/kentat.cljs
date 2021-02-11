@@ -633,12 +633,16 @@
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data]
+            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
+            pakollinen?] :as kaka} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+   (println "petar kaka " (pr-str kaka))
+   (println "petar data " (pr-str @data))
     (let [nykyinen-arvo @data
           valinnat (or valinnat (valinnat-fn rivi))]
+      (println "petar nykyinen " (pr-str valinnat))
       [livi-pudotusvalikko {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa))
                             :valinta               (if valinta-arvo
                                                      (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
@@ -658,6 +662,7 @@
                                                      (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
+                            :pakollinen?           pakollinen?
                             :vayla-tyyli?          vayla-tyyli?
                             :elementin-id elementin-id}
        valinnat]))
