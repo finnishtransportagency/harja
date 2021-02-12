@@ -62,18 +62,22 @@
                            :murske             {:otsikko       "Murske" :nimi :murske :tyyppi :valinta
                                                 :valinta-arvo  ::pot2-domain/murske-id
                                                 :valinta-nayta (fn [murske]
-                                                                 (let [[a b] (pot2-domain/mursken-rikastettu-nimi
-                                                                               mursketyypit
-                                                                               murske)]
-                                                                   (str a b)))
+                                                                 (if murske
+                                                                   (let [[a b] (pot2-domain/mursken-rikastettu-nimi
+                                                                                 mursketyypit
+                                                                                 murske)]
+                                                                     (str a b))
+                                                                   " "))
                                                 :valinnat      murskeet}
                            :massa              {:otsikko       "Massa" :nimi :massa :tyyppi :valinta
                                                 :valinta-arvo  ::pot2-domain/massa-id
                                                 :valinta-nayta (fn [massa]
-                                                                 (let [[a b] (pot2-domain/massan-rikastettu-nimi
-                                                                               massatyypit
-                                                                               massa)]
-                                                                   (str a b)))
+                                                                 (if massa
+                                                                   (let [[a b] (pot2-domain/massan-rikastettu-nimi
+                                                                                 massatyypit
+                                                                                 massa)]
+                                                                     (str a b))
+                                                                   " "))
                                                 :valinnat      massat}
                            :sideaine           {:otsikko      "Sideaine" :nimi :sideaine :tyyppi :valinta
                                                 :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
@@ -93,12 +97,18 @@
                                                 :valinnat     verkon-tarkoitukset}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
         lisakentta-generaattori (fn [{:keys [nimi pakollinen? otsikko] :as kentta-metadata}]
-                                  (lomake/rivi (merge (get kaikki-lisakentat nimi)
-                                                      {:palstoja    3
-                                                       :pakollinen? (if (some? pakollinen?)
-                                                                      pakollinen? true)}
-                                                      (when (some? otsikko)
-                                                        {:otsikko otsikko}))))]
+                                  (let [kentta (get kaikki-lisakentat nimi)
+                                        pakollinen? (if (some? pakollinen?)
+                                                      pakollinen? true)
+                                        valinnat (if pakollinen?
+                                                   (:valinnat kentta)
+                                                   (conj (:valinnat kentta) nil))]
+                                    (lomake/rivi (merge kentta
+                                                        {:palstoja    3
+                                                         :valinnat    valinnat
+                                                         :pakollinen? pakollinen?}
+                                                        (when (some? otsikko)
+                                                          {:otsikko otsikko})))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet

@@ -194,8 +194,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                 [linkki-jossa-valittu-checked
                                  teksti toiminto
                                  (= valittu-arvo vaihtoehto)])))]
-    (println "petar unutar jednog polja " (pr-str kaka) " cudno polje = " (pr-str linkin-cond))
-
     [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
      (if-not vayla-tyyli?
        linkin-cond
