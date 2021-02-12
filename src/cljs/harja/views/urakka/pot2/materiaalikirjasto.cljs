@@ -43,7 +43,8 @@
   (komp/luo
     (komp/lippu mk-tiedot/materiaalikirjastossa?)
     (komp/piirretty (fn [this]
-                      (e! (mk-tiedot/->AlustaTila))))
+                      (e! (mk-tiedot/->AlustaTila))
+                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))))
     (fn [e! app]
       [:div
        (cond
