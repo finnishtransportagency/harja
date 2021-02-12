@@ -11,7 +11,7 @@ WHERE ut.urakka = :urakka
 
 -- name: hae-tehtavamaarat-ja-toteumat-aikavalilla
 -- Raportin hakuhimmeli
-with urakat as (select u.id
+with urakat as (select u.id, u.hallintayksikko
                 from urakka u
                 where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
                   and case
@@ -49,7 +49,7 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
        u.hallintayksikko        as "hallintayksikko",
        tpk3.nimi                as "toimenpide",
        toteumat.maara           as "toteuma",
-       toteumat.materiaalimaara as materiaalimaara,
+       toteumat.materiaalimaara as "toteutunut-materiaali",
        (CASE
             WHEN tpk3.koodi = '23104' THEN 1
             WHEN tpk3.koodi = '23116' THEN 2
@@ -60,11 +60,11 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
             WHEN tpk3.koodi = '23151' THEN 7
            END)                 AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
-       join urakka u
+       join urakat u
        join organisaatio o
             on o.id = u.hallintayksikko
             on u.id = tpi.urakka
-       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
+       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%'
        join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
                  on suunnitelmat.tehtava = tpk.id
@@ -77,7 +77,7 @@ where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
          u.hallintayksikko, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by u.hallintayksikko, "toimenpide-jarjestys", tpk.jarjestys;
+order by u.hallintayksikko ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 
 -- name: lisaa-tehtavamaara<!
