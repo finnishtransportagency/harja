@@ -209,35 +209,41 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            li-luokka-fn itemit-komponentteja? format-fn valitse-fn
            vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
            pakollinen?] :as kaka}]
-  (println "petar unutar liste 2 " (pr-str kaka))
-  [:ul (if vayla-tyyli?
-         {:style (merge {:display (if @auki?
-                                    "block"
-                                    "none")}
-                        (when skrollattava?
-                          {:overflow "scroll"
-                           :max-height valinta-ul-max-korkeus-px}))}
-         {:class "dropdown-menu livi-alasvetolista"
-          :style {:max-height valinta-ul-max-korkeus-px}})
-   (doall
-     (when (false? pakollinen?)
-       (println "petar sada kobajagi ubacujem praznu vrednost")
-       ^{:key (hash "ei-arvoa")}
-       [lista-item  {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn str :valitse-fn valitse-fn
-                     :vaihtoehto {} :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo nil :vayla-tyyli? vayla-tyyli? :auki? auki?}])
-     (if ryhmissa?
-       (for [ryhma nayta-ryhmat]
-         ^{:key ryhma}
-         [:div.haku-lista-ryhma
-          [:div.haku-lista-ryhman-otsikko (ryhman-otsikko ryhma)]
-          (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
-            ^{:key (hash vaihtoehto)}
-            [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
-                         :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])])
-       (for [vaihtoehto vaihtoehdot]
-         ^{:key (hash vaihtoehto)}
-         [lista-item  {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
-                       :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
+  (println "petar vaihtoehdot 1" (pr-str vaihtoehdot))
+
+  (let [vaihtoehdot (if pakollinen?
+                      vaihtoehdot
+                      ;; TODO: tässä pitää tehdä jotenkin geneerisesti se, millä avaimella tuodaan ei arvoa
+                      ;; esim {:harja.domain.pot2/nimi "Ei arvoa", :harja.domain.pot2/koodi nil}
+                      ;; Mutta nuo avaimet vaihtuvat eri tapauksissa
+                      ;; Järkevintä olisi tuoda suoraan API:n käyttäjän päässä mukaan vaihtoehdot / valinnat -tiedossa se, että siellä
+                      ;; joko on tai ei ole mukana "ei arvoa", muuten joudumme muuttamaan koko Harjan läpi ne paikat, minne jo passataa
+                      ;; ei arvoa käsin
+                      (conj vaihtoehdot {nil "Ei arvoa"}))]
+    (println "petar vaihtoehdot 2" (pr-str vaihtoehdot))
+    [:ul (if vayla-tyyli?
+           {:style (merge {:display (if @auki?
+                                      "block"
+                                      "none")}
+                          (when skrollattava?
+                            {:overflow "scroll"
+                             :max-height valinta-ul-max-korkeus-px}))}
+           {:class "dropdown-menu livi-alasvetolista"
+            :style {:max-height valinta-ul-max-korkeus-px}})
+     (doall
+       (if ryhmissa?
+         (for [ryhma nayta-ryhmat]
+           ^{:key ryhma}
+           [:div.haku-lista-ryhma
+            [:div.haku-lista-ryhman-otsikko (ryhman-otsikko ryhma)]
+            (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
+              ^{:key (hash vaihtoehto)}
+              [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
+                           :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])])
+         (for [vaihtoehto vaihtoehdot]
+           ^{:key (hash vaihtoehto)}
+           [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
+                        :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))]))
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
