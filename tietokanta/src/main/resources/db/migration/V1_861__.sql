@@ -1,17 +1,26 @@
--- Paikkauskohde tauluun lisätään paikkauskohteen-tila kenttä, jonka arvot on tässä
-create type paikkauskohteen_tila as enum ('ehdotettu', 'hylatty', 'tilattu', 'valmis', 'tarkistettu');
+-- Tässä tehdään edelliseen nähden vain sellainen muutos, että tapahtuman tietoja ei poisteta triggerissä, jos
+-- uusi data ei ole samalta serveriltä kuin aikaisempi.
+DROP TRIGGER tg_poista_vanhat_tapahtumat ON tapahtuman_tiedot;
 
--- Paikkauskohde taulussa ei ole ihan kaikkiakenttiä, mitä paikkauskohteen hallinta vaatii.
--- Lisätään puuttuvat kentät
-ALTER TABLE paikkauskohde
-    ADD COLUMN nro TEXT, -- Laskun numero tai muu numero, minkä urakoitsijat voivat paikkauskohteelle antaa.
-    ADD COLUMN alkuaika timestamp, -- Ehdotettu alkuaika, joka antaa raamit, milloin paikkaus pitäisi aloittaa
-    ADD COLUMN loppuaika timestamp, -- Ehdotettu loppuaika, joka antaa raamit, milloin paikkaus pitäisi olla valmiina
-    ADD COLUMN tyomenetelma TEXT, -- esim UREM
-    ADD COLUMN tyomenetelma_kuvaus TEXT, -- Vapaa kuvaus mitä työmenetelmää käytetään
-    ADD COLUMN tierekisteriosoite tr_osoite, -- tie, alkuetäisyys, alkuosa, loppuetäisyys loppuosa
-    ADD COLUMN "paikkauskohteen-tila" paikkauskohteen_tila; -- ehdotettu, hylätty, tilattu, valmis, tarkistettu
+CREATE OR REPLACE FUNCTION poista_vanhat_tapahtumat() RETURNS TRIGGER AS $$
+BEGIN
+    DELETE
+      FROM tapahtuman_tiedot
+     WHERE luotu < NOW() - INTERVAL '10 minutes'
+       AND ((kanava = new.kanava
+         AND palvelin = new.palvelin)
+         OR kanava IN (SELECT tt.kanava
+                         FROM tapahtuman_tiedot tt
+                                  JOIN tapahtumatyyppi t ON t.kanava = tt.kanava
+                        WHERE t.nimi ILIKE 'urakan_%'
+                           OR t.nimi ILIKE 'ilmoitus_%'));
+    RETURN new;
+END;
+$$ LANGUAGE plpgsql;
 
-ALTER TABLE paikkauskohde
-    RENAME COLUMN tila TO "yhalahetyksen-tila";
+CREATE TRIGGER tg_poista_vanhat_tapahtumat
+    AFTER INSERT
+    ON tapahtuman_tiedot
+    FOR EACH ROW
+EXECUTE PROCEDURE poista_vanhat_tapahtumat();
 
