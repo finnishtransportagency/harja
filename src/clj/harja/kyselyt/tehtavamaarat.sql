@@ -22,18 +22,16 @@ with urakat as (select u.id
                         else true
                   end
                   and u.tyyppi = 'teiden-hoito'),
-     toteumat as (select sum(tt.maara) as "maara",
-                         tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tt.urakka_id
-                  from toteuma t
-                           join toteuma_tehtava tt on tt.toteuma = t.id and t.urakka = tt.urakka_id and tt.poistettu = false
-                    and tt.urakka_id in (select id from urakat)
-                  where
-                      case when :urakka::integer is not null then t.urakka = :urakka else true end
-                    and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-                    and t.poistettu = false
-                  group by tt.toimenpidekoodi, tt.poistettu, tt.urakka_id),
+     toteumat as (SELECT sum(rtm.tehtavamaara) as "maara",
+                         sum(rtm.materiaalimaara) as "materiaalimaara",
+                         rtm.toimenpidekoodi,
+                         rtm.urakka_id
+                    FROM urakat u
+                         JOIN raportti_toteuma_maarat rtm ON rtm.urakka_id = u.id
+                   WHERE
+                         case when :urakka::integer is not null then rtm.urakka_id = :urakka else true end
+                     AND (rtm.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                   GROUP by rtm.toimenpidekoodi, rtm.urakka_id),
      suunnitelmat as (select sum(ut.maara) as "maara",
                              ut.tehtava,
                              ut.urakka
@@ -42,24 +40,25 @@ with urakat as (select u.id
                         and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
                         and ut.poistettu is not true
                       group by ut.urakka, ut.tehtava)
-select tpk.nimi               as "nimi",  --tehtävän nimi
-       tpk.jarjestys          as "jarjestys",
-       suunnitelmat.maara     as "suunniteltu",
-       tpk.suunnitteluyksikko as "suunnitteluyksikko",
-       tpk.yksikko            as "yksikko",
-       tpk.id                 as "toimenpidekoodi",
-       u.hallintayksikko      as "hallintayksikko",
-       tpk3.nimi              as "toimenpide",
-       toteumat.maara         as "toteuma",
+select tpk.nimi                 as "nimi", --tehtävän nimi
+       tpk.jarjestys            as "jarjestys",
+       suunnitelmat.maara       as "suunniteltu",
+       tpk.suunnitteluyksikko   as "suunnitteluyksikko",
+       tpk.yksikko              as "yksikko",
+       tpk.id                   as "toimenpidekoodi",
+       u.hallintayksikko        as "hallintayksikko",
+       tpk3.nimi                as "toimenpide",
+       toteumat.maara           as "toteuma",
+       toteumat.materiaalimaara as materiaalimaara,
        (CASE
-          WHEN tpk3.koodi = '23104' THEN 1
-          WHEN tpk3.koodi = '23116' THEN 2
-          WHEN tpk3.koodi = '23124' THEN 3
-          WHEN tpk3.koodi = '20107' THEN 4
-          WHEN tpk3.koodi = '20191' THEN 5
-          WHEN tpk3.koodi = '14301' THEN 6
-          WHEN tpk3.koodi = '23151' THEN 7
-         END)                 AS "toimenpide-jarjestys"
+            WHEN tpk3.koodi = '23104' THEN 1
+            WHEN tpk3.koodi = '23116' THEN 2
+            WHEN tpk3.koodi = '23124' THEN 3
+            WHEN tpk3.koodi = '20107' THEN 4
+            WHEN tpk3.koodi = '20191' THEN 5
+            WHEN tpk3.koodi = '14301' THEN 6
+            WHEN tpk3.koodi = '23151' THEN 7
+           END)                 AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
        join urakka u
        join organisaatio o
@@ -76,7 +75,7 @@ from toimenpideinstanssi tpi
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
-         u.hallintayksikko, suunnitelmat.maara, toteumat.maara
+         u.hallintayksikko, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
 order by u.hallintayksikko, "toimenpide-jarjestys", tpk.jarjestys;
 

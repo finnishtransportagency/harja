@@ -32,6 +32,6 @@ SELECT SUM(tm.maara)                AS kokonaismaara,
     FROM toteuma_materiaali tm
              JOIN toteuma t ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
              LEFT JOIN materiaalikoodi mk ON mk.id = tm.materiaalikoodi
-    WHERE tm.poistettu IS NOT TRUE
+    WHERE tm.poistettu = FALSE
     GROUP BY "urakka-id", paiva, "materiaali-id"
 WITH NO DATA;

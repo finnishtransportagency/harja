@@ -5,17 +5,14 @@ with urakat as (select id, hallintayksikko
                   and u.tyyppi = 'hoito'
                   and u.poistettu = false
                   and (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)),
-     toteumat as (select sum(tt.maara) as "maara", tpk.id as "toimenpidekoodi", o.id as "hallintayksikko", sum(tm.maara) as "materiaalimaara"
-                    from toteuma t
-                         LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu = FALSE
-                         join urakat u
-                         join organisaatio o on u.hallintayksikko = o.id on t.urakka = u.id
-                         join toteuma_tehtava tt on tt.toteuma = t.id AND tt.urakka_id = t.urakka AND tt.poistettu = false
-                         join toimenpidekoodi tpk on tt.toimenpidekoodi = tpk.id
-                   where t.urakka in (select id from urakat)
-                     and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-                     and t.poistettu = false
-                   group by o.id, tpk.id),
+     toteumat as (select sum(tr.tehtavamaara) as "maara",
+                         tr.toimenpidekoodi as "toimenpidekoodi",
+                         tr.hallintayksikko_id as "hallintayksikko",
+                         sum(tr.materiaalimaara) as "materiaalimaara"
+                    from raportti_toteuma_maarat tr
+                   where (:hallintayksikko::integer is null or tr.hallintayksikko_id = :hallintayksikko::integer)
+                     and (tr.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                   group by tr.hallintayksikko_id, tr.toimenpidekoodi, tr.toimenpidekoodi, tr.hallintayksikko_id),
      tyot as (select sum(yt.maara) as "maara", yt.tehtava as "tehtava", yt.urakka as "urakka"
               from yksikkohintainen_tyo yt
               where yt.urakka in (select id from urakat)
