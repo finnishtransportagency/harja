@@ -67,7 +67,7 @@
                                                                                  mursketyypit
                                                                                  murske)]
                                                                      (str a b))
-                                                                   " "))
+                                                                   "-"))
                                                 :valinnat      murskeet}
                            :massa              {:otsikko       "Massa" :nimi :massa :tyyppi :valinta
                                                 :valinta-arvo  ::pot2-domain/massa-id
@@ -77,7 +77,7 @@
                                                                                  massatyypit
                                                                                  massa)]
                                                                      (str a b))
-                                                                   " "))
+                                                                   "-"))
                                                 :valinnat      massat}
                            :sideaine           {:otsikko      "Sideaine" :nimi :sideaine :tyyppi :valinta
                                                 :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
