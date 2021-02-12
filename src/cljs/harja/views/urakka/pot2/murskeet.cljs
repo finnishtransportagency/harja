@@ -30,13 +30,15 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
+(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot luokka voi-muokata?] :as app}]
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
-        _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))]
+        _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))
+        materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
+       :luokka luokka :voi-muokata? voi-muokata?
        :otsikko (if murske-id
                   "Muokkaa mursketta"
                   "Uusi murske")
@@ -51,12 +53,10 @@
                            [:li puute])]])
                      [:div.flex-row
                       [:div.tallenna-peruuta
-                       [napit/tallenna
-                        "Tallenna"
+                       [mk-tiedot/tallenna-materiaali-nappi materiaali-kaytossa
                         #(e! (mk-tiedot/->TallennaMurskeLomake data))
-                        {:vayla-tyyli? true
-                         :luokka "suuri"
-                         :disabled (not (ui-lomake/voi-tallentaa? data))}]
+                        (not (ui-lomake/voi-tallentaa? data))
+                        :massa]
                        [napit/yleinen
                         "Peruuta" :toissijainen
                         #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
@@ -64,17 +64,10 @@
                          :luokka "suuri"}]]
 
                       (when murske-id
-                        [napit/poista
-                         "Poista"
-                         (fn []
-                           (varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "Murskeen poistaminen"
-                              :sisalto
-                              [:div "Haluatko ihan varmasti poistaa tämän murskeen?"]
-                              :toiminto-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
-                              :hyvaksy "Kyllä"}))
-                         {:vayla-tyyli? true
-                          :luokka "suuri"}])]])
+                        [mk-tiedot/poista-materiaali-nappi materiaali-kaytossa
+                         #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
+                         :murske])]
+                     [mk-tiedot/materiaalin-kaytto materiaali-kaytossa]])
        :vayla-tyyli? true}
       [{:otsikko "Murskeen nimi" :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"

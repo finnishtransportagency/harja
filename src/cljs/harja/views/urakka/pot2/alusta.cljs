@@ -92,7 +92,6 @@
                                                 :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
                                                 :valinnat     verkon-sijainnit}
                            :verkon-tarkoitus   {:otsikko      "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
-                                                ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
                                                 :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
                                                 :valinnat     verkon-tarkoitukset}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)

@@ -10,12 +10,15 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.napit :as napit]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def materiaalikirjastossa? (atom false))
 (def nayta-materiaalikirjasto? (atom false))
+(def materiaali-jo-kaytossa-str "Materiaali on jo käytössä, eikä sitä voi enää poistaa.")
 
 (defrecord AlustaTila [])
 (defrecord UusiMassa [])
@@ -134,6 +137,74 @@
 
 (def nayta-lahde mursketyyppia-bem-tai-muu?)
 
+(defn materiaalin-kaytto
+  [materiaali-kaytossa]
+  (when-not (empty? materiaali-kaytossa)
+    (let [lukittu? (some #(str/includes? % "lukittu")
+                         (map :tila materiaali-kaytossa))
+          lukitut-kohteet (filter #(when (str/includes? (:tila %) "lukittu")
+                                     %)
+                                  materiaali-kaytossa)
+          materiaali-kaytossa (if-not (empty? lukitut-kohteet)
+                                lukitut-kohteet
+                                materiaali-kaytossa)]
+      [:div
+       [:h3 (if (not (empty? lukitut-kohteet))
+              "Materiaalia on kirjattu päällystysilmoitukseen jonka tila on lukittu. Muokkaamista ei enää sallita. Lukitut kohteet: "
+              (str "Materiaalia on kirjattu seuraavissa päällystysilmoituksissa: "))]
+       [:ul
+        (for [{kohdenumero :kohdenumero
+               nimi :nimi
+               kohteiden-lkm :kohteiden-lkm} materiaali-kaytossa]
+          ^{:key kohdenumero}
+          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm " riviä)")])]])))
+
+(defn tallenna-materiaali-nappi
+  [materiaali-kaytossa toiminto-fn disabled tyyppi]
+  (assert (#{:massa :murske} tyyppi) "Tallennettavan tyyppi oltava massa tai murske")
+  (let [lukittu? (some #(str/includes? % "lukittu")
+                       (map :tila materiaali-kaytossa))]
+    [napit/tallenna
+     "Tallenna"
+     (let [materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
+       (if (empty? materiaali-kaytossa)
+         toiminto-fn
+         (when-not lukittu?
+           (fn []
+             (varmista-kayttajalta/varmista-kayttajalta
+               {:otsikko (str materiaalin-str " tallentaminen")
+                :sisalto
+                [:div
+                 [:div (str "Materiaali on käytössä päällystysilmoituksissa joita ei ole vielä lukittu, joten muokkaaminen on mahdollista. Jos muokkaat kyseistä materiaalia, tiedot päivittyvät kaikkialla missä materiaalia on käytetty.")]
+                 [materiaalin-kaytto materiaali-kaytossa]
+                 [:div "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda tästä massasta kopion ja muokata sitä."]]
+                :toiminto-fn toiminto-fn
+                :hyvaksy "Kyllä"})))))
+     {:vayla-tyyli? true
+      :luokka "suuri"
+      :disabled (or disabled lukittu?)}]))
+
+(defn poista-materiaali-nappi
+  [materiaali-kaytossa toiminto-fn tyyppi]
+  (println "materiaali-kaytossa " materiaali-kaytossa)
+  (assert (#{:massa :murske} tyyppi) "Poistettavan tyyppi oltava massa tai murske")
+  (let [materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
+    [:div {:style {:width "160px"}}
+     [napit/poista
+      "Poista"
+      (fn []
+        (varmista-kayttajalta/varmista-kayttajalta
+          {:otsikko (str materiaalin-str " poistaminen")
+           :sisalto
+           [:div (str "Haluatko ihan varmasti poistaa tämän " (clojure.string/lower-case materiaalin-str) "?")]
+           :toiminto-fn toiminto-fn
+           :hyvaksy "Kyllä"}))
+      {:disabled (not (empty? materiaali-kaytossa))
+       :vayla-tyyli? true
+       :luokka "suuri"}]
+     (when-not (empty? materiaali-kaytossa)
+       [harja.ui.yleiset/vihje materiaali-jo-kaytossa-str])]))
+
 (extend-protocol tuck/Event
 
   AlustaTila
@@ -222,11 +293,13 @@
 
   MuokkaaMursketta
   (process-event [{rivi :rivi klooni? :klooni?} app]
-    ;; jos käyttäjä luo uuden massan kloonaamalla vanhan, nollataan id:t
-    (let [murske-id (if klooni? nil (::pot2-domain/murske-id rivi))]
+    ;; jos käyttäjä luo uuden massan kloonaamalla vanhan, nollataan id:t ja käytössäoleminen
+    (let [murske-id (if klooni? nil (::pot2-domain/murske-id rivi))
+          kaytossa (if klooni? nil (::pot2-domain/kaytossa rivi))]
       (-> app
           (assoc :pot2-murske-lomake rivi)
-          (assoc-in [:pot2-murske-lomake ::pot2-domain/murske-id] murske-id))))
+          (assoc-in [:pot2-murske-lomake ::pot2-domain/murske-id] murske-id)
+          (assoc-in [:pot2-murske-lomake ::pot2-domain/kaytossa] kaytossa))))
 
   PaivitaMassaLomake
   (process-event [{data :data} app]
@@ -310,8 +383,8 @@
   TallennaMurskeOnnistui
   (process-event [{vastaus :vastaus} app]
     (if (::pot2-domain/poistettu? vastaus)
-      (viesti/nayta! "Massa poistettu!")
-      (viesti/nayta! "Massa tallennettu!"))
+      (viesti/nayta! "Murske poistettu!")
+      (viesti/nayta! "Murske tallennettu!"))
     (hae-massat-ja-murskeet app)
     (assoc app :pot2-murske-lomake nil))
 
