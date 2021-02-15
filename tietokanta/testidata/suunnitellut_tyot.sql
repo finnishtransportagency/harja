@@ -693,7 +693,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -718,7 +718,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -743,7 +743,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -979,7 +979,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1004,7 +1004,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1029,7 +1029,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1334,7 +1334,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1359,7 +1359,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1384,7 +1384,7 @@ BEGIN
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
