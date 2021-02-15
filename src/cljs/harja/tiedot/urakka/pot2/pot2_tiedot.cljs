@@ -73,10 +73,11 @@
     (fn [rivi]
       [:div.pot2-toimenpiteen-tiedot
        ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
-       (str/capitalize
-         (str/join ", " (map #(when (:nimi %)
-                                (str (fmt-kentan-nimi (:nimi %)) ": " ((:nimi %) rivi)))
-                             (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide))))])))
+       (when (and toimenpide rivi)
+         (str/capitalize
+           (str/join ", " (map #(when (:nimi %)
+                                  (str (fmt-kentan-nimi (:nimi %)) ": " ((:nimi %) rivi)))
+                               (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)))))])))
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
   [:div.pot2-materiaalin-tiedot
