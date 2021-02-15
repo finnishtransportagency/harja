@@ -27,9 +27,14 @@
                       urakkatieto-fixture))
 
 (def default-paikkauskohde {:nimi "testinimi"
-                            :alkuaika "2020-01-01 00:00:00"
-                            :loppuaika "2020-01-02 00:00:00"
-                            :paikkauskohteen-tila "valmis"})
+                            :alkuaika (pvm/->pvm-aika "01.01.2020 00:00:00" )
+                            :loppuaika (pvm/->pvm-aika "01.02.2020 00:00:00" )
+                            :paikkauskohteen-tila "valmis"
+                            :tie 22
+                            :aosa 1
+                            :losa 2
+                            :aet 10
+                            :let 20})
 
 (deftest paikkauskohteet-urakalle-testi
   (let [_ (hae-kemin-alueurakan-2019-2023-id)
@@ -37,8 +42,7 @@
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :paikkauskohteet-urakalle
                                         +kayttaja-jvh+
-                                        {:urakka-id urakka-id})
-        _ (println "Löydettiin paikkauskohteet" (pr-str paikkauskohteet))]
+                                        {:urakka-id urakka-id})]
     (is (> (count paikkauskohteet) 0))))
 
 (deftest muokkaa-paikkauskohdetta-testi
@@ -54,14 +58,13 @@
         kohde (-> kohde
                   (assoc :nimi "testinimi")
                   (assoc :tie "22")
-                  (assoc :alkuaika "2020-01-01 00:00:00")
-                  (assoc :loppuaika "2020-01-02 00:00:00")
+                  (assoc :alkuaika (pvm/->pvm-aika "01.01.2020 00:00:00" ))
+                  (assoc :loppuaika (pvm/->pvm-aika "01.02.2020 00:00:00" ))
                   (assoc :paikkauskohteen-tila "valmis"))
         muokattu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-paikkauskohde-urakalle
                                        +kayttaja-jvh+
-                                       kohde)
-        _ (println "muokattu-kohde" (pr-str muokattu-kohde))]
+                                       kohde)]
     (is (= muokattu-kohde kohde))))
 
 (deftest luo-uusi-paikkauskohde-testi
@@ -76,6 +79,16 @@
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :paikkauskohteet-urakalle
                                         +kayttaja-jvh+
-                                        {:urakka-id urakka-id})
-        _ (println "Uuden kohteen id" (pr-str kohde-id))]
+                                        {:urakka-id urakka-id})]
     (is (> (count paikkauskohteet) 3))))
+
+(deftest luo-uusi-paikkauskohde-virheellisin-tiedoin-testi
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        ;; Poistetaan kohteelta nimi
+        kohde (dissoc (merge {:urakka-id urakka-id} default-paikkauskohde)
+                      :nimi )]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-paikkauskohde-urakalle
+                                           +kayttaja-jvh+
+                                           kohde))
+        "Poikkeusta ei heitetty! Tallennus onnistui vaikka ei oli saanut")))
