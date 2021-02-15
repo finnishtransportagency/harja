@@ -567,11 +567,8 @@
                       :alusta
                       (filter (comp not :poistettu)))]
       (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
-            toimenpidespesifit-avaimet (pot2-domain/alusta-toimenpide-lisaavaimet (:toimenpide rivi))
-            pakolliset-avaimet (->> toimenpidespesifit-avaimet
-                                    (filter #(:pakollinen? %))
-                                    (map #(:nimi %))
-                                    set)
+            toimenpide (:toimenpide rivi)
+            [sallittut-avaimet pakolliset-avaimet] (pot2-domain/alusta-sallitut-ja-pakolliset-lisaavaimet rivi)
             rivi-ja-kaikki-lisaparametrit (if (and (empty? (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi))
                                                    (set/subset? pakolliset-avaimet (-> annetut-lisaparams keys set)))
                                             (merge rivi
@@ -579,8 +576,9 @@
                                                    (zipmap pot2-domain/alusta-toimenpide-kaikki-lisaavaimet (repeat nil))
                                                    annetut-lisaparams)
                                             (throw (IllegalArgumentException.
-                                                     (str "Alustassa väärät lisätiedot. Odotettu: "
-                                                          (pr-str toimenpidespesifit-avaimet) " tuli: "
+                                                     (str "Alustassa väärät lisätiedot. Toimenpide = " toimenpide
+                                                          " Odotettu: "
+                                                          (pr-str sallittut-avaimet) " tuli: "
                                                           (pr-str annetut-lisaparams)))))]
         (try
           (if (:pot2a_id rivi-ja-kaikki-lisaparametrit)

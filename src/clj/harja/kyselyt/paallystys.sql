@@ -172,7 +172,13 @@ SELECT
     pot2a.verkon_sijainti AS "verkon-sijainti",
     pot2a.kasittelysyvyys,
     pot2a.lisatty_paksuus AS "lisatty-paksuus",
-    pot2a.massamaara
+    pot2a.massamaara,
+    pot2a.leveys,
+    pot2a.pinta_ala AS "pinta-ala",
+    pot2a.kokonaismassamaara,
+    pot2a.sideaine,
+    pot2a.sideainepitoisuus,
+    pot2a.sideaine2
   FROM pot2_alusta pot2a
  WHERE pot2_id = :pot2_id AND poistettu IS FALSE;
 

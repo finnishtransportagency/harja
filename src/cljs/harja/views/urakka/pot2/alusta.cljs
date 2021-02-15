@@ -44,7 +44,7 @@
            sidotun-kantavan-kerroksen-sideaine
            verkon-sijainnit
            verkon-tyypit
-           verkon-tarkoitukset]}]
+           verkon-tarkoitukset] :as alusta}]
   (let [kaikki-lisakentat {:kasittelysyvyys    {:nimi   :kasittelysyvyys :otsikko "Käsittelysyvyys"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :lisatty-paksuus    {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
@@ -95,20 +95,20 @@
                                                 ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
                                                 :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
                                                 :valinnat     verkon-tarkoitukset}}
-        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
-        lisakentta-generaattori (fn [{:keys [nimi pakollinen? otsikko] :as kentta-metadata}]
+        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
+        lisakentta-generaattori (fn [{:keys [nimi pakollinen? otsikko jos] :as kentta-metadata}]
                                   (let [kentta (get kaikki-lisakentat nimi)
-                                        pakollinen? (if (some? pakollinen?)
-                                                      pakollinen? true)
                                         valinnat (if pakollinen?
                                                    (:valinnat kentta)
                                                    (conj (:valinnat kentta) nil))]
-                                    (lomake/rivi (merge kentta
+                                    (when (or (nil? jos)
+                                              (some? (get alusta jos)))
+                                      (lomake/rivi (merge kentta
                                                         {:palstoja    3
                                                          :valinnat    valinnat
                                                          :pakollinen? pakollinen?}
                                                         (when (some? otsikko)
-                                                          {:otsikko otsikko})))))]
+                                                          {:otsikko otsikko}))))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
@@ -158,6 +158,7 @@
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
+  (println "petar lomake DA VIDIMO " (pr-str alustalomake))
   [lomake/lomake
    {:luokka " overlay-oikealla"
     :otsikko "Toimenpiteen tiedot"
@@ -180,6 +181,7 @@
                    {:disabled false}]])}
    (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
                             :toimenpide (:toimenpide alustalomake)
+                            :murske (:murske alustalomake)
                             :massat massat
                             :murskeet murskeet
                             :massatyypit (:massatyypit materiaalikoodistot)

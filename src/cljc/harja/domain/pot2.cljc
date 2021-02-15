@@ -31,7 +31,7 @@
    :verkon-sijainti
    :verkon-tarkoitus])
 
-(defn alusta-toimenpide-lisaavaimet
+(defn alusta-toimenpidespesifit-metadata
   [toimenpide]
   "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
@@ -39,28 +39,32 @@
                                                 {:nimi :massamaara :pakollinen? false}]
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
                                                12           ;; VBST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
                                                13           ;; REST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
-                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
                                                14           ;; SST
                                                [:kasittelysyvyys
                                                 {:nimi :sideaine2 :otsikko "Sideaine"}
                                                 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
-                                                :massamaara]
+                                                {:nimi :massamaara :jos :murske}]
                                                15           ;; MHST
                                                [:kasittelysyvyys
                                                 {:nimi :sideaine2 :otsikko "Sideaine"}
                                                 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
-                                                :massamaara]
+                                                {:nimi :massamaara :jos :murske}]
                                                16           ;; KOST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus :sideaine2
-                                                {:nimi :murske :pakollinen? false} :massamaara]
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
                                                23           ;; MS
                                                [:lisatty-paksuus
                                                 {:nimi :massamaara :pakollinen? false}
@@ -84,11 +88,14 @@
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
-        luo-metadata (fn [avain]
-                       (if (keyword? avain)
-                         {:nimi avain}
-                         avain))]
-    (map luo-metadata avaimet)))
+        luo-metadata-ja-oletusarvot (fn [avain]
+                                      (if (keyword? avain)
+                                        {:nimi avain :pakollinen? true}
+                                        (let [pakollinen? (:pakollinen? avain)]
+                                          (if (nil? pakollinen?)
+                                            (assoc avain :pakollinen? true)
+                                            avain))))]
+    (map luo-metadata-ja-oletusarvot avaimet)))
 
 (defn alusta-kaikki-lisaparams
   "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
@@ -101,14 +108,32 @@
         annetut-lisaparams (keep-some lisaparams)]
     annetut-lisaparams))
 
+(defn alusta-sallitut-ja-pakolliset-lisaavaimet
+  "Palauta vain sallttut avaimet"
+  [alusta]
+  (let [relevantti-metadata (->> (alusta-toimenpidespesifit-metadata (:toimenpide alusta))
+                                 (filter (fn [{:keys [jos]}]
+                                           (or (nil? jos)
+                                               (and (some? jos)
+                                                    (some? (get alusta jos)))))))
+        sallitut (->> relevantti-metadata
+                      (map #(:nimi %))
+                      set)
+        pakolliset (->> relevantti-metadata
+                        (filter #(:pakollinen? %))
+                        (map #(:nimi %))
+                        set)]
+    [sallitut pakolliset]))
+
 (defn alusta-ylimaaraiset-lisaparams-avaimet
-  "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen"
+  "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen.
+  Voi sisältää myös pakolliset-ehdolliset avaimet, jotka eivät kuuluu annetulle alustalle"
   [{:keys [toimenpide] :as alusta}]
   (let [annettu-lisaparams (alusta-kaikki-lisaparams alusta)
-        sallitut-lisaavaimet (map #(:nimi %) (alusta-toimenpide-lisaavaimet toimenpide))
+        [sallitut-lisaavaimet _] (alusta-sallitut-ja-pakolliset-lisaavaimet alusta)
         ylimaaraiset-avaimet (set/difference
                                (set (keys annettu-lisaparams))
-                               (set sallitut-lisaavaimet))]
+                               sallitut-lisaavaimet)]
     (vec ylimaaraiset-avaimet)))
 
 (defn paattele-ilmoituksen-tila
