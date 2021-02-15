@@ -116,6 +116,7 @@
         :tyyppi :positiivinen-numero
         :nimi :suunniteltu-hinta
         ::lomake/col-luokka "col-sm-12"
+        :pakollinen? true
         :yksikko "€"})]
     [{:otsikko "Suunniteltu aikataulu"
       :nimi :aikataulu
@@ -146,12 +147,12 @@
          {:otsikko "Tie"
           :tyyppi :string
           :nimi :tie
-          :pakolinen? true}
+          :pakollinen? true}
          {:otsikko "Ajorata"
           :tyyppi :valinta
           :valinnat [0 1 2 3] ; TODO: Hae jostain?
           :nimi :ajorata
-          :pakolinen? false})
+          :pakollinen? false})
        (lomake/rivi
          {:otsikko "A-osa"
           :tyyppi :string
@@ -177,20 +178,21 @@
 
 (defn nimi-numero-ja-tp-kentat [e! voi-muokata?]
   (if voi-muokata?
-    [{:otsikko "Numero"
-      :tyyppi :numero
-      :nimi :nro
-      ::lomake/col-luokka "col-sm-4"}
-     {:otsikko "Nimi"
+    [{:otsikko "Nimi"
       :tyyppi :string
       :nimi :nimi
       :pakollinen? true
       ::lomake/col-luokka "col-sm-8"}
+     {:otsikko "Lask.nro"
+      :tyyppi :numero
+      :nimi :nro
+      ::lomake/col-luokka "col-sm-2"}
      {:otsikko "Työmenetelmä"
       :tyyppi :valinta
       :nimi :tyomenetelma
       :valinnat ["MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"] ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
-      :pakolinen? true}]
+      :pakollinen? true}]
+    ;; TODO: Toteuta "Muu" valinnan kuvaus
     [{:tyyppi :numero
       :kokonaisluku? true
       :uusi-rivi? true
