@@ -34,10 +34,9 @@
 
 (extend-protocol tuck/Event
   AvaaLomake
-  (process-event [lomake app]
-    (println (pr-str lomake))
+  (process-event [{lomake :lomake} app]
     (-> app
-        (assoc :lomake (:lomake lomake))))
+        (assoc :lomake lomake)))
 
   SuljeLomake
   (process-event [_ app]

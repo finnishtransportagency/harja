@@ -203,14 +203,16 @@
       :uusi-rivi? true
       :komponentti (fn [{:keys [data]}]
                      (let [arvo (:paikkauskohteen-tila data)]
-                       [:span
-                        [:span {:class (str "circle "
-                                            (cond
-                                              (= "tilattu" arvo) "tila-tilattu"
-                                              (= "ehdotettu" arvo) "tila-ehdotettu"
-                                              (= "valmis" arvo) "tila-valmis"
-                                              :default "tila-ehdotettu"
-                                              ))}] (str/capitalize arvo)]))}
+                       (if arvo
+                         [:span
+                          [:span {:class (str "circle "
+                                              (cond
+                                                (= "tilattu" arvo) "tila-tilattu"
+                                                (= "ehdotettu" arvo) "tila-ehdotettu"
+                                                (= "valmis" arvo) "tila-valmis"
+                                                :default "tila-ehdotettu"
+                                                ))}] (str/capitalize arvo)]
+                         "Tila ei tiedossa")))}
      {:nimi :paivitetty
       :tyyppi :string
       :hae (fn [rivi]
@@ -218,7 +220,7 @@
      {:nimi :muokkauspainike
       :tyyppi :komponentti
       :komponentti (fn [{:keys [data]}]
-                     (napit/muokkaa "Muokkaa kohdetta" (e! (t-paikkauskohteet/->AvaaLomake (assoc data :tyyppi :paikkauskohteen-muokkaus)))))}
+                     [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc data :tyyppi :paikkauskohteen-muokkaus)))])}
      {:nimi :tyomenetelma
       :otsikko "Työmenetelmä"
       :uusi-rivi? true
@@ -236,27 +238,24 @@
   (let [voi-muokata? (or
                        (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                        (= :uusi-paikkauskohde (:tyyppi lomake)))]
-    (fn [e! lomake]
-      [:div
-       ^{:key (hash lomake)}
-       [lomake/lomake
-        {:luokka " overlay-oikealla"
-         :overlay {:leveys "600px"}
-         :ei-borderia? true
-         :voi-muokata? voi-muokata?
-         :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
-         :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-         :footer-fn (fn [lomake]
-                      (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)]
-                        [:div
-                         [napit/tallenna
-                          "Tallenna"
-                          #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
-                         [napit/yleinen-toissijainen
-                          "Peruuta"
-                          #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
-        (paikkauskohde-skeema e! voi-muokata?) ;;TODO: korjaa päivitys
-        lomake]])))
+      [lomake/lomake
+       {:luokka " overlay-oikealla"
+        :overlay {:leveys "600px"}
+        :ei-borderia? true
+        :voi-muokata? voi-muokata?
+        :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
+        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+        :footer-fn (fn [lomake]
+                     (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)]
+                       [:div
+                        [napit/tallenna
+                         "Tallenna"
+                         #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                        [napit/yleinen-toissijainen
+                         "Peruuta"
+                         #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
+       (paikkauskohde-skeema e! voi-muokata?) ;;TODO: korjaa päivitys
+       lomake]))
 
 (defn testilomake
   [e! _lomake]
@@ -264,13 +263,12 @@
    [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
 
 (defn paikkauslomake [e! lomake] ;; TODO: Parempi nimeäminen
-  (fn [e! lomake]
-    (case (:tyyppi lomake)
-      :uusi-paikkauskohde [paikkauskohde-lomake e! lomake]
-      :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake]
-      :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake]
-      :testilomake [testilomake e! lomake]
-      [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])))
+  (case (:tyyppi lomake)
+    :uusi-paikkauskohde [paikkauskohde-lomake e! lomake]
+    :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake]
+    :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake]
+    :testilomake [testilomake e! lomake]
+    [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
