@@ -28,13 +28,14 @@
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
 (defrecord PaivitaLomake [lomake])
-(defrecord TallennaUusiPaikkauskohde [paikkauskohde])
-(defrecord TallennaUusiPaikkauskohdeOnnistui [vastaus])
-(defrecord TallennaUusiPaikkauskohdeEpaonnistui [vastaus])
+(defrecord TallennaPaikkauskohde [paikkauskohde])
+(defrecord TallennaPaikkauskohdeOnnistui [vastaus])
+(defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   AvaaLomake
   (process-event [lomake app]
+    (println (pr-str lomake))
     (-> app
         (assoc :lomake (:lomake lomake))))
 
@@ -77,24 +78,24 @@
   (process-event [{lomake :lomake} app]
     (assoc app :lomake lomake))
 
-  TallennaUusiPaikkauskohde
+  TallennaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
     (do
       (println "Lähetetään paikkauskohde" (pr-str paikkauskohde))
       (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
                          {:paikkaukohde paikkauskohde}
-                         {:onnistui ->TallennaUusiPaikkauskohdeOnnistui
-                          :epaonnistui ->TallennaUusiPaikkauskohdeEpaonnistui
+                         {:onnistui ->TallennaPaikkauskohdeOnnistui
+                          :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
                           :paasta-virhe-lapi? true})
       app))
 
-  TallennaUusiPaikkauskohdeOnnistui
+  TallennaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (println "Paikkauskohteen tallennus onnistui" vastaus)
       (dissoc app :lomake)))
 
-  TallennaUusiPaikkauskohdeEpaonnistui
+  TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (println "Paikkauskohteen tallennus epäonnistui" vastaus)

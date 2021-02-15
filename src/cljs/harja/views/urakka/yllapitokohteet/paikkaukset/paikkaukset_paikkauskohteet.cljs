@@ -59,7 +59,7 @@
                            (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
                            )
                          ;; avaa lomake
-                         (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :testilomake})))))
+                         (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu})))))
       :rivi-jalkeen-fn (fn [rivit]
                          ^{:luokka "yhteenveto"}
                          [{:teksti "Yht."}
@@ -85,111 +85,190 @@
      [paikkauskohteet-taulukko e! app]])
   )
 
-(defn uusi-paikkauskohde-lomake [e! lomake]
-  (fn [e! lomake]
-    [:div
-     [lomake/lomake
-      {:luokka " overlay-oikealla"
-       :overlay {:leveys "600px"}
-       :ei-borderia? true
-       :otsikko "Ehdota paikkauskohdetta"
-       :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-       :footer-fn (fn [lomake]
-                    [:div
-                     [napit/tallenna
-                      "Tallenna"
-                      #(e! (t-paikkauskohteet/->TallennaUusiPaikkauskohde (lomake/ilman-lomaketietoja lomake)))]
-                     [napit/yleinen-toissijainen
-                      "Peruuta"
-                      #(e! (t-paikkauskohteet/->SuljeLomake))]])}
-      [
-       {:otsikko "Numero"
-        :tyyppi :numero
-        :nimi :numero
-        ::lomake/col-luokka "col-sm-4"}
-       {:otsikko "Nimi"
-        :tyyppi :string
-        :nimi :nimi
-        :pakollinen? true
-        ::lomake/col-luokka "col-sm-8"}
-       {:otsikko "Työmenetelmä"
-        :tyyppi :valinta
-        :nimi :tyomenetelma
-        :valinnat ["MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"]
-        :pakolinen? true}
-       (lomake/ryhma
-         {:otsikko "Sijainti"
-          :uusi-rivi? true
-          :ryhman-luokka "lomakeryhman-border"}
-         (lomake/rivi
-           {:otsikko "Tie"
-            :tyyppi :string
-            :nimi :tie
-            :pakolinen? true}
-           {:otsikko "Ajorata"
-            :tyyppi :valinta
-            :valinnat [0 1 2 3] ; TODO: Hae jostain?
-            :nimi :ajorata
-            :pakolinen? false})
-         (lomake/rivi
-           {:otsikko "A-osa"
-            :tyyppi :string
-            :pakollinen? true
-            :nimi :aosa}
-           {:otsikko "A-et."
-            :tyyppi :string
-            :pakollinen? true
-            :nimi :aet}
-           {:otsikko "L-osa."
-            :tyyppi :string
-            :pakollinen? true
-            :nimi :losa}
-           {:otsikko "L-et."
-            :tyyppi :string
-            :pakollinen? true
-            :nimi :let}))
-       (lomake/ryhma
-         {:otsikko "Alustava suunnitelma"}
-         (lomake/rivi
-           {:otsikko "Arv. aloitus"
-            :tyyppi :pvm
-            :nimi :aloitus
-            :pakollinen? true
-            ::lomake/col-luokka "col-sm-6"}
-           {:otsikko "Arv. lopetus"
-            :tyyppi :pvm
-            :nimi :lopetus
-            :pakollinen? true
-            ::lomake/col-luokka "col-sm-6"})
-         (lomake/rivi
-           {:otsikko "Suunniteltu määrä"
-            :tyyppi :positiivinen-numero
-            :nimi :maara
-            :pakollinen? true
-            ::lomake/col-luokka "col-sm-6"}
-           {:otsikko "Yksikkö"
-            :tyyppi :valinta
-            :valinnat ["m²" "t" "kpl" "jm"]
-            :nimi :yksikko
-            :pakollinen? true
-            ::lomake/col-luokka "col-sm-6"})
-         )
+(defn suunnitelman-kentat [voi-muokata?]
+  (if voi-muokata?
+    [(lomake/ryhma
+       {:otsikko "Alustava suunnitelma"}
+       (lomake/rivi
+         {:otsikko "Arv. aloitus"
+          :tyyppi :pvm
+          :nimi :alkuaika
+          :pakollinen? true
+          ::lomake/col-luokka "col-sm-6"}
+         {:otsikko "Arv. lopetus"
+          :tyyppi :pvm
+          :nimi :loppuaika
+          :pakollinen? true
+          ::lomake/col-luokka "col-sm-6"})
+       (lomake/rivi
+         {:otsikko "Suunniteltu määrä"
+          :tyyppi :positiivinen-numero
+          :nimi :maara
+          :pakollinen? true
+          ::lomake/col-luokka "col-sm-6"}
+         {:otsikko "Yksikkö"
+          :tyyppi :valinta
+          :valinnat ["m²" "t" "kpl" "jm"]
+          :nimi :yksikko
+          :pakollinen? true
+          ::lomake/col-luokka "col-sm-6"})
        {:otsikko "Suunniteltu hinta"
         :tyyppi :positiivinen-numero
         :nimi :suunniteltu-hinta
         ::lomake/col-luokka "col-sm-12"
-        :yksikko "€"}]
-      lomake]]))
+        :yksikko "€"})]
+    [{:otsikko "Suunniteltu aikataulu"
+      :nimi :aikataulu
+      :uusi-rivi? true
+      :tyyppi :string
+      :hae (fn [rivi]
+             (if (and (:alkuaika rivi) (:loppuaika rivi))
+               (harja.fmt/pvm-vali [(:alkuaika rivi) (:loppuaika rivi)])
+               "Suunniteltua aikataulua ei löytynyt"))}
+     {:otsikko "Suunniteltu määrä"
+      :nimi :koostettu-maara
+      :tyyppi :string
+      :uusi-rivi? true
+      :hae (fn [rivi]
+             (str (:maara rivi) " " (:yksikko rivi)))}
+     {:otsikko "Suunniteltu hinta"
+      :nimi :hinta
+      :uusi-rivi? true
+      :tyyppi :string}]))
+
+(defn sijainnin-kentat [voi-muokata?]
+  (if voi-muokata?
+    [(lomake/ryhma
+       {:otsikko "Sijainti"
+        :uusi-rivi? true
+        :ryhman-luokka "lomakeryhman-border"}
+       (lomake/rivi
+         {:otsikko "Tie"
+          :tyyppi :string
+          :nimi :tie
+          :pakolinen? true}
+         {:otsikko "Ajorata"
+          :tyyppi :valinta
+          :valinnat [0 1 2 3] ; TODO: Hae jostain?
+          :nimi :ajorata
+          :pakolinen? false})
+       (lomake/rivi
+         {:otsikko "A-osa"
+          :tyyppi :string
+          :pakollinen? true
+          :nimi :aosa}
+         {:otsikko "A-et."
+          :tyyppi :string
+          :pakollinen? true
+          :nimi :aet}
+         {:otsikko "L-osa."
+          :tyyppi :string
+          :pakollinen? true
+          :nimi :losa}
+         {:otsikko "L-et."
+          :tyyppi :string
+          :pakollinen? true
+          :nimi :let}))]
+    [{:tyyppi :string
+      :otsikko "Sijainti"
+      :nimi :sijaintikooste
+      :uusi-rivi? true
+      :hae #(clojure.string/join "/" ((juxt :tie :aosa :aet :losa :let) %))}]))
+
+(defn nimi-numero-ja-tp-kentat [e! voi-muokata?]
+  (if voi-muokata?
+    [{:otsikko "Numero"
+      :tyyppi :numero
+      :nimi :nro
+      ::lomake/col-luokka "col-sm-4"}
+     {:otsikko "Nimi"
+      :tyyppi :string
+      :nimi :nimi
+      :pakollinen? true
+      ::lomake/col-luokka "col-sm-8"}
+     {:otsikko "Työmenetelmä"
+      :tyyppi :valinta
+      :nimi :tyomenetelma
+      :valinnat ["MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"] ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
+      :pakolinen? true}]
+    [{:tyyppi :numero
+      :kokonaisluku? true
+      :uusi-rivi? true
+      :nimi :nro}
+     {:tyyppi :string
+      :uusi-rivi? true
+      :nimi :nimi}
+     {:nimi :paikkauskohteen-tila
+      :tyyppi :komponentti
+      :uusi-rivi? true
+      :komponentti (fn [{:keys [data]}]
+                     (let [arvo (:paikkauskohteen-tila data)]
+                       [:span
+                        [:span {:class (str "circle "
+                                            (cond
+                                              (= "tilattu" arvo) "tila-tilattu"
+                                              (= "ehdotettu" arvo) "tila-ehdotettu"
+                                              (= "valmis" arvo) "tila-valmis"
+                                              :default "tila-ehdotettu"
+                                              ))}] (str/capitalize arvo)]))}
+     {:nimi :paivitetty
+      :tyyppi :string
+      :hae (fn [rivi]
+             (if (:paivitetty rivi) (str "Päivitetty " (:paivitetty rivi)) "Ei päivitystietoa"))}
+     {:nimi :muokkauspainike
+      :tyyppi :komponentti
+      :komponentti (fn [{:keys [data]}]
+                     (napit/muokkaa "Muokkaa kohdetta" (e! (t-paikkauskohteet/->AvaaLomake (assoc data :tyyppi :paikkauskohteen-muokkaus)))))}
+     {:nimi :tyomenetelma
+      :otsikko "Työmenetelmä"
+      :uusi-rivi? true
+      :tyyppi :string}]))
+
+(defn paikkauskohde-skeema [e! voi-muokata?]
+  (let [nimi-nro-ja-tp (nimi-numero-ja-tp-kentat e! voi-muokata?)
+        sijainti (sijainnin-kentat voi-muokata?)
+        suunnitelma (suunnitelman-kentat voi-muokata?)]
+    (vec (concat nimi-nro-ja-tp
+                 sijainti
+                 suunnitelma))))
+
+(defn paikkauskohde-lomake [e! lomake]
+  (let [voi-muokata? (or
+                       (= :paikkauskohteen-muokkaus (:tyyppi lomake))
+                       (= :uusi-paikkauskohde (:tyyppi lomake)))]
+    (fn [e! lomake]
+      [:div
+       ^{:key (hash lomake)}
+       [lomake/lomake
+        {:luokka " overlay-oikealla"
+         :overlay {:leveys "600px"}
+         :ei-borderia? true
+         :voi-muokata? voi-muokata?
+         :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
+         :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+         :footer-fn (fn [lomake]
+                      (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)]
+                        [:div
+                         [napit/tallenna
+                          "Tallenna"
+                          #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                         [napit/yleinen-toissijainen
+                          "Peruuta"
+                          #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
+        (paikkauskohde-skeema e! voi-muokata?) ;;TODO: korjaa päivitys
+        lomake]])))
 
 (defn testilomake
   [e! _lomake]
   [:div "Kuvittele tähän hieno lomake"
    [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
 
-(defn paikkauslomake [e! lomake]
+(defn paikkauslomake [e! lomake] ;; TODO: Parempi nimeäminen
   (fn [e! lomake]
     (case (:tyyppi lomake)
-      :uusi-paikkauskohde [uusi-paikkauskohde-lomake e! lomake]
+      :uusi-paikkauskohde [paikkauskohde-lomake e! lomake]
+      :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake]
+      :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake]
       :testilomake [testilomake e! lomake]
       [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])))
 
