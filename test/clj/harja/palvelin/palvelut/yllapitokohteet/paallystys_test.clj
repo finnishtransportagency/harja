@@ -1109,6 +1109,14 @@
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alustassa väärät lisätiedot.")))
 
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-kun-puuttuu-ehtollinen-kentta
+  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                               (assoc :alusta pot2-alusta-esimerkki)
+                               (update-in [:alusta 2] dissoc :massamaara))]
+    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
+                                       "Alustassa väärät lisätiedot.")))
+
 (deftest ei-saa-tallenna-pot2-jos-sama-tr-osoite-samalla-alustatoimenpiteella
   (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
