@@ -542,3 +542,29 @@ VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
 UPDATE pot2_alusta
    SET poistettu = TRUE
  WHERE id IN (:pot2a_idt);
+
+-- name: massan-kayttotiedot
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+  FROM pot2_paallystekerros pk
+           LEFT JOIN paallystysilmoitus pot ON pk.pot2_id = pot.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
+           left join urakka u ON ypk.urakka = u.id
+ WHERE pk.materiaali = :id
+ group by ypk.nimi, ypk.kohdenumero
+ UNION
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+  FROM pot2_alusta a
+           LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
+           left join urakka u ON ypk.urakka = u.id
+ WHERE a.massa = :id
+ group by ypk.nimi, ypk.kohdenumero;
+
+-- name: murskeen-kayttotiedot
+SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
+  FROM pot2_alusta a
+           LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
+           left join urakka u ON ypk.urakka = u.id
+ WHERE a.murske = :id
+ group by ypk.nimi, ypk.kohdenumero;

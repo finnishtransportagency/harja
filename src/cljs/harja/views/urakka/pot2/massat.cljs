@@ -199,14 +199,15 @@
               polun-avaimet aineet])])]))])
 
 
-(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
+(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot luokka voi-muokata?] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
         massa-id (::pot2-domain/massa-id pot2-massa-lomake)
-        _ (js/console.log "massa-pot2-massa-lomake :: pot2-massa-lomake " (pr-str pot2-massa-lomake))
-        muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)]
+        muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
+        materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
+       :luokka luokka :voi-muokata? voi-muokata?
        :otsikko (if massa-id
                   "Muokkaa massaa"
                   "Uusi massa")
@@ -224,13 +225,11 @@
                            [:li (name puute)])]])
                      [:div.flex-row
                       [:div.tallenna-peruuta
-                       [napit/tallenna
-                        "Tallenna"
+                       [mk-tiedot/tallenna-materiaali-nappi materiaali-kaytossa
                         #(e! (mk-tiedot/->TallennaLomake data))
-                        {:vayla-tyyli? true
-                         :luokka "suuri"
-                         :disabled (or (not (ui-lomake/voi-tallentaa? data))
-                                       (not (empty? muut-validointivirheet)))}]
+                        (or (not (ui-lomake/voi-tallentaa? data))
+                            (not (empty? muut-validointivirheet)))
+                        :massa]
                        [napit/yleinen
                         "Peruuta" :toissijainen
                         #(e! (mk-tiedot/->TyhjennaLomake data))
@@ -238,17 +237,10 @@
                          :luokka "suuri"}]]
 
                       (when massa-id
-                        [napit/poista
-                         "Poista"
-                         (fn []
-                           (varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "Massan poistaminen"
-                              :sisalto
-                              [:div "Haluatko ihan varmasti poistaa tämän massan?"]
-                              :toiminto-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
-                              :hyvaksy "Kyllä"}))
-                         {:vayla-tyyli? true
-                          :luokka "suuri"}])]])
+                        [mk-tiedot/poista-materiaali-nappi materiaali-kaytossa
+                         #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
+                         :massa])]
+                     [mk-tiedot/materiaalin-kaytto materiaali-kaytossa]])
        :vayla-tyyli? true}
       [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
