@@ -15,8 +15,9 @@
                 "erkki.esimerkki@example.com",
                 "markku.jalkimerkki@example.com"
             ],
-            "liitePdfData": "ZGFkYQo=",
-            "liitePdfNimi": "liite.pdf"
+            "liiteData": "ZGFkYQo=",
+            "liiteNimi": "liite.pdf",
+            "liiteContentType": "application/pdf"
         }
     ],
     "required": [
@@ -25,8 +26,9 @@
         "otsikko",
         "sisalto",
         "vastaanottajat",
-        "liitePdfData",
-        "liitePdfNimi"
+        "liiteData",
+        "liiteNimi",
+        "liiteContentType"
     ],
     "properties": {
         "viestiId": {
@@ -99,26 +101,37 @@
                 ]
             }
         },
-        "liitePdfData": {
-            "$id": "#/properties/liitePdfData",
+        "liiteData": {
+            "$id": "#/properties/liiteData",
             "type": "string",
-            "title": "The liitePdfData schema",
+            "title": "The liiteData schema",
             "description": "An explanation about the purpose of this instance.",
             "default": "",
             "examples": [
                 "ZGFkYQo="
             ]
         },
-        "liitePdfNimi": {
-            "$id": "#/properties/liitePdfNimi",
+        "liiteNimi": {
+            "$id": "#/properties/liiteNimi",
             "type": "string",
-            "title": "The liitePdfNimi schema",
+            "title": "The liiteNimi schema",
             "description": "An explanation about the purpose of this instance.",
             "default": "",
             "examples": [
                 "liite.pdf"
             ]
+        },
+        "liiteContentType": {
+            "$id": "#/properties/liiteContentType",
+            "type": "string",
+            "title": "The liiteContentType schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "application/pdf"
+            ]
         }
     },
     "additionalProperties": true
 }
+
