@@ -192,8 +192,8 @@
                             :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
    alustalomake])
 
-(defn materiaali [massat-tai-murskeet koodi]
-  (first (filter #(= (::pot2-domain/koodi %) koodi)
+(defn materiaali [massat-tai-murskeet rivi]
+  (first (filter #(= (::pot2-domain/koodi %) (:murske-id rivi))
                  massat-tai-murskeet)))
 
 (defn alusta
@@ -264,18 +264,17 @@
                 (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 4
         :tyyppi :komponentti :muokattava? (constantly false)
-
         :komponentti (fn [rivi]
-                       [pot2-tiedot/toimenpiteen-tiedot rivi materiaalikoodistot])}
+                       [pot2-tiedot/toimenpiteen-tiedot rivi])}
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
                        [pot2-tiedot/materiaalin-tiedot (cond
                                                          (:massa rivi)
-                                                         (materiaali massat (:massa rivi))
+                                                         (materiaali massat rivi)
 
                                                          (:murske rivi)
-                                                         (materiaali murskeet (:murske rivi))
+                                                         (materiaali murskeet rivi)
 
                                                          :else
                                                          [])

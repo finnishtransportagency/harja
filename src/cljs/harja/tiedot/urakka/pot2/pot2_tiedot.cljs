@@ -2,6 +2,7 @@
   (:require
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]
+    [clojure.string :as str]
     [harja.domain.pot2 :as pot2-domain]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
@@ -53,31 +54,40 @@
    (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
         ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
-(defn toimenpiteen-tiedot
-  [rivi materiaalikoodistot]
-  (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
-        toimenpide (:toimenpide rivi)
-        {:keys [alusta-toimenpiteet verkon-tarkoitukset verkon-tyypit verkon-sijainnit]} materiaalikoodistot]
-    (fn [rivi materiaalikoodistot]
-      [:div.pot2-toimenpiteen-tiedot
-       (cond
-         (onko-toimenpide-verkko? alusta-toimenpiteet toimenpide)
-         (fmt-toimenpide-verkko (select-keys rivi verkko-avaimet) materiaalikoodistot)
+(defn- fmt-kentan-nimi  [kentta]
+  (case kentta
 
-         :else
-         [:span "Ei tietoja"])])))
-;; TODO: tänne domain puolelta käyttöön palvelinpuolen kanssa yhteinen logiikka päätellä
-;; eri toimenpidetyyppien kentät
+    ;; jos on ääkkösiä, täytyy tehdä special case
+    :lisatty-paksuus "Lisätty paksuus"
+
+    :massamaara "Massa\u00ADmäärä"
+
+
+    ;; ei korjattavaa
+    (when kentta
+      (str/replace (name kentta) #"-" " "))))
+
+(defn toimenpiteen-tiedot
+  [rivi]
+  (let [toimenpide (:toimenpide rivi)]
+    (fn [rivi]
+      [:div.pot2-toimenpiteen-tiedot
+       ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
+       (str/capitalize
+         (str/join ", " (map #(when (:nimi %)
+                                (str (fmt-kentan-nimi (:nimi %)) ": " ((:nimi %) rivi)))
+                             (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide))))])))
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
   [:div.pot2-materiaalin-tiedot
    (cond
-     (some? (:murske materiaali))
+     (some? (:murske-id materiaali))
      [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti]
 
-     (some? (:massa materiaali))
+     (some? (:massa-id materiaali))
      [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti]
-     )])
+
+     :else nil)])
 
 
 (extend-protocol tuck/Event
