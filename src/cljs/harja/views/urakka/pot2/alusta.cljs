@@ -45,17 +45,17 @@
            verkon-sijainnit
            verkon-tyypit
            verkon-tarkoitukset] :as alusta}]
-  (let [kaikki-lisakentat {:kasittelysyvyys    {:nimi   :kasittelysyvyys :otsikko "Käsittelysyvyys"
+  (let [kaikki-lisakentat {:kasittelysyvyys    {:nimi   :kasittelysyvyys :otsikko "Käsittelysyvyys (cm)"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :lisatty-paksuus    {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
+                           :lisatty-paksuus    {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus (cm)"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :massamaara         {:nimi   :massamaara :otsikko "Massamäärä"
+                           :massamaara         {:nimi   :massamaara :otsikko "Massamäärä (kg/m2)"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :kokonaismassamaara {:nimi   :kokonaismassamaara :otsikko "Kokonaismassamäärä"
+                           :kokonaismassamaara {:nimi   :kokonaismassamaara :otsikko "Kokonaismassamäärä (t)"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :leveys             {:nimi   :leveys :otsikko "Leveys"
+                           :leveys             {:nimi   :leveys :otsikko "Leveys (m)"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :pinta-ala          {:nimi   :pinta-ala :otsikko "Pinta-ala"
+                           :pinta-ala          {:nimi   :pinta-ala :otsikko "Pinta-ala (m2)"
                                                 :tyyppi :positiivinen-numero :kokonaisluku? true}
                            :sideainepitoisuus  {:nimi   :sideainepitoisuus :otsikko "Sideainepitoisuus"
                                                 :tyyppi :positiivinen-numero :desimaalien-maara 1}
@@ -198,7 +198,7 @@
 
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}
    {:keys [massat murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
   (let [perusleveys 2
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
@@ -269,16 +269,18 @@
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
-                       [pot2-tiedot/materiaalin-tiedot (cond
-                                                         (:massa rivi)
-                                                         (materiaali massat rivi)
+                       (when (or (:massa rivi) (:murske rivi))
+                         [pot2-tiedot/materiaalin-tiedot (cond
+                                                           (:massa rivi)
+                                                           (materiaali massat rivi)
 
-                                                         (:murske rivi)
-                                                         (materiaali murskeet rivi)
+                                                           (:murske rivi)
+                                                           (materiaali murskeet rivi)
 
-                                                         :else
-                                                         [])
-                        {:materiaalikoodistot materiaalikoodistot}])}
+                                                           :else
+                                                           nil)
+                          {:materiaalikoodistot materiaalikoodistot}
+                          #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))]))}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
