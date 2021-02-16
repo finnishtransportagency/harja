@@ -99,6 +99,7 @@ SELECT id
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
 SELECT pk.id                        AS id,
        pk.nimi                      AS nimi,
+       pk.nro                       AS nro,
        pk.luotu                     AS luotu,
        pk."urakka-id"               AS "urakka-id",
        pk.tyomenetelma              AS tyomenetelma,

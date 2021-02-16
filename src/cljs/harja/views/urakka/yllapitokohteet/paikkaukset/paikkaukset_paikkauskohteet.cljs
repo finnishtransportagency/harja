@@ -188,7 +188,7 @@
       :pakollinen? true
       ::lomake/col-luokka "col-sm-8"}
      {:otsikko "Lask.nro"
-      :tyyppi :numero
+      :tyyppi :string
       :nimi :nro
       ::lomake/col-luokka "col-sm-2"}
      {:otsikko "Työmenetelmä"
@@ -203,8 +203,7 @@
         :pakollinen? :true
         :tyyppi :string
         ::lomake/col-luokka "col-sm-6"})]
-    [{:tyyppi :numero
-      :kokonaisluku? true
+    [{:tyyppi :string ;;miksi numero on str tilassa
       :uusi-rivi? true
       :nimi :nro}
      {:tyyppi :string
@@ -231,6 +230,7 @@
              (if (:paivitetty rivi) (str "Päivitetty " (:paivitetty rivi)) "Ei päivitystietoa"))}
      {:nimi :muokkauspainike
       :tyyppi :komponentti
+      ::lomake/col-luokka "col-md-12 reunus-alhaalla"
       :komponentti (fn [{:keys [data]}]
                      [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc data :tyyppi :paikkauskohteen-muokkaus)))])}
      {:nimi :tyomenetelma
@@ -251,6 +251,7 @@
                        (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                        (= :uusi-paikkauskohde (:tyyppi lomake)))
         muu-menetelma? (= "Muu" (:tyomenetelma lomake))]
+    ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
       [lomake/lomake
        {:luokka " overlay-oikealla"
         :overlay {:leveys "600px"}

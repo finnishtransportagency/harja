@@ -80,7 +80,9 @@
 
   TallennaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (dissoc paikkauskohde :sijainti)]
+    (let [paikkauskohde (-> paikkauskohde
+                            (dissoc :sijainti)
+                            (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
         (println "Lähetetään paikkauskohde" (pr-str paikkauskohde))
         (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
