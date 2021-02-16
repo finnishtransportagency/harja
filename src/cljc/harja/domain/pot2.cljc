@@ -35,42 +35,43 @@
   [toimenpide]
   "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
-                                               [:kasittelysyvyys :lisatty-paksuus :murske
-                                                {:nimi :massamaara :pakollinen? false}]
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
+                                                {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus (cm)"} :murske
+                                                {:nimi :massamaara :pakollinen? false :otsikko "Massa\u00ADmäärä (kg/m2)"}]
                                                11           ;; BEST
-                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                12           ;; VBST
-                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                13           ;; REST
-                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                14           ;; SST
-                                               [:kasittelysyvyys
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
                                                 {:nimi :sideaine2 :otsikko "Sideaine"}
                                                 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                15           ;; MHST
-                                               [:kasittelysyvyys
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
                                                 {:nimi :sideaine2 :otsikko "Sideaine"}
                                                 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                16           ;; KOST
-                                               [:kasittelysyvyys :sideaine :sideainepitoisuus :sideaine2
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus :sideaine2
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                23           ;; MS
-                                               [:lisatty-paksuus
-                                                {:nimi :massamaara :pakollinen? false}
+                                               [{:nimi :lisatty-paksuus :otsikko "Lisätty paksuus"}
+                                                {:nimi :massamaara :pakollinen? false :otsikko "Massa\u00ADmäärä (kg/m2)"}
                                                 :murske]
                                                24           ;; SJYR
-                                               [:kasittelysyvyys
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
                                                 {:nimi :murske :pakollinen? false}]
                                                31           ;; TASK
                                                []
@@ -79,11 +80,11 @@
                                                41           ;; TJYR
                                                []
                                                42           ;; LJYR
-                                               [:kasittelysyvyys :leveys :pinta-ala]
+                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :leveys {:nimi :pinta-ala :otsikkO "Pinta-ala (m2)"}]
                                                43           ;; RJYR
                                                []
                                                666          ;; REM-TAS
-                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false :otsikko "Kokonais\u00ADmassa\u00ADmäärä (t)"} :massamaara]
                                                667          ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]}
