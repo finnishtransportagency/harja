@@ -203,7 +203,7 @@
         :pakollinen? :true
         :tyyppi :string
         ::lomake/col-luokka "col-sm-6"})]
-    [{:tyyppi :string ;;miksi numero on str tilassa
+    [{:tyyppi :string
       :uusi-rivi? true
       :nimi :nro}
      {:tyyppi :string
@@ -224,10 +224,10 @@
                                                 :default "tila-ehdotettu"
                                                 ))}] (str/capitalize arvo)]
                          "Tila ei tiedossa")))}
-     {:nimi :paivitetty
+     {:nimi :muokattu
       :tyyppi :string
       :hae (fn [rivi]
-             (if (:paivitetty rivi) (str "Päivitetty " (:paivitetty rivi)) "Ei päivitystietoa"))}
+             (if (:muokattu rivi) (str "Päivitetty "  (harja.fmt/pvm (:muokattu rivi))) "Ei päivitystietoa"))}
      {:nimi :muokkauspainike
       :tyyppi :komponentti
       ::lomake/col-luokka "col-md-12 reunus-alhaalla"

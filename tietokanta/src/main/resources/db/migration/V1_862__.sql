@@ -13,7 +13,8 @@ ALTER TABLE paikkauskohde
     ADD COLUMN "paikkauskohteen-tila" paikkauskohteen_tila, -- ehdotettu, hylätty, tilattu, valmis, tarkistettu
     ADD COLUMN "suunniteltu-maara" NUMERIC, -- Arvioitu menekki työmenetelmälle
     ADD COLUMN "suunniteltu-hinta" NUMERIC, -- Paikkauksen arvioitu hinta
-    ADD COLUMN "yksikko" TEXT;
+    ADD COLUMN "yksikko" TEXT, -- Suunnitellun määrän yksikkö
+    ALTER COLUMN "ulkoinen-id" DROP NOT NULL; -- Poistetaan rajoitus, koska nyt kohteet eivät enää tule aina ulkoa.
 
 ALTER TABLE paikkauskohde
     RENAME COLUMN tila TO "yhalahetyksen-tila";

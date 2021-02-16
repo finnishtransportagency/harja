@@ -82,7 +82,7 @@
                   (do
                     (q/paivita-paikkauskohde! db
                                               {:id kohde-id
-                                               :ulkoinen-id (or (:ulkoinen-id kohde) 0)
+                                               :ulkoinen-id (:ulkoinen-id kohde)
                                                :nimi (:nimi kohde)
                                                :poistettu (or (:poistettu kohde) false)
                                                :muokkaaja-id (:id user)
@@ -110,7 +110,7 @@
                     (println "Tallennettiin uusi :: antamalla " (pr-str kohde))
                     (q/luo-uusi-paikkauskohde! db
                                                {:luoja-id (:id user)
-                                                :ulkoinen-id (or (:ulkoinen-id kohde) 0)
+                                                :ulkoinen-id (:ulkoinen-id kohde)
                                                 :nimi (:nimi kohde)
                                                 :urakka-id (:urakka-id kohde)
                                                 :luotu (or (:luotu kohde) (pvm/nyt))
