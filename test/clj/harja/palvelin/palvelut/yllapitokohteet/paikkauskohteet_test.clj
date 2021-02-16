@@ -27,8 +27,8 @@
                       urakkatieto-fixture))
 
 (def default-paikkauskohde {:nimi "testinimi"
-                            :alkuaika (pvm/->pvm-aika "01.01.2020 00:00:00" )
-                            :loppuaika (pvm/->pvm-aika "01.02.2020 00:00:00" )
+                            :alkupvm (pvm/->pvm "01.01.2020")
+                            :loppupvm (pvm/->pvm "01.02.2020")
                             :paikkauskohteen-tila "valmis"
                             :tie 22
                             :aosa 1
@@ -58,8 +58,8 @@
         kohde (-> kohde
                   (assoc :nimi "testinimi")
                   (assoc :tie "22")
-                  (assoc :alkuaika (pvm/->pvm-aika "01.01.2020 00:00:00" ))
-                  (assoc :loppuaika (pvm/->pvm-aika "01.02.2020 00:00:00" ))
+                  (assoc :alkupvm (pvm/->pvm "01.01.2020"))
+                  (assoc :loppupvm (pvm/->pvm "01.02.2020"))
                   (assoc :paikkauskohteen-tila "valmis"))
         muokattu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-paikkauskohde-urakalle

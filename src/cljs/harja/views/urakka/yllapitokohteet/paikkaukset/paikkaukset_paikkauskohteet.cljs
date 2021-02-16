@@ -44,7 +44,10 @@
                  :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
                  :leveys 4
-                 :nimi :formatoitu-aikataulu}]
+                 :nimi :formatoitu-aikataulu}
+                {:otsikko "Suun. hinta"
+                 :leveys 4
+                 :nimi :suunniteltu-hinta}]
         paikkauskohteet (:paikkauskohteet app)]
     [grid/grid
      {:otsikko "Paikkauskohteet"
@@ -64,6 +67,7 @@
                          ^{:luokka "yhteenveto"}
                          [{:teksti "Yht."}
                           {:teksti (str (count paikkauskohteet) " kohdetta")}
+                          {:teksti ""}
                           {:teksti ""}
                           {:teksti ""}
                           {:teksti ""}
@@ -92,18 +96,18 @@
        (lomake/rivi
          {:otsikko "Arv. aloitus"
           :tyyppi :pvm
-          :nimi :alkuaika
+          :nimi :alkupvm
           :pakollinen? true
           ::lomake/col-luokka "col-sm-6"}
          {:otsikko "Arv. lopetus"
           :tyyppi :pvm
-          :nimi :loppuaika
+          :nimi :loppupvm
           :pakollinen? true
           ::lomake/col-luokka "col-sm-6"})
        (lomake/rivi
          {:otsikko "Suunniteltu määrä"
           :tyyppi :positiivinen-numero
-          :nimi :maara
+          :nimi :suunniteltu-maara
           :pakollinen? true
           ::lomake/col-luokka "col-sm-6"}
          {:otsikko "Yksikkö"
@@ -123,17 +127,17 @@
       :uusi-rivi? true
       :tyyppi :string
       :hae (fn [rivi]
-             (if (and (:alkuaika rivi) (:loppuaika rivi))
-               (harja.fmt/pvm-vali [(:alkuaika rivi) (:loppuaika rivi)])
+             (if (and (:alkupvm rivi) (:loppupvm rivi))
+               (harja.fmt/pvm-vali [(:alkupvm rivi) (:loppupvm rivi)])
                "Suunniteltua aikataulua ei löytynyt"))}
      {:otsikko "Suunniteltu määrä"
       :nimi :koostettu-maara
       :tyyppi :string
       :uusi-rivi? true
       :hae (fn [rivi]
-             (str (:maara rivi) " " (:yksikko rivi)))}
+             (str (:suunniteltu-maara rivi) " " (:yksikko rivi)))}
      {:otsikko "Suunniteltu hinta"
-      :nimi :hinta
+      :nimi :suunniteltu-hinta
       :uusi-rivi? true
       :tyyppi :string}]))
 

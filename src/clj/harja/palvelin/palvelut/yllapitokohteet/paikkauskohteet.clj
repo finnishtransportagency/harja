@@ -11,22 +11,25 @@
             [taoensso.timbre :as log]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
-  (if (and (not (nil? alku)) (not (nil? loppu)) (.after (konv/sql-timestamp alku) (konv/sql-timestamp loppu)))
-    (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
-    validointivirheet))
+  (let [_ (println "validi-pvm-vali? :: alku loppu" (pr-str alku) (pr-str loppu) (pr-str (.after alku loppu)) (pr-str (.after loppu alku)))]
+    (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
+      (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
+      validointivirheet)))
 
 (defn validit-tr_osat? [validointivirheet tie alkuosa alkuetaisyys loppuosa loppuetaisyys]
-  (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
-           (>= loppuosa alkuosa))
-    validointivirheet
-    (conj validointivirheet "Tierekisterissä virhe.")))
+  (let [_ (println "validit-tr_osat?" tie alkuosa alkuetaisyys loppuosa loppuetaisyys)]
+    (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
+             (>= loppuosa alkuosa))
+      validointivirheet
+      (conj validointivirheet "Tierekisterissä virhe."))))
 
-(defn- validi-aika? [^java.util.Date aika]
-  (if (and
-        (.after aika (pvm/->pvm-aika "01.01.2000 00:00:00"))
-        (.before aika (pvm/->pvm-aika "01.01.2100 00:00:00")))
-    true
-    false))
+(defn- validi-aika? [aika]
+  (let [_ (println "validi-aika? :: aika" (pr-str aika) (pr-str (.after aika (pvm/->pvm "01.01.2000"))) )]
+    (if (and
+          (.after aika (pvm/->pvm "01.01.2000"))
+          (.before aika (pvm/->pvm "01.01.2100")))
+      true
+      false)))
 
 (defn- validi-nimi? [nimi]
   (if (or (nil? nimi) (= "" nimi))
@@ -34,21 +37,21 @@
     true))
 
 (s/def ::nimi (s/and string? #(validi-nimi? %)))
-(s/def ::alkuaika (s/and #(instance? java.util.Date %) #(validi-aika? %)))
-(s/def ::loppuaika (s/and #(instance? java.util.Date %) #(validi-aika? %)))
+(s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
+(s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 
 (defn paikkauskohde-validi? [kohde]
   (let [validointivirheet (as-> #{} virheet
                                 (if (s/valid? ::nimi (:nimi kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen nimi puuttuu."))
-                                (if (s/valid? ::alkuaika (:alkuaika kohde))
+                                (if (s/valid? ::alkupvm (:alkupvm kohde))
                                   virheet
-                                  (conj virheet "Paikkauskohteen lopetusajassa virhe."))
-                                (if (s/valid? ::loppuaika (:loppuaika kohde))
+                                  (conj virheet "Paikkauskohteen alkupäivässä virhe."))
+                                (if (s/valid? ::loppupvm (:loppupvm kohde))
                                   virheet
-                                  (conj virheet "Paikkauskohteen aloitusajassa virhe."))
-                                (validi-pvm-vali? virheet (:alkuaika kohde) (:loppuaika kohde))
+                                  (conj virheet "Paikkauskohteen loppupäivässä virhe."))
+                                (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
                                 (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))]
     validointivirheet))
 
@@ -61,13 +64,14 @@
                                       (-> p
                                           (assoc :sijainti (geo/pg->clj (:geometria p)))
                                           (dissoc :geometria)))
-                                    urakan-paikkauskohteet)]
+                                    urakan-paikkauskohteet)
+        _ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))]
     urakan-paikkauskohteet))
 
 (defn tallenna-paikkauskohde! [db user kohde]
   ;;TODO: Tarkista oikeudet
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (:urakka-id kohde))
-  (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str kohde))
+  (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kohde-id (:id kohde)
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde)
@@ -89,8 +93,8 @@
                                                :tarkistaja-id (or (:tarkistaja-id kohde) nil)
                                                :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
                                                :nro (:nro kohde)
-                                               :alkuaika (:alkuaika kohde)
-                                               :loppuaika (:loppuaika kohde)
+                                               :alkupvm (:alkupvm kohde)
+                                               :loppupvm (:loppupvm kohde)
                                                :tyomenetelma (or (:tyomenetelma kohde) nil)
                                                :tyomenetelma-kuvaus (or (:tyomenetelma-kuvaus kohde) nil)
                                                :tie (:tie kohde)
@@ -98,7 +102,9 @@
                                                :losa (:losa kohde)
                                                :aet (:aet kohde)
                                                :let (:let kohde)
-                                               :paikkauskohteen-tila (:paikkauskohteen-tila kohde)})
+                                               :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                               :suunniteltu-hinta (:suunniteltu-hinta kohde)
+                                               :suunniteltu-maara (:suunniteltu-maara kohde)})
                     kohde)
                   (do
                     (println "Tallennettiin uusi :: antamalla " (pr-str kohde))
@@ -111,8 +117,8 @@
                                                 :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
                                                 :virhe (:virhe kohde)
                                                 :nro (:nro kohde)
-                                                :alkuaika (:alkuaika kohde)
-                                                :loppuaika (:loppuaika kohde)
+                                                :alkupvm (:alkupvm kohde)
+                                                :loppupvm (:loppupvm kohde)
                                                 :tyomenetelma (:tyomenetelma kohde)
                                                 :tyomenetelma-kuvaus (:tyomenetelma-kuvaus kohde)
                                                 :tie (:tie kohde)
@@ -121,6 +127,8 @@
                                                 :aet (:aet kohde)
                                                 :let (:let kohde)
                                                 :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                :suunniteltu-hinta (:suunniteltu-hinta kohde)
+                                                :suunniteltu-maara (:suunniteltu-maara kohde)
                                                 }))))
 
         _ (println "kohde: " (pr-str kohde))

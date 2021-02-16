@@ -11,11 +11,11 @@
             [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn- fmt-aikataulu [alkuaika loppuaika tila]
+(defn- fmt-aikataulu [alkupvm loppupvm tila]
   (str
-    (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkuaika)
+    (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkupvm)
     " - "
-    (pvm/fmt-p-k-v-lyhyt loppuaika)
+    (pvm/fmt-p-k-v-lyhyt loppupvm)
     (when-not (= "Valmis" tila)
       " (arv.)")))
 
@@ -58,10 +58,11 @@
     (let [paikkauskohteet (map (fn [kohde]
                                  (-> kohde
                                      (assoc :formatoitu-aikataulu
-                                            (fmt-aikataulu (:alkuaika kohde) (:loppuaika kohde) "Ehdotettu"))
+                                            (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) "Ehdotettu"))
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
-                               vastaus)]
+                               vastaus)
+          _ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))]
       (do
         (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
         (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
@@ -79,14 +80,15 @@
 
   TallennaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (do
-      (println "Lähetetään paikkauskohde" (pr-str paikkauskohde))
-      (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
-                         {:paikkaukohde paikkauskohde}
-                         {:onnistui ->TallennaPaikkauskohdeOnnistui
-                          :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
-                          :paasta-virhe-lapi? true})
-      app))
+    (let [paikkauskohde (dissoc paikkauskohde :sijainti)]
+      (do
+        (println "Lähetetään paikkauskohde" (pr-str paikkauskohde))
+        (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
+                           paikkauskohde
+                           {:onnistui ->TallennaPaikkauskohdeOnnistui
+                            :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
+                            :paasta-virhe-lapi? true})
+        app)))
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
