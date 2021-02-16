@@ -149,7 +149,7 @@
         :ryhman-luokka "lomakeryhman-border"}
        (lomake/rivi
          {:otsikko "Tie"
-          :tyyppi :string
+          :tyyppi :numero
           :nimi :tie
           :pakollinen? true}
          {:otsikko "Ajorata"
@@ -159,19 +159,19 @@
           :pakollinen? false})
        (lomake/rivi
          {:otsikko "A-osa"
-          :tyyppi :string
+          :tyyppi :numero
           :pakollinen? true
           :nimi :aosa}
          {:otsikko "A-et."
-          :tyyppi :string
+          :tyyppi :numero
           :pakollinen? true
           :nimi :aet}
          {:otsikko "L-osa."
-          :tyyppi :string
+          :tyyppi :numero
           :pakollinen? true
           :nimi :losa}
          {:otsikko "L-et."
-          :tyyppi :string
+          :tyyppi :numero
           :pakollinen? true
           :nimi :let}))]
     [{:tyyppi :string
@@ -180,7 +180,7 @@
       :uusi-rivi? true
       :hae #(clojure.string/join "/" ((juxt :tie :aosa :aet :losa :let) %))}]))
 
-(defn nimi-numero-ja-tp-kentat [e! voi-muokata?]
+(defn nimi-numero-ja-tp-kentat [e! muu-menetelma? voi-muokata?]
   (if voi-muokata?
     [{:otsikko "Nimi"
       :tyyppi :string
@@ -195,8 +195,14 @@
       :tyyppi :valinta
       :nimi :tyomenetelma
       :valinnat ["MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"] ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
-      :pakollinen? true}]
-    ;; TODO: Toteuta "Muu" valinnan kuvaus
+      :pakollinen? true
+      ::lomake/col-luokka "col-sm-6"}
+     (when muu-menetelma?
+       {:otsikko "Menetelmän kuvaus"
+        :nimi :menetelman-kuvaus
+        :pakollinen? :true
+        :tyyppi :string
+        ::lomake/col-luokka "col-sm-6"})]
     [{:tyyppi :numero
       :kokonaisluku? true
       :uusi-rivi? true
@@ -232,8 +238,8 @@
       :uusi-rivi? true
       :tyyppi :string}]))
 
-(defn paikkauskohde-skeema [e! voi-muokata?]
-  (let [nimi-nro-ja-tp (nimi-numero-ja-tp-kentat e! voi-muokata?)
+(defn paikkauskohde-skeema [e! muu-menetelma? voi-muokata?]
+  (let [nimi-nro-ja-tp (nimi-numero-ja-tp-kentat e! muu-menetelma? voi-muokata?)
         sijainti (sijainnin-kentat voi-muokata?)
         suunnitelma (suunnitelman-kentat voi-muokata?)]
     (vec (concat nimi-nro-ja-tp
@@ -243,7 +249,8 @@
 (defn paikkauskohde-lomake [e! lomake]
   (let [voi-muokata? (or
                        (= :paikkauskohteen-muokkaus (:tyyppi lomake))
-                       (= :uusi-paikkauskohde (:tyyppi lomake)))]
+                       (= :uusi-paikkauskohde (:tyyppi lomake)))
+        muu-menetelma? (= "Muu" (:tyomenetelma lomake))]
       [lomake/lomake
        {:luokka " overlay-oikealla"
         :overlay {:leveys "600px"}
@@ -260,7 +267,7 @@
                         [napit/yleinen-toissijainen
                          "Peruuta"
                          #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
-       (paikkauskohde-skeema e! voi-muokata?) ;;TODO: korjaa päivitys
+       (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
        lomake]))
 
 (defn testilomake
