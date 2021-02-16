@@ -97,20 +97,22 @@ SELECT id
 
 --name: paikkauskohteet-urakalle
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
-SELECT pk.id                     AS id,
-       pk.nimi                   AS nimi,
-       pk.luotu                  AS luotu,
-       pk."urakka-id"            AS "urakka-id",
-       pk.tyomenetelma           AS tyomenetelma,
-       pk.tyomenetelma_kuvaus    AS "tyomenetelma-kuvaus",
-       pk.alkuaika               AS alkuaika,
-       pk.loppuaika              AS loppuaika,
-       pk."paikkauskohteen-tila" AS "paikkauskohteen-tila",
-       (pk.tierekisteriosoite).tie AS tie,
+SELECT pk.id                        AS id,
+       pk.nimi                      AS nimi,
+       pk.luotu                     AS luotu,
+       pk."urakka-id"               AS "urakka-id",
+       pk.tyomenetelma              AS tyomenetelma,
+       pk.tyomenetelma_kuvaus       AS "tyomenetelma-kuvaus",
+       pk.alkupvm                   AS alkupvm,
+       pk.loppupvm                  AS loppupvm,
+       pk."paikkauskohteen-tila"    AS "paikkauskohteen-tila",
+       pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
+       pk."suunniteltu-maara"       AS "suunniteltu-maara",
+       (pk.tierekisteriosoite).tie  AS tie,
        (pk.tierekisteriosoite).aosa AS aosa,
-       (pk.tierekisteriosoite).aet AS aet,
+       (pk.tierekisteriosoite).aet  AS aet,
        (pk.tierekisteriosoite).losa AS losa,
-       (pk.tierekisteriosoite).let AS let,
+       (pk.tierekisteriosoite).let  AS let,
        CASE
            WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
                (SELECT *
@@ -139,18 +141,21 @@ SET "ulkoinen-id"          = :ulkoinen-id,
     "tarkistaja-id"        = :tarkistaja-id,
     "ilmoitettu-virhe"     = :ilmoitettu-virhe,
     nro                    = :nro,
-    alkuaika               = :alkuaika::TIMESTAMP,
-    loppuaika              = :loppuaika::TIMESTAMP,
+    alkupvm               = :alkupvm::TIMESTAMP,
+    loppupvm              = :loppupvm::TIMESTAMP,
     tyomenetelma           = :tyomenetelma,
     tyomenetelma_kuvaus    = :tyomenetelma-kuvaus,
     tierekisteriosoite = ROW(:tie, :aosa, :losa, :aet, :let, NULL)::tr_osoite,
-    "paikkauskohteen-tila" = :paikkauskohteen-tila::paikkauskohteen_tila
+    "paikkauskohteen-tila" = :paikkauskohteen-tila::paikkauskohteen_tila,
+    "suunniteltu-hinta" = :suunniteltu-hinta,
+    "suunniteltu-maara" = :suunniteltu-maara
 WHERE id = :id RETURNING id;
 
 --name: luo-uusi-paikkauskohde!
 INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
-                           "yhalahetyksen-tila", virhe, nro, alkuaika, loppuaika, tyomenetelma,
-                           "tyomenetelma_kuvaus", tierekisteriosoite, "paikkauskohteen-tila", "urakka-id")
+                           "yhalahetyksen-tila", virhe, nro, alkupvm, loppupvm, tyomenetelma,
+                           "tyomenetelma_kuvaus", tierekisteriosoite, "paikkauskohteen-tila", "urakka-id",
+                           "suunniteltu-hinta", "suunniteltu-maara")
 VALUES (:luoja-id,
         :ulkoinen-id,
         :nimi,
@@ -159,11 +164,13 @@ VALUES (:luoja-id,
         :yhalahetyksen-tila,
         :virhe,
         :nro,
-        :alkuaika::TIMESTAMP,
-        :loppuaika::TIMESTAMP,
+        :alkupvm::TIMESTAMP,
+        :loppupvm::TIMESTAMP,
         :tyomenetelma,
         :tyomenetelma-kuvaus,
         ROW(:tie, :aosa,:losa, :aet, :let, NULL)::tr_osoite,
         :paikkauskohteen-tila::paikkauskohteen_tila,
-        :urakka-id)
+        :urakka-id,
+        :suunniteltu-hinta,
+        :suunniteltu-maara)
         RETURNING id;
