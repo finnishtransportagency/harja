@@ -1,6 +1,28 @@
-alter table kustannusarvioitu_tyo add column indeksikorjattu numeric;
-alter table johto_ja_hallintokorvaus add column indeksikorjattu_palkka numeric;
-alter table kiinteahintainen_tyo add column indeksikorjattu_summa numeric;
+alter table kustannusarvioitu_tyo
+drop constraint "kustannusarvioitu_tyo_toimenpideinstanssi_tehtava_sopimus_v_key";
+
+alter table johto_ja_hallintokorvaus
+drop constraint "uniikki_johto_ja_hallintokorvaus";
+
+alter table kiinteahintainen_tyo
+drop constraint "kiinteahintainen_tyo_toimenpideinstanssi_tehtavaryhma_tehta_key";
+
+-- indeksikorjattu hinta tallennetaan omana rivinään ja tätä merkkaa boolean
+-- versio on juokseva numero, joka lähtee nollasta. jos kustannussuunnitelmaa muokataan jälkeenpäin, nostetaan versionumeroa tietoja tallennettaessa. näin saadaan sitten muodostettua historiatiedot.
+alter table kustannusarvioitu_tyo
+add column indeksikorjattu boolean not null default false,
+add column versio numeric not null default 0,
+add constraint uniikki_kustannusarvioitu_tyo unique (toimenpideinstanssi, tehtava, sopimus, vuosi, kuukausi, versio, indeksikorjattu);
+
+alter table johto_ja_hallintokorvaus
+add column indeksikorjattu boolean not null default false,
+add column versio numeric not null default 0,
+ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus EXCLUDE ("urakka-id" WITH =, "toimenkuva-id" WITH =, vuosi WITH =, kuukausi WITH =, indeksikorjattu WITH =, versio WITH =, ei_ennen_urakka("ennen-urakkaa", id) WITH =);
+
+alter table kiinteahintainen_tyo
+add column indeksikorjattu boolean not null default false,
+add column versio numeric not null default 0,
+add constraint uniikki_kiinteahintainen_tyo unique (toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, vuosi, kuukausi, versio, indeksikorjattu);
 
 --- (def ^{:private true} tallennettava-asia->tehtava
   -- {:hoidonjohtopalkkio                         "c9712637-fbec-4fbd-ac13-620b5619c744"
