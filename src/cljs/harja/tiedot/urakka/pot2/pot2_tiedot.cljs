@@ -54,19 +54,6 @@
    (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
         ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
-(defn- fmt-kentan-nimi  [kentta]
-  (case kentta
-
-    ;; jos on ääkkösiä, täytyy tehdä special case
-    :lisatty-paksuus "Lisätty paksuus"
-
-    :massamaara "Massa\u00ADmäärä"
-
-
-    ;; ei korjattavaa
-    (when kentta
-      (str/replace (name kentta) #"-" " "))))
-
 (defn toimenpiteen-tiedot
   [rivi]
   (let [toimenpide (:toimenpide rivi)]
@@ -76,7 +63,7 @@
        (when (and toimenpide rivi)
          (str/capitalize
            (str/join ", " (map #(when (:nimi %)
-                                  (str (fmt-kentan-nimi (:nimi %)) ": " ((:nimi %) rivi)))
+                                  (str (:otsikko %) ": " ((:nimi %) rivi)))
                                (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)))))])))
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]

@@ -16,62 +16,58 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (def alusta-toimenpide-kaikki-lisaavaimet
-  [:lisatty-paksuus
-   :massamaara
-   :murske
-   :kasittelysyvyys
-   :leveys
-   :pinta-ala
-   :kokonaismassamaara
-   :massa
-   :sideaine
-   :sideainepitoisuus
-   :sideaine2
-   :verkon-tyyppi
-   :verkon-sijainti
-   :verkon-tarkoitus])
+  {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"}
+   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m2"}
+   :murske {:nimi :murske :otsikko "Murske"}
+   :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"}
+   :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"}
+   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta ala" :yksikko "m2"}
+   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"}
+   :massa {:nimi :massa :otsikko "Massa"}
+   :sideaine {:nimi :sideaine :otsikko "Sideaine"}
+   :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"}
+   :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"}
+   :verkon-tyyppi {:nimi :verkon-tyyppi :otsikko "Verkon tyyppi"}
+   :verkon-sijainti {:nimi :verkon-sijainti :otsikko "Verkon sijainti"}
+   :verkon-tarkoitus {:nimi :verkon-tarkoitus :otsikko "Verkon tarkoitus"}})
 
 (defn alusta-toimenpidespesifit-metadata
   [toimenpide]
   "Palauta alusta toimenpide metadata lisäkenteistä"
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
-                                                {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus (cm)"} :murske
-                                                {:nimi :massamaara :pakollinen? false :otsikko "Massa\u00ADmäärä (kg/m2)"}]
+                                               [:kasittelysyvyys :lisatty-paksuus :murske
+                                                {:nimi :massamaara :pakollinen? false}]
                                                11           ;; BEST
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                12           ;; VBST
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                13           ;; REST
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                14           ;; SST
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
-                                                {:nimi :sideaine2 :otsikko "Sideaine"}
-                                                :sideainepitoisuus
+                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                15           ;; MHST
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
-                                                {:nimi :sideaine2 :otsikko "Sideaine"}
-                                                :sideainepitoisuus
+                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                16           ;; KOST
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :sideaine :sideainepitoisuus :sideaine2
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :sideaine2 :otsikko "Sideaine 2"}
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
                                                23           ;; MS
-                                               [{:nimi :lisatty-paksuus :otsikko "Lisätty paksuus"}
-                                                {:nimi :massamaara :pakollinen? false :otsikko "Massa\u00ADmäärä (kg/m2)"}
+                                               [:lisatty-paksuus
+                                                {:nimi :massamaara :pakollinen? false}
                                                 :murske]
                                                24           ;; SJYR
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"}
+                                               [:kasittelysyvyys
                                                 {:nimi :murske :pakollinen? false}]
                                                31           ;; TASK
                                                []
@@ -80,22 +76,25 @@
                                                41           ;; TJYR
                                                []
                                                42           ;; LJYR
-                                               [{:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys (cm)"} :leveys {:nimi :pinta-ala :otsikkO "Pinta-ala (m2)"}]
+                                               [:kasittelysyvyys
+                                                :leveys :pinta-ala]
                                                43           ;; RJYR
                                                []
                                                666          ;; REM-TAS
-                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false :otsikko "Kokonais\u00ADmassa\u00ADmäärä (t)"} :massamaara]
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                667          ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
-        luo-metadata-ja-oletusarvot (fn [avain]
-                                      (if (keyword? avain)
-                                        {:nimi avain :pakollinen? true}
-                                        (let [pakollinen? (:pakollinen? avain)]
-                                          (if (nil? pakollinen?)
-                                            (assoc avain :pakollinen? true)
-                                            avain))))]
+        luo-metadata-ja-oletusarvot (fn [avain-tai-metadata]
+                                      (let [toimenpide-spesifinen-kentta-metadata (if (keyword? avain-tai-metadata)
+                                                                                    {:nimi avain-tai-metadata :pakollinen? true}
+                                                                                    (let [pakollinen? (:pakollinen? avain-tai-metadata)]
+                                                                                      (if (nil? pakollinen?)
+                                                                                        (assoc avain-tai-metadata :pakollinen? true)
+                                                                                        avain-tai-metadata)))
+                                            kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))]
+                                        (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
     (map luo-metadata-ja-oletusarvot avaimet)))
 
 (defn alusta-kaikki-lisaparams
@@ -105,7 +104,7 @@
                     (into {} (filter
                                (fn [[_ arvo]] (some? arvo))
                                params)))
-        lisaparams (select-keys alusta alusta-toimenpide-kaikki-lisaavaimet)
+        lisaparams (select-keys alusta (keys alusta-toimenpide-kaikki-lisaavaimet))
         annetut-lisaparams (keep-some lisaparams)]
     annetut-lisaparams))
 
