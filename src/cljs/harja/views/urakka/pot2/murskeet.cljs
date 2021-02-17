@@ -31,6 +31,7 @@
 
 
 (defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app} {:keys [sivulle? voi-muokata?]}]
+  (println "murske lomake pot2-murske-lomakje " (pr-str pot2-murske-lomake))
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
         _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))
@@ -43,31 +44,15 @@
                   "Muokkaa mursketta"
                   "Uusi murske")
        :footer-fn (fn [data]
-                    [:div
-                     (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data)))
-                       [:div
-                        [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
-                        [:ul
-                         (for [puute (ui-lomake/puuttuvien-pakollisten-kenttien-otsikot data)]
-                           ^{:key (gensym)}
-                           [:li puute])]])
-                     [:div.flex-row
-                      [:div.tallenna-peruuta
-                       [mk-tiedot/tallenna-materiaali-nappi materiaali-kaytossa
-                        #(e! (mk-tiedot/->TallennaMurskeLomake data))
-                        (not (ui-lomake/voi-tallentaa? data))
-                        :massa]
-                       [napit/yleinen
-                        "Peruuta" :toissijainen
-                        #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
-                        {:vayla-tyyli? true
-                         :luokka "suuri"}]]
-
-                      (when murske-id
-                        [mk-tiedot/poista-materiaali-nappi materiaali-kaytossa
-                         #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
-                         :murske])]
-                     [mk-tiedot/materiaalin-kaytto materiaali-kaytossa]])
+                    [mk-tiedot/tallennus-ja-puutelistaus e! {:data data
+                                                             :validointivirheet []
+                                                             :tallenna-fn #(e! (mk-tiedot/->TallennaMurskeLomake data))
+                                                             :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
+                                                             :peruuta-fn #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
+                                                             :poista-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
+                                                             :tyyppi :murske
+                                                             :id murske-id
+                                                             :materiaali-kaytossa materiaali-kaytossa}])
        :vayla-tyyli? true}
       [{:otsikko "Murskeen nimi" :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
@@ -77,11 +62,12 @@
                  (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string)))}
        (ui-lomake/rivi
          {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
-          :vayla-tyyli? true})
+          :vayla-tyyli? true :palstoja (if sivulle? 3 1)})
        (ui-lomake/rivi
          {:otsikko "Mursketyyppi" :nimi ::pot2-domain/tyyppi :tyyppi :radio-group :pakollinen? true
           :vaihtoehdot (:mursketyypit materiaalikoodistot) :vaihtoehto-arvo ::pot2-domain/koodi
-          :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true})
+          :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true
+          :palstoja 3})
        (when (= (pot2-domain/ainetyypin-nimi->koodi mursketyypit "Muu")
                 (::pot2-domain/tyyppi pot2-murske-lomake))
          (ui-lomake/rivi
@@ -91,36 +77,43 @@
                      (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake))
          (ui-lomake/rivi
            {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string
+            :palstoja (if sivulle? 3 1)
             :validoi [[:ei-tyhja "Anna DoP nro"]]
             :vayla-tyyli? true :pakollinen? true}))
        (when-not (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake)
          (ui-lomake/rivi
            {:otsikko "Kiviaines\u00ADesiintymä" :nimi ::pot2-domain/esiintyma :tyyppi :string
+            :palstoja (if sivulle? 3 1)
             :validoi [[:ei-tyhja "Anna esiintymä"]]
             :vayla-tyyli? true :pakollinen? true}))
        (when (mk-tiedot/nayta-lahde mursketyypit pot2-murske-lomake)
          (ui-lomake/rivi
            {:otsikko "Esiintymä / lähde" :nimi ::pot2-domain/lahde :tyyppi :string
+            :palstoja (if sivulle? 3 1)
             :validoi [[:ei-tyhja "Anna esiintymä"]]
             :vayla-tyyli? true :pakollinen? true}))
        (when-not (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake)
          (ui-lomake/rivi
            {:otsikko "Rakeisuus" :vayla-tyyli? true :pakollinen? true
+            :palstoja (if sivulle? 3 1)
             :nimi ::pot2-domain/rakeisuus :tyyppi :valinta
             :valinnat pot2-domain/murskeen-rakeisuusarvot}))
        (when (= "Muu" (::pot2-domain/rakeisuus pot2-murske-lomake))
          (ui-lomake/rivi
            {:otsikko "Muu rakeisuus" :vayla-tyyli? true :pakollinen? true
+            :palstoja (if sivulle? 3 1)
             :validoi [[:ei-tyhja "Anna rakeisuuden arvo"]]
             :nimi ::pot2-domain/rakeisuus-tarkenne :tyyppi :string}))
        (when-not (mk-tiedot/mursketyyppia-bem-tai-muu? mursketyypit pot2-murske-lomake)
          (ui-lomake/rivi
            {:otsikko "Iskunkestävyys" :vayla-tyyli? true :pakollinen? true
+            :palstoja (if sivulle? 3 1)
             :nimi ::pot2-domain/iskunkestavyys :tyyppi :valinta
             :valinnat pot2-domain/murskeen-iskunkestavyysarvot}))
        (when (= "Muu" (::pot2-domain/tyyppi pot2-murske-lomake))
          (ui-lomake/rivi
            {:otsikko "Tyyppi" :vayla-tyyli? true :pakollinen? true
+            :palstoja (if sivulle? 3 1)
             :nimi ::pot2-domain/tyyppi-tarkenne :tyyppi :string}))]
 
       pot2-murske-lomake]]))

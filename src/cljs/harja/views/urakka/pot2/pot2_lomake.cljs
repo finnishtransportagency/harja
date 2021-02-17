@@ -129,7 +129,6 @@
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
-    (println "paallystysilmoitus-lomakedata paallystekerros" (pr-str (:paallystekerros paallystysilmoitus-lomakedata)))
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
@@ -150,8 +149,8 @@
                       pot2-massa-lomake pot2-murske-lomake] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
-              massalomake-app (select-keys #{:pot2-massa-lomake :materiaalikoodistot} app)
-              murskelomake-app (select-keys #{:pot2-murske-lomake :materiaalikoodistot} app)
+              massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
+              murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
               alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
               paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
@@ -165,7 +164,6 @@
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet)))
                                          )]
-          (println "Jarno pot2-murske-lomake 666" (pr-str pot2-murske-lomake))
           [:div.pot2-lomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
            [:p {:style {:color "red"}}
@@ -195,7 +193,7 @@
                  [murskeet/murske-lomake e! murskelomake-app {:sivulle? true :voi-muokata? true}]
 
                  :else
-                 nil)
+                 [:span])
            [yleiset/valitys-vertical]
            [lisatiedot pot2-tiedot/lisatiedot-atom]
            [yleiset/valitys-vertical]

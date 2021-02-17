@@ -12,7 +12,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.napit :as napit]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.lomake :as ui-lomake])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -162,7 +163,7 @@
                                 materiaali-kaytossa)]
       [:div
        [:h3 (if (not (empty? lukitut-kohteet))
-              "Materiaalia on kirjattu päällystysilmoitukseen jonka tila on lukittu. Muokkaamista ei enää sallita. Lukitut kohteet: "
+              "Materiaalia on kirjattu päällystysilmoitukseen jonka tila on lukittu. Muokkaamista tai poistamista ei enää sallita. Lukitut kohteet: "
               (str "Materiaalia on kirjattu seuraavissa päällystysilmoituksissa: "))]
        [:ul
         (for [{kohdenumero :kohdenumero
@@ -170,6 +171,18 @@
                kohteiden-lkm :kohteiden-lkm} materiaali-kaytossa]
           ^{:key kohdenumero}
           [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm " riviä)")])]])))
+
+(defn puutelistaus [data muut-validointivirheet]
+  (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
+                 (empty? muut-validointivirheet))
+    [:div
+     [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
+     [:ul
+      (for [puute (concat
+                    (ui-lomake/puuttuvien-pakollisten-kenttien-otsikot data)
+                    muut-validointivirheet)]
+        ^{:key (name puute)}
+        [:li (name puute)])]]))
 
 (defn tallenna-materiaali-nappi
   [materiaali-kaytossa toiminto-fn disabled tyyppi]
@@ -198,9 +211,10 @@
 
 (defn poista-materiaali-nappi
   [materiaali-kaytossa toiminto-fn tyyppi]
-  (println "materiaali-kaytossa " materiaali-kaytossa)
   (assert (#{:massa :murske} tyyppi) "Poistettavan tyyppi oltava massa tai murske")
-  (let [materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
+  (let [lukittu? (some #(str/includes? % "lukittu")
+                       (map :tila materiaali-kaytossa))
+        materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
     [:div {:style {:width "160px"}}
      [napit/poista
       "Poista"
@@ -214,8 +228,27 @@
       {:disabled (not (empty? materiaali-kaytossa))
        :vayla-tyyli? true
        :luokka "suuri"}]
-     (when-not (empty? materiaali-kaytossa)
+     (when (and (not lukittu?)
+                (not (empty? materiaali-kaytossa)))
        [harja.ui.yleiset/vihje materiaali-jo-kaytossa-str])]))
+
+(defn tallennus-ja-puutelistaus
+  [e! {:keys [data validointivirheet tallenna-fn voi-tallentaa?
+              peruuta-fn poista-fn tyyppi id materiaali-kaytossa]}]
+  [:div
+   [puutelistaus (ui-lomake/puuttuvat-pakolliset-kentat data) validointivirheet]
+   [:div.flex-row {:style {:margin-top "2rem" :align-items "start"}}
+    [:div.tallenna-peruuta
+     [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
+      voi-tallentaa?
+      tyyppi]
+     [napit/yleinen "Peruuta" :toissijainen peruuta-fn
+      {:vayla-tyyli? true
+       :luokka "suuri"}]]
+
+    (when id
+      [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])]
+   [materiaalin-kaytto materiaali-kaytossa]])
 
 (defn rivi->massa-tai-murske [rivi {:keys [massat murskeet]}]
   (if (:murske rivi)

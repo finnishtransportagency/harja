@@ -215,35 +215,14 @@
                   "Muokkaa massaa"
                   "Uusi massa")
        :footer-fn (fn [data]
-                    [:div
-                     (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
-                                    (empty? muut-validointivirheet))
-                       [:div
-                        [:div "Seuraavat pakolliset kentät pitää täyttää ennen tallentamista: "]
-                        [:ul
-                         (for [puute (concat
-                                       (ui-lomake/puuttuvat-pakolliset-kentat data)
-                                       muut-validointivirheet)]
-                           ^{:key (name puute)}
-                           [:li (name puute)])]])
-                     [:div.flex-row
-                      [:div.tallenna-peruuta
-                       [mk-tiedot/tallenna-materiaali-nappi materiaali-kaytossa
-                        #(e! (mk-tiedot/->TallennaLomake data))
-                        (or (not (ui-lomake/voi-tallentaa? data))
-                            (not (empty? muut-validointivirheet)))
-                        :massa]
-                       [napit/yleinen
-                        "Peruuta" :toissijainen
-                        #(e! (mk-tiedot/->TyhjennaLomake data))
-                        {:vayla-tyyli? true
-                         :luokka "suuri"}]]
-
-                      (when massa-id
-                        [mk-tiedot/poista-materiaali-nappi materiaali-kaytossa
-                         #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
-                         :massa])]
-                     [mk-tiedot/materiaalin-kaytto materiaali-kaytossa]])
+                    [mk-tiedot/tallennus-ja-puutelistaus e! {:data data
+                                                             :validointivirheet muut-validointivirheet
+                                                             :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
+                                                             :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
+                                                             :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
+                                                             :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
+                                                             :tyyppi :massa
+                                                             :id massa-id}])
        :vayla-tyyli? true}
       [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
