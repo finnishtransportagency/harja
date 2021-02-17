@@ -46,55 +46,34 @@
            verkon-sijainnit
            verkon-tyypit
            verkon-tarkoitukset] :as alusta}]
-  (let [kaikki-lisakentat {:kasittelysyvyys    {:nimi   :kasittelysyvyys
-                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :lisatty-paksuus    {:nimi   :lisatty-paksuus
-                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :massamaara         {:nimi   :massamaara
-                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :kokonaismassamaara {:nimi   :kokonaismassamaara
-                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :leveys             {:nimi   :leveys
-                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :pinta-ala          {:nimi   :pinta-ala
-                                                :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :sideainepitoisuus  {:nimi   :sideainepitoisuus
-                                                :tyyppi :positiivinen-numero :desimaalien-maara 1}
-                           :murske             {:nimi :murske :tyyppi :valinta
-                                                :valinta-arvo  ::pot2-domain/murske-id
-                                                :valinta-nayta (fn [murske]
-                                                                 (if murske
-                                                                   (let [[a b] (pot2-domain/mursken-rikastettu-nimi
-                                                                                 mursketyypit
-                                                                                 murske)]
-                                                                     (str a b))
-                                                                   "-"))
-                                                :valinnat      murskeet}
-                           :massa              {:nimi :massa :tyyppi :valinta
-                                                :valinta-arvo  ::pot2-domain/massa-id
-                                                :valinta-nayta (fn [massa]
-                                                                 (if massa
-                                                                   (let [[a b] (pot2-domain/massan-rikastettu-nimi
-                                                                                 massatyypit
-                                                                                 massa)]
-                                                                     (str a b))
-                                                                   "-"))
-                                                :valinnat      massat}
-                           :sideaine           {:nimi :sideaine :tyyppi :valinta
-                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                                :valinnat     sideainetyypit}
-                           :sideaine2          {:nimi :sideaine2 :tyyppi :valinta
-                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                                :valinnat     sidotun-kantavan-kerroksen-sideaine}
-                           :verkon-tyyppi      {:nimi :verkon-tyyppi :tyyppi :valinta
-                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                                :valinnat     verkon-tyypit}
-                           :verkon-sijainti    {:nimi :verkon-sijainti :tyyppi :valinta
-                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                                :valinnat     verkon-sijainnit}
-                           :verkon-tarkoitus   {:nimi :verkon-tarkoitus :tyyppi :valinta
-                                                :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                                :valinnat     verkon-tarkoitukset}}
+  (let [kaikki-lisakentat {:murske           {:nimi          :murske
+                                              :valinta-nayta (fn [murske]
+                                                               (if murske
+                                                                 (let [[a b] (pot2-domain/mursken-rikastettu-nimi
+                                                                               mursketyypit
+                                                                               murske)]
+                                                                   (str a b))
+                                                                 "-"))
+                                              :valinnat      murskeet}
+                           :massa            {:nimi          :massa
+                                              :valinta-nayta (fn [massa]
+                                                               (if massa
+                                                                 (let [[a b] (pot2-domain/massan-rikastettu-nimi
+                                                                               massatyypit
+                                                                               massa)]
+                                                                   (str a b))
+                                                                 "-"))
+                                              :valinnat      massat}
+                           :sideaine         {:nimi     :sideaine
+                                              :valinnat sideainetyypit}
+                           :sideaine2        {:nimi     :sideaine2
+                                              :valinnat sidotun-kantavan-kerroksen-sideaine}
+                           :verkon-tyyppi    {:nimi     :verkon-tyyppi
+                                              :valinnat verkon-tyypit}
+                           :verkon-sijainti  {:nimi     :verkon-sijainti
+                                              :valinnat verkon-sijainnit}
+                           :verkon-tarkoitus {:nimi     :verkon-tarkoitus
+                                              :valinnat verkon-tarkoitukset}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
         lisakentta-generaattori (fn [{:keys [nimi pakollinen? otsikko yksikko jos] :as kentta-metadata}]
                                   (let [kentta (get kaikki-lisakentat nimi)
@@ -103,13 +82,13 @@
                                                    (conj (:valinnat kentta) nil))]
                                     (when (or (nil? jos)
                                               (some? (get alusta jos)))
-                                      (lomake/rivi (merge kentta
-                                                        {:palstoja    3
-                                                         :valinnat    valinnat
-                                                         :pakollinen? pakollinen?}
-                                                        (when (some? otsikko)
-                                                          {:otsikko (str otsikko
-                                                                         (when (some? yksikko)
+                                      (lomake/rivi (merge kentta-metadata
+                                                          kentta
+                                                          {:palstoja    3
+                                                           :valinnat    valinnat}
+                                                          (when (some? otsikko)
+                                                            {:otsikko (str otsikko
+                                                                           (when (some? yksikko)
                                                                            (str " (" yksikko ")")))}))))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 

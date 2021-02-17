@@ -16,20 +16,41 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (def alusta-toimenpide-kaikki-lisaavaimet
-  {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"}
-   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m2"}
-   :murske {:nimi :murske :otsikko "Murske"}
-   :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"}
-   :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"}
-   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta ala" :yksikko "m2"}
-   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"}
-   :massa {:nimi :massa :otsikko "Massa"}
-   :sideaine {:nimi :sideaine :otsikko "Sideaine"}
-   :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"}
-   :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"}
-   :verkon-tyyppi {:nimi :verkon-tyyppi :otsikko "Verkon tyyppi"}
-   :verkon-sijainti {:nimi :verkon-sijainti :otsikko "Verkon sijainti"}
-   :verkon-tarkoitus {:nimi :verkon-tarkoitus :otsikko "Verkon tarkoitus"}})
+  {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
+                     :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m2"
+                :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :murske {:nimi :murske :otsikko "Murske"
+            :tyyppi :valinta
+            :valinta-arvo ::murske-id}
+   :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"
+                     :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
+            :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta ala" :yksikko "m2"
+               :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
+                        :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :massa {:nimi :massa :otsikko "Massa"
+           :tyyppi :valinta
+           :valinta-arvo  ::massa-id}
+   :sideaine {:nimi :sideaine :otsikko "Sideaine"
+              :tyyppi :valinta
+              :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
+                       :tyyppi :positiivinen-numero :desimaalien-maara 1}
+   :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
+               :tyyppi :valinta
+               :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :verkon-tyyppi {:nimi :verkon-tyyppi :otsikko "Verkon tyyppi"
+                   :tyyppi :valinta
+                   :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :verkon-sijainti {:nimi :verkon-sijainti :otsikko "Verkon sijainti"
+                     :tyyppi :valinta
+                     :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :verkon-tarkoitus {:nimi :verkon-tarkoitus :otsikko "Verkon tarkoitus"
+                      :tyyppi :valinta
+                      :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata
   [toimenpide]
