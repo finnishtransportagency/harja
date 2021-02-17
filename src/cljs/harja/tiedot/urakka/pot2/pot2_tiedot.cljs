@@ -74,19 +74,12 @@
                                           (when (some? (:yksikko %))
                                             (str " " (:yksikko %)))))))))])))
 
-(defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
-  [:div.pot2-materiaalin-tiedot
-   (cond
-     (some? (:harja.domain.pot2/murske-id materiaali))
-     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
-
-     (some? (:harja.domain.pot2/massa-id materiaali))
-     [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
-
-     :else nil)
-   [napit/nappi "" toiminto-fn {:luokka "napiton-nappi"
-                                :ikoni (ikonit/livicon-external)}]])
-
+(defn- rivi->massa-tai-murske [rivi {:keys [massat murskeet]}]
+  (if (:murske rivi)
+    (first (filter #(= (::pot2-domain/murske-id (:murske rivi)))
+                   murskeet))
+    (first (filter #(= (::pot2-domain/massa-id (:massa rivi)))
+                   massat))))
 
 (extend-protocol tuck/Event
 
@@ -199,7 +192,7 @@
   NaytaMateriaalilomake
   (process-event [{rivi :rivi} app]
     (println "NaytaMateriaalilomake " (pr-str rivi))
-    (let [materiaali (mk-tiedot/rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+    (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
           polku (if (:murske rivi) :pot2-murske-lomake :pot2-massa-lomake)
           nil-polku (if (:murske rivi) :pot2-massa-lomake :pot2-murske-lomake)]
       (-> app

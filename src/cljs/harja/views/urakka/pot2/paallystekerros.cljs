@@ -10,17 +10,13 @@
     [harja.loki :refer [log]]
     [harja.ui.debug :refer [debug]]
     [harja.ui.grid :as grid]
-    [harja.ui.komponentti :as komp]
-    [harja.ui.lomake :as lomake]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
-    [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset])
+    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
+    [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -113,7 +109,7 @@
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tasaa :oikea
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :valinta-nayta (fn [rivi]
-                        (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string)) :validoi [[:ei-tyhja "Anna arvo"]]}
+                        (mm-yhteiset/massan-rikastettu-nimi massatyypit rivi :string)) :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea

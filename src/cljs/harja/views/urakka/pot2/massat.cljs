@@ -24,7 +24,8 @@
             [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+            [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -215,21 +216,21 @@
                   "Muokkaa massaa"
                   "Uusi massa")
        :footer-fn (fn [data]
-                    [mk-tiedot/tallennus-ja-puutelistaus e! {:data data
-                                                             :validointivirheet muut-validointivirheet
-                                                             :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
-                                                             :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
-                                                             :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
-                                                             :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
-                                                             :tyyppi :massa
-                                                             :id massa-id}])
+                    [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
+                                                               :validointivirheet muut-validointivirheet
+                                                               :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
+                                                               :voi-tallentaa? (not (ui-lomake/voi-tallentaa? data))
+                                                               :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
+                                                               :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
+                                                               :tyyppi :massa
+                                                               :id massa-id}])
        :vayla-tyyli? true}
       [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
         :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                 (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string)))}
+                 (mm-yhteiset/massan-rikastettu-nimi massatyypit rivi :string)))}
        (ui-lomake/rivi
          {:otsikko "Massatyyppi"
           :nimi ::pot2-domain/tyyppi :tyyppi :valinta
@@ -335,25 +336,6 @@
        (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
        [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
 
-(defn massan-toiminnot [e! rivi]
-  (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
-                         mk-tiedot/->MuokkaaMursketta
-                         mk-tiedot/->MuokkaaMassaa)]
-    [:span.pull-right
-     [yleiset/wrap-if true
-      [yleiset/tooltip {} :% "Muokkaa"]
-      [napit/nappi ""
-       #(e! (muokkaus-event rivi false))
-       {:ikoninappi? true :luokka "klikattava"
-        :ikoni (ikonit/livicon-pen)}]]
-
-     [yleiset/wrap-if true
-      [yleiset/tooltip {} :% "Luo kopio"]
-      [napit/nappi ""
-       #(e! (muokkaus-event rivi true))
-       {:ikoninappi? true :luokka "klikattava"
-        :ikoni (ikonit/livicon-duplicate)}]]]))
-
 (defn massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
    {:otsikko "Massat"
@@ -370,7 +352,7 @@
                              :luokka "napiton-nappi"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
-                    [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) rivi :komponentti])}
+                    [mm-yhteiset/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) rivi :komponentti])}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
@@ -382,5 +364,5 @@
                     [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
-                    [massan-toiminnot e! rivi])}]
+                    [mm-yhteiset/massan-tai-murskeen-toiminnot e! rivi])}]
    massat])
