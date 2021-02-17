@@ -10,7 +10,9 @@
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot])
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.ui.napit :as napit]
+    [harja.ui.ikonit :as ikonit])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -79,7 +81,9 @@
      (some? (:harja.domain.pot2/massa-id materiaali))
      [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
 
-     :else nil)])
+     :else nil)
+   [napit/nappi "" toiminto-fn {:luokka "napiton-nappi"
+                                :ikoni (ikonit/livicon-external)}]])
 
 
 (extend-protocol tuck/Event
