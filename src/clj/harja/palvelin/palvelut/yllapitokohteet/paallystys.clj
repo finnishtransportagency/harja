@@ -10,6 +10,7 @@
             [hiccup.core :refer [html]]
 
             [clojure.set :as clj-set]
+            [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
 
             [harja.kyselyt
@@ -38,7 +39,8 @@
              [yleiset :as yy]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
-            [clojure.set :as set]))
+            [clojure.set :as set])
+  (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
   "Palauttaa booleanin, onko kyseinen päällystysilmoitus POT2. False = POT1."
@@ -555,26 +557,34 @@
 
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
-  (try
-    (let [alustarivit (:alusta paallystysilmoitus)
-          idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
-          hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
-          poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
+  (let [alustarivit (:alusta paallystysilmoitus)
+        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+        hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
+        poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
 
-      (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
-      (doseq [rivi (->> paallystysilmoitus
-                        :alusta
-                        (filter (comp not :poistettu)))]
-        (let [params (merge rivi
-                            {:pot2_id pot2-id})
-              _ 1                                           ; petar validoi alustarivi tässä?
-              ]
-          (if (:pot2a_id rivi)
-            (q/paivita-pot2-alusta<! db params)
-            (q/luo-pot2-alusta<! db params)))))
-    (catch Throwable t
-      (throw (IllegalArgumentException. (cheshire/encode t))))))
-
+    (q/poista-pot2-alustarivit! db {:pot2a_idt poistuneet-idt})
+    (doseq [rivi (->> paallystysilmoitus
+                      :alusta
+                      (filter (comp not :poistettu)))]
+      (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
+            toimenpidespesifit-avaimet (pot2-domain/alusta-toimenpide-lisaavaimet (:toimenpide rivi))
+            rivi-ja-kaikki-lisaparametrit (if (= (-> annetut-lisaparams keys set) (set toimenpidespesifit-avaimet))
+                                            (merge rivi
+                                                   {:pot2_id pot2-id}
+                                                   (zipmap pot2-domain/alusta-toimenpide-kaikki-lisaavaimet (repeat nil))
+                                                   annetut-lisaparams)
+                                            (throw (IllegalArgumentException.
+                                                     (str "Alustassa väärät lisätiedot. Odotettu: "
+                                                          (pr-str toimenpidespesifit-avaimet) " tuli: "
+                                                          (pr-str annetut-lisaparams)))))]
+        (try
+          (if (:pot2a_id rivi-ja-kaikki-lisaparametrit)
+            (q/paivita-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit)
+            (q/luo-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit))
+          (catch PSQLException pe
+            (throw (if (s/includes? (.getMessage pe) "violates foreign key constraint")
+                     (IllegalArgumentException. "Koodisto tai muu referenssi virhe pyynnössä" pe)
+                     pe))))))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.

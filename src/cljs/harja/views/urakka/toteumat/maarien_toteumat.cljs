@@ -191,7 +191,10 @@
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
       (if (:toimenpiteet-lataa app)
-        [yleiset/ajax-loader "Haetaan..."]
+        [:tbody
+         [:tr
+          [:td {:colSpan "5"} [yleiset/ajax-loader "Haetaan..."]]]]
+
         [:tbody
          (doall
            (for [l ll]
