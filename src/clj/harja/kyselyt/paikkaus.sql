@@ -110,6 +110,7 @@ SELECT pk.id                        AS id,
        pk."paikkauskohteen-tila"    AS "paikkauskohteen-tila",
        pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
        pk."suunniteltu-maara"       AS "suunniteltu-maara",
+       pk.yksikko                   AS yksikko,
        (pk.tierekisteriosoite).tie  AS tie,
        (pk.tierekisteriosoite).aosa AS aosa,
        (pk.tierekisteriosoite).aet  AS aet,
@@ -150,14 +151,15 @@ SET "ulkoinen-id"          = :ulkoinen-id,
     tierekisteriosoite = ROW(:tie, :aosa, :losa, :aet, :let, NULL)::tr_osoite,
     "paikkauskohteen-tila" = :paikkauskohteen-tila::paikkauskohteen_tila,
     "suunniteltu-hinta" = :suunniteltu-hinta,
-    "suunniteltu-maara" = :suunniteltu-maara
+    "suunniteltu-maara" = :suunniteltu-maara,
+    "yksikko" = :yksikko
 WHERE id = :id RETURNING id;
 
 --name: luo-uusi-paikkauskohde!
 INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
                            "yhalahetyksen-tila", virhe, nro, alkupvm, loppupvm, tyomenetelma,
                            "tyomenetelma_kuvaus", tierekisteriosoite, "paikkauskohteen-tila", "urakka-id",
-                           "suunniteltu-hinta", "suunniteltu-maara")
+                           "suunniteltu-hinta", "suunniteltu-maara", "yksikko")
 VALUES (:luoja-id,
         :ulkoinen-id,
         :nimi,
@@ -174,5 +176,6 @@ VALUES (:luoja-id,
         :paikkauskohteen-tila::paikkauskohteen_tila,
         :urakka-id,
         :suunniteltu-hinta,
-        :suunniteltu-maara)
+        :suunniteltu-maara,
+        :yksikko)
         RETURNING id;
