@@ -61,6 +61,7 @@
         kulutuskerros-toimenpiteet (:kulutuskerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
+      :voi-kumota? false :lisaa-rivi " Lisää toimenpide"
       :uusi-rivi (fn [rivi]
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))
@@ -105,11 +106,11 @@
        :leveys perusleveys :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys perusleveys :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
-      {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+      {:otsikko "Pituus" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
        :muokattava? (constantly false)
        :hae #(paallystys/rivin-kohteen-pituus
                (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pääl\u00ADlyste *)" :nimi :materiaali :leveys 3
+      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tasaa :oikea
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :valinta-nayta (fn [rivi]
                         (mk-tiedot/massan-rikastettu-nimi massatyypit rivi :string)) :validoi [[:ei-tyhja "Anna arvo"]]}

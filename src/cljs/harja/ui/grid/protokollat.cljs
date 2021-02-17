@@ -149,13 +149,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
     (sulje-vetolaatikko! g id)
     (avaa-vetolaatikko! g id)))
 
-(defn vetolaatikon-tila [ohjaus vetolaatikot id]
+(defn vetolaatikon-tila [ohjaus vetolaatikot id luokat]
   (let [vetolaatikko? (contains? vetolaatikot id)]
     ^{:key (str "vetolaatikontila" id)}
-    [:td.vetolaatikon-tila.klikattava {:on-click (when vetolaatikko?
-                                                   #(do (.preventDefault %)
-                                                        (.stopPropagation %)
-                                                        (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
+    [:td {:class luokat
+          :on-click (when vetolaatikko?
+                      #(do (.preventDefault %)
+                           (.stopPropagation %)
+                           (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
        (if (vetolaatikko-auki? ohjaus id)
          (ikonit/livicon-chevron-down)

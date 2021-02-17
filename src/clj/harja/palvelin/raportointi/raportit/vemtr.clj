@@ -14,14 +14,14 @@
        (= (:hallintayksikko e) (:hallintayksikko t))))
 
 (defn laske-yhteen
-  [e t]  
+  [e t]
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
            :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
            :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e) 0) (or (:toteutunut-materiaalimaara t) 0))))
 
 (defn kombota-samat-tehtavat
   ([ekat tokat]
-    (kombota-samat-tehtavat ekat tokat {}))
+   (kombota-samat-tehtavat ekat tokat {}))
   ([ekat tokat {:keys [tarkistus-fn]}]
    (loop [ekat ekat
           tokat tokat
@@ -63,7 +63,7 @@
     [:raportti
      {:nimi "Valtakunnallinen määrätoteumaraportti"}
      [:taulukko
-      {:otsikko    "Määrätoteumat ajalta "
+      {:otsikko "Määrätoteumat ajalta "
        :sheet-nimi "Määrätoteumat"}
       otsikot
       rivit]]))
