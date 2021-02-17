@@ -32,6 +32,8 @@
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
+(defrecord NaytaMateriaalilomake [rivi])
+(defrecord SuljeMateriaalilomake [])
 
 (defn- paallystekerroksen-osat-jarjestysnrolla
   "Palauttaa päällystekerroksen osat järjestysnumerolla"
@@ -68,14 +70,14 @@
                                          (str " " (:yksikko %)))))
                                (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)))))])))
 
-(defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
+(defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
   [:div.pot2-materiaalin-tiedot
    (cond
-     (some? (:murske-id materiaali))
-     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti]
+     (some? (:harja.domain.pot2/murske-id materiaali))
+     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
 
-     (some? (:massa-id materiaali))
-     [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti]
+     (some? (:harja.domain.pot2/massa-id materiaali))
+     [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
 
      :else nil)])
 
@@ -188,4 +190,21 @@
     (println "SuljeAlustalomake ")
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
-  )
+  NaytaMateriaalilomake
+  (process-event [{rivi :rivi} app]
+    (println "NaytaMateriaalilomake " (pr-str rivi))
+    (let [materiaali (mk-tiedot/rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+          polku (if (:murske rivi) :pot2-murske-lomake :pot2-massa-lomake)
+          nil-polku (if (:murske rivi) :pot2-massa-lomake :pot2-murske-lomake)]
+      (-> app
+          (assoc polku (merge materiaali
+                              {:sivulle? true
+                               :voi-muokata? false})
+                 nil-polku nil))))
+
+  SuljeMateriaalilomake
+  (process-event [_ app]
+    (println "SuljeMateriaalilomake ")
+    (-> app
+        (assoc :pot2-massa-lomake nil
+               :pot2-murske-lomake nil))))

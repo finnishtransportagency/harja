@@ -23,7 +23,9 @@
     [harja.views.urakka.pot2.alusta :as alusta]
     [harja.views.urakka.pot2.paallystekerros :as paallystekerros]
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
-    [harja.ui.kentat :as kentat])
+    [harja.ui.kentat :as kentat]
+    [harja.views.urakka.pot2.murskeet :as murskeet]
+    [harja.views.urakka.pot2.massat :as massat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -144,9 +146,12 @@
                                  (yllapitokohteet-domain/indeksoi-kohdeosat)))
                      (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
                      (nav/vaihda-kartan-koko! :S)))
-      (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot] :as app}]
+      (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
+                      pot2-massa-lomake pot2-murske-lomake] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              massalomake-app (select-keys #{:pot2-massa-lomake :materiaalikoodistot} app)
+              murskelomake-app (select-keys #{:pot2-murske-lomake :materiaalikoodistot} app)
               alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
               paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
@@ -160,6 +165,7 @@
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet)))
                                          )]
+          (println "Jarno pot2-murske-lomake 666" (pr-str pot2-murske-lomake))
           [:div.pot2-lomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
            [:p {:style {:color "red"}}
@@ -181,6 +187,15 @@
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)}
             pot2-tiedot/alustarivit-atom]
+           ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
+           (cond pot2-massa-lomake
+                 [massat/massa-lomake e! massalomake-app {:sivulle? true :voi-muokata? true}]
+
+                 pot2-murske-lomake
+                 [murskeet/murske-lomake e! murskelomake-app {:sivulle? true :voi-muokata? true}]
+
+                 :else
+                 nil)
            [yleiset/valitys-vertical]
            [lisatiedot pot2-tiedot/lisatiedot-atom]
            [yleiset/valitys-vertical]

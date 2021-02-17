@@ -23,7 +23,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.loki :refer [log logt tarkkaile!]])
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -199,15 +200,17 @@
               polun-avaimet aineet])])]))])
 
 
-(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot luokka voi-muokata?] :as app}]
+(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle? voi-muokata?]}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
         massa-id (::pot2-domain/massa-id pot2-massa-lomake)
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
     [:div
+     (when sivulle?
+       [napit/sulje-ruksi #(e! (pot2-tiedot/->SuljeMateriaalilomake))])
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
-       :luokka luokka :voi-muokata? voi-muokata?
+       :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
        :otsikko (if massa-id
                   "Muokkaa massaa"
                   "Uusi massa")

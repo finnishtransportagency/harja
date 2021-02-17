@@ -30,7 +30,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot luokka voi-muokata?] :as app}]
+(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app} {:keys [sivulle? voi-muokata?]}]
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
         _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))
@@ -38,7 +38,7 @@
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
-       :luokka luokka :voi-muokata? voi-muokata?
+       :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
        :otsikko (if murske-id
                   "Muokkaa mursketta"
                   "Uusi murske")

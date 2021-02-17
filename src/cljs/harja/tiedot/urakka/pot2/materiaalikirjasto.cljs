@@ -54,31 +54,43 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
-(defn- massan-murskeen-nimen-komp [ydin tarkennukset fmt]
+(defn- massan-murskeen-nimen-komp [ydin tarkennukset fmt toiminto-fn]
   (if (= :komponentti fmt)
-   [:span
-    [:span.bold ydin]
-    [:span tarkennukset]]
-   (str ydin tarkennukset)))
+    [(if toiminto-fn
+       :a
+       :span)
+     {:on-click #(when toiminto-fn
+                   (do
+                     (.stopPropagation %)
+                     (toiminto-fn)))
+      :style {:cursor "pointer"}}
+     [:span.bold ydin]
+     [:span tarkennukset]]
+    (str ydin tarkennukset)))
 
 (defn massan-rikastettu-nimi
   "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
-  [massatyypit massa fmt]
+  ([massatyypit massa fmt]
+   (massan-rikastettu-nimi massatyypit massa fmt nil))
+  ([massatyypit massa fmt toiminto-fn]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
   (let [[ydin tarkennukset] (pot2-domain/massan-rikastettu-nimi massatyypit massa)]
     ;; vähän huonoksi ehkä meni tämän kanssa. Toinen funktiota kutsuva tarvitsee komponenttiwrapperin ja toinen ei
     ;; pitänee refaktoroida... fixme jos ehdit
     (if (= fmt :komponentti)
-      [massan-murskeen-nimen-komp ydin tarkennukset fmt]
-      (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
+      [massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn]
+      (massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn)))))
 
-(defn murskeen-rikastettu-nimi [mursketyypit murske fmt]
-  ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
-  ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
-  (let [[ydin tarkennukset]  (pot2-domain/mursken-rikastettu-nimi mursketyypit murske)]
-    (if (= fmt :komponentti)
-      [massan-murskeen-nimen-komp ydin tarkennukset fmt]
-      (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
+(defn murskeen-rikastettu-nimi
+  ([mursketyypit murske fmt]
+   (murskeen-rikastettu-nimi mursketyypit murske fmt nil))
+  ([mursketyypit murske fmt toiminto-fn]
+   ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
+   ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
+   (let [[ydin tarkennukset] (pot2-domain/mursken-rikastettu-nimi mursketyypit murske)]
+     (if (= fmt :komponentti)
+       [massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn]
+       (massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn)))))
 
 (def sideaineen-kayttotavat
   [{::pot2-domain/nimi "Lopputuotteen sideaine"
@@ -204,6 +216,13 @@
        :luokka "suuri"}]
      (when-not (empty? materiaali-kaytossa)
        [harja.ui.yleiset/vihje materiaali-jo-kaytossa-str])]))
+
+(defn rivi->massa-tai-murske [rivi {:keys [massat murskeet]}]
+  (if (:murske rivi)
+    (first (filter #(= (::pot2-domain/murske-id (:murske rivi)))
+                   murskeet))
+    (first (filter #(= (::pot2-domain/massa-id (:massa rivi)))
+                   massat))))
 
 (extend-protocol tuck/Event
 
