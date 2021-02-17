@@ -2,12 +2,13 @@
   "POT2-lomakkeen alustarivien näkymä"
   (:require
     [reagent.core :refer [atom] :as r]
+    [harja.loki :refer [log]]
+    [harja.pvm :as pvm]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.paallystysilmoitus :as pot]
     [harja.domain.pot2 :as pot2-domain]
     [harja.domain.tierekisteri :as tr]
     [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-    [harja.loki :refer [log]]
     [harja.ui.debug :refer [debug]]
     [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
@@ -21,7 +22,7 @@
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.pvm :as pvm])
+    [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -272,7 +273,7 @@
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
                        (when (or (:massa rivi) (:murske rivi))
-                         [pot2-tiedot/materiaalin-tiedot (cond
+                         [mm-yhteiset/materiaalin-tiedot (cond
                                                            (:massa rivi)
                                                            (materiaali massat rivi)
 

@@ -4,26 +4,19 @@
             [cljs.core.async :refer [<! chan]]
             [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
-
             [harja.ui.grid :as grid]
             [harja.ui.debug :refer [debug]]
             [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as ui-lomake]
-            [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]
             [harja.ui.validointi :as v]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.pot2 :as pot2-domain]
-            [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.views.urakka.pot2.massat :as massat-view]
+            [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
+
             [harja.loki :refer [log logt tarkkaile!]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -44,7 +37,7 @@
                   "Muokkaa mursketta"
                   "Uusi murske")
        :footer-fn (fn [data]
-                    [mk-tiedot/tallennus-ja-puutelistaus e! {:data data
+                    [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
                                                              :validointivirheet []
                                                              :tallenna-fn #(e! (mk-tiedot/->TallennaMurskeLomake data))
                                                              :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
@@ -59,7 +52,7 @@
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                 (mk-tiedot/murskeen-rikastettu-nimi mursketyypit rivi :string)))}
+                 (mm-yhteiset/murskeen-rikastettu-nimi mursketyypit rivi :string)))}
        (ui-lomake/rivi
          {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
           :vayla-tyyli? true :palstoja (if sivulle? 3 1)})
@@ -135,7 +128,7 @@
                              :luokka "napiton-nappi"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
-                    [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi :komponentti])}
+                    [mm-yhteiset/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi :komponentti])}
     {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
             (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
@@ -145,5 +138,5 @@
     {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
-                    [massat-view/massan-toiminnot e! rivi])}]
+                    [mm-yhteiset/massan-tai-murskeen-toiminnot e! rivi])}]
    murskeet])
