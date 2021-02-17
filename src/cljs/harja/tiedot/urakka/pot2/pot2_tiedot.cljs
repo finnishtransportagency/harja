@@ -66,11 +66,13 @@
        ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
        (when (and toimenpide rivi)
          (str/capitalize
-           (str/join ", " (map #(when (:nimi %)
-                                  (str (:otsikko %) ": " ((:nimi %) rivi)
-                                       (when (some? (:yksikko %))
-                                         (str " " (:yksikko %)))))
-                               (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)))))])))
+           (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
+                               (filter #(and (:nimi %)
+                                             (not= (:nimi %) :massa)
+                                             (not= (:nimi %) :murske)))
+                               (map #(str (:otsikko %) ": " ((:nimi %) rivi)
+                                          (when (some? (:yksikko %))
+                                            (str " " (:yksikko %)))))))))])))
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
   [:div.pot2-materiaalin-tiedot
