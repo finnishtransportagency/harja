@@ -63,7 +63,9 @@
        (when (and toimenpide rivi)
          (str/capitalize
            (str/join ", " (map #(when (:nimi %)
-                                  (str (:otsikko %) ": " ((:nimi %) rivi)))
+                                  (str (:otsikko %) ": " ((:nimi %) rivi)
+                                       (when (some? (:yksikko %))
+                                         (str " " (:yksikko %)))))
                                (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)))))])))
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
