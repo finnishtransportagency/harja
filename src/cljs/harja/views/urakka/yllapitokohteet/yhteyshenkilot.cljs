@@ -53,7 +53,8 @@
             (reset! yhteyshenkilot vastaus)))))
 
   (modal/nayta!
-    {:otsikko (str "Kohteen "
+    {:leveys "80%"
+     :otsikko (str "Kohteen "
                    (str/lower-case (u/urakkatyyppi->otsikko urakkatyyppi))
                    "urakan yhteyshenkilöt")
      :footer [napit/sulje #(modal/piilota!)]}
