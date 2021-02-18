@@ -1073,46 +1073,6 @@ SET suunnitteluyksikko = ''
 WHERE taso = 4
   AND nimi in ('Levähdysalueen puhtaanapito');
 
-
--- Äkillisten hoitotöiden ja vahinkojen korjaamisen nimeäminen selkeämmin
--- Päivitetään myös liik.ymp.hoito => l.ymp.hoito
-UPDATE toimenpidekoodi
-SET nimi               = 'Äkillinen hoitotyö (talvihoito)',
-    suunnitteluyksikko = 'euroa'
-WHERE nimi = 'Äkillinen hoitotyö'
-  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23104');
-
-UPDATE toimenpidekoodi
-SET nimi               = 'Äkillinen hoitotyö (l.ymp.hoito)',
-    suunnitteluyksikko = 'euroa'
-WHERE nimi IN ('Äkillinen hoitotyö', 'Äkillinen hoitotyö (liik.ymp.hoito)')
-  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23116');
-
-UPDATE toimenpidekoodi
-SET nimi               = 'Äkillinen hoitotyö (soratiet)',
-    suunnitteluyksikko = 'euroa'
-WHERE nimi IN ('Äkillinen hoitotyö')
-  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23124');
-
-UPDATE toimenpidekoodi
-SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
-    suunnitteluyksikko = 'euroa'
-WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen'
-  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23104');
-
-UPDATE toimenpidekoodi
-SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
-    suunnitteluyksikko = 'euroa'
-WHERE nimi IN ('Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen',
-               'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (liik.ymp.hoito)')
-  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23116');
-
-UPDATE toimenpidekoodi
-SET nimi               = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)',
-    suunnitteluyksikko = 'euroa'
-WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen'
-  AND emo = (SELECT id from toimenpidekoodi where taso = 3 AND koodi = '23124');
-
 -- Käyttöliittymän kautta lisättyjen tehtävien puuttuvien yksiköiden päivitys
 UPDATE toimenpidekoodi
 SET yksikko = 'kpl'
