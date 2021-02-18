@@ -77,7 +77,7 @@
                                                         koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
                                                         koodisto-teksti (valinta-nayta koodisto-rivi)]
                                                     koodisto-teksti)
-                                                  (str (nimi rivi)
+                                                  (str kentan-arvo
                                                        (when (some? yksikko)
                                                          (str " " yksikko))))]
                                      (str otsikko ": " teksti)))]
