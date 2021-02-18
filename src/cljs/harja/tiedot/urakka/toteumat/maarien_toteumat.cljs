@@ -367,7 +367,6 @@
                     :as lomake} :lomake
                    polku :polku
                    indeksi :indeksi} app]
-    (println "TYYPPIIIII " tyyppi)
     (let [;; Toimenpidettä vaihdettaessa polkua ei tallenneta, mutta viimeksi-muokattu tallennetaan
           polku (if (and (nil? polku) viimeksi-muokattu)
                   viimeksi-muokattu
