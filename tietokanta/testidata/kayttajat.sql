@@ -27,3 +27,8 @@ INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
   ((SELECT id FROM kayttaja WHERE kayttajanimi='oletus-kaytto-oikeudet'), 'liikennepaivystaja');
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES ('seppo','Seppo','Taalasmalli','seppo@example.com', '040123456789', NULL);
+
+-- Kemin alueurakan Urakan laadunvalvoja, jonka käyttöoikeuksia on rajoitettu
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
+  ('KeminLaatu','Keppi','Laatujärvi','keppi.laatujarvi@example.com', '123123123', (SELECT id  FROM organisaatio  WHERE nimi = 'Kemin Alueurakoitsija Oy'));
+INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='KeminLaatu'), 'urakoitsijan laatuvastaava');

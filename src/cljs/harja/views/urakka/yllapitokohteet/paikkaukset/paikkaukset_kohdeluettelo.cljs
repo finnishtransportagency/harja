@@ -36,6 +36,6 @@
         "Paikkauskohteet"
         :paikkauskohteet
         ;TODO: Lisää luvat roolit.xlxs
-        (when true #_(oikeudet/urakat-paikkaukset-paikkauskohteeet (:id ur))
+        (when true (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:id ur))
           [paikkauskohteet/paikkauskohteet ur]
           )]])))

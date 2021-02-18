@@ -538,6 +538,7 @@
 (def kemin-alueurakan-2019-2023-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
+(def kemin-aluerakennus-id (atom nil))
 
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
@@ -810,6 +811,9 @@
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
+
+(defn hae-kemin-aluerakennus-id []
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Kemin Alueurakoitsija Oy'"))))
 
 (defn hae-kajaanin-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -1121,6 +1125,8 @@
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
 
+(def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
+
 ;; Sepolla ei ole oikeutta mihinkään. :(
 
 (def +kayttaja-seppo+ (hae-testi-kayttajan-tiedot {:etunimi "Seppo" :sukunimi "Taalasmalli"}))
@@ -1169,7 +1175,8 @@
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
-  (reset! yit-rakennus-id (hae-yit-rakennus-id)))
+  (reset! yit-rakennus-id (hae-yit-rakennus-id))
+  (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id)))
 
 (defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
@@ -1228,6 +1235,14 @@
    :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
    :organisaatioroolit {}
    :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"laadunvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-laadunvalvoja []
+  {:sahkoposti "keppi.laatujarvih@example.com", :kayttajanimi "KeminLaatu", :puhelin 123123123, :sukunimi "Laatujärvi",
+   :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
+   :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {} #_ {@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
