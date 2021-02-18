@@ -93,11 +93,11 @@
                  :sheet-nimi raportin-nimi}
       (flatten (keep identity [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
                                {:leveys 5 :otsikko "Klo"}
-                               {:leveys 6 :otsikko "Tie" :tasaa :oikea}
-                               {:leveys 6 :otsikko "Aosa" :tasaa :oikea}
-                               {:leveys 6 :otsikko "Aet" :tasaa :oikea}
-                               {:leveys 6 :otsikko "Losa" :tasaa :oikea}
-                               {:leveys 6 :otsikko "Let" :tasaa :oikea}
+                               {:leveys 6 :otsikko "Tie"}
+                               {:leveys 6 :otsikko "Aosa"}
+                               {:leveys 6 :otsikko "Aet"}
+                               {:leveys 6 :otsikko "Losa"}
+                               {:leveys 6 :otsikko "Let"}
                                {:leveys 20 :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys 25 :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys 6 :otsikko "Laadun alitus"}

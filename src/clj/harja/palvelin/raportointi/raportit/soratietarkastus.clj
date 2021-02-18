@@ -136,11 +136,11 @@
 
 (def taulukon-otsikot
   [{:leveys 8 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-   {:leveys 5 :otsikko "Tie" :tasaa :oikea}
-   {:leveys 6 :otsikko "Aosa" :tasaa :oikea}
-   {:leveys 6 :otsikko "Aet" :tasaa :oikea}
-   {:leveys 6 :otsikko "Losa" :tasaa :oikea}
-   {:leveys 6 :otsikko "Let" :tasaa :oikea}
+   {:leveys 5 :otsikko "Tie"}
+   {:leveys 6 :otsikko "Aosa"}
+   {:leveys 6 :otsikko "Aet"}
+   {:leveys 6 :otsikko "Losa"}
+   {:leveys 6 :otsikko "Let"}
    {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
    {:leveys 8 :otsikko "1" :tyyppi :arvo-ja-osuus}
    {:leveys 8 :otsikko "2" :tyyppi :arvo-ja-osuus}

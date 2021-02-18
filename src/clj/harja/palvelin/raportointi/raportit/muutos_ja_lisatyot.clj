@@ -141,8 +141,8 @@
 
         otsikot (if kayta-ryhmittelya?
                   [{:leveys 7 :otsikko "Tyyppi"}
-                   {:leveys 5 :otsikko "Summa €" :fmt :raha :tasaa :oikea}
-                   {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha :tasaa :oikea}]
+                   {:leveys 5 :otsikko "Summa €" :fmt :raha}
+                   {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}]
                   [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                    {:leveys 5 :otsikko "Pvm"}
                    {:leveys 7 :otsikko "Tyyppi"}
@@ -150,8 +150,8 @@
                    {:leveys 12 :otsikko "Tehtävä"}
                    {:leveys 12 :otsikko "Lisätieto"}
                    {:leveys 5 :otsikko "Määrä"}
-                   {:leveys 5 :otsikko "Summa €" :fmt :raha :tasaa :oikea}
-                   {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha :tasaa :oikea}])]
+                   {:leveys 5 :otsikko "Summa €" :fmt :raha}
+                   {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}])]
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko                    (str otsikko ", " tpi-nimi)

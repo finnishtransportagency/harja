@@ -223,10 +223,10 @@
                                     (if (> (count hoitokaudet) 1)
                                       (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
                                       (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
-                      :leveys  1 :fmt :numero :tasaa :oikea}
-                     {:otsikko "Toteuma" :leveys 1 :fmt :numero :tasaa :oikea}
-                     {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim :tasaa :oikea}
-                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1 :fmt :numero :tasaa :oikea}])}))
+                      :leveys  1 :fmt :numero}
+                     {:otsikko "Toteuma" :leveys 1 :fmt :numero}
+                     {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
+                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1 :fmt :numero}])}))
 
 (defn db-haku-fn
   [db params]
