@@ -465,7 +465,7 @@
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
    (for* [item sisalto]
-     item)])
+         item)])
 
 (defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
   (let [naulattu? (atom false)
@@ -494,7 +494,7 @@
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                                              "urakkatoiminnot-tyyliton "))}
          (for* [item sisalto]
-           item)]))))
+               item)]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
   [:div.row
@@ -593,3 +593,21 @@
                                        "Kaikki")
                          :valitse-fn valitse-fn}
     tyypit]])
+
+(defn hv-valinta-fn
+  [fn! hv]
+  (fn [_]
+    (fn! hv)))
+
+(defn hoitovuosi-rivivalitsin
+  [hoitovuodet valittu valitse-fn]
+  [:div.rivivalitsin
+   [:label "Hoitovuosi"]
+   [:div
+    (for [hv hoitovuodet]
+     [napit/harmaa
+      (str hv)
+      (hv-valinta-fn valitse-fn hv)
+      {:teksti-nappi? true
+       :luokka "nappi-rivivalitsin"
+       :valittu? (= valittu hv)}])]])

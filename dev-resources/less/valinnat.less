@@ -48,3 +48,35 @@
     margin: 0px;
   }
 }
+
+.rivivalitsin {
+  display:flex;
+  flex-direction:column;
+  color: #5C5C5C;
+  div {
+    display: flex;
+    flex-direction: row;
+    width: fit-content;
+    line-height: 20px;
+    background: #F0F0F0;
+    border-radius: 8px;
+    .nappi-rivivalitsin {
+      width: 56px;
+      flex:none;
+      flex-grow: 0;
+      height: 36px;
+      border: 0;
+      padding: 8px 24px 8px 24px;
+      background: none;
+      &.valittu {
+        background: #FFFFFF;
+        /* White/Darker */
+
+        border: 1px solid #D6D6D6;
+        box-sizing: border-box;
+        border-radius: 8px;
+      }
+    }
+  }
+
+}

@@ -185,6 +185,62 @@
               [ikonit/ikoni-ja-teksti ikoni teksti])
             teksti)])))))
 
+(defn harmaa
+  ([toiminto] (harmaa "Unohdit laittaa tekstin" toiminto {}))
+  ([teksti toiminto] (harmaa teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka ikoni valittu?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            (into {}
+                                  (filter second
+                                          {:luokka
+                                           (str
+                                             (when valittu? "valittu ")
+                                             " " luokka)
+                                           :ikoni  ikoni})))]))
+
+(defn kotiin
+  ([toiminto] (kotiin "Kotiin" toiminto {}))
+  ([teksti toiminto] (kotiin teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-toissijainen") " " luokka)
+                             :ikoni  (ikonit/home)})]))
+
+(defn ylos
+  ([toiminto] (ylos "Ylös" toiminto {}))
+  ([teksti toiminto] (ylos teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-toissijainen") " " luokka)
+                             :ikoni  (ikonit/livicon-chevron-up)})]))
+
+(defn alas
+  ([toiminto] (alas "Alas" toiminto {}))
+  ([teksti toiminto] (alas teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-toissijainen") " " luokka)
+                             :ikoni  (ikonit/livicon-chevron-down)})]))
+
 (defn takaisin
   ([toiminto] (takaisin "Takaisin" toiminto {}))
   ([teksti toiminto] (takaisin teksti toiminto {}))
