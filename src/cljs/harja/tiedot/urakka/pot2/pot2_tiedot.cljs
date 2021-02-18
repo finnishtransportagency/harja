@@ -59,20 +59,31 @@
         ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
 (defn toimenpiteen-tiedot
-  [rivi]
+  [{:keys [koodistot]} rivi]
   (let [toimenpide (:toimenpide rivi)]
-    (fn [rivi]
+    (fn [{:keys [koodistot]} rivi]
       [:div.pot2-toimenpiteen-tiedot
        ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
        (when (and toimenpide rivi)
          (str/capitalize
-           (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
-                               (filter #(and (:nimi %)
-                                             (not= (:nimi %) :massa)
-                                             (not= (:nimi %) :murske)))
-                               (map #(str (:otsikko %) ": " ((:nimi %) rivi)
-                                          (when (some? (:yksikko %))
-                                            (str " " (:yksikko %)))))))))])))
+           (let [kuuluu-kentalle? (fn [{:keys [nimi]}]
+                                    (and nimi
+                                         (not= nimi :massa)
+                                         (not= nimi :murske)))
+                 muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta] :as metadata}]
+                                   (let [kentan-arvo (nimi rivi)
+                                         teksti (if valinnat-koodisto
+                                                  (let [koodisto (valinnat-koodisto koodistot)
+                                                        koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
+                                                        koodisto-teksti (valinta-nayta koodisto-rivi)]
+                                                    koodisto-teksti)
+                                                  (str (nimi rivi)
+                                                       (when (some? yksikko)
+                                                         (str " " yksikko))))]
+                                     (str otsikko ": " teksti)))]
+             (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
+                                 (filter kuuluu-kentalle?)
+                                 (map muotoile-kentta))))))])))
 
 (defn- rivi->massa-tai-murske [rivi {:keys [massat murskeet]}]
   (if (:murske rivi)

@@ -230,7 +230,7 @@
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 4
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
-                       [pot2-tiedot/toimenpiteen-tiedot rivi])}
+                       [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
