@@ -355,10 +355,7 @@
             ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
             (assoc-in [:sijainti indeksi] osoite))
         app)))
-
-  ;; TODO: missä tälle voisi sanoa, että jos määrämitattava on valittu,
-  ;; (remove #(or (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko %))
-  ;                       (= "7.0 LISÄTYÖT" (:otsikko %))) (get-in app [:toimenpiteet]))
+  
   PaivitaLomake
   (process-event [{{useampi? ::t/useampi-toteuma
                     tyyppi ::t/tyyppi
