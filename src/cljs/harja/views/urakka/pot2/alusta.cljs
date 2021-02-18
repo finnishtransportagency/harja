@@ -41,11 +41,7 @@
            massatyypit
            murskeet
            mursketyypit
-           sideainetyypit
-           sidotun-kantavan-kerroksen-sideaine
-           verkon-sijainnit
-           verkon-tyypit
-           verkon-tarkoitukset] :as alusta}]
+           koodistot] :as alusta}]
   (let [kaikki-lisakentat {:murske           {:nimi          :murske
                                               :valinta-nayta (fn [murske]
                                                                (if murske
@@ -63,33 +59,27 @@
                                                                                massa)]
                                                                    (str a b))
                                                                  "-"))
-                                              :valinnat      massat}
-                           :sideaine         {:nimi     :sideaine
-                                              :valinnat sideainetyypit}
-                           :sideaine2        {:nimi     :sideaine2
-                                              :valinnat sidotun-kantavan-kerroksen-sideaine}
-                           :verkon-tyyppi    {:nimi     :verkon-tyyppi
-                                              :valinnat verkon-tyypit}
-                           :verkon-sijainti  {:nimi     :verkon-sijainti
-                                              :valinnat verkon-sijainnit}
-                           :verkon-tarkoitus {:nimi     :verkon-tarkoitus
-                                              :valinnat verkon-tarkoitukset}}
+                                              :valinnat      massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
-        lisakentta-generaattori (fn [{:keys [nimi pakollinen? otsikko yksikko jos] :as kentta-metadata}]
+        lisakentta-generaattori (fn [{:keys [nimi pakollinen? tyyppi valinnat-koodisto otsikko yksikko jos] :as kentta-metadata}]
                                   (let [kentta (get kaikki-lisakentat nimi)
-                                        valinnat (if pakollinen?
-                                                   (:valinnat kentta)
-                                                   (conj (:valinnat kentta) nil))]
+                                        valinnat (or (:valinnat kentta)
+                                                     (get koodistot valinnat-koodisto))
+                                        valinnat-ja-nil (if pakollinen?
+                                                          valinnat
+                                                          (conj valinnat nil))]
+                                    (when (and (= tyyppi :valinta) (nil? valinnat-ja-nil))
+                                      (println "Kenttä " nimi " on valinta mutta ei sisällä valinnat"))
                                     (when (or (nil? jos)
                                               (some? (get alusta jos)))
                                       (lomake/rivi (merge kentta-metadata
                                                           kentta
-                                                          {:palstoja    3
-                                                           :valinnat    valinnat}
+                                                          {:palstoja 3
+                                                           :valinnat valinnat-ja-nil}
                                                           (when (some? otsikko)
                                                             {:otsikko (str otsikko
                                                                            (when (some? yksikko)
-                                                                           (str " (" yksikko ")")))}))))))]
+                                                                             (str " (" yksikko ")")))}))))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
@@ -139,7 +129,6 @@
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
-  (println "petar lomake DA VIDIMO " (pr-str alustalomake))
   [lomake/lomake
    {:luokka " overlay-oikealla"
     :otsikko "Toimenpiteen tiedot"
@@ -165,13 +154,7 @@
                             :murske (:murske alustalomake)
                             :massat massat
                             :murskeet murskeet
-                            :massatyypit (:massatyypit materiaalikoodistot)
-                            :mursketyypit (:mursketyypit materiaalikoodistot)
-                            :sideainetyypit (:sideainetyypit materiaalikoodistot)
-                            :sidotun-kantavan-kerroksen-sideaine (:sidotun-kantavan-kerroksen-sideaine materiaalikoodistot)
-                            :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
-                            :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
-                            :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
+                            :koodistot materiaalikoodistot})
    alustalomake])
 
 (defn materiaali [massat-tai-murskeet rivi]

@@ -35,21 +35,21 @@
            :tyyppi :valinta
            :valinta-arvo  ::massa-id}
    :sideaine {:nimi :sideaine :otsikko "Sideaine"
-              :tyyppi :valinta
+              :tyyppi :valinta :valinnat-koodisto :sideainetyypit
               :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
                        :tyyppi :positiivinen-numero :desimaalien-maara 1}
    :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
-               :tyyppi :valinta
+               :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine
                :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :verkon-tyyppi {:nimi :verkon-tyyppi :otsikko "Verkon tyyppi"
-                   :tyyppi :valinta
+                   :tyyppi :valinta :valinnat-koodisto :verkon-tyypit
                    :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :verkon-sijainti {:nimi :verkon-sijainti :otsikko "Verkon sijainti"
-                     :tyyppi :valinta
+                     :tyyppi :valinta :valinnat-koodisto :verkon-sijainnit
                      :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :verkon-tarkoitus {:nimi :verkon-tarkoitus :otsikko "Verkon tarkoitus"
-                      :tyyppi :valinta
+                      :tyyppi :valinta :valinnat-koodisto :verkon-tarkoitukset
                       :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
 (defn alusta-toimenpidespesifit-metadata

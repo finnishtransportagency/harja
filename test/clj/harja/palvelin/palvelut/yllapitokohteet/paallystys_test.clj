@@ -1088,7 +1088,6 @@
         [_ paallystysilmoitus-kannassa-uusi] (tallenna-pot2-testi-paallystysilmoitus
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-uudet (:alusta paallystysilmoitus-kannassa-uusi)
-        - (println "petar da vidimo sta je procitao " (pr-str alustarivit-uudet))
         paivitetyt-verkon-tiedot {:verkon-tyyppi 9 :verkon-tarkoitus 1 :verkon-sijainti 2}
         paivitetty-paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                           (assoc :alusta alustarivit-uudet)
