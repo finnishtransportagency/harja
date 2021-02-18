@@ -42,27 +42,27 @@
            murskeet
            mursketyypit
            koodistot] :as alusta}]
-  (let [kaikki-lisakentat {:murske           {:nimi          :murske
-                                              :valinta-nayta (fn [murske]
-                                                               (if murske
-                                                                 (let [[a b] (pot2-domain/mursken-rikastettu-nimi
-                                                                               mursketyypit
-                                                                               murske)]
-                                                                   (str a b))
-                                                                 "-"))
-                                              :valinnat      murskeet}
-                           :massa            {:nimi          :massa
-                                              :valinta-nayta (fn [massa]
-                                                               (if massa
-                                                                 (let [[a b] (pot2-domain/massan-rikastettu-nimi
-                                                                               massatyypit
-                                                                               massa)]
-                                                                   (str a b))
-                                                                 "-"))
-                                              :valinnat      massat}}
+  (let [mukautetut-lisakentat {:murske {:nimi          :murske
+                                        :valinta-nayta (fn [murske]
+                                                         (if murske
+                                                           (let [[a b] (pot2-domain/mursken-rikastettu-nimi
+                                                                         mursketyypit
+                                                                         murske)]
+                                                             (str a b))
+                                                           "-"))
+                                        :valinnat      murskeet}
+                               :massa  {:nimi          :massa
+                                        :valinta-nayta (fn [massa]
+                                                         (if massa
+                                                           (let [[a b] (pot2-domain/massan-rikastettu-nimi
+                                                                         massatyypit
+                                                                         massa)]
+                                                             (str a b))
+                                                           "-"))
+                                        :valinnat      massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
         lisakentta-generaattori (fn [{:keys [nimi pakollinen? tyyppi valinnat-koodisto otsikko yksikko jos] :as kentta-metadata}]
-                                  (let [kentta (get kaikki-lisakentat nimi)
+                                  (let [kentta (get mukautetut-lisakentat nimi)
                                         valinnat (or (:valinnat kentta)
                                                      (get koodistot valinnat-koodisto))
                                         valinnat-ja-nil (if pakollinen?
@@ -82,7 +82,7 @@
                                                                              (str " (" yksikko ")")))}))))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
-(defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
+(defn- alustalomakkeen-kentat [{:keys                  [alusta-toimenpiteet
                                        toimenpide] :as alusta}]
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
