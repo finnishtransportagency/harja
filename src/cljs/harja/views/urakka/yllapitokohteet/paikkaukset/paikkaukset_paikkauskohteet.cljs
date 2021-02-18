@@ -83,8 +83,7 @@
     [:div.col-xs-12.col-md-12.col-lg-9 #_{:style {:display "flex"
                                                   :justify-content "flex-start"}}
      [grid/grid
-      {:otsikko "Paikkauskohteet"
-       :tunniste :id
+      {:tunniste :id
        :tyhja "Ei tietoja"
        :rivi-klikattu (fn [kohde]
                         (do
@@ -112,13 +111,15 @@
 (defn kohteet [e! app]
   [:div
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
-    ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-    ;TODO: Napeista puuttuu myös kulmien pyöristys
-    [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-    [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]
-   [paikkauskohteet-taulukko e! app]]
+    [:div.col-xs-12.col-md-6.col-lg-6 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
+    [:div.col-xs-12.col-md-6.col-lg-6.pull-right
+     ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+     ;TODO: Napeista puuttuu myös kulmien pyöristys
+     [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+     [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+     [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+     [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]]
+   [:div.row [paikkauskohteet-taulukko e! app]]]
   )
 
 (defn suunnitelman-kentat [voi-muokata?]
