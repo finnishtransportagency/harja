@@ -90,3 +90,7 @@ VALUES
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
   ('MHU Oulu sopimus',NOW(),NOW() + INTERVAL '2 year','666-TES', (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'));
+-- Kuvitteellinen Kemin päällystysurakka
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Kemin alueurakka opimus', '2019-10-01', '2023-09-30', '1337133-LAP1',
+        (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'));

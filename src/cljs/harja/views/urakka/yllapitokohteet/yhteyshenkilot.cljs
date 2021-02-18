@@ -18,6 +18,18 @@
 
 (def yhteyshenkilot (atom nil)) ; nil = haetaan, vector = tulos, :virhe = epäonnistui
 
+(defn- yhteyshenkilot-taulukko [yhteyshenkilot]
+  [grid/grid
+   {:otsikko "Yhteyshenkilöt"
+    :tyhja "Ei yhteyshenkilöitä."}
+   [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
+    {:otsikko "Nimi" :nimi :nimi :tyyppi :string
+     :hae #(str (:etunimi %) " " (:sukunimi %))}
+    {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
+    {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
+    {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
+   yhteyshenkilot])
+
 (defn- yhteyshenkilot-view [yhteyshenkilot-atom]
   (fn [yhteyshenkilot-atom]
     (let [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot} @yhteyshenkilot-atom]
@@ -26,16 +38,7 @@
           [:p "Virhe yhteyshenkilöiden haussa."]
           [:div
            [urakkaan-liitetyt-kayttajat fim-kayttajat]
-           [grid/grid
-            {:otsikko "Yhteyshenkilöt"
-             :tyhja "Ei yhteyshenkilöitä."}
-            [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-             {:otsikko "Nimi" :nimi :nimi :tyyppi :string
-              :hae #(str (:etunimi %) " " (:sukunimi %))}
-             {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
-             {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
-             {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-            yhteyshenkilot]])
+           [yhteyshenkilot-taulukko yhteyshenkilot]])
         [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
 
 (defn nayta-yhteyshenkilot-modal!
@@ -58,3 +61,31 @@
                    "urakan yhteyshenkilöt")
      :footer [napit/sulje #(modal/piilota!)]}
     [yhteyshenkilot-view yhteyshenkilot]))
+
+(defn- paikkauskohteen-yhteyshenkilot-view [yhteyshenkilot-atom]
+  (fn [yhteyshenkilot-atom]
+    (let [yhteyshenkilot @yhteyshenkilot-atom]
+      (if yhteyshenkilot
+        (if (= yhteyshenkilot :virhe)
+          [:p "Virhe yhteyshenkilöiden haussa."]
+          [:div
+           [yhteyshenkilot-taulukko yhteyshenkilot]])
+        [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
+
+(defn nayta-paikkauskohteen-yhteyshenkilot-modal!
+  "Paikkauskohteella on erilaiset yhteyshenkilöt kuin ylläpitokohteella. Joten siksi oma fn"
+  [urakka-id]
+  (go (do
+        (reset! yhteyshenkilot nil)
+        (let [vastaus (<! (k/post! :hae-urakan-yhteyshenkilot urakka-id))]
+          (if (k/virhe? vastaus)
+            (do
+              (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
+              (reset! yhteyshenkilot :virhe))
+            (reset! yhteyshenkilot vastaus)))))
+
+  (modal/nayta!
+    {:leveys "80%"
+     :otsikko (str "Paikkauskohteen yhteyshenkilöt")
+     :footer [napit/sulje #(modal/piilota!)]}
+    [paikkauskohteen-yhteyshenkilot-view yhteyshenkilot]))

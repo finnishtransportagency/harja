@@ -57,7 +57,7 @@
 
 (defn paikkauskohteet [db user {:keys [vastuuyksikko tila aikavali tyomenetelmat urakka-id] :as tiedot}]
   ;; TODO: Tarkista oikeudet
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (:urakka-id tiedot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         urakan-paikkauskohteet (q/paikkauskohteet-urakalle db {:urakka-id urakka-id})
         urakan-paikkauskohteet (map (fn [p]
@@ -65,12 +65,22 @@
                                           (assoc :sijainti (geo/pg->clj (:geometria p)))
                                           (dissoc :geometria)))
                                     urakan-paikkauskohteet)
-        _ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))]
+        _ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
+        ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
+        ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
+        urakan-paikkauskohteet (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id tiedot) user)
+                                 ;; True - on oikeudet kustannuksiin
+                                 urakan-paikkauskohteet
+                                 ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
+                                 (map (fn [kohde]
+                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta))
+                                   urakan-paikkauskohteet))
+        ]
     urakan-paikkauskohteet))
 
 (defn tallenna-paikkauskohde! [db user kohde]
   ;;TODO: Tarkista oikeudet
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (:urakka-id kohde))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kohde-id (:id kohde)
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus

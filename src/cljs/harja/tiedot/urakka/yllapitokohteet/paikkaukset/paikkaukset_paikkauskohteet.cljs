@@ -32,6 +32,13 @@
 (defrecord TallennaPaikkauskohdeOnnistui [vastaus])
 (defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
 
+(defn- hae-paikkauskohteet [urakka-id]
+  (tuck-apurit/post! :paikkauskohteet-urakalle
+                     {:urakka-id urakka-id}
+                     {:onnistui ->HaePaikkauskohteetOnnistui
+                      :epaonnistui ->HaePaikkauskohteetEpaonnistui
+                      :paasta-virhe-lapi? true}))
+
 (extend-protocol tuck/Event
   AvaaLomake
   (process-event [{lomake :lomake} app]
@@ -46,11 +53,7 @@
   (process-event [_ app]
     (do
       (js/console.log "HaePaikkauskohteet -> tehdään serverihaku")
-      (tuck-apurit/post! :paikkauskohteet-urakalle
-                         {:urakka-id (-> @tila/yleiset :urakka :id)}
-                         {:onnistui ->HaePaikkauskohteetOnnistui
-                          :epaonnistui ->HaePaikkauskohteetEpaonnistui
-                          :paasta-virhe-lapi? true})
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id))
       app))
 
   HaePaikkauskohteetOnnistui
@@ -96,7 +99,8 @@
   TallennaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (println "Paikkauskohteen tallennus onnistui" vastaus)
+      (js/console.log "Paikkauskohteen tallennus onnistui" vastaus)
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id))
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
