@@ -6,6 +6,7 @@
             [harja.loki :refer [log]]
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
@@ -49,18 +50,19 @@
                 {:otsikko "Aikataulu"
                  :leveys 4
                  :nimi :formatoitu-aikataulu}
-                ;; TODO: Hintatiedot pitää formatoida!, eli tyylin 30 000,00 Nyt se on vain 30000
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
-                (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id) )
+                (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
                   {:otsikko "Suun. hinta"
-                       :leveys 2
-                       :nimi :suunniteltu-hinta
-                       :tasaa :oikea})
+                   :leveys 2
+                   :nimi :suunniteltu-hinta
+                   :fmt fmt/euro-opt
+                   :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
                 (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
                   {:otsikko "Tot. hinta"
                    :leveys 2
                    :nimi :toteutunut-hinta
+                   :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin näytetään yhteystiedot
                 (when (false? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
@@ -70,19 +72,16 @@
                    :tasaa :keskita
                    :tyyppi :komponentti
                    :komponentti (fn [rivi]
-                                  (let [_ (js/console.log ":yhteystiedot :: rivi" (pr-str (dissoc rivi :sijainti)))]
-                                    [napit/yleinen-toissijainen ""
-                                     #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
-                                        (:urakka-id rivi)
-                                        :paallystys)
-                                     {:ikoni (ikonit/user)
-                                      :luokka "btn-xs"}]))})
+                                  [napit/yleinen-toissijainen ""
+                                   #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (:urakka-id rivi))
+                                   {:ikoni (ikonit/user)
+                                    :luokka "btn-xs"}])})
                 ]
         paikkauskohteet (:paikkauskohteet app)]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
-    [:div.col-xs-12.col-md-12.col-lg-9 #_ {:style {:display "flex"
-                   :justify-content "flex-start"}}
+    [:div.col-xs-12.col-md-12.col-lg-9 #_{:style {:display "flex"
+                                                  :justify-content "flex-start"}}
      [grid/grid
       {:otsikko "Paikkauskohteet"
        :tunniste :id
@@ -111,17 +110,15 @@
       paikkauskohteet]]))
 
 (defn kohteet [e! app]
-  (let [_ (js/console.log "View - kohteet:")
-        _ (js/console.log "oikeudet" #_ (oikeudet/urakat-paikkaukset-paikkauskohteeet 36))]
-    [:div
-     [:div.row #_ {:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
-      ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-      ;TODO: Napeista puuttuu myös kulmien pyöristys
-      [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-      [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-      [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-      [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]
-     [paikkauskohteet-taulukko e! app]])
+  [:div
+   [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
+    ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+    ;TODO: Napeista puuttuu myös kulmien pyöristys
+    [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+    [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+    [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+    [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]
+   [paikkauskohteet-taulukko e! app]]
   )
 
 (defn suunnitelman-kentat [voi-muokata?]
@@ -262,7 +259,7 @@
      {:nimi :muokattu
       :tyyppi :string
       :hae (fn [rivi]
-             (if (:muokattu rivi) (str "Päivitetty "  (harja.fmt/pvm (:muokattu rivi))) "Ei päivitystietoa"))}
+             (if (:muokattu rivi) (str "Päivitetty " (harja.fmt/pvm (:muokattu rivi))) "Ei päivitystietoa"))}
      {:nimi :muokkauspainike
       :tyyppi :komponentti
       ::lomake/col-luokka "col-md-12 reunus-alhaalla"
@@ -287,24 +284,24 @@
                        (= :uusi-paikkauskohde (:tyyppi lomake)))
         muu-menetelma? (= "Muu" (:tyomenetelma lomake))]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
-      [lomake/lomake
-       {:luokka " overlay-oikealla"
-        :overlay {:leveys "600px"}
-        :ei-borderia? true
-        :voi-muokata? voi-muokata?
-        :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
-        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-        :footer-fn (fn [lomake]
-                     (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)]
-                       [:div
-                        [napit/tallenna
-                         "Tallenna"
-                         #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
-                        [napit/yleinen-toissijainen
-                         "Peruuta"
-                         #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
-       (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
-       lomake]))
+    [lomake/lomake
+     {:luokka " overlay-oikealla"
+      :overlay {:leveys "600px"}
+      :ei-borderia? true
+      :voi-muokata? voi-muokata?
+      :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
+      :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+      :footer-fn (fn [lomake]
+                   (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)]
+                     [:div
+                      [napit/tallenna
+                       "Tallenna"
+                       #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                      [napit/yleinen-toissijainen
+                       "Peruuta"
+                       #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
+     (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
+     lomake]))
 
 (defn testilomake
   [e! _lomake]
