@@ -123,10 +123,10 @@
                                   (re-find #"SORATEIDEN HOITO" tehtavaryhma) "Soratiet|sorateiden"
                                   :else ""))
          parametrit {:polku :tehtavat
-                     :filtteri (case tyyppi ;; TODO: Maarit, mihin tämä vaikuttaa? Mitä tässä tehdään?
-                                 ; :maaramitattava
-                                 ; {:id 17368, :tehtava Äkillinen hoitotyö (talvihoito), :yksikko euroa}
-                                 ;; saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
+                     :filtteri (case tyyppi
+                                 ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
+                                 ;; :maaramitattava
+
                                  :akillinen-hoitotyo
                                  #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
 
