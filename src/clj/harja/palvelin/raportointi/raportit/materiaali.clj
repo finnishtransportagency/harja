@@ -120,7 +120,7 @@
             (concat
               [{:otsikko (if (= konteksti :koko-maa) "Hallintayksikkö" "Urakka")}]
               (map (fn [mat]
-                     {:otsikko (materiaalin-otsikko-sarakeen-nimeen mat) :fmt :numero})
+                     {:otsikko (materiaalin-otsikko-sarakeen-nimeen mat) :fmt :numero :tasaa :oikea})
                    (cons "Kaikki talvisuola yhteensä" materiaaliotsikot))))
       (keep identity
             (into

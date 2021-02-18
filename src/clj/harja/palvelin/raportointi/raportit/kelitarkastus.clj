@@ -95,18 +95,18 @@
                  :sheet-nimi raportin-nimi}
       [{:leveys 10 :otsikko "Päivämäärä" :fmt :pvm}
        {:leveys 5 :otsikko "Klo"}
-       {:leveys 5 :otsikko "Tie"}
-       {:leveys 5 :otsikko "Aosa"}
-       {:leveys 5 :otsikko "Aet"}
-       {:leveys 5 :otsikko "Losa"}
-       {:leveys 5 :otsikko "Let"}
+       {:leveys 5 :otsikko "Tie" :tasaa :oikea}
+       {:leveys 5 :otsikko "Aosa" :tasaa :oikea}
+       {:leveys 5 :otsikko "Aet" :tasaa :oikea}
+       {:leveys 5 :otsikko "Losa" :tasaa :oikea}
+       {:leveys 5 :otsikko "Let" :tasaa :oikea}
        {:leveys 5 :otsikko "Ajo\u00ADsuun\u00ADta"}
        {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-       {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)" :fmt :numero}
-       {:leveys 5 :otsikko "Ta\u00ADsai\u00ADsuus (cm)" :fmt :numero}
-       {:leveys 5 :otsikko "Kit\u00ADka" :fmt :numero}
-       {:leveys 5 :otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla" :fmt :numero}
-       {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla" :fmt :numero}
+       {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)" :fmt :numero :tasaa :oikea}
+       {:leveys 5 :otsikko "Ta\u00ADsai\u00ADsuus (cm)" :fmt :numero :tasaa :oikea}
+       {:leveys 5 :otsikko "Kit\u00ADka" :fmt :numero :tasaa :oikea}
+       {:leveys 5 :otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla" :fmt :numero :tasaa :oikea}
+       {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla" :fmt :numero :tasaa :oikea}
        {:leveys 5 :otsikko "Tar\u00ADkas\u00ADtaja"}
        {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
        {:leveys 3 :otsikko "Laadun alitus"}
