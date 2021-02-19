@@ -32,7 +32,7 @@
 ; sama kuin ylempänä, mutta kohdistuu tehtäväryhmiin
 (def erillishankinnat-tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c")
 (def rahavaraus-lupaukseen-1-tunniste "0e78b556-74ee-437f-ac67-7a03381c64f6")
-(def tilaajan-varaukset-tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54")
+(def johto-ja-hallintokorvaukset-tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54")
 
 (defn toimenpide->toimenpide-avain [v]
   (key-from-val toimenpide-avain->toimenpide v))
@@ -65,9 +65,9 @@
   (key-from-val tallennettava-asia->tehtava v))
 
 (def tallennettava-asia->tehtavaryhma
-  {:erillishankinnat erillishankinnat-tunniste
+  {:erillishankinnat        erillishankinnat-tunniste
    :rahavaraus-lupaukseen-1 rahavaraus-lupaukseen-1-tunniste
-   :tilaajan-varaukset tilaajan-varaukset-tunniste})
+   :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste}) ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä. Käsitteenä :tilaajan-varaukset = :rahavaraus-lupaukseen-1. En uskalla/ehdi uudelleennimetä avainta tässä vaiheessa. ML.
 
 (defn tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
