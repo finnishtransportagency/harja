@@ -58,12 +58,13 @@
       "id": "urn:harja/paikkaukset/0/paikkaus/tyomenetelma",
       "required": true,
       "enum": [
-        "UREM",
         "MPA",
-        "REPA",
+        "HJYR",
         "KTVA",
+        "REPA",
         "SIPA",
-        "SIPU"
+        "SIPU",
+        "UREM"
       ]
     },
     "massatyyppi": {
