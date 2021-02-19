@@ -115,7 +115,8 @@
                                                :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
                                                :suunniteltu-hinta (:suunniteltu-hinta kohde)
                                                :suunniteltu-maara (:suunniteltu-maara kohde)
-                                               :yksikko (:yksikko kohde)})
+                                               :yksikko (:yksikko kohde)
+                                               :lisatiedot (:lisatiedot kohde)})
                     kohde)
                   (do
                     (println "Tallennettiin uusi :: antamalla " (pr-str kohde))
@@ -141,6 +142,7 @@
                                                 :suunniteltu-hinta (:suunniteltu-hinta kohde)
                                                 :suunniteltu-maara (:suunniteltu-maara kohde)
                                                 :yksikko (:yksikko kohde)
+                                                :lisatiedot (:lisatiedot kohde)
                                                 }))))
 
         _ (println "kohde: " (pr-str kohde))

@@ -14,6 +14,7 @@ ALTER TABLE paikkauskohde
     ADD COLUMN "suunniteltu-maara" NUMERIC, -- Arvioitu menekki työmenetelmälle
     ADD COLUMN "suunniteltu-hinta" NUMERIC, -- Paikkauksen arvioitu hinta
     ADD COLUMN "yksikko" TEXT, -- Suunnitellun määrän yksikkö
+    ADD COLUMN "lisatiedot" TEXT, -- Paikkauskohteelle voi antaa ehdotusta tehdessä lisätietoja
     ALTER COLUMN "ulkoinen-id" DROP NOT NULL; -- Poistetaan rajoitus, koska nyt kohteet eivät enää tule aina ulkoa.
 
 ALTER TABLE paikkauskohde
