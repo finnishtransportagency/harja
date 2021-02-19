@@ -66,8 +66,8 @@
 
 (def tallennettava-asia->tehtavaryhma
   {:erillishankinnat        erillishankinnat-tunniste
-   :rahavaraus-lupaukseen-1 rahavaraus-lupaukseen-1-tunniste
-   :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste}) ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä. Käsitteenä :tilaajan-varaukset = :rahavaraus-lupaukseen-1. En uskalla/ehdi uudelleennimetä avainta tässä vaiheessa. ML.
+   :rahavaraus-lupaukseen-1 rahavaraus-lupaukseen-1-tunniste ;; Käsitteellisesti :tilaajan-varaukset = :rahavaraus-lupaukseen-1. En uskalla/ehdi uudelleennimetä avainta tässä vaiheessa. ML.
+   :tilaajan-varaukset      johto-ja-hallintokorvaukset-tunniste}) ;; Kyseessä on johto-ja-hallintokorvaus-tehtäväryhmä.
 
 (defn tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
