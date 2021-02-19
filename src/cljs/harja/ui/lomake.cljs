@@ -13,7 +13,7 @@
             [harja.ui.ikonit :as ikonit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
-(defrecord ^:private Otsikko [otsikko])
+(defrecord ^:private Otsikko [otsikko optiot])
 (defn- otsikko? [x]
   (instance? Otsikko x))
 
@@ -175,7 +175,7 @@ ja kaikki pakolliset kentät on täytetty"
           (recur (vec (concat (if (empty? rivi)
                                 rivit
                                 (conj rivit rivi))
-                              [[(->Otsikko (:otsikko s))]
+                              [[(->Otsikko (:otsikko s) (:optiot s))]
                                (with-meta
                                  (remove nil? (:skeemat s))
                                  {:rivi? true})]))
@@ -198,7 +198,10 @@ ja kaikki pakolliset kentät on täytetty"
           (ryhma? s)
           ;; Muuten lisätään ryhmän otsikko ja jatketaan rivitystä normaalisti
           (recur rivit rivi palstoja
-                 (concat [(->Otsikko (:otsikko s))] (remove nil? (:skeemat s)) skeemat))
+                 (concat
+                   [(->Otsikko (:otsikko s) (:optiot s))]
+                   (remove nil? (:skeemat s))
+                   skeemat))
 
           :default
           ;; Rivitä skeema
@@ -429,7 +432,8 @@ ja kaikki pakolliset kentät on täytetty"
                      (col-luokat (count skeemat)))]
     [(if palstoitettu?
        :div.row.lomakepalstat
-       :div.row.lomakerivi)
+       (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
+                                            (str "." (:rivi-luokka (first skeemat)))))))
      (doall
        (for [{:keys [nimi muokattava?] :as s} skeemat
              :let [muokattava? (and voi-muokata?
@@ -597,7 +601,7 @@ ja kaikki pakolliset kentät on täytetty"
                                    :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}]]
                      (if otsikko ;;pitaisiko olla mieluummin ryhma
                        ^{:key (str otsikko "-" i)}
-                       [:div {:class (:ryhman-luokka otsikko)}
+                       [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}

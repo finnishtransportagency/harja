@@ -30,19 +30,27 @@
           :tyyppi :positiivinen-numero
           :nimi :suunniteltu-maara
           :pakollinen? true
-          ::lomake/col-luokka "col-sm-6"}
+          ::lomake/col-luokka "col-sm-3"}
          {:otsikko "Yksikkö"
           :tyyppi :valinta
           :valinnat ["m²" "t" "kpl" "jm"]
           :nimi :yksikko
           :pakollinen? true
-          ::lomake/col-luokka "col-sm-6"})
-       {:otsikko "Suunniteltu hinta"
-        :tyyppi :positiivinen-numero
-        :nimi :suunniteltu-hinta
-        ::lomake/col-luokka "col-sm-12"
-        :pakollinen? true
-        :yksikko "€"})]
+          ::lomake/col-luokka "col-sm-3"}
+         {:otsikko "Suunniteltu hinta"
+          :tyyppi :positiivinen-numero
+          :nimi :suunniteltu-hinta
+          ::lomake/col-luokka "col-sm-6"
+          :pakollinen? true
+          :yksikko "€"})
+       (lomake/rivi
+         {:otsikko "Lisatiedot"
+          :tyyppi :text
+          :nimi :lisatiedot
+          :pakollinen? false
+          ::lomake/col-luokka "col-sm-12"}
+         )
+       )]
     [{:otsikko "Suunniteltu aikataulu"
       :nimi :aikataulu
       :uusi-rivi? true
@@ -66,35 +74,37 @@
   (if voi-muokata?
     [(lomake/ryhma
        {:otsikko "Sijainti"
-        :uusi-rivi? true
-        :ryhman-luokka "lomakeryhman-border"}
-       (lomake/rivi
+        :rivi? true
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+
          {:otsikko "Tie"
           :tyyppi :numero
           :nimi :tie
-          :pakollinen? true}
+          :pakollinen? true
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:otsikko "Ajorata"
           :tyyppi :valinta
           :valinnat [0 1 2 3] ; TODO: Hae jostain?
           :nimi :ajorata
           :pakollinen? false})
-       (lomake/rivi
-         {:otsikko "A-osa"
-          :tyyppi :numero
-          :pakollinen? true
-          :nimi :aosa}
-         {:otsikko "A-et."
-          :tyyppi :numero
-          :pakollinen? true
-          :nimi :aet}
-         {:otsikko "L-osa."
-          :tyyppi :numero
-          :pakollinen? true
-          :nimi :losa}
-         {:otsikko "L-et."
-          :tyyppi :numero
-          :pakollinen? true
-          :nimi :let}))]
+     (lomake/rivi
+       {:otsikko "A-osa"
+        :tyyppi :numero
+        :pakollinen? true
+        :nimi :aosa
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "A-et."
+        :tyyppi :numero
+        :pakollinen? true
+        :nimi :aet}
+       {:otsikko "L-osa."
+        :tyyppi :numero
+        :pakollinen? true
+        :nimi :losa}
+       {:otsikko "L-et."
+        :tyyppi :numero
+        :pakollinen? true
+        :nimi :let})]
     [{:tyyppi :string
       :otsikko "Sijainti"
       :nimi :sijaintikooste
@@ -107,11 +117,11 @@
       :tyyppi :string
       :nimi :nimi
       :pakollinen? true
-      ::lomake/col-luokka "col-sm-8"}
+      ::lomake/col-luokka "col-sm-6"}
      {:otsikko "Lask.nro"
       :tyyppi :string
       :nimi :nro
-      ::lomake/col-luokka "col-sm-2"}
+      ::lomake/col-luokka "col-sm-3"}
      {:otsikko "Työmenetelmä"
       :tyyppi :valinta
       :nimi :tyomenetelma

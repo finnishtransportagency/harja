@@ -64,8 +64,7 @@
                                             (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) "Ehdotettu"))
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
-                               vastaus)
-          _ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))]
+                               vastaus)]
       (do
         (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
         (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
