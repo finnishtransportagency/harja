@@ -13,24 +13,25 @@
 (defn suunnitelman-kentat [voi-muokata?]
   (if voi-muokata?
     [(lomake/ryhma
-       {:otsikko "Alustava suunnitelma"}
-       (lomake/rivi
-         {:otsikko "Arv. aloitus"
-          :tyyppi :pvm
-          :nimi :alkupvm
-          :pakollinen? true
-          ::lomake/col-luokka "col-sm-6"}
-         {:otsikko "Arv. lopetus"
-          :tyyppi :pvm
-          :nimi :loppupvm
-          :pakollinen? true
-          ::lomake/col-luokka "col-sm-6"})
+       {:otsikko "Alustava suunnitelma"
+        :ryhman-luokka "lomakeryhman-otsikko-tausta"}
+       {:otsikko "Arv. aloitus"
+        :tyyppi :pvm
+        :nimi :alkupvm
+        :pakollinen? true
+        ::lomake/col-luokka "col-sm-6"}
+       {:otsikko "Arv. lopetus"
+        :tyyppi :pvm
+        :nimi :loppupvm
+        :pakollinen? true
+        ::lomake/col-luokka "col-sm-6"})
        (lomake/rivi
          {:otsikko "Suunniteltu määrä"
           :tyyppi :positiivinen-numero
           :nimi :suunniteltu-maara
           :pakollinen? true
-          ::lomake/col-luokka "col-sm-3"}
+          ::lomake/col-luokka "col-sm-3"
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:otsikko "Yksikkö"
           :tyyppi :valinta
           :valinnat ["m²" "t" "kpl" "jm"]
@@ -48,9 +49,9 @@
           :tyyppi :text
           :nimi :lisatiedot
           :pakollinen? false
-          ::lomake/col-luokka "col-sm-12"}
-         )
-       )]
+          ::lomake/col-luokka "col-sm-12"
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
+         )]
     [{:otsikko "Suunniteltu aikataulu"
       :nimi :aikataulu
       :uusi-rivi? true
