@@ -74,7 +74,7 @@
                                 (mapcat
                                   (fn [_]
                                     (map (fn [{:keys [nimi]}]
-                                           {:otsikko nimi :tasaa :keskita :fmt :numero})
+                                           {:otsikko nimi :tasaa :oikea :fmt :numero})
                                          talvihoitoluokat))
                                   naytettavat-alueet)))
         datarivit (muodosta-datarivit naytettavat-alueet hoitoluokat toteumat)]

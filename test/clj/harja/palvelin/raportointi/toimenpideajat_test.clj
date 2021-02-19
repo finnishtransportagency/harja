@@ -74,55 +74,55 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Teh­tä­vä"}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :oikea, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :oikea, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :oikea, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :oikea, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :oikea, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :oikea, :reunus :oikea}
-      {:otsikko "Yht.", :tasaa :oikea, :leveys 5})))
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "< 6", :reunus :vasen}
+      {:otsikko "6 - 10", :reunus :ei}
+      {:otsikko "10 - 14", :reunus :ei}
+      {:otsikko "14 - 18", :reunus :ei}
+      {:otsikko "18 - 22", :reunus :ei}
+      {:otsikko "22 - 02", :reunus :oikea}
+      {:otsikko "Yht.", :leveys 5})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -158,55 +158,55 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Teh­tä­vä"}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "Yht." :tasaa :oikea})))
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "Yht."})))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -241,52 +241,52 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Teh­tä­vä"}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "< 6" :reunus :vasen :tasaa :oikea}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :oikea}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :oikea}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :oikea}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :oikea}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :oikea}
-      {:otsikko "Yht." :tasaa :oikea})))
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "< 6" :reunus :vasen}
+      {:otsikko "6 - 10" :reunus :ei}
+      {:otsikko "10 - 14" :reunus :ei}
+      {:otsikko "14 - 18" :reunus :ei}
+      {:otsikko "18 - 22" :reunus :ei}
+      {:otsikko "22 - 02" :reunus :oikea}
+      {:otsikko "Yht."})))
