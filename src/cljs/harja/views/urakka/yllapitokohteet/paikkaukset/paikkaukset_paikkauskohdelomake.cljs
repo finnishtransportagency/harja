@@ -4,6 +4,8 @@
             [harja.loki :refer [log]]
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
@@ -30,14 +32,14 @@
           :tyyppi :positiivinen-numero
           :nimi :suunniteltu-maara
           :pakollinen? true
-          ::lomake/col-luokka "col-sm-3"
+          ::lomake/col-luokka "col-sm-4"
           :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:otsikko "Yksikkö"
           :tyyppi :valinta
           :valinnat ["m²" "t" "kpl" "jm"]
           :nimi :yksikko
           :pakollinen? true
-          ::lomake/col-luokka "col-sm-3"}
+          ::lomake/col-luokka "col-sm-2"}
          {:otsikko "Suunniteltu hinta"
           :tyyppi :positiivinen-numero
           :nimi :suunniteltu-hinta
@@ -182,7 +184,15 @@
   (let [voi-muokata? (or
                        (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                        (= :uusi-paikkauskohde (:tyyppi lomake)))
-        muu-menetelma? (= "Muu" (:tyomenetelma lomake))]
+        muu-menetelma? (= "Muu" (:tyomenetelma lomake))
+        kayttajarooli (roolit/osapuoli @istunto/kayttaja)
+        ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
+        voi-tilata? (or (and
+                          (= "ehdotettu" (:paikkauskohteen-tila lomake))
+                          (= :tilaaja kayttajarooli))
+                        false)
+        _ (js/console.log "kayttajarooli " (pr-str kayttajarooli))
+        ]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
     [lomake/lomake
      {:luokka " overlay-oikealla"
@@ -192,14 +202,25 @@
       :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
       :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
       :footer-fn (fn [lomake]
-                   (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)]
+                   (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)
+                         urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                      [:div
-                      [napit/tallenna
-                       "Tallenna"
-                       #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                      [:hr]
+                      (if urakoitsija?
+                        [:span "urakoitsija"]
+                        [:p "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
+                      (when voi-muokata?
+                        [:div [napit/tallenna
+                               "Tallenna"
+                               #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]])
+                      (when voi-tilata?
+                        [napit/tallenna
+                         "Tilaa"
+                         #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))])
                       [napit/yleinen-toissijainen
                        "Peruuta"
-                       #(e! (t-paikkauskohteet/->SuljeLomake))]]))}
+                       #(e! (t-paikkauskohteet/->SuljeLomake))]
+                      ]))}
      (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
      lomake]))
 

@@ -31,6 +31,7 @@
 (defrecord TallennaPaikkauskohde [paikkauskohde])
 (defrecord TallennaPaikkauskohdeOnnistui [vastaus])
 (defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
+(defrecord TilaaPaikkauskohde [paikkauskohde])
 
 (defn- hae-paikkauskohteet [urakka-id]
   (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -94,6 +95,12 @@
                             :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
                             :paasta-virhe-lapi? true})
         app)))
+
+  TilaaPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (do
+      (js/console.log "Tää ei tilaa vielä mitään. Eli implementoi toteutus!")
+      app))
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
