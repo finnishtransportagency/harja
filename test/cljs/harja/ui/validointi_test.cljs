@@ -1,5 +1,5 @@
 (ns harja.ui.validointi-test
-  (:require [harja.ui.validointi :as val]
+  (:require [harja.validointi :as val]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as ur]
             [harja.pvm :as pvm]

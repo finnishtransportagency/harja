@@ -7,11 +7,11 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
+            [harja.validointi :as v]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-                      ]))
+            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -38,7 +38,8 @@
               :tyyppi :valinta :valinnat-koodisto :sideainetyypit
               :valinta-arvo ::koodi :valinta-nayta ::nimi}
    :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
-                       :tyyppi :positiivinen-numero :desimaalien-maara 1}
+                       :tyyppi :positiivinen-numero :desimaalien-maara 1
+                       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
    :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
                :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine
                :valinta-arvo ::koodi :valinta-nayta ::nimi}

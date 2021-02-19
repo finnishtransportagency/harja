@@ -14,7 +14,6 @@
             [harja.ui.lomake :as ui-lomake]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
-            [harja.ui.validointi :as v]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
@@ -25,6 +24,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+            [harja.validointi :as v]
             [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
