@@ -230,7 +230,9 @@
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                 (mm-yhteiset/massan-rikastettu-nimi massatyypit rivi :string)))}
+                 (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
+                                                           :materiaali rivi
+                                                           :fmt :string})))}
        (ui-lomake/rivi
          {:otsikko "Massatyyppi"
           :nimi ::pot2-domain/tyyppi :tyyppi :valinta
@@ -352,7 +354,9 @@
                              :luokka "napiton-nappi"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
-                    [mm-yhteiset/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) rivi :komponentti])}
+                    [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                              :materiaali rivi
+                                                              :fmt :komponentti}])}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
@@ -364,5 +368,5 @@
                     [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
-                    [mm-yhteiset/massan-tai-murskeen-toiminnot e! rivi])}]
+                    [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
    massat])

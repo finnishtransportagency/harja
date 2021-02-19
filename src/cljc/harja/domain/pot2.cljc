@@ -352,7 +352,7 @@
    (str/join separator
              (remove nil? (mapv val (select-keys rivi avaimet))))))
 
-(defn mursken-rikastettu-nimi [mursketyypit murske]
+(defn murskeen-rikastettu-nimi [mursketyypit murske]
   ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
                   (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))

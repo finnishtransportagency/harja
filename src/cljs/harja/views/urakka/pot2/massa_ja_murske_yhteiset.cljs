@@ -18,7 +18,7 @@
 (def materiaali-jo-kaytossa-str "Materiaali on jo käytössä, eikä sitä voi enää poistaa.")
 
 
-(defn- massan-murskeen-nimen-komp [ydin tarkennukset fmt toiminto-fn]
+(defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
   (if (= :komponentti fmt)
     [(if toiminto-fn
        :a
@@ -32,29 +32,22 @@
      [:span tarkennukset]]
     (str ydin tarkennukset)))
 
-(defn massan-rikastettu-nimi
-  "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
-  ([massatyypit massa fmt]
-   (massan-rikastettu-nimi massatyypit massa fmt nil))
-  ([massatyypit massa fmt toiminto-fn]
-   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-   (let [[ydin tarkennukset] (pot2-domain/massan-rikastettu-nimi massatyypit massa)]
-     ;; vähän huonoksi ehkä meni tämän kanssa. Toinen funktiota kutsuva tarvitsee komponenttiwrapperin ja toinen ei
-     ;; pitänee refaktoroida... fixme jos ehdit
-     (if (= fmt :komponentti)
-       [massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn]
-       (massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn)))))
+(defn materiaalin-rikastettu-nimi
+  "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
+  [{:keys [tyypit materiaali fmt toiminto-fn]}]
+  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
 
-(defn murskeen-rikastettu-nimi
-  ([mursketyypit murske fmt]
-   (murskeen-rikastettu-nimi mursketyypit murske fmt nil))
-  ([mursketyypit murske fmt toiminto-fn]
-   ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
-   ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
-   (let [[ydin tarkennukset] (pot2-domain/mursken-rikastettu-nimi mursketyypit murske)]
-     (if (= fmt :komponentti)
-       [massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn]
-       (massan-murskeen-nimen-komp ydin tarkennukset fmt toiminto-fn)))))
+  (let [tyyppi (mk-tiedot/massatyypit-vai-mursketyypit? tyypit)
+        [ydin tarkennukset] ((if (= :massa tyyppi)
+                               pot2-domain/massan-rikastettu-nimi
+                               pot2-domain/murskeen-rikastettu-nimi)
+                             tyypit materiaali)
+        params {:ydin ydin
+                :tarkennukset tarkennukset
+                :fmt fmt :toiminto-fn toiminto-fn}]
+    (if (= fmt :komponentti)
+      [materiaalin-nimen-komp params]
+      (materiaalin-nimen-komp params))))
 
 (defn materiaalin-kaytto
   [materiaali-kaytossa]
@@ -95,7 +88,8 @@
                        (map :tila materiaali-kaytossa))]
     [napit/tallenna
      "Tallenna"
-     (let [materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")]
+     (let [materiaalin-str (if (= :murske tyyppi) "Murskeen" "Massan")
+           materiaalista-str (if (= :murske tyyppi) "murskeesta" "massasta")]
        (if (empty? materiaali-kaytossa)
          toiminto-fn
          (when-not lukittu?
@@ -106,7 +100,7 @@
                 [:div
                  [:div (str "Materiaali on käytössä päällystysilmoituksissa joita ei ole vielä lukittu, joten muokkaaminen on mahdollista. Jos muokkaat kyseistä materiaalia, tiedot päivittyvät kaikkialla missä materiaalia on käytetty.")]
                  [materiaalin-kaytto materiaali-kaytossa]
-                 [:div "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda tästä massasta kopion ja muokata sitä."]]
+                 [:div (str "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda " materiaalista-str " kopion ja muokata sitä.")]]
                 :toiminto-fn toiminto-fn
                 :hyvaksy "Kyllä"})))))
      {:vayla-tyyli? true
@@ -155,19 +149,18 @@
    [materiaalin-kaytto materiaali-kaytossa]])
 
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
-  [:div.pot2-materiaalin-tiedot
-   (cond
-     (some? (:harja.domain.pot2/murske-id materiaali))
-     [murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
+  (when (or (::pot2-domain/massa-id materiaali)
+            (::pot2-domain/murske-id materiaali))
+    [:div.pot2-materiaalin-tiedot
+     [materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
+                                              :mursketyypit
+                                              :massatyypit) materiaalikoodistot)
+                                   :materiaali materiaali
+                                   :fmt :komponentti :toiminto-fn toiminto-fn}]
+     [napit/nappi "" toiminto-fn {:luokka "napiton-nappi"
+                                  :ikoni (ikonit/livicon-external)}]]))
 
-     (some? (:harja.domain.pot2/massa-id materiaali))
-     [massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti toiminto-fn]
-
-     :else nil)
-   [napit/nappi "" toiminto-fn {:luokka "napiton-nappi"
-                                :ikoni (ikonit/livicon-external)}]])
-
-(defn massan-tai-murskeen-toiminnot [e! rivi]
+(defn materiaalirivin-toiminnot [e! rivi]
   (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
                          mk-tiedot/->MuokkaaMursketta
                          mk-tiedot/->MuokkaaMassaa)]
@@ -185,3 +178,8 @@
        #(e! (muokkaus-event rivi true))
        {:ikoninappi? true :luokka "klikattava"
         :ikoni (ikonit/livicon-duplicate)}]]]))
+
+(defn materiaali
+  [massat-tai-murskeet id]
+  (first (filter #(= (::pot2-domain/koodi %) id)
+                 massat-tai-murskeet)))

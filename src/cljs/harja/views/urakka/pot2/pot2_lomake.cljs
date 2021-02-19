@@ -178,8 +178,8 @@
            [toimenpiteet-ja-materiaalit-otsikkorivi e!]
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
-                                                              :materiaalikoodistot materiaalikoodistot
-                                                              :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+                                                                    :materiaalikoodistot materiaalikoodistot
+                                                                    :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot

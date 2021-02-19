@@ -12,11 +12,13 @@
     [harja.ui.grid :as grid]
     [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
+    [harja.ui.yleiset :refer [ajax-loader]]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
+    [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -52,7 +54,7 @@
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
-   {:keys [massat massatyypit materiaalikoodistot validointi]} kohdeosat-atom]
+   {:keys [massat materiaalikoodistot validointi]} kohdeosat-atom]
   (let [perusleveys 2
         paallystekerros-toimenpiteet (:paallystekerros-toimenpiteet materiaalikoodistot)]
     [grid/muokkaus-grid
@@ -109,7 +111,14 @@
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tasaa :oikea
        :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
        :valinta-nayta (fn [rivi]
-                        (mm-yhteiset/massan-rikastettu-nimi massatyypit rivi :string)) :validoi [[:ei-tyhja "Anna arvo"]]}
+                        [:div
+                         [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                                   :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
+                                                                   :fmt :komponentti}]
+                         ;; TODO POSITION TO RIGHT 20px...
+                         [:div.inline-block {:on-click #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))}
+                          (ikonit/livicon-external)]])
+       :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea

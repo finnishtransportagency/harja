@@ -50,6 +50,12 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
+(defn massatyypit-vai-mursketyypit? [tyypit]
+  (if (some (fn [lyhenne] (= lyhenne "AB"))
+            (map ::pot2-domain/lyhenne tyypit))
+    :massa
+    :murske))
+
 (def sideaineen-kayttotavat
   [{::pot2-domain/nimi "Lopputuotteen sideaine"
     ::pot2-domain/koodi :lopputuote}
@@ -107,6 +113,29 @@
 
 (def nayta-lahde mursketyyppia-bem-tai-muu?)
 
+(defn massa-kayttoliittyman-muotoon
+  [massa id klooni?]
+  (let [runkoaineet (aine-kayttoliittyman-muotoon (map
+                                                    ;; Koska luodaan uusi massa olemassaolevan tietojen pohjalta, täytyy vanhan massan viittaukset poistaa
+                                                    #(if klooni?
+                                                       (dissoc % :runkoaine/id ::pot2-domain/massa-id)
+                                                       (identity %))
+                                                    (:harja.domain.pot2/runkoaineet massa)) :runkoaine/tyyppi)
+        sideaineet (sideaine-kayttoliittyman-muotoon (map
+                                                       #(if klooni?
+                                                          (dissoc % :sideaine/id ::pot2-domain/massa-id)
+                                                          (identity %))
+                                                       (:harja.domain.pot2/sideaineet massa)))
+        lisaaineet (aine-kayttoliittyman-muotoon (map
+                                                   #(if klooni?
+                                                      (dissoc % :lisaaine/id ::pot2-domain/massa-id)
+                                                      (identity %))
+                                                   (:harja.domain.pot2/lisaaineet massa)) :lisaaine/tyyppi)]
+    (-> massa
+        (assoc ::pot2-domain/massa-id id
+               :harja.domain.pot2/runkoaineet runkoaineet
+               :harja.domain.pot2/sideaineet sideaineet
+               :harja.domain.pot2/lisaaineet lisaaineet))))
 
 (extend-protocol tuck/Event
 
@@ -166,28 +195,9 @@
     (let [massan-id (if klooni?
                       nil
                       (::pot2-domain/massa-id rivi))
-          runkoaineet (aine-kayttoliittyman-muotoon (map
-                                                      ;; Koska luodaan uusi massa olemassaolevan tietojen pohjalta, täytyy vanhan massan viittaukset poistaa
-                                                      #(if klooni?
-                                                         (dissoc % :runkoaine/id ::pot2-domain/massa-id)
-                                                         (identity %))
-                                                      (:harja.domain.pot2/runkoaineet rivi)) :runkoaine/tyyppi)
-          sideaineet (sideaine-kayttoliittyman-muotoon (map
-                                                         #(if klooni?
-                                                            (dissoc % :sideaine/id ::pot2-domain/massa-id)
-                                                            (identity %))
-                                                         (:harja.domain.pot2/sideaineet rivi)))
-          lisaaineet (aine-kayttoliittyman-muotoon (map
-                                                     #(if klooni?
-                                                        (dissoc % :lisaaine/id ::pot2-domain/massa-id)
-                                                        (identity %))
-                                                     (:harja.domain.pot2/lisaaineet rivi)) :lisaaine/tyyppi)]
+          massa (massa-kayttoliittyman-muotoon rivi massan-id klooni?)]
       (-> app
-          (assoc :pot2-massa-lomake rivi)
-          (assoc-in [:pot2-massa-lomake ::pot2-domain/massa-id] massan-id)
-          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/runkoaineet] runkoaineet)
-          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet] sideaineet)
-          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet] lisaaineet))))
+          (assoc :pot2-massa-lomake massa))))
 
   UusiMurske
   (process-event [_ app]

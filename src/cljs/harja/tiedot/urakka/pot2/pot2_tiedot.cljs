@@ -37,26 +37,10 @@
 (defrecord NaytaMateriaalilomake [rivi])
 (defrecord SuljeMateriaalilomake [])
 
-(defn- paallystekerroksen-osat-jarjestysnrolla
-  "Palauttaa päällystekerroksen osat järjestysnumerolla"
-  [rivit jarjestysnro]
-  )
-
-(defn kulutuskerroksen-osat
-  [rivit]
-  (paallystekerroksen-osat-jarjestysnrolla rivit 1))
-
-(defn alemman-paallystekerroksen-osat
-  [rivit]
-  (paallystekerroksen-osat-jarjestysnrolla rivit 2))
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
   (= koodi 667))
 
-(defn- fmt-toimenpide-verkko [rivi materiaalikoodistot]
- [:span
-   (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
-        ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
 (defn toimenpiteen-tiedot
   [rivi]
@@ -74,7 +58,10 @@
                                           (when (some? (:yksikko %))
                                             (str " " (:yksikko %)))))))))])))
 
-(defn- rivi->massa-tai-murske [rivi {:keys [massat murskeet]}]
+(defn rivi->massa-tai-murske
+  "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
+
+  [rivi {:keys [massat murskeet]}]
   (if (:murske rivi)
     (first (filter #(= (::pot2-domain/murske-id (:murske rivi)))
                    murskeet))
@@ -193,6 +180,11 @@
   (process-event [{rivi :rivi} app]
     (println "NaytaMateriaalilomake " (pr-str rivi))
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+          materiaali (if (::pot2-domain/massa-id materiaali)
+                       (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
+                                                                false
+                                                                (::pot2-domain/massa-id materiaali))
+                       materiaali)
           polku (if (:murske rivi) :pot2-murske-lomake :pot2-massa-lomake)
           nil-polku (if (:murske rivi) :pot2-massa-lomake :pot2-murske-lomake)]
       (-> app

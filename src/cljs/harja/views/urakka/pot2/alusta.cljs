@@ -42,24 +42,24 @@
            murskeet
            mursketyypit
            koodistot] :as alusta}]
-  (let [mukautetut-lisakentat {:murske {:nimi          :murske
+  (let [mukautetut-lisakentat {:murske {:nimi :murske
                                         :valinta-nayta (fn [murske]
                                                          (if murske
-                                                           (let [[a b] (pot2-domain/mursken-rikastettu-nimi
+                                                           (let [[a b] (pot2-domain/murskeen-rikastettu-nimi
                                                                          mursketyypit
                                                                          murske)]
                                                              (str a b))
                                                            "-"))
-                                        :valinnat      murskeet}
-                               :massa  {:nimi          :massa
-                                        :valinta-nayta (fn [massa]
-                                                         (if massa
-                                                           (let [[a b] (pot2-domain/massan-rikastettu-nimi
-                                                                         massatyypit
-                                                                         massa)]
-                                                             (str a b))
-                                                           "-"))
-                                        :valinnat      massat}}
+                                        :valinnat murskeet}
+                               :massa {:nimi :massa
+                                       :valinta-nayta (fn [massa]
+                                                        (if massa
+                                                          (let [[a b] (pot2-domain/massan-rikastettu-nimi
+                                                                        massatyypit
+                                                                        massa)]
+                                                            (str a b))
+                                                          "-"))
+                                       :valinnat massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
         lisakentta-generaattori (fn [{:keys [nimi pakollinen? tyyppi valinnat-koodisto otsikko yksikko jos] :as kentta-metadata}]
                                   (let [kentta (get mukautetut-lisakentat nimi)
@@ -157,9 +157,6 @@
                             :koodistot materiaalikoodistot})
    alustalomake])
 
-(defn materiaali [massat-tai-murskeet rivi]
-  (first (filter #(= (::pot2-domain/koodi %) (:murske-id rivi))
-                 massat-tai-murskeet)))
 
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
@@ -237,10 +234,10 @@
                        (when (or (:massa rivi) (:murske rivi))
                          [mm-yhteiset/materiaalin-tiedot (cond
                                                            (:massa rivi)
-                                                           (materiaali massat rivi)
+                                                           (mm-yhteiset/materiaali massat (:murske-id rivi))
 
                                                            (:murske rivi)
-                                                           (materiaali murskeet rivi)
+                                                           (mm-yhteiset/materiaali murskeet (:massa-id rivi))
 
                                                            :else
                                                            nil)

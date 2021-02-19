@@ -52,7 +52,9 @@
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
-                 (mm-yhteiset/murskeen-rikastettu-nimi mursketyypit rivi :string)))}
+                 (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit mursketyypit
+                                                           :materiaali rivi
+                                                           :fmt :string})))}
        (ui-lomake/rivi
          {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
           :vayla-tyyli? true :palstoja (if sivulle? 3 1)})
@@ -128,7 +130,9 @@
                              :luokka "napiton-nappi"}}}
    [{:otsikko "Nimi" :tyyppi :komponentti :leveys 8
      :komponentti (fn [rivi]
-                    [mm-yhteiset/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) rivi :komponentti])}
+                    [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:mursketyypit materiaalikoodistot)
+                                                              :materiaali rivi
+                                                              :fmt :komponentti}])}
     {:otsikko "Tyyppi" :tyyppi :string :muokattava? (constantly false) :leveys 6
      :hae (fn [rivi]
             (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot) (::pot2-domain/tyyppi rivi)))}
@@ -138,5 +142,5 @@
     {:otsikko "DoP" :nimi ::pot2-domain/dop-nro :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
-                    [mm-yhteiset/massan-tai-murskeen-toiminnot e! rivi])}]
+                    [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
    murskeet])
