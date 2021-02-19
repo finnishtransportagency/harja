@@ -109,7 +109,11 @@
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                                                           nimi] :as kohde}]
   (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id (pr-str tierekisteriosoitevali))
-  (let [kohde (yha-q/luo-yllapitokohde<!
+  (let [yha-tr-osoite (-> tierekisteriosoitevali
+                          (select-keys [:tienumero :aosa :aet :losa :let])
+                          (set/rename-keys {:tienumero :tie}))
+        - (println "petar trosoite " (pr-str yha-tr-osoite))
+        kohde (yha-q/luo-yllapitokohde<!
                 db
                 {:urakka urakka-id
                  :tr_numero (:tienumero tierekisteriosoitevali)
@@ -117,9 +121,7 @@
                  :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                  :tr_loppuosa (:losa tierekisteriosoitevali)
                  :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                 :yha_tr_osoite (-> tierekisteriosoitevali
-                                    (select-keys [:tienumero :aosa :aet :losa :let])
-                                    (set/rename-keys {:tienumero :tie}))
+                 :yha_tr_osoite yha-tr-osoite
                  :tunnus tunnus
                  :yhaid yha-id
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)

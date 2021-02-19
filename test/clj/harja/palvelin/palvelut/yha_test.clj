@@ -182,8 +182,7 @@
               :aosa 1
               :aet 1
               :losa 1
-              :let 2} (:yha-tr-osoite vastaus)))
-      (println "petar vastaus " (pr-str vastaus)))))
+              :let 2} :todo-lue-yla-tr-osoite-uudesta-yllapitokohde-rivista)))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
