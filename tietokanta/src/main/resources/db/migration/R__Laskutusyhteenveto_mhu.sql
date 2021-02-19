@@ -539,7 +539,7 @@ BEGIN
                                                 JOIN lasku_kohdistus lk ON lk.lasku = l.id
                                                 JOIN toimenpideinstanssi tpi
                                                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                       WHERE lk.maksueratyyppi = 'kokonaishintainen' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
+                                       WHERE lk.maksueratyyppi != 'lisatyo' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
                                          AND lk.poistettu IS NOT TRUE
                                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                     LOOP
