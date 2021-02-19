@@ -1,0 +1,1 @@
+ALTER TABLE yllapitokohde ADD COLUMN yha_tr_osoite tr_osoite;

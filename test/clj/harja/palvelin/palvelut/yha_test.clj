@@ -177,7 +177,13 @@
       (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
       (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
           "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
-      (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen)))))
+      (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))
+      (is (= {:tie 20
+              :aosa 1
+              :aet 1
+              :losa 1
+              :let 2} (:yha-tr-osoite vastaus)))
+      (println "petar vastaus " (pr-str vastaus)))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

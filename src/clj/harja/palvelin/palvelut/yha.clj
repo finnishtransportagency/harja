@@ -20,6 +20,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [clojure.string :as str]
+            [clojure.set :as set]
             [harja.domain.tierekisteri :as tr-domain]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
@@ -107,7 +108,7 @@
 (defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                                                           nimi] :as kohde}]
-  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id (pr-str tierekisteriosoitevali))
   (let [kohde (yha-q/luo-yllapitokohde<!
                 db
                 {:urakka urakka-id
@@ -116,6 +117,9 @@
                  :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                  :tr_loppuosa (:losa tierekisteriosoitevali)
                  :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                 :yha_tr_osoite (-> tierekisteriosoitevali
+                                    (select-keys [:tienumero :aosa :aet :losa :let])
+                                    (set/rename-keys {:tienumero :tie}))
                  :tunnus tunnus
                  :yhaid yha-id
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)
@@ -160,7 +164,7 @@
                                             (map :syy kohdeosien-validointi)))))))
     kohteet))
 
-(defn- tallenna-uudet-yha-kohteet
+(defn- tallenna-uudet-yha-kohteet                           ; petar ovde
   "Tallentaa YHA:sta tulleet ylläpitokohtetierekistet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]

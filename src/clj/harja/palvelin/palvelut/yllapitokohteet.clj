@@ -575,7 +575,8 @@
                                       toteutunut-hinta
                                       keskimaarainen-vuorokausiliikenne]
                                :as kohde}]
-  (do (log/debug "Päivitetään ylläpitokohde")
+  (do (log/debug "petar Päivitetään ylläpitokohde")
+      (throw (Exception. (str "petar izuzetak " tr-numero)))
       (q/paivita-yllapitokohde<! db
                                  {:kohdenumero                       kohdenumero
                                   :nimi                              nimi
