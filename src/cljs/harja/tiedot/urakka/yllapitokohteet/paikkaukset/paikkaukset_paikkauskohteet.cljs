@@ -68,7 +68,8 @@
                                vastaus)]
       (do
         (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
-        (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
+        ;(kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
+        (kartta-tiedot/zoomaa-geometrioihin)
         (assoc app :paikkauskohteet paikkauskohteet))))
 
   HaePaikkauskohteetEpaonnistui
@@ -88,7 +89,7 @@
                             (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id))
                             (assoc :paikkauskohteen-tila "ehdotettu"))]
       (do
-        (println "Lähetetään paikkauskohde" (pr-str paikkauskohde))
+        (js/console.log "Lähetetään paikkauskohde" (pr-str paikkauskohde))
         (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
                            paikkauskohde
                            {:onnistui ->TallennaPaikkauskohdeOnnistui
@@ -112,7 +113,8 @@
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (println "Paikkauskohteen tallennus epäonnistui" vastaus)
+      (js/console.log "Paikkauskohteen tallennus epäonnistui" vastaus)
+      ;;TODO: tämä antaa warningin
       (harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
       (dissoc app :lomake)))
   )

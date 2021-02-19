@@ -34,14 +34,16 @@
                  :leveys 2
                  :nimi :paikkauskohteen-tila
                  :fmt (fn [arvo]
-                        [:span
-                         [:span {:class (str "circle "
+                        [:div {:class (str arvo "-bg")}
+                         [:div
+                          [:div {:class (str "circle "
                                              (cond
                                                (= "tilattu" arvo) "tila-tilattu"
                                                (= "ehdotettu" arvo) "tila-ehdotettu"
                                                (= "valmis" arvo) "tila-valmis"
                                                :default "tila-ehdotettu"
-                                               ))}] (str/capitalize arvo)])}
+                                               ))}]
+                          [:span  (str/capitalize arvo)]]])}
                 {:otsikko "Menetelmä"
                  :leveys 2
                  :nimi :tyomenetelma}
@@ -81,7 +83,7 @@
         paikkauskohteet (:paikkauskohteet app)]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
-    [:div.col-xs-12.col-md-12.col-lg-9 #_{:style {:display "flex"
+    [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
                                                   :justify-content "flex-start"}}
      [grid/grid
       {:tunniste :id
@@ -95,6 +97,7 @@
                             (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
                             )
                           ;; avaa lomake
+
                           (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu})))))
        :rivi-jalkeen-fn (fn [rivit]
                           ^{:luokka "yhteenveto"}
@@ -112,8 +115,8 @@
 (defn kohteet [e! app]
   [:div
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
-    [:div.col-xs-12.col-md-6.col-lg-6 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
-    [:div.col-xs-12.col-md-6.col-lg-6.pull-right
+    [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
+    [:div.col-xs-12.col-md-8.col-lg-8.pull-right
      ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
      ;TODO: Napeista puuttuu myös kulmien pyöristys
      [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi

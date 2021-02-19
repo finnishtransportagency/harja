@@ -56,7 +56,6 @@
     validointivirheet))
 
 (defn paikkauskohteet [db user {:keys [vastuuyksikko tila aikavali tyomenetelmat urakka-id] :as tiedot}]
-  ;; TODO: Tarkista oikeudet
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         urakan-paikkauskohteet (q/paikkauskohteet-urakalle db {:urakka-id urakka-id})
@@ -79,7 +78,6 @@
     urakan-paikkauskohteet))
 
 (defn tallenna-paikkauskohde! [db user kohde]
-  ;;TODO: Tarkista oikeudet
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kohde-id (:id kohde)

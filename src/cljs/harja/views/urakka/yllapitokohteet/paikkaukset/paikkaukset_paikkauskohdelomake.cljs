@@ -6,6 +6,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
@@ -27,33 +28,33 @@
         :nimi :loppupvm
         :pakollinen? true
         ::lomake/col-luokka "col-sm-6"})
-       (lomake/rivi
-         {:otsikko "Suunniteltu määrä"
-          :tyyppi :positiivinen-numero
-          :nimi :suunniteltu-maara
-          :pakollinen? true
-          ::lomake/col-luokka "col-sm-4"
-          :rivi-luokka "lomakeryhman-rivi-tausta"}
-         {:otsikko "Yksikkö"
-          :tyyppi :valinta
-          :valinnat ["m²" "t" "kpl" "jm"]
-          :nimi :yksikko
-          :pakollinen? true
-          ::lomake/col-luokka "col-sm-2"}
-         {:otsikko "Suunniteltu hinta"
-          :tyyppi :positiivinen-numero
-          :nimi :suunniteltu-hinta
-          ::lomake/col-luokka "col-sm-6"
-          :pakollinen? true
-          :yksikko "€"})
-       (lomake/rivi
-         {:otsikko "Lisatiedot"
-          :tyyppi :text
-          :nimi :lisatiedot
-          :pakollinen? false
-          ::lomake/col-luokka "col-sm-12"
-          :rivi-luokka "lomakeryhman-rivi-tausta"}
-         )]
+     (lomake/rivi
+       {:otsikko "Suunniteltu määrä"
+        :tyyppi :positiivinen-numero
+        :nimi :suunniteltu-maara
+        :pakollinen? true
+        ::lomake/col-luokka "col-sm-4"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Yksikkö"
+        :tyyppi :valinta
+        :valinnat ["m²" "t" "kpl" "jm"]
+        :nimi :yksikko
+        :pakollinen? true
+        ::lomake/col-luokka "col-sm-2"}
+       {:otsikko "Suunniteltu hinta"
+        :tyyppi :positiivinen-numero
+        :nimi :suunniteltu-hinta
+        ::lomake/col-luokka "col-sm-6"
+        :pakollinen? true
+        :yksikko "€"})
+     (lomake/rivi
+       {:otsikko "Lisatiedot"
+        :tyyppi :text
+        :nimi :lisatiedot
+        :pakollinen? false
+        ::lomake/col-luokka "col-sm-12"
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       )]
     [{:otsikko "Suunniteltu aikataulu"
       :nimi :aikataulu
       :uusi-rivi? true
@@ -68,8 +69,14 @@
       :uusi-rivi? true
       :hae (fn [rivi]
              (str (:suunniteltu-maara rivi) " " (:yksikko rivi)))}
-     {:otsikko "Suunniteltu hinta"
-      :nimi :suunniteltu-hinta
+     (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+       {:otsikko "Suunniteltu hinta"
+        :nimi :suunniteltu-hinta
+        :uusi-rivi? true
+        :fmt fmt/euro-opt
+        :tyyppi :string})
+     {:otsikko "Lisatiedot"
+      :nimi :lisatiedot
       :uusi-rivi? true
       :tyyppi :string}]))
 
@@ -80,16 +87,16 @@
         :rivi? true
         :ryhman-luokka "lomakeryhman-otsikko-tausta"}
 
-         {:otsikko "Tie"
-          :tyyppi :numero
-          :nimi :tie
-          :pakollinen? true
-          :rivi-luokka "lomakeryhman-rivi-tausta"}
-         {:otsikko "Ajorata"
-          :tyyppi :valinta
-          :valinnat [0 1 2 3] ; TODO: Hae jostain?
-          :nimi :ajorata
-          :pakollinen? false})
+       {:otsikko "Tie"
+        :tyyppi :numero
+        :nimi :tie
+        :pakollinen? true
+        :rivi-luokka "lomakeryhman-rivi-tausta"}
+       {:otsikko "Ajorata"
+        :tyyppi :valinta
+        :valinnat [0 1 2 3] ; TODO: Hae jostain?
+        :nimi :ajorata
+        :pakollinen? false})
      (lomake/rivi
        {:otsikko "A-osa"
         :tyyppi :numero
@@ -137,28 +144,33 @@
         :pakollinen? :true
         :tyyppi :string
         ::lomake/col-luokka "col-sm-6"})]
-    [{:tyyppi :string
-      :uusi-rivi? true
-      :nimi :nro}
-     {:tyyppi :string
-      :uusi-rivi? true
-      :nimi :nimi}
+    [
      {:nimi :paikkauskohteen-tila
       :tyyppi :komponentti
+      ::lomake/col-luokka "col-xs-12"
       :uusi-rivi? true
       :komponentti (fn [{:keys [data]}]
                      (let [arvo (:paikkauskohteen-tila data)]
                        (if arvo
                          [:span
-                          [:span {:class (str "circle "
-                                              (cond
-                                                (= "tilattu" arvo) "tila-tilattu"
-                                                (= "ehdotettu" arvo) "tila-ehdotettu"
-                                                (= "valmis" arvo) "tila-valmis"
-                                                :default "tila-ehdotettu"
-                                                ))}] (str/capitalize arvo)]
+                          [:div {:class (str arvo "-bg")
+                                 :style {:display "inline-block"}}
+                           [:div
+                            [:div {:class (str "circle "
+                                               (cond
+                                                 (= "tilattu" arvo) "tila-tilattu"
+                                                 (= "ehdotettu" arvo) "tila-ehdotettu"
+                                                 (= "valmis" arvo) "tila-valmis"
+                                                 :default "tila-ehdotettu"
+                                                 ))}]
+                            [:span (str/capitalize arvo)]]]
+                          [:span.pieni-teksti {:style {:padding-left "24px"
+                                                       :display "inline-block"}}
+                           (if (:muokattu data)
+                             (str "Päivitetty " (harja.fmt/pvm (:muokattu data)))
+                             "Ei päivitystietoa")]]
                          "Tila ei tiedossa")))}
-     {:nimi :muokattu
+     #_ {:nimi :muokattu
       :tyyppi :string
       :hae (fn [rivi]
              (if (:muokattu rivi) (str "Päivitetty " (harja.fmt/pvm (:muokattu rivi))) "Ei päivitystietoa"))}
@@ -191,38 +203,47 @@
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))
                           (= :tilaaja kayttajarooli))
                         false)
-        _ (js/console.log "kayttajarooli " (pr-str kayttajarooli))
+        _ (js/console.log "lomake " (pr-str (dissoc lomake :sijainti)))
+        _ (js/console.log "voi-muokata? " (pr-str voi-muokata?))
         ]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
-    [lomake/lomake
-     {:luokka " overlay-oikealla"
-      :overlay {:leveys "600px"}
-      :ei-borderia? true
-      :voi-muokata? voi-muokata?
-      :otsikko (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta")
-      :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
-      :footer-fn (fn [lomake]
-                   (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)
-                         urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
-                     [:div
-                      [:hr]
-                      (if urakoitsija?
-                        [:span "urakoitsija"]
-                        [:p "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
-                      (when voi-muokata?
-                        [:div [napit/tallenna
-                               "Tallenna"
-                               #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]])
-                      (when voi-tilata?
-                        [napit/tallenna
-                         "Tilaa"
-                         #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))])
-                      [napit/yleinen-toissijainen
-                       "Peruuta"
-                       #(e! (t-paikkauskohteet/->SuljeLomake))]
-                      ]))}
-     (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
-     lomake]))
+    [:div.overlay-oikealla {:style {:width "600px"}}
+     (when-not voi-muokata?
+       (do
+         (js/console.log "whenistä läpi " (:nimi lomake))
+         [:div {:style {:padding-left "16px" :padding-top "16px"}}
+          [:div.pieni-teksti (:nro lomake)]
+          [:div {:style {:font-size 16 :font-weight "bold"}} (:nimi lomake)]]))
+     [lomake/lomake
+      {;:luokka " overlay-oikealla"
+       ;:overlay {:leveys "600px"}
+       :ei-borderia? true
+       :voi-muokata? voi-muokata?
+       :otsikko (when voi-muokata?
+                  (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
+       :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+       :footer-fn (fn [lomake]
+                    (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)
+                          urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
+                      [:div
+                       [:hr]
+                       (if urakoitsija?
+                         [:span "urakoitsija"]
+                         [:p "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
+                       (when voi-muokata?
+                         [:div [napit/tallenna
+                                "Tallenna"
+                                #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]])
+                       (when voi-tilata?
+                         [napit/tallenna
+                          "Tilaa"
+                          #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))])
+                       [napit/yleinen-toissijainen
+                        "Peruuta"
+                        #(e! (t-paikkauskohteet/->SuljeLomake))]
+                       ]))}
+      (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
+      lomake]]))
 
 (defn testilomake
   [e! _lomake]
