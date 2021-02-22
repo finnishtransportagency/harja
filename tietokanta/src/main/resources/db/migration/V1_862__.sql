@@ -7,14 +7,15 @@ ALTER TABLE paikkauskohde
     ADD COLUMN nro TEXT, -- Laskun numero tai muu numero, minkä urakoitsijat voivat paikkauskohteelle antaa.
     ADD COLUMN alkupvm DATE, -- Ehdotettu alkupäivä, joka antaa raamit, milloin paikkaus pitäisi aloittaa
     ADD COLUMN loppupvm DATE, -- Ehdotettu loppupaiva, joka antaa raamit, milloin paikkaus pitäisi olla valmiina
+    ADD COLUMN tilattupvm DATE, -- Tilattu paiva, jotta jää merkintä, milloin kohde on tilattu
     ADD COLUMN tyomenetelma TEXT, -- esim UREM
     ADD COLUMN tyomenetelma_kuvaus TEXT, -- Vapaa kuvaus mitä työmenetelmää käytetään
     ADD COLUMN tierekisteriosoite tr_osoite, -- tie, alkuetäisyys, alkuosa, loppuetäisyys loppuosa
     ADD COLUMN "paikkauskohteen-tila" paikkauskohteen_tila, -- ehdotettu, hylätty, tilattu, valmis, tarkistettu
     ADD COLUMN "suunniteltu-maara" NUMERIC, -- Arvioitu menekki työmenetelmälle
     ADD COLUMN "suunniteltu-hinta" NUMERIC, -- Paikkauksen arvioitu hinta
-    ADD COLUMN "yksikko" TEXT, -- Suunnitellun määrän yksikkö
-    ADD COLUMN "lisatiedot" TEXT, -- Paikkauskohteelle voi antaa ehdotusta tehdessä lisätietoja
+    ADD COLUMN yksikko TEXT, -- Suunnitellun määrän yksikkö
+    ADD COLUMN lisatiedot TEXT, -- Paikkauskohteelle voi antaa ehdotusta tehdessä lisätietoja
     ALTER COLUMN "ulkoinen-id" DROP NOT NULL; -- Poistetaan rajoitus, koska nyt kohteet eivät enää tule aina ulkoa.
 
 ALTER TABLE paikkauskohde

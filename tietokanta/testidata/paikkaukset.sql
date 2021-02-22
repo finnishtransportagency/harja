@@ -365,13 +365,19 @@ insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkau
  ROW (926, 5, 2764, 6, 2964, NULL) :: TR_OSOITE);
 
 insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
-                           tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite) VALUES
-('Kaislajärven suora osa 2', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+                           tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite, tilattupvm) VALUES
+('Kaislajärven suora osa 1', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
  '2021-05-01', '2021-05-13', 'tilattu', 000, 'KTVA', 'kuvaus ktva:sta',
- ROW (926, 6, 2964, 7, 3064, NULL) :: TR_OSOITE);
+ ROW (926, 6, 2964, 7, 3064, NULL) :: TR_OSOITE, '2021-02-17');
 
 insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite) VALUES
-('Kaislajärven suora osa 1', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+('Kaislajärven suora osa 2', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
  '2021-01-01', '2021-01-13', 'valmis', 000, 'SIPU', 'kuvaus sipusta',
  ROW (926, 7, 3164, 8, 3264, NULL) :: TR_OSOITE);
+
+insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
+                           tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite, lisatiedot) VALUES
+('Kaislajärven suora osa 3', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
+ '2021-03-01', '2021-03-13', 'hylatty', 000, 'KTVA', 'kuvaus ktva:sta',
+ ROW (926, 9, 3364, 12, 3964, NULL) :: TR_OSOITE, 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.');
