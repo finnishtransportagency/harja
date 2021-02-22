@@ -86,10 +86,27 @@
     border-radius: 12px;
     border-collapse:separate;
     td {
-      padding: 32px 24px;
+      &:first-of-type {
+        padding-left: 32px;
+      }
+      &:last-of-type {
+        padding-right: 32px;
+      }
     }
+
+
     tr {
+      border-collapse:separate;
       border: 1px solid #D6D6D6;
+      .padding-top {
+        padding-top: 24px;
+        padding-bottom: 8px;
+      }
+
+      .padding-bottom {
+        padding-top: 8px;
+        padding-bottom: 24px;
+      }
     }
     .table-perusarvot();
     &-odd {

@@ -755,3 +755,11 @@ jatkon."
    (valitys-vertical "2rem"))
   ([korkeus]
    [:div {:style {:margin-top (or korkeus "2rem")}}]))
+
+(defn infolaatikko
+  [ikoni teksti tyyppi]
+  (case tyyppi
+    ::info
+    [:span.infolaatikko.info [ikoni] teksti]
+    ::ok
+    [:span.infolaatikko.ok [ikoni] teksti]))

@@ -2534,38 +2534,38 @@
 
 (defn- summa-komp
   [m]
-  [:td
-   [:div {:style {:margin-left "auto"}} (str (or (:nimi m)
-                                                 "-"))]
-   [:div {:style {:margin-left "auto"}} (str (or (:summa m)
-                                                 "-") "€")]])
+  [:div.sisalto
+   [:div.otsikko (str (or (:otsikko m)
+                  "-"))]
+   [:div.summa (str (or (:summa m)
+                  "-") "€")]])
 
 (defn navigointivalikko
   [hoitokausi {:keys [urakka soluja]} tiedot]
   (fn [avaimet]
-    (let [table-rivit (into [:tbody]
+    (let [table-rivit (into [:<>]
                             (keep identity
                                   (mapcat identity
                                           (for [a avaimet]
                                             (let [{:keys [nimi suunnitelma-ok? summat] :as tieto} (a tiedot)
-                                                  luo-tyhjia? (< (count summat) soluja)
-                                                  summat (mapv summa-komp
-                                                               summat)
-                                                  padding (when luo-tyhjia?
-                                                            (loop [kertoja (- soluja (count summat))
-                                                                   solut []]
-                                                              (if (> kertoja 0)
-                                                                (recur (dec kertoja)
-                                                                       (conj solut [:td ""]))
-                                                                solut)))]
+                                                  summat (mapv summa-komp summat)
+                                                  ikoni (cond
+                                                          suunnitelma-ok? ikonit/check
+                                                          :else ikonit/aika)
+                                                  tyyppi (cond
+                                                           suunnitelma-ok? ::yleiset/ok
+                                                           :else ::yleiset/info)
+                                                  teksti (case suunnitelma-ok?
+                                                           true "Vahvistettu"
+                                                           false "Odottaa vahvistusta")]
                                               (when tieto
-                                                [[:tr {:on-click (vieritys/vierita a)}
-                                                  [:td
-                                                   [:div (str nimi)]]
-                                                  [:td
-                                                   [:div (str suunnitelma-ok?)]]]
+                                                [[:div.flex-row
+                                                  [:div
+                                                   [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
+                                                  [:div
+                                                   [:div [yleiset/infolaatikko ikoni teksti tyyppi]]]]
                                                  (vec (keep identity
-                                                            (concat [:tr]
+                                                            (concat [:div.flex-row.alkuun]
                                                                     summat)))]))))))]
       [:<>
        [:div.flex-row
@@ -2577,7 +2577,7 @@
         [:button
          {:on-click #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:hoitovuosi hoitokausi}))}
          "Vahvista"]]
-       [:table.table-border-default table-rivit]])))
+       [:div#tilayhteenveto.hintalaskuri table-rivit]])))
 
 (defn laske-hankintakustannukset
   [hoitokausi suunnitellut laskutus varaukset]
@@ -2620,13 +2620,13 @@
                             {:otsikko "Indeksikorjattu"
                              :summa (* hankintakustannukset-summa indeksikerroin)}]
           summat-tavoite-ja-kattohinta [{:summa tavoitehinta-summa
-                                         :otsikko indeksikerroin}
+                                         :otsikko "Tavoitehinta yhteensä"}
                                         {:summa (* tavoitehinta-summa indeksikerroin)
-                                         :otsikko indeksikerroin}
+                                         :otsikko "Tavoitehinta indeksikorjattu"}
                                         {:summa kattohinta-summa
-                                         :otsikko indeksikerroin}
+                                         :otsikko "Kattohinta yhteensä"}
                                         {:summa (* kattohinta-summa indeksikerroin)
-                                         :indeksikerroin indeksikerroin}]
+                                         :otsikko "Kattohinta indeksikorjattu"}]
           summat-erillishankinnat [{:otsikko "Yhteensä"
                                     :summa erillishankinnat-summa}
                                    {:otsikko "Indeksikorjattu"

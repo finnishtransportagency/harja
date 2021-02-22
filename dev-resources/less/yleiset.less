@@ -443,3 +443,44 @@ button > .ajax-loader {
 .placeholder {
   color: @harmaa5;
 }
+
+.infolaatikko {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 8px;
+
+  border-radius: 4px;
+
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+
+  & > * {
+    //flex: none;
+    //order: 1;
+    //flex-grow: 0;
+    margin: 0 4px;
+  }
+  &.info {
+    border: 1px solid #E0EDF9;
+    background: #E0EDF9;
+    color: #004D99;
+
+  }
+  &.ok {
+    border: 1px solid #E7F9E7;
+    background: #E7F9E7;
+    color: #1c891C;
+  }
+}
+
+
+
+
+
+
+
