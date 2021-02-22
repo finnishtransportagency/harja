@@ -293,7 +293,9 @@ BEGIN
                               FROM kustannusarvioitu_tyo kt
                               WHERE kt.toimenpideinstanssi = t_instanssi
                                 AND kt.sopimus = sopimus_id
-                                AND kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
+                                AND (kt.tehtava = toimistotarvike_koodi -- Kustannussuunnitelmassa "Muut kulut" on toimistotarvikekuluja
+                                        OR
+                                     kt.tehtavaryhma = tehtavaryhma_id) -- Tietokantaan saa myös 'Johto- ja hallintokorvaus (J)' tehtäväryhmälle suunniteltua kuluja
                                 AND (SELECT (date_trunc('MONTH',
                                                         format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE))) BETWEEN hk_alkupvm AND aikavali_loppupvm
 
@@ -537,7 +539,7 @@ BEGIN
                                                 JOIN lasku_kohdistus lk ON lk.lasku = l.id
                                                 JOIN toimenpideinstanssi tpi
                                                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                       WHERE lk.maksueratyyppi = 'kokonaishintainen' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
+                                       WHERE lk.maksueratyyppi != 'lisatyo' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
                                          AND lk.poistettu IS NOT TRUE
                                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                     LOOP

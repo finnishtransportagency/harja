@@ -79,7 +79,7 @@
                               :tr-kaista 11
                               :tr-alkuosa 1
                               :tr-alkuetaisyys 1
-                              :tr-loppuosa 2
+                              :tr-loppuosa 3
                               :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
                               :kaasuindeks 123})
@@ -88,7 +88,7 @@
                                  :tr-numero 20
                                  :tr-alkuosa 1
                                  :tr-alkuetaisyys 1
-                                 :tr-loppuosa 2
+                                 :tr-loppuosa 3
                                  :tr-loppuetaisyys 2
                                  :kvl 4
                                  :nykyinen_paallyste 2
@@ -355,7 +355,6 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))]
-
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
                                                               :sopimus-id sopimus-id
@@ -632,11 +631,11 @@
                        (update kohde :yllapitokohdetyotyyppi keyword)))
         testidata (into []
                         haku-xf
-                       (q-map
-                         (str "SELECT " kohteen-avaimet " "
-                              "FROM yllapitokohde yk "
-                              "LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde=yk.id "
-                              "WHERE yk.urakka=" urakka-id " AND
+                        (q-map
+                          (str "SELECT " kohteen-avaimet " "
+                               "FROM yllapitokohde yk "
+                               "LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde=yk.id "
+                               "WHERE yk.urakka=" urakka-id " AND
                                      yk.lahetys_onnistunut IS NOT TRUE AND
                                      yk.poistettu IS NOT TRUE AND
                                      yk.yhaid IS NOT NULL AND
@@ -815,13 +814,17 @@
                    {:tr-kaista nil
                     :sijainti _
                     :tr-ajorata nil
-                    :tr-numero 20
+                    :massamaara nil
+                    :tr-loppuosa 3
                     :tr-alkuosa 1
-                    :tr-alkuetaisyys 1
-                    :tr-loppuosa 2
                     :tr-loppuetaisyys 2
                     :nimi "Testiosa123456"
+                    :raekoko nil
+                    :tyomenetelma nil
+                    :paallystetyyppi nil
                     :id _
+                    :tr-alkuetaisyys 1
+                    :tr-numero 20
                     :toimenpide "Ei tehdä mitään"}
                    true))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))))))
@@ -1012,7 +1015,7 @@
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkopostien-sisallot (atom [])]
     (jms/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [viesti]
-                                                            (swap! sahkopostien-sisallot conj (sanomat/lue-sahkoposti (.getText viesti)))))
+                                                           (swap! sahkopostien-sisallot conj (sanomat/lue-sahkoposti (.getText viesti)))))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
