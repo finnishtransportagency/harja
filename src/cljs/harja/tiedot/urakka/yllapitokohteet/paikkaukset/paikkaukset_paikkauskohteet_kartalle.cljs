@@ -13,6 +13,7 @@
                "ehdotettu" "#f1b371"
                "tilattu" "#274ac6"
                "valmis" "#58a006"
+               "hylatty" "#F8D7D1"
                :default "#f1b371")]
     vari))
 (def karttataso-paikkauskohteet (atom []))

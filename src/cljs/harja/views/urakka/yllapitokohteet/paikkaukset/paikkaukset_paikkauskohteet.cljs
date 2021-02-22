@@ -41,6 +41,7 @@
                                                (= "tilattu" arvo) "tila-tilattu"
                                                (= "ehdotettu" arvo) "tila-ehdotettu"
                                                (= "valmis" arvo) "tila-valmis"
+                                               (= "hylatty" arvo) "tila-hylatty"
                                                :default "tila-ehdotettu"
                                                ))}]
                           [:span  (str/capitalize arvo)]]])}
@@ -80,7 +81,15 @@
                                    {:ikoni (ikonit/user)
                                     :luokka "btn-xs"}])})
                 ]
-        paikkauskohteet (:paikkauskohteet app)]
+        paikkauskohteet (:paikkauskohteet app)
+        yht-suunniteltu-hinta (reduce (fn [summa kohde]
+                                        (+ summa (:suunniteltu-hinta kohde)))
+                                      0
+                                      paikkauskohteet)
+        yht-tot-hinta (reduce (fn [summa kohde]
+                                        (+ summa (:toteutunut-hinta kohde)))
+                                      0
+                                      paikkauskohteet)]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
@@ -107,8 +116,8 @@
                            {:teksti ""}
                            {:teksti ""}
                            {:teksti ""}
-                           {:teksti ""}
-                           {:teksti ""}])}
+                           {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]}
+                           {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]}])}
       skeema
       paikkauskohteet]]))
 
@@ -116,7 +125,7 @@
   [:div
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
     [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
-    [:div.col-xs-12.col-md-8.col-lg-8.pull-right
+    [:div.col-xs-12.col-md-8.col-lg-8 {:style {:text-align "end"}}
      ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
      ;TODO: Napeista puuttuu myös kulmien pyöristys
      [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
