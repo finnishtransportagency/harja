@@ -10,7 +10,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero 1.0.53 Julkaistu 24.2.2021
-      - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa tehtävät, Viherhoidosta vastaava henkilö.
+      - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
 - Versionumero 1.0.51 Julkaistu 11.9.2020
     - Työkoneseurannan viivageometria erotettu erilliseen skeematiedostoon koodigeneroinnin helpottamiseksi. Skeemamääritys ei muutu. Päivitetty versiohistoria raml-tiedoston tasolle.
 - Versionumero 1.0.50 Julkaistu 11.9.2020
