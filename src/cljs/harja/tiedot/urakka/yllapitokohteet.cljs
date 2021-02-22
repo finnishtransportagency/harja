@@ -74,6 +74,35 @@
 (def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
 (def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
 
+(defn lisaa-uusi-pot2-alustarivi
+  "Lisää uuden POT2-alustarivin annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
+  jälkeen tulevien osien avaimia yhdellä suuremmaksi."
+  [kohdeosat key yllapitokohde]
+  (let [rivi (get kohdeosat key)
+        ;; Jos ennestään ei yhtään kohdeosaa täytetään ajorata ja kaista pääkohteelta
+        rivi (if rivi
+               rivi
+               {:tr-numero (:tr-numero yllapitokohde)
+                :tr-ajorata (:tr-ajorata yllapitokohde)
+                :tr-kaista (:tr-kaista yllapitokohde)})
+        avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
+        uusi-rivi {:tr-numero (:tr-numero rivi)
+                   :tr-alkuosa nil
+                   :tr-alkuetaisyys nil
+                   :tr-loppuosa (:tr-loppuosa rivi)
+                   :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
+                   :tr-ajorata (:tr-ajorata rivi)
+                   :tr-kaista (:tr-kaista rivi)
+                   :toimenpide nil}]
+    (if (empty? kohdeosat)
+      {key uusi-rivi}
+      (-> kohdeosat
+          (assoc-in [key :tr-loppuosa] nil)
+          (assoc-in [key :tr-loppuetaisyys] nil)
+          (assoc (inc key) uusi-rivi)
+          (merge (zipmap (map inc avaimet-jalkeen)
+                         (map #(get kohdeosat %) avaimet-jalkeen)))))))
+
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."

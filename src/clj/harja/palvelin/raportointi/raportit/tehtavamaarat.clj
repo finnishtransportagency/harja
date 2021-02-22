@@ -73,7 +73,7 @@
                     (cond
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
-                      :default (* (.divide toteuma suunniteltu 4 RoundingMode/HALF_UP) 100)))
+                      :default (* (with-precision 2 (/ toteuma suunniteltu)) 100)))
         rivi-toteumaprosentilla (filter some?
                                         (conj (into [] (take 4 rivi)) toteuma-% toteutunut-materiaalimaara))]
 
@@ -174,7 +174,10 @@
                                                          (fn [_ _] nil)]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
-
+        ;; Korjataan järjestys kuntoon, mutta tämä ei lopullisesti auta, koska jossain tuossa
+        ;; alapuolella hallintayksikköjen järjestys sotketaa. Toimenpiteet ja tehtäväryhmät pysyvät onneksi
+        ;; tässä asetetussa järjestyksessä.
+        suunnitellut-ryhmissa (into [] (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil

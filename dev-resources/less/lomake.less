@@ -21,6 +21,7 @@
   border: solid 1px @harmaa7;
   .lomake-otsikko, .lomake-ryhman-otsikko {
     margin-left: 1em;
+    margin-bottom: 1rem;
   }
 
   margin-top: 0.25rem;
@@ -299,4 +300,24 @@ fieldset.lomake-osa {
   flex-wrap: wrap;
   justify-content: flex-start;
 
+}
+.overlay-oikealla {
+  position: fixed;
+  right: 0;
+  height: 100%;
+  width: 400px;
+  top: 0;
+  z-index: 1000;/* kartan päälle, joka 900*/
+  background-color: @valkoinen;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.15), 0px 4px 12px rgba(0, 0, 0, 0.25);
+}
+.harmaa-tumma-teksti {
+  color: @harmaa2;
+}
+.fontti-20 {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 24px;
 }
