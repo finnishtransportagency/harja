@@ -1353,4 +1353,4 @@ VALUES ('1242141-OULU3', (SELECT id
 -- Luodaan kuvitteellinen urakka paikkauskohteiden testaamiseksi
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija)
 VALUES ('1337133-LAP1', 'kokonaisurakka' :: sopimustyyppi, 13, 'Kemin päällystysurakka', '2019-01-01', '2023-12-31',
-        'paallystys', 'LAP1',(SELECT id FROM organisaatio WHERE lyhenne = 'LAP'));
+        'paallystys', 'LAP1',(SELECT id FROM organisaatio WHERE nimi = 'Kemin Alueurakoitsija Oy'));

@@ -111,7 +111,8 @@ SELECT pk.id                        AS id,
        pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
        pk."suunniteltu-maara"       AS "suunniteltu-maara",
        pk.yksikko                   AS yksikko,
-       pk.lisatiedot              AS lisatiedot,
+       pk.lisatiedot                AS lisatiedot,
+       o.nimi                       AS urakoitsija,
        (pk.tierekisteriosoite).tie  AS tie,
        (pk.tierekisteriosoite).aosa AS aosa,
        (pk.tierekisteriosoite).aet  AS aet,
@@ -126,11 +127,13 @@ SELECT pk.id                        AS id,
                         CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
            ELSE NULL
            END                   AS geometria
-FROM paikkauskohde pk
+FROM paikkauskohde pk, urakka u, organisaatio o
  WHERE pk."urakka-id" = :urakka-id
    AND pk.poistettu = false
    -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
-   AND pk."paikkauskohteen-tila" IS NOT NULL;
+   AND pk."paikkauskohteen-tila" IS NOT NULL
+   AND u.id = pk."urakka-id"
+   AND o.id = u.urakoitsija;
 
 --name:paivita-paikkauskohde!
 UPDATE paikkauskohde

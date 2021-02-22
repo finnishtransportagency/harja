@@ -161,8 +161,8 @@
                                                  (= "tilattu" arvo) "tila-tilattu"
                                                  (= "ehdotettu" arvo) "tila-ehdotettu"
                                                  (= "valmis" arvo) "tila-valmis"
-                                                 :default "tila-ehdotettu"
-                                                 ))}]
+                                                 (= "hylatty" arvo) "tila-hylatty"
+                                                 :default "tila-ehdotettu"))}]
                             [:span (str/capitalize arvo)]]]
                           [:span.pieni-teksti {:style {:padding-left "24px"
                                                        :display "inline-block"}}
@@ -170,10 +170,6 @@
                              (str "Päivitetty " (harja.fmt/pvm (:muokattu data)))
                              "Ei päivitystietoa")]]
                          "Tila ei tiedossa")))}
-     #_ {:nimi :muokattu
-      :tyyppi :string
-      :hae (fn [rivi]
-             (if (:muokattu rivi) (str "Päivitetty " (harja.fmt/pvm (:muokattu rivi))) "Ei päivitystietoa"))}
      {:nimi :muokkauspainike
       :tyyppi :komponentti
       ::lomake/col-luokka "col-md-12 reunus-alhaalla"
@@ -231,16 +227,21 @@
                          [:span "urakoitsija"]
                          [:p "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
                        (when voi-muokata?
-                         [:div [napit/tallenna
-                                "Tallenna"
-                                #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]])
+                         [:div
+                          [napit/tallenna
+                           "Tallenna"
+                           #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                          [napit/yleinen-toissijainen
+                           "Peruuta"
+                           #(e! (t-paikkauskohteet/->SuljeLomake))]])
                        (when voi-tilata?
                          [napit/tallenna
                           "Tilaa"
                           #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))])
-                       [napit/yleinen-toissijainen
-                        "Peruuta"
-                        #(e! (t-paikkauskohteet/->SuljeLomake))]
+                       (when-not voi-muokata?
+                         [napit/yleinen-toissijainen
+                          "Peruuta"
+                          #(e! (t-paikkauskohteet/->SuljeLomake))])
                        ]))}
       (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
       lomake]]))

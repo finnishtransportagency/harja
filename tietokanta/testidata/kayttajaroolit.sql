@@ -21,3 +21,17 @@ INSERT INTO kayttajan_lisaoikeudet_urakkaan (kayttaja, urakka) VALUES ((SELECT i
                                                                        (SELECT id
                                                                         FROM urakka
                                                                         WHERE nimi = 'Oulun alueurakka 2014-2019'));
+
+-- Kemin alueurakkaa varten tehdyt mäppäykset
+INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
+((SELECT id FROM kayttaja WHERE kayttajanimi='KeminLaatu'), 'urakoitsijan laatuvastaava');
+INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES
+((SELECT id FROM kayttaja WHERE kayttajanimi='KeminLaatu'),
+ (SELECT id FROM urakka WHERE nimi='Kemin päällystysurakka'),
+ 'urakoitsijan laatuvastaava');
+
+INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='ELYKeminLaatu'), 'urakanvalvoja');
+INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES
+((SELECT id FROM kayttaja WHERE kayttajanimi='ELYKeminLaatu'),
+ (SELECT id FROM urakka WHERE nimi='Kemin päällystysurakka'),
+ 'urakanvalvoja');

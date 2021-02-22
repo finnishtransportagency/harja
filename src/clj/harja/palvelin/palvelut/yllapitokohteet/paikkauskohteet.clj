@@ -3,6 +3,7 @@
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure.spec.alpha :as s]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]
@@ -11,25 +12,22 @@
             [taoensso.timbre :as log]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
-  (let [_ (println "validi-pvm-vali? :: alku loppu" (pr-str alku) (pr-str loppu) (pr-str (.after alku loppu)) (pr-str (.after loppu alku)))]
-    (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
-      (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
-      validointivirheet)))
+  (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
+    (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
+    validointivirheet))
 
 (defn validit-tr_osat? [validointivirheet tie alkuosa alkuetaisyys loppuosa loppuetaisyys]
-  (let [_ (println "validit-tr_osat?" tie alkuosa alkuetaisyys loppuosa loppuetaisyys)]
-    (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
-             (>= loppuosa alkuosa))
-      validointivirheet
-      (conj validointivirheet "Tierekisterissä virhe."))))
+  (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
+           (>= loppuosa alkuosa))
+    validointivirheet
+    (conj validointivirheet "Tierekisterissä virhe.")))
 
 (defn- validi-aika? [aika]
-  (let [_ (println "validi-aika? :: aika" (pr-str aika) (pr-str (.after aika (pvm/->pvm "01.01.2000"))) )]
-    (if (and
-          (.after aika (pvm/->pvm "01.01.2000"))
-          (.before aika (pvm/->pvm "01.01.2100")))
-      true
-      false)))
+  (if (and
+        (.after aika (pvm/->pvm "01.01.2000"))
+        (.before aika (pvm/->pvm "01.01.2100")))
+    true
+    false))
 
 (defn- validi-nimi? [nimi]
   (if (or (nil? nimi) (= "" nimi))
@@ -78,8 +76,11 @@
     urakan-paikkauskohteet))
 
 (defn tallenna-paikkauskohde! [db user kohde]
+  (println "tallenna-paikkauskohde! voi voi-lukea? " (pr-str (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)) (pr-str (roolit/osapuoli user)))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
+        kayttajarooli (roolit/osapuoli user)
+        on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde)
@@ -89,59 +90,63 @@
                 (if kohde-id
                   (do
                     (q/paivita-paikkauskohde! db
-                                              {:id kohde-id
-                                               :ulkoinen-id (:ulkoinen-id kohde)
-                                               :nimi (:nimi kohde)
-                                               :poistettu (or (:poistettu kohde) false)
-                                               :muokkaaja-id (:id user)
-                                               :muokattu (pvm/nyt)
-                                               :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                                               :virhe (:virhe kohde)
-                                               :tarkistettu (or (:tarkistettu kohde) nil)
-                                               :tarkistaja-id (or (:tarkistaja-id kohde) nil)
-                                               :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
-                                               :nro (:nro kohde)
-                                               :alkupvm (:alkupvm kohde)
-                                               :loppupvm (:loppupvm kohde)
-                                               :tyomenetelma (or (:tyomenetelma kohde) nil)
-                                               :tyomenetelma-kuvaus (or (:tyomenetelma-kuvaus kohde) nil)
-                                               :tie (:tie kohde)
-                                               :aosa (:aosa kohde)
-                                               :losa (:losa kohde)
-                                               :aet (:aet kohde)
-                                               :let (:let kohde)
-                                               :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                                               :suunniteltu-hinta (:suunniteltu-hinta kohde)
-                                               :suunniteltu-maara (:suunniteltu-maara kohde)
-                                               :yksikko (:yksikko kohde)
-                                               :lisatiedot (:lisatiedot kohde)})
+                                              (merge
+                                                (when on-kustannusoikeudet?
+                                                  {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
+                                                {:id kohde-id
+                                                 :ulkoinen-id (:ulkoinen-id kohde)
+                                                 :nimi (:nimi kohde)
+                                                 :poistettu (or (:poistettu kohde) false)
+                                                 :muokkaaja-id (:id user)
+                                                 :muokattu (pvm/nyt)
+                                                 :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
+                                                 :virhe (:virhe kohde)
+                                                 :tarkistettu (or (:tarkistettu kohde) nil)
+                                                 :tarkistaja-id (or (:tarkistaja-id kohde) nil)
+                                                 :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
+                                                 :nro (:nro kohde)
+                                                 :alkupvm (:alkupvm kohde)
+                                                 :loppupvm (:loppupvm kohde)
+                                                 :tyomenetelma (or (:tyomenetelma kohde) nil)
+                                                 :tyomenetelma-kuvaus (or (:tyomenetelma-kuvaus kohde) nil)
+                                                 :tie (:tie kohde)
+                                                 :aosa (:aosa kohde)
+                                                 :losa (:losa kohde)
+                                                 :aet (:aet kohde)
+                                                 :let (:let kohde)
+                                                 :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                 :suunniteltu-maara (:suunniteltu-maara kohde)
+                                                 :yksikko (:yksikko kohde)
+                                                 :lisatiedot (:lisatiedot kohde)}))
                     kohde)
                   (do
                     (println "Tallennettiin uusi :: antamalla " (pr-str kohde))
                     (q/luo-uusi-paikkauskohde! db
-                                               {:luoja-id (:id user)
-                                                :ulkoinen-id (:ulkoinen-id kohde)
-                                                :nimi (:nimi kohde)
-                                                :urakka-id (:urakka-id kohde)
-                                                :luotu (or (:luotu kohde) (pvm/nyt))
-                                                :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                                                :virhe (:virhe kohde)
-                                                :nro (:nro kohde)
-                                                :alkupvm (:alkupvm kohde)
-                                                :loppupvm (:loppupvm kohde)
-                                                :tyomenetelma (:tyomenetelma kohde)
-                                                :tyomenetelma-kuvaus (:tyomenetelma-kuvaus kohde)
-                                                :tie (:tie kohde)
-                                                :aosa (:aosa kohde)
-                                                :losa (:losa kohde)
-                                                :aet (:aet kohde)
-                                                :let (:let kohde)
-                                                :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                                                :suunniteltu-hinta (:suunniteltu-hinta kohde)
-                                                :suunniteltu-maara (:suunniteltu-maara kohde)
-                                                :yksikko (:yksikko kohde)
-                                                :lisatiedot (:lisatiedot kohde)
-                                                }))))
+                                               (merge
+                                                 (when on-kustannusoikeudet?
+                                                   {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
+                                                 {:luoja-id (:id user)
+                                                  :ulkoinen-id (:ulkoinen-id kohde)
+                                                  :nimi (:nimi kohde)
+                                                  :urakka-id (:urakka-id kohde)
+                                                  :luotu (or (:luotu kohde) (pvm/nyt))
+                                                  :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
+                                                  :virhe (:virhe kohde)
+                                                  :nro (:nro kohde)
+                                                  :alkupvm (:alkupvm kohde)
+                                                  :loppupvm (:loppupvm kohde)
+                                                  :tyomenetelma (:tyomenetelma kohde)
+                                                  :tyomenetelma-kuvaus (:tyomenetelma-kuvaus kohde)
+                                                  :tie (:tie kohde)
+                                                  :aosa (:aosa kohde)
+                                                  :losa (:losa kohde)
+                                                  :aet (:aet kohde)
+                                                  :let (:let kohde)
+                                                  :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                  :suunniteltu-maara (:suunniteltu-maara kohde)
+                                                  :yksikko (:yksikko kohde)
+                                                  :lisatiedot (:lisatiedot kohde)
+                                                  })))))
 
         _ (println "kohde: " (pr-str kohde))
         ]

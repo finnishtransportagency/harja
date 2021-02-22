@@ -113,9 +113,10 @@
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "Paikkauskohteen tallennus epäonnistui" vastaus)
+      (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str vastaus))
       ;;TODO: tämä antaa warningin
-      (harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
-      (dissoc app :lomake)))
+      ;(harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
+      #_(dissoc app :lomake)
+      app))
   )
 
