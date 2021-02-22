@@ -6,6 +6,8 @@
             [harja.loki :refer [log]]
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -24,7 +26,9 @@
             ))
 
 (defn- paikkauskohteet-taulukko [e! app]
-  (let [skeema [{:otsikko "NRO"
+  (let [_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
+        _ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
+        skeema [{:otsikko "NRO"
                  :leveys 2
                  :nimi :nro}
                 {:otsikko "Nimi"
@@ -44,7 +48,7 @@
                                                (= "hylatty" arvo) "tila-hylatty"
                                                :default "tila-ehdotettu"
                                                ))}]
-                          [:span  (str/capitalize arvo)]]])}
+                          [:span (str/capitalize arvo)]]])}
                 {:otsikko "Menetelmä"
                  :leveys 2
                  :nimi :tyomenetelma}
@@ -76,10 +80,13 @@
                    :tasaa :keskita
                    :tyyppi :komponentti
                    :komponentti (fn [rivi]
-                                  [napit/yleinen-toissijainen ""
-                                   #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (:urakka-id rivi))
-                                   {:ikoni (ikonit/user)
-                                    :luokka "btn-xs"}])})
+                                  [:span
+                                   [:span {:style {:padding-right "24px"}}
+                                    (:urakoitsija rivi)]
+                                   [napit/yleinen-toissijainen ""
+                                    #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (:urakka-id rivi))
+                                    {:ikoni (ikonit/user)
+                                     :luokka "btn-xs"}]])})
                 ]
         paikkauskohteet (:paikkauskohteet app)
         yht-suunniteltu-hinta (reduce (fn [summa kohde]
@@ -87,13 +94,13 @@
                                       0
                                       paikkauskohteet)
         yht-tot-hinta (reduce (fn [summa kohde]
-                                        (+ summa (:toteutunut-hinta kohde)))
-                                      0
-                                      paikkauskohteet)]
+                                (+ summa (:toteutunut-hinta kohde)))
+                              0
+                              paikkauskohteet)]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
-                                                  :justify-content "flex-start"}}
+                                                   :justify-content "flex-start"}}
      [grid/grid
       {:tunniste :id
        :tyhja "Ei tietoja"
@@ -116,8 +123,10 @@
                            {:teksti ""}
                            {:teksti ""}
                            {:teksti ""}
-                           {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]}
-                           {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]}])}
+                           (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+                             {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]})
+                           (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+                             {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}
       skeema
       paikkauskohteet]]))
 
@@ -125,13 +134,14 @@
   [:div
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
     [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
-    [:div.col-xs-12.col-md-8.col-lg-8 {:style {:text-align "end"}}
-     ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-     ;TODO: Napeista puuttuu myös kulmien pyöristys
-     [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-     [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-     [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-     [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]]]
+    (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+      [:div.col-xs-12.col-md-8.col-lg-8 {:style {:text-align "end"}}
+       ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+       ;TODO: Napeista puuttuu myös kulmien pyöristys
+       [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+       [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+       [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+       [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
    [:div.row [paikkauskohteet-taulukko e! app]]]
   )
 

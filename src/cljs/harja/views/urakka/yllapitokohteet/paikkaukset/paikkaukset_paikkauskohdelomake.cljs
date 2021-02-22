@@ -201,6 +201,7 @@
                         false)
         _ (js/console.log "lomake " (pr-str (dissoc lomake :sijainti)))
         _ (js/console.log "voi-muokata? " (pr-str voi-muokata?))
+        _ (js/console.log "voi-tilata? " (pr-str voi-tilata?))
         ]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
     [:div.overlay-oikealla {:style {:width "600px"}}
@@ -221,27 +222,43 @@
        :footer-fn (fn [lomake]
                     (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)
                           urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
-                      [:div
+                      [:div.row
                        [:hr]
-                       (if urakoitsija?
-                         [:span "urakoitsija"]
-                         [:p "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
+                       (when (and (not urakoitsija?) voi-tilata? (not voi-muokata?))
+                         [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
                        (when voi-muokata?
-                         [:div
-                          [napit/tallenna
-                           "Tallenna"
-                           #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
-                          [napit/yleinen-toissijainen
-                           "Peruuta"
-                           #(e! (t-paikkauskohteet/->SuljeLomake))]])
-                       (when voi-tilata?
-                         [napit/tallenna
-                          "Tilaa"
-                          #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))])
-                       (when-not voi-muokata?
-                         [napit/yleinen-toissijainen
-                          "Peruuta"
-                          #(e! (t-paikkauskohteet/->SuljeLomake))])
+                         [:div.row
+                          [:div.col-xs-6 {:style {:padding-left "0"}}
+                           [napit/tallenna
+                            "Tallenna"
+                            #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                           [napit/yleinen-toissijainen
+                            "Peruuta"
+                            #(e! (t-paikkauskohteet/->SuljeLomake))]]
+                          [:div.col-xs-6 {:style {:text-align "end"}}
+                           [napit/yleinen-toissijainen
+                            "Sulje"
+                            #(e! (t-paikkauskohteet/->SuljeLomake))]]])
+                       (when (and voi-tilata? (not voi-muokata?))
+                         [:div.row
+                          [:div.col-xs-6 {:style {:padding-left "0"}}
+                           [napit/tallenna
+                            "Tilaa"
+                            #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))]
+                           [napit/yleinen-toissijainen
+                            "Hylkää"
+                            #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]]
+                          [:div.col-xs-6 {:style {:text-align "end"}}
+                           [napit/yleinen-toissijainen
+                            "Sulje"
+                            #(e! (t-paikkauskohteet/->SuljeLomake))]]])
+                       ;; Tämä on ainut tilanne, missä tulee vain yksi nappi
+                       (when (and (not voi-muokata?) (not voi-tilata?))
+                         [:div.row
+                          [:div.col-xs-12 {:style {:text-align "end"}}
+                           [napit/yleinen-toissijainen
+                            "Sulje"
+                            #(e! (t-paikkauskohteet/->SuljeLomake))]]])
                        ]))}
       (paikkauskohde-skeema e! muu-menetelma? voi-muokata?) ;;TODO: korjaa päivitys
       lomake]]))

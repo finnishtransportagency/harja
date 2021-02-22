@@ -32,6 +32,7 @@
 (defrecord TallennaPaikkauskohdeOnnistui [vastaus])
 (defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
 (defrecord TilaaPaikkauskohde [paikkauskohde])
+(defrecord HylkaaPaikkauskohde [paikkauskohde])
 
 (defn- hae-paikkauskohteet [urakka-id]
   (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -101,6 +102,12 @@
   (process-event [{paikkauskohde :paikkauskohde} app]
     (do
       (js/console.log "Tää ei tilaa vielä mitään. Eli implementoi toteutus!")
+      app))
+
+  HylkaaPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (do
+      (js/console.log "Tää ei hylkaa vielä mitään. Eli implementoi toteutus!")
       app))
 
   TallennaPaikkauskohdeOnnistui
