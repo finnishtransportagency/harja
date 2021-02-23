@@ -57,15 +57,20 @@
     "tyomenetelma": {
       "id": "urn:harja/paikkaukset/0/paikkaus/tyomenetelma",
       "required": true,
-      "type": "string"
+      "enum": [
+        "MPA",
+        "HJYR",
+        "KTVA",
+        "REPA",
+        "SIPA",
+        "SIPU",
+        "UREM"
+      ]
     },
     "massatyyppi": {
       "id": "urn:harja/paikkaukset/0/paikkaus/massatyyppi",
       "required": true,
       "enum": [
-        "asfalttibetoni",
-        "kivimastiks",
-        "pehmeät ab / bitumi",
         "AB, Asfalttibetoni",
         "SMA, Kivimastiksiasfaltti",
         "PAB-B, Pehmeät asfalttibetonit",
