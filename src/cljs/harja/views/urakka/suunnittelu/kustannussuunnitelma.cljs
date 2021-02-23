@@ -2536,9 +2536,11 @@
   [m]
   [:div.sisalto
    [:div.otsikko (str (or (:otsikko m)
-                  "-"))]
-   [:div.summa (str (or (:summa m)
-                  "-") "€")]])
+                          "-"))]
+   [:div.summa (str
+                 (fmt/euro
+                   (or (:summa m)
+                       0)))]])
 
 (defn navigointivalikko
   [hoitokausi {:keys [urakka soluja]} tiedot]
@@ -2571,12 +2573,8 @@
        [:div.flex-row
         [:div
          [:h3 "Kustannussuunnitelma"]
-         [:h4 urakka]]
+         [:div.pieni-teksti urakka]]
         [valinnat/hoitovuosi-rivivalitsin (range 1 6) hoitokausi #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] %1))]]
-       [:div "suunnitelma vahvistamatta tai vahvistettu"
-        [:button
-         {:on-click #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:hoitovuosi hoitokausi}))}
-         "Vahvista"]]
        [:div#tilayhteenveto.hintalaskuri table-rivit]])))
 
 (defn laske-hankintakustannukset
@@ -2669,7 +2667,7 @@
                                :summat summat-tilaajanvaraukset
                                :suunnitelma-ok? (= :valmis (:kuluva-hoitokausi tilaajan-varaukset))}}))
     (fn []
-      [:div "Haku käynnissä"])))
+      [yleiset/ajax-loader "Haetaan tietoja"])))
 
 (defn kustannussuunnitelma*
   [_ app]
@@ -2761,7 +2759,6 @@
               :menukomponentti (tee-menukomponentti app)}
 
              ::hankintakustannukset
-             [debug/debug (get-in app [:domain])]
              [hankintakustannukset-taulukot
               (get-in app [:domain :kirjoitusoikeus?])
               (get-in app [:domain :indeksit])

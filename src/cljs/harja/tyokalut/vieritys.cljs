@@ -24,8 +24,9 @@
       (.scrollIntoView elementti parametrit))))
 
 (defn tee-majakat
+  "Käydään läpi kaikki saadut elementit ja keyword-tunnisteet korvataan majakka-elementeillä. ::navigointi-keywordillä sitten seuraavassa vaiheessa korvataan navigointikomponentilla."
   [es]
-  (let [tulos (concat
+  (concat
     []
     (keep identity
           (conj
@@ -40,14 +41,14 @@
                     []
                     es))
             (when-not (keyword? (first es))
-              ::navigointi))))]
-    tulos))
+              ::navigointi)))))
 
 (defn vierita-ylos
   []
   (vierita ::top))
 
 (defn tee-navigointi
+  "Transduceri joka täydentää navigointielementit kohdilleen. Tilallinen, koska pitää tietää, mihin osioon navigointikomponentti liittyy. Sitten navigointikomponentin sisällä voidaan luoda oikea vieritys."
   [navigointi]
   (fn [rf]
     (let [aiemmat (volatile! [])]
@@ -79,7 +80,7 @@
   (let [avaimet (filter keyword? osiot)
         alkuvalikko (or menukomponentti
                         (fn [avaimet]
-                          [:div "valikko"
+                          [:div "valikkoa ei erikseen määritelty"
                            (for [a avaimet]
                              [:span {:on-click (vierita a)}
                               (name a)])]))
@@ -89,9 +90,8 @@
                     (mapcat tee-majakat)
                     (tee-navigointi navigointi)
                     (filter #(not (keyword? %))))
-        pohja (keep identity
-                    [:<>
-                     [majakka ::top]
-                     (when alkuvalikko [alkuvalikko avaimet])])
+        pohja [:<>
+               [majakka ::top]
+               [alkuvalikko avaimet]]
         osiot-majakoineen (into [] luo-osiot osiot)]
     (vec (concat pohja osiot-majakoineen))))

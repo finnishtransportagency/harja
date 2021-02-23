@@ -50,31 +50,50 @@
 }
 
 .rivivalitsin {
+  > label {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
   display:flex;
   flex-direction:column;
   color: #5C5C5C;
-  div {
+  > div {
+    > .borderhack {
+      height: 28px;
+      margin: 4px 0;
+
+      // voe helevetti
+      &:not(:first-of-type) {
+        border-left: 0.5px solid #D6D6D6;
+      }
+    }
     display: flex;
     flex-direction: row;
     width: fit-content;
     line-height: 20px;
     background: #F0F0F0;
     border-radius: 8px;
+
     .nappi-rivivalitsin {
       width: 56px;
       flex:none;
       flex-grow: 0;
-      height: 36px;
+      height:28px;
       border: 0;
-      padding: 8px 24px 8px 24px;
+      padding: 4px 24px;
+      border-radius: 8px;
+      box-sizing: border-box;
       background: none;
+
       &.valittu {
         background: #FFFFFF;
         /* White/Darker */
-
+        height: 36px;
+        padding: 8px 24px;
         border: 1px solid #D6D6D6;
-        box-sizing: border-box;
-        border-radius: 8px;
+
+        //border-radius: 8px;
       }
     }
   }

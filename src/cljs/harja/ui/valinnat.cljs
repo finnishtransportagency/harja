@@ -605,9 +605,17 @@
    [:label "Hoitovuosi"]
    [:div
     (for [hv hoitovuodet]
-     [napit/harmaa
-      (str hv)
-      (hv-valinta-fn valitse-fn hv)
-      {:teksti-nappi? true
-       :luokka "nappi-rivivalitsin"
-       :valittu? (= valittu hv)}])]])
+      (if (= valittu hv)
+        [napit/harmaa
+         (str hv)
+         (hv-valinta-fn valitse-fn hv)
+         {:teksti-nappi? true
+          :luokka "nappi-rivivalitsin"
+          :valittu? (= valittu hv)}]
+        [:span.borderhack
+         [napit/harmaa
+          (str hv)
+          (hv-valinta-fn valitse-fn hv)
+          {:teksti-nappi? true
+           :luokka "nappi-rivivalitsin"
+           :valittu? (= valittu hv)}]]))]])
