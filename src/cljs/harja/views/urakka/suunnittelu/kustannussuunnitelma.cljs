@@ -2525,10 +2525,14 @@
          jaljella avaimet]
     (if (or (= nykyinen (first jaljella))
             (nil? (first jaljella)))
-      [:div {:style {:background-color "#ff0000"}}
-       [napit/kotiin "Takaisin alkuun" (vieritys/vierita-ylos)]
-       (when edellinen [napit/ylos "Edellinen osio" (vieritys/vierita edellinen)])
-       (when (second jaljella) [napit/alas "Seuraava osio" (vieritys/vierita (second jaljella))])]
+      [:div.navigointirivi
+       [:div.ylos
+        [napit/kotiin "Takaisin alkuun" (vieritys/vierita-ylos)]]
+       [:div.edellinen-seuraava
+        (when edellinen [napit/ylos "Edellinen osio" (vieritys/vierita edellinen)])
+        (when (second jaljella) [napit/alas "Seuraava osio" (vieritys/vierita (second jaljella))])]
+       [:div.piiloon                                        ; tämä on semmoinen hack että elementit tasoittuu oikein, ihan puhtaasti
+        [napit/kotiin "Tää on puhdas hack" (vieritys/vierita-ylos)]]]
       (recur (first jaljella)
              (rest jaljella)))))
 
