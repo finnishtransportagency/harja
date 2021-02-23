@@ -98,7 +98,7 @@
       :pakollinen? true
       :nimi :let})])
 
-(defn nimi-numero-ja-tp-kentat [ muu-menetelma?]
+(defn nimi-numero-ja-tp-kentat [muu-menetelma?]
   [{:otsikko "Nimi"
     :tyyppi :string
     :nimi :nimi
@@ -133,7 +133,7 @@
                  suunnitelma))))
 
 (defn paikkauskohde-lomake [e! lomake]
-  (let [voi-muokata? (or
+  (let [muokkaustila? (or
                        (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                        (= :uusi-paikkauskohde (:tyyppi lomake)))
         muu-menetelma? (= "Muu" (:tyomenetelma lomake))
@@ -142,10 +142,25 @@
         voi-tilata? (or (and
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))
                           (= :tilaaja kayttajarooli))
-                        false)]
+                        false)
+        nayta-muokkaus? (or (= :tilaaja (roolit/osapuoli @istunto/kayttaja)) ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
+                            ;; Tarkista kirjoitusoikeudet
+                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
+                                                      (-> @tila/tila :yleiset :urakka :id)
+                                                      @istunto/kayttaja)
+                            ;; Urakoitsija, jolla on periaatteessa kirjoitusoikeudet ei voi muuttaa enää hylättyä kohdetta
+                            (and (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
+                                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
+                                                           (-> @tila/tila :yleiset :urakka :id)
+                                                           @istunto/kayttaja)
+                                 (not= "hylatty" (:paikkauskohteen-tila lomake)))
+
+                            false ;; Defaulttina estetään muokkaus
+                            )]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
     [:div.overlay-oikealla {:style {:width "600px"}}
-     (when (not voi-muokata?)
+     ;; Tarkistetaan muokkaustila
+     (when (not muokkaustila?)
        [:div
         [:div {:style {:padding-left "16px" :padding-top "32px"}}
          [:div.pieni-teksti (:nro lomake)]
@@ -176,11 +191,7 @@
                "Ei päivitystietoa")]]]
           [:span "Tila ei tiedossa"])
         ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
-        (when (or (= :tilaaja (roolit/osapuoli @istunto/kayttaja)) ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
-                  (and (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
-                       (not= "hylatty" (:paikkauskohteen-tila lomake)))
-                  false ;; Defaulttina piilossa
-                  )
+        (when nayta-muokkaus?
           [:div.col-xs-12 {:style {:padding-top "24px"}}
            [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))]])
 
@@ -217,16 +228,16 @@
              [:h4 "MÄÄRÄ"]]
             [:div.row
              [:div.col-xs-6
-              [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]];; :koostettu-maara
+              [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
              [:div.col-xs-6
-              [lukutila-rivi "Toteutunut määrä" (str " - " )]]]]
+              [lukutila-rivi "Toteutunut määrä" (str " - ")]]]]
            (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
              [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
               [:div.col-xs-12
                [:h4 "KUSTANNUKSET"]]
               [:div.row
                [:div.col-xs-6
-                [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))]];; :koostettu-maara
+                [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))]] ;; :koostettu-maara
                [:div.col-xs-6
                 [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
           ;; Ja muut
@@ -247,8 +258,8 @@
 
      [lomake/lomake
       {:ei-borderia? true
-       :voi-muokata? voi-muokata?
-       :otsikko (when voi-muokata?
+       :voi-muokata? muokkaustila?
+       :otsikko (when muokkaustila?
                   (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :footer-fn (fn [lomake]
@@ -256,9 +267,9 @@
                           urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                       [:div.row
                        [:hr]
-                       (when (and (not urakoitsija?) voi-tilata? (not voi-muokata?))
+                       (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
                          [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
-                       (when voi-muokata?
+                       (when muokkaustila?
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
                            [napit/tallenna
@@ -271,7 +282,7 @@
                            [napit/yleinen-toissijainen
                             "Poista"
                             #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]]])
-                       (when (and voi-tilata? (not voi-muokata?))
+                       (when (and voi-tilata? (not muokkaustila?))
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
                            [napit/tallenna
@@ -285,14 +296,14 @@
                             "Sulje"
                             #(e! (t-paikkauskohteet/->SuljeLomake))]]])
                        ;; Tämä on ainut tilanne, missä tulee vain yksi nappi
-                       (when (and (not voi-muokata?) (not voi-tilata?))
+                       (when (and (not muokkaustila?) (not voi-tilata?))
                          [:div.row
                           [:div.col-xs-12 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
                             "Sulje"
                             #(e! (t-paikkauskohteet/->SuljeLomake))]]])
                        ]))}
-      (paikkauskohde-skeema e! muu-menetelma? voi-muokata? lomake) ;;TODO: korjaa päivitys
+      (paikkauskohde-skeema e! muu-menetelma? muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
 
 (defn testilomake

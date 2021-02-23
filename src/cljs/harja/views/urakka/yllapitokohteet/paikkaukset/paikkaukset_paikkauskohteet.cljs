@@ -28,6 +28,18 @@
 (defn- paikkauskohteet-taulukko [e! app]
   (let [_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
         _ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
+        _ (js/console.log "voi kirjoittaa kohteisiin" (pr-str (oikeudet/voi-kirjoittaa?
+                                                                oikeudet/urakat-paikkaukset-paikkauskohteet
+                                                                (-> @tila/tila :yleiset :urakka :id)
+                                                                @istunto/kayttaja)))
+        _ (js/console.log "voi kirjoittaa kustannuksiin" (pr-str (oikeudet/voi-kirjoittaa?
+                                                                   oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
+                                                                   (-> @tila/tila :yleiset :urakka :id)
+                                                                   @istunto/kayttaja)))
+        _ (js/console.log "voi lukea kohteita" (pr-str (oikeudet/voi-lukea?
+                                                         oikeudet/urakat-paikkaukset-paikkauskohteet
+                                                         (-> @tila/tila :yleiset :urakka :id)
+                                                         @istunto/kayttaja)))
         skeema [{:otsikko "NRO"
                  :leveys 2
                  :nimi :nro}
