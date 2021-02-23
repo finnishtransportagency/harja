@@ -359,7 +359,7 @@
                                                                             (nil? tehtava)
                                                                             (nil? tehtavaryhma))
                                     :tilaajan-varaukset (and (= tyyppi "laskutettava-tyo")
-                                                             (= tr_yt mhu/tilaajan-varaukset-tunniste)
+                                                             (= tr_yt mhu/johto-ja-hallintokorvaukset-tunniste)
                                                              (nil? tehtava))))
         tallennettava-data (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
         paivitettava-data (mapv (fn [data]
