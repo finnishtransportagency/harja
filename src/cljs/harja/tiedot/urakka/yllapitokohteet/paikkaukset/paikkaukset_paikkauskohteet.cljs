@@ -19,7 +19,7 @@
     (when-not (= "Valmis" tila)
       " (arv.)")))
 
-(defn- fmt-sijainti [tie alkuosa loppuosa alkuet loppuet]
+(defn fmt-sijainti [tie alkuosa loppuosa alkuet loppuet]
   (str tie "/" alkuosa "/" alkuet " - " tie "/" loppuosa "/" loppuet))
 
 (defrecord AvaaLomake [lomake])
@@ -33,6 +33,7 @@
 (defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
 (defrecord TilaaPaikkauskohde [paikkauskohde])
 (defrecord HylkaaPaikkauskohde [paikkauskohde])
+(defrecord PoistaPaikkauskohde [paikkauskohde])
 
 (defn- hae-paikkauskohteet [urakka-id]
   (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -85,10 +86,13 @@
 
   TallennaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (-> paikkauskohde
+    (let [ ;; Muutetaan paikkauskohteen tilaa vain, jos sitä ei ole asetettu
+          paikkauskohde (if (nil? (:paikkauskohteen-tila paikkauskohde))
+                          (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")
+                          paikkauskohde)
+          paikkauskohde (-> paikkauskohde
                             (dissoc :sijainti)
-                            (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id))
-                            (assoc :paikkauskohteen-tila "ehdotettu"))]
+                            (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
         (js/console.log "Lähetetään paikkauskohde" (pr-str paikkauskohde))
         (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
@@ -101,13 +105,19 @@
   TilaaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
     (do
-      (js/console.log "Tää ei tilaa vielä mitään. Eli implementoi toteutus!")
+      (js/console.log "Tää ei tilaa vielä mitään. Eli implementoi toteutus!" (pr-str paikkauskohde))
       app))
 
   HylkaaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
     (do
-      (js/console.log "Tää ei hylkaa vielä mitään. Eli implementoi toteutus!")
+      (js/console.log "Tää ei hylkaa vielä mitään. Eli implementoi toteutus!" (pr-str paikkauskohde))
+      app))
+
+  PoistaPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (do
+      (js/console.log "Tää ei poista vielä mitään. Eli implementoi toteutus!" (pr-str paikkauskohde))
       app))
 
   TallennaPaikkauskohdeOnnistui
