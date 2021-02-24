@@ -34,6 +34,8 @@
 (defrecord TilaaPaikkauskohde [paikkauskohde])
 (defrecord HylkaaPaikkauskohde [paikkauskohde])
 (defrecord PoistaPaikkauskohde [paikkauskohde])
+(defrecord PeruPaikkauskohteenTilaus [paikkauskohde])
+(defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
 
 (defn- hae-paikkauskohteet [urakka-id]
   (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -142,5 +144,22 @@
       ;(harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
       #_(dissoc app :lomake)
       app))
+
+  ;; TODO: Mieti siistimisen yhteydessä, yhdistetäänkö nämä kaksi yhdeksi. Ainoa ero on logitus tällä hetkellä
+  PeruPaikkauskohteenTilaus
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
+      (do
+        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatusta ehdotetuksi")
+        (tallenna-paikkauskohde paikkauskohde)
+        app)))
+
+  PeruPaikkauskohteenHylkays
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
+      (do
+        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätystä ehdotetuksi")
+        (tallenna-paikkauskohde paikkauskohde)
+        app)))
   )
 

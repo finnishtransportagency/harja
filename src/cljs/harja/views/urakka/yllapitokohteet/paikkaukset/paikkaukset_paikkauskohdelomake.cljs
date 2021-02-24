@@ -144,6 +144,11 @@
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))
                           (= :tilaaja kayttajarooli))
                         false)
+        voi-perua? (and
+                     (= :tilaaja kayttajarooli)
+                     (or
+                       (= "tilattu" (:paikkauskohteen-tila lomake))
+                       (= "hylatty" (:paikkauskohteen-tila lomake))))
         nayta-muokkaus? (or (= :tilaaja (roolit/osapuoli @istunto/kayttaja)) ;; Tilaaja voi muokata missä tahansa tilassa olevaa paikkauskohdetta
                             ;; Tarkista kirjoitusoikeudet
                             (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet
@@ -311,15 +316,30 @@
                                          :margin-bottom "3rem"
                                          :display :flex
                                          :width "100%"
-                                         :justify-content "center" }}
+                                         :justify-content "center"}}
                                        [napit/yleinen-ensisijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
                                        [napit/yleinen-toissijainen "Kumoa" modal/piilota!]]]))]]
                           [:div.col-xs-6 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
                             "Sulje"
                             #(e! (t-paikkauskohteet/->SuljeLomake))]]])
+                       (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
+                         [:div.row
+                          [:div.col-xs-6 {:style {:padding-left "0"}}
+                           [napit/yleinen-toissijainen
+                            "Sulje"
+                            #(e! (t-paikkauskohteet/->SuljeLomake))]
+                           (if (= (:paikkauskohteen-tila lomake) "tilattu")
+                             [napit/nappi
+                              "Peru tilaus"
+                              #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus lomake-ilman-lomaketietoja))
+                              {:luokka "napiton-nappi punainen"}]
+                             [napit/nappi
+                              "Peru hylkäys"
+                              #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays lomake-ilman-lomaketietoja))
+                              {:luokka "napiton-nappi punainen"}])]])
                        ;; Tämä on ainut tilanne, missä tulee vain yksi nappi
-                       (when (and (not muokkaustila?) (not voi-tilata?))
+                       (when (and (not muokkaustila?) (not voi-tilata?) (not voi-perua?))
                          [:div.row
                           [:div.col-xs-12 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
