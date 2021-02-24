@@ -17,7 +17,8 @@ SELECT
   urakkatyyppi,
   kohdistettava
 FROM materiaalikoodi
-WHERE materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI;
+WHERE materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI
+ORDER BY jarjestys;
 
 -- name: hae-urakan-materiaalit
 -- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
