@@ -294,9 +294,24 @@
                             (fn [] (modal/nayta!
                                      {:modal-luokka "harja-modal-keskitetty"
                                       :luokka "modal-dialog-keskitetty"}
-                                     [:div {:style {:display :flex}}
-                                      [:div "Hylätäänkö kohde " (:nimi lomake) "?"]
+                                     [:div
+                                      {:style
+                                       {:display :flex
+                                        :flex-direction :column
+                                        :align-items :center}}
                                       [:div
+                                       {:style
+                                        {:margin-top "3rem"
+                                         :font-size "16px"
+                                         :font-weight "bold"}}
+                                       "Hylätäänkö kohde " (:nimi lomake) "?"]
+                                      [:div
+                                       {:style
+                                        {:margin-top "3rem"
+                                         :margin-bottom "3rem"
+                                         :display :flex
+                                         :width "100%"
+                                         :justify-content "center" }}
                                        [napit/yleinen-ensisijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
                                        [napit/yleinen-toissijainen "Kumoa" modal/piilota!]]]))]]
                           [:div.col-xs-6 {:style {:text-align "end"}}
