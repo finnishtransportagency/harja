@@ -15,6 +15,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
+            [harja.ui.modal :as modal]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila]
@@ -163,6 +164,7 @@
    [debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! (:lomake app)])
+
    [kohteet e! app]])
 
 (defn paikkauskohteet* [e! app]

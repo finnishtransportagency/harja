@@ -11,7 +11,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+            [harja.ui.modal :as modal]))
 
 (defn- lukutila-rivi [otsikko arvo]
   [:div {:style {:padding-top "16px" :padding-bottom "8px"}}
@@ -134,8 +135,8 @@
 
 (defn paikkauskohde-lomake [e! lomake]
   (let [muokkaustila? (or
-                       (= :paikkauskohteen-muokkaus (:tyyppi lomake))
-                       (= :uusi-paikkauskohde (:tyyppi lomake)))
+                        (= :paikkauskohteen-muokkaus (:tyyppi lomake))
+                        (= :uusi-paikkauskohde (:tyyppi lomake)))
         muu-menetelma? (= "Muu" (:tyomenetelma lomake))
         kayttajarooli (roolit/osapuoli @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
@@ -290,7 +291,13 @@
                             #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))]
                            [napit/yleinen-toissijainen
                             "Hylkää"
-                            #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]]
+                            (fn [] (modal/nayta!
+                                     {}
+                                     [:div {:style {:display :flex}}
+                                      [:div "Hylätäänkö kohde " (:nimi lomake) "?"]
+                                      [:div
+                                       [napit/yleinen-ensisijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
+                                       [napit/yleinen-toissijainen "Kumoa" modal/piilota!]]]))]]
                           [:div.col-xs-6 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
                             "Sulje"

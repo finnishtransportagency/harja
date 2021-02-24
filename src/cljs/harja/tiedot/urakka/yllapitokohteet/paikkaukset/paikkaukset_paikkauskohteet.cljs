@@ -115,9 +115,11 @@
 
   HylkaaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (do
-      (js/console.log "Tää ei hylkaa vielä mitään. Eli implementoi toteutus!" (pr-str paikkauskohde))
-      app))
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "hylatty")]
+      (do
+        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätyksi")
+        (tallenna-paikkauskohde paikkauskohde)
+        app)))
 
   PoistaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
