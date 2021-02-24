@@ -234,10 +234,10 @@
                        (when (or (:massa rivi) (:murske rivi))
                          [mm-yhteiset/materiaalin-tiedot (cond
                                                            (:massa rivi)
-                                                           (mm-yhteiset/materiaali massat (:murske-id rivi))
+                                                           (mm-yhteiset/materiaali massat {:massa-id (:massa rivi)})
 
                                                            (:murske rivi)
-                                                           (mm-yhteiset/materiaali murskeet (:massa-id rivi))
+                                                           (mm-yhteiset/materiaali murskeet {:murske-id (:murske rivi)})
 
                                                            :else
                                                            nil)

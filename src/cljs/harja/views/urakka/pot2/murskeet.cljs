@@ -17,49 +17,61 @@
             [harja.views.urakka.pot2.massat :as massat-view]
             [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
 
-            [harja.loki :refer [log logt tarkkaile!]])
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app} {:keys [sivulle? voi-muokata?]}]
+(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
   (println "murske lomake pot2-murske-lomakje " (pr-str pot2-murske-lomake))
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
-        _ (js/console.log "murske-pot2-murske-lomake :: pot2-murske-lomake " (pr-str pot2-murske-lomake))
+        voi-muokata? (:voi-muokata? pot2-murske-lomake)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)]
     [:div
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
        :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
-       :otsikko (if murske-id
-                  "Muokkaa mursketta"
-                  "Uusi murske")
+       :otsikko-komp (fn [data]
+                       [:div.lomake-otsikko-pieni (cond
+                                                    (false? voi-muokata?)
+                                                    "Murskeen tiedot"
+
+                                                    murske-id
+                                                    "Muokkaa mursketta"
+
+                                                    :else
+                                                    "Uusi murske")])
        :footer-fn (fn [data]
                     [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
-                                                             :validointivirheet []
-                                                             :tallenna-fn #(e! (mk-tiedot/->TallennaMurskeLomake data))
-                                                             :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
-                                                             :peruuta-fn #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
-                                                             :poista-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
-                                                             :tyyppi :murske
-                                                             :id murske-id
-                                                             :materiaali-kaytossa materiaali-kaytossa}])
+                                                               :validointivirheet []
+                                                               :tallenna-fn #(e! (mk-tiedot/->TallennaMurskeLomake data))
+                                                               :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
+                                                               :peruuta-fn #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
+                                                               :poista-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
+                                                               :tyyppi :murske
+                                                               :id murske-id
+                                                               :materiaali-kaytossa materiaali-kaytossa
+                                                               :voi-muokata? voi-muokata?}])
        :vayla-tyyli? true}
-      [{:otsikko "Murskeen nimi" :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
-        :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
+      [{:otsikko "" :piilota-label? true :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
+        :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
                  (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit mursketyypit
                                                            :materiaali rivi
                                                            :fmt :string})))}
+       (when-not voi-muokata?
+           (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-murske-lomake))))
+       (when-not voi-muokata? (ui-lomake/lomake-spacer {}))
        (ui-lomake/rivi
          {:otsikko "Nimen tarkenne" :nimi ::pot2-domain/nimen-tarkenne :tyyppi :string
           :vayla-tyyli? true :palstoja (if sivulle? 3 1)})
        (ui-lomake/rivi
-         {:otsikko "Mursketyyppi" :nimi ::pot2-domain/tyyppi :tyyppi :radio-group :pakollinen? true
+         {:otsikko (if voi-muokata? "" "Tyyppi") :piilota-label? (boolean voi-muokata?) :nimi ::pot2-domain/tyyppi :tyyppi :radio-group :pakollinen? true
           :vaihtoehdot (:mursketyypit materiaalikoodistot) :vaihtoehto-arvo ::pot2-domain/koodi
           :vaihtoehto-nayta ::pot2-domain/nimi :vayla-tyyli? true
           :palstoja 3})
@@ -109,7 +121,8 @@
          (ui-lomake/rivi
            {:otsikko "Tyyppi" :vayla-tyyli? true :pakollinen? true
             :palstoja (if sivulle? 3 1)
-            :nimi ::pot2-domain/tyyppi-tarkenne :tyyppi :string}))]
+            :nimi ::pot2-domain/tyyppi-tarkenne :tyyppi :string}))
+       (ui-lomake/lomake-spacer {})]
 
       pot2-murske-lomake]]))
 

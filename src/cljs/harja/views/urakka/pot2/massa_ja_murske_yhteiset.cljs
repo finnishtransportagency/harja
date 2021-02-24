@@ -17,26 +17,24 @@
 
 (def materiaali-jo-kaytossa-str "Materiaali on jo käytössä, eikä sitä voi enää poistaa.")
 
-
 (defn- materiaalin-nimen-komp [{:keys [ydin tarkennukset fmt toiminto-fn]}]
   (if (= :komponentti fmt)
-    [(if toiminto-fn
-       :a
-       :span)
+    [(if toiminto-fn :div :span)
      {:on-click #(when toiminto-fn
                    (do
                      (.stopPropagation %)
                      (toiminto-fn)))
       :style {:cursor "pointer"}}
      [:span.bold ydin]
-     [:span tarkennukset]]
-    (str ydin tarkennukset)))
+     ;; Toistaiseksi Tean kanssa sovittu 23.2.2021 ettei näytetä tarkennuksia suluissa
+     #_[:span tarkennukset]]
+    (str ydin ;tarkennukset
+         )))
 
 (defn materiaalin-rikastettu-nimi
   "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
   [{:keys [tyypit materiaali fmt toiminto-fn]}]
   ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-
   (let [tyyppi (mk-tiedot/massatyypit-vai-mursketyypit? tyypit)
         [ydin tarkennukset] ((if (= :massa tyyppi)
                                pot2-domain/massan-rikastettu-nimi
@@ -67,7 +65,10 @@
                nimi :nimi
                kohteiden-lkm :kohteiden-lkm} materiaali-kaytossa]
           ^{:key kohdenumero}
-          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm " riviä)")])]])))
+          [:li (str "#" kohdenumero " " nimi " (" kohteiden-lkm
+                    (if (= 1 kohteiden-lkm)
+                      " rivi)"
+                      " riviä)"))])]])))
 
 (defn puutelistaus [data muut-validointivirheet]
   (when-not (and (empty? (ui-lomake/puuttuvat-pakolliset-kentat data))
@@ -103,8 +104,7 @@
                  [:div (str "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda " materiaalista-str " kopion ja muokata sitä.")]]
                 :toiminto-fn toiminto-fn
                 :hyvaksy "Kyllä"})))))
-     {:vayla-tyyli? true
-      :luokka "suuri"
+     {:luokka "medium"
       :disabled (or disabled lukittu?)}]))
 
 (defn poista-materiaali-nappi
@@ -124,27 +124,26 @@
            :toiminto-fn toiminto-fn
            :hyvaksy "Kyllä"}))
       {:disabled (not (empty? materiaali-kaytossa))
-       :vayla-tyyli? true
-       :luokka "suuri"}]
+       :luokka "medium"}]
      (when (and (not lukittu?)
                 (not (empty? materiaali-kaytossa)))
        [yleiset/vihje materiaali-jo-kaytossa-str])]))
 
 (defn tallennus-ja-puutelistaus
   [e! {:keys [data validointivirheet tallenna-fn voi-tallentaa?
-              peruuta-fn poista-fn tyyppi id materiaali-kaytossa]}]
+              peruuta-fn poista-fn tyyppi id materiaali-kaytossa voi-muokata?]}]
   [:div
    [puutelistaus (ui-lomake/puuttuvat-pakolliset-kentat data) validointivirheet]
-   [:div.flex-row {:style {:margin-top "2rem" :align-items "start"}}
+   [:div.flex-row {:style {:align-items "start"}}
     [:div.tallenna-peruuta
-     [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
-      voi-tallentaa?
-      tyyppi]
-     [napit/yleinen "Peruuta" :toissijainen peruuta-fn
-      {:vayla-tyyli? true
-       :luokka "suuri"}]]
+     (when voi-muokata?
+       [tallenna-materiaali-nappi materiaali-kaytossa tallenna-fn
+        voi-tallentaa?
+        tyyppi])
+     [napit/yleinen (if voi-muokata? "Peruuta" "Sulje") :toissijainen peruuta-fn
+      {:luokka "medium"}]]
 
-    (when id
+    (when (and id voi-muokata?)
       [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])]
    [materiaalin-kaytto materiaali-kaytossa]])
 
@@ -180,6 +179,13 @@
         :ikoni (ikonit/livicon-duplicate)}]]]))
 
 (defn materiaali
-  [massat-tai-murskeet id]
-  (first (filter #(= (::pot2-domain/koodi %) id)
+  [massat-tai-murskeet {:keys [massa-id murske-id]}]
+  (first (filter #(or (= (::pot2-domain/massa-id %) massa-id)
+                      (= (::pot2-domain/murske-id %) murske-id))
                  massat-tai-murskeet)))
+
+(defn muokkaa-nappi [muokkaa-fn]
+  {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3
+   :piilota-label? true
+   :komponentti (fn [rivi]
+                  [napit/muokkaa "Muokkaa" muokkaa-fn {:luokka "napiton-nappi"}])})

@@ -187,10 +187,10 @@
             pot2-tiedot/alustarivit-atom]
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
            (cond pot2-massa-lomake
-                 [massat/massa-lomake e! massalomake-app {:sivulle? true :voi-muokata? true}]
+                 [massat/massa-lomake e! massalomake-app {:sivulle? true}]
 
                  pot2-murske-lomake
-                 [murskeet/murske-lomake e! murskelomake-app {:sivulle? true :voi-muokata? true}]
+                 [murskeet/murske-lomake e! murskelomake-app {:sivulle? true}]
 
                  :else
                  [:span])

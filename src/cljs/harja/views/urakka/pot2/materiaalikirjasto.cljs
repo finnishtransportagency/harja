@@ -49,10 +49,10 @@
       [:div
        (cond
          (:pot2-massa-lomake app)
-         [massat/massa-lomake e! app {:voi-muokata? true}]
+         [massat/massa-lomake e! app {:sivulle? false}]
 
          (:pot2-murske-lomake app)
-         [murskeet/murske-lomake e! app {:voi-muokata? true}]
+         [murskeet/murske-lomake e! app {:sivulle? false}]
 
          :else
          [urakan-materiaalit e! app])

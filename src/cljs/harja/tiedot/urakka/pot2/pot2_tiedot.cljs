@@ -74,9 +74,11 @@
 
   [rivi {:keys [massat murskeet]}]
   (if (:murske rivi)
-    (first (filter #(= (::pot2-domain/murske-id (:murske rivi)))
+    (first (filter #(when (= (::pot2-domain/murske-id %) (:murske rivi))
+                      %)
                    murskeet))
-    (first (filter #(= (::pot2-domain/massa-id (:massa rivi)))
+    (first (filter #(when (= (::pot2-domain/massa-id %) (::pot2-domain/massa-id rivi))
+                      %)
                    massat))))
 
 (extend-protocol tuck/Event

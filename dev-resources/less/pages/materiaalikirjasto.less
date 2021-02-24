@@ -59,6 +59,9 @@
                     }
                 }
             }
+            .pot2-materiaalin-tiedot {
+                color: @black;
+            }
         }
     }
     .tooltip {
@@ -72,3 +75,33 @@
         }
     }
 }
+// POT2:sta avaamme massa- ja murskelomakkeen myös sivulle overlayhin ilman materiaalikirjaston modaalia
+.lomake {
+    .lukutila {
+        padding: 16px;
+        .lukutilan-tausta {
+            background-color: @white-dark;
+        }
+        .aineen-pitoisuus-ja-nimi {
+            .fontti-14();
+            display: grid;
+            grid-gap: 1rem;
+            grid-template-columns: 20px auto;
+            grid-template-rows: 20px 100px auto;
+            .pitoisuus {
+                grid-column-start: 1;
+                grid-column-end: span col2-start;
+                grid-row-start: 1;
+                grid-row-end: span 1;
+            }
+            .nimi {
+                grid-column-start: 2;
+                grid-column-end: span col2-end;
+                grid-row-start: 1;
+                grid-row-end: span 1;
+            }
+        }
+
+    }
+}
+

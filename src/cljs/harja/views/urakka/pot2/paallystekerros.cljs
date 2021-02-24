@@ -115,7 +115,7 @@
                          [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                                    :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
                                                                    :fmt :komponentti}]
-                         ;; TODO POSITION TO RIGHT 20px...
+                         ;; TODO nätti ratkaisu miten avataan massa overlayihin, kenties ujutetaan kenttätasolle
                          [:div.inline-block {:on-click #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))}
                           (ikonit/livicon-external)]])
        :validoi [[:ei-tyhja "Anna arvo"]]}

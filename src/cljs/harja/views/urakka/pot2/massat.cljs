@@ -172,37 +172,66 @@
     mk-tiedot/sideaineen-kayttotavat
     aineet))
 
-(defn- ainevalinta-kentat [e! rivi tyyppi aineet]
+(defn- massan-aineen-lukutila [{:keys [tiedot tyyppi aineen-otsikko]}]
+  (let [{:runkoaine/keys [massaprosentti kuulamyllyarvo litteysluku pitoisuus
+                          esiintyma]} tiedot]
+    [:div.lukutilan-tausta
+     [:div.aineen-pitoisuus-ja-nimi
+      [:div.pitoisuus massaprosentti]
+      [:div.nimi aineen-otsikko]]
+     [:div.massan-yksityiskohdat
+      (when kuulamyllyarvo [:span (str "KM-arvo " kuulamyllyarvo)])
+      (when litteysluku [:span (str "Litteysluku " litteysluku)])
+      (when esiintyma [:span esiintyma])
+      ]
+     ]))
+
+(defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?]}]
   [:div.ainevalinta-kentat
    (for [t (ainevalintalaatikot tyyppi aineet)]
      (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
            {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
-       ^{:key t}
-       [:div {:class (str "ainevalinta " (when valittu? "valittu"))}
-        (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
-                  (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
-          [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
-                                       :arvo valittu? :label-luokka (when valittu? "bold")
-                                       :polku (conj polun-avaimet :valittu?)}])
+       (if voi-muokata?
+         ^{:key t}
+         [:div {:class (str "aineiden-muokkaustila ainevalinta " (when valittu? "valittu"))}
+          (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
+                    (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
+            [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
+                                         :arvo valittu? :label-luokka (when valittu? "bold")
+                                         :polku (conj polun-avaimet :valittu?)}])
 
-        (when valittu?
-          [:div.kentat-haitari
-           (case tyyppi
-             (:runkoaineet :lisaaineet)
-             (for [k (tyypin-kentat {:tyyppi tyyppi
-                                     :tiedot tiedot
-                                     :polun-avaimet polun-avaimet})]
-               ^{:key (:otsikko k)}
-               [:div.inline-block {:style {:margin-right "6px"}}
-                [otsikko-ja-kentta e! k]])
+          (when valittu?
+            [:div.kentat-haitari
+             (case tyyppi
+               (:runkoaineet :lisaaineet)
+               (for [k (tyypin-kentat {:tyyppi tyyppi
+                                       :tiedot tiedot
+                                       :polun-avaimet polun-avaimet
+                                       :voi-muokata? voi-muokata?})]
+                 ^{:key (:otsikko k)}
+                 [:div.inline-block {:style {:margin-right "6px"}}
+                  [otsikko-ja-kentta e! k]])
 
-             :sideaineet
-             [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
-              polun-avaimet aineet])])]))])
+               :sideaineet
+               [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
+                polun-avaimet aineet])])]
+         (when valittu?
+           ^{:key t}
+           [:div.aineiden-lukutila
+            (case tyyppi
+              :runkoaineet
+              [massan-aineen-lukutila {:tiedot tiedot :tyyppi tyyppi :aineen-otsikko (::pot2-domain/nimi t)}]
+
+              :sideaineet
+              [:div (str "Sideaine" tiedot)]
+
+              :lisaaineet
+              [:div (str "Lisäaine" tiedot)])]))))])
 
 
-(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle? voi-muokata?]}]
+(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
+        voi-muokata? (:voi-muokata? pot2-massa-lomake)
         massa-id (::pot2-domain/massa-id pot2-massa-lomake)
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
@@ -212,9 +241,16 @@
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
        :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
-       :otsikko (if massa-id
-                  "Muokkaa massaa"
-                  "Uusi massa")
+       :otsikko-komp (fn [data]
+                       [:div.lomake-otsikko-pieni (cond
+                                                    (false? voi-muokata?)
+                                                    "Massan tiedot"
+
+                                                    massa-id
+                                                    "Muokkaa massaa"
+
+                                                    :else
+                                                    "Uusi massa")])
        :footer-fn (fn [data]
                     [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
                                                                :validointivirheet muut-validointivirheet
@@ -223,16 +259,21 @@
                                                                :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
                                                                :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                                                                :tyyppi :massa
-                                                               :id massa-id}])
+                                                               :id massa-id
+                                                               :materiaali-kaytossa materiaali-kaytossa
+                                                               :voi-muokata? voi-muokata?}])
        :vayla-tyyli? true}
-      [{:otsikko "Massan nimi" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
-        :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "placeholder"
+      [{:otsikko "" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
+        :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"
         :hae (fn [rivi]
                (if-not (::pot2-domain/tyyppi rivi)
                  "Nimi muodostuu automaattisesti lomakkeeseen täytettyjen tietojen perusteella"
                  (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
                                                            :materiaali rivi
                                                            :fmt :string})))}
+       (when-not voi-muokata?
+         (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-massa-lomake))))
+       (when-not voi-muokata? (ui-lomake/lomake-spacer {}))
        (ui-lomake/rivi
          {:otsikko "Massatyyppi"
           :nimi ::pot2-domain/tyyppi :tyyppi :valinta
@@ -268,14 +309,28 @@
           :validoi [[:ei-tyhja "Anna DoP nro"]]
           :vayla-tyyli? true :pakollinen? true})
 
-
+       (ui-lomake/lomake-spacer {})
 
        {:nimi ::pot2-domain/runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti :palstoja 2
-        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :runkoaineet runkoainetyypit])}
+        :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
+        :komponentti (fn [rivi]
+                       [ainevalinta-kentat e! {:rivi rivi
+                                               :tyyppi :runkoaineet
+                                               :aineet runkoainetyypit
+                                               :voi-muokata? voi-muokata?}])}
        {:nimi ::pot2-domain/sideaineet :otsikko "Sideaineet" :tyyppi :komponentti :palstoja 2
-        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :sideaineet sideainetyypit])}
+        :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
+        :komponentti (fn [rivi] [ainevalinta-kentat e! {:rivi rivi
+                                                        :tyyppi :sideaineet
+                                                        :aineet sideainetyypit
+                                                        :voi-muokata? voi-muokata?}])}
        {:nimi ::pot2-domain/lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti :palstoja 2
-        :komponentti (fn [rivi] [ainevalinta-kentat e! rivi :lisaaineet lisaainetyypit])}]
+        :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
+        :komponentti (fn [rivi] [ainevalinta-kentat e! {:rivi rivi
+                                                        :tyyppi :lisaaineet
+                                                        :aineet lisaainetyypit
+                                                        :voi-muokata? voi-muokata?}])}
+       (ui-lomake/lomake-spacer {})]
 
       pot2-massa-lomake]]))
 

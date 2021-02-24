@@ -22,6 +22,7 @@
 (defrecord UusiMurske [])
 (defrecord MuokkaaMursketta [rivi klooni?])
 (defrecord NaytaModal [avataanko?])
+(defrecord AloitaMuokkaus [lomakepolku])
 
 ;; Massat
 (defrecord TallennaLomake [data])
@@ -311,4 +312,9 @@
     (js/console.log "TyhjennaLomake" (pr-str data))
     (-> app
         (assoc :pot2-murske-lomake nil)))
-  )
+
+  AloitaMuokkaus
+  (process-event [{lomakepolku :lomakepolku} app]
+    (js/console.log "AloitaMuokkaus" (pr-str lomakepolku))
+    (-> app
+        (assoc-in [lomakepolku :voi-muokata?] true))))
