@@ -161,7 +161,7 @@ SET "ulkoinen-id"          = :ulkoinen-id,
     lisatiedot = :lisatiedot
 WHERE id = :id RETURNING id;
 
---name: luo-uusi-paikkauskohde!
+--name: luo-uusi-paikkauskohde<!
 INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
                            "yhalahetyksen-tila", virhe, nro, alkupvm, loppupvm, tyomenetelma,
                            "tyomenetelma_kuvaus", tierekisteriosoite, "paikkauskohteen-tila", "urakka-id",
@@ -186,3 +186,6 @@ VALUES (:luoja-id,
         :yksikko,
         :lisatiedot)
         RETURNING id;
+
+--name: poista-paikkauskohde!
+UPDATE paikkauskohde SET poistettu = true WHERE id = :id;
