@@ -353,5 +353,5 @@ BEGIN
          (2356, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
           'Liikennejärjestelyt', 1800, 'SIPU', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
   (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-      'Liikennejärjestelyt', 1900, 'KIVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
+      'Liikennejärjestelyt', 1900, 'KTVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;
