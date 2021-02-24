@@ -164,7 +164,6 @@
    [debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! (:lomake app)])
-
    [kohteet e! app]])
 
 (defn paikkauskohteet* [e! app]

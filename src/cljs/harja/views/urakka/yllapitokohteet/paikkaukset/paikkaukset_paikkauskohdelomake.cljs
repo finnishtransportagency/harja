@@ -292,7 +292,8 @@
                            [napit/yleinen-toissijainen
                             "Hylkää"
                             (fn [] (modal/nayta!
-                                     {}
+                                     {:modal-luokka "harja-modal-keskitetty"
+                                      :luokka "modal-dialog-keskitetty"}
                                      [:div {:style {:display :flex}}
                                       [:div "Hylätäänkö kohde " (:nimi lomake) "?"]
                                       [:div
