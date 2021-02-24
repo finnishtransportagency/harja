@@ -71,7 +71,7 @@
                                  ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
                                  (map (fn [kohde]
                                         (dissoc kohde :suunniteltu-hinta :toteutunut-hinta))
-                                   urakan-paikkauskohteet))
+                                      urakan-paikkauskohteet))
         ]
     urakan-paikkauskohteet))
 
@@ -121,32 +121,32 @@
                     kohde)
                   (do
                     (println "Tallennettiin uusi :: antamalla " (pr-str kohde))
-                    (q/luo-uusi-paikkauskohde! db
-                                               (merge
-                                                 (when on-kustannusoikeudet?
-                                                   {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
-                                                 {:luoja-id (:id user)
-                                                  :ulkoinen-id (:ulkoinen-id kohde)
-                                                  :nimi (:nimi kohde)
-                                                  :urakka-id (:urakka-id kohde)
-                                                  :luotu (or (:luotu kohde) (pvm/nyt))
-                                                  :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                                                  :virhe (:virhe kohde)
-                                                  :nro (:nro kohde)
-                                                  :alkupvm (:alkupvm kohde)
-                                                  :loppupvm (:loppupvm kohde)
-                                                  :tyomenetelma (:tyomenetelma kohde)
-                                                  :tyomenetelma-kuvaus (:tyomenetelma-kuvaus kohde)
-                                                  :tie (:tie kohde)
-                                                  :aosa (:aosa kohde)
-                                                  :losa (:losa kohde)
-                                                  :aet (:aet kohde)
-                                                  :let (:let kohde)
-                                                  :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                                                  :suunniteltu-maara (:suunniteltu-maara kohde)
-                                                  :yksikko (:yksikko kohde)
-                                                  :lisatiedot (:lisatiedot kohde)
-                                                  })))))
+                    (q/luo-uusi-paikkauskohde<! db
+                                                (merge
+                                                  (when on-kustannusoikeudet?
+                                                    {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
+                                                  {:luoja-id (:id user)
+                                                   :ulkoinen-id (:ulkoinen-id kohde)
+                                                   :nimi (:nimi kohde)
+                                                   :urakka-id (:urakka-id kohde)
+                                                   :luotu (or (:luotu kohde) (pvm/nyt))
+                                                   :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
+                                                   :virhe (:virhe kohde)
+                                                   :nro (:nro kohde)
+                                                   :alkupvm (:alkupvm kohde)
+                                                   :loppupvm (:loppupvm kohde)
+                                                   :tyomenetelma (:tyomenetelma kohde)
+                                                   :tyomenetelma-kuvaus (:tyomenetelma-kuvaus kohde)
+                                                   :tie (:tie kohde)
+                                                   :aosa (:aosa kohde)
+                                                   :losa (:losa kohde)
+                                                   :aet (:aet kohde)
+                                                   :let (:let kohde)
+                                                   :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                   :suunniteltu-maara (:suunniteltu-maara kohde)
+                                                   :yksikko (:yksikko kohde)
+                                                   :lisatiedot (:lisatiedot kohde)
+                                                   })))))
 
         _ (println "kohde: " (pr-str kohde))
         ]
@@ -155,6 +155,14 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti validointivirheet}]}))
     ))
+
+(defn poista-paikkauskohde! [db user kohde]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
+  (let [_ (println "poista-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
+        id (:id kohde)
+        _ (q/poista-paikkauskohde! db id)]
+    ;; Palautetaan poistettu paikkauskohde
+    (assoc kohde :poistettu true)))
 
 (defrecord Paikkauskohteet []
   component/Lifecycle
@@ -168,11 +176,15 @@
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
                           (tallenna-paikkauskohde! db user kohde)))
+      (julkaise-palvelu http :poista-paikkauskohde
+                        (fn [user kohde]
+                          (poista-paikkauskohde! db user kohde)))
       this))
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
       :paikkauskohteet-urakalle
-      :tallenna-paikkauskohde-urakalle)
+      :tallenna-paikkauskohde-urakalle
+      :poista-paikkauskohde)
     this))

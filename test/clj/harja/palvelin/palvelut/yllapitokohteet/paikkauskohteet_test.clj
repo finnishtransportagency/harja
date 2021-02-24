@@ -109,9 +109,43 @@
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         ;; Poistetaan kohteelta nimi
         kohde (dissoc (merge {:urakka-id urakka-id} default-paikkauskohde)
-                      :nimi )]
+                      :nimi)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-paikkauskohde-urakalle
                                            +kayttaja-jvh+
                                            kohde))
         "Poikkeusta ei heitetty! Tallennus onnistui vaikka ei oli saanut")))
+
+;; Testataan poistamisen toimivuutta ihan vain pääkäyttäjällä.
+(deftest poista-paikkauskohde-paakayttajana-testi
+  (let [;; Lisätään defaulta paikkauskohteelle haluamamme urakka-id
+        ;; ja nimi vaihdetaan sellaiseksi, että helppo tunnistaa, onko poisto onnistunut
+        nimi "Tämä kemin kohde tulee poistumaan"
+        urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge default-paikkauskohde
+                     {:urakka-id urakka-id
+                      :nimi nimi})
+        ;; Luodaan paikkauskohde tietokantaan
+        kohde-id (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-paikkauskohde-urakalle
+                                 +kayttaja-jvh+
+                                 kohde)
+        kohde (merge {:id kohde-id}
+                     kohde)
+        ;; Poistetaan paikkauskohde
+        poistettu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :poista-paikkauskohde
+                        +kayttaja-jvh+
+                        kohde)
+        ;; Haetaan kohteet ja tarkistetaan, että onko meidän juuri luotu kohde enää listassa
+        paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :paikkauskohteet-urakalle
+                                        +kayttaja-jvh+
+                                        {:urakka-id urakka-id})]
+    (is (= 0 (count (reduce (fn [loydetyt kohde]
+                              (if (= nimi (:nimi kohde))
+                                (conj loydetyt kohde)
+                                loydetyt))
+                            []
+                            paikkauskohteet)))
+        "Poistaminen ei onnistunut!")))
