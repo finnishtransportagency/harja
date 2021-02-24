@@ -42,6 +42,13 @@
                       :epaonnistui ->HaePaikkauskohteetEpaonnistui
                       :paasta-virhe-lapi? true}))
 
+(defn- tallenna-paikkauskohde [paikkauskohde]
+  (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
+                     paikkauskohde
+                     {:onnistui ->TallennaPaikkauskohdeOnnistui
+                      :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
+                      :paasta-virhe-lapi? true}))
+
 (extend-protocol tuck/Event
   AvaaLomake
   (process-event [{lomake :lomake} app]
@@ -86,7 +93,7 @@
 
   TallennaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [ ;; Muutetaan paikkauskohteen tilaa vain, jos sitä ei ole asetettu
+    (let [;; Muutetaan paikkauskohteen tilaa vain, jos sitä ei ole asetettu
           paikkauskohde (if (nil? (:paikkauskohteen-tila paikkauskohde))
                           (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")
                           paikkauskohde)
@@ -95,18 +102,16 @@
                             (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
         (js/console.log "Lähetetään paikkauskohde" (pr-str paikkauskohde))
-        (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
-                           paikkauskohde
-                           {:onnistui ->TallennaPaikkauskohdeOnnistui
-                            :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
-                            :paasta-virhe-lapi? true})
+        (tallenna-paikkauskohde paikkauskohde)
         app)))
 
   TilaaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (do
-      (js/console.log "Tää ei tilaa vielä mitään. Eli implementoi toteutus!" (pr-str paikkauskohde))
-      app))
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "tilattu")]
+      (do
+        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatuksi")
+        (tallenna-paikkauskohde paikkauskohde)
+        app)))
 
   HylkaaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
