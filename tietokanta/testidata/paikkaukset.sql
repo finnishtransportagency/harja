@@ -150,7 +150,7 @@ DO $$ DECLARE
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 7331
                                            LIMIT 1);
-  tyomenetelmat                TEXT [] := '{"UREM", "MPA", "REPA", "KIVA", "SIPA", "SIPU"}';
+  tyomenetelmat                TEXT [] := '{"UREM", "MPA", "REPA", "KTVA", "SIPA", "SIPU"}';
 BEGIN
   INSERT INTO paikkaus ("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                         "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
