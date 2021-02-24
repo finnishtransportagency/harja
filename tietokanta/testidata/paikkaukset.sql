@@ -150,7 +150,7 @@ DO $$ DECLARE
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 7331
                                            LIMIT 1);
-  tyomenetelmat                TEXT [] := '{"UREM", "MPA", "REPA", "KIVA", "SIPA", "SIPU"}';
+  tyomenetelmat                TEXT [] := '{"UREM", "MPA", "REPA", "KTVA", "SIPA", "SIPU"}';
 BEGIN
   INSERT INTO paikkaus ("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                         "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
@@ -353,5 +353,5 @@ BEGIN
          (2356, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
           'Liikennejärjestelyt', 1800, 'SIPU', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL)),
   (2357, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
-      'Liikennejärjestelyt', 1900, 'KIVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
+      'Liikennejärjestelyt', 1900, 'KTVA', NOW()::DATE, ROW (22, 1, 40, 1, 150, NULL));
 END $$;
