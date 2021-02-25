@@ -59,25 +59,53 @@
   (testing "VEMTR prosessointihärvelit"
     (is (= 14 (count (vemtr/kombota-samat-tehtavat ekat tokat))))))
 
+;; Kombota-samat-tehtavat on muutettu niin, että myös toimenpide vaikuttaa yhdistämiseen
+;; Koska on mahdollista, että saman niminen tehtävä on kahden eri toimenpiteen alla
+(def e2 [{:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide2" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 4 :toteuma 2}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 4 :toteuma 2}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 6 :toteuma 3}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 6 :toteuma 3}])
+
+(def t2 [{:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 4 :toteuma 2}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 1 :suunniteltu 4 :toteuma 2}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 1 :toteuma 1}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 6 :toteuma 3}
+         {:nimi "Nimi1" :toimenpide "Toimenpide1" :hallintayksikko 2 :suunniteltu 6 :toteuma 3}])
+
+(deftest vemtr-harvelit-ver2
+  (testing "VEMTR prosessointihärvelit"
+    (is (= 3 (count (vemtr/yhdistele-toimenpiteet-ja-tehtavat e2 t2))))))
+
+
 (deftest vemtr-raportti-perusjutut
   (testing "Valtakunnallisten määrien haku raportille"
     (let [[koko-raportti _ [koko-taulukko _ _ koko-maa-rivit] :as koko-maa-kamat]
           (kutsu-palvelua (:http-palvelin jarjestelma)
                           :suorita-raportti
                           +kayttaja-jvh+
-                          {:nimi       :tehtavamaarat
-                           :konteksti  "koko maa"
-                           :parametrit {:alkupvm  (c/to-date (t/local-date 2020 10 1))
+                          {:nimi :tehtavamaarat
+                           :konteksti "koko maa"
+                           :parametrit {:alkupvm (c/to-date (t/local-date 2020 10 1))
                                         :loppupvm (c/to-date (t/local-date 2021 10 1))}})
           [ely-raportti _ [ely-taulukko _ _ ely-rivit] :as ely-kamat]
           (kutsu-palvelua (:http-palvelin jarjestelma)
                           :suorita-raportti
                           +kayttaja-jvh+
-                          {:nimi               :tehtavamaarat
-                           :konteksti          "hallintayksikko"
+                          {:nimi :tehtavamaarat
+                           :konteksti "hallintayksikko"
                            :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                           :parametrit         {:alkupvm  (c/to-date (t/local-date 2020 10 1))
-                                                :loppupvm (c/to-date (t/local-date 2021 10 1))}})]
+                           :parametrit {:alkupvm (c/to-date (t/local-date 2020 10 1))
+                                        :loppupvm (c/to-date (t/local-date 2021 10 1))}})]
 
       (is (not (empty? koko-maa-rivit)) "Palautuu raportille asioita koko maalla")
       (is (not (empty? ely-rivit)) "Palautuu raportille asioita hankintayksiköllä"))))

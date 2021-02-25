@@ -3,11 +3,9 @@
   (:require [harja.kyselyt
              [urakat :as urakat-q]
              [tehtavamaarat :as tm-q]
-             [toteumat :as toteuma-q]
              [hallintayksikot :as hallinta-q]]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log])
-  (:import (java.math RoundingMode)))
+            [taoensso.timbre :as log]))
 
 (defn- sama-tehtava-ja-ely?
   [e t]
@@ -57,13 +55,13 @@
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)]
     (kysely-fn
       db
-      {:alkupvm         alkupvm
-       :loppupvm        loppupvm
-       :hoitokausi      hoitokaudet
-       :urakka          urakka-id
+      {:alkupvm alkupvm
+       :loppupvm loppupvm
+       :hoitokausi hoitokaudet
+       :urakka urakka-id
        :hallintayksikko hallintayksikko-id})))
 
-(defn- laske-toteuma-%                                      ;:TODO voisko olla sql:ssä?
+(defn- laske-toteuma-% ;:TODO voisko olla sql:ssä?
   [rivi]
   (let [[_ _ suunniteltu toteuma toteutunut-materiaalimaara] rivi
         valiotsikko? (-> rivi
@@ -91,7 +89,7 @@
 (defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
   [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
 
-  (if-let [valiotsikkorivi? (= 1 (count (keys rivi)))]
+  (if (= 1 (count (keys rivi))) ;; Tarkistetaan onko väliotsikkorivi
     rivi
     (let [rivi (select-keys rivi [:nimi :toteuma :yksikko :toteutunut-materiaalimaara])]
       (if (= yksikko suunnitteluyksikko)
@@ -122,7 +120,7 @@
 
     :else (vec m)))
 
-(defn taustatiedot                                          ; härveli :D
+(defn taustatiedot ; härveli :D
   [db params & haut]
   (let [haut-muunnoksilla (mapv #(fn [db params acc]
                                    (let [db-fn (first %)
@@ -174,35 +172,34 @@
                                                          (fn [_ _] nil)]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
-        ;; Korjataan järjestys kuntoon, mutta tämä ei lopullisesti auta, koska jossain tuossa
-        ;; alapuolella hallintayksikköjen järjestys sotketaa. Toimenpiteet ja tehtäväryhmät pysyvät onneksi
-        ;; tässä asetetussa järjestyksessä.
-        suunnitellut-ryhmissa (into [] (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
-        suunnitellut-valiotsikoineen (keep identity
-                                           (loop [rivit suunnitellut-ryhmissa
-                                                  toimenpide nil
-                                                  hallintayksikko nil
-                                                  kaikki []]
-                                             (if (empty? rivit)
-                                               kaikki
-                                               (let [rivi (first rivit)
-                                                     uusi-toimenpide? (not= toimenpide (:toimenpide rivi))
-                                                     uusi-hallintayksikko? (not= hallintayksikko (:hallintayksikko rivi))
-                                                     hallintayksikko (if uusi-hallintayksikko?
-                                                                       (:hallintayksikko rivi)
-                                                                       hallintayksikko)
-                                                     toimenpide (if uusi-toimenpide?
-                                                                  (:toimenpide rivi)
-                                                                  toimenpide)]
-                                                 (recur (rest rivit)
-                                                        toimenpide
-                                                        hallintayksikko
-                                                        (conj kaikki
-                                                              (when uusi-hallintayksikko?
-                                                                {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) raportin-taustatiedot)})
-                                                              (when uusi-toimenpide?
-                                                                {:nimi toimenpide})
-                                                              rivi))))))
+        ;; Varmistetaan vielä, että kaikki tehtävät ovat oikeassa järjestyksessä
+        suunnitellut-ryhmissa (into [] (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
+        suunnitellut-valiotsikoineen (loop [rivit suunnitellut-ryhmissa
+                                            toimenpiteet #{}
+                                            hallintayksikot #{}
+                                            kaikki []]
+                                       (if (empty? rivit)
+                                         kaikki
+                                         (let [rivi (first rivit)
+                                               uusi-toimenpide? (not (contains? toimenpiteet
+                                                                                (str (:toimenpide rivi) (:hallintayksikko rivi))))
+
+                                               uusi-hallintayksikko? (not (contains? hallintayksikot (:hallintayksikko rivi)))
+                                               hallintayksikko (:hallintayksikko rivi)
+                                               toimenpide (:toimenpide rivi)
+                                               kaikki-rivit (if uusi-hallintayksikko?
+                                                              (conj kaikki
+                                                                    {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) raportin-taustatiedot)})
+                                                              kaikki)
+                                               kaikki-rivit (if uusi-toimenpide?
+                                                              (conj kaikki-rivit
+                                                                    {:nimi toimenpide})
+                                                              kaikki-rivit)
+                                               kaikki-rivit (conj kaikki-rivit rivi)]
+                                           (recur (rest rivit) ;; loput suunnitellut-ryhmissä
+                                                  (conj toimenpiteet (str (:toimenpide rivi) (:hallintayksikko rivi))) ;; Toimenpide set
+                                                  (conj hallintayksikot hallintayksikko) ;; Hallintayksikkö set
+                                                  kaikki-rivit)))) ;; Pidetään kirjaa kaikista riveistä, joita raporttiin laitetaan
         muodosta-rivi (comp
                         (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
                         (map null-arvot-nollaksi-rivilla)
@@ -214,8 +211,8 @@
                                       vemtr?
                                       (map :nimi raportin-taustatiedot))))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
-    {:rivit   rivit
-     :debug   suunnitellut-ryhmissa
+    {:rivit rivit
+     :debug suunnitellut-ryhmissa
      :otsikot (take (if vemtr? 6 5)
                     [{:otsikko "Tehtävä" :leveys 6}
                      {:otsikko "Yksikkö" :leveys 1}
@@ -223,7 +220,7 @@
                                     (if (> (count hoitokaudet) 1)
                                       (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
                                       (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
-                      :leveys  1 :fmt :numero}
+                      :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma" :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma-%" :leveys 1}
                      {:otsikko "Toteutunut materiaalimäärä" :leveys 1}])}))
@@ -239,7 +236,7 @@
     [:raportti
      {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
      [:taulukko
-      {:otsikko    (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
+      {:otsikko (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
        :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]
