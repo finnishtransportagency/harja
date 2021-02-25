@@ -40,16 +40,3 @@ vahvistaja integer references kayttaja(id),
 vahvistus_pvm timestamp,
 constraint urakka_kategoria_hoitovuosi unique (urakka, kategoria, hoitovuosi)
 );
-
-create table suunnittelu_kustannussuunnitelman_muutos (
-id serial primary key,
-toimenpideinstanssi integer references toimenpideinstanssi(id),
-hoitovuosi integer not null,
-kuvaus text not null,
-maara numeric not null,
-luotu timestamp default now(),
-luoja integer references kayttaja(id) not null,
-urakka integer references urakka(id) not null,
-muokattu timestamp,
-muokkaaja integer references kayttaja(id)
-);
