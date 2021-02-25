@@ -21,3 +21,5 @@ VALUES
 ('(UUSIO) CEM III/A', 10),
 ('(UUSIO) CEM III/B', 11),
 ('Masuuni- tms kuona', 12);
+
+ALTER TABLE yllapitokohde ADD COLUMN yha_tr_osoite tr_osoite;
