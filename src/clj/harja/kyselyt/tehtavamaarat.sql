@@ -47,6 +47,7 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
        tpk.yksikko              as "yksikko",
        tpk.id                   as "toimenpidekoodi",
        u.hallintayksikko        as "hallintayksikko",
+       o.elynumero              as elynumero,
        tpk3.nimi                as "toimenpide",
        toteumat.maara           as "toteuma",
        toteumat.materiaalimaara as "toteutunut-materiaali",
@@ -75,9 +76,9 @@ from toimenpideinstanssi tpi
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
-         u.hallintayksikko, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
+         u.hallintayksikko, o.elynumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by u.hallintayksikko ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
+order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 
 -- name: lisaa-tehtavamaara<!
