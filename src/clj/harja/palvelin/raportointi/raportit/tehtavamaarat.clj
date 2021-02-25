@@ -225,8 +225,8 @@
                                       (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
                       :leveys  1 :fmt :numero}
                      {:otsikko "Toteuma" :leveys 1 :fmt :numero}
-                     {:otsikko "Toteuma-%" :leveys 1}
-                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1}])}))
+                     {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
+                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1 :fmt :numero}])}))
 
 (defn db-haku-fn
   [db params]
