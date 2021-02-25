@@ -271,7 +271,6 @@
 
   TyhjennaLomake
   (process-event [{data :data} app]
-    (js/console.log "TyhjennaLomake" (pr-str data))
     (-> app
         (assoc :pot2-massa-lomake nil)))
 

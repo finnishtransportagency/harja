@@ -44,7 +44,7 @@
 (defn- otsikko-ja-kentta
   [e! {:keys [otsikko tyyppi arvo polku pakollinen? leveys placeholder
               valinnat valinta-nayta valinta-arvo validoi-kentta-fn
-              desimaalien-maara kokonaisluku?]}]
+              desimaalien-maara kokonaisluku? elementin-id]}]
   [:div.otsikko-ja-kentta.inline-block
    [:div
     [:span.kentan-label otsikko]
@@ -56,7 +56,8 @@
                        :vayla-tyyli? true
                        :validoi-kentta-fn validoi-kentta-fn
                        :desimaalien-maara desimaalien-maara
-                       :kokonaisluku? kokonaisluku?}
+                       :kokonaisluku? kokonaisluku?
+                       :elementin-id elementin-id}
     (r/wrap
       arvo
       (fn [uusi-arvo]
@@ -111,6 +112,7 @@
       :valinta-nayta ::pot2-domain/nimi
       :valinta-arvo ::pot2-domain/koodi
       :arvo tyyppi :leveys "250px"
+      :elementin-id (str tyyppi idx)
       :polku (conj polun-avaimet :aineet idx :sideaine/tyyppi)}
      {:otsikko "Pitoisuus"
       :tyyppi :numero :pakollinen? true
@@ -173,18 +175,33 @@
     mk-tiedot/sideaineen-kayttotavat
     aineet))
 
-(defn- massan-aineen-lukutila [{:keys [tiedot tyyppi aineen-otsikko]}]
-  (let [{:runkoaine/keys [massaprosentti kuulamyllyarvo litteysluku pitoisuus
-                          esiintyma]} tiedot]
-    [:div.lukutilan-tausta
-     [:div.aineen-pitoisuus-ja-nimi
-      [:div.pitoisuus (str massaprosentti " %")]
-      [:div.nimi-ja-yksityiskohdat
-       [:div.nimi aineen-otsikko]
-       [:div.massan-yksityiskohdat
-        (when kuulamyllyarvo [:span.yksityiskohta (str "KM-arvo " kuulamyllyarvo)])
-        (when litteysluku [:span.yksityiskohta (str "Litteysluku " litteysluku)])
-        (when esiintyma [:span.yksityiskohta esiintyma])]]]]))
+(defn- runko-ja-lisa-aineen-lukutila
+  [tiedot aineen-otsikko]
+  (let [{:runkoaine/keys [massaprosentti kuulamyllyarvo litteysluku esiintyma]
+         :lisaaine/keys [pitoisuus]} tiedot]
+    [:div.aineen-pitoisuus-ja-nimi
+     [:div.pitoisuus (str (or massaprosentti pitoisuus) " %")]
+     [:div.nimi-ja-yksityiskohdat
+      [:div.nimi aineen-otsikko]
+      [:div.massan-yksityiskohdat
+       (when kuulamyllyarvo [:span.yksityiskohta (str "KM-arvo " kuulamyllyarvo)])
+       (when litteysluku [:span.yksityiskohta (str "Litteysluku " litteysluku)])
+       (when esiintyma [:span.yksityiskohta esiintyma])]]]))
+
+(defn- sideaineen-lukutila
+  [tiedot aineen-otsikko ainetyypit]
+  [:div
+   [:div (str aineen-otsikko)]
+   [:div.sideaineiden-lukutila
+    (for [aine (reverse
+                 (sort-by :sideaine/pitoisuus
+                          (vals (:aineet tiedot))))
+          :let [aineen-nimi (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))]]
+      ^{:key aine}
+      [:div.aineen-pitoisuus-ja-nimi
+       [:div.pitoisuus (str (:sideaine/pitoisuus aine) " %")]
+       [:div.nimi-ja-yksityiskohdat
+        [:div.nimi aineen-nimi]]])]])
 
 (defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?]}]
   [:div.ainevalinta-kentat
@@ -217,16 +234,13 @@
                 polun-avaimet aineet])])]
          (when valittu?
            ^{:key t}
-           [:div.aineiden-lukutila
+           [:div {:class (str "aineiden-lukutila " (name tyyppi))}
             (case tyyppi
-              :runkoaineet
-              [massan-aineen-lukutila {:tiedot tiedot :tyyppi tyyppi :aineen-otsikko (::pot2-domain/nimi t)}]
+              (:runkoaineet :lisaaineet)
+              [runko-ja-lisa-aineen-lukutila tiedot (::pot2-domain/nimi t)]
 
               :sideaineet
-              [:div (str "Sideaine" tiedot)]
-
-              :lisaaineet
-              [:div (str "Lisäaine" tiedot)])]))))])
+              [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])]))))])
 
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
@@ -257,7 +271,8 @@
                     [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
                                                                :validointivirheet muut-validointivirheet
                                                                :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
-                                                               :voi-tallentaa? (not (ui-lomake/voi-tallentaa? data))
+                                                               :voi-tallentaa?  (or (not (ui-lomake/voi-tallentaa? data))
+                                                                                    (not (empty? muut-validointivirheet)))
                                                                :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
                                                                :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                                                                :tyyppi :massa
@@ -351,7 +366,7 @@
                                      (when (= 7 (:runkoaine/tyyppi aine))
                                        (yleiset/str-suluissa-opt (:runkoaine/kuvaus aine)))))
                otsikko-rivitettyna (let [[aine tiedot] (str/split aineen-otsikko #"\(")
-                                         tiedot (if (str/includes? tiedot ")")
+                                         tiedot (if (and tiedot (str/includes? tiedot ")"))
                                                   (str "(" tiedot)
                                                   tiedot)]
                                      [:div [:div aine] [:div tiedot]])]]
