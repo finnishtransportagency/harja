@@ -103,7 +103,7 @@
                  [materiaalin-kaytto materiaali-kaytossa]
                  [:div (str "Haluatko varmasti tallentaa muutokset? Voit myös halutessasi luoda " materiaalista-str " kopion ja muokata sitä.")]]
                 :toiminto-fn toiminto-fn
-                :hyvaksy "Kyllä"})))))
+                :hyvaksy "Tallenna"})))))
      {:luokka "medium"
       :disabled (or disabled lukittu?)}]))
 

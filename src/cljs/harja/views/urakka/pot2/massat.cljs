@@ -53,6 +53,7 @@
                        :leveys leveys :placeholder placeholder
                        :valinnat valinnat :valinta-nayta valinta-nayta
                        :valinta-arvo valinta-arvo
+                       :vayla-tyyli? true
                        :validoi-kentta-fn validoi-kentta-fn
                        :desimaalien-maara desimaalien-maara
                        :kokonaisluku? kokonaisluku?}
@@ -231,13 +232,15 @@
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
-        voi-muokata? (:voi-muokata? pot2-massa-lomake)
+        voi-muokata? (if (contains? pot2-massa-lomake :voi-muokata?)
+                       (:voi-muokata? pot2-massa-lomake)
+                       true)
         massa-id (::pot2-domain/massa-id pot2-massa-lomake)
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
-    [:div
+    [:div.massa-lomake
      (when sivulle?
-       [napit/sulje-ruksi #(e! (pot2-tiedot/->SuljeMateriaalilomake))])
+       [:div.pull-right [napit/sulje-ruksi #(e! (pot2-tiedot/->SuljeMateriaalilomake))]])
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
        :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
@@ -311,20 +314,20 @@
 
        (ui-lomake/lomake-spacer {})
 
-       {:nimi ::pot2-domain/runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti :palstoja 2
+       {:nimi ::pot2-domain/runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti :palstoja 3
         :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
         :komponentti (fn [rivi]
                        [ainevalinta-kentat e! {:rivi rivi
                                                :tyyppi :runkoaineet
                                                :aineet runkoainetyypit
                                                :voi-muokata? voi-muokata?}])}
-       {:nimi ::pot2-domain/sideaineet :otsikko "Sideaineet" :tyyppi :komponentti :palstoja 2
+       {:nimi ::pot2-domain/sideaineet :otsikko "Sideaineet" :tyyppi :komponentti :palstoja 3
         :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
         :komponentti (fn [rivi] [ainevalinta-kentat e! {:rivi rivi
                                                         :tyyppi :sideaineet
                                                         :aineet sideainetyypit
                                                         :voi-muokata? voi-muokata?}])}
-       {:nimi ::pot2-domain/lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti :palstoja 2
+       {:nimi ::pot2-domain/lisaaineet :otsikko "Lisäaineet" :tyyppi :komponentti :palstoja 3
         :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
         :komponentti (fn [rivi] [ainevalinta-kentat e! {:rivi rivi
                                                         :tyyppi :lisaaineet

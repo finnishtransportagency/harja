@@ -28,9 +28,11 @@
   (println "murske lomake pot2-murske-lomakje " (pr-str pot2-murske-lomake))
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
-        voi-muokata? (:voi-muokata? pot2-murske-lomake)
+        voi-muokata? (if (contains? pot2-murske-lomake :voi-muokata?)
+                       (:voi-muokata? pot2-murske-lomake)
+                       true)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)]
-    [:div
+    [:div.murske-lomake
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
        :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?

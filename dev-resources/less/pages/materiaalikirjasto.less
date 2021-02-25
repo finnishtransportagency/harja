@@ -1,29 +1,4 @@
 .materiaalikirjasto-modal {
-    ul.runkoaineen-tiedot {
-        list-style-position: inside;
-        list-style-type: disc;
-        padding-inline-start: 0;
-
-    }
-    .lomake {
-        border: none;
-        .ainevalinta {
-            background-color: @gray240;
-            border-bottom: solid 4px @white;
-            .checkbox {
-                margin: 0;
-            }
-            &.valittu, .lisaa-sideaine, .poista-sideaine {
-                background-color: @gray225;
-            }
-            .kentat-haitari {
-                margin-top: -12px;
-                margin-left: 35px;
-                margin-bottom: 5px;
-            }
-
-        }
-    }
     .livi-grid {
         .panel-heading, .panel-body {
             background-color: @white;
@@ -76,32 +51,56 @@
     }
 }
 // POT2:sta avaamme massa- ja murskelomakkeen myös sivulle overlayhin ilman materiaalikirjaston modaalia
-.lomake {
-    .lukutila {
-        padding: 16px;
-        .lukutilan-tausta {
-            background-color: @white-dark;
+.massa-lomake, .murske-lomake {
+    .lomake {
+        border: none;
+        input {
+            height: 40px;
         }
-        .aineen-pitoisuus-ja-nimi {
-            .fontti-14();
-            display: grid;
-            grid-gap: 1rem;
-            grid-template-columns: 20px auto;
-            grid-template-rows: 20px 100px auto;
-            .pitoisuus {
-                grid-column-start: 1;
-                grid-column-end: span col2-start;
-                grid-row-start: 1;
-                grid-row-end: span 1;
+        .ainevalinta {
+            background-color: @gray240;
+            border-bottom: solid 4px @white;
+            max-width: 650px;
+            .checkbox {
+                margin: 0;
             }
-            .nimi {
-                grid-column-start: 2;
-                grid-column-end: span col2-end;
-                grid-row-start: 1;
-                grid-row-end: span 1;
+            &.valittu, .lisaa-sideaine, .poista-sideaine {
+                background-color: @gray225;
             }
-        }
+            .kentat-haitari {
+                margin-top: -12px;
+                margin-left: 35px;
+                margin-bottom: 5px;
+            }
 
+        }
+        .lukutila {
+            padding: 16px;
+            .lukutilan-tausta {
+                background-color: @white-dark;
+            }
+            .aineen-pitoisuus-ja-nimi {
+                .fontti-14();
+                display: grid;
+                grid-gap: 1rem;
+                grid-template-columns: 20px auto;
+                grid-template-rows: 20px 100px auto;
+                .pitoisuus {
+                    grid-column-start: 1;
+                    grid-column-end: span col2-start;
+                    grid-row-start: 1;
+                    grid-row-end: span 1;
+                }
+                .nimi {
+                    grid-column-start: 2;
+                    grid-column-end: span col2-end;
+                    grid-row-start: 1;
+                    grid-row-end: span 1;
+                }
+            }
+
+        }
     }
 }
+
 
