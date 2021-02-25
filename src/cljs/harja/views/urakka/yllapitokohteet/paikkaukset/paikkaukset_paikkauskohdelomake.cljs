@@ -287,7 +287,33 @@
                           [:div.col-xs-6 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
                             "Poista"
-                            #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]]])
+                            (fn [] (modal/nayta!
+                                     {:modal-luokka "harja-modal-keskitetty"
+                                      :luokka "modal-dialog-keskitetty"}
+                                     [:div
+                                      {:style
+                                       {:display :flex
+                                        :flex-direction :column
+                                        :align-items :center}}
+                                      [:div
+                                       {:style
+                                        {:margin-top "3rem"
+                                         :font-size "16px"
+                                         :font-weight "bold"}}
+                                       "Poistetaanko kohde \"" (:nimi lomake) "\"?"]
+                                      [:div
+                                       {:style
+                                        {:margin-top "1rem"}}
+                                       "Toimintoa ei voi perua."]
+                                      [:div
+                                       {:style
+                                        {:margin-top "3rem"
+                                         :margin-bottom "3rem"
+                                         :display :flex
+                                         :width "100%"
+                                         :justify-content "center"}}
+                                       [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
+                                       [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!]]]))]]])
                        (when (and voi-tilata? (not muokkaustila?))
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
@@ -317,7 +343,7 @@
                                          :display :flex
                                          :width "100%"
                                          :justify-content "center"}}
-                                       [napit/yleinen-ensisijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
+                                       [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
                                        [napit/yleinen-toissijainen "Kumoa" modal/piilota!]]]))]]
                           [:div.col-xs-6 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
