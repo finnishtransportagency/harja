@@ -174,7 +174,10 @@
                                                          (fn [_ _] nil)]))))
         suunnitellut-ryhmissa (->> parametrit
                                    (hae-tehtavamaarat db kysely-fn))
-
+        ;; Korjataan järjestys kuntoon, mutta tämä ei lopullisesti auta, koska jossain tuossa
+        ;; alapuolella hallintayksikköjen järjestys sotketaa. Toimenpiteet ja tehtäväryhmät pysyvät onneksi
+        ;; tässä asetetussa järjestyksessä.
+        suunnitellut-ryhmissa (into [] (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
         suunnitellut-valiotsikoineen (keep identity
                                            (loop [rivit suunnitellut-ryhmissa
                                                   toimenpide nil

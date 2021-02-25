@@ -244,21 +244,22 @@
                                     :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
                                   user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
-  (jdbc/with-db-transaction [c db]
-                            (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
-                            (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
-                            (let [id (if (:toteuma-id toteuma)
-                                       (paivita-toteuma c user toteuma)
-                                       (luo-toteuma c user toteuma))
-                                  paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
-                                                                                           {:urakka-id     (:urakka-id toteuma)
-                                                                                            :sopimus-id    (:sopimus-id toteuma)
-                                                                                            :alkupvm       (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
-                                                                                            :loppupvm      (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
-                                                                                            :toimenpide-id (:toimenpide-id toteuma)
-                                                                                            :tyyppi        (:tyyppi toteuma)})]
-                              {:toteuma          (assoc toteuma :toteuma-id id)
-                               :tehtavien-summat paivitetyt-summat})))
+  (jdbc/with-db-transaction
+    [c db]
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
+    (let [id (if (:toteuma-id toteuma)
+               (paivita-toteuma c user toteuma)
+               (luo-toteuma c user toteuma))
+          paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
+                                                                   {:urakka-id (:urakka-id toteuma)
+                                                                    :sopimus-id (:sopimus-id toteuma)
+                                                                    :alkupvm (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
+                                                                    :loppupvm (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
+                                                                    :toimenpide-id (:toimenpide-id toteuma)
+                                                                    :tyyppi (:tyyppi toteuma)})]
+      {:toteuma (assoc toteuma :toteuma-id id)
+       :tehtavien-summat paivitetyt-summat})))
 
 (defn tallenna-toteuma-ja-kokonaishintaiset-tehtavat
   "Tallentaa toteuman. Palauttaa sen ja tehtävien summat."
