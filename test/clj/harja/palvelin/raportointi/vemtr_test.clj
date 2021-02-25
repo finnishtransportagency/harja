@@ -57,7 +57,7 @@
 
 (deftest vemtr-harvelit
   (testing "VEMTR prosessointihärvelit"
-    (is (= 14 (count (vemtr/kombota-samat-tehtavat ekat tokat))))))
+    (is (= 14 (count (vemtr/yhdistele-toimenpiteet-ja-tehtavat ekat tokat))))))
 
 ;; Kombota-samat-tehtavat on muutettu niin, että myös toimenpide vaikuttaa yhdistämiseen
 ;; Koska on mahdollista, että saman niminen tehtävä on kahden eri toimenpiteen alla
