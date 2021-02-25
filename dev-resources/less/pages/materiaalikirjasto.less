@@ -72,33 +72,46 @@
                 margin-left: 35px;
                 margin-bottom: 5px;
             }
-
         }
         .lukutila {
-            padding: 16px;
-            .lukutilan-tausta {
+            &.mk-aine {
                 background-color: @white-dark;
+                margin-bottom: 8px;
+                > label {
+                    margin-bottom: 12px;
+                    > span > .kentan-label {
+                        color: @black-default;
+                        text-transform: uppercase;
+                    }
+                }
             }
+            .ainevalinta-kentat {
+                .aineiden-lukutila {
+                    &:not(:last-child) {
+                        margin-bottom: 16px;
+                    }
+                }
+            }
+            padding: 16px;
             .aineen-pitoisuus-ja-nimi {
                 .fontti-14();
-                display: grid;
-                grid-gap: 1rem;
-                grid-template-columns: 20px auto;
-                grid-template-rows: 20px 100px auto;
                 .pitoisuus {
-                    grid-column-start: 1;
-                    grid-column-end: span col2-start;
-                    grid-row-start: 1;
-                    grid-row-end: span 1;
+                    display: inline-block;
+                    margin-right: 8px;
+                    vertical-align: top;
+                    width: 50px;
                 }
-                .nimi {
-                    grid-column-start: 2;
-                    grid-column-end: span col2-end;
-                    grid-row-start: 1;
-                    grid-row-end: span 1;
+                .nimi-ja-yksityiskohdat {
+                    display: inline-block;
+                    .massan-yksityiskohdat {
+                        .fontti-12();
+                        color: @black-light;
+                        .yksityiskohta:not(:last-child):after {
+                            content: " \2022  ";
+                        }
+                    }
                 }
             }
-
         }
     }
 }

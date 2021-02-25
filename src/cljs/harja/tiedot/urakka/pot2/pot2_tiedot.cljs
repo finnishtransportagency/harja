@@ -152,25 +152,21 @@
 
   LisaaAlustaToimenpide
   (process-event [_ app]
-    (println "LisaaAlustaToimenpide " )
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] {}))
 
   ValitseAlustatoimenpide
   (process-event [{toimenpide :toimenpide} app]
-    (println "ValitseAlustatoimenpide " (pr-str toimenpide))
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
               {:toimenpide toimenpide}))
 
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]
-    (println "PaivitaAlustalomake " (pr-str alustalomake))
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
               alustalomake))
 
   TallennaAlustalomake
   (process-event [{alustalomake :alustalomake
                    jatka? :jatka?} app]
-    (println "TallennaAlustalomake " (pr-str alustalomake jatka?))
     (let [idt (keys @alustarivit-atom)
           pienin-id (apply min idt)
           uusi-id (if (pos? pienin-id)
@@ -186,12 +182,10 @@
 
   SuljeAlustalomake
   (process-event [_ app]
-    (println "SuljeAlustalomake ")
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
   NaytaMateriaalilomake
   (process-event [{rivi :rivi} app]
-    (println "NaytaMateriaalilomake " (pr-str rivi))
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
           materiaali (if (::pot2-domain/massa-id materiaali)
                        (mk-tiedot/massa-kayttoliittyman-muotoon materiaali

@@ -26,7 +26,6 @@
 
 (defn validoi-paallystekerros
   [rivi taulukko]
-  (println "validoi-paallystekerros rivi" (pr-str rivi))
   (let [{:keys [perustiedot tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
         paakohde (select-keys perustiedot tr/paaluvali-avaimet)
         vuosi 2021 ;; riittää pot2:lle aina

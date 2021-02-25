@@ -178,14 +178,13 @@
                           esiintyma]} tiedot]
     [:div.lukutilan-tausta
      [:div.aineen-pitoisuus-ja-nimi
-      [:div.pitoisuus massaprosentti]
-      [:div.nimi aineen-otsikko]]
-     [:div.massan-yksityiskohdat
-      (when kuulamyllyarvo [:span (str "KM-arvo " kuulamyllyarvo)])
-      (when litteysluku [:span (str "Litteysluku " litteysluku)])
-      (when esiintyma [:span esiintyma])
-      ]
-     ]))
+      [:div.pitoisuus (str massaprosentti " %")]
+      [:div.nimi-ja-yksityiskohdat
+       [:div.nimi aineen-otsikko]
+       [:div.massan-yksityiskohdat
+        (when kuulamyllyarvo [:span.yksityiskohta (str "KM-arvo " kuulamyllyarvo)])
+        (when litteysluku [:span.yksityiskohta (str "Litteysluku " litteysluku)])
+        (when esiintyma [:span.yksityiskohta esiintyma])]]]]))
 
 (defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?]}]
   [:div.ainevalinta-kentat
@@ -312,9 +311,10 @@
           :validoi [[:ei-tyhja "Anna DoP nro"]]
           :vayla-tyyli? true :pakollinen? true})
 
-       (ui-lomake/lomake-spacer {})
+       (when voi-muokata? (ui-lomake/lomake-spacer {}))
 
        {:nimi ::pot2-domain/runkoaineet :otsikko "Runkoaineen materiaali" :tyyppi :komponentti :palstoja 3
+        :kentan-arvon-luokka "text-uppercase"
         :kaariva-luokka (str "mk-aine " (when-not voi-muokata? "lukutila"))
         :komponentti (fn [rivi]
                        [ainevalinta-kentat e! {:rivi rivi
