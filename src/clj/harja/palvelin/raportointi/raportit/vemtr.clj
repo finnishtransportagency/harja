@@ -7,9 +7,10 @@
 
 (defn laske-yhteen [groupattu]
   (let [tulos (reduce (fn [rivi r]
-                        (assoc rivi :suunniteltu (+ (or (:suunniteltu r) 0) (or (:suunniteltu rivi) 0))
-                                    :toteuma (+ (or (:toteuma r) 0) (or (:toteuma rivi) 0))
-                                    :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara r) 0) (or (:toteutunut-materiaalimaara rivi) 0))))
+                        (-> rivi
+                            (update :suunniteltu #(+ (or (:suunniteltu r) 0) (or % 0)))
+                            (update :toteuma #(+ (or (:toteuma r) 0) (or % 0)))
+                            (update :toteutunut-materiaalimaara #(+ (or (:toteutunut-materiaalimaara r) 0) (or % 0)))))
                       (first groupattu) (rest groupattu))]
     tulos))
 
@@ -19,7 +20,7 @@
                          (fn [g]
                            (merge (laske-yhteen (second g))
                                   {:nimi (nth (first g) 2)
-                                   :toimenipde (nth (first g) 1)
+                                   :toimenpide (nth (first g) 1)
                                    :hallintayksikko (nth (first g) 0)}))
                          groupit) ]
     yhteenlasketut))
