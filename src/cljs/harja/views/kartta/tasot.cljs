@@ -293,7 +293,7 @@
 (def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio (taso :organisaatio :urakka 0.7)
+      {:organisaatio (taso :organisaatio :urakka 0.4)
        :tilannekuva-organisaatiot (taso :tilannekuva-organisaatiot :urakka)
        :pohjavesi (taso :pohjavesi :pohjavesialueet)
        :sillat (taso :sillat :sillat)
@@ -319,7 +319,7 @@
        :kan-hairiot (taso :kan-hairiot)
        :suolatoteumat (taso :suolatoteumat)
        :paikkaukset-toteumat (taso :paikkaukset-toteumat)
-       :paikkaukset-paikkauskohteet (taso :paikkaukset-paikkauskohteet)
+       :paikkaukset-paikkauskohteet (taso :paikkaukset-paikkauskohteet :paikkaukset-paikkauskohteet 0.7)
        :maarien-toteumat (taso :maarien-toteumat)
        :tieluvat (taso :tieluvat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
