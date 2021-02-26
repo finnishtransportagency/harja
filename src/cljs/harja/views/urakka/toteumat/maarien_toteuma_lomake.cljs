@@ -33,6 +33,7 @@
 
                      (or (= tyyppi :lisatyo)
                          (= tyyppi :akillinen-hoitotyo)
+                         (= tyyppi :vahinkojen-korjaukset)
                          (= tyyppi :muut-rahavaraukset))
                      "kpl"
 
