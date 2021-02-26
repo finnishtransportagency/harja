@@ -16,14 +16,17 @@
     (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkupvm)
     " - "
     (pvm/fmt-p-k-v-lyhyt loppupvm)
-    (when-not (= "Valmis" tila)
+    (when-not (= "valmis" tila)
       " (arv.)")))
 
 (defn fmt-sijainti [tie alkuosa loppuosa alkuet loppuet]
-  (str tie "/" alkuosa "/" alkuet " - " tie "/" loppuosa "/" loppuet))
+  (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
 
 (defrecord AvaaLomake [lomake])
 (defrecord SuljeLomake [])
+(defrecord FiltteriValitseTila [uusi-tila])
+(defrecord FiltteriValitseVuosi [uusi-vuosi])
+(defrecord FiltteriValitseTyomenetelma [uusi-menetelma])
 (defrecord HaePaikkauskohteet [])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])

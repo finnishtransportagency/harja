@@ -207,7 +207,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            li-luokka-fn itemit-komponentteja? format-fn valitse-fn
            vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo]}]
   [:ul (if vayla-tyyli?
-         {:style (merge {:display (if @auki?
+         {:style (merge {:z-index "1000"
+                         :display (if @auki?
                                     "block"
                                     "none")}
                         (when skrollattava?
