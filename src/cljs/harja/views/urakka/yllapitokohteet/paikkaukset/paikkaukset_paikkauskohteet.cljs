@@ -2,6 +2,7 @@
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.geo :as geo]
+            [cljs-time.core :as time-core]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [clojure.string :as str]
@@ -16,6 +17,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.modal :as modal]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila]
@@ -25,6 +27,16 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as paikkauskohdelomake]
             ))
+
+(def paikkauskohteiden-tilat
+  ["kaikki" "ehdotettu" "hylatty" "tilattu" "valmis"])
+
+(defn- urakan-vuodet [alkupvm loppupvm]
+  (when (and (not (nil? alkupvm)) (not (nil? loppupvm)))
+    (mapv
+      (fn [aika]
+        (time-core/year (first aika)))
+      (pvm/urakan-vuodet alkupvm loppupvm))))
 
 (defn- paikkauskohteet-taulukko [e! app]
   (let [_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
@@ -70,7 +82,11 @@
                  :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
                  :leveys 4
-                 :nimi :formatoitu-aikataulu}
+                 :nimi :formatoitu-aikataulu
+                 :fmt (fn [arvo]
+                        [:span {:class (if (str/includes? arvo "arv")
+                                         "prosessi-kesken"
+                                         "")} arvo])}
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
                 (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
                   {:otsikko "Suun. hinta"
@@ -115,36 +131,39 @@
     [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
                                                    :justify-content "flex-start"}}
      [grid/grid
-      {:tunniste :id
-       :tyhja "Ei tietoja"
-       :rivi-klikattu (fn [kohde]
-                        (do
-                          ;(js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
-                          ;; Näytä valittu rivi kartalla
-                          (when (not (nil? (:sijainti kohde)))
-                            (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
-                            (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
-                            )
-                          ;; avaa lomake
+      (merge {:tunniste :id
+              :tyhja "Ei tietoja"
+              :rivi-klikattu (fn [kohde]
+                               (do
+                                 (js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
+                                 ;; Näytä valittu rivi kartalla
+                                 (when (not (nil? (:sijainti kohde)))
+                                   (js/console.log "rivi-klikattu :: zoomataan" (pr-str (harja.geo/extent (:sijainti kohde))))
+                                   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
+                                   (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
+                                   )
+                                 ;; avaa lomake
 
-                          (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu})))))
-       :rivi-jalkeen-fn (fn [rivit]
-                          ^{:luokka "yhteenveto"}
-                          [{:teksti "Yht."}
-                           {:teksti (str (count paikkauskohteet) " kohdetta")}
-                           {:teksti ""}
-                           {:teksti ""}
-                           {:teksti ""}
-                           {:teksti ""}
-                           (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-                             {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]})
-                           (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-                             {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}
+                                 (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu})))))
+              }
+             (when (> (count paikkauskohteet) 0)
+               {:rivi-jalkeen-fn (fn [rivit]
+                                   ^{:luokka "yhteenveto"}
+                                   [{:teksti "Yht."}
+                                    {:teksti (str (count paikkauskohteet) " kohdetta")}
+                                    {:teksti ""}
+                                    {:teksti ""}
+                                    {:teksti ""}
+                                    {:teksti ""}
+                                    (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+                                      {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]})
+                                    (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+                                      {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}))
       skeema
       paikkauskohteet]]))
 
 (defn kohteet [e! app]
-  [:div
+  [:div.kohdelistaus
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
     [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
     (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
@@ -158,8 +177,50 @@
    [:div.row [paikkauskohteet-taulukko e! app]]]
   )
 
+(defn- filtterit [e! app]
+  (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
+        valittu-tila (:valittu-tila app)
+        valittu-vuosi (:valittu-vuosi app)
+        valittu-tyomenetelma (:valittu-tyomenetelma app)]
+    [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
+     [:div.row
+      #_ [:div.col-xs-2 "vastuuykiskkö"]
+      [:div.col-xs-2
+
+       [:span.alasvedon-otsikko "Tila"]
+       [yleiset/livi-pudotusvalikko {:valinta valittu-tila
+                                     :vayla-tyyli? true
+                                     :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseTila %))
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+                                     :format-fn (fn [val]
+                                                  (let [val (if (= "hylatty" val)
+                                                              "hylätty"
+                                                              val)
+                                                        val (str/capitalize val)]
+                                                    val))}
+        paikkauskohteiden-tilat]]
+      [:div.col-xs-2
+       [:span.alasvedon-otsikko "Vuosi"]
+       [yleiset/livi-pudotusvalikko
+        {:valinta valittu-vuosi
+         :vayla-tyyli? true
+         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+         :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
+        vuodet]]
+      [:div.col-xs-2
+       [:span.alasvedon-otsikko "Työmenetelmä"]
+       [yleiset/livi-pudotusvalikko
+        {:valinta valittu-tyomenetelma
+         :vayla-tyyli? true
+         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+         :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma %))}
+        t-paikkauskohteet/tyomenetelmat]]
+      #_ [:div.col-xs-2 "hae"]
+      ]]))
+
 (defn- paikkauskohteet-sivu [e! app]
   [:div
+   [filtterit e! app]
    [kartta/kartan-paikka]
    [debug/debug app]
    (when (:lomake app)

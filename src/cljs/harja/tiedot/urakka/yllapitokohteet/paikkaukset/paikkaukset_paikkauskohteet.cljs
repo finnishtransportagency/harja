@@ -40,12 +40,19 @@
 (defrecord PeruPaikkauskohteenTilaus [paikkauskohde])
 (defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
 
-(defn- hae-paikkauskohteet [urakka-id]
-  (tuck-apurit/post! :paikkauskohteet-urakalle
-                     {:urakka-id urakka-id}
-                     {:onnistui ->HaePaikkauskohteetOnnistui
-                      :epaonnistui ->HaePaikkauskohteetEpaonnistui
-                      :paasta-virhe-lapi? true}))
+(defn- hae-paikkauskohteet [urakka-id tila vuosi menetelma]
+  (let [alkupvm (pvm/->pvm (str "1.1." vuosi))
+        loppupvm (pvm/->pvm (str "31.12." vuosi))
+        _ (js/console.log "hae-paikkauskohteet" (pr-str alkupvm) (pr-str loppupvm) )]
+    (tuck-apurit/post! :paikkauskohteet-urakalle
+                       {:urakka-id urakka-id
+                        :tila tila
+                        :alkupvm alkupvm
+                        :loppupvm loppupvm
+                        :tyomenetelmat #{menetelma}}
+                       {:onnistui ->HaePaikkauskohteetOnnistui
+                        :epaonnistui ->HaePaikkauskohteetEpaonnistui
+                        :paasta-virhe-lapi? true})))
 
 (defn- tallenna-paikkauskohde [paikkauskohde]
   (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
@@ -64,11 +71,26 @@
   (process-event [_ app]
     (dissoc app :lomake))
 
+  FiltteriValitseTila
+  (process-event [{uusi-tila :uusi-tila} app]
+    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) uusi-tila (:valittu-vuosi app) (:valittu-tyomenetelma app))
+    (assoc app :valittu-tila uusi-tila))
+
+  FiltteriValitseVuosi
+  (process-event [{uusi-vuosi :uusi-vuosi} app]
+    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) uusi-vuosi (:valittu-tyomenetelma app))
+    (assoc app :valittu-vuosi uusi-vuosi))
+
+  FiltteriValitseTyomenetelma
+  (process-event [{uusi-menetelma :uusi-menetelma} app]
+    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) uusi-menetelma)
+    (assoc app :valittu-tyomenetelma uusi-menetelma))
+
   HaePaikkauskohteet
   (process-event [_ app]
     (do
       (js/console.log "HaePaikkauskohteet -> tehdään serverihaku")
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
       app))
 
   HaePaikkauskohteetOnnistui
@@ -76,15 +98,17 @@
     (let [paikkauskohteet (map (fn [kohde]
                                  (-> kohde
                                      (assoc :formatoitu-aikataulu
-                                            (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) "Ehdotettu"))
+                                            (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
-                               vastaus)]
+                               vastaus)
+          zoomattavat-geot (into [] (concat (mapv #(harja.geo/extent (:sijainti %)) paikkauskohteet)))]
       (do
         (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
-        ;(kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)
-        (kartta-tiedot/zoomaa-geometrioihin)
-        (assoc app :paikkauskohteet paikkauskohteet))))
+        (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot)
+        (-> app
+            (assoc :lomake nil) ;; Sulje mahdollinen lomake
+            (assoc :paikkauskohteet paikkauskohteet)))))
 
   HaePaikkauskohteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -136,7 +160,7 @@
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "Paikkauskohteen tallennus onnistui" vastaus)
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id))
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
@@ -165,4 +189,7 @@
         (tallenna-paikkauskohde paikkauskohde)
         app)))
   )
+
+(def tyomenetelmat
+  ["Kaikki" "MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"])
 

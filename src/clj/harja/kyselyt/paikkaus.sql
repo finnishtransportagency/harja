@@ -133,6 +133,10 @@ FROM paikkauskohde pk, urakka u, organisaatio o
    AND pk.poistettu = false
    -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
    AND pk."paikkauskohteen-tila" IS NOT NULL
+   AND (:tila::TEXT IS NULL OR pk."paikkauskohteen-tila" = :tila::paikkauskohteen_tila)
+   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
+    OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
+   AND (:tyomenetelmat::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
    AND u.id = pk."urakka-id"
    AND o.id = u.urakoitsija;
 

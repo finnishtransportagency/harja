@@ -9,7 +9,8 @@
             [harja.geo :as geo]
             [harja.kyselyt.paikkaus :as q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as str]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -53,10 +54,20 @@
                                 (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))]
     validointivirheet))
 
-(defn paikkauskohteet [db user {:keys [vastuuyksikko tila aikavali tyomenetelmat urakka-id] :as tiedot}]
+(defn paikkauskohteet [db user {:keys [vastuuyksikko tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
-        urakan-paikkauskohteet (q/paikkauskohteet-urakalle db {:urakka-id urakka-id})
+        tila (if (or (nil? tila) (= "kaikki" (str/lower-case tila)))
+               nil ;; kaikkia haettaessa käytetään nil arvoa
+               tila)
+        menetelmat (disj tyomenetelmat "Kaikki")
+        menetelmat (when (> (count menetelmat) 0)
+                     menetelmat)
+        urakan-paikkauskohteet (q/paikkauskohteet-urakalle db {:urakka-id urakka-id
+                                                               :tila tila
+                                                               :alkupvm alkupvm
+                                                               :loppupvm loppupvm
+                                                               :tyomenetelmat menetelmat})
         urakan-paikkauskohteet (map (fn [p]
                                       (-> p
                                           (assoc :sijainti (geo/pg->clj (:geometria p)))

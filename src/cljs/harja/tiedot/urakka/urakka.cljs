@@ -203,7 +203,9 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}})
 
-(def paikkaus-default-arvot {:paikkauskohteet {}})
+(def paikkaus-default-arvot {:paikkauskohteet {:valittu-tila "kaikki"
+                                               :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
+                                               :valittu-tyomenetelma "Kaikki"}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 

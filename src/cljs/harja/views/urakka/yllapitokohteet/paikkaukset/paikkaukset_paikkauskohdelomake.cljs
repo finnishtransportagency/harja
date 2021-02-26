@@ -112,7 +112,7 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat ["MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"] ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
+    :valinnat (rest t-paikkauskohteet/tyomenetelmat) ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
     :pakollinen? true
     ::lomake/col-luokka "col-sm-6"}
    (when muu-menetelma?
