@@ -3,58 +3,33 @@
   (:require [harja.kyselyt
              [vemtr :as vemtr-q]
              [tehtavamaarat :as tm-q]]
-            [harja.palvelin.raportointi.raportit.tehtavamaarat :as tm-r]
-            [harja.pvm :as pvm])
-  (:import (java.math RoundingMode)))
+            [harja.palvelin.raportointi.raportit.tehtavamaarat :as tm-r]))
 
+(defn laske-yhteen [groupattu]
+  (let [tulos (reduce (fn [rivi r]
+                        (-> rivi
+                            (update :suunniteltu #(+ (or (:suunniteltu r) 0) (or % 0)))
+                            (update :toteuma #(+ (or (:toteuma r) 0) (or % 0)))
+                            (update :toteutunut-materiaalimaara #(+ (or (:toteutunut-materiaalimaara r) 0) (or % 0)))))
+                      (first groupattu) (rest groupattu))]
+    tulos))
 
-(defn- sama-tehtava-ja-ely?
-  [e t]
-  (and (= (:nimi e) (:nimi t))
-       (= (:hallintayksikko e) (:hallintayksikko t))))
-
-(defn laske-yhteen
-  [e t]
-  (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
-           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
-           :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e) 0) (or (:toteutunut-materiaalimaara t) 0))))
-
-(defn kombota-samat-tehtavat
-  ([ekat tokat]
-   (kombota-samat-tehtavat ekat tokat {}))
-  ([ekat tokat {:keys [tarkistus-fn]}]
-   (loop [ekat ekat
-          tokat tokat
-          kombottu []]
-     (let [e (first ekat)
-           t (first tokat)
-           tarkista (or tarkistus-fn
-                        sama-tehtava-ja-ely?)]
-       (if (not (or e t))
-         kombottu
-         (let [e (or (some #(when (tarkista % e)
-                              (laske-yhteen % e))
-                           kombottu)
-                     (when (tarkista e t)
-                       (laske-yhteen e t))
-                     e)
-               t (or (some #(when (tarkista % t)
-                              (laske-yhteen % t))
-                           kombottu)
-                     (when-not (tarkista e t)
-                       t))
-               kombottu (filter #(not (or (tarkista % e)
-                                          (tarkista % t)))
-                                kombottu)
-               kombottu (apply conj kombottu (keep identity [e t]))]
-           (recur (rest ekat) (rest tokat) kombottu)))))))
+(defn yhdistele-toimenpiteet-ja-tehtavat [e t]
+  (let [groupit (group-by (juxt :hallintayksikko :toimenpide :nimi) (concat e t))
+        yhteenlasketut (mapv
+                         (fn [g]
+                           (merge (laske-yhteen (second g))
+                                  {:nimi (nth (first g) 2)
+                                   :toimenpide (nth (first g) 1)
+                                   :hallintayksikko (nth (first g) 0)}))
+                         groupit) ]
+    yhteenlasketut))
 
 (defn hae-tm-combo [db params]
-  (let [combo-fn
-        (juxt tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla
-              vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla)
-        [mhut yht :as kaksi-tulosjoukkoa] (combo-fn db params)        
-        paluuarvo (sort-by (juxt :hallintayksikko :toimenpide-jarjestys :jarjestys) (kombota-samat-tehtavat mhut yht))]
+  (let [mhut (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params)
+        yht (vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla db params)
+        paluuarvo (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys)
+                           (yhdistele-toimenpiteet-ja-tehtavat mhut yht))]
     paluuarvo))
 
 (defn suorita
