@@ -6,6 +6,7 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.modal :as modal]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila])
@@ -152,16 +153,19 @@
 
   PoistaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (do
-      (js/console.log "Tää ei poista vielä mitään. Eli implementoi toteutus!" (pr-str paikkauskohde))
-      app))
+    (let [paikkauskohde (assoc paikkauskohde :poistettu true)]
+      (do
+        (js/console.log "Merkitään paikkauskohde " (:nimi paikkauskohde) "poistetuksi")
+        (tallenna-paikkauskohde paikkauskohde)
+        app)))
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "Paikkauskohteen tallennus onnistui" vastaus)
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
-      (dissoc app :lomake)))
+      (dissoc app :lomake)
+      (modal/piilota!)))
 
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
