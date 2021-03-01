@@ -130,7 +130,7 @@
                                  :tallenna-paikkauskohde-urakalle
                                  +kayttaja-jvh+
                                  kohde)
-        kohde (merge {:id kohde-id}
+        kohde (merge {:id (:id kohde-id)}
                      kohde)
         ;; Poistetaan paikkauskohde
         poistettu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -149,3 +149,40 @@
                             []
                             paikkauskohteet)))
         "Poistaminen ei onnistunut!")))
+
+
+;; Testataan poistamisen toimivuutta väärillä käyttöoikeuksilla
+(deftest poista-paikkauskohde-vaaralla-kayttajalla-ja-tiedoilla-testi
+  (let [;; Lisätään defaulta paikkauskohteelle haluamamme urakka-id
+        ;; ja nimi vaihdetaan sellaiseksi, että helppo tunnistaa, onko poisto onnistunut
+        nimi "Tämä kemin kohde tulee poistumaan"
+        urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge default-paikkauskohde
+                     {:urakka-id urakka-id
+                      :nimi nimi})
+        ;; Luodaan paikkauskohde tietokantaan
+        kohde-id (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-paikkauskohde-urakalle
+                                 +kayttaja-jvh+
+                                 kohde)
+        kohde (merge {:id (:id kohde-id)}
+                     kohde)
+        ;; Tehdään myös aivan väärä kohde ja yritetään poistaa
+        vaara-id 934534534
+        vaara-kohde (merge {:id vaara-id}
+                     kohde)
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :poista-paikkauskohde
+                          +kayttaja-jvh+
+                          vaara-kohde)
+        ]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-paikkauskohde
+                                           +kayttaja-seppo+
+                                           kohde))
+        "Poikkeusta ei heitetty! Sepolla olikin oikeus poistaa kohde.")
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-paikkauskohde
+                                           +kayttaja-jvh+
+                                           vaara-kohde))
+        "Poikkeusta ei heitetty! Vääkä paikkauskohde onnistuttiin tuhoamaan!")))

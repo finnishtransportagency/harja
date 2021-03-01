@@ -193,3 +193,45 @@ VALUES (:luoja-id,
 
 --name: poista-paikkauskohde!
 UPDATE paikkauskohde SET poistettu = true WHERE id = :id;
+
+--name: hae-paikkauskohde
+-- Haetaan yksittäinen paikkauskohde
+SELECT pk.id                        AS id,
+       pk.nimi                      AS nimi,
+       pk.nro                       AS nro,
+       pk.luotu                     AS luotu,
+       pk.muokattu                  AS muokattu,
+       pk."urakka-id"               AS "urakka-id",
+       pk.tyomenetelma              AS tyomenetelma,
+       pk.tyomenetelma_kuvaus       AS "tyomenetelma-kuvaus",
+       pk.alkupvm                   AS alkupvm,
+       pk.loppupvm                  AS loppupvm,
+       pk.tilattupvm                AS tilattupvm,
+       pk."paikkauskohteen-tila"    AS "paikkauskohteen-tila",
+       pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
+       pk."suunniteltu-maara"       AS "suunniteltu-maara",
+       pk.yksikko                   AS yksikko,
+       pk.lisatiedot                AS lisatiedot,
+       o.nimi                       AS urakoitsija,
+       (pk.tierekisteriosoite).tie  AS tie,
+       (pk.tierekisteriosoite).aosa AS aosa,
+       (pk.tierekisteriosoite).aet  AS aet,
+       (pk.tierekisteriosoite).losa AS losa,
+       (pk.tierekisteriosoite).let  AS let,
+       CASE
+           WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
+               (SELECT *
+                FROM tierekisteriosoitteelle_viiva(
+                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
+                        CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
+                        CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
+           ELSE NULL
+           END                   AS geometria
+FROM paikkauskohde pk, urakka u, organisaatio o
+WHERE pk.poistettu = false
+  -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
+  AND pk."paikkauskohteen-tila" IS NOT NULL
+  AND pk.id = :id
+  AND pk."urakka-id" = :urakka-id
+  AND u.id = pk."urakka-id"
+  AND o.id = u.urakoitsija;

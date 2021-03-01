@@ -171,9 +171,14 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (println "poista-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         id (:id kohde)
+        ;; Tarkistetaan, että haluttu paikkauskohde on olemassa eikä sitä ole vielä poistettu
+        poistettava (first (q/hae-paikkauskohde db {:id (:id kohde) :urakka-id (:urakka-id kohde)}))
         _ (q/poista-paikkauskohde! db id)]
-    ;; Palautetaan poistettu paikkauskohde
-    (assoc kohde :poistettu true)))
+    (if (empty? poistettava)
+      (throw+ {:type "Error"
+               :virheet [{:koodi "ERROR" :viesti "Paikkauskohdetta ei voitu poistaa, koska sitä ei löydy."}]})
+      ;; Palautetaan poistettu paikkauskohde
+      (assoc poistettava :poistettu true))))
 
 (defrecord Paikkauskohteet []
   component/Lifecycle
