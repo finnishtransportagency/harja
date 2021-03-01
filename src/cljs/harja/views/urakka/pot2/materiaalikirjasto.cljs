@@ -48,11 +48,11 @@
     (fn [e! app]
       [:div
        (cond
-         (:pot2-massa-lomake app)
-         [massat/massa-lomake e! app {:sivulle? false}]
+         (and (:pot2-massa-lomake app) (not (get-in app [:pot2-massa-lomake :sivulle?])))
+         [massat/massa-lomake e! app]
 
-         (:pot2-murske-lomake app)
-         [murskeet/murske-lomake e! app {:sivulle? false}]
+         (and (:pot2-murske-lomake app) (not (get-in app [:pot2-murske-lomake :sivulle?])))
+         [murskeet/murske-lomake e! app]
 
          :else
          [urakan-materiaalit e! app])

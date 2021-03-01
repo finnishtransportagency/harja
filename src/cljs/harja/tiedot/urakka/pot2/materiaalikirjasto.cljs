@@ -138,6 +138,27 @@
                :harja.domain.pot2/sideaineet sideaineet
                :harja.domain.pot2/lisaaineet lisaaineet))))
 
+(defn- lisa-aineisiin-pitoisuus [rivi aineet]
+  (mapv (fn [aine]
+          (let [pitoisuus-rivissa (:lisaaine/pitoisuus
+                                    (first (filter (fn [la]
+                                                     (= (::pot2-domain/koodi aine)
+                                                        (:lisaaine/tyyppi la)))
+                                                   (vals (get-in rivi [:data ::pot2-domain/lisaaineet])))))]
+            (assoc aine ::pot2-domain/pitoisuus pitoisuus-rivissa)))
+        aineet))
+
+(defn jarjesta-aineet-tarvittaessa
+  "Järjestää tarvittaessa esim massan lisäaineet pitoisuuden mukaisesti suurimmasta pienimpään"
+  [{:keys [rivi tyyppi aineet voi-muokata?] :as opts}]
+  (if (and (= tyyppi :lisaaineet)
+           (not voi-muokata?))
+    (into []
+          (reverse
+            (sort-by ::pot2-domain/pitoisuus
+                     (lisa-aineisiin-pitoisuus rivi aineet))))
+    aineet))
+
 (extend-protocol tuck/Event
 
   AlustaTila

@@ -141,7 +141,7 @@
   (let [aineet (or (get-in rivi (cons :data [::pot2-domain/sideaineet kayttotapa :aineet]))
                    {0 mk-tiedot/tyhja-sideaine})
         jo-valitut-sideainetyypit (into #{} (map :sideaine/tyyppi (vals aineet)))]
-    [:div
+    [:div.sideaine-komponentti
      (map-indexed (fn [idx [_ sideaine]]
                     ;; Tässä tarjotaan käyttäjälle mahdollisena sideainetyyppinä kaikki sellaiset, joita ei ole vielä ko. massalle
                     ;; valittu.
@@ -203,51 +203,53 @@
        [:div.nimi-ja-yksityiskohdat
         [:div.nimi aineen-nimi]]])]])
 
-(defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?]}]
+(defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?] :as opts}]
   [:div.ainevalinta-kentat
-   (for [t (ainevalintalaatikot tyyppi aineet)]
-     (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
-           {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
-       (if voi-muokata?
-         ^{:key t}
-         [:div {:class (str "aineiden-muokkaustila ainevalinta " (when valittu? "valittu"))}
-          (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
-                    (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
-            [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
-                                         :arvo valittu? :label-luokka (when valittu? "bold")
-                                         :polku (conj polun-avaimet :valittu?)}])
-
-          (when valittu?
-            [:div.kentat-haitari
-             (case tyyppi
-               (:runkoaineet :lisaaineet)
-               (for [k (tyypin-kentat {:tyyppi tyyppi
-                                       :tiedot tiedot
-                                       :polun-avaimet polun-avaimet
-                                       :voi-muokata? voi-muokata?})]
-                 ^{:key (:otsikko k)}
-                 [:div.inline-block {:style {:margin-right "6px"}}
-                  [otsikko-ja-kentta e! k]])
-
-               :sideaineet
-               [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
-                polun-avaimet aineet])])]
-         (when valittu?
+   (let [aineet (mk-tiedot/jarjesta-aineet-tarvittaessa opts)]
+     (for [t (ainevalintalaatikot tyyppi aineet)]
+       (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
+             {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
+         (if voi-muokata?
            ^{:key t}
-           [:div {:class (str "aineiden-lukutila " (name tyyppi))}
-            (case tyyppi
-              (:runkoaineet :lisaaineet)
-              [runko-ja-lisa-aineen-lukutila tiedot (::pot2-domain/nimi t)]
+           [:div {:class (str "aineiden-muokkaustila ainevalinta " (when valittu? "valittu"))}
+            (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
+                      (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
+              [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
+                                           :arvo valittu? :label-luokka (when valittu? "bold")
+                                           :polku (conj polun-avaimet :valittu?)}])
 
-              :sideaineet
-              [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])]))))])
+            (when valittu?
+              [:div.kentat-haitari
+               (case tyyppi
+                 (:runkoaineet :lisaaineet)
+                 (for [k (tyypin-kentat {:tyyppi tyyppi
+                                         :tiedot tiedot
+                                         :polun-avaimet polun-avaimet
+                                         :voi-muokata? voi-muokata?})]
+                   ^{:key (:otsikko k)}
+                   [:div.inline-block {:style {:margin-right "6px"}}
+                    [otsikko-ja-kentta e! k]])
+
+                 :sideaineet
+                 [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
+                  polun-avaimet aineet])])]
+           (when valittu?
+             ^{:key t}
+             [:div {:class (str "aineiden-lukutila " (name tyyppi))}
+              (case tyyppi
+                (:runkoaineet :lisaaineet)
+                [runko-ja-lisa-aineen-lukutila tiedot (::pot2-domain/nimi t)]
+
+                :sideaineet
+                [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])])))))])
 
 
-(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
+(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
         voi-muokata? (if (contains? pot2-massa-lomake :voi-muokata?)
                        (:voi-muokata? pot2-massa-lomake)
                        true)
+        sivulle? (:sivulle? pot2-massa-lomake)
         massa-id (::pot2-domain/massa-id pot2-massa-lomake)
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
@@ -389,27 +391,29 @@
         aineen-otsikko
         [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]]])])
 
-(defn- massan-sideaineet [rivi ainetyypit]
-  [:span
-   (for [aine (reverse
-                (sort-by :sideaine/pitoisuus
-                         (:harja.domain.pot2/sideaineet rivi)))]
-     ^{:key (:sideaine/id aine)}
-     [:span
-      [:div
-       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
-       [:span.pull-right (str (:sideaine/pitoisuus aine) "%")]]])])
+(defn- massan-side-tai-lisa-aineet [rivi ainetyypit tyyppi]
+  (let [aineet-key (if (= tyyppi :lisaaineet)
+                     :harja.domain.pot2/lisaaineet
+                     :harja.domain.pot2/sideaineet)]
+    [:span
+     (for [aine (reverse
+                  (sort-by (if (= tyyppi :lisaaineet)
+                             :lisaaine/pitoisuus
+                             :sideaine/pitoisuus)
+                           (aineet-key rivi)))
+           :let [aine (clojure.set/rename-keys aine {:sideaine/tyyppi :tyyppi
+                                                     :lisaaine/tyyppi :tyyppi
+                                                     :sideaine/pitoisuus :pitoisuus
+                                                     :lisaaine/pitoisuus :pitoisuus
+                                                     :sideaine/id :id
+                                                     :lisaaine/id :id})
 
-(defn- massan-lisaaineet [rivi ainetyypit]
-  [:span
-   (for [aine (reverse
-                (sort-by :lisaaine/pitoisuus
-                         (:harja.domain.pot2/lisaaineet rivi)))]
-     ^{:key (:lisaaine/id aine)}
-     [:span
-      [:div
-       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
-       [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
+                 {:keys [id tyyppi pitoisuus]}  aine]]
+       ^{:key (str id tyyppi)}
+       [:span
+        [:div
+         (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit tyyppi))
+         [:span.pull-right (str pitoisuus "%")]]])]))
 
 (defn massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
@@ -435,10 +439,10 @@
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
     {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
      :komponentti (fn [rivi]
-                    [massan-sideaineet rivi (:sideainetyypit materiaalikoodistot)])}
+                    [massan-side-tai-lisa-aineet rivi (:sideainetyypit materiaalikoodistot) :sideaineet])}
     {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisaaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
-                    [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
+                    [massan-side-tai-lisa-aineet rivi (:lisaainetyypit materiaalikoodistot) :lisaaineet])}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]

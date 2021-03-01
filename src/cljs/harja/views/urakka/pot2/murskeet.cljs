@@ -24,13 +24,13 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
-  (println "murske lomake pot2-murske-lomakje " (pr-str pot2-murske-lomake))
+(defn murske-lomake [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
   (let [{:keys [mursketyypit]} materiaalikoodistot
         murske-id (::pot2-domain/murske-id pot2-murske-lomake)
         voi-muokata? (if (contains? pot2-murske-lomake :voi-muokata?)
                        (:voi-muokata? pot2-murske-lomake)
                        true)
+        sivulle? (:sivulle? pot2-murske-lomake)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)]
     [:div.murske-lomake
      [ui-lomake/lomake
