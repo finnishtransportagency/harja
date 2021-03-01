@@ -141,7 +141,7 @@
   (let [aineet (or (get-in rivi (cons :data [::pot2-domain/sideaineet kayttotapa :aineet]))
                    {0 mk-tiedot/tyhja-sideaine})
         jo-valitut-sideainetyypit (into #{} (map :sideaine/tyyppi (vals aineet)))]
-    [:div
+    [:div.sideaine-komponentti
      (map-indexed (fn [idx [_ sideaine]]
                     ;; Tässä tarjotaan käyttäjälle mahdollisena sideainetyyppinä kaikki sellaiset, joita ei ole vielä ko. massalle
                     ;; valittu.
@@ -203,51 +203,53 @@
        [:div.nimi-ja-yksityiskohdat
         [:div.nimi aineen-nimi]]])]])
 
-(defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?]}]
+(defn- ainevalinta-kentat [e! {:keys [rivi tyyppi aineet voi-muokata?] :as opts}]
   [:div.ainevalinta-kentat
-   (for [t (ainevalintalaatikot tyyppi aineet)]
-     (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
-           {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
-       (if voi-muokata?
-         ^{:key t}
-         [:div {:class (str "aineiden-muokkaustila ainevalinta " (when valittu? "valittu"))}
-          (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
-                    (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
-            [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
-                                         :arvo valittu? :label-luokka (when valittu? "bold")
-                                         :polku (conj polun-avaimet :valittu?)}])
-
-          (when valittu?
-            [:div.kentat-haitari
-             (case tyyppi
-               (:runkoaineet :lisaaineet)
-               (for [k (tyypin-kentat {:tyyppi tyyppi
-                                       :tiedot tiedot
-                                       :polun-avaimet polun-avaimet
-                                       :voi-muokata? voi-muokata?})]
-                 ^{:key (:otsikko k)}
-                 [:div.inline-block {:style {:margin-right "6px"}}
-                  [otsikko-ja-kentta e! k]])
-
-               :sideaineet
-               [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
-                polun-avaimet aineet])])]
-         (when valittu?
+   (let [aineet (mk-tiedot/jarjesta-aineet-tarvittaessa opts)]
+     (for [t (ainevalintalaatikot tyyppi aineet)]
+       (let [polun-avaimet [(keyword "harja.domain.pot2" (name tyyppi)) (::pot2-domain/koodi t)]
+             {:keys [valittu?] :as tiedot} (get-in rivi (cons :data polun-avaimet))]
+         (if voi-muokata?
            ^{:key t}
-           [:div {:class (str "aineiden-lukutila " (name tyyppi))}
-            (case tyyppi
-              (:runkoaineet :lisaaineet)
-              [runko-ja-lisa-aineen-lukutila tiedot (::pot2-domain/nimi t)]
+           [:div {:class (str "aineiden-muokkaustila ainevalinta " (when valittu? "valittu"))}
+            (when (or (not= polun-avaimet [:harja.domain.pot2/sideaineet :lisatty])
+                      (mk-tiedot/lisatty-sideaine-mahdollinen? (:data rivi)))
+              [aineen-otsikko-checkbox e! {:otsikko (::pot2-domain/nimi t)
+                                           :arvo valittu? :label-luokka (when valittu? "bold")
+                                           :polku (conj polun-avaimet :valittu?)}])
 
-              :sideaineet
-              [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])]))))])
+            (when valittu?
+              [:div.kentat-haitari
+               (case tyyppi
+                 (:runkoaineet :lisaaineet)
+                 (for [k (tyypin-kentat {:tyyppi tyyppi
+                                         :tiedot tiedot
+                                         :polun-avaimet polun-avaimet
+                                         :voi-muokata? voi-muokata?})]
+                   ^{:key (:otsikko k)}
+                   [:div.inline-block {:style {:margin-right "6px"}}
+                    [otsikko-ja-kentta e! k]])
+
+                 :sideaineet
+                 [sideaineet-komponentti e! rivi (::pot2-domain/koodi t)
+                  polun-avaimet aineet])])]
+           (when valittu?
+             ^{:key t}
+             [:div {:class (str "aineiden-lukutila " (name tyyppi))}
+              (case tyyppi
+                (:runkoaineet :lisaaineet)
+                [runko-ja-lisa-aineen-lukutila tiedot (::pot2-domain/nimi t)]
+
+                :sideaineet
+                [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])])))))])
 
 
-(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app} {:keys [sivulle?]}]
+(defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
         voi-muokata? (if (contains? pot2-massa-lomake :voi-muokata?)
                        (:voi-muokata? pot2-massa-lomake)
                        true)
+        sivulle? (:sivulle? pot2-massa-lomake)
         massa-id (::pot2-domain/massa-id pot2-massa-lomake)
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
@@ -395,7 +397,9 @@
                      :harja.domain.pot2/sideaineet)]
     [:span
      (for [aine (reverse
-                  (sort-by :pitoisuus
+                  (sort-by (if (= tyyppi :lisaaineet)
+                             :lisaaine/pitoisuus
+                             :sideaine/pitoisuus)
                            (aineet-key rivi)))
            :let [aine (clojure.set/rename-keys aine {:sideaine/tyyppi :tyyppi
                                                      :lisaaine/tyyppi :tyyppi
@@ -405,7 +409,7 @@
                                                      :lisaaine/id :id})
 
                  {:keys [id tyyppi pitoisuus]}  aine]]
-       ^{:key id}
+       ^{:key (str id tyyppi)}
        [:span
         [:div
          (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit tyyppi))

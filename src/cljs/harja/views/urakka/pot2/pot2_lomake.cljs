@@ -186,11 +186,11 @@
                                          :validointi (:alusta pot2-validoinnit)}
             pot2-tiedot/alustarivit-atom]
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
-           (cond pot2-massa-lomake
-                 [massat/massa-lomake e! massalomake-app {:sivulle? true}]
+           (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))
+                 [massat/massa-lomake e! massalomake-app]
 
-                 pot2-murske-lomake
-                 [murskeet/murske-lomake e! murskelomake-app {:sivulle? true}]
+                 (and pot2-murske-lomake (:sivulle? pot2-murske-lomake))
+                 [murskeet/murske-lomake e! murskelomake-app ]
 
                  :else
                  [:span])

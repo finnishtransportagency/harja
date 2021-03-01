@@ -189,8 +189,8 @@
     (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
           materiaali (if (::pot2-domain/massa-id materiaali)
                        (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
-                                                                false
-                                                                (::pot2-domain/massa-id materiaali))
+                                                                (::pot2-domain/massa-id materiaali)
+                                                                false)
                        materiaali)
           polku (if (:murske rivi) :pot2-murske-lomake :pot2-massa-lomake)
           nil-polku (if (:murske rivi) :pot2-massa-lomake :pot2-murske-lomake)]
