@@ -39,17 +39,20 @@
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
 (defn- paikkauskohteet-taulukko [e! app]
-  (let [_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
-        _ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
-        _ (js/console.log "voi kirjoittaa kohteisiin" (pr-str (oikeudet/voi-kirjoittaa?
+  (let [;_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
+        ;_ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
+        ;_
+        #_(js/console.log "voi kirjoittaa kohteisiin" (pr-str (oikeudet/voi-kirjoittaa?
                                                                 oikeudet/urakat-paikkaukset-paikkauskohteet
                                                                 (-> @tila/tila :yleiset :urakka :id)
                                                                 @istunto/kayttaja)))
-        _ (js/console.log "voi kirjoittaa kustannuksiin" (pr-str (oikeudet/voi-kirjoittaa?
+        ;_
+        #_(js/console.log "voi kirjoittaa kustannuksiin" (pr-str (oikeudet/voi-kirjoittaa?
                                                                    oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
                                                                    (-> @tila/tila :yleiset :urakka :id)
                                                                    @istunto/kayttaja)))
-        _ (js/console.log "voi lukea kohteita" (pr-str (oikeudet/voi-lukea?
+        ;_
+        #_(js/console.log "voi lukea kohteita" (pr-str (oikeudet/voi-lukea?
                                                          oikeudet/urakat-paikkaukset-paikkauskohteet
                                                          (-> @tila/tila :yleiset :urakka :id)
                                                          @istunto/kayttaja)))
@@ -135,10 +138,10 @@
               :tyhja "Ei tietoja"
               :rivi-klikattu (fn [kohde]
                                (do
-                                 (js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
+                                 ;(js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
                                  ;; Näytä valittu rivi kartalla
                                  (when (not (nil? (:sijainti kohde)))
-                                   (js/console.log "rivi-klikattu :: zoomataan" (pr-str (harja.geo/extent (:sijainti kohde))))
+                                   ;(js/console.log "rivi-klikattu :: zoomataan" (pr-str (harja.geo/extent (:sijainti kohde))))
                                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
                                    (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
                                    )

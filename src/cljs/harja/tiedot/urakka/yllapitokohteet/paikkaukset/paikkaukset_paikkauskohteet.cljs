@@ -41,10 +41,15 @@
 (defrecord PeruPaikkauskohteenTilaus [paikkauskohde])
 (defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
 
+(defn- siivoa-ennen-lahetysta [lomake]
+  (dissoc lomake
+          :sijainti
+          :harja.tiedot.urakka.urakka/validi?
+          :harja.tiedot.urakka.urakka/validius))
+
 (defn- hae-paikkauskohteet [urakka-id tila vuosi menetelma]
   (let [alkupvm (pvm/->pvm (str "1.1." vuosi))
-        loppupvm (pvm/->pvm (str "31.12." vuosi))
-        _ (js/console.log "hae-paikkauskohteet" (pr-str alkupvm) (pr-str loppupvm) )]
+        loppupvm (pvm/->pvm (str "31.12." vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
                        {:urakka-id urakka-id
                         :tila tila
@@ -62,11 +67,66 @@
                       :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
                       :paasta-virhe-lapi? true}))
 
+(defn validoinnit
+  ([avain lomake]
+   (avain {:nimi [tila/ei-nil tila/ei-tyhja]
+           :tyomenetelma [tila/ei-nil tila/ei-tyhja]
+           :tie [tila/ei-nil tila/ei-tyhja tila/numero]
+           :aosa [tila/ei-nil tila/ei-tyhja tila/numero]
+           :losa [tila/ei-nil tila/ei-tyhja tila/numero]
+           :aet [tila/ei-nil tila/ei-tyhja tila/numero]
+           :let [tila/ei-nil tila/ei-tyhja tila/numero]
+           :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+           :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                      (tila/silloin-kun #(not (nil? (:alkupvm lomake)))
+                                        (fn [arvo]
+                                          ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                          (when (pvm/ennen? (:alkupvm lomake) arvo)
+                                            arvo)))]
+           :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
+           :yksikko [tila/ei-nil tila/ei-tyhja]
+           :suunniteltu-hinta [tila/ei-nil tila/ei-tyhja tila/numero]
+           }))
+  ([avain]
+   (validoinnit avain {})))
+
+(defn lomakkeen-validoinnit [lomake]
+  [[:nimi] (validoinnit :nimi lomake)
+   [:tyomenetelma] (validoinnit :tyomenetelma lomake)
+   [:tie] (validoinnit :tie lomake)
+   [:aosa] (validoinnit :aosa lomake)
+   [:losa] (validoinnit :losa lomake)
+   [:aet] (validoinnit :aet lomake)
+   [:let] (validoinnit :let lomake)
+   [:alkupvm] (validoinnit :alkupvm lomake)
+   [:loppupvm] (validoinnit :loppupvm lomake)
+   [:suunniteltu-maara] (validoinnit :suunniteltu-maara lomake)
+   [:yksikko] (validoinnit :yksikko lomake)
+   [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)])
+
+(defn- validoi-lomake [lomake]
+  (apply tila/luo-validius-tarkistukset [[:nimi] (validoinnit :nimi lomake)
+                                         [:tyomenetelma] (validoinnit :tyomenetelma lomake)
+                                         [:tie] (validoinnit :tie lomake)
+                                         [:aosa] (validoinnit :aosa lomake)
+                                         [:losa] (validoinnit :losa lomake)
+                                         [:aet] (validoinnit :aet lomake)
+                                         [:let] (validoinnit :let lomake)
+                                         [:alkupvm] (validoinnit :alkupvm lomake)
+                                         [:loppupvm] (validoinnit :loppupvm lomake)
+                                         [:suunniteltu-maara] (validoinnit :suunniteltu-maara lomake)
+                                         [:yksikko] (validoinnit :yksikko lomake)
+                                         [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)]))
+
 (extend-protocol tuck/Event
   AvaaLomake
   (process-event [{lomake :lomake} app]
-    (-> app
-        (assoc :lomake lomake)))
+    (let [{:keys [validoi] :as validoinnit} (validoi-lomake lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)]
+      (-> app
+          (assoc :lomake lomake)
+          (assoc-in [:lomake ::tila/validius] validius)
+          (assoc-in [:lomake ::tila/validi?] validi?))))
 
   SuljeLomake
   (process-event [_ app]
@@ -90,7 +150,7 @@
   HaePaikkauskohteet
   (process-event [_ app]
     (do
-      (js/console.log "HaePaikkauskohteet -> tehdään serverihaku")
+      ; (js/console.log "HaePaikkauskohteet -> tehdään serverihaku")
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
       app))
 
@@ -103,10 +163,14 @@
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
                                vastaus)
-          zoomattavat-geot (into [] (concat (mapv #(harja.geo/extent (:sijainti %)) paikkauskohteet)))]
+          zoomattavat-geot (into [] (concat (mapv #(harja.geo/extent (:sijainti %)) paikkauskohteet)))
+          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
+          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
+          ]
       (do
-        (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
-        (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot)
+        (when (and paikkauskohteet zoomattavat-geot)
+          (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
+          (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot))
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
             (assoc :paikkauskohteet paikkauskohteet)))))
@@ -114,12 +178,17 @@
   HaePaikkauskohteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "Haku epäonnistui, vastaus " vastaus)
+      (js/console.log "Haku epäonnistui, vastaus " (pr-str vastaus))
       app))
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
-    (assoc app :lomake lomake))
+    (let [{:keys [validoi] :as validoinnit} (validoi-lomake lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)]
+      (-> app
+          (assoc :lomake lomake)
+          (assoc-in [:lomake ::tila/validius] validius)
+          (assoc-in [:lomake ::tila/validi?] validi?))))
 
   TallennaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
@@ -128,10 +197,10 @@
                           (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")
                           paikkauskohde)
           paikkauskohde (-> paikkauskohde
-                            (dissoc :sijainti)
+                            (siivoa-ennen-lahetysta)
                             (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
-        (js/console.log "Lähetetään paikkauskohde" (pr-str paikkauskohde))
+        (js/console.log "Tallennetaan paikkauskohde" (pr-str paikkauskohde))
         (tallenna-paikkauskohde paikkauskohde)
         app)))
 
@@ -161,11 +230,10 @@
 
   TallennaPaikkauskohdeOnnistui
   (process-event [{vastaus :vastaus} app]
-    (do
-      (js/console.log "Paikkauskohteen tallennus onnistui" vastaus)
-      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
-      (dissoc app :lomake)
-      (modal/piilota!)))
+    (let [_ (js/console.log "Paikkauskohteen tallennus onnistui" (pr-str vastaus))
+          _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]

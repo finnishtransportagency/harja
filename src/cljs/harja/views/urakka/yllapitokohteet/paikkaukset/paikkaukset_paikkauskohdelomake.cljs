@@ -14,6 +14,14 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.ui.modal :as modal]))
 
+(defn nayta-virhe? [polku lomake]
+  (let [validi? (if (::tila/validius lomake)
+                  (get-in lomake [::tila/validius polku :validi?])
+                  false)]
+    ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
+    ;; boolean ympäri
+    (not validi?)))
+
 (defn- lukutila-rivi [otsikko arvo]
   [:div {:style {:padding-top "16px" :padding-bottom "8px"}}
    [:div.row
@@ -21,7 +29,7 @@
    [:div.row
     [:span {:style {:font-weight 400 :font-size "14px" :line-height "20px" :color "black"}} arvo]]])
 
-(defn suunnitelman-kentat []
+(defn suunnitelman-kentat [lomake]
 
   [(lomake/ryhma
      {:otsikko "Alustava suunnitelma"
@@ -30,17 +38,23 @@
       :tyyppi :pvm
       :nimi :alkupvm
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:alkupvm] lomake)
       ::lomake/col-luokka "col-sm-6"}
      {:otsikko "Arv. lopetus"
       :tyyppi :pvm
       :nimi :loppupvm
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:loppupvm] lomake)
       ::lomake/col-luokka "col-sm-6"})
    (lomake/rivi
      {:otsikko "Suunniteltu määrä"
       :tyyppi :positiivinen-numero
       :nimi :suunniteltu-maara
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:suunniteltu-maara] lomake)
       ::lomake/col-luokka "col-sm-4"
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Yksikkö"
@@ -48,12 +62,16 @@
       :valinnat ["m²" "t" "kpl" "jm"]
       :nimi :yksikko
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:yksikko] lomake)
       ::lomake/col-luokka "col-sm-2"}
      {:otsikko "Suunniteltu hinta"
       :tyyppi :positiivinen-numero
       :nimi :suunniteltu-hinta
       ::lomake/col-luokka "col-sm-6"
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:suunniteltu-hinta] lomake)
       :yksikko "€"})
    (lomake/rivi
      {:otsikko "Lisatiedot"
@@ -64,7 +82,7 @@
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      )])
 
-(defn sijainnin-kentat []
+(defn sijainnin-kentat [lomake]
   [(lomake/ryhma
      {:otsikko "Sijainti"
       :rivi? true
@@ -74,6 +92,8 @@
       :tyyppi :numero
       :nimi :tie
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:tie] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Ajorata"
       :tyyppi :valinta
@@ -85,26 +105,38 @@
       :tyyppi :numero
       :pakollinen? true
       :nimi :aosa
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:aosa] lomake)
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "A-et."
       :tyyppi :numero
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:aet] lomake)
       :nimi :aet}
      {:otsikko "L-osa."
       :tyyppi :numero
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:losa] lomake)
       :nimi :losa}
      {:otsikko "L-et."
       :tyyppi :numero
       :pakollinen? true
+      :vayla-tyyli? true
+      :virhe? (nayta-virhe? [:let] lomake)
       :nimi :let})])
 
-(defn nimi-numero-ja-tp-kentat [muu-menetelma?]
+(defn nimi-numero-ja-tp-kentat [muu-menetelma? lomake]
   [{:otsikko "Nimi"
     :tyyppi :string
     :nimi :nimi
     :pakollinen? true
-    ::lomake/col-luokka "col-sm-6"}
+    :vayla-tyyli? true
+    :virhe? (nayta-virhe? [:nimi] lomake)
+    :validoi [[:ei-tyhja "Anna nimi"]]
+    ::lomake/col-luokka "col-sm-6"
+    :pituus-max 100}
    {:otsikko "Lask.nro"
     :tyyppi :string
     :nimi :nro
@@ -113,6 +145,8 @@
     :tyyppi :valinta
     :nimi :tyomenetelma
     :valinnat (rest t-paikkauskohteet/tyomenetelmat) ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
+    :vayla-tyyli? true
+    :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
     ::lomake/col-luokka "col-sm-6"}
    (when muu-menetelma?
@@ -124,11 +158,11 @@
 
 (defn paikkauskohde-skeema [e! muu-menetelma? voi-muokata? lomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
-                         (nimi-numero-ja-tp-kentat muu-menetelma?))
+                         (nimi-numero-ja-tp-kentat muu-menetelma? lomake))
         sijainti (when voi-muokata?
-                   (sijainnin-kentat))
+                   (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
-                      (suunnitelman-kentat))]
+                      (suunnitelman-kentat lomake))]
     (vec (concat nimi-nro-ja-tp
                  sijainti
                  suunnitelma))))
@@ -162,9 +196,12 @@
                                  (not= "hylatty" (:paikkauskohteen-tila lomake)))
 
                             false ;; Defaulttina estetään muokkaus
-                            )]
+                            )
+        ;; Pidetään kirjaa validoinnista
+        voi-tallentaa? (::tila/validi? lomake)
+        ]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
-    [:div.overlay-oikealla {:style {:width "600px"}}
+    [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Tarkistetaan muokkaustila
      (when (not muokkaustila?)
        [:div
@@ -280,7 +317,8 @@
                           [:div.col-xs-6 {:style {:padding-left "0"}}
                            [napit/tallenna
                             "Tallenna"
-                            #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))]
+                            #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))
+                            {:disabled (not voi-tallentaa?)}]
                            [napit/yleinen-toissijainen
                             "Peruuta"
                             #(e! (t-paikkauskohteet/->SuljeLomake))]]
