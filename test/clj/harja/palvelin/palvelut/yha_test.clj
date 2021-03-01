@@ -171,18 +171,16 @@
                                                               :let 2})})
           yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
                                                FROM yhatiedot WHERE urakka = " urakka-id ";"))
-          kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
-
+          kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))
+          yha-tr-osoite (first (q "SELECT (yha_tr_osoite).tie, (yha_tr_osoite).aosa, (yha_tr_osoite).aet,
+                                          (yha_tr_osoite).losa, (yha_tr_osoite).let
+                                     FROM yllapitokohde WHERE yha_kohdenumero = 1"))]
       (is (some? (:yhatiedot vastaus)))
       (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
       (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
           "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
       (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))
-      (is (= {:tie 20
-              :aosa 1
-              :aet 1
-              :losa 1
-              :let 2} :todo-lue-yla-tr-osoite-uudesta-yllapitokohde-rivista)))))
+      (is (= [20 1 1 1 2] yha-tr-osoite)))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

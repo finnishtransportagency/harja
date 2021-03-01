@@ -636,7 +636,7 @@
                            (-> paallystysilmoitus :alusta)
                            (-> paallystysilmoitus :ilmoitustiedot :alustatoimet))
             kohde-id (:paallystyskohde-id paallystysilmoitus)
-            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)] ; petar
+            virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
         (when (seq virheviestit)
           (throw (IllegalArgumentException. (cheshire/encode virheviestit)))))
       (let [paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat

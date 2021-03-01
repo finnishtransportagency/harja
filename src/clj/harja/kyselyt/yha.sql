@@ -86,7 +86,7 @@ VALUES (
   (SELECT id
    FROM sopimus
    WHERE paasopimus IS NULL AND urakka = :urakka),
-  :yha_tr_osoite :: tr_osoite,
+  ROW(:tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, NULL) :: tr_osoite,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
