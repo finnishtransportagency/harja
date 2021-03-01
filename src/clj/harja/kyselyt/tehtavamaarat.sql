@@ -47,6 +47,7 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
        tpk.yksikko              as "yksikko",
        tpk.id                   as "toimenpidekoodi",
        u.hallintayksikko        as "hallintayksikko",
+       o.elynumero              as elynumero,
        tpk3.nimi                as "toimenpide",
        toteumat.maara           as "toteuma",
        toteumat.materiaalimaara as "toteutunut-materiaali",
@@ -75,9 +76,9 @@ from toimenpideinstanssi tpi
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
-         u.hallintayksikko, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
+         u.hallintayksikko, o.elynumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by u.hallintayksikko ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
+order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 
 -- name: lisaa-tehtavamaara<!
@@ -96,7 +97,9 @@ WHERE urakka = :urakka
   AND tehtava = :tehtava;
 
 -- name: tehtavaryhmat-ja-toimenpiteet-urakalle
--- Pois jätetyt tehtäväryhmät ovat ainoastaan suunnittelua ja toteumia varten. Niihin ei kohdisteta kuluja.
+-- Pois jätetyt lisätyöhön viittaavat tehtäväryhmät ovat ainoastaan toteumien kirjaamista varten.
+-- Nämä dummy-tehtäväryhmät ja niihin liitetyt tehtävät tarvitaan, koska toteumiin on pakko liittää tehtävä.
+-- Lisätöiden kulut voidaan kohdistaa ilman tehtävää ja tehtäväryhmää suoraan toimenpiteelle.
 SELECT distinct tpk3.id       as "toimenpide-id",
                 tpk3.nimi     as "toimenpide",
                 tr3.nimi      as "tehtavaryhma-nimi",
@@ -105,7 +108,7 @@ SELECT distinct tpk3.id       as "toimenpide-id",
                 tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Liikenteen varmistaminen%') and tr3.nimi not like ('%Lisätyöt%')
+       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Lisätyöt%')
        LEFT JOIN toimenpidekoodi tpk4
                  ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true

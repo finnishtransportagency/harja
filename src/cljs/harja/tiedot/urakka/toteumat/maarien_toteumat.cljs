@@ -124,6 +124,9 @@
                                   :else ""))
          parametrit {:polku :tehtavat
                      :filtteri (case tyyppi
+                                 ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
+                                 ;; :maaramitattava
+
                                  :akillinen-hoitotyo
                                  #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
 
@@ -192,13 +195,13 @@
     (let [{{:keys [tehtava]} ::t/tehtava} (first toteumat)]
       (cond
         (re-find #"ahavarau" tehtava) :tilaajan-varaukset
-        (re-find #"korjaukset" tehtava) :vahinkojen-korjaukset
+        (re-find #"vahinkojen korjaaminen" tehtava) :vahinkojen-korjaukset
         :else t))
     t))
 
 (defn- vaihda-toimenpide-tyypin-mukaan [app tyyppi]
   (cond
-    (= tyyppi :akillinen-hoitotyo)
+    (= tyyppi :akillinen-hoitotyo) ;; Äkillinen hoitotyö tässä tarkoittaa, että on valittu käyttöliittymässä "Äkillinen hoitotyö, vahingon korjaus, rahavaraus".
     (some (fn [toimenpide]
             (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
               toimenpide))
@@ -352,7 +355,7 @@
             ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
             (assoc-in [:sijainti indeksi] osoite))
         app)))
-
+  
   PaivitaLomake
   (process-event [{{useampi? ::t/useampi-toteuma
                     tyyppi ::t/tyyppi
