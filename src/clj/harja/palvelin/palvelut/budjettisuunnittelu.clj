@@ -65,13 +65,16 @@
                                                  :vahvistaja (:id user)}))
 
 (defn tallenna-suunnitelman-osalle-tila
-  [db user {:keys [urakka-id hoitovuodet]}]
+  [db user {:keys [urakka-id hoitovuodet tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (doseq [hv hoitovuodet]
     (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                      :hoitovuosi hv
-                                     :kategoria "hankintakustannukset"
-                                     :luoja (:id user)}) ))
+                                     :kategoria (tyyppi tyyppi->kategoria)
+                                     :luoja (:id user)})))
+
+(defn tallenna-suunnitelman-muutos
+  [db user {:keys [selite muutoksen-syy]}])
 
 (defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]
@@ -453,7 +456,7 @@
 
 
 (defn tallenna-kustannusarvioitu-tyo
-  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa ajat]}]
+  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa ajat vahvistettu?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [tyyppi (mhu/tallennettava-asia->tyyppi tallennettava-asia)
@@ -462,7 +465,8 @@
                                             (get tehtava toimenpide-avain)
                                             tehtava)
                                   tehtavaryhma (mhu/tallennettava-asia->tehtavaryhma tallennettava-asia)
-                                  toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)]
+                                  toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
+                                  tarvi]
                               (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
                                                                         :tehtava tehtava
                                                                         :tehtavaryhma tehtavaryhma

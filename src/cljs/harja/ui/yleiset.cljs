@@ -16,6 +16,16 @@
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn placeholder
+  "Näyttää helposti huomattavan placeholder elementin, jota voi käyttää sommitteluun"
+  ([teksti]
+    (placeholder teksti {}))
+  ([teksti {:keys [placeholderin-optiot]}]
+  [:div (merge {:style {:background-color "hotpink"
+                 :color "white"}}
+               placeholderin-optiot)
+   [ikonit/exclamation-sign] teksti]))
+
 (def navigaation-min-korkeus 47)
 
 (defn navigaation-korkeus []

@@ -23,61 +23,39 @@
           parametrit (js-obj "behavior" "smooth")]
       (.scrollIntoView elementti parametrit))))
 
+(defn- majakat
+  [avain acc e]
+  (vec
+    (keep identity
+          (conj acc
+                (when (keyword? e)
+                  (reset! avain e)
+                  [majakka e])
+                e))))
+
 (defn tee-majakat
-  "Käydään läpi kaikki saadut elementit ja keyword-tunnisteet korvataan majakka-elementeillä. ::navigointi-keywordillä sitten seuraavassa vaiheessa korvataan navigointikomponentilla."
-  [es]
+  "Käydään läpi kaikki saadut elementit ja keyword-tunnisteet korvataan majakka-elementeillä. Laitetaan myös navigointi kohdilleen"
+  [navigointi nykyinen-avain es]
   (concat
     []
     (keep identity
           (conj
             (into []
                   (reduce
-                    (fn [acc e]
-                      (keep identity
-                            (conj acc
-                                  (when (keyword? e)
-                                    [majakka e])
-                                  e)))
+                    (r/partial majakat nykyinen-avain)
                     []
                     es))
             (when-not (keyword? (first es))
-              ::navigointi)))))
+              [navigointi @nykyinen-avain])))))
 
 (defn vierita-ylos
   []
   (vierita ::top))
 
-(defn tee-navigointi
-  "Transduceri joka täydentää navigointielementit kohdilleen. Tilallinen, koska pitää tietää, mihin osioon navigointikomponentti liittyy. Sitten navigointikomponentin sisällä voidaan luoda oikea vieritys."
-  [navigointi]
-  (fn [rf]
-    (let [aiemmat (volatile! [])]
-      (fn
-        ([]
-         (rf))
-        ([acc]
-         (rf acc))
-        ([acc e]
-         (let [at @aiemmat
-               avain (when (= e ::navigointi)
-                       (loop [vika (last at)
-                              loput (butlast at)]
-                         (if (or
-                               (nil? vika)
-                               (keyword? vika))
-                           vika
-                           (recur (last loput) (butlast loput)))))
-               elementti [navigointi avain]]
-           (vswap! aiemmat conj (if (= e ::navigointi)
-                                  elementti
-                                  e))
-           (if (= e ::navigointi)
-             (rf acc elementti)
-             (rf acc e))))))))
-
 (defn vieritettava-osio
   [{:keys [menukomponentti osionavigointikomponentti] :as _optiot} & osiot]
   (let [avaimet (filter keyword? osiot)
+        nykyinen-avain (r/atom nil)                         ; ikävä mutatointi, mut selkeyttää ylipäätään
         alkuvalikko (or menukomponentti
                         (fn [avaimet]
                           [:div "valikkoa ei erikseen määritelty"
@@ -87,8 +65,7 @@
         navigointi (r/partial osionavigointikomponentti avaimet)
         luo-osiot (comp
                     (partition-by keyword?)
-                    (mapcat tee-majakat)
-                    (tee-navigointi navigointi)
+                    (mapcat (r/partial tee-majakat navigointi nykyinen-avain))
                     (filter #(not (keyword? %))))
         pohja [:<>
                [majakka ::top]

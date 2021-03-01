@@ -2519,6 +2519,26 @@
                  Tämän avulla tarkastetaan, että taulukkojen tila on ok."}
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
+(defn- vahvista-suunnitelman-osa-fn
+  [parametrit]
+  (t/->VahvistaSuunnitelmanOsioVuodella parametrit))
+
+(defn vahvista-suunnitelman-osa-komponentti
+  [_ _]
+  (let [auki? (r/atom false)]
+    (fn [osion-nimi kayttajan-rooli]
+      [:div
+       [:div.flex-row
+        [yleiset/placeholder "IKONI"]
+        "Vahvista suunnitelma ja hoitovuoden indeksikorjaukset"
+        [yleiset/placeholder (str "Auki? " @auki?)
+         {:placeholderin-optiot {:on-click #(swap! auki? not)}}]]
+       (when @auki?
+         [:div.flex-row
+          (str "Oon auki" osion-nimi)
+          [napit/yleinen-ensisijainen "Vahvista"
+           (r/partial vahvista-suunnitelman-osa-fn) {:disabled (not= kayttajan-rooli ::PLACEHOLDER)}]])])))
+
 (defn osionavigointi
   [avaimet nykyinen]
   (loop [edellinen nil
@@ -2526,6 +2546,7 @@
     (if (or (= nykyinen (first jaljella))
             (nil? (first jaljella)))
       [:div.navigointirivi
+       nykyinen
        [:div.ylos
         [napit/kotiin "Takaisin alkuun" (vieritys/vierita-ylos)]]
        [:div.edellinen-seuraava
@@ -2774,6 +2795,7 @@
               (:kantahaku-valmis? app)
               suodattimet]
              [:span.viiva-alas]
+             [vahvista-suunnitelman-osa-komponentti ::hankintakustannukset ::PLACEHOLDER]
 
              ::erillishankinnat
              [erillishankinnat-osio
@@ -2784,6 +2806,7 @@
               (dissoc suodattimet :hankinnat)
               (get-in app [:domain :kuluva-hoitokausi])]
              [:span.viiva-alas.sininen]
+             [vahvista-suunnitelman-osa-komponentti ::erillishankinnat ::PLACEHOLDER]
 
              ::johto-ja-hallintokorvaukset
              [johto-ja-hallintokorvaus-osio
@@ -2796,6 +2819,7 @@
               (get-in app [:domain :kuluva-hoitokausi])
               (get-in app [:domain :indeksit])
               (:kantahaku-valmis? app)]
+             [vahvista-suunnitelman-osa-komponentti ::johto-ja-hallintokorvaukset ::PLACEHOLDER]
 
              ::hoidonjohtopalkkio
              [hoidonjohtopalkkio-osio
@@ -2805,6 +2829,7 @@
               (get-in app [:domain :kuluva-hoitokausi])
               (dissoc suodattimet :hankinnat)
               (:kantahaku-valmis? app)]
+             [vahvista-suunnitelman-osa-komponentti ::hoidonjohtopalkkio ::PLACEHOLDER]
 
              ::tavoite-ja-kattohinta
              [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
@@ -2819,12 +2844,14 @@
               [:span#tavoite-ja-kattohinta-huomio
                "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
              [:span.viiva-alas]
+             [vahvista-suunnitelman-osa-komponentti ::tavoite-ja-kattohinta ::PLACEHOLDER]
 
              ::tilaajan-varaukset
              [tilaajan-varaukset
               (get-in app [:gridit :tilaajan-varaukset :grid])
               (dissoc suodattimet :hankinnat)
-              (:kantahaku-valmis? app)])])))))
+              (:kantahaku-valmis? app)]
+             [vahvista-suunnitelman-osa-komponentti ::tilaajan-varaukset ::PLACEHOLDER])])))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
