@@ -72,6 +72,7 @@
 
     (or (= (:tyyppi rivi) "lisatyo")
         (= (:tyyppi rivi) "akillinen-hoitotyo")
+        (= (:tyyppi rivi) "vahinkojen-korjaukset")
         (= (:tyyppi rivi) "muut-rahavaraukset"))
     "kpl"
 
@@ -124,7 +125,7 @@
                                                                                      [ikonit/livicon-chevron-up])
                                                                                    (when kasin-lisattava?
                                                                                      [ikonit/livicon-chevron-down]))]
-                                        [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (:yk (first (second rivi))) #_ (maarita-yksikko (first (second rivi))))]
+                                        [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
                                                       :color fontin-vari}} (if (big/eq (big/->big -1) suunniteltu-maara)
                                                                                          (case tyyppi

@@ -55,31 +55,31 @@
       {:otsikko "Hoi­to­luok­ka"}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita})
+       :tasaa   :oikea})
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       (fn [r]
@@ -130,57 +130,57 @@
       {:otsikko "Hoi­to­luok­ka"}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita})))
+       :tasaa   :oikea})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -215,244 +215,244 @@
       {:otsikko "Hoi­to­luok­ka"}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "I"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Ib"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "TIb"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "III"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K1"
-       :tasaa   :keskita}
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :keskita})))
+       :tasaa   :oikea})))
