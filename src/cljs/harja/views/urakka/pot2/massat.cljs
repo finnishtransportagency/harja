@@ -389,27 +389,27 @@
         aineen-otsikko
         [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]]])])
 
-(defn- massan-sideaineet [rivi ainetyypit]
-  [:span
-   (for [aine (reverse
-                (sort-by :sideaine/pitoisuus
-                         (:harja.domain.pot2/sideaineet rivi)))]
-     ^{:key (:sideaine/id aine)}
-     [:span
-      [:div
-       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:sideaine/tyyppi aine)))
-       [:span.pull-right (str (:sideaine/pitoisuus aine) "%")]]])])
+(defn- massan-side-tai-lisa-aineet [rivi ainetyypit tyyppi]
+  (let [aineet-key (if (= tyyppi :lisaaineet)
+                     :harja.domain.pot2/lisaaineet
+                     :harja.domain.pot2/sideaineet)]
+    [:span
+     (for [aine (reverse
+                  (sort-by :pitoisuus
+                           (aineet-key rivi)))
+           :let [aine (clojure.set/rename-keys aine {:sideaine/tyyppi :tyyppi
+                                                     :lisaaine/tyyppi :tyyppi
+                                                     :sideaine/pitoisuus :pitoisuus
+                                                     :lisaaine/pitoisuus :pitoisuus
+                                                     :sideaine/id :id
+                                                     :lisaaine/id :id})
 
-(defn- massan-lisaaineet [rivi ainetyypit]
-  [:span
-   (for [aine (reverse
-                (sort-by :lisaaine/pitoisuus
-                         (:harja.domain.pot2/lisaaineet rivi)))]
-     ^{:key (:lisaaine/id aine)}
-     [:span
-      [:div
-       (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:lisaaine/tyyppi aine)))
-       [:span.pull-right (str (:lisaaine/pitoisuus aine) "%")]]])])
+                 {:keys [id tyyppi pitoisuus]}  aine]]
+       ^{:key id}
+       [:span
+        [:div
+         (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit tyyppi))
+         [:span.pull-right (str pitoisuus "%")]]])]))
 
 (defn massat-taulukko [e! {:keys [massat materiaalikoodistot] :as app}]
   [grid/grid
@@ -435,10 +435,10 @@
                     [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
     {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
      :komponentti (fn [rivi]
-                    [massan-sideaineet rivi (:sideainetyypit materiaalikoodistot)])}
+                    [massan-side-tai-lisa-aineet rivi (:sideainetyypit materiaalikoodistot) :sideaineet])}
     {:otsikko "Lisäaineet" :nimi ::pot2-domain/lisaaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
-                    [massan-lisaaineet rivi (:lisaainetyypit materiaalikoodistot)])}
+                    [massan-side-tai-lisa-aineet rivi (:lisaainetyypit materiaalikoodistot) :lisaaineet])}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 3
      :komponentti (fn [rivi]
                     [mm-yhteiset/materiaalirivin-toiminnot e! rivi])}]
