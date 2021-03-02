@@ -68,7 +68,7 @@
                ; MHU Ylläpito	20190	50
                ; MHU Korvausinvestointi	14300	51
                odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4207.8269412251655629246831000M}
-                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 1813.9635471854304635809971M}
+                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6258.4035471854304635809971M}
                          {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
                          {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2745.94354304635761589082M}
                          {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
