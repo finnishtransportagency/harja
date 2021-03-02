@@ -64,6 +64,9 @@
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
 
+(defn sama-tr-osoite? [tr1 tr2]
+  (= (normalisoi tr1) (normalisoi tr2)))
+
 (defn ennen?
   "Tarkistaa alkaako tie1 osa ennen tie2 osaa. Osien tulee olla samalla tienumerolla.
   Jos osat ovat eri teilla, palauttaa nil."

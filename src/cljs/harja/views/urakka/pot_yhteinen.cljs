@@ -50,9 +50,11 @@
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
 
 (defn tr-kentta [{:keys [muokkaa-lomaketta data]} e!
-                 {{:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} :perustiedot
+                 {{:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                          yha-tr-osoite] :as perustiedot} :perustiedot
                   ohjauskahvat :ohjauskahvat}]
-  (let [muuta!  (fn [kentta]
+  (let [osoite-sama-kuin-yhasta-tuodessa? (tr/sama-tr-osoite? perustiedot yha-tr-osoite)
+        muuta!  (fn [kentta]
                   #(do
                      (.preventDefault %)
                      (let [v (-> % .-target .-value)]
@@ -74,43 +76,49 @@
                              (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))
                            (when (:alustalle-tehdyt-toimet ohjauskahvat)
                              (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat))))))))]
-    [:table
-     [:thead
-      [:tr
-       [:th "Tie"]
-       (when tr-ajorata
-         [:th "Ajorata"])
-       (when tr-kaista
-         [:th "Kaista"])
-       [:th "Aosa"]
-       [:th "Aet"]
-       [:th "Losa"]
-       [:th "Let"]]]
-     [:tbody
-      [:tr
-       [:td
-        [kentat/tr-kentan-elementti true muuta! nil
-         "Tie" tr-numero :tr-numero true ""]]
-       (when tr-ajorata
-         [:td
-          [kentat/tr-kentan-elementti true muuta! nil
-           "Ajorata" tr-ajorata :tr-ajorata false ""]])
-       (when tr-kaista
-         [:td
-          [kentat/tr-kentan-elementti true muuta! nil
-           "Kaista" tr-kaista :tr-kaista false ""]])
-       [:td
-        [kentat/tr-kentan-elementti true muuta! nil
-         "Aosa" tr-alkuosa :tr-alkuosa false ""]]
-       [:td
-        [kentat/tr-kentan-elementti true muuta! nil
-         "Aet" tr-alkuetaisyys :tr-alkuetaisyys false ""]]
-       [:td
-        [kentat/tr-kentan-elementti true muuta! nil
-         "Losa" tr-loppuosa :tr-loppuosa false ""]]
-       [:td
-        [kentat/tr-kentan-elementti true muuta! nil
-         "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]))
+    [:div
+     [:table
+      [:thead
+       [:tr
+        [:th "Tie"]
+        (when tr-ajorata
+          [:th "Ajorata"])
+        (when tr-kaista
+          [:th "Kaista"])
+        [:th "Aosa"]
+        [:th "Aet"]
+        [:th "Losa"]
+        [:th "Let"]]]
+      [:tbody
+       [:tr
+        [:td
+         [kentat/tr-kentan-elementti true muuta! nil
+          "Tie" tr-numero :tr-numero true ""]]
+        (when tr-ajorata
+          [:td
+           [kentat/tr-kentan-elementti true muuta! nil
+            "Ajorata" tr-ajorata :tr-ajorata false ""]])
+        (when tr-kaista
+          [:td
+           [kentat/tr-kentan-elementti true muuta! nil
+            "Kaista" tr-kaista :tr-kaista false ""]])
+        [:td
+         [kentat/tr-kentan-elementti true muuta! nil
+          "Aosa" tr-alkuosa :tr-alkuosa false ""]]
+        [:td
+         [kentat/tr-kentan-elementti true muuta! nil
+          "Aet" tr-alkuetaisyys :tr-alkuetaisyys false ""]]
+        [:td
+         [kentat/tr-kentan-elementti true muuta! nil
+          "Losa" tr-loppuosa :tr-loppuosa false ""]]
+        [:td
+         [kentat/tr-kentan-elementti true muuta! nil
+          "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]
+     (when-not osoite-sama-kuin-yhasta-tuodessa?
+       [:div {:style {:margin-top "4px"}}
+        [:label.kentan-label "Alkuperäinen TR-osoite YHA:sta tuodessa oli:"]
+        [:div {:style {}}
+         (tr/tierekisteriosoite-tekstina yha-tr-osoite)]])]))
 
 (defn laske-hinta [lomakedata-nyt]
   (let [urakkasopimuksen-mukainen-kokonaishinta (:kokonaishinta-ilman-maaramuutoksia lomakedata-nyt)

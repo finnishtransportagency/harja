@@ -12,7 +12,8 @@
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.ui.napit :as napit]
-    [harja.ui.ikonit :as ikonit])
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -117,9 +118,8 @@
           (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
   HaePot2TiedotEpaonnistui
-  ;; fixme implement
   (process-event [{vastaus :vastaus} app]
-    (println "HaePot2TiedotEpaonnistui " (pr-str vastaus))
+    (viesti/nayta! (str "Tietojen haku epäonnistui: " vastaus) :danger viesti/viestin-nayttoaika-pitka)
     app)
 
   TallennaPot2Tiedot

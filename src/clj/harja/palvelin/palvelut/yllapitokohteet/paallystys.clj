@@ -39,7 +39,8 @@
              [yleiset :as yy]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.tyokalut.html :refer [sanitoi]]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [harja.kyselyt.konversio :as konv])
   (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
@@ -276,6 +277,7 @@
   (let [paallystysilmoitus (into []
                                  (comp (map konversio/alaviiva->rakenne)
                                        (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
+                                       (map #(update % :yha-tr-osoite konv/lue-tr-osoite))
                                        (map #(konversio/string-poluista->keyword
                                                %
                                                [[:tekninen-osa :paatos]
