@@ -469,6 +469,8 @@
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:versio paallystysilmoitus-kannassa) 2))
+    (is (= {:numero 20, :alkuosa 1, :alkuetaisyys 1066, :loppuosa 1, :loppuetaisyys 3827}
+           (:yha-tr-osoite paallystysilmoitus-kannassa)))
     (is (= 2 (count kohdeosat)))))   ; TODO ehkä myös varmista että data tuli pot2_ tauluista
 
 (defn- hae-yllapitokohdeosadata [yllapitokohde-id]
