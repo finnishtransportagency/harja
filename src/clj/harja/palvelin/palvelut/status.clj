@@ -202,6 +202,7 @@
   (stop [{http :http-palvelin :as this}]
     (http-palvelin/poista-palvelu http :status)
     (http-palvelin/poista-palvelu http :app-status)
+    (http-palvelin/poista-palvelu http :app-status-local)
     this))
 
 (defn luo-status [kehitysmoodi?]
