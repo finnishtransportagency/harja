@@ -116,7 +116,7 @@
           "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]
      (when-not osoite-sama-kuin-yhasta-tuodessa?
        [:div {:style {:margin-top "4px"}}
-        [:label.kentan-label "Alkuperäinen TR-osoite YHA:sta tuodessa oli:"]
+        [:label.kentan-label "Alkuperäinen suunniteltu TR-osoite:"]
         [:div {:style {}}
          (tr/tierekisteriosoite-tekstina yha-tr-osoite)]])]))
 
