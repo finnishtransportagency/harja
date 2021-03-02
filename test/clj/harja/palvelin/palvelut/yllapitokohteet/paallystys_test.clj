@@ -377,7 +377,8 @@
     (is (= "L42" (:kohdenumero tarkea-kohde)) "Kohdenumero")
     (is (nil? (:paatos-tekninen-osa tarkea-kohde)) "Päätös")
     (is (nil? (:ilmoitustiedot tarkea-kohde)))
-    (is (contains? tarkea-kohde :yha-tr-osoite))
+    (is (= {:numero 20, :alkuosa 1, :alkuetaisyys 1066, :loppuosa 1, :loppuetaisyys 3827}
+           (:yha-tr-osoite tarkea-kohde)))
     (is (= 2 (count (:kohdeosat tarkea-kohde))) "Kohdeosien lkm")))
 
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus

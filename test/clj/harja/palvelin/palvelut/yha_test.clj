@@ -15,7 +15,8 @@
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
             [harja.kyselyt.yha :as yha-kyselyt]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.kyselyt.konversio :as konv])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -172,15 +173,14 @@
           yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
                                                FROM yhatiedot WHERE urakka = " urakka-id ";"))
           kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))
-          yha-tr-osoite (first (q "SELECT (yha_tr_osoite).tie, (yha_tr_osoite).aosa, (yha_tr_osoite).aet,
-                                          (yha_tr_osoite).losa, (yha_tr_osoite).let
-                                     FROM yllapitokohde WHERE yha_kohdenumero = 1"))]
+          yha-tr-osoite (ffirst (q "SELECT yha_tr_osoite FROM yllapitokohde WHERE yha_kohdenumero = 1"))]
       (is (some? (:yhatiedot vastaus)))
       (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
       (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
           "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
       (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))
-      (is (= [20 1 1 1 2] yha-tr-osoite)))))
+      (is (= {:numero 20, :alkuosa 1, :alkuetaisyys 1, :loppuosa 1, :loppuetaisyys 2}
+             (konv/lue-tr-osoite yha-tr-osoite))))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

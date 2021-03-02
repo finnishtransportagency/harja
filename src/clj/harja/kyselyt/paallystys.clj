@@ -21,6 +21,7 @@
                                    (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                                          :sopimus sopimus-id
                                                                          :vuosi vuosi}))
+        paallytysilmoitukset (map #(update % :yha-tr-osoite konv/lue-tr-osoite) paallytysilmoitukset)
         paallytysilmoitukset (yllapitokohteet-q/liita-kohdeosat-kohteisiin
                                db paallytysilmoitukset :paallystyskohde-id)]
     paallytysilmoitukset))
