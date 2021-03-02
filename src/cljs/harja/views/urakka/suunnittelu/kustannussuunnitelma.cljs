@@ -2795,7 +2795,7 @@
               (:kantahaku-valmis? app)
               suodattimet]
              [:span.viiva-alas]
-             [vahvista-suunnitelman-osa-komponentti ::hankintakustannukset ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
+             [vahvista-suunnitelman-osa-komponentti :hankintakustannukset ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
 
              ::erillishankinnat
              [erillishankinnat-osio
@@ -2806,7 +2806,7 @@
               (dissoc suodattimet :hankinnat)
               (get-in app [:domain :kuluva-hoitokausi])]
              [:span.viiva-alas.sininen]
-             [vahvista-suunnitelman-osa-komponentti ::erillishankinnat ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
+             [vahvista-suunnitelman-osa-komponentti :erillishankinnat ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
 
              ::johto-ja-hallintokorvaukset
              [johto-ja-hallintokorvaus-osio
@@ -2819,7 +2819,7 @@
               (get-in app [:domain :kuluva-hoitokausi])
               (get-in app [:domain :indeksit])
               (:kantahaku-valmis? app)]
-             [vahvista-suunnitelman-osa-komponentti ::johto-ja-hallintokorvaukset ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
+             [vahvista-suunnitelman-osa-komponentti :johto-ja-hallintokorvaukset ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
 
              ::hoidonjohtopalkkio
              [hoidonjohtopalkkio-osio
@@ -2829,7 +2829,7 @@
               (get-in app [:domain :kuluva-hoitokausi])
               (dissoc suodattimet :hankinnat)
               (:kantahaku-valmis? app)]
-             [vahvista-suunnitelman-osa-komponentti ::hoidonjohtopalkkio ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
+             [vahvista-suunnitelman-osa-komponentti :hoidonjohtopalkkio ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
 
              ::tavoite-ja-kattohinta
              [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
@@ -2844,14 +2844,14 @@
               [:span#tavoite-ja-kattohinta-huomio
                "*) Vuodet ovat hoitovuosia, eivät kalenterivuosia."]]
              [:span.viiva-alas]
-             [vahvista-suunnitelman-osa-komponentti ::tavoite-ja-kattohinta ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
+             [vahvista-suunnitelman-osa-komponentti :tavoite-ja-kattohinta ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])]
 
              ::tilaajan-varaukset
              [tilaajan-varaukset
               (get-in app [:gridit :tilaajan-varaukset :grid])
               (dissoc suodattimet :hankinnat)
               (:kantahaku-valmis? app)]
-             [vahvista-suunnitelman-osa-komponentti ::tilaajan-varaukset ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])])])))))
+             [vahvista-suunnitelman-osa-komponentti :tilaajan-varaukset ::PLACEHOLDER (get-in app [:suodattimet :hoitokauden-numero])])])))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

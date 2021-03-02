@@ -1825,13 +1825,13 @@ vaihtelua-teksti "vaihtelua/kk")
     (viesti/nayta! "Suunnitelman vahvistus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
     app)
   VahvistaSuunnitelmanOsioVuodella
-  (process-event [{:keys [hoitovuosi]} app]
+  (process-event [{:keys [tyyppi hoitovuosi]} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
       (tuck-apurit/post! app
                          :vahvista-kustannussuunnitelman-osa-vuodella
                          {:urakka-id  urakka
                           :hoitovuosi hoitovuosi
-                          ;:kategoria
+                          :kategoria tyyppi
                           }
                          {:onnistui           ->VahvistaSuunnitelmanOsioVuodellaOnnistui
                           :epaonnistui        ->VahvistaSuunnitelmanOsioVuodellaEpaonnistui
