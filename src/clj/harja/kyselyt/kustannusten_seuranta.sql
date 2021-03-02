@@ -1,11 +1,6 @@
 -- name: listaa-kustannukset-paaryhmittain
--- Listaa kustannusten seurantaa varten tehtävien toteutuneet kustannukset ja budjetoidut kustannukset.
--- Arvioidut/Budjetoidut kustannukset tallennetaan KUSTANNUSARVOITU_TYO-tauluun.
--- Kustannusarvioitu työ toteutuu neljällä eri tyypillä
--- laskutettava-tyo, joka voi olla vaikka erillishankintoja.
--- muut-rahavaraukset
--- akillinen-hoitotyo on työtä, jonka kustannuksia ei voida tarkkaan arvioida, mutta johon tehdään rahavaraus. Summa on joka kuukaudelle sama.
--- vahinkojen-korjaukset on samaan tapaan työtä, jonka kustannuksia ei voida tarkkaan arvioida, mutta johon tehdään rahavaraus. Summa on joka kuukaudelle sama.
+-- Listaa kustannusten seurantaa varten tehtävien toteutuneet ja budjetoidut kustannukset.
+-- Haetaan ensin urakan toimenpideinstanssi-id hoidonjohdolle
 WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
@@ -40,8 +35,8 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        tk_tehtava.jarjestys                      AS jarjestys,
        CASE
            WHEN kt.tyyppi::TEXT = 'laskutettava-tyo' THEN 'hankintakustannukset'
-           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'varaukset'
-           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'varaukset'
+           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
+           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                                   AS paaryhma
 FROM toimenpidekoodi tk,
@@ -144,7 +139,8 @@ FROM toimenpidekoodi tk,
 WHERE s.urakka = :urakka
   AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
   AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)')
-    OR kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'))
+    OR kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744') -- Hoitourakan työnjohto
+    OR kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')) -- Hoidonjohtopalkkio
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND tpi.toimenpide = tk.id
@@ -226,9 +222,9 @@ SELECT 0                          AS budjetoitu_summa,
        'toteutunut'               AS toteutunut,
        tk_tehtava.jarjestys       AS jarjestys,
        CASE
-           WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'varaukset'
-           WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'varaukset' -- muu = vahinkojen-korjaukset
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)' THEN 'varaukset'
+           WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
+           WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'rahavaraukset' -- muu = vahinkojen-korjaukset
+           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)' THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                    AS paaryhma
 FROM lasku_kohdistus lk
@@ -346,7 +342,7 @@ WHERE t.urakka_id = :urakka
   AND tk.koodi = '23151'
 GROUP BY tehtava_nimi, toimenpideryhma,paaryhma, tr.nimi,  tk.yksiloiva_tunniste, tk_tehtava.yksiloiva_tunniste
 UNION ALL
--- Budjetoidut bonukset eli tilaajan varaukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
+-- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        0                                              AS toteutunut_summa,
@@ -367,6 +363,7 @@ WHERE s.urakka = :urakka
   -- Tämä kovakoodattu tehtäväryhmä on nimeltään - Johto- ja hallintokorvaus (J). Se on päätetty
   -- tulkita Bonuksien alle tulevaksi Tilaajan varaukseksi Kustannusten suunnittelu sivulla, koska sen toimenpideinstanssin
   -- id on 23150.
+  -- Tehtäväryhmä: Johto- ja hallintokorvaus (J) = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
   AND kt.tehtavaryhma = (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
@@ -374,7 +371,7 @@ GROUP BY tehtava_nimi
 UNION ALL
 -- Toteutuneet erilliskustannukset eli bonukset
 -- Toteutuneita bonuksia voidaan lisätä erilliskustannusnäytötä ja ne menee erilliskustannuksiksi
--- Tässä ei ole siis mukana kustannusarvoitu_tyo tauluun tallennetut "Tilaajan varaukset" jotka pohjimmiltaan on
+-- Tässä ei ole siis mukana kustannusarvoitu_tyo tauluun tallennetut "Tilaajan rahavaraukset" jotka pohjimmiltaan on
 -- budjetoituja bonuksia ja jotka haetaan sitten erikseen toteutuneet_kustannukset taulusta, koska sinne siirretään kaikki toteutuneet
 -- kustannusarvoidut_työt
 SELECT 0                    AS budjetoitu_summa,

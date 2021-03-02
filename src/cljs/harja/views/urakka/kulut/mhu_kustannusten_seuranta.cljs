@@ -35,7 +35,7 @@
     [:span 0]
     [:span (when negatiivinen?
              {:class "pilleri"})
-     (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2)]))
+     (str (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2) " %")]))
 
 ; spekseistä laskettu
 (def leveydet {:caret-paaryhma "2%"
@@ -177,9 +177,9 @@
                                   (big/->big (or (get-in app [:kustannukset-yhteensa :yht-budjetoitu-summa]) 0)))
         jjhk-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (taulukoi-paaryhman-tehtavat (:lisatyot rivit-paaryhmittain))
-        varaukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:varaukset rivit-paaryhmittain))
-        varaus-negatiivinen? (big/gt (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
-                                              (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0)))
+        rahavaraukset-toimenpiteet (rivita-toimenpiteet-paaryhmalle e! app (:rahavaraukset rivit-paaryhmittain))
+        rahavaraus-negatiivinen? (big/gt (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
+                                              (big/->big (or (:rahavaraukset-budjetoitu rivit-paaryhmittain) 0)))
         bonukset (taulukoi-paaryhman-tehtavat (:tehtavat (:bonukset rivit-paaryhmittain)))
         bonus-negatiivinen? (big/gt (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
                                               (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0)))
@@ -220,16 +220,16 @@
                                 (big/->big (or (:hankintakustannukset-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:hankintakustannukset-budjetoitu rivit-paaryhmittain) 0))
                                 hankintakustannukset-negatiivinen?))
-         (paaryhma-taulukkoon e! app "Rahavaraukset" :varaukset
-                                varaukset-toimenpiteet varaus-negatiivinen?
-                                (fmt->big (:varaukset-budjetoitu rivit-paaryhmittain))
-                                (fmt->big (:varaukset-toteutunut rivit-paaryhmittain))
-                                (fmt->big (- (:varaukset-toteutunut rivit-paaryhmittain)
-                                             (:varaukset-budjetoitu rivit-paaryhmittain)))
+         (paaryhma-taulukkoon e! app "Rahavaraukset" :rahavaraukset
+                                rahavaraukset-toimenpiteet rahavaraus-negatiivinen?
+                                (fmt->big (:rahavaraukset-budjetoitu rivit-paaryhmittain))
+                                (fmt->big (:rahavaraukset-toteutunut rivit-paaryhmittain))
+                                (fmt->big (- (:rahavaraukset-toteutunut rivit-paaryhmittain)
+                                             (:rahavaraukset-budjetoitu rivit-paaryhmittain)))
                                 (muotoile-prosentti
-                                  (big/->big (or (:varaukset-toteutunut rivit-paaryhmittain) 0))
-                                  (big/->big (or (:varaukset-budjetoitu rivit-paaryhmittain) 0))
-                                  varaus-negatiivinen?))
+                                  (big/->big (or (:rahavaraukset-toteutunut rivit-paaryhmittain) 0))
+                                  (big/->big (or (:rahavaraukset-budjetoitu rivit-paaryhmittain) 0))
+                                  rahavaraus-negatiivinen?))
          (paaryhma-taulukkoon e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintakorvaus
                               jjhk-toimenpiteet hallintakorvaus-negatiivinen?
                               (fmt->big (:johto-ja-hallintakorvaus-budjetoitu rivit-paaryhmittain))
@@ -260,7 +260,7 @@
                                 (big/->big (or (:erillishankinnat-toteutunut rivit-paaryhmittain) 0))
                                 (big/->big (or (:erillishankinnat-budjetoitu rivit-paaryhmittain) 0))
                                 erillishankinnat-negatiivinen?))
-         (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
+         #_ (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
                                 bonukset bonus-negatiivinen?
                                 (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
                                 (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
@@ -309,7 +309,17 @@
            (doall
              (for [l lisatyot]
                ^{:key (hash l)}
-               l)))]]]]]))
+               l)))
+         (paaryhma-taulukkoon e! app "Bonukset yms." :bonukset
+                              bonukset bonus-negatiivinen?
+                              (fmt->big (:bonukset-budjetoitu rivit-paaryhmittain))
+                              (fmt->big (:bonukset-toteutunut rivit-paaryhmittain))
+                              (fmt->big (- (:bonukset-toteutunut rivit-paaryhmittain)
+                                           (:bonukset-budjetoitu rivit-paaryhmittain)))
+                              (muotoile-prosentti
+                                (big/->big (or (:bonukset-toteutunut rivit-paaryhmittain) 0))
+                                (big/->big (or (:bonukset-budjetoitu rivit-paaryhmittain) 0))
+                                bonus-negatiivinen?))]]]]]))
 
 (defn yhteenveto-laatikko [e! app data]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
@@ -363,7 +373,7 @@
      [:div
       [:div.row.header
        [:div.col-xs-12
-        [:h1 "Kustannusten seuranta"]
+        [:h1 "Kustannusten seuranta -TESTIVERSIO"]
         [:p.urakka (:nimi @nav/valittu-urakka)]
         [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
      Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]]]

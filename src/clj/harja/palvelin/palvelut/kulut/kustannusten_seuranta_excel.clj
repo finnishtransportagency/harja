@@ -199,7 +199,7 @@
                                             (get-in kustannusdata [:taulukon-rivit :hankintakustannukset])
                                             "Hankintakustannukset")
         rahavarausten-toimenpiteet (rivita-toimenpiteet
-                                     (get-in kustannusdata [:taulukon-rivit :varaukset])
+                                     (get-in kustannusdata [:taulukon-rivit :rahavaraukset])
                                      "Rahavaraukset")
         hallintakorvausten-toimenpiteet (rivita-toimenpiteet
                                           (get-in kustannusdata [:taulukon-rivit :johto-ja-hallintakorvaus])
@@ -224,13 +224,13 @@
                                                                false)) hallintakorvausten-toimenpiteet)
                      (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio")
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat")
-                     (luo-excel-rivit kustannusdata "bonukset" "Bonukset yms.")
                      (luo-excel-rivi-yhteensa kustannusdata)
                      (mapv (fn [rivi]
                              (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))
                                                              true
                                                              false)))
-                           lisatyot))]]
+                           lisatyot)
+                     (luo-excel-rivit kustannusdata "bonukset" "Bonukset yms."))]]
         taulukko (concat
                    [:raportti {:nimi (str urakka-nimi "_" alkupvm "-" loppupvm)
                                :orientaatio :landscape}]

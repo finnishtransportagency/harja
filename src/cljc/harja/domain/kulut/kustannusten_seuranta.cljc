@@ -3,7 +3,7 @@
 
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
-  ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "varaukset", "bonukset"])
+  ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "rahavaraukset", "bonukset"])
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -189,7 +189,7 @@
         jjhallinta-kustannukset (get paaryhmat (nth raportin-paaryhmat 1)) ;; johto-ja hallinta..
         hoidonjohdonpalkkiot (get paaryhmat (nth raportin-paaryhmat 2))
         erillishankinnat (get paaryhmat (nth raportin-paaryhmat 3))
-        varaukset (get paaryhmat (nth raportin-paaryhmat 4))
+        rahavaraukset (get paaryhmat (nth raportin-paaryhmat 4))
         bonukset (get paaryhmat (nth raportin-paaryhmat 5))
 
         ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
@@ -197,8 +197,8 @@
         hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
         jjhallinnan-toimenpiteet (summaa-hoito-ja-hallinta-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
         jjhallinnan-toimenpiteet (sort-by :jarjestys jjhallinnan-toimenpiteet)
-        varaukset (sort-by toimenpide-jarjestys (group-by :toimenpide varaukset))
-        varaus-toimenpiteet (summaa-toimenpidetaso varaukset (nth raportin-paaryhmat 4))
+        rahavaraukset (sort-by toimenpide-jarjestys (group-by :toimenpide rahavaraukset))
+        rahavaraus-toimenpiteet (summaa-toimenpidetaso rahavaraukset (nth raportin-paaryhmat 4))
         hoidonjohdonpalkkiot (summaa-paaryhman-tehtavat hoidonjohdonpalkkiot (nth raportin-paaryhmat 2))
         bonus-tehtavat (summaa-paaryhman-tehtavat bonukset (nth raportin-paaryhmat 5))
         erillishankinta-tehtavat (summaa-paaryhman-tehtavat erillishankinnat (nth raportin-paaryhmat 3))
@@ -218,17 +218,17 @@
                            (assoc (keyword (nth raportin-paaryhmat 3)) erillishankinta-tehtavat)
                            (summaa-tehtavat erillishankinta-tehtavat 3)
 
-                           (assoc (keyword (nth raportin-paaryhmat 4)) varaus-toimenpiteet)
-                           (summaa-paaryhman-toimenpiteet 4 varaus-toimenpiteet)
+                           (assoc (keyword (nth raportin-paaryhmat 4)) rahavaraus-toimenpiteet)
+                           (summaa-paaryhman-toimenpiteet 4 rahavaraus-toimenpiteet)
 
                            (assoc (keyword (nth raportin-paaryhmat 5)) bonus-tehtavat)
                            (summaa-tehtavat bonus-tehtavat 5))
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-toteutunut"))))
-                                                      raportin-paaryhmat))
+                                                      (rest (reverse raportin-paaryhmat)))) ;; Jätetään bonukset pois
                   :yht-budjetoitu-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-budjetoitu"))))
-                                                      raportin-paaryhmat))}]
+                                                      (rest (reverse raportin-paaryhmat))))}] ;; Jätetään bonukset pois
     {:taulukon-rivit taulukon-rivit
      :yhteensa yhteensa}))
