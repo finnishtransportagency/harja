@@ -573,7 +573,7 @@
                                                    (set/subset? pakolliset-avaimet (-> annetut-lisaparams keys set)))
                                             (merge rivi
                                                    {:pot2_id pot2-id}
-                                                   (zipmap pot2-domain/alusta-toimenpide-kaikki-lisaavaimet (repeat nil))
+                                                   (zipmap (keys pot2-domain/alusta-toimenpide-kaikki-lisaavaimet) (repeat nil))
                                                    annetut-lisaparams)
                                             (throw (IllegalArgumentException.
                                                      (str "Alustassa väärät lisätiedot. Toimenpide = " toimenpide
