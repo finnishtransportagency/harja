@@ -319,8 +319,10 @@
                         :hae-urakan-massat-ja-murskeet
                         +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
         oletetut-massat '({:harja.domain.pot2/dop-nro "1234567"
-                           :harja.domain.pot2/kaytossa ({:kohteiden-lkm 1
-                                       :nimi "Tärkeä kohde mt20"})
+                           :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
+                                                         :kohteiden-lkm 1
+                                                         :nimi "Tärkeä kohde mt20"
+                                                         :tila "aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN14"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
                                                            :lisaaine/pitoisuus 0.5M
@@ -344,8 +346,10 @@
                            :harja.domain.pot2/tyyppi 12
                            ::pot2-domain/massa-id 1}
                           {:harja.domain.pot2/dop-nro "987654331-2"
-                           :harja.domain.pot2/kaytossa ({:kohteiden-lkm 2
-                                       :nimi "Tärkeä kohde mt20"})
+                           :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
+                                                         :kohteiden-lkm 2
+                                                         :nimi "Tärkeä kohde mt20"
+                                                         :tila "aloitettu,aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN7"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
                                                            :lisaaine/pitoisuus 0.5M
@@ -407,8 +411,10 @@
                                                            :sideaine/tyyppi 1})
                            :harja.domain.pot2/tyyppi 1
                            ::pot2-domain/massa-id 3})
-        oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohteiden-lkm 1
-                                                                                                                                                                                                             :nimi "Tärkeä kohde mt20"})})]
+        oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
+                                                                                                                                                                                                             :kohteiden-lkm 1
+                                                                                                                                                                                                             :nimi "Tärkeä kohde mt20"
+                                                                                                                                                                                                             :tila "aloitettu"})})]
     (is (= massat oletetut-massat))
     (is (= murskeet oletetut-murskeet))))
 
