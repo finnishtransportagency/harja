@@ -7,7 +7,8 @@
             [hiccup.core :refer [html]]
             [clj-time.format :as f]
             [clj-time.coerce :as tc]
-            [clojure.data.zip.xml :as z])
+            [clojure.data.zip.xml :as z]
+            [clojure.string :as str])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -203,6 +204,13 @@
     (tee-c-data-elementti sisalto)
     sisalto))
 
+(defn escape-xml-varten [data]
+  "Palauttaa merkit &, < ja > xml-ystävällisessä muodossa.
+  Jos data on nil, palauttaa tyhjän merkkijonon."
+  (str/escape (or data "") {\& "&amp;"
+                            \> "&gt;"
+                            \< "&lt;"}))
+
 (defn lue-attribuutit
   "Lukee annetusta XML zipper objektista attribuutit. Palauttaa mäpin, jossa
   luetut attribuuttien arvot. Avain-fn muuntaa attr-map olevan avaimen (XML attribuutin nimi)
@@ -230,3 +238,4 @@
   (when timestamp
     (let [format (SimpleDateFormat. "yyyy-MM-dd") ]
       (.format format timestamp))))
+
