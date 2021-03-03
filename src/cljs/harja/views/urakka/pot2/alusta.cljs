@@ -75,11 +75,7 @@
                                       (lomake/rivi (merge kentta-metadata
                                                           kentta
                                                           {:palstoja 3
-                                                           :valinnat valinnat-ja-nil}
-                                                          (when (some? otsikko)
-                                                            {:otsikko (str otsikko
-                                                                           (when (some? yksikko)
-                                                                             (str " (" yksikko ")")))}))))))]
+                                                           :valinnat valinnat-ja-nil})))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys                  [alusta-toimenpiteet
