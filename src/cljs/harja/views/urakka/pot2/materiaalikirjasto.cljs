@@ -43,14 +43,15 @@
   (komp/luo
     (komp/lippu mk-tiedot/materiaalikirjastossa?)
     (komp/piirretty (fn [this]
-                      (e! (mk-tiedot/->AlustaTila))))
+                      (e! (mk-tiedot/->AlustaTila))
+                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))))
     (fn [e! app]
       [:div
        (cond
-         (:pot2-massa-lomake app)
+         (and (:pot2-massa-lomake app) (not (get-in app [:pot2-massa-lomake :sivulle?])))
          [massat/massa-lomake e! app]
 
-         (:pot2-murske-lomake app)
+         (and (:pot2-murske-lomake app) (not (get-in app [:pot2-murske-lomake :sivulle?])))
          [murskeet/murske-lomake e! app]
 
          :else

@@ -21,9 +21,11 @@
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.alusta :as alusta]
-    [harja.views.urakka.pot2.kulutuskerros :as kulutuskerros]
+    [harja.views.urakka.pot2.paallystekerros :as paallystekerros]
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
-    [harja.ui.kentat :as kentat])
+    [harja.ui.kentat :as kentat]
+    [harja.views.urakka.pot2.murskeet :as murskeet]
+    [harja.views.urakka.pot2.massat :as massat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -67,22 +69,22 @@
 
 (def pot2-validoinnit
   {:perustiedot paallystys/perustietojen-validointi
-   :kulutuskerros {:rivi [{:fn kulutuskerros/validoi-kulutuskerros
-                           :sarakkeet {:tr-numero :tr-numero
-                                       :tr-ajorata :tr-ajorata
-                                       :tr-kaista :tr-kaista
-                                       :tr-alkuosa :tr-alkuosa
-                                       :tr-alkuetaisyys :tr-alkuetaisyys
-                                       :tr-loppuosa :tr-loppuosa
-                                       :tr-loppuetaisyys :tr-loppuetaisyys}}]
-                   :taulukko [{:fn (r/partial kulutuskerros/kohde-toisten-kanssa-paallekkain-validointi true)
-                               :sarakkeet {:tr-numero :tr-numero
-                                           :tr-ajorata :tr-ajorata
-                                           :tr-kaista :tr-kaista
-                                           :tr-alkuosa :tr-alkuosa
-                                           :tr-alkuetaisyys :tr-alkuetaisyys
-                                           :tr-loppuosa :tr-loppuosa
-                                           :tr-loppuetaisyys :tr-loppuetaisyys}}]}
+   :paallystekerros {:rivi [{:fn paallystekerros/validoi-paallystekerros
+                             :sarakkeet {:tr-numero :tr-numero
+                                         :tr-ajorata :tr-ajorata
+                                         :tr-kaista :tr-kaista
+                                         :tr-alkuosa :tr-alkuosa
+                                         :tr-alkuetaisyys :tr-alkuetaisyys
+                                         :tr-loppuosa :tr-loppuosa
+                                         :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                     :taulukko [{:fn (r/partial paallystekerros/kohde-toisten-kanssa-paallekkain-validointi true)
+                                 :sarakkeet {:tr-numero :tr-numero
+                                             :tr-ajorata :tr-ajorata
+                                             :tr-kaista :tr-kaista
+                                             :tr-alkuosa :tr-alkuosa
+                                             :tr-alkuetaisyys :tr-alkuetaisyys
+                                             :tr-loppuosa :tr-loppuosa
+                                             :tr-loppuetaisyys :tr-loppuetaisyys}}]}
    :alusta {:rivi [{:fn alusta/alustan-validointi
                     :sarakkeet {:tr-numero :tr-numero
                                 :tr-ajorata :tr-ajorata
@@ -127,14 +129,13 @@
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
-    (println "paallystysilmoitus-lomakedata kulutuskerros" (pr-str (:kulutuskerros paallystysilmoitus-lomakedata)))
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (reset! pot2-tiedot/kohdeosat-atom
-                             (-> (:kulutuskerros paallystysilmoitus-lomakedata)
+                             (-> (:paallystekerros paallystysilmoitus-lomakedata)
                                  (pot2-domain/lisaa-paallystekerroksen-jarjestysnro 1)
                                  (yllapitokohteet-domain/jarjesta-yllapitokohteet)
                                  (yllapitokohteet-domain/indeksoi-kohdeosat)))
@@ -144,11 +145,14 @@
                                  (yllapitokohteet-domain/indeksoi-kohdeosat)))
                      (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
                      (nav/vaihda-kartan-koko! :S)))
-      (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot] :as app}]
+      (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
+                      pot2-massa-lomake pot2-murske-lomake] :as app}]
         (let [perustiedot (:perustiedot paallystysilmoitus-lomakedata)
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
+              massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
+              murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
               alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake})
-              kulutuskerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :kulutuskerros})
+              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila})
               {:keys [tila]} perustiedot
@@ -173,14 +177,23 @@
            [:hr]
            [toimenpiteet-ja-materiaalit-otsikkorivi e!]
            [yleiset/valitys-vertical]
-           [kulutuskerros/kulutuskerros e! kulutuskerros-app {:massat massat
-                                                              :materiaalikoodistot materiaalikoodistot
-                                                              :validointi (:kulutuskerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+           [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
+                                                                    :materiaalikoodistot materiaalikoodistot
+                                                                    :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)}
             pot2-tiedot/alustarivit-atom]
+           ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
+           (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))
+                 [massat/massa-lomake e! massalomake-app]
+
+                 (and pot2-murske-lomake (:sivulle? pot2-murske-lomake))
+                 [murskeet/murske-lomake e! murskelomake-app ]
+
+                 :else
+                 [:span])
            [yleiset/valitys-vertical]
            [lisatiedot pot2-tiedot/lisatiedot-atom]
            [yleiset/valitys-vertical]

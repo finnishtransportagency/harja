@@ -5,8 +5,7 @@
             [hiccup.core :refer [html]]
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
-
-            [harja.kyselyt.pot2 :as pot2-q]
+            [harja.kyselyt.paallystys :as paallystys-q]
             [harja.domain
              [pot2 :as pot2-domain]
              [skeema :refer [Toteuma validoi] :as skeema]
@@ -40,6 +39,19 @@
                                                  {::pot2-domain/massa-id (::pot2-domain/massa-id %)}))
        massat))
 
+(defn- liita-materiaalin-kayttotieto
+  "Liittää tiedon missä urakan kohteissa massaa tai mursketta on jo käytetty (POT:ien mukaan), if any"
+  [db tyyppi materiaalit]
+  (mapv #(assoc % ::pot2-domain/kaytossa
+                  (case tyyppi
+                    :murske
+                    (paallystys-q/murskeen-kayttotiedot db {:id (::pot2-domain/murske-id %)})
+
+                    :massa
+                    (paallystys-q/massan-kayttotiedot db {:id (::pot2-domain/massa-id %)})
+
+                    nil))
+        materiaalit))
 
 (defn hae-urakan-massat-ja-murskeet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -68,21 +80,23 @@
                      ::pot2-domain/poistettu? false})
              ;; Specql:ssä ominaisuus, ettei voi tehdä monta joinia samalla kyselyllä, siksi erilliset kyselyt, sorry
              (liita-sideaineet db)
-             (liita-lisaaineet db))
-        murskeet (fetch db
-                        ::pot2-domain/pot2-mk-urakan-murske
-                        #{::pot2-domain/murske-id
-                          ::pot2-domain/nimen-tarkenne
-                          ::pot2-domain/tyyppi
-                          ::pot2-domain/tyyppi-tarkenne
-                          ::pot2-domain/esiintyma
-                          ::pot2-domain/lahde
-                          ::pot2-domain/rakeisuus
-                          ::pot2-domain/rakeisuus-tarkenne
-                          ::pot2-domain/iskunkestavyys
-                          ::pot2-domain/dop-nro}
-                        {::pot2-domain/urakka-id urakka-id
-                         ::pot2-domain/poistettu? false})
+             (liita-lisaaineet db)
+             (liita-materiaalin-kayttotieto db :massa))
+        murskeet (->> (fetch db
+                             ::pot2-domain/pot2-mk-urakan-murske
+                             #{::pot2-domain/murske-id
+                               ::pot2-domain/nimen-tarkenne
+                               ::pot2-domain/tyyppi
+                               ::pot2-domain/tyyppi-tarkenne
+                               ::pot2-domain/esiintyma
+                               ::pot2-domain/lahde
+                               ::pot2-domain/rakeisuus
+                               ::pot2-domain/rakeisuus-tarkenne
+                               ::pot2-domain/iskunkestavyys
+                               ::pot2-domain/dop-nro}
+                             {::pot2-domain/urakka-id urakka-id
+                              ::pot2-domain/poistettu? false})
+                      (liita-materiaalin-kayttotieto db :murske))
         _ (println "hae-urakan-massat-ja-murskeet :: massat" (pr-str massat))
         _ (println "hae-urakan-massat-ja-murskeet :: murskeet" (pr-str murskeet))]
     {:massat massat
@@ -102,14 +116,17 @@
         sideainetyypit (fetch db ::pot2-domain/pot2-mk-sideainetyyppi
                           (specql/columns ::pot2-domain/pot2-mk-sideainetyyppi)
                           {})
+        sidotun-kantavan-kerroksen-sideaine (fetch db ::pot2-domain/pot2-mk-sidotun-kantavan-kerroksen-sideaine
+                                                   (specql/columns ::pot2-domain/pot2-mk-sidotun-kantavan-kerroksen-sideaine)
+                                                   {})
         lisaainetyypit (fetch db ::pot2-domain/pot2-mk-lisaainetyyppi
                               (specql/columns ::pot2-domain/pot2-mk-lisaainetyyppi)
                               {})
         alusta-toimenpiteet (fetch db ::pot2-domain/pot2-mk-alusta-toimenpide
                                           (specql/columns ::pot2-domain/pot2-mk-alusta-toimenpide)
                                           {})
-        kulutuskerros-toimenpiteet (fetch db ::pot2-domain/pot2-mk-kulutuskerros-toimenpide
-                                          (specql/columns ::pot2-domain/pot2-mk-kulutuskerros-toimenpide)
+        paallystekerros-toimenpiteet (fetch db ::pot2-domain/pot2-mk-paallystekerros-toimenpide
+                                          (specql/columns ::pot2-domain/pot2-mk-paallystekerros-toimenpide)
                                           {})
         verkon-sijainnit (fetch db ::pot2-domain/pot2-verkon-sijainti
                                           (specql/columns ::pot2-domain/pot2-verkon-sijainti)
@@ -124,13 +141,13 @@
                    :mursketyypit mursketyypit
                    :runkoainetyypit runkoainetyypit
                    :sideainetyypit sideainetyypit
+                   :sidotun-kantavan-kerroksen-sideaine sidotun-kantavan-kerroksen-sideaine
                    :lisaainetyypit lisaainetyypit
                    :alusta-toimenpiteet alusta-toimenpiteet
-                   :kulutuskerros-toimenpiteet kulutuskerros-toimenpiteet
+                   :paallystekerros-toimenpiteet paallystekerros-toimenpiteet
                    :verkon-sijainnit verkon-sijainnit
                    :verkon-tarkoitukset verkon-tarkoitukset
-                   :verkon-tyypit verkon-tyypit
-                   }]
+                   :verkon-tyypit verkon-tyypit}]
     koodistot))
 
 (defn- tallenna-runkoaineet
