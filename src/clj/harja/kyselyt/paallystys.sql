@@ -548,25 +548,29 @@ UPDATE pot2_alusta
 -- name: massan-kayttotiedot
 SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
   FROM pot2_paallystekerros pk
+           JOIN pot2_mk_urakan_massa um ON um.id = pk.materiaali
+           JOIN yllapitokohdeosa ypko ON pk.kohdeosa_id = ypko.id AND ypko.poistettu IS NOT TRUE
            LEFT JOIN paallystysilmoitus pot ON pk.pot2_id = pot.id
-           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
-           left join urakka u ON ypk.urakka = u.id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde AND ypk.poistettu IS NOT TRUE
+           LEFT JOIN urakka u ON ypk.urakka = u.id
  WHERE pk.materiaali = :id
  group by ypk.nimi, ypk.kohdenumero
  UNION
 SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
   FROM pot2_alusta a
+           JOIN pot2_mk_urakan_massa um ON um.id = a.massa
            LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id
            LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
-           left join urakka u ON ypk.urakka = u.id
- WHERE a.massa = :id
+           LEFT JOIN urakka u ON ypk.urakka = u.id
+ WHERE a.massa = :id AND a.poistettu IS NOT TRUE
  group by ypk.nimi, ypk.kohdenumero;
 
 -- name: murskeen-kayttotiedot
 SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS tila, count(*) AS "kohteiden-lkm"
   FROM pot2_alusta a
+           JOIN pot2_mk_urakan_murske um ON um.id = a.murske
            LEFT JOIN paallystysilmoitus pot ON a.pot2_id = pot.id
-           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde
-           left join urakka u ON ypk.urakka = u.id
- WHERE a.murske = :id
+           LEFT JOIN yllapitokohde ypk ON ypk.id = pot.paallystyskohde AND ypk.poistettu IS NOT TRUE
+           LEFT JOIN urakka u ON ypk.urakka = u.id
+ WHERE a.murske = :id AND a.poistettu IS NOT TRUE
  group by ypk.nimi, ypk.kohdenumero;

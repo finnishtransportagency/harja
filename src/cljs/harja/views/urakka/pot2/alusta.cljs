@@ -161,7 +161,7 @@
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}
-   {:keys [massat murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
+   {:keys [massat murskeet materiaalikoodistot validointi]} alustarivit-atom]
   (let [perusleveys 2
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
     [:div
@@ -231,18 +231,21 @@
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
-                       (when (or (:massa rivi) (:murske rivi))
-                         [mm-yhteiset/materiaalin-tiedot (cond
-                                                           (:massa rivi)
-                                                           (mm-yhteiset/materiaali massat {:massa-id (:massa rivi)})
+                       ;; hieman erilainen formaatti riippuen tuleeko massa kulutuskerroksesta tai alustasta
+                       (let [massa-id (or (:massa rivi) (:massa-id rivi))
+                             murske-id (:murske rivi)]
+                         (when (or massa-id murske-id)
+                          [mm-yhteiset/materiaalin-tiedot (cond
+                                                            massa-id
+                                                            (mm-yhteiset/materiaali massat {:massa-id massa-id})
 
-                                                           (:murske rivi)
-                                                           (mm-yhteiset/materiaali murskeet {:murske-id (:murske rivi)})
+                                                            murske-id
+                                                            (mm-yhteiset/materiaali murskeet {:murske-id murske-id})
 
-                                                           :else
-                                                           nil)
-                          {:materiaalikoodistot materiaalikoodistot}
-                          #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))]))}
+                                                            :else
+                                                            nil)
+                           {:materiaalikoodistot materiaalikoodistot}
+                           #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
