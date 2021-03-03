@@ -1,0 +1,72 @@
+div.kustannusten-seuranta {
+  padding-top: 1rem;
+
+  .filtterit-container {
+    padding-top: 24px;
+
+    .filtteri {
+      height: 69px;
+    }
+  }
+  .sivuelementti {
+    padding-top: 24px;
+  }
+
+  span.taso2 {
+    padding-left: 8px;
+    display: inline-block;
+  }
+  span.taso2:first-letter {
+    text-transform: uppercase;
+  }
+}
+
+div.header {
+  p.urakka {
+    font-weight: 400;
+    color: @harmaa-tumma;
+  }
+}
+
+span.pilleri {
+  border-radius: 15px;
+  background: @red-lighter;
+  padding: 4px 12px;
+  margin-right: -13px;
+}
+
+/* Kustannusseurannan yhteenvetolaatikko */
+div.yhteenveto {
+  max-width: 532px;
+  margin-top: 40px;
+  border: 1px solid @harmaa-vaalea;
+  box-sizing: border-box;
+  padding: 16px;
+
+  .header {
+    font-size: 20px;
+    font-width: 600;
+    line-height: 24px;
+    padding: 8px 16px 8px 16px;
+  }
+
+  .row {
+    font-size: 14px;
+    line-height: 20px;
+    padding-left: 24px;
+    span {
+      padding: 8px 16px 8px 16px;
+    }
+  }
+  .negatiivinen-numero {
+    color: @red-dark;
+    font-weight: bold;
+  }
+}
+
+/*Kustannusten seuranta taulukossa on uusin taulukkoelementti ja sen vaatimat muutokset on tässä */
+.paaryhma-center {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  text-align: center !important;
+}
