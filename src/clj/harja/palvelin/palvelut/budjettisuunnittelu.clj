@@ -58,11 +58,20 @@
 (defn vahvista-suunnitelman-osa-hoitovuodelle
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (q/vahvista-suunnitelman-osa-hoitovuodelle db {:urakka urakka-id
-                                                 :hoitovuosi hoitovuosi
-                                                 :kategoria (tyyppi tyyppi->kategoria)
-                                                 :muokkaaja (:id user)
-                                                 :vahvistaja (:id user)}))
+  (let [hakuparametrit {:urakka urakka-id
+                        :hoitovuosi hoitovuosi
+                        :kategoria (tyyppi tyyppi->kategoria)
+                        :muokkaaja (:id user)
+                        :vahvistaja (:id user)}
+        onko-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
+    (if onko-tila?
+      (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)
+      (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
+                                       :hoitovuosi hoitovuosi
+                                       :kategoria (tyyppi tyyppi->kategoria)
+                                       :luoja (:id user)
+                                       :vahvistaja (:id user)
+                                       :vahvistettu true}))))
 
 (defn tallenna-suunnitelman-osalle-tila
   [db user {:keys [urakka-id hoitovuodet tyyppi]}]
@@ -71,7 +80,8 @@
     (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                      :hoitovuosi hv
                                      :kategoria (tyyppi tyyppi->kategoria)
-                                     :luoja (:id user)})))
+                                     :luoja (:id user)
+                                     :vahvistettu false})))
 
 (defn tallenna-suunnitelman-muutos
   [db user {:keys [selite muutoksen-syy]}])
@@ -465,8 +475,7 @@
                                             (get tehtava toimenpide-avain)
                                             tehtava)
                                   tehtavaryhma (mhu/tallennettava-asia->tehtavaryhma tallennettava-asia)
-                                  toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
-                                  tarvi]
+                                  toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)]
                               (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
                                                                         :tehtava tehtava
                                                                         :tehtavaryhma tehtavaryhma

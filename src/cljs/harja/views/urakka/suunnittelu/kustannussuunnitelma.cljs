@@ -2521,7 +2521,7 @@
 
 (defn- vahvista-suunnitelman-osa-fn
   [parametrit]
-  (t/->VahvistaSuunnitelmanOsioVuodella parametrit))
+  (e! (t/->VahvistaSuunnitelmanOsioVuodella parametrit)))
 
 (defn vahvista-suunnitelman-osa-komponentti
   [_ _ _]

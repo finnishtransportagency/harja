@@ -1825,17 +1825,15 @@ vaihtelua-teksti "vaihtelua/kk")
     (viesti/nayta! "Suunnitelman vahvistus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
     app)
   VahvistaSuunnitelmanOsioVuodella
-  (process-event [{:keys [tyyppi hoitovuosi]} app]
+  (process-event [{{:keys [tyyppi hoitovuosi]} :parametrit} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
-      (tuck-apurit/post! app
-                         :vahvista-kustannussuunnitelman-osa-vuodella
-                         {:urakka-id  urakka
-                          :hoitovuosi hoitovuosi
-                          :kategoria tyyppi
-                          }
-                         {:onnistui           ->VahvistaSuunnitelmanOsioVuodellaOnnistui
-                          :epaonnistui        ->VahvistaSuunnitelmanOsioVuodellaEpaonnistui
-                          :paasta-virhe-lapi? true})))
+      (laheta-ja-odota-vastaus app
+                         {:palvelu :vahvista-kustannussuunnitelman-osa-vuodella
+                          :payload {:urakka-id  urakka
+                                    :hoitovuosi hoitovuosi
+                                    :tyyppi tyyppi}
+                          :onnistui           ->VahvistaSuunnitelmanOsioVuodellaOnnistui
+                          :epaonnistui        ->VahvistaSuunnitelmanOsioVuodellaEpaonnistui})))
   HaeKustannussuunnitelmanTilatOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc-in app [:domain :tilat] vastaus))
