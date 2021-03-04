@@ -229,7 +229,8 @@
          (if (>= (:valittu-urakan-vuosi urakka-tila)
                  pot/pot2-vuodesta-eteenpain)
            [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
-                                                          :massat :murskeet :materiaalikoodistot})
+                                                          :massat :murskeet :materiaalikoodistot
+                                                          :pot2-massa-lomake :pot2-murske-lomake})
             lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div

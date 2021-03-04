@@ -2,6 +2,7 @@
   (:require
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]
+    [clojure.string :as str]
     [harja.domain.pot2 :as pot2-domain]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
@@ -9,7 +10,10 @@
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot])
+    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.ui.napit :as napit]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -31,42 +35,52 @@
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
+(defrecord NaytaMateriaalilomake [rivi])
+(defrecord SuljeMateriaalilomake [])
 
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
   (= koodi 667))
 
-(defn- fmt-toimenpide-verkko [rivi materiaalikoodistot]
- [:span
-   (str (pot2-domain/ainetyypin-koodi->nimi (:verkon-sijainnit materiaalikoodistot) (:verkon-sijainti rivi))
-        ", " (pot2-domain/ainetyypin-koodi->nimi (:verkon-tarkoitukset materiaalikoodistot) (:verkon-tarkoitus rivi)))])
 
 (defn toimenpiteen-tiedot
-  [rivi materiaalikoodistot]
-  (let [verkko-avaimet [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]
-        toimenpide (:toimenpide rivi)
-        {:keys [alusta-toimenpiteet verkon-tarkoitukset verkon-tyypit verkon-sijainnit]} materiaalikoodistot]
-    (fn [rivi materiaalikoodistot]
+  [{:keys [koodistot]} rivi]
+  (let [toimenpide (:toimenpide rivi)]
+    (fn [{:keys [koodistot]} rivi]
       [:div.pot2-toimenpiteen-tiedot
-       (cond
-         (onko-toimenpide-verkko? alusta-toimenpiteet toimenpide)
-         (fmt-toimenpide-verkko (select-keys rivi verkko-avaimet) materiaalikoodistot)
+       ;; Kaivetaan metatiedosta sopivat kentät. Tähän mahdollisimman geneerinen ratkaisu olisi hyvä
+       (when (and toimenpide rivi)
+         (str/capitalize
+           (let [kuuluu-kentalle? (fn [{:keys [nimi]}]
+                                    (and nimi
+                                         (not= nimi :massa)
+                                         (not= nimi :murske)))
+                 muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta] :as metadata}]
+                                   (let [kentan-arvo (nimi rivi)
+                                         teksti (if valinnat-koodisto
+                                                  (let [koodisto (valinnat-koodisto koodistot)
+                                                        koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
+                                                        koodisto-teksti (valinta-nayta koodisto-rivi)]
+                                                    koodisto-teksti)
+                                                  (str kentan-arvo
+                                                       (when (some? yksikko)
+                                                         (str " " yksikko))))]
+                                     (str otsikko ": " teksti)))]
+             (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
+                                 (filter kuuluu-kentalle?)
+                                 (map muotoile-kentta))))))])))
 
-         :else
-         [:span "Ei tietoja"])])))
-;; TODO: tänne domain puolelta käyttöön palvelinpuolen kanssa yhteinen logiikka päätellä
-;; eri toimenpidetyyppien kentät
+(defn rivi->massa-tai-murske
+  "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
 
-(defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]}]
-  [:div.pot2-materiaalin-tiedot
-   (cond
-     (some? (:murske materiaali))
-     [mk-tiedot/murskeen-rikastettu-nimi (:mursketyypit materiaalikoodistot) materiaali :komponentti]
-
-     (some? (:massa materiaali))
-     [mk-tiedot/massan-rikastettu-nimi (:massatyypit materiaalikoodistot) materiaali :komponentti]
-     )])
-
+  [rivi {:keys [massat murskeet]}]
+  (if (:murske rivi)
+    (first (filter #(when (= (::pot2-domain/murske-id %) (:murske rivi))
+                      %)
+                   murskeet))
+    (first (filter #(when (= (::pot2-domain/massa-id %) (::pot2-domain/massa-id rivi))
+                      %)
+                   massat))))
 
 (extend-protocol tuck/Event
 
@@ -90,23 +104,22 @@
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [perustiedot (select-keys vastaus paallystys/perustiedot-avaimet)
-          kulutuskerros (:kulutuskerros vastaus)
+          kulutuskerros (:paallystekerros vastaus)
           alusta (:alusta vastaus)
           lomakedata {:paallystyskohde-id (:paallystyskohde-id vastaus)
                       :perustiedot (merge perustiedot
                                           {:tr-osoite (select-keys perustiedot paallystys/tr-osoite-avaimet)})
                       :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                                   (:id urakka))
-                      :kulutuskerros kulutuskerros
+                      :paallystekerros kulutuskerros
                       :alusta alusta
                       :lisatiedot (:lisatiedot vastaus)}]
       (-> app
           (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
   HaePot2TiedotEpaonnistui
-  ;; fixme implement
   (process-event [{vastaus :vastaus} app]
-    (println "HaePot2TiedotEpaonnistui " (pr-str vastaus))
+    (viesti/nayta! (str "Tietojen haku epäonnistui: " vastaus) :danger viesti/viestin-nayttoaika-pitka)
     app)
 
   TallennaPot2Tiedot
@@ -121,7 +134,7 @@
                                (assoc :lisatiedot @lisatiedot-atom
                                       :versio 2)
                                (update :ilmoitustiedot dissoc :virheet)
-                               (assoc :kulutuskerros (gridin-muokkaus/filteroi-uudet-poistetut
+                               (assoc :paallystekerros (gridin-muokkaus/filteroi-uudet-poistetut
                                                                 (into (sorted-map)
                                                                       @kohdeosat-atom)))
                                (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
@@ -139,25 +152,21 @@
 
   LisaaAlustaToimenpide
   (process-event [_ app]
-    (println "LisaaAlustaToimenpide " )
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] {}))
 
   ValitseAlustatoimenpide
   (process-event [{toimenpide :toimenpide} app]
-    (println "ValitseAlustatoimenpide " (pr-str toimenpide))
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
               {:toimenpide toimenpide}))
 
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]
-    (println "PaivitaAlustalomake " (pr-str alustalomake))
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
               alustalomake))
 
   TallennaAlustalomake
   (process-event [{alustalomake :alustalomake
                    jatka? :jatka?} app]
-    (println "TallennaAlustalomake " (pr-str alustalomake jatka?))
     (let [idt (keys @alustarivit-atom)
           pienin-id (apply min idt)
           uusi-id (if (pos? pienin-id)
@@ -173,7 +182,27 @@
 
   SuljeAlustalomake
   (process-event [_ app]
-    (println "SuljeAlustalomake ")
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] nil))
 
-  )
+  NaytaMateriaalilomake
+  (process-event [{rivi :rivi} app]
+    (let [materiaali (rivi->massa-tai-murske rivi (select-keys app #{:massat :murskeet}))
+          materiaali (if (::pot2-domain/massa-id materiaali)
+                       (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
+                                                                (::pot2-domain/massa-id materiaali)
+                                                                false)
+                       materiaali)
+          polku (if (:murske rivi) :pot2-murske-lomake :pot2-massa-lomake)
+          nil-polku (if (:murske rivi) :pot2-massa-lomake :pot2-murske-lomake)]
+      (-> app
+          (assoc polku (merge materiaali
+                              {:sivulle? true
+                               :voi-muokata? false})
+                 nil-polku nil))))
+
+  SuljeMateriaalilomake
+  (process-event [_ app]
+    (println "SuljeMateriaalilomake ")
+    (-> app
+        (assoc :pot2-massa-lomake nil
+               :pot2-murske-lomake nil))))

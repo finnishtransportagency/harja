@@ -9,8 +9,7 @@
             [harja.domain.pot2 :as pot2-domain]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -23,6 +22,7 @@
 (defrecord UusiMurske [])
 (defrecord MuokkaaMursketta [rivi klooni?])
 (defrecord NaytaModal [avataanko?])
+(defrecord AloitaMuokkaus [lomakepolku])
 
 ;; Massat
 (defrecord TallennaLomake [data])
@@ -51,56 +51,11 @@
 (defrecord HaeKoodistotOnnistui [vastaus])
 (defrecord HaeKoodistotEpaonnistui [vastaus])
 
-(def asfalttirouheen-tyypin-id 2)
-
-(defn massan-rc-pitoisuus
-  "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
-  [rivi]
-  (when-let [runkoaineet (::pot2-domain/runkoaineet rivi)]
-    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
-                                            runkoaineet))]
-      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
-
-(defn- rivin-avaimet->str
-  ([rivi avaimet] (rivin-avaimet->str rivi avaimet " "))
-  ([rivi avaimet separator]
-   (str/join separator
-             (remove nil? (mapv val (select-keys rivi avaimet))))))
-
-(defn- massan-murskeen-nimen-komp [ydin tarkennukset fmt]
-  (if (= :komponentti fmt)
-   [:span
-    [:span.bold ydin]
-    [:span (when-not (empty? tarkennukset) (str " (" tarkennukset ")"))]]
-   (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))))
-
-(defn massan-rikastettu-nimi
-  "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
-  [massatyypit massa fmt]
-  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
-  (let [massa (assoc massa ::pot2-domain/rc% (massan-rc-pitoisuus massa))
-        ydin (str (pot2-domain/ainetyypin-koodi->lyhenne massatyypit (::pot2-domain/tyyppi massa))
-                  (rivin-avaimet->str massa [::pot2-domain/max-raekoko
-                                             ::pot2-domain/nimen-tarkenne
-                                             ::pot2-domain/dop-nro]))
-
-        tarkennukset (rivin-avaimet->str massa [::pot2-domain/kuulamyllyluokka
-                                                ::pot2-domain/rc%] ", ")]
-    ;; vähän huonoksi ehkä meni tämän kanssa. Toinen funktiota kutsuva tarvitsee komponenttiwrapperin ja toinen ei
-    ;; pitänee refaktoroida... fixme jos ehdit
-    (if (= fmt :komponentti)
-      [massan-murskeen-nimen-komp ydin tarkennukset fmt]
-      (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
-
-(defn murskeen-rikastettu-nimi [mursketyypit murske fmt]
-  ;; esim KaM LJYR 2020/09/3232 (0/40, LA30)
-  ;; tyyppi Kalliomurske, tarkenne LJYR, rakeisuus 0/40, iskunkestävyys (esim LA30)
-  (let [ydin (str (pot2-domain/ainetyypin-koodi->lyhenne mursketyypit (::pot2-domain/tyyppi murske)) " "
-                  (rivin-avaimet->str murske #{::pot2-domain/nimen-tarkenne ::pot2-domain/dop-nro}))
-        tarkennukset (rivin-avaimet->str murske #{::pot2-domain/rakeisuus ::pot2-domain/iskunkestavyys} ", ")]
-    (if (= fmt :komponentti)
-      [massan-murskeen-nimen-komp ydin tarkennukset fmt]
-      (massan-murskeen-nimen-komp ydin tarkennukset fmt))))
+(defn massatyypit-vai-mursketyypit? [tyypit]
+  (if (some (fn [lyhenne] (= lyhenne "AB"))
+            (map ::pot2-domain/lyhenne tyypit))
+    :massa
+    :murske))
 
 (def sideaineen-kayttotavat
   [{::pot2-domain/nimi "Lopputuotteen sideaine"
@@ -158,6 +113,51 @@
       (mursketyyppia? mursketyypit "Muu" lomake)))
 
 (def nayta-lahde mursketyyppia-bem-tai-muu?)
+
+(defn massa-kayttoliittyman-muotoon
+  [massa id klooni?]
+  (let [runkoaineet (aine-kayttoliittyman-muotoon (map
+                                                    ;; Koska luodaan uusi massa olemassaolevan tietojen pohjalta, täytyy vanhan massan viittaukset poistaa
+                                                    #(if klooni?
+                                                       (dissoc % :runkoaine/id ::pot2-domain/massa-id)
+                                                       (identity %))
+                                                    (:harja.domain.pot2/runkoaineet massa)) :runkoaine/tyyppi)
+        sideaineet (sideaine-kayttoliittyman-muotoon (map
+                                                       #(if klooni?
+                                                          (dissoc % :sideaine/id ::pot2-domain/massa-id)
+                                                          (identity %))
+                                                       (:harja.domain.pot2/sideaineet massa)))
+        lisaaineet (aine-kayttoliittyman-muotoon (map
+                                                   #(if klooni?
+                                                      (dissoc % :lisaaine/id ::pot2-domain/massa-id)
+                                                      (identity %))
+                                                   (:harja.domain.pot2/lisaaineet massa)) :lisaaine/tyyppi)]
+    (-> massa
+        (assoc ::pot2-domain/massa-id id
+               :harja.domain.pot2/runkoaineet runkoaineet
+               :harja.domain.pot2/sideaineet sideaineet
+               :harja.domain.pot2/lisaaineet lisaaineet))))
+
+(defn- lisa-aineisiin-pitoisuus [rivi aineet]
+  (mapv (fn [aine]
+          (let [pitoisuus-rivissa (:lisaaine/pitoisuus
+                                    (first (filter (fn [la]
+                                                     (= (::pot2-domain/koodi aine)
+                                                        (:lisaaine/tyyppi la)))
+                                                   (vals (get-in rivi [:data ::pot2-domain/lisaaineet])))))]
+            (assoc aine ::pot2-domain/pitoisuus pitoisuus-rivissa)))
+        aineet))
+
+(defn jarjesta-aineet-tarvittaessa
+  "Järjestää tarvittaessa esim massan lisäaineet pitoisuuden mukaisesti suurimmasta pienimpään"
+  [{:keys [rivi tyyppi aineet voi-muokata?] :as opts}]
+  (if (and (= tyyppi :lisaaineet)
+           (not voi-muokata?))
+    (into []
+          (reverse
+            (sort-by ::pot2-domain/pitoisuus
+                     (lisa-aineisiin-pitoisuus rivi aineet))))
+    aineet))
 
 (extend-protocol tuck/Event
 
@@ -217,28 +217,9 @@
     (let [massan-id (if klooni?
                       nil
                       (::pot2-domain/massa-id rivi))
-          runkoaineet (aine-kayttoliittyman-muotoon (map
-                                                      ;; Koska luodaan uusi massa olemassaolevan tietojen pohjalta, täytyy vanhan massan viittaukset poistaa
-                                                      #(if klooni?
-                                                         (dissoc % :runkoaine/id ::pot2-domain/massa-id)
-                                                         (identity %))
-                                                      (:harja.domain.pot2/runkoaineet rivi)) :runkoaine/tyyppi)
-          sideaineet (sideaine-kayttoliittyman-muotoon (map
-                                                         #(if klooni?
-                                                            (dissoc % :sideaine/id ::pot2-domain/massa-id)
-                                                            (identity %))
-                                                         (:harja.domain.pot2/sideaineet rivi)))
-          lisaaineet (aine-kayttoliittyman-muotoon (map
-                                                     #(if klooni?
-                                                        (dissoc % :lisaaine/id ::pot2-domain/massa-id)
-                                                        (identity %))
-                                                     (:harja.domain.pot2/lisaaineet rivi)) :lisaaine/tyyppi)]
+          massa (massa-kayttoliittyman-muotoon rivi massan-id klooni?)]
       (-> app
-          (assoc :pot2-massa-lomake rivi)
-          (assoc-in [:pot2-massa-lomake ::pot2-domain/massa-id] massan-id)
-          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/runkoaineet] runkoaineet)
-          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/sideaineet] sideaineet)
-          (assoc-in [:pot2-massa-lomake :harja.domain.pot2/lisaaineet] lisaaineet))))
+          (assoc :pot2-massa-lomake massa))))
 
   UusiMurske
   (process-event [_ app]
@@ -247,11 +228,13 @@
 
   MuokkaaMursketta
   (process-event [{rivi :rivi klooni? :klooni?} app]
-    ;; jos käyttäjä luo uuden massan kloonaamalla vanhan, nollataan id:t
-    (let [murske-id (if klooni? nil (::pot2-domain/murske-id rivi))]
+    ;; jos käyttäjä luo uuden massan kloonaamalla vanhan, nollataan id:t ja käytössäoleminen
+    (let [murske-id (if klooni? nil (::pot2-domain/murske-id rivi))
+          kaytossa (if klooni? nil (::pot2-domain/kaytossa rivi))]
       (-> app
           (assoc :pot2-murske-lomake rivi)
-          (assoc-in [:pot2-murske-lomake ::pot2-domain/murske-id] murske-id))))
+          (assoc-in [:pot2-murske-lomake ::pot2-domain/murske-id] murske-id)
+          (assoc-in [:pot2-murske-lomake ::pot2-domain/kaytossa] kaytossa))))
 
   PaivitaMassaLomake
   (process-event [{data :data} app]
@@ -309,7 +292,6 @@
 
   TyhjennaLomake
   (process-event [{data :data} app]
-    (js/console.log "TyhjennaLomake" (pr-str data))
     (-> app
         (assoc :pot2-massa-lomake nil)))
 
@@ -335,8 +317,8 @@
   TallennaMurskeOnnistui
   (process-event [{vastaus :vastaus} app]
     (if (::pot2-domain/poistettu? vastaus)
-      (viesti/nayta! "Massa poistettu!")
-      (viesti/nayta! "Massa tallennettu!"))
+      (viesti/nayta! "Murske poistettu!")
+      (viesti/nayta! "Murske tallennettu!"))
     (hae-massat-ja-murskeet app)
     (assoc app :pot2-murske-lomake nil))
 
@@ -350,4 +332,9 @@
     (js/console.log "TyhjennaLomake" (pr-str data))
     (-> app
         (assoc :pot2-murske-lomake nil)))
-  )
+
+  AloitaMuokkaus
+  (process-event [{lomakepolku :lomakepolku} app]
+    (js/console.log "AloitaMuokkaus" (pr-str lomakepolku))
+    (-> app
+        (assoc-in [lomakepolku :voi-muokata?] true))))

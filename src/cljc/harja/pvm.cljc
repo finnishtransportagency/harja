@@ -1014,6 +1014,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                :cljs (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
 
+(defn montako-paivaa-valissa
+  "Montako päivää on paiva1 ja paiva2 välissä."
+  [paiva1 paiva2]
+  (let [paiva1 #?(:clj  (joda-timeksi paiva1)
+           :cljs paiva1)
+        paiva2 #?(:clj  (joda-timeksi paiva2)
+                  :cljs paiva2)]
+    (if (t/before? paiva1 paiva2)
+      (t/in-days (t/interval paiva1 paiva2))
+      (- (t/in-days (t/interval paiva2 paiva1))))))
+
 (defn ajan-muokkaus
   "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä"
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))

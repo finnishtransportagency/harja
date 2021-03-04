@@ -179,7 +179,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn lista-item
   [{:keys [li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-           vaihtoehto disabled-vaihtoehdot valittu-arvo vayla-tyyli? auki?]}]
+           vaihtoehto disabled-vaihtoehdot valittu-arvo vayla-tyyli? auki?] :as kaka}]
   (let [disabled? (and disabled-vaihtoehdot
                        (contains? disabled-vaihtoehdot vaihtoehto))
         linkin-cond (cond
@@ -205,7 +205,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasvetolista
   [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
            li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-           vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo]}]
+           vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
+           pakollinen?] :as kaka}]
   [:ul (if vayla-tyyli?
          {:style (merge {:z-index "1000"
                          :display (if @auki?
@@ -228,8 +229,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                          :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])])
        (for [vaihtoehto vaihtoehdot]
          ^{:key (hash vaihtoehto)}
-         [lista-item  {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
-                       :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
+         [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
+                      :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
@@ -297,7 +298,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   {:tarkista-komponentti? true})
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
+                   pakollinen?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -336,6 +338,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
+                                  :pakollinen? pakollinen?
                                   :valittu-arvo valinta
                                   :auki?     auki?})]])))))
 

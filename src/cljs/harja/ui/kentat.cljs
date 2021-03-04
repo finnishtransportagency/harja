@@ -633,7 +633,8 @@
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
-            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id]} data]
+            nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
+            pakollinen?]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -658,6 +659,7 @@
                                                      (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
                                                      (or (and valinta-nayta #(valinta-nayta % true)) str))
                             :disabled              disabled?
+                            :pakollinen?           pakollinen?
                             :vayla-tyyli?          vayla-tyyli?
                             :elementin-id elementin-id}
        valinnat]))
@@ -693,20 +695,29 @@
                                 :elementin-id elementin-id}
            valinnat])))))
 
-(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
-                                        valinnat valinnat-fn rivi hae
-                                        jos-tyhja-fn jos-tyhja]} data]
+(defn- nayta-arvo-valinta-tai-radio-group
+  [{:keys [valinta-nayta valinta-arvo
+           valinnat valinnat-fn rivi hae
+           jos-tyhja-fn jos-tyhja]} data]
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))
         valinta (if valinta-arvo
                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                   nykyinen-arvo)]
-    [:span (or ((or valinta-nayta str false) valinta) valinta)]
     [:span (if (empty? valinnat)
              ((or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja"))) valinta)
              (or ((or valinta-nayta str false) valinta) valinta))]))
 
+(defmethod nayta-arvo :valinta [opts data]
+  [nayta-arvo-valinta-tai-radio-group opts data])
 
+(defmethod nayta-arvo :radio-group
+  [opts data]
+  (let [opts (clojure.set/rename-keys opts {:vaihtoehto-arvo :valinta-arvo
+                                            :vaihtoehto-nayta :valinta-nayta
+                                            :vaihtoehdot :valinnat
+                                            :vaihtoehdot-fn :valinnat-fn})]
+    [nayta-arvo-valinta-tai-radio-group opts data]))
 
 (defmethod tee-kentta :kombo [{:keys [valinnat on-focus on-blur lomake? disabled?]} data]
   (let [auki (atom false)]

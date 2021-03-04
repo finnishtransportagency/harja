@@ -1,9 +1,10 @@
 (ns harja.ui.validointi-test
-  (:require [harja.ui.validointi :as val]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as ur]
-            [harja.pvm :as pvm]
-            [cljs.test :as t :refer-macros [deftest is testing async]]))
+  (:require  [harja.ui.validointi :as val]
+             [harja.validointi :as val-cljc]
+             [harja.tiedot.navigaatio :as nav]
+             [harja.tiedot.urakka :as ur]
+             [harja.pvm :as pvm]
+             [cljs.test :as t :refer-macros [deftest is testing async]]))
 
 (defn validi-data? [saanto data & optiot]
   (apply val/validoi-saanto saanto :testi data {} {} optiot))
@@ -254,7 +255,7 @@
 
 (deftest numeron-validointi
   (testing "testaa numeron validointia"
-    (is (true? (val/validoi-numero "3,6" 2 4 2)))
-    (is (true? (val/validoi-numero "3" 2 4 2)))
-    (is (false? (val/validoi-numero "3,61231233" 2 4 2)))
-    (is (false? (val/validoi-numero "13,6" 1 10 2)))))
+    (is (true? (val-cljc/validoi-numero "3,6" 2 4 2)))
+    (is (true? (val-cljc/validoi-numero "3" 2 4 2)))
+    (is (false? (val-cljc/validoi-numero "3,61231233" 2 4 2)))
+    (is (false? (val-cljc/validoi-numero "13,6" 1 10 2)))))

@@ -2,12 +2,13 @@
   "POT2-lomakkeen alustarivien näkymä"
   (:require
     [reagent.core :refer [atom] :as r]
+    [harja.loki :refer [log]]
+    [harja.pvm :as pvm]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.paallystysilmoitus :as pot]
     [harja.domain.pot2 :as pot2-domain]
     [harja.domain.tierekisteri :as tr]
     [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-    [harja.loki :refer [log]]
     [harja.ui.debug :refer [debug]]
     [harja.ui.grid :as grid]
     [harja.ui.komponentti :as komp]
@@ -21,7 +22,7 @@
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.pvm :as pvm])
+    [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -36,38 +37,52 @@
 
 (defn- alustalomakkeen-lisakentat
   [{:keys [toimenpide
+           massat
+           massatyypit
            murskeet
-           verkon-sijainnit
-           verkon-tyypit
-           verkon-tarkoitukset]}]
-  (let [kaikki-lisakentat {:lisatty-paksuus  {:nimi   :lisatty-paksuus :otsikko "Lisätty paksuus"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :massamaara       {:nimi   :massamaara :otsikko "Massamäärä"
-                                              :tyyppi :positiivinen-numero :kokonaisluku? true}
-                           :murske           {:otsikko      "Murske" :nimi :murske :tyyppi :valinta
-                                              :valinta-arvo ::pot2-domain/murske-id
-                                              :valinta-nayta (str ::pot2-domain/nimen-tarkenne " "
-                                                                  ::pot2-domain/rakeisuus " "
-                                                                  ::pot2-domain/iskunkestavyys " "
-                                                                  ::pot2-domain/esiintyma) ;; todo: mitä haluamme näyttää?
-                                              :valinnat     murskeet}
-                           :verkon-tyyppi    {:otsikko      "Verkon tyyppi" :nimi :verkon-tyyppi :tyyppi :valinta
-                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-tyypit}
-                           :verkon-sijainti  {:otsikko      "Sijainti" :nimi :verkon-sijainti :tyyppi :valinta
-                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-sijainnit}
-                           :verkon-tarkoitus {:otsikko      "Tarkoitus" :nimi :verkon-tarkoitus :tyyppi :valinta
-                                              ;; TODO: verkon_sijainti :hae-pot2-koodistot palvelun kautta tänne
-                                              :valinta-arvo ::pot2-domain/koodi :valinta-nayta ::pot2-domain/nimi
-                                              :valinnat     verkon-tarkoitukset}}
-        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpide-lisaavaimet toimenpide)
-        lisakentta-generaattori (fn [kentta]
-                                  (lomake/rivi (merge (get kaikki-lisakentat kentta)
-                                              {:palstoja 3 :pakollinen? true})))]
+           mursketyypit
+           koodistot] :as alusta}]
+  (let [mukautetut-lisakentat {:murske {:nimi :murske
+                                        :valinta-nayta (fn [murske]
+                                                         (if murske
+                                                           (let [[a b] (pot2-domain/murskeen-rikastettu-nimi
+                                                                         mursketyypit
+                                                                         murske)]
+                                                             (str a b))
+                                                           "-"))
+                                        :valinnat murskeet}
+                               :massa {:nimi :massa
+                                       :valinta-nayta (fn [massa]
+                                                        (if massa
+                                                          (let [[a b] (pot2-domain/massan-rikastettu-nimi
+                                                                        massatyypit
+                                                                        massa)]
+                                                            (str a b))
+                                                          "-"))
+                                       :valinnat massat}}
+        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
+        lisakentta-generaattori (fn [{:keys [nimi pakollinen? tyyppi valinnat-koodisto otsikko yksikko jos] :as kentta-metadata}]
+                                  (let [kentta (get mukautetut-lisakentat nimi)
+                                        valinnat (or (:valinnat kentta)
+                                                     (get koodistot valinnat-koodisto))
+                                        valinnat-ja-nil (if pakollinen?
+                                                          valinnat
+                                                          (conj valinnat nil))]
+                                    (when (and (= tyyppi :valinta) (nil? valinnat-ja-nil))
+                                      (println "Kenttä " nimi " on valinta mutta ei sisällä valinnat"))
+                                    (when (or (nil? jos)
+                                              (some? (get alusta jos)))
+                                      (lomake/rivi (merge kentta-metadata
+                                                          kentta
+                                                          {:palstoja 3
+                                                           :valinnat valinnat-ja-nil}
+                                                          (when (some? otsikko)
+                                                            {:otsikko (str otsikko
+                                                                           (when (some? yksikko)
+                                                                             (str " (" yksikko ")")))}))))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
-(defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet
+(defn- alustalomakkeen-kentat [{:keys                  [alusta-toimenpiteet
                                        toimenpide] :as alusta}]
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
@@ -113,7 +128,7 @@
               (when toimenpide lisakentat)))))
 
 (defn alustalomake-nakyma
-  [e! {:keys [alustalomake alusta-toimenpiteet murskeet materiaalikoodistot]}]
+  [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
   [lomake/lomake
    {:luokka " overlay-oikealla"
     :otsikko "Toimenpiteen tiedot"
@@ -136,19 +151,16 @@
                    {:disabled false}]])}
    (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
                             :toimenpide (:toimenpide alustalomake)
+                            :murske (:murske alustalomake)
+                            :massat massat
                             :murskeet murskeet
-                            :verkon-sijainnit (:verkon-sijainnit materiaalikoodistot)
-                            :verkon-tyypit (:verkon-tyypit materiaalikoodistot)
-                            :verkon-tarkoitukset (:verkon-tarkoitukset materiaalikoodistot)})
+                            :koodistot materiaalikoodistot})
    alustalomake])
 
-(defn materiaali [massat-tai-murskeet koodi]
-  (first (filter #(= (::pot2-domain/koodi %) koodi)
-                 massat-tai-murskeet)))
 
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}
    {:keys [massat murskeet mursketyypit materiaalikoodistot validointi]} alustarivit-atom]
   (let [perusleveys 2
         alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
@@ -156,6 +168,7 @@
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
                                 :alusta-toimenpiteet alusta-toimenpiteet
+                                :massat massat
                                 :murskeet murskeet
                                 :materiaalikoodistot materiaalikoodistot}])
      [grid/muokkaus-grid
@@ -213,22 +226,23 @@
                 (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %)}
        {:otsikko "Toimenpiteen tie\u00ADdot" :nimi :toimenpiteen-tiedot :leveys 4
         :tyyppi :komponentti :muokattava? (constantly false)
-
         :komponentti (fn [rivi]
-                       [pot2-tiedot/toimenpiteen-tiedot rivi materiaalikoodistot])}
+                       [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
        {:otsikko "Materiaa\u00ADli" :nimi :materiaalin-tiedot :leveys 3
         :tyyppi :komponentti :muokattava? (constantly false)
         :komponentti (fn [rivi]
-                       [pot2-tiedot/materiaalin-tiedot (cond
-                                                         (:massa rivi)
-                                                         (materiaali massat (:massa rivi))
+                       (when (or (:massa rivi) (:murske rivi))
+                         [mm-yhteiset/materiaalin-tiedot (cond
+                                                           (:massa rivi)
+                                                           (mm-yhteiset/materiaali massat {:massa-id (:massa rivi)})
 
-                                                         (:murske rivi)
-                                                         (materiaali murskeet (:murske rivi))
+                                                           (:murske rivi)
+                                                           (mm-yhteiset/materiaali murskeet {:murske-id (:murske rivi)})
 
-                                                         :else
-                                                         [])
-                        {:materiaalikoodistot materiaalikoodistot}])}
+                                                           :else
+                                                           nil)
+                          {:materiaalikoodistot materiaalikoodistot}
+                          #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))]))}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
