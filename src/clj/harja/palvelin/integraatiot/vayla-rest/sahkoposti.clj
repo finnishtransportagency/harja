@@ -10,27 +10,28 @@
             [taoensso.timbre :as log])
   (:import (java.util UUID)))
 
-;; mietittävää: rest-lähetysrajapinnasta tulossa synkroninen, eli kutsu voi kestää - ok blokata jutsuja siksi aikaa vai tehdäänkö esim futurella?
+; (ratkennut) rest-lähetysrajapinnasta tulossa synkroninen, eli kutsu voi kestää - ok blokata jutsuja siksi aikaa vai tehdäänkö esim futurella?
+;;  -> testattu, oli nopea
 
-;; mietittävää 2: kuuntelijat. säilytetäänkö tämä api?
+;; (ratkennut): kuuntelijat. säilytetäänkö tämä api?
+;;   -> ei käytetä lähetyksessä, mutta säilytetään vastaanotossa sitten kun se toteutetaan.
 ;;  - aloitetaan samalla, jos ei tule syytä esim yksinkertaisuuden takia muuttaa.
 ;;  - kuuntelija-systeemi:
 ;;     - komponentin kuuntelijat-parametri on atomi jonka sisällä on joukko callback-funktioita, ne saa "viestin" parametriksi johon pitää sitten osata vastata ilman muita kontekstia antavia parametreja. eli käytännössä aika paljon kontekstia tulee sulkeuman kontekstista, joka on kuuntelijaa rekisteröidessä määritelty
 ;;     - integraatiopisteet.jms/kuittauskuuntelija tekee callbackin joka kuittaa jms-viestejä esim
-
-
-
+;;     -> lähetyskoodissa kuuntelijasysteemiä ei käytetä. vastaanottopuolessa myöhemmin kyllä.
+;;
+;; -  muutetaan laheta-viesti! -api käyttämään validoitua mappia positional parametrien sijaan
 
 (defn lokittaja [{il :integraatioloki db :db} nimi]
   (integraatioloki/lokittaja il db "vayla-rest" nimi))
 
-
-(defn laheta-sahkoposti [{:keys [otsikko leipateksti url]}]
+(defn laheta-sahkoposti [{:keys [otsikko leipateksti url viestitunniste]}]
   (let [opts {:as :text
               :body (json/encode {... (ks json schemasta)})
-              ;; :basic-auth ["user" "pass"]
+              :basic-auth [rest-kayttaja rest-salasana]
               :user-agent "Harja"
-              
+              :message-id viestitunniste
               }
         resp-promise (htclient/post url opts)
         resp (deref resp-promise)
@@ -38,7 +39,7 @@
     ))
 
 
-(defrecord VaylaRestSahkoposti [vastausosoite jonot kuuntelijat kuittaus-kuuntelijat]
+(defrecord VaylaRestSahkoposti [vastausosoite rest-kayttaja rest-salasana]
   component/Lifecycle
   (start [{vayla-rest :vayla-rest :as this}]
     (log/debug "VaylaRestSahkoposti-komponentti käynnistyy"))
@@ -56,12 +57,11 @@
     (swap! kuuntelijat conj kuuntelija-fn)
     #(swap! kuuntelijat disj kuuntelija-fn))
 
-  (laheta-viesti! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti! [lahettaja vastaanottaja otsikko sisalto]
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      {:jms-message-id (jms-lahettaja viesti viesti-id)
-       :viesti-id viesti-id}))
+      {:viesti-id viesti-id}))
 
   (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))
