@@ -1244,6 +1244,22 @@
    :organisaatioroolit {} #_ {@kemin-aluerakennus-id #{"laadunvalvoja"}}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
 
+(defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-kemin-urakanvalvoja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 417,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id, #{"ELY_Urakanvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-paakayttaja []
+  {:sahkoposti "keppi.paajarvi@example.com", :kayttajanimi "KeminPaa", :puhelin 123123123, :sukunimi "Pääjärvi",
+   :roolit #{"Paakayttaja"}, :id 18, :etunimi "Keppi",
+   :organisaatio {:id @kemin-aluerakennus-id  :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
+
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit #{}, :id 17, :etunimi "Yitin",

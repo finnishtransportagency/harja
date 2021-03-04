@@ -23,6 +23,26 @@
     validointivirheet
     (conj validointivirheet "Tierekisterissä virhe.")))
 
+(defn- sallittu-tilamuutos? [uusi vanha rooli]
+  (let [ehdotettu? #(= "ehdotettu" %)
+        tilattu? #(= "tilattu" %)
+        hylatty? #(= "hylatty" %)]
+    (if (or (= uusi vanha) (nil? vanha))
+      true
+      (if (= rooli :tilaaja)
+        ;; tilaaja saa tehdä seuraavat tilamuutokset.
+        (or
+          (and (ehdotettu? vanha) (or (tilattu? uusi) (hylatty? uusi)))
+          (and (or (tilattu? vanha) (hylatty? vanha)) (ehdotettu? uusi)))
+        false))))
+
+(defn validi-paikkauskohteen-tilamuutos? [validointivirheet uusi vanha rooli]
+  (if (sallittu-tilamuutos? (:paikkauskohteen-tila uusi) (:paikkauskohteen-tila vanha) rooli)
+    validointivirheet
+    (conj validointivirheet
+          (str "Virhe tilan muutoksessa "
+               (name (:paikkauskohteen-tila vanha)) " -> " (name (:paikkauskohteen-tila uusi))))))
+
 (defn- validi-aika? [aika]
   (if (and
         (.after aika (pvm/->pvm "01.01.2000"))
@@ -35,11 +55,15 @@
     false
     true))
 
+(defn- validi-paikkauskohteen-tila? [tila]
+  (boolean (some #(= tila %) ["ehdotettu" "tilattu" "hylatty" "valmis" "hyvaksytty"])))
+
 (s/def ::nimi (s/and string? #(validi-nimi? %)))
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
+(s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
 
-(defn paikkauskohde-validi? [kohde]
+(defn paikkauskohde-validi? [kohde vanha-kohde rooli]
   (let [validointivirheet (as-> #{} virheet
                                 (if (s/valid? ::nimi (:nimi kohde))
                                   virheet
@@ -50,15 +74,19 @@
                                 (if (s/valid? ::loppupvm (:loppupvm kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen loppupäivässä virhe."))
+                                (if (s/valid? ::paikkauskohteen-tila (:paikkauskohteen-tila kohde))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen tilassa virhe."))
                                 (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
-                                (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))]
+                                (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
+                                (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
 
 (defn paikkauskohteet [db user {:keys [vastuuyksikko tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         tila (if (or (nil? tila) (= "kaikki" (str/lower-case tila)))
-               nil ;; kaikkia haettaessa käytetään nil arvoa
+               nil                                          ;; kaikkia haettaessa käytetään nil arvoa
                tila)
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
@@ -86,6 +114,7 @@
         ]
     urakan-paikkauskohteet))
 
+
 (defn tallenna-paikkauskohde! [db user kohde]
   (println "tallenna-paikkauskohde! voi voi-lukea? " (pr-str (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)) (pr-str (roolit/osapuoli user)))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
@@ -93,8 +122,9 @@
         kayttajarooli (roolit/osapuoli user)
         on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
+        vanha-kohde (when kohde-id (first (q/paikkauskohde-urakalle db {:id kohde-id})))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
-        validointivirheet (paikkauskohde-validi? kohde)
+        validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         _ (println "tallenna-paikkauskohde! :: validointivirheet" (pr-str validointivirheet))
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)

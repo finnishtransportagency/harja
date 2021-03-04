@@ -134,9 +134,9 @@
                      kohde)
         ;; Poistetaan paikkauskohde
         poistettu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
-                        :poista-paikkauskohde
-                        +kayttaja-jvh+
-                        kohde)
+                                        :poista-paikkauskohde
+                                        +kayttaja-jvh+
+                                        kohde)
         ;; Haetaan kohteet ja tarkistetaan, että onko meidän juuri luotu kohde enää listassa
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :paikkauskohteet-urakalle
@@ -186,3 +186,51 @@
                                            +kayttaja-jvh+
                                            vaara-kohde))
         "Poikkeusta ei heitetty! Vääkä paikkauskohde onnistuttiin tuhoamaan!")))
+
+(defn- paivita-paikkaukkohteen-tila [kohde uusi-tila kayttaja]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-paikkauskohde-urakalle
+                  kayttaja
+                  (merge kohde {:paikkauskohteen-tila uusi-tila})))
+
+(deftest paikkauskohde-tilamuutokset-testi
+  (let [urakoitsija (kemin-alueurakan-2019-2023-paakayttaja)
+        tilaaja (kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja)
+        kohde (merge default-paikkauskohde
+                     {:urakka-id @kemin-alueurakan-2019-2023-id
+                      :nimi "Tilamuutosten testikohde"
+                      :paikkauskohteen-tila "ehdotettu"})
+        ;; Urakoitsija luo kohteen
+        kohde-id (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-paikkauskohde-urakalle
+                                 urakoitsija
+                                 kohde)
+        kohde (merge kohde kohde-id)]
+    ;; Urakoitsija yrittää merkitä kohteen tilatuksi
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "tilattu" urakoitsija))
+        "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen tilatuksi.")
+
+
+    ;; Urakoitsija yrittää merkitä kohteen hylätyksi
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "hylatty" urakoitsija))
+        "Poikkeusta ei heitetty! Urakoitsija pystyi merkkaamaan paikkauskohteen hylätyksi.")
+
+    ;; Tilaaja pystyy merkitsemään kohteen tilatuksi
+    (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "tilattu" tilaaja))))
+
+    ;; Tilaaja yrittää merkitä kohteen hylätyksi tilatusta
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "hylatty" tilaaja))
+        "Poikkeusta ei heitetty! Tilaaj pystyi merkkaamaan paikkauskohteen hylätyksi tilatusta.")
+
+    ;; Tilaaja pystyy perumaan kohteen tilauksen
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "ehdotettu" tilaaja))))
+
+    ;; Tilaaja pystyy merkitsemään kohteen hylätyksi
+    (is (= "hylatty" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "hylatty" tilaaja))))
+
+    ;; Tilaaja yrittää merkitä kohteen hylätystä tilatuksi
+    (is (thrown? Exception (paivita-paikkaukkohteen-tila kohde "tilattu" tilaaja))
+        "Poikkeusta ei heitetty! Tilaaj pystyi merkkaamaan paikkauskohteen tilatuksi hylätystä.")
+
+    ;; Tilaaja pystyy perumaan kohteen hylkäyksen
+    (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "ehdotettu" tilaaja))))))
