@@ -7,6 +7,7 @@
             [taoensso.timbre :as log]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila])
@@ -156,19 +157,29 @@
 
   HaePaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [paikkauskohteet (map (fn [kohde]
+    (let [
+          paikkauskohteet (map (fn [kohde]
                                  (-> kohde
                                      (assoc :formatoitu-aikataulu
                                             (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
                                vastaus)
-          zoomattavat-geot (into [] (concat (mapv #(harja.geo/extent (:sijainti %)) paikkauskohteet)))
-          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
+          zoomattavat-geot  (into [] (concat (mapv (fn [p]
+                                                     (when (and
+                                                             (not (nil? (:sijainti p)))
+                                                             (not (empty? (:sijainti p))))
+                                                       (harja.geo/extent (:sijainti p))))
+                                                   paikkauskohteet)))
+          _ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
           ;_ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
           ]
       (do
-        (when (and paikkauskohteet zoomattavat-geot)
+        (when (and (not (nil? paikkauskohteet))
+                   (not (empty? paikkauskohteet))
+                   (not (nil? zoomattavat-geot))
+                   (not (empty? zoomattavat-geot)))
+          (js/console.log "reset ja keskitys")
           (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
           (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot))
         (-> app
@@ -233,12 +244,15 @@
     (let [_ (js/console.log "Paikkauskohteen tallennus onnistui" (pr-str vastaus))
           _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
           _ (modal/piilota!)]
+      (viesti/nayta-uusi! "Paikkauskohteen tallennus onnistui."
+                     :success viesti/viestin-nayttoaika-pitka)
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str vastaus))
+      (viesti/nayta! "Paikkauskohteen tallennus epäonnistui" viesti/viestin-nayttoaika-keskipitka :danger)
       ;;TODO: tämä antaa warningin
       ;(harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
       #_(dissoc app :lomake)

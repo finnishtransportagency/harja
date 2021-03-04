@@ -17,6 +17,11 @@
                                :nakyvissa? false
                                :kesto nil}))
 
+(defonce uusi-viesti-sisalto (atom {:viesti nil
+                                    :luokka nil
+                                    :nakyvissa? false
+                                    :kesto nil}))
+
 
 (def +bootstrap-alert-classes+ {:success "alert-success"
                                 :info "alert-info"
@@ -43,6 +48,22 @@
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 
+(defn uusi-viesti-container
+  "Tämä komponentti sisältää flash viestin ja laitetaan päätason sivuun"
+  []
+  (let [{:keys [viesti luokka nakyvissa? kesto]} @uusi-viesti-sisalto]
+    (if nakyvissa?
+      (do (go (<! (timeout kesto))
+              (swap! uusi-viesti-sisalto assoc :nakyvissa? false))
+          ^{:key "viesti"}
+          [:div.flash-viesti-container
+           [:div {:on-click #(swap! uusi-viesti-sisalto assoc :nakyvissa? false)}
+            [:div.alert {:class (when luokka
+                                  (+bootstrap-alert-classes+ luokka))}
+             viesti]]])
+      ^{:key "ei-viestia"}
+      [:div.ei-viestia-nyt])))
+
 (defn nayta!
   ([viesti] (nayta! viesti :success))
   ([viesti luokka] (nayta! viesti luokka viestin-oletusnayttoaika))
@@ -52,3 +73,13 @@
                              :luokka luokka
                              :nakyvissa? true
                              :kesto kesto}))))
+
+(defn nayta-uusi!
+  ([viesti] (nayta! viesti :success))
+  ([viesti luokka] (nayta! viesti luokka viestin-oletusnayttoaika))
+  ([viesti luokka kesto]
+   (when-not (:nakyvissa? @uusi-viesti-sisalto)
+     (reset! uusi-viesti-sisalto {:viesti viesti
+                                  :luokka luokka
+                                  :nakyvissa? true
+                                  :kesto kesto}))))

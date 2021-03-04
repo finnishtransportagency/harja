@@ -8,7 +8,7 @@
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
-            [harja.ui.viesti :refer [viesti-container]]
+            [harja.ui.viesti :refer [viesti-container uusi-viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
             [harja.tiedot.hairioilmoitukset :as hairiotiedot]
@@ -218,6 +218,7 @@
         [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
+   [uusi-viesti-container]
    (when @nav/kartta-nakyvissa?
      [kartta-layers korkeus])
 
