@@ -95,6 +95,37 @@ SELECT id
   FROM paikkauskohde
  WHERE "ulkoinen-id" = :ulkoinen-id;
 
+--name: paikkauskohde-urakalle
+--- Haetaan yksittäinen paikkauskohde päivitystä varten
+SELECT "ulkoinen-id",
+       nimi,
+       poistettu,
+       "muokkaaja-id",
+       muokattu,
+       "yhalahetyksen-tila",
+       virhe,
+       tarkistettu,
+       "tarkistaja-id",
+       "ilmoitettu-virhe",
+       nro,
+       alkupvm,
+       loppupvm,
+       tyomenetelma,
+       tyomenetelma_kuvaus,
+       (tierekisteriosoite).tie  AS tie,
+       (tierekisteriosoite).aosa AS aosa,
+       (tierekisteriosoite).aet  AS aet,
+       (tierekisteriosoite).losa AS losa,
+       (tierekisteriosoite).let  AS let,
+       "paikkauskohteen-tila",
+       "suunniteltu-maara",
+       "suunniteltu-hinta",
+       yksikko,
+       lisatiedot
+  FROM paikkauskohde
+ WHERE id = :id;
+
+
 --name: paikkauskohteet-urakalle
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
 SELECT pk.id                        AS id,
