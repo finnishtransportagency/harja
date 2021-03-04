@@ -188,7 +188,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :nimi :indeksi
                 :leveys 1.5
                 :tyyppi :valinta
-                :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
+                :valinnat ["MAKU 2015" "MAKU 2010" "MAKU 2005"]
                 :valinta-nayta #(or % "Ei sidota indeksiin")
                 :palstoja 1
                 :muokattava? sanktio-domain/sakko?})]
