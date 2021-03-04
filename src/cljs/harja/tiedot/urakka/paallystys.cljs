@@ -45,7 +45,8 @@
   #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
     :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
-    :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio})
+    :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
+    :yha-tr-osoite})
 
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys

@@ -1,4 +1,8 @@
+@import "grid";
+
 .pvm-valinta {
+  border: 1px solid @harmaa-vaalea;
+  padding: 0;
   position: absolute;
   z-index: 2000;
   text-align: center;
@@ -7,8 +11,13 @@
 
   background-color: #ffffff;
 
-  .pvm-controllit {
-    background-color: #fafafa;
+  .pvm-kontrollit, .pvm-paivat {
+    tr {
+      td, th {
+        height: @livitaulukon-rivi-korkeus;
+      }
+      height: @livitaulukon-rivi-korkeus;
+    }
   }
 
   .pvm-valittu {
@@ -19,9 +28,14 @@
     cursor: pointer;
   }
 
-  .pvm-paiva {
+  td.pvm-paiva {
+    border: 1px solid @harmaa-vaalea;
+    padding: @livi-taulukon-padding-tiivis;
     &:hover {
       background-color: wheat;
+    }
+    &.pvm-tanaan {
+      background-color: @harmaa13;
     }
   }
 
@@ -31,20 +45,16 @@
 
   .pvm-viikonpaivat {
     font-size: 85%;
-    background-color: @sininen6;
+    td {
+      padding: 0;
+    }
   }
 
   .pvm-disabloitu {
     background-color: @harmaa6;
   }
-
-  border: solid 1px black;
-  border-top: none;
 }
 
-.pvm-tanaan {
-  background-color: yellow;
-}
 
 .kalenteri-kontti {
   display: flex;

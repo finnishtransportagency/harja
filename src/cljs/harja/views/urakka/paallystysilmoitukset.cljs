@@ -78,6 +78,7 @@
       :voi-kumota?  false
       :voi-poistaa? (constantly false)
       :voi-muokata? true
+      :piilota-toiminnot? true
       :data-cy      "paallystysilmoitukset-grid"}
      [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
       {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
@@ -86,12 +87,12 @@
       {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
        :hae     (fn [rivi]
                   (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-      {:otsikko       "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
+      {:otsikko       "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
        :fmt           pvm/pvm-opt
        :tayta-alas?   #(not (nil? %))
        :tayta-fn      tayta-takuupvm
        :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
+      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
        :leveys      20
        :komponentti (fn [rivi]
                       [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
@@ -228,7 +229,8 @@
          (if (>= (:valittu-urakan-vuosi urakka-tila)
                  pot/pot2-vuodesta-eteenpain)
            [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
-                                                          :massat :murskeet :materiaalikoodistot})
+                                                          :massat :murskeet :materiaalikoodistot
+                                                          :pot2-massa-lomake :pot2-murske-lomake})
             lukko urakka kayttaja]
            [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja])
          [:div

@@ -319,6 +319,10 @@
                         :hae-urakan-massat-ja-murskeet
                         +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
         oletetut-massat '({:harja.domain.pot2/dop-nro "1234567"
+                           :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
+                                                         :kohteiden-lkm 1
+                                                         :nimi "Tärkeä kohde mt20"
+                                                         :tila "aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN14"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
                                                            :lisaaine/pitoisuus 0.5M
@@ -342,6 +346,10 @@
                            :harja.domain.pot2/tyyppi 12
                            ::pot2-domain/massa-id 1}
                           {:harja.domain.pot2/dop-nro "987654331-2"
+                           :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
+                                                         :kohteiden-lkm 2
+                                                         :nimi "Tärkeä kohde mt20"
+                                                         :tila "aloitettu,aloitettu"})
                            :harja.domain.pot2/kuulamyllyluokka "AN7"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
                                                            :lisaaine/pitoisuus 0.5M
@@ -380,6 +388,7 @@
                            :harja.domain.pot2/tyyppi 14
                            ::pot2-domain/massa-id 2}
                           {:harja.domain.pot2/dop-nro "12345abc"
+                           ::pot2-domain/kaytossa ()
                            :harja.domain.pot2/kuulamyllyluokka "AN5"
                            :harja.domain.pot2/lisaaineet ({:lisaaine/id 3
                                                            :lisaaine/pitoisuus 1.5M
@@ -402,7 +411,10 @@
                                                            :sideaine/tyyppi 1})
                            :harja.domain.pot2/tyyppi 1
                            ::pot2-domain/massa-id 3})
-        oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1})]
+        oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
+                                                                                                                                                                                                             :kohteiden-lkm 1
+                                                                                                                                                                                                             :nimi "Tärkeä kohde mt20"
+                                                                                                                                                                                                             :tila "aloitettu"})})]
     (is (= massat oletetut-massat))
     (is (= murskeet oletetut-murskeet))))
 
@@ -413,10 +425,15 @@
                            :mursketyypit
                            :runkoainetyypit
                            :sideainetyypit
+                           :sidotun-kantavan-kerroksen-sideaine
                            :lisaainetyypit
                            :alusta-toimenpiteet
-                           :kulutuskerros-toimenpiteet}]
+                           :paallystekerros-toimenpiteet
+                           :verkon-sijainnit
+                           :verkon-tarkoitukset
+                           :verkon-tyypit}]
     (is (every? #(contains? vastaus %) odotetut-avaimet))
+    (is (= (count (keys vastaus)) (count odotetut-avaimet)) "Koodistojen määrä ei täsmää odotettujen määrään.")
     (is (= (some #(= :harja.domain.pot2 {:nimi "Kovat asfalttibetonit", :lyhenne "Kovat asfalttibetonit", :koodi 10} %)
                  (:massatyypit vastaus))))
     (is (= (some #(= :harja.domain.pot2 {:nimi " Kalliomurske", :lyhenne "KaM", :koodi 1} %)
@@ -425,12 +442,13 @@
                  (:runkoainetyypit vastaus))))
     (is (= (some #(= :harja.domain.pot2 {:nimi "Bitumi, 20/30", :lyhenne " Bitumi, 20/30", :koodi 1} %)
                  (:sideainetyypit vastaus))))
+    (is (= (list #:harja.domain.pot2{:nimi "(UUSIO) CEM I", :koodi 1} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-S", :koodi 2} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/B-S", :koodi 3} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-D", :koodi 4} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-V", :koodi 5} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/B-V", :koodi 6} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-L", :koodi 7} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-LL", :koodi 8} #:harja.domain.pot2{:nimi "(UUSIO) CEM II/A-M", :koodi 9} #:harja.domain.pot2{:nimi "(UUSIO) CEM III/A", :koodi 10} #:harja.domain.pot2{:nimi "(UUSIO) CEM III/B", :koodi 11} #:harja.domain.pot2{:nimi "Masuuni- tms kuona", :koodi 12}) (:sidotun-kantavan-kerroksen-sideaine vastaus)))
     (is (= (some #(= :harja.domain.pot2 {:nimi "Kuitu", :lyhenne "Kuitu", :koodi 1}  %)
                  (:lisaainetyypit vastaus))))
     (is (= (some #(= :harja.domain.pot2{:nimi "Massanvaihto", :lyhenne "MV", :koodi 1}  %)
                  (:alusta-toimenpiteet vastaus))))
     (is (= (some #(= :harja.domain.pot2 {:nimi "Paksuudeltaan vakio laatta", :lyhenne "LTA", :koodi 12}  %)
-                 (:kulutuskerros-toimenpiteet vastaus))))
+                 (:paallystekerros-toimenpiteet vastaus))))
 
 
     (is (= (count (:massatyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_massatyyppi"))))
@@ -439,7 +457,10 @@
     (is (= (count (:sideainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_sideainetyyppi"))))
     (is (= (count (:lisaainetyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_lisaainetyyppi"))))
     (is (= (count (:alusta-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_alusta_toimenpide"))))
-    (is (= (count (:kulutuskerros-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_kulutuskerros_toimenpide"))))
+    (is (= (count (:paallystekerros-toimenpiteet vastaus)) (ffirst (q "SELECT count(*) FROM pot2_mk_paallystekerros_toimenpide"))))
+    (is (= (count (:verkon-sijainnit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_sijainti"))))
+    (is (= (count (:verkon-tarkoitukset vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tarkoitus"))))
+    (is (= (count (:verkon-tyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tyyppi"))))
     )
 
   )

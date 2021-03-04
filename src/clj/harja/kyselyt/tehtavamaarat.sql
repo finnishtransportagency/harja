@@ -11,7 +11,7 @@ WHERE ut.urakka = :urakka
 
 -- name: hae-tehtavamaarat-ja-toteumat-aikavalilla
 -- Raportin hakuhimmeli
-with urakat as (select u.id
+with urakat as (select u.id, u.hallintayksikko
                 from urakka u
                 where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
                   and case
@@ -22,18 +22,16 @@ with urakat as (select u.id
                         else true
                   end
                   and u.tyyppi = 'teiden-hoito'),
-     toteumat as (select sum(tt.maara) as "maara",
-                         tt.toimenpidekoodi,
-                         tt.poistettu,
-                         tt.urakka_id
-                  from toteuma t
-                           join toteuma_tehtava tt on tt.toteuma = t.id and t.urakka = tt.urakka_id and tt.poistettu = false
-                    and tt.urakka_id in (select id from urakat)
-                  where
-                      case when :urakka::integer is not null then t.urakka = :urakka else true end
-                    and (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-                    and t.poistettu = false
-                  group by tt.toimenpidekoodi, tt.poistettu, tt.urakka_id),
+     toteumat as (SELECT sum(rtm.tehtavamaara) as "maara",
+                         sum(rtm.materiaalimaara) as "materiaalimaara",
+                         rtm.toimenpidekoodi,
+                         rtm.urakka_id
+                    FROM urakat u
+                         JOIN raportti_toteuma_maarat rtm ON rtm.urakka_id = u.id
+                   WHERE
+                         case when :urakka::integer is not null then rtm.urakka_id = :urakka else true end
+                     AND (rtm.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                   GROUP by rtm.toimenpidekoodi, rtm.urakka_id),
      suunnitelmat as (select sum(ut.maara) as "maara",
                              ut.tehtava,
                              ut.urakka
@@ -42,30 +40,32 @@ with urakat as (select u.id
                         and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
                         and ut.poistettu is not true
                       group by ut.urakka, ut.tehtava)
-select tpk.nimi               as "nimi",  --tehtävän nimi
-       tpk.jarjestys          as "jarjestys",
-       suunnitelmat.maara     as "suunniteltu",
-       tpk.suunnitteluyksikko as "suunnitteluyksikko",
-       tpk.yksikko            as "yksikko",
-       tpk.id                 as "toimenpidekoodi",
-       u.hallintayksikko      as "hallintayksikko",
-       tpk3.nimi              as "toimenpide",
-       toteumat.maara         as "toteuma",
+select tpk.nimi                 as "nimi", --tehtävän nimi
+       tpk.jarjestys            as "jarjestys",
+       suunnitelmat.maara       as "suunniteltu",
+       tpk.suunnitteluyksikko   as "suunnitteluyksikko",
+       tpk.yksikko              as "yksikko",
+       tpk.id                   as "toimenpidekoodi",
+       u.hallintayksikko        as "hallintayksikko",
+       o.elynumero              as elynumero,
+       tpk3.nimi                as "toimenpide",
+       toteumat.maara           as "toteuma",
+       toteumat.materiaalimaara as "toteutunut-materiaali",
        (CASE
-          WHEN tpk3.koodi = '23104' THEN 1
-          WHEN tpk3.koodi = '23116' THEN 2
-          WHEN tpk3.koodi = '23124' THEN 3
-          WHEN tpk3.koodi = '20107' THEN 4
-          WHEN tpk3.koodi = '20191' THEN 5
-          WHEN tpk3.koodi = '14301' THEN 6
-          WHEN tpk3.koodi = '23151' THEN 7
-         END)                 AS "toimenpide-jarjestys"
+            WHEN tpk3.koodi = '23104' THEN 1
+            WHEN tpk3.koodi = '23116' THEN 2
+            WHEN tpk3.koodi = '23124' THEN 3
+            WHEN tpk3.koodi = '20107' THEN 4
+            WHEN tpk3.koodi = '20191' THEN 5
+            WHEN tpk3.koodi = '14301' THEN 6
+            WHEN tpk3.koodi = '23151' THEN 7
+           END)                 AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
-       join urakka u
+       join urakat u
        join organisaatio o
             on o.id = u.hallintayksikko
             on u.id = tpi.urakka
-       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo
+       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%'
        join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
                  on suunnitelmat.tehtava = tpk.id
@@ -76,9 +76,9 @@ from toimenpideinstanssi tpi
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
-         u.hallintayksikko, suunnitelmat.maara, toteumat.maara
+         u.hallintayksikko, o.elynumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by u.hallintayksikko, "toimenpide-jarjestys", tpk.jarjestys;
+order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 
 -- name: lisaa-tehtavamaara<!
@@ -97,7 +97,9 @@ WHERE urakka = :urakka
   AND tehtava = :tehtava;
 
 -- name: tehtavaryhmat-ja-toimenpiteet-urakalle
--- Pois jätetyt tehtäväryhmät ovat ainoastaan suunnittelua ja toteumia varten. Niihin ei kohdisteta kuluja.
+-- Pois jätetyt lisätyöhön viittaavat tehtäväryhmät ovat ainoastaan toteumien kirjaamista varten.
+-- Nämä dummy-tehtäväryhmät ja niihin liitetyt tehtävät tarvitaan, koska toteumiin on pakko liittää tehtävä.
+-- Lisätöiden kulut voidaan kohdistaa ilman tehtävää ja tehtäväryhmää suoraan toimenpiteelle.
 SELECT distinct tpk3.id       as "toimenpide-id",
                 tpk3.nimi     as "toimenpide",
                 tr3.nimi      as "tehtavaryhma-nimi",
@@ -106,7 +108,7 @@ SELECT distinct tpk3.id       as "toimenpide-id",
                 tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Liikenteen varmistaminen%') and tr3.nimi not like ('%Lisätyöt%')
+       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Lisätyöt%')
        LEFT JOIN toimenpidekoodi tpk4
                  ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true

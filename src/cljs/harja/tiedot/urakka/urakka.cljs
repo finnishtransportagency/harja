@@ -203,7 +203,13 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}})
 
+(def kustannusten-seuranta-default-arvot {:kustannukset
+                                          {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                                                                                  (pvm/vuosi (pvm/nyt))
+                                                                                  (dec (pvm/vuosi (pvm/nyt))))}})
+
 (defonce toteumanakyma (atom toteumat-default-arvot))
+(def kustannusten-seuranta-nakymassa? (atom false))
 
 
 (def kulut-default {:parametrit  {:haetaan 0}
@@ -222,10 +228,13 @@
                      :laskutus    laskutus-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
-                     :toteumat    toteumat-default-arvot}))
+                     :toteumat    toteumat-default-arvot
+                     :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
+
 
 (defonce pot2 (atom pot2-default-arvot))
 
+(defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))

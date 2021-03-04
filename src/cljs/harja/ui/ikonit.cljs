@@ -525,6 +525,8 @@
   [:span.livicon-chevron.livicon-chevron-left])
 (defn livicon-download []
   [:span.livicon-download])
+(defn livicon-external []
+  [:span.livicon-external])
 (defn livicon-info-sign []
   [:span.livicon-info-circle])
 (defn livicon-info []

@@ -7,6 +7,48 @@
 
 /** VÄRIT */
 
+// 2021 ns. uuden väripaletin värit
+
+// Black
+@black-default: #000000;
+@black-light: #5C5C5C;
+@black-lighter: #858585;
+// White
+@white-default: #FFFFFF;
+@white-dark: #F0F0F0;
+@white-darker: #D6D6D6;
+// Blue
+@blue-default: #0066CC;
+@blue-dark: #004D99;
+@blue-darker: #0B335A;
+@blue-light: #66A3E0;
+@blue-lighter: #E0EDF9;
+// Red
+@red-default: #DE3618;
+@red-dark: #B40A14;
+@red-darker: #5C070C;
+@red-light: #D9A599;
+@red-lighter: #F8D7D1;
+// Green
+@green-default: #27B427;
+@green-dark: #1C891C;
+@green-darker: #0E430E;
+@green-light: #A7D2A0;
+@green-lighter: #E0F5DF;
+// Data
+@fig-default: #00B0CC;
+@fig-light: #AFE1E9;
+@lemon-default: #FFC300;
+@lemon-light: #FFF0BF;
+@eggplant-default: #A050A0;
+@eggplant-light: #DEBBEE;
+@pitaya-default: #E50083;
+@pitaya-light: #FFC6E5;
+@pea-default: #8DCB6D;
+@pea-light: #E2FDC0;
+
+
+// vanhempaa väristöä
 /** Harmaat */
 @musta:    rgb(0,0,0);
 @harmaa1: rgb(25,25,25);
@@ -164,6 +206,7 @@
 @fontin-koko-taulukko-pienempi: 0.675rem; // käytä jos hyvin paljon sarakkeita, esim. Kohdeluettelo
 @fontin-koko-raportti-pienempi:     0.6rem;
 
+@fontin-vari-harmaa: @harmaa-tumma;
 
 /** PALKIT */
 
@@ -379,17 +422,6 @@ table.table-striped {
         display: block;
         cursor: default;
     }
-}
-
-.dropdown-menu .harja-alasvetolista-ryhma:not(:last-child) {
-    border-bottom: 2px solid @sininen5;
-}
-
-.dropdown-menu .harja-alasvetolista-ryhman-otsikko {
-    background-color: @valkoinen;
-    color: @sininen4;
-    font-weight: bold;
-    padding: 3px 6px;
 }
 
 .livi-valittu {

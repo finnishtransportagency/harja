@@ -155,6 +155,7 @@
     :yha-paikkauskomponentti
     :pot2
     :kustannusarvioiduntyontoteumien-ajastus
+    :kustannusten-seuranta
     :komponenttien-tila
     :itmf})
 
@@ -212,7 +213,8 @@
     :kustannusarvioiduntyontoteumien-ajastus
     :jarjestelman-tila
     :yha-paikkauskomponentti
-    :pot2})
+    :pot2
+    :kustannusten-seuranta})
 
 (def hidas-ok-status #{:sonja :itmf})
 
