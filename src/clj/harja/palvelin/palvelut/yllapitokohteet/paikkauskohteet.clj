@@ -2,6 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure.spec.alpha :as s]
+            [dk.ative.docjure.spreadsheet :as xls]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [harja.pvm :as pvm]
@@ -12,7 +14,9 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.java.io :as io]
+            [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-exel]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -79,7 +83,9 @@
                                 (if (s/valid? ::paikkauskohteen-tila (:paikkauskohteen-tila kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen tilassa virhe."))
-                                (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
+                                (when (and (s/valid? ::alkupvm (:alkupvm kohde))
+                                         (s/valid? ::loppupvm (:loppupvm kohde)))
+                                  (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde)))
                                 (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
@@ -121,7 +127,7 @@
         urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
 
         tila (if (or (nil? tila) (= "kaikki" (str/lower-case tila)))
-               nil                                          ;; kaikkia haettaessa käytetään nil arvoa
+               nil ;; kaikkia haettaessa käytetään nil arvoa
                tila)
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
@@ -243,6 +249,42 @@
       ;; Palautetaan poistettu paikkauskohde
       (assoc poistettava :poistettu true))))
 
+(defn upload-file [db req]
+  (let [_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
+        ;; TODO: Tarkista oikeudet
+        urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
+        kayttaja (:kayttaja req)
+
+        workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+        paikkauskohteet (p-exel/erottele-paikkauskohteet workbook)
+
+        _ (println "Excelin data" (pr-str paikkauskohteet))
+        ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
+        id-lista (keep
+                   (fn [p]
+                     (let [;; Excelistä ei aseteta paikkauskohteelle tilaa, joten asetetaan se "ehdotettu" tilaan tässä
+                           p (-> p
+                               (assoc :urakka-id urakka-id)
+                               (assoc :paikkauskohteen-tila "ehdotettu"))
+                           kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
+                           ;_ (println "kohde" (pr-str kohde) (pr-str p))
+                           ]
+                       (when (empty? kohde)
+                         ;(println "Tallennetaan kohde!")
+                         (tallenna-paikkauskohde! db kayttaja p))
+                       )
+                     )
+                   paikkauskohteet)
+        _ (println "id-lista" (pr-str id-lista) (> (count id-lista) 0))
+
+        ]
+
+    (if (> (count id-lista) 0)
+      {:status 200
+       :body "OK"}
+      {:status 500
+       :body "ERROR"})))
+
 (defrecord Paikkauskohteet []
   component/Lifecycle
   (start [this]
@@ -258,6 +300,9 @@
       (julkaise-palvelu http :poista-paikkauskohde
                         (fn [user kohde]
                           (poista-paikkauskohde! db user kohde)))
+      (julkaise-palvelu http :lue-paikkauskohteet-excelista
+                        (wrap-multipart-params (fn [req] (upload-file db req)))
+                        {:ring-kasittelija? true})
       this))
 
   (stop [this]
@@ -265,5 +310,6 @@
       (:http-palvelin this)
       :paikkauskohteet-urakalle
       :tallenna-paikkauskohde-urakalle
-      :poista-paikkauskohde)
+      :poista-paikkauskohde
+      :lue-paikkauskohteet-excelista)
     this))

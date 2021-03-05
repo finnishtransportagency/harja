@@ -3,9 +3,11 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
+            [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [dk.ative.docjure.spreadsheet :as xls]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -185,7 +187,7 @@
                                            :poista-paikkauskohde
                                            +kayttaja-jvh+
                                            vaara-kohde))
-        "Poikkeusta ei heitetty! Vääkä paikkauskohde onnistuttiin tuhoamaan!")))
+        "Poikkeusta ei heitetty! Väärä paikkauskohde onnistuttiin tuhoamaan!")))
 
 (defn- paivita-paikkaukkohteen-tila [kohde uusi-tila kayttaja]
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -234,3 +236,41 @@
 
     ;; Tilaaja pystyy perumaan kohteen hylkäyksen
     (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "ehdotettu" tilaaja))))))
+
+(deftest lue-paikkauskohteet-excelista
+  (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
+        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
+        _ (println "paikkauskohteet" (pr-str paikkauskohteet))]
+    (is (= 4 (count paikkauskohteet)))))
+
+(deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
+  (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
+        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
+        _ (println "paikkauskohteet" (pr-str paikkauskohteet))
+        ]
+    ;; Tallennetaan kantaan - mikä ei onnistu koska tieto on puutteellista
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-paikkauskohde-urakalle
+                                           +kayttaja-jvh+
+                                           (first paikkauskohteet)))
+        "Poikkeusta ei heitetty! Excelin paikkauskohde olikin validi!")))
+
+(deftest tallenna-validit-paikkauskohteet-excelista-kantaan
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset_valid.xlsx")
+        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
+        _ (println "paikkauskohteet" (pr-str paikkauskohteet))
+        id-list (mapv
+                  (fn [p]
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-paikkauskohde-urakalle
+                                    +kayttaja-jvh+
+                                    (merge {:urakka-id urakka-id
+                                            :paikkauskohteen-tila "ehdotettu"}
+                                           p)))
+                  paikkauskohteet)
+        _ (println "Tallennetut paikkauskohteet" (pr-str id-list))
+        ]
+    ;; Tarkistetaan, että saatiin neljä
+    (is (= 4 (count paikkauskohteet)))
+    ))

@@ -29,6 +29,7 @@
 (defrecord FiltteriValitseTila [uusi-tila])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma])
+(defrecord LiiteLisatty [liite])
 (defrecord HaePaikkauskohteet [])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
@@ -41,6 +42,8 @@
 (defrecord PoistaPaikkauskohde [paikkauskohde])
 (defrecord PeruPaikkauskohteenTilaus [paikkauskohde])
 (defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
+(defrecord UploadAttachment [input-html-element])
+
 
 (defn- siivoa-ennen-lahetysta [lomake]
   (dissoc lomake
@@ -120,6 +123,17 @@
                                          [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)]))
 
 (extend-protocol tuck/Event
+
+  UploadAttachment
+  (process-event  [{input-html-element :input-html-element} app]
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          ;; TODO: siirrä tämä jotenki pois letistä ehkä.
+          _ (k/laheta-excel! "lue-paikkauskohteet-excelista" input-html-element urakka-id)]
+
+      (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app)
+                           (:valittu-vuosi app) (:valittu-tyomenetelma app))
+      app))
+
   AvaaLomake
   (process-event [{lomake :lomake} app]
     (let [{:keys [validoi] :as validoinnit} (validoi-lomake lomake)
@@ -147,6 +161,16 @@
   (process-event [{uusi-menetelma :uusi-menetelma} app]
     (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) uusi-menetelma)
     (assoc app :valittu-tyomenetelma uusi-menetelma))
+
+  LiiteLisatty
+  (process-event [{{:keys [kuvaus nimi id tyyppi koko]} :liite} app]
+    (update-in app
+               [:lomake :liitteet]
+               conj
+               {:liite-id     id
+                :liite-nimi   nimi
+                :liite-tyyppi tyyppi
+                :liite-koko   koko}))
 
   HaePaikkauskohteet
   (process-event [_ app]

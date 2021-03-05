@@ -91,6 +91,13 @@
                                           ::paikkaus/urakka-id urakka-id
                                           ::muokkaustiedot/luoja-id luoja-id})))))
 
+(defn onko-kohde-olemassa-nimella? [db nimi urakka-id]
+  (fetch db
+         ::paikkaus/paikkauskohde
+         paikkaus/paikkauskohteen-perustiedot
+         {::paikkaus/nimi nimi
+          ::paikkaus/urakka-id urakka-id} ))
+
 (defn paivita-paikkaukset-poistetuksi
   "Poistaa paikkaukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
   [db kayttaja-id urakka-id paikkaus-idt]

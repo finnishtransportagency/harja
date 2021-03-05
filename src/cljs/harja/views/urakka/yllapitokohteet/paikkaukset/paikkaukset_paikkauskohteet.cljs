@@ -176,6 +176,9 @@
        [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
        [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
        [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+       ;; TODO: Voisko olla enää kamalampi? Mut tällä oli nopee testata
+       [:div [:input {:name "file" :type "file" :size "20" :on-change #(e! (t-paikkauskohteet/->UploadAttachment (.-target %)))}]]
+
        [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
    [:div.row [paikkauskohteet-taulukko e! app]]]
   )
