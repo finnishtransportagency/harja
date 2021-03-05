@@ -2529,7 +2529,7 @@
         [vahvista-suunnitelman-osa-fn #(e! (t/->VahvistaSuunnitelmanOsioVuodella {:tyyppi osion-nimi
                                                                                   :hoitovuosi hoitovuosi}))
          disabloitu? (not (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                               (indeksit-saatavilla?)))]
+                               indeksit-saatavilla?))]
         [:div
          [:div.flex-row
           [yleiset/placeholder "IKONI"]
@@ -2550,7 +2550,7 @@
              [yleiset/placeholder (str (when disabloitu? "Vain urakan aluevastaava voi vahvistaa suunnitelman"))]]])]))))
 
 (defn osionavigointi
-  [avaimet nykyinen]
+  [{:keys [avaimet nykyinen]}]
   (loop [edellinen nil
          jaljella avaimet]
     (if (or (= nykyinen (first jaljella))
@@ -2577,39 +2577,38 @@
                        0)))]])
 
 (defn navigointivalikko
-  [hoitokausi {:keys [urakka]} tiedot]
-  (fn [avaimet]
-    (let [table-rivit (into [:<>]
-                            (keep identity
-                                  (mapcat identity
-                                          (for [a avaimet]
-                                            (let [{:keys [nimi suunnitelma-vahvistettu? summat] :as tieto} (a tiedot)
-                                                  summat (mapv summa-komp summat)
-                                                  indeksit-saatavilla? true
-                                                  {:keys [ikoni tyyppi teksti]} (cond suunnitelma-vahvistettu?
-                                                                                      {:ikoni ikonit/check :tyyppi ::yleiset/ok :teksti "Vahvistettu"}
+  [avaimet hoitokausi {:keys [urakka]} tiedot]
+  (let [table-rivit (into [:<>]
+                          (keep identity
+                                (mapcat identity
+                                        (for [a avaimet]
+                                          (let [{:keys [nimi suunnitelma-vahvistettu? summat] :as tieto} (a tiedot)
+                                                summat (mapv summa-komp summat)
+                                                indeksit-saatavilla? true
+                                                {:keys [ikoni tyyppi teksti]} (cond suunnitelma-vahvistettu?
+                                                                                    {:ikoni ikonit/check :tyyppi ::yleiset/ok :teksti "Vahvistettu"}
 
-                                                                                      indeksit-saatavilla?
-                                                                                      {:ikoni ikonit/aika :tyyppi ::yleiset/info :teksti "Odottaa vahvistusta"}
+                                                                                    indeksit-saatavilla?
+                                                                                    {:ikoni ikonit/aika :tyyppi ::yleiset/info :teksti "Odottaa vahvistusta"}
 
-                                                                                      :else
-                                                                                      {:ikoni ikonit/alert :tyyppi ::yleiset/huomio :teksti "Indeksejä ei vielä saatavilla"})]
-                                              (when tieto
-                                                [[:div.flex-row
-                                                  [:div
-                                                   [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
-                                                  [:div
-                                                   [:div [yleiset/infolaatikko ikoni teksti tyyppi]]]]
-                                                 (vec (keep identity
-                                                            (concat [:div.flex-row.alkuun]
-                                                                    summat)))]))))))]
-      [:<>
-       [:div.flex-row
-        [:div
-         [:h3 "Kustannussuunnitelma"]
-         [:div.pieni-teksti urakka]]
-        [valinnat/hoitovuosi-rivivalitsin (range 1 6) hoitokausi #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] %1))]]
-       [:div#tilayhteenveto.hintalaskuri table-rivit]])))
+                                                                                    :else
+                                                                                    {:ikoni ikonit/alert :tyyppi ::yleiset/huomio :teksti "Indeksejä ei vielä saatavilla"})]
+                                            (when tieto
+                                              [[:div.flex-row
+                                                [:div
+                                                 [:div [yleiset/linkki (str nimi) (vieritys/vierita a)]]]
+                                                [:div
+                                                 [:div [yleiset/infolaatikko ikoni teksti tyyppi]]]]
+                                               (vec (keep identity
+                                                          (concat [:div.flex-row.alkuun]
+                                                                  summat)))]))))))]
+    [:<>
+     [:div.flex-row
+      [:div
+       [:h3 "Kustannussuunnitelma"]
+       [:div.pieni-teksti urakka]]
+      [valinnat/hoitovuosi-rivivalitsin (range 1 6) hoitokausi #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] %1))]]
+     [:div#tilayhteenveto.hintalaskuri table-rivit]]))
 
 (defn laske-hankintakustannukset
   [hoitokausi suunnitellut laskutus varaukset]
@@ -2618,8 +2617,8 @@
                        (mapcat vals (vals varaukset)))]
     (reduce #(+ %1 (nth %2 indeksi)) 0 kaikki)))
 
-(defn tee-menukomponentti
-  [app]
+(defn menukomponentti
+  [{:keys [avaimet app]}]
   (if (:kantahaku-valmis? app)
     (let [hoitokausi (get-in app [:suodattimet :hoitokauden-numero])
           indeksikerroin (get-in app [:domain :indeksit (dec hoitokausi) :indeksikerroin])
@@ -2675,30 +2674,30 @@
                                      :summa tilaajan-varaukset-summa}
                                     {:otsikko "Indeksikorjattu"
                                      :summa (* tilaajan-varaukset-summa indeksikerroin)}]]
-      (navigointivalikko
-        hoitokausi
-        {:urakka (-> @tila/yleiset :urakka :nimi)
-         :soluja (count summat-tavoite-ja-kattohinta)}
-        {::hankintakustannukset {:nimi "Hankintakustannukset"
-                                 :summat summat-hankinnat
-                                 :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
-         ::erillishankinnat {:nimi "Erillishankinnat"
-                             :summat summat-erillishankinnat
-                             :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
-         ::johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaukset"
-                                        :summat summat-johto-ja-hallintokorvaus
-                                        :suunnitelma-vahvistettu? johto-ja-hallintokorvaus-vahvistettu?}
-         ::hoidonjohtopalkkio {:nimi "Hoidonjohtopalkkio"
-                               :summat summat-hoidonjohtopalkkio
-                               :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
-         ::tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
-                                  :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
-                                  :summat summat-tavoite-ja-kattohinta}
-         ::tilaajan-varaukset {:nimi "Tilaajan varaukset"
-                               :summat summat-tilaajanvaraukset
-                               :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}))
-    (fn []
-      [yleiset/ajax-loader "Haetaan tietoja"])))
+      [navigointivalikko
+       avaimet
+       hoitokausi
+       {:urakka (-> @tila/yleiset :urakka :nimi)
+        :soluja (count summat-tavoite-ja-kattohinta)}
+       {::hankintakustannukset {:nimi "Hankintakustannukset"
+                                :summat summat-hankinnat
+                                :suunnitelma-vahvistettu? hankintakustannukset-vahvistettu?}
+        ::erillishankinnat {:nimi "Erillishankinnat"
+                            :summat summat-erillishankinnat
+                            :suunnitelma-vahvistettu? erillishankinnat-vahvistettu?}
+        ::johto-ja-hallintokorvaukset {:nimi "Johto- ja hallintokorvaukset"
+                                       :summat summat-johto-ja-hallintokorvaus
+                                       :suunnitelma-vahvistettu? johto-ja-hallintokorvaus-vahvistettu?}
+        ::hoidonjohtopalkkio {:nimi "Hoidonjohtopalkkio"
+                              :summat summat-hoidonjohtopalkkio
+                              :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
+        ::tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
+                                 :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
+                                 :summat summat-tavoite-ja-kattohinta}
+        ::tilaajan-varaukset {:nimi "Tilaajan varaukset"
+                              :summat summat-tilaajanvaraukset
+                              :suunnitelma-vahvistettu? tilaajan-varaukset-vahvistettu?}}])
+    [yleiset/ajax-loader "Haetaan tietoja"]))
 
 (defn kustannussuunnitelma*
   [_ app]
@@ -2788,7 +2787,9 @@
                                                 (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
              (vieritys/vieritettava-osio
                {:osionavigointikomponentti osionavigointi
-                :menukomponentti (tee-menukomponentti app)}
+                :menukomponentti menukomponentti
+                :parametrit {:menu {:app app}
+                             :navigointi {:indeksit-saatavilla? indeksit-saatavilla?}}}
 
                ::hankintakustannukset
                [hankintakustannukset-taulukot

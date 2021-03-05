@@ -29,6 +29,8 @@
              [mhu :as mhu]]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
+(declare hae-urakan-indeksikertoimet)
+
 (defn hae-urakan-tavoite
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -56,6 +58,7 @@
     tilat))
 
 (defn vahvista-suunnitelman-osa-hoitovuodelle
+  "Merkataan vahvistus ja lasketaan indeksikorjatut luvut. Vahvistus tehdään osissa, joten lasketaan indeksikorjatut luvutkin osissa?"
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -64,6 +67,8 @@
                                                   :kategoria (tyyppi tyyppi->kategoria)
                                                   :muokkaaja (:id user)
                                                   :vahvistaja (:id user)}
+                                  indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
+                                  _ (println "indeksit " indeksit)
                                   onko-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
                               (if onko-tila?
                                 (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)

@@ -35,40 +35,41 @@
 
 (defn tee-majakat
   "Käydään läpi kaikki saadut elementit ja keyword-tunnisteet korvataan majakka-elementeillä. Laitetaan myös navigointi kohdilleen"
-  [navigointi nykyinen-avain es]
+  [navigointikomponentti komponentin-optiot es]
   (concat
     []
     (keep identity
           (conj
             (into []
                   (reduce
-                    (r/partial majakat nykyinen-avain)
+                    (r/partial majakat (:nykyinen komponentin-optiot))
                     []
                     es))
             (when-not (keyword? (first es))
-              [navigointi @nykyinen-avain])))))
+              [navigointikomponentti (assoc komponentin-optiot :nykyinen @(:nykyinen komponentin-optiot))])))))
 
 (defn vierita-ylos
   []
   (vierita ::top))
 
 (defn vieritettava-osio
-  [{:keys [menukomponentti osionavigointikomponentti] :as _optiot} & osiot]
-  (let [avaimet (filter keyword? osiot)
+  [{:keys [menukomponentti osionavigointikomponentti parametrit] :as _optiot} & osiot]
+  (let [{menu-optiot :menu
+         osionavigointi-optiot :navigointi} parametrit
+        avaimet (filter keyword? osiot)
         nykyinen-avain (r/atom nil)                         ; ikävä mutatointi, mut selkeyttää ylipäätään
         alkuvalikko (or menukomponentti
-                        (fn [avaimet]
+                        (fn [avaimet _]
                           [:div "valikkoa ei erikseen määritelty"
                            (for [a avaimet]
                              [:span {:on-click (vierita a)}
                               (name a)])]))
-        navigointi (r/partial osionavigointikomponentti avaimet)
         luo-osiot (comp
                     (partition-by keyword?)
-                    (mapcat (r/partial tee-majakat navigointi nykyinen-avain))
+                    (mapcat (r/partial tee-majakat osionavigointikomponentti (merge {} osionavigointi-optiot {:avaimet avaimet :nykyinen nykyinen-avain})))
                     (filter #(not (keyword? %))))
         pohja [:<>
                [majakka ::top]
-               [alkuvalikko avaimet]]
+               [alkuvalikko (merge {} menu-optiot {:avaimet avaimet})]]
         osiot-majakoineen (into [] luo-osiot osiot)]
     (vec (concat pohja osiot-majakoineen))))
