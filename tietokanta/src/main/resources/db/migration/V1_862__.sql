@@ -1,22 +1,11 @@
--- Paikkauskohde tauluun lisätään paikkauskohteen-tila kenttä, jonka arvot on tässä
-create type paikkauskohteen_tila as enum ('ehdotettu', 'hylatty', 'tilattu', 'valmis', 'tarkistettu');
+-- Kustannussuunnitelmassa on tallennettu hoidonjohtopalkkioita väärällä tehtävällä, niin oikaistaan ne. Näitä ei tallenneta muualta käsin tähän tauluun, niin pitäisi olla safe.
+update kustannusarvioitu_tyo
+  set tehtava = (select id from toimenpidekoodi tpk where tpk.nimi = 'Hoidonjohtopalkkio')
+  where tehtava = (select id from toimenpidekoodi tpk where tpk.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'); -- Hoitourakan työnjohto -toimenpidekoodin tunniste
 
--- Paikkauskohde taulussa ei ole ihan kaikkiakenttiä, mitä paikkauskohteen hallinta vaatii.
--- Lisätään puuttuvat kentät
-ALTER TABLE paikkauskohde
-    ADD COLUMN nro TEXT, -- Laskun numero tai muu numero, minkä urakoitsijat voivat paikkauskohteelle antaa.
-    ADD COLUMN alkupvm DATE, -- Ehdotettu alkupäivä, joka antaa raamit, milloin paikkaus pitäisi aloittaa
-    ADD COLUMN loppupvm DATE, -- Ehdotettu loppupaiva, joka antaa raamit, milloin paikkaus pitäisi olla valmiina
-    ADD COLUMN tilattupvm DATE, -- Tilattu paiva, jotta jää merkintä, milloin kohde on tilattu
-    ADD COLUMN tyomenetelma TEXT, -- esim UREM
-    ADD COLUMN tyomenetelma_kuvaus TEXT, -- Vapaa kuvaus mitä työmenetelmää käytetään
-    ADD COLUMN tierekisteriosoite tr_osoite, -- tie, alkuetäisyys, alkuosa, loppuetäisyys loppuosa
-    ADD COLUMN "paikkauskohteen-tila" paikkauskohteen_tila, -- ehdotettu, hylätty, tilattu, valmis, tarkistettu
-    ADD COLUMN "suunniteltu-maara" NUMERIC, -- Arvioitu menekki työmenetelmälle
-    ADD COLUMN "suunniteltu-hinta" NUMERIC, -- Paikkauksen arvioitu hinta
-    ADD COLUMN yksikko TEXT, -- Suunnitellun määrän yksikkö
-    ADD COLUMN lisatiedot TEXT, -- Paikkauskohteelle voi antaa ehdotusta tehdessä lisätietoja
-    ALTER COLUMN "ulkoinen-id" DROP NOT NULL; -- Poistetaan rajoitus, koska nyt kohteet eivät enää tule aina ulkoa.
-
-ALTER TABLE paikkauskohde
-    RENAME COLUMN tila TO "yhalahetyksen-tila";
+-- Bugin seurauksena syntyneitä rivejä siivotaan pois
+delete from kustannusarvioitu_tyo
+  where id in
+    (select id from kustannusarvioitu_tyo
+      where toimenpideinstanssi in (select id from toimenpideinstanssi where toimenpide = 601)
+        and tehtavaryhma is null and tehtava is null);

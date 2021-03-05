@@ -85,7 +85,7 @@
                   (assoc :tie "22")
                   (assoc :alkupvm (pvm/->pvm "01.01.2020"))
                   (assoc :loppupvm (pvm/->pvm "01.02.2020"))
-                  (assoc :paikkauskohteen-tila "valmis"))
+                  #_(assoc :paikkauskohteen-tila "valmis"))
         muokattu-kohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-paikkauskohde-urakalle
                                        +kayttaja-jvh+
