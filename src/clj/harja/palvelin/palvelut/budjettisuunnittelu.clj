@@ -58,20 +58,22 @@
 (defn vahvista-suunnitelman-osa-hoitovuodelle
   [db user {:keys [urakka-id hoitovuosi tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [hakuparametrit {:urakka urakka-id
-                        :hoitovuosi hoitovuosi
-                        :kategoria (tyyppi tyyppi->kategoria)
-                        :muokkaaja (:id user)
-                        :vahvistaja (:id user)}
-        onko-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
-    (if onko-tila?
-      (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)
-      (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
-                                       :hoitovuosi hoitovuosi
-                                       :kategoria (tyyppi tyyppi->kategoria)
-                                       :luoja (:id user)
-                                       :vahvistaja (:id user)
-                                       :vahvistettu true}))))
+  (jdbc/with-db-transaction [db db]
+                            (let [hakuparametrit {:urakka urakka-id
+                                                  :hoitovuosi hoitovuosi
+                                                  :kategoria (tyyppi tyyppi->kategoria)
+                                                  :muokkaaja (:id user)
+                                                  :vahvistaja (:id user)}
+                                  onko-tila? (not (empty? (q/hae-suunnitelman-osan-tila-hoitovuodelle db (dissoc hakuparametrit :muokkaaja :vahvistaja))))]
+                              (if onko-tila?
+                                (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)
+                                (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
+                                                                 :hoitovuosi hoitovuosi
+                                                                 :kategoria (tyyppi tyyppi->kategoria)
+                                                                 :luoja (:id user)
+                                                                 :vahvistaja (:id user)
+                                                                 :vahvistettu true}))
+                              (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id}))))
 
 (defn tallenna-suunnitelman-osalle-tila
   [db user {:keys [urakka-id hoitovuodet tyyppi]}]

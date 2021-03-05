@@ -1818,8 +1818,8 @@ vaihtelua-teksti "vaihtelua/kk")
     app)
   VahvistaSuunnitelmanOsioVuodellaOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta! "Suunnitelman vahvistus onnistui!" :success viesti/viestin-nayttoaika-pitka)
-    app)
+    (viesti/nayta! (str "Suunnitelman vahvistus onnistui!") :success viesti/viestin-nayttoaika-pitka)
+    (assoc-in app [:domain :tilat] vastaus))
   VahvistaSuunnitelmanOsioVuodellaEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! "Suunnitelman vahvistus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)

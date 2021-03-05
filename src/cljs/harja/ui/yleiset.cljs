@@ -772,4 +772,6 @@ jatkon."
     ::info
     [:span.infolaatikko.info [ikoni] teksti]
     ::ok
-    [:span.infolaatikko.ok [ikoni] teksti]))
+    [:span.infolaatikko.ok [ikoni] teksti]
+    ::huomio
+    [:span.infolaatikko.huomio [ikoni] teksti]))
