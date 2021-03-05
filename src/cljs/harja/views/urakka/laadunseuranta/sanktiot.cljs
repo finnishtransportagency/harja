@@ -255,7 +255,7 @@
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
             :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
-            :valinnat ["MAKU 2015" "MAKU 2010" "MAKU 2005"]
+            :valinnat sanktio-domain/hoidon-indeksivalinnat
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1})
 
