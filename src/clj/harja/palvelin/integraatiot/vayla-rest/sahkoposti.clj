@@ -5,6 +5,8 @@
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
             [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
             [harja.pvm :as pvm]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti.sanomat.sahkoposti-lahetys :as lahetys-sanoma]
+            [clojure.spec.alpha :as spec]
             [org.httpkit.client :as htclient]
             [clojure.data.json :as json]
             [taoensso.timbre :as log])
@@ -26,17 +28,17 @@
 (defn lokittaja [{il :integraatioloki db :db} nimi]
   (integraatioloki/lokittaja il db "vayla-rest" nimi))
 
-(defn laheta-sahkoposti [{:keys [otsikko leipateksti url viestitunniste]}]
+(defn laheta-sahkoposti-post! [{:keys [sanoma rest-kayttaja rest-salasana]}]
   (let [opts {:as :text
-              :body (json/encode {... (ks json schemasta)})
+              :body (json/encode )
               :basic-auth [rest-kayttaja rest-salasana]
-              :user-agent "Harja"
-              :message-id viestitunniste
-              }
-        resp-promise (htclient/post url opts)
-        resp (deref resp-promise)
+              :user-agent "Harja"}
         ]
-    ))
+    (if (spec/valid? :lahetys-sanoma/sanoma sanoma)          
+      (deref (htclient/post url opts))
+      ;; else      
+      (throw (ex-info "Sähköpostilähetyksen parametrit eivät täsmää speksiin"
+                       (spec/explain-data :lahetys-sanoma/sanoma sanoma))))))
 
 
 (defrecord VaylaRestSahkoposti [vastausosoite rest-kayttaja rest-salasana]
@@ -61,7 +63,8 @@
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      {:viesti-id viesti-id}))
+      {:viestiId viesti-id
+       :}))
 
   (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))
