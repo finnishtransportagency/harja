@@ -84,7 +84,7 @@
                                   virheet
                                   (conj virheet "Paikkauskohteen tilassa virhe."))
                                 (when (and (s/valid? ::alkupvm (:alkupvm kohde))
-                                         (s/valid? ::loppupvm (:loppupvm kohde)))
+                                           (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde)))
                                 (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
@@ -226,16 +226,14 @@
                                                    :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
                                                    :suunniteltu-maara (:suunniteltu-maara kohde)
                                                    :yksikko (:yksikko kohde)
-                                                   :lisatiedot (:lisatiedot kohde)
-                                                   })))))
+                                                   :lisatiedot (:lisatiedot kohde)})))))
 
         _ (println "kohde: " (pr-str kohde))
         ]
     (if (empty? validointivirheet)
       kohde
       (throw+ {:type "Error"
-               :virheet [{:koodi "ERROR" :viesti validointivirheet}]}))
-    ))
+               :virheet [{:koodi "ERROR" :viesti validointivirheet}]}))))
 
 (defn poista-paikkauskohde! [db user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
@@ -250,7 +248,7 @@
       ;; Palautetaan poistettu paikkauskohde
       (assoc poistettava :poistettu true))))
 
-(defn upload-file [db req]
+(defn vastaanota-excel [db req]
   (let [_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
         ;; TODO: Tarkista oikeudet
         urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
@@ -261,30 +259,36 @@
 
         _ (println "Excelin data" (pr-str paikkauskohteet))
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
-        id-lista (keep
-                   (fn [p]
-                     (let [;; Excelistä ei aseteta paikkauskohteelle tilaa, joten asetetaan se "ehdotettu" tilaan tässä
-                           p (-> p
-                               (assoc :urakka-id urakka-id)
-                               (assoc :paikkauskohteen-tila "ehdotettu"))
-                           kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
-                           ;_ (println "kohde" (pr-str kohde) (pr-str p))
-                           ]
-                       (when (empty? kohde)
-                         ;(println "Tallennetaan kohde!")
-                         (tallenna-paikkauskohde! db kayttaja p))
-                       )
-                     )
-                   paikkauskohteet)
-        _ (println "id-lista" (pr-str id-lista) (> (count id-lista) 0))
+        kohteet (keep
+                  (fn [p]
+                    (let [;; Excelistä ei aseteta paikkauskohteelle tilaa, joten asetetaan se "ehdotettu" tilaan tässä
+                          p (-> p
+                                (assoc :urakka-id urakka-id)
+                                (assoc :paikkauskohteen-tila "ehdotettu"))
+                          kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
+                          ;_ (println "kohde" (pr-str kohde) (pr-str p))
+                          ]
+                      (when (empty? kohde)
+                        ;(println "Tallennetaan kohde!")
+                        (try
 
-        ]
+                          (tallenna-paikkauskohde! db kayttaja p)
 
-    (if (> (count id-lista) 0)
+                          (catch Exception e
+                            {:error e
+                             :paikkauskohde p})))))
+                  paikkauskohteet)
+        tallennetut (filter #(nil? (:error %)) kohteet)
+        virheet (filter #(some? (:error %)) kohteet)
+        _ (println "kohteet" (pr-str kohteet))
+        _ (println "tallennetut" tallennetut)
+        _ (println "virheet" virheet)]
+
+    (if (> (count tallennetut) 0)
       {:status 200
        :body "OK"}
       {:status 500
-       :body "ERROR"})))
+       :body {:message "ERROR" :virheet virheet}})))
 
 (defrecord Paikkauskohteet []
   component/Lifecycle
@@ -302,7 +306,7 @@
                         (fn [user kohde]
                           (poista-paikkauskohde! db user kohde)))
       (julkaise-palvelu http :lue-paikkauskohteet-excelista
-                        (wrap-multipart-params (fn [req] (upload-file db req)))
+                        (wrap-multipart-params (fn [req] (vastaanota-excel db req)))
                         {:ring-kasittelija? true})
       this))
 
