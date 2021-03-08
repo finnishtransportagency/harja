@@ -127,8 +127,9 @@
     [:tunnus yhatunnus]
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
-(defn muodosta [urakka kohteet]
+(defn muodosta [urakka kohteet]                             ; petar ovo pravi veliki xml
   (let [sisalto (muodosta-sanoma urakka kohteet)
+        _ (println "petar medjukorak " (pr-str sisalto))
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
