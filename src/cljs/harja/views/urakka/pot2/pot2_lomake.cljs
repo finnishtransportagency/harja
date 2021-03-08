@@ -25,7 +25,8 @@
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
     [harja.ui.kentat :as kentat]
     [harja.views.urakka.pot2.murskeet :as murskeet]
-    [harja.views.urakka.pot2.massat :as massat])
+    [harja.views.urakka.pot2.massat :as massat]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -162,10 +163,20 @@
                             (-> perustiedot ::lomake/virheet))
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
-                                         (empty? (flatten (keep vals virheet)))
-                                         )]
+                                         (empty? (flatten (keep vals virheet))))
+              lomakkeella-tallentamattomia-tietoja? false ;;TODO
+              ]
           [:div.pot2-lomake
-           [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+           [napit/takaisin
+            "Takaisin ilmoitusluetteloon"
+            #(if lomakkeella-tallentamattomia-tietoja?
+               (varmista-kayttajalta/varmista-kayttajalta
+                 {:otsikko "Lomakkeelta poistuminen"
+                  :sisalto (str "Lomakkeella on tallentamattomia tietoja. Jos poistut, menetät tekemäsi muutokset. Haluatko varmasti poistua lomakkeelta?")
+                  :hyvaksy "Poistu tallentamatta"
+                  :toiminto-fn (fn []
+                                 (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
+               (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
            [:p {:style {:color "red"}}
             "Tämä on työn alla oleva uusi versio päällystysilmoituksesta, joka tullee käyttöön kesällä 2021. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."]
            [otsikkotiedot perustiedot]

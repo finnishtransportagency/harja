@@ -14,21 +14,25 @@
   :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
-  (let [napit (or napit [:peruuta :hyvaksy])]
+  (let [napit (or napit [:hyvaksy :peruuta])]
     (modal/nayta! {:otsikko otsikko
                    :footer [:span
                             (doall
                               (for [tyyppi napit]
                                 (with-meta
                                   (case tyyppi
-                                    :peruuta [napit/peruuta "Peruuta" #(modal/piilota!)]
                                     :hyvaksy [napit/hyvaksy hyvaksy #(do
                                                                        (modal/piilota!)
-                                                                       (toiminto-fn))]
-                                    :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)]
+                                                                       (toiminto-fn))
+                                              {:luokka "pull-left"}]
                                     :poista [napit/poista hyvaksy #(do
                                                                      (modal/piilota!)
-                                                                     (toiminto-fn))]
+                                                                     (toiminto-fn))
+                                             {:luokka "pull-left"}]
+                                    :peruuta [napit/peruuta "Peruuta" #(modal/piilota!)
+                                              {:luokka "pull-right"}]
+                                    :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)
+                                               {:luokka "pull-right"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]}
                   sisalto)))
