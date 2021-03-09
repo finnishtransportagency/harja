@@ -19,12 +19,12 @@
 (defn placeholder
   "Näyttää helposti huomattavan placeholder elementin, jota voi käyttää sommitteluun"
   ([teksti]
-    (placeholder teksti {}))
+   (placeholder teksti {}))
   ([teksti {:keys [placeholderin-optiot]}]
-  [:div (merge {:style {:background-color "hotpink"
-                 :color "white"}}
-               placeholderin-optiot)
-   [ikonit/exclamation-sign] teksti]))
+   [:div (merge {:style {:background-color "hotpink"
+                         :color "white"}}
+                placeholderin-optiot)
+    [ikonit/exclamation-sign] teksti]))
 
 (def navigaation-min-korkeus 47)
 
@@ -126,8 +126,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
   ([otsikko toiminto {:keys [style ikoni]}]
-   [:a {:style    style
-        :href     "#"
+   [:a {:style style
+        :href "#"
         :on-click #(do (.preventDefault %) (toiminto))}
     [:span
      (when ikoni ikoni)
@@ -147,11 +147,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     [:span.raksiboksi
      [:div.input-group
       [:div.input-group-addon
-       [:input.klikattava {:type      "checkbox"
-                           :checked   (if checked "checked" "")
-                           :disabled  (when disabled? "disabled")
+       [:input.klikattava {:type "checkbox"
+                           :checked (if checked "checked" "")
+                           :disabled (when disabled? "disabled")
                            :on-change #(toiminto-fn %)}]
-       [:span.raksiboksi-teksti {:class    (when-not disabled? "klikattava")
+       [:span.raksiboksi-teksti {:class (when-not disabled? "klikattava")
                                  :on-click #(toiminto-fn %)} teksti]]
       (when komponentti
         komponentti)]
@@ -237,8 +237,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                          :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])])
        (for [vaihtoehto vaihtoehdot]
          ^{:key (hash vaihtoehto)}
-         [lista-item  {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
-                       :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
+         [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
+                      :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
@@ -346,7 +346,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
                                   :valittu-arvo valinta
-                                  :auki?     auki?})]])))))
+                                  :auki? auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -685,10 +685,10 @@ jatkon."
                       (/ (.-width parent-rect) 2)))))
       (fn [auki? sisalto]
         [:div.tooltip.bottom {:class (when auki? "in")
-                              :style {:position  "absolute"
+                              :style {:position "absolute"
                                       :min-width 150
-                                      :left      (when-let [x @x]
-                                                   x)}}
+                                      :left (when-let [x @x]
+                                              x)}}
          [:div.tooltip-arrow]
          [:div.tooltip-inner
           sisalto]]))))
@@ -699,7 +699,7 @@ jatkon."
     (komp/luo
       (fn [opts komponentti tooltipin-sisalto]
         [:div.inline-block
-         {:style          {:position "relative"}            ;:div.inline-block
+         {:style {:position "relative"}                     ;:div.inline-block
           :on-mouse-enter #(reset! tooltip-nakyy? true)
           :on-mouse-leave #(reset! tooltip-nakyy? false)}
          komponentti
@@ -768,10 +768,12 @@ jatkon."
 
 (defn infolaatikko
   [ikoni teksti tyyppi]
-  (case tyyppi
-    ::info
-    [:span.infolaatikko.info [ikoni] teksti]
-    ::ok
-    [:span.infolaatikko.ok [ikoni] teksti]
-    ::huomio
-    [:span.infolaatikko.huomio [ikoni] teksti]))
+  [:span {:class (str "infolaatikko "
+                      (case tyyppi
+                        ::info
+                        "info"
+                        ::ok
+                        "ok"
+                        ::huomio
+                        "huomio"))}
+   [ikoni] teksti])

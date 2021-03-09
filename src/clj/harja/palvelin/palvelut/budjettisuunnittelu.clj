@@ -36,19 +36,19 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
-(def ^{:private true} tyyppi->kategoria
+(def ^{:private true} tyyppi->osio
   {:johto-ja-hallintokorvaus "johto-ja-hallintokorvaus"
    :erillishankinnat "erillishankinnat"
    :tavoite-ja-kattohinta "tavoite-ja-kattohinta"
    :hoidonjohtopalkkio "hoidonjohtopalkkio"
    :hankintakustannukset "hankintakustannukset"
-   :tilaajan-varaukset "tilaajan-vararahastot"})
+   :tilaajan-varaukset "tilaajan-rahavaraukset"})
 
 (defn- redusoi-tilat
   [tilat tila]
-  (let [{:keys [hoitovuosi kategoria vahvistettu]} tila
-        kategoria (keyword kategoria)]
-    (assoc-in tilat [kategoria hoitovuosi] vahvistettu)))
+  (let [{:keys [hoitovuosi osio vahvistettu]} tila
+        osio (keyword osio)]
+    (assoc-in tilat [osio hoitovuosi] vahvistettu)))
 
 (defn hae-urakan-suunnitelman-tilat
   [db user {:keys [urakka-id]}]
@@ -64,7 +64,7 @@
   (jdbc/with-db-transaction [db db]
                             (let [hakuparametrit {:urakka urakka-id
                                                   :hoitovuosi hoitovuosi
-                                                  :kategoria (tyyppi tyyppi->kategoria)
+                                                  :osio (tyyppi tyyppi->osio)
                                                   :muokkaaja (:id user)
                                                   :vahvistaja (:id user)}
                                   indeksit (hae-urakan-indeksikertoimet db user {:urakka-id urakka-id})
@@ -74,7 +74,7 @@
                                 (q/vahvista-suunnitelman-osa-hoitovuodelle db hakuparametrit)
                                 (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                                                  :hoitovuosi hoitovuosi
-                                                                 :kategoria (tyyppi tyyppi->kategoria)
+                                                                 :osio (tyyppi tyyppi->osio)
                                                                  :luoja (:id user)
                                                                  :vahvistaja (:id user)
                                                                  :vahvistettu true}))
@@ -86,7 +86,7 @@
   (doseq [hv hoitovuodet]
     (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
                                      :hoitovuosi hv
-                                     :kategoria (tyyppi tyyppi->kategoria)
+                                     :osio (tyyppi tyyppi->osio)
                                      :luoja (:id user)
                                      :vahvistettu false})))
 
