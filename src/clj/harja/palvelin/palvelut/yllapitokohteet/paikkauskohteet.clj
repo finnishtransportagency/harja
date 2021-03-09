@@ -268,7 +268,7 @@
                           kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
                           ;_ (println "kohde" (pr-str kohde) (pr-str p))
                           ]
-                      (when (empty? kohde)
+                      (if (empty? kohde)
                         ;(println "Tallennetaan kohde!")
                         (try
 
@@ -276,7 +276,9 @@
 
                           (catch Exception e
                             {:error e
-                             :paikkauskohde p})))))
+                             :paikkauskohde p}))
+                        {:error {:message "Urakalta löytyy jo kohde samalla nimellä"
+                                 :paikkauskohde p}})))
                   paikkauskohteet)
         tallennetut (filter #(nil? (:error %)) kohteet)
         virheet (filter #(some? (:error %)) kohteet)

@@ -11,9 +11,9 @@
                                         :M :yksikko :N :suunniteltu-hinta :O :lisatiedot}
                                        sivu)
         ;; TODO: Katsotaan tarviiko tätä, riippuu miten halutaan hoitaa virheiden hallinta
-        #_#_otsikko-idx (first (keep-indexed (fn [idx rivi] (when (and (= "Nro." (:nro rivi)) (= "Kohde" (:nimi rivi))) idx)) raaka-data))
         ;; Säästetään vain ne rivit, joille on annettu tarpeeksi data
-        paikkauskohteet (keep
+        ;; Paitsi että ei, jotta voidaan antaa validointivirheet
+        #_#_paikkauskohteet (keep
                           (fn [rivi]
                             (when (and (:nimi rivi)
                                        (:tyomenetelma rivi)
@@ -21,5 +21,12 @@
                                        (:suunniteltu-hinta rivi)
                                        (number? (:suunniteltu-hinta rivi)))
                               rivi))
-                          raaka-data)]
+                          raaka-data)
+
+        ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
+        ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
+        ;; Ja otetaan otsikon jälkeiset rivit, joissa on nimi. Päästetään tässä vaiheessa myös selvästi virheelliset
+        ;; rivit läpi, jotta voidaan palauttaa validaatiovirheet.
+        otsikko-idx (first (keep-indexed (fn [idx rivi] (when (and (= "Nro." (:nro rivi)) (= "Kohde" (:nimi rivi))) idx)) raaka-data))
+        paikkauskohteet (remove #(nil? (:nimi %)) (subvec raaka-data (inc otsikko-idx)))]
     paikkauskohteet))
