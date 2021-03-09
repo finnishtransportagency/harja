@@ -13,4 +13,6 @@
                                            (when tunniste (str tunniste))))
               (update :tehtavaryhman-tunniste (fn [tunniste]
                                                 (when tunniste (str tunniste))))))
-        (q/hae-urakan-kustannusarvioidut-tyot-nimineen db {:urakka urakka-id :indeksikorjatut indeksikorjatut?}))))
+        (q/hae-urakan-kustannusarvioidut-tyot-nimineen db {:urakka urakka-id :indeksikorjatut (if (= :kaikki indeksikorjatut?)
+                                                                                                (name indeksikorjatut?)
+                                                                                                indeksikorjatut?)}))))

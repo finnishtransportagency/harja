@@ -8,13 +8,14 @@ SELECT kat.id,
        tpik_t.yksiloiva_tunniste AS "tehtavan-tunniste",
        tr.yksiloiva_tunniste AS "tehtavaryhman-tunniste",
        tpik_tpi.koodi AS "toimenpiteen-koodi",
-       kat.sopimus
+       kat.sopimus,
+       kat.indeksikorjattu
 FROM kustannusarvioitu_tyo kat
        LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
        LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
        LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
        LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
-WHERE tpi.urakka = :urakka and kat.indeksikorjattu = :indeksikorjatut;
+WHERE tpi.urakka = :urakka and (case when 'kaikki' = :indeksikorjatut then :indeksikorjatut else kat.indeksikorjattu end) = :indeksikorjatut);
 
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
