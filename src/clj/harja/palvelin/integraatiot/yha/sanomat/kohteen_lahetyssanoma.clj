@@ -64,7 +64,7 @@
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
-                                              verkon-sijainti]}
+                                              verkon-sijainti toimenpide kasittelysyvyys]}
                                       kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
    [:tierekisteriosoitevali
@@ -80,8 +80,9 @@
     [:let tr-loppuetaisyys]
     [:ajorata tr-ajorata]
     [:kaista tr-kaista]]
-   [:kasittelymenetelma kasittelymenetelma]
-   [:kasittelypaksuus paksuus]
+    [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
+   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys 1)]
+     [:kasittelypaksuus kasittelysyvyys])
    (when verkkotyyppi
      [:verkkotyyppi verkkotyyppi])
    (when verkon-tarkoitus
@@ -131,6 +132,7 @@
   (let [sisalto (muodosta-sanoma urakka kohteet)
         _ (println "petar medjukorak " (pr-str sisalto))
         xml (xml/tee-xml-sanoma sisalto)]
+    (println "petar evo ga XML " (pr-str xml))
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)

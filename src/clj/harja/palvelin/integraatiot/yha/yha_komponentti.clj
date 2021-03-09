@@ -17,8 +17,7 @@
             [clojure.string :as clj-str]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -166,8 +165,15 @@
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
           paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
-          paallystysilmoitus (if (paallystys/onko-pot2? paallystysilmoitus)
-                               (let [alustatoimet (paallystys/pot2-alusta db paallystysilmoitus)]
+          paallystysilmoitus (if (= (:versio paallystysilmoitus) 2)
+                               (let [keep-some (fn [map-jossa-on-nil]
+                                                 (into {} (filter
+                                                            (fn [[_ arvo]] (some? arvo))
+                                                            map-jossa-on-nil)))
+                                     alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
+                                                       (map keep-some)
+                                                       (into []))]
+                                 (println "petar evo ga lista " (pr-str alustatoimet))
                                  (assoc-in paallystysilmoitus [:ilmoitustiedot :alustatoimet] alustatoimet))
                                paallystysilmoitus)
           alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
@@ -254,7 +260,6 @@
                 url (str url "toteumatiedot")
                 _ (println "petar evo ovo ce da muodosta " (pr-str kohteet))
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                _ (println "petar evo ga XML " (pr-str kutsudata))
                 otsikot {"Content-Type" "text/xml; charset=utf-8"}
                 http-asetukset {:metodi :POST
                                 :url url
