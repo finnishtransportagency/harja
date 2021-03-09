@@ -14,7 +14,7 @@ FROM kustannusarvioitu_tyo kat
        LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
        LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
        LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
-WHERE tpi.urakka = :urakka;
+WHERE tpi.urakka = :urakka and kat.indeksikorjattu = :indeksikorjatut;
 
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
