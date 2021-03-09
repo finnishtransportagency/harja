@@ -7,7 +7,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
-            [dk.ative.docjure.spreadsheet :as xls]))
+            [dk.ative.docjure.spreadsheet :as xls]
+            [clojure.java.io :as io]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -172,7 +173,7 @@
         ;; Tehdään myös aivan väärä kohde ja yritetään poistaa
         vaara-id 934534534
         vaara-kohde (merge {:id vaara-id}
-                     kohde)
+                           kohde)
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :poista-paikkauskohde
                           +kayttaja-jvh+
@@ -255,22 +256,26 @@
                                            (first paikkauskohteet)))
         "Poikkeusta ei heitetty! Excelin paikkauskohde olikin validi!")))
 
+;; TODO: Keksi miten kutsu-palvelua saa toimimaan ja käytä sitä tämän sijaan.
+(defn vastaanota-excel [urakka-id kayttaja tiedoston-nimi]
+  (paikkauskohteet/vastaanota-excel (:db jarjestelma) {:params {"urakka-id" (str urakka-id)
+                                                                "file" {:tempfile (io/file tiedoston-nimi)}}
+                                                       :kayttaja kayttaja}))
+
 (deftest tallenna-validit-paikkauskohteet-excelista-kantaan
   (let [urakka-id @kemin-alueurakan-2019-2023-id
-        workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset_valid.xlsx")
-        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
-        _ (println "paikkauskohteet" (pr-str paikkauskohteet))
-        id-list (mapv
-                  (fn [p]
-                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :tallenna-paikkauskohde-urakalle
-                                    +kayttaja-jvh+
-                                    (merge {:urakka-id urakka-id
-                                            :paikkauskohteen-tila "ehdotettu"}
-                                           p)))
-                  paikkauskohteet)
-        _ (println "Tallennetut paikkauskohteet" (pr-str id-list))
+        filtteroi-testin-kohteet (fn [pkt] (filter #(= "Happy day excel testi" (:lisatiedot %)) pkt))
+        paikkauskohteet-ennen-tallennusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                          :paikkauskohteet-urakalle
+                                                          +kayttaja-jvh+
+                                                          {:urakka-id urakka-id})
+        vastaus (vastaanota-excel urakka-id +kayttaja-jvh+ "test/resurssit/excel/Paikkausehdotukset_valid.xlsx")
+        paikkauskohteet-tallennuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                             :paikkauskohteet-urakalle
+                                                             +kayttaja-jvh+
+                                                             {:urakka-id urakka-id})
         ]
     ;; Tarkistetaan, että saatiin neljä
-    (is (= 4 (count paikkauskohteet)))
-    ))
+    (is (= 200) (:status vastaus))
+    (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-ennen-tallennusta))) "Testin kohteet löytyvät jo kannasta, testikantaa ei ole siivottu.")
+    (is (= 4 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))) "Kannasta ei löydy testin kohteita.")))
