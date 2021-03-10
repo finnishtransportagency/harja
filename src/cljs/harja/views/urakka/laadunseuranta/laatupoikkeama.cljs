@@ -125,11 +125,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                            (if-not (sanktio-domain/sakko? paivitetty)
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
-                :valinnat mahdolliset-sanktiolajit
+                :valinnat (sort mahdolliset-sanktiolajit)
                 :valinta-nayta #(case %
                                   :A "Ryhmä A"
                                   :B "Ryhmä B"
                                   :C "Ryhmä C"
+                                  :lupaussanktio "Lupaussanktio"
                                   :muistutus "Muistutus"
                                   :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                                   :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
