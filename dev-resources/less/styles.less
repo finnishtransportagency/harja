@@ -207,7 +207,7 @@ tr.uusitehtavakoodi td {
   z-index: 10000;
 }
 
-.flash-viesti-container {
+.toast-viesti-container {
   position: fixed;
   bottom: 10px;
   left: 20px;
@@ -215,6 +215,16 @@ tr.uusitehtavakoodi td {
   z-index: 10000;
 }
 
+.toast-viesti {
+  padding: 14px 24px;
+
+  &-onnistunut {
+    &:extend(.toast-viesti);
+    background: @green-lighter;
+    border: 1px solid @green-light;
+  }
+
+}
 
 .hoitokauden-kustannukset {
   > div.summa {

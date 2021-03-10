@@ -268,7 +268,7 @@
     (let [_ (js/console.log "Paikkauskohteen tallennus onnistui" (pr-str vastaus))
           _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
           _ (modal/piilota!)]
-      (viesti/nayta-uusi! "Paikkauskohteen tallennus onnistui."
+      (viesti/nayta-toast! "Paikkauskohteen tallennus onnistui."
                      :success viesti/viestin-nayttoaika-pitka)
       (dissoc app :lomake)))
 
