@@ -126,7 +126,9 @@
        :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
        :leveys perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
+      ;; Sovittiin 3.3.2021 että piennar-ominaisuutta ei tuoda heti POT2 alussa, ettei sekoiteta käyttäjiä
+      ;; Jätetään tietokantaan kuitenkin valmius, ja palataan tähän kun POT2 on saatu otettua käyttöön
+      #_{:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                                   (boolean (:piennar rivi)))}
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys perusleveys
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros]
