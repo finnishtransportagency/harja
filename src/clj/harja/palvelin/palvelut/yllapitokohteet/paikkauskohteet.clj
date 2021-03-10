@@ -96,14 +96,15 @@
                                   (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
                                 ;; Pois käytöstä kunnes excel-pohja korjataan.
                                 #_(if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
-                                  virheet
-                                  (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
+                                    virheet
+                                    (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
                                 (if (s/valid? ::yksikko (:yksikko kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
-                                (when (and (s/valid? ::alkupvm (:alkupvm kohde))
-                                           (s/valid? ::loppupvm (:loppupvm kohde)))
-                                  (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde)))
+                                (if (and (s/valid? ::alkupvm (:alkupvm kohde))
+                                         (s/valid? ::loppupvm (:loppupvm kohde)))
+                                  (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
+                                  virheet)
                                 (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
@@ -304,9 +305,14 @@
         _ (println "tallennetut" tallennetut)
         _ (println "virheet" virheet)]
 
+    ;; Vielä ei selvää, halutaanko tallentaa mitään, jos seassa virheellisiä.
+    ;; Oletetaan toistaiseksi, että halutaan tallentaa ne, joissa ei ole virheitä
+    ;; ja palautetaan tieto myös virheellistä kohteista.
     (if (> (count tallennetut) 0)
       {:status 200
-       :body "OK"}
+       :body (merge {:message "OK"}
+                    (when (> (count virheet) 0)
+                      {:virheet virheet}))}
       {:status 500
        :body {:message "ERROR" :virheet virheet}})))
 
