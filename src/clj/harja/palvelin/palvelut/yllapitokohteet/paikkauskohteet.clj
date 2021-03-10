@@ -68,6 +68,11 @@
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
+;; TODO: Muuta tarkastamaan, että on yksi sallituista arvoista, kunhan ne päivitetään muutetaan enumeiksi.
+(s/def ::tyomenetelma (s/and string? (complement empty?)))
+(s/def ::suunniteltu-maara (s/and number? pos?))
+(s/def ::suunniteltu-hinta (s/and number? pos?))
+(s/def ::yksikko #{"m2" "t" "kpl" "jm"})
 
 (defn paikkauskohde-validi? [kohde vanha-kohde rooli]
   (let [validointivirheet (as-> #{} virheet
@@ -83,6 +88,19 @@
                                 (if (s/valid? ::paikkauskohteen-tila (:paikkauskohteen-tila kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen tilassa virhe."))
+                                (if (s/valid? ::tyomenetelma (:tyomenetelma kohde))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen työmenetelmässä virhe"))
+                                (if (s/valid? ::suunniteltu-hinta (:suunniteltu-hinta kohde))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
+                                ;; Pois käytöstä kunnes excel-pohja korjataan.
+                                #_(if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
+                                (if (s/valid? ::yksikko (:yksikko kohde))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
                                 (when (and (s/valid? ::alkupvm (:alkupvm kohde))
                                            (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde)))
@@ -232,8 +250,8 @@
         ]
     (if (empty? validointivirheet)
       kohde
-      (throw+ {:type "Error"
-               :virheet [{:koodi "ERROR" :viesti validointivirheet}]}))))
+      (throw+ {:type "Validaatiovirhe"
+               :virheet {:koodi "ERROR" :viesti validointivirheet}}))))
 
 (defn poista-paikkauskohde! [db user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
@@ -270,12 +288,12 @@
                           ]
                       (if (empty? kohde)
                         ;(println "Tallennetaan kohde!")
-                        (try
+                        (try+
 
                           (tallenna-paikkauskohde! db kayttaja p)
 
-                          (catch Exception e
-                            {:error e
+                          (catch [:type "Validaatiovirhe"] e
+                            {:error (get-in e [:virheet :viesti])
                              :paikkauskohde p}))
                         {:error {:message "Urakalta löytyy jo kohde samalla nimellä"
                                  :paikkauskohde p}})))
