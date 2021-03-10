@@ -149,7 +149,9 @@
 
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
+        osoitteet (if (= (:versio paallystysilmoitus) 2)
+                    (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})       ; petar citaj iz pot2_paallystys
+                    (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
