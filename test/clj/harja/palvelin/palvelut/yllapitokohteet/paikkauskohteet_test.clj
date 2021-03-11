@@ -273,9 +273,19 @@
         paikkauskohteet-tallennuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                                              :paikkauskohteet-urakalle
                                                              +kayttaja-jvh+
-                                                             {:urakka-id urakka-id})
-        ]
+                                                             {:urakka-id urakka-id})]
     ;; Tarkistetaan, että saatiin neljä
     (is (= 200) (:status vastaus))
     (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-ennen-tallennusta))) "Testin kohteet löytyvät jo kannasta, testikantaa ei ole siivottu.")
     (is (= 4 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))) "Kannasta ei löydy testin kohteita.")))
+
+(deftest yrita-tallentaa-virheellinen-paikkaukohde-excelista-kantaan
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        filtteroi-testin-kohteet (fn [pkt] (filter #(= "Virheellinen, työmenetelmä puuttuu" (:lisatiedot %)) pkt))
+        vastaus (vastaanota-excel urakka-id +kayttaja-jvh+ "test/resurssit/excel/Paikkausehdotukset_yksi_virhe.xlsx")
+        paikkauskohteet-tallennuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                             :paikkauskohteet-urakalle
+                                                             +kayttaja-jvh+
+                                                             {:urakka-id urakka-id})]
+    (is (= "Paikkauskohteen työmenetelmässä virhe" (-> vastaus :body :virheet first :error first)))
+    (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))))))
