@@ -381,3 +381,9 @@ insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkau
 ('Kaislajärven suora osa 3', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
  '2021-03-01', '2021-03-13', 'hylatty', 000, 'KTVA', 'kuvaus ktva:sta',
  ROW (926, 9, 3364, 12, 3964, NULL) :: TR_OSOITE, 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.');
+
+insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "urakka-id",
+                           alkupvm, loppupvm, tyomenetelma, tierekisteriosoite,
+                           "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot)  VALUES
+(0000, 'Muokattava testikohde', current_timestamp, 36, '2021-01-01', '2021-01-02', 'UREM', ROW(926, 9, 3364, 12, 3964, NULL) :: TR_OSOITE, 'ehdotettu',
+ 1000, 1000, 'jm', 'muokattava testikohde');

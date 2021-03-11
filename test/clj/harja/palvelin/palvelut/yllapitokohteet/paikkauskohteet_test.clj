@@ -37,7 +37,11 @@
                             :aosa 1
                             :losa 2
                             :aet 10
-                            :let 20})
+                            :let 20
+                            :yksikko "jm"
+                            :suunniteltu-hinta 1000.00
+                            :suunniteltu-maara 100
+                            :tyomenetelma "UREM"})
 
 (deftest paikkauskohteet-urakalle-testi
   (let [_ (hae-kemin-alueurakan-2019-2023-id)
@@ -79,7 +83,7 @@
                                         +kayttaja-jvh+
                                         {:urakka-id urakka-id})
         ;; Otetaan eka
-        kohde (first paikkauskohteet)
+        kohde (first (filter #(= "Muokattava testikohde" (:nimi %)) paikkauskohteet))
         ;; Muokataan nimi, tierekisteriosoite, alkuaika, loppuaika, tila
         kohde (-> kohde
                   (assoc :nimi "testinimi")
@@ -237,12 +241,6 @@
 
     ;; Tilaaja pystyy perumaan kohteen hylkäyksen
     (is (= "ehdotettu" (:paikkauskohteen-tila (paivita-paikkaukkohteen-tila kohde "ehdotettu" tilaaja))))))
-
-(deftest lue-paikkauskohteet-excelista
-  (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
-        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
-        _ (println "paikkauskohteet" (pr-str paikkauskohteet))]
-    (is (= 4 (count paikkauskohteet)))))
 
 (deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
   (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
