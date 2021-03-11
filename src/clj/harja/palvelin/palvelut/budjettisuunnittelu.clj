@@ -166,7 +166,7 @@
 
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
-  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)]
+  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id :kaikki)]
     (map (fn [tyo]
            (-> tyo
                (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))

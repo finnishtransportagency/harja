@@ -15,7 +15,7 @@ FROM kustannusarvioitu_tyo kat
        LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
        LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
        LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
-WHERE tpi.urakka = :urakka and (case when 'kaikki' = :indeksikorjatut then :indeksikorjatut else kat.indeksikorjattu end) = :indeksikorjatut);
+WHERE tpi.urakka = :urakka and (case when 'kaikki' = :indeksikorjatut then true else kat.indeksikorjattu = :indeksikorjatut::boolean end);
 
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!

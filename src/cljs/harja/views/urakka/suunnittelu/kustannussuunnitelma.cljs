@@ -820,8 +820,13 @@
                                                      true
                                                      hoitokauden-numero
                                                      :hankinnat)
-                               (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                               (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))]
+
+                               (e! (t/->TarkistaTarvitaankoVahvistus
+                                     :hankintakustannukset
+                                     hoitokauden-numero
+                                     (fn []
+                                       (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/suunnittellut-hankinnat-rajapinta
                                        (t/suunnittellut-hankinnat-dr)
@@ -2521,6 +2526,14 @@
                  Tämän avulla tarkastetaan, että taulukkojen tila on ok."}
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
+(defn selite-modal
+  [laheta-fn!]
+  [modal/modal {:otsikko "Sun pitää vahvistaa tää"
+                :nakyvissa? true
+                :sulje-fn #(e! (t/->SuljeVahvistus))}
+   [:div "Please confirm"
+    [:button {:on-click laheta-fn!} "Klikkeris"]]])
+
 (defn vahvista-suunnitelman-osa-komponentti
   [_ _]
   (let [auki? (r/atom false)]
@@ -2554,7 +2567,7 @@
                 vahvista-suunnitelman-osa-fn
                 {:disabled disabloitu?
                  :toiminto-args [osion-nimi hoitovuosi]}])
-             [yleiset/placeholder (str (when disabloitu? "Vain urakan aluevastaava voi vahvistaa suunnitelman"))]]])]))))
+             [yleiset/placeholder (str (when disabloitu? "Vain urakan aluevastaava voi vahvistaa suunnitelman") indeksit-saatavilla? disabloitu?)]]])]))))
 
 (defn osionavigointi
   [{:keys [avaimet nykyinen]}]
@@ -2662,40 +2675,40 @@
 
             {:keys [summa-hankinnat summa-erillishankinnat summa-hoidonjohtopalkkio summa-tilaajan-varaukset summa-johto-ja-hallintokorvaus summa-tavoite-ja-kattohinta]}
             (poista-nilit
-                     {:summa-hankinnat [{:otsikko "Yhteensä"
-                                         :summa hankintakustannukset-summa}
-                                        (when indeksit-saatavilla? {:otsikko "Indeksikorjattu"
-                                                                    :summa (* hankintakustannukset-summa indeksikerroin)})]
-                      :summa-erillishankinnat [{:otsikko "Yhteensä"
-                                                :summa erillishankinnat-summa}
-                                               (when indeksit-saatavilla?
-                                                 {:otsikko "Indeksikorjattu"
-                                                  :summa (* erillishankinnat-summa indeksikerroin)})]
-                      :summa-hoidonjohtopalkkio [{:otsikko "Yhteensä"
-                                                  :summa hoidonjohtopalkkio-summa}
-                                                 (when indeksit-saatavilla?
-                                                   {:otsikko "Indeksikorjattu"
-                                                    :summa (* hoidonjohtopalkkio-summa indeksikerroin)})]
-                      :summa-tilaajan-varaukset [{:otsikko "Yhteensä"
-                                                  :summa tilaajan-varaukset-summa}
-                                                 (when indeksit-saatavilla?
-                                                   {:otsikko "Indeksikorjattu"
-                                                    :summa (* tilaajan-varaukset-summa indeksikerroin)})]
-                      :summa-johto-ja-hallintokorvaus [{:otsikko "Yhteensä"
-                                                        :summa johto-ja-hallintokorvaukset-summa}
-                                                       (when indeksit-saatavilla?
-                                                         {:otsikko "Indeksikorjattu"
-                                                          :summa (* johto-ja-hallintokorvaukset-summa indeksikerroin)})]
-                      :summa-tavoite-ja-kattohinta [{:summa tavoitehinta-summa
-                                                     :otsikko "Tavoitehinta yhteensä"}
-                                                    (when indeksit-saatavilla?
-                                                      {:summa (* tavoitehinta-summa indeksikerroin)
-                                                       :otsikko "Tavoitehinta indeksikorjattu"})
-                                                    {:summa kattohinta-summa
-                                                     :otsikko "Kattohinta yhteensä"}
-                                                    (when indeksit-saatavilla?
-                                                      {:summa (* kattohinta-summa indeksikerroin)
-                                                       :otsikko "Kattohinta indeksikorjattu"})]})]
+              {:summa-hankinnat [{:otsikko "Yhteensä"
+                                  :summa hankintakustannukset-summa}
+                                 (when indeksit-saatavilla? {:otsikko "Indeksikorjattu"
+                                                             :summa (* hankintakustannukset-summa indeksikerroin)})]
+               :summa-erillishankinnat [{:otsikko "Yhteensä"
+                                         :summa erillishankinnat-summa}
+                                        (when indeksit-saatavilla?
+                                          {:otsikko "Indeksikorjattu"
+                                           :summa (* erillishankinnat-summa indeksikerroin)})]
+               :summa-hoidonjohtopalkkio [{:otsikko "Yhteensä"
+                                           :summa hoidonjohtopalkkio-summa}
+                                          (when indeksit-saatavilla?
+                                            {:otsikko "Indeksikorjattu"
+                                             :summa (* hoidonjohtopalkkio-summa indeksikerroin)})]
+               :summa-tilaajan-varaukset [{:otsikko "Yhteensä"
+                                           :summa tilaajan-varaukset-summa}
+                                          (when indeksit-saatavilla?
+                                            {:otsikko "Indeksikorjattu"
+                                             :summa (* tilaajan-varaukset-summa indeksikerroin)})]
+               :summa-johto-ja-hallintokorvaus [{:otsikko "Yhteensä"
+                                                 :summa johto-ja-hallintokorvaukset-summa}
+                                                (when indeksit-saatavilla?
+                                                  {:otsikko "Indeksikorjattu"
+                                                   :summa (* johto-ja-hallintokorvaukset-summa indeksikerroin)})]
+               :summa-tavoite-ja-kattohinta [{:summa tavoitehinta-summa
+                                              :otsikko "Tavoitehinta yhteensä"}
+                                             (when indeksit-saatavilla?
+                                               {:summa (* tavoitehinta-summa indeksikerroin)
+                                                :otsikko "Tavoitehinta indeksikorjattu"})
+                                             {:summa kattohinta-summa
+                                              :otsikko "Kattohinta yhteensä"}
+                                             (when indeksit-saatavilla?
+                                               {:summa (* kattohinta-summa indeksikerroin)
+                                                :otsikko "Kattohinta indeksikorjattu"})]})]
         [navigointivalikko
          avaimet
          hoitokausi
@@ -2795,7 +2808,7 @@
                          (gridien-siivous!)
                          (log "[kustannussuunnitelma] SIIVOTTU")
                          (reset! lopeta-taulukkojen-luonti? false)))))
-      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
+      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] {{:keys [vaaditaan-muutoksen-vahvistus? tee-kun-vahvistettu]} :vahvistus} :domain :as app}]
         (set! e! e*!)
         (r/with-let [indeksit-saatavilla? (fn [app]
                                             (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
@@ -2904,7 +2917,9 @@
                           (:kantahaku-valmis? app)]
                          [vahvista-suunnitelman-osa-komponentti :tilaajan-varaukset {:hoitovuosi (get-in app [:suodattimet :hoitokauden-numero])
                                                                                      :indeksit-saatavilla? (indeksit-saatavilla? app)
-                                                                                     :on-tila? (onko-tila? :tilaajan-varaukset app)}])]))))))
+                                                                                     :on-tila? (onko-tila? :tilaajan-varaukset app)}])
+                       (when vaaditaan-muutoksen-vahvistus?
+                         [selite-modal tee-kun-vahvistettu])]))))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
