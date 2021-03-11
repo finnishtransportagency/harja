@@ -17,7 +17,6 @@
     [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
-    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.alusta :as alusta]
@@ -26,7 +25,8 @@
     [harja.ui.kentat :as kentat]
     [harja.views.urakka.pot2.murskeet :as murskeet]
     [harja.views.urakka.pot2.massat :as massat]
-    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+    [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -183,8 +183,9 @@
                   :toiminto-fn (fn []
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
-           [:p {:style {:color "red"}}
-            "Tämä on kehitysversio uudesta päällystysilmoituksesta, joka tulee käyttöön kauden 2021 päällystyksiin. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."]
+           (when-not (k/kehitysymparistossa?)
+             [:p {:style {:color "red"}}
+              "Tämä on kehitysversio uudesta päällystysilmoituksesta, joka tulee käyttöön kauden 2021 päällystyksiin. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."])
            [otsikkotiedot perustiedot]
            (when (= :lukittu tila)
              [pot-yhteinen/poista-lukitus e! urakka])
