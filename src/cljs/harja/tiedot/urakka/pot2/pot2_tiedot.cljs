@@ -37,6 +37,7 @@
 (defrecord SuljeAlustalomake [])
 (defrecord NaytaMateriaalilomake [rivi])
 (defrecord SuljeMateriaalilomake [])
+(defrecord Pot2Muokattu [])
 
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
@@ -205,4 +206,8 @@
   (process-event [_ app]
     (-> app
         (assoc :pot2-massa-lomake nil
-               :pot2-murske-lomake nil))))
+               :pot2-murske-lomake nil)))
+
+  Pot2Muokattu
+  (process-event [_ app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true)))
