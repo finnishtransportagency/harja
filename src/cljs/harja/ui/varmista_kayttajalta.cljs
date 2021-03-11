@@ -5,13 +5,14 @@
             [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]))
 
-(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy napit]}]
+(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit]}]
   "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
 
   Parametrimap:
   :otsikko = dialogin otsikko
   :sisalto = dialogin sisältö
   :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
+  :peruuta-txt = peruuta-painikkeen teksti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
   (let [napit (or napit [:hyvaksy :peruuta])]
@@ -29,7 +30,7 @@
                                                                      (modal/piilota!)
                                                                      (toiminto-fn))
                                              {:luokka "pull-left"}]
-                                    :peruuta [napit/peruuta "Peruuta" #(modal/piilota!)
+                                    :peruuta [napit/peruuta (or peruuta-txt "Peruuta") #(modal/piilota!)
                                               {:luokka "pull-right"}]
                                     :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)
                                                {:luokka "pull-right"}]

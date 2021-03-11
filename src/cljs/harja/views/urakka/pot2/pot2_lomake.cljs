@@ -115,11 +115,13 @@
              :margin-left "0"}}]])
 
 (defn lisatiedot
-  [lisatiedot-atom]
+  [e! lisatiedot-atom]
   [:span
    [:h6 "Lisätiedot ja huomautukset"]
    [kentat/tee-kentta {:tyyppi :text :nimi :lisatiedot :koko [80 4]}
-    (r/wrap @lisatiedot-atom #(reset! lisatiedot-atom %))]])
+    (r/wrap @lisatiedot-atom #(do
+                                (e! (pot2-tiedot/->Pot2Muokattu))
+                                (reset! lisatiedot-atom %)))]])
 
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
@@ -129,6 +131,7 @@
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
+        perustiedot-hash-avatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
@@ -164,21 +167,24 @@
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet))))
-              lomakkeella-tallentamattomia-tietoja? false ;;TODO
-              ]
+              perustiedot-hash-rendatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+              tietoja-muokattu? (or
+                                  (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
+                                  (:muokattu? paallystysilmoitus-lomakedata))]
           [:div.pot2-lomake
            [napit/takaisin
             "Takaisin ilmoitusluetteloon"
-            #(if lomakkeella-tallentamattomia-tietoja?
+            #(if tietoja-muokattu?
                (varmista-kayttajalta/varmista-kayttajalta
                  {:otsikko "Lomakkeelta poistuminen"
                   :sisalto (str "Lomakkeella on tallentamattomia tietoja. Jos poistut, menetät tekemäsi muutokset. Haluatko varmasti poistua lomakkeelta?")
                   :hyvaksy "Poistu tallentamatta"
+                  :peruuta-txt "Palaa lomakkeelle"
                   :toiminto-fn (fn []
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
-               (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+               (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [:p {:style {:color "red"}}
-            "Tämä on työn alla oleva uusi versio päällystysilmoituksesta, joka tullee käyttöön kesällä 2021. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."]
+            "Tämä on kehitysversio uudesta päällystysilmoituksesta, joka tulee käyttöön kauden 2021 päällystyksiin. Ethän vielä tee tällä lomakkeella kirjauksia tuotannossa, kiitos."]
            [otsikkotiedot perustiedot]
            (when (= :lukittu tila)
              [pot-yhteinen/poista-lukitus e! urakka])
@@ -206,7 +212,7 @@
                  :else
                  [:span])
            [yleiset/valitys-vertical]
-           [lisatiedot pot2-tiedot/lisatiedot-atom]
+           [lisatiedot e! pot2-tiedot/lisatiedot-atom]
            [yleiset/valitys-vertical]
            [tallenna e! tallenna-app {:kayttaja kayttaja
                                       :urakka-id (:id urakka)

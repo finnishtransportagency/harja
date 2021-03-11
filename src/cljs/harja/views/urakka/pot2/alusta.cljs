@@ -159,7 +159,9 @@
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi]} alustarivit-atom]
   (let [perusleveys 2
-        alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
+        alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
+        muutos-fn (fn [g]
+                    (e! (pot2-tiedot/->Pot2Muokattu)))]
     [:div
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
@@ -174,6 +176,7 @@
                          :toiminto #(e! (pot2-tiedot/->LisaaAlustaToimenpide))
                          :opts {:ikoni (ikonit/livicon-plus)
                                 :luokka "nappi-toissijainen"}}
+       :muutos muutos-fn
        :rivi-validointi (:rivi validointi)
        :taulukko-validointi (:taulukko validointi)
        ;; Gridin renderöinnin jälkeen lasketaan alikohteiden pituudet

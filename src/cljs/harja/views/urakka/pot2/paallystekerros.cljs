@@ -55,13 +55,16 @@
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
    {:keys [massat materiaalikoodistot validointi]} kohdeosat-atom]
   (let [perusleveys 2
-        paallystekerros-toimenpiteet (:paallystekerros-toimenpiteet materiaalikoodistot)]
+        paallystekerros-toimenpiteet (:paallystekerros-toimenpiteet materiaalikoodistot)
+        muutos-fn (fn [g]
+                    (e! (pot2-tiedot/->Pot2Muokattu)))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :voi-kumota? false :lisaa-rivi " Lisää toimenpide"
       :uusi-rivi (fn [rivi]
                    (assoc rivi
                      :tr-numero (:tr-numero perustiedot)))
+      :muutos muutos-fn
       :piilota-toiminnot? true
       :rivi-validointi (:rivi validointi)
       :taulukko-validointi (:taulukko validointi)
