@@ -281,6 +281,8 @@
 
 (defonce ^:private testikannan-luonti-lukko (Object.))
 
+
+(def testikanta-yritysten-lkm 15)
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
@@ -288,13 +290,13 @@
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
 
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm)
       (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-                    5
+                    testikanta-yritysten-lkm
                     true
                     true))
     (luo-kannat-uudelleen)
