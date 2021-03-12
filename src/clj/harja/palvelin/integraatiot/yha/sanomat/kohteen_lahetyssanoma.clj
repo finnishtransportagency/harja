@@ -33,6 +33,7 @@
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
                             lisaaineet poistettu] :as alikohde}]
+  (println "petar alikohde je " (pr-str alikohde))
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]

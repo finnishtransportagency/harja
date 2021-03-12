@@ -175,7 +175,6 @@
                                      alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
                                                        (map keep-some)
                                                        (into []))]
-                                 (println "petar evo ga lista " (pr-str alustatoimet))
                                  (assoc-in paallystysilmoitus [:ilmoitustiedot :alustatoimet] alustatoimet))
                                paallystysilmoitus)
           alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
