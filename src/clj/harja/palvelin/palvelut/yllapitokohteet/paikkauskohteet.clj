@@ -95,7 +95,7 @@
                                   virheet
                                   (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
                                 ;; Pois käytöstä kunnes excel-pohja korjataan.
-                                #_(if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
+                                (if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
                                     virheet
                                     (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
                                 (if (s/valid? ::yksikko (:yksikko kohde))

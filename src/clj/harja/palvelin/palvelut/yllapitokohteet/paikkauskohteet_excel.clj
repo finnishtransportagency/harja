@@ -8,7 +8,7 @@
         ;; Me emme voi olla tästä kuitenkaan ihan varmoja, niin luetaan varalta kaikki data excelistä ulos
         raaka-data (xls/select-columns {:A :nro, :B :nimi :C :tie :D :ajorata :E :aosa :F :aet :G :losa
                                         :H :let :I :pituus :J :alkupvm :K :loppupvm :L :tyomenetelma
-                                        :M :yksikko :N :suunniteltu-hinta :O :lisatiedot}
+                                        :M :suunniteltu-maara :N :yksikko :O :suunniteltu-hinta :P :lisatiedot}
                                        sivu)
         ;; TODO: Katsotaan tarviiko tätä, riippuu miten halutaan hoitaa virheiden hallinta
         ;; Säästetään vain ne rivit, joille on annettu tarpeeksi data

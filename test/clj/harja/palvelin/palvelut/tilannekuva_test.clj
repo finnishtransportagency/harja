@@ -171,7 +171,7 @@
     (is (not (contains? vastaus :tarkastus)))
     (is (= (count (:laatupoikkeamat vastaus)) 47))
     (is (= (count (:paallystys vastaus)) 1))
-    (is (= (count (:paikkaus vastaus)) 10))
+    (is (= (count (:paikkaus vastaus)) 11))
     (is (= (count (:ilmoitukset vastaus)) 48))
     (is (= (count (:tietyomaat vastaus)) 1))
     (is (= (count (:tietyoilmoitukset vastaus)) 4))))
