@@ -268,11 +268,13 @@
                         (f n-kierros)
                         (f))
                       (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+                        (println "yrita-querya: virhe kannan tappamisesssa:" viesti)
                         (Thread/sleep 500)
                         (when log?
                           (log/warn viesti))
                         ::virhe)
                       (catch PSQLException e
+                        (println "yrita-querya: psql:" e)
                         (Thread/sleep 500)
                         (when log?
                           (log/warn e "- yritetään uudelleen, yritys" n-kierros))
