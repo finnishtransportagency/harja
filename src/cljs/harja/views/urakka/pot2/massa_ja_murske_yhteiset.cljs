@@ -27,9 +27,8 @@
       :style {:cursor "pointer"}}
      [:span.bold ydin]
      ;; Toistaiseksi Tean kanssa sovittu 23.2.2021 ettei näytetä tarkennuksia suluissa
-     #_[:span tarkennukset]]
-    (str ydin ;tarkennukset
-         )))
+     [:span tarkennukset]]
+    (str ydin tarkennukset)))
 
 (defn materiaalin-rikastettu-nimi
   "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"

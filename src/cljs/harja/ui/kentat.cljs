@@ -630,7 +630,7 @@
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta
-  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa
+  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo tasaa linkki-fn linkki-icon
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
@@ -638,33 +638,45 @@
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+
     (let [nykyinen-arvo @data
-          valinnat (or valinnat (valinnat-fn rivi))]
-      [livi-pudotusvalikko {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa))
-                            :valinta               (if valinta-arvo
-                                                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
-                                                     nykyinen-arvo)
-                            :valitse-fn            #(reset! data
-                                                            (if valinta-arvo
-                                                              (valinta-arvo %)
-                                                              %))
-                            :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                            :nayta-ryhmat          nayta-ryhmat
-                            :ryhmittely            ryhmittely
-                            :ryhman-otsikko        ryhman-otsikko
-                            :virhe?                virhe?
-                            :on-focus              on-focus
-                            :on-blur               on-blur
-                            :format-fn             (if (empty? valinnat)
-                                                     (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                                     (or (and valinta-nayta #(valinta-nayta % true)) str))
-                            :disabled              disabled?
-                            :pakollinen?           pakollinen?
-                            :vayla-tyyli?          vayla-tyyli?
-                            :elementin-id elementin-id}
-       valinnat]))
+          valinnat (or valinnat (valinnat-fn rivi))
+          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa))
+                :valinta               (if valinta-arvo
+                                         (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
+                                         nykyinen-arvo)
+                :valitse-fn            #(reset! data
+                                                (if valinta-arvo
+                                                  (valinta-arvo %)
+                                                  %))
+                :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                :nayta-ryhmat          nayta-ryhmat
+                :ryhmittely            ryhmittely
+                :ryhman-otsikko        ryhman-otsikko
+                :virhe?                virhe?
+                :on-focus              on-focus
+                :on-blur               on-blur
+                :format-fn             (if (empty? valinnat)
+                                         (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                                         (or (and valinta-nayta #(valinta-nayta % true)) str))
+                :disabled              disabled?
+                :pakollinen?           pakollinen?
+                :vayla-tyyli?          vayla-tyyli?
+                :elementin-id elementin-id}]
+      (if-not (and linkki-fn linkki-icon)
+        [livi-pudotusvalikko opts
+         valinnat]
+        [:div.valinta-ja-linkki-container
+         [:span {:style {:color "#004D99"}}
+          [napit/nappi ""
+           #(linkki-fn nykyinen-arvo)
+           {:ikoni linkki-icon
+            :ikoninappi? true
+            :luokka "valinnan-vierusnappi napiton-nappi"}]]
+         [livi-pudotusvalikko opts
+          valinnat]])))
   ([{:keys [jos-tyhja]} data data-muokkaus-fn]
-    ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
+   ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
     (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]
       (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
                    valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
