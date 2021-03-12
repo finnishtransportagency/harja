@@ -18,7 +18,8 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
     [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot])
+    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+    [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -52,6 +53,40 @@
 
 (def gridin-perusleveys 2)
 
+(defn materiaalin-valinta-linkilla
+  "Käyttöliittymäkenttä, jossa on linkki materiaalin avaamiseksi lomakkeelle sekä alasvetovalinta materiaalin valitsemiseksi"
+  [e! rivi kohdeosat-atom massat materiaalikoodistot]
+  (let [_ (println "kohdeosat atom nyt " (pr-str @kohdeosat-atom))]
+    [:div.materiaalin-valinta-linkilla {:style {:display "flex"
+                                                :justify-content "flex-start"}}
+
+     [:span {:style {:color "#004D99"}}
+      [napit/nappi ""
+       #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))
+       {:ikoni (ikonit/livicon-external)
+        :ikoninappi? true
+        :luokka "valinnan-vierusnappi napiton-nappi"}]]
+     [kentat/tee-kentta
+      {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tasaa :oikea
+       :alasveto-luokka "materiaalin-valinta-alasveto"
+       :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
+       ;; jotta alasvetovalikko aukeaa, pitää olla aina uniikki elementin-id
+       ;; uusilla pilkotuilla riveillä ei ole pot2p_id:tä eikä :id:tä joten käytetään countia
+       :elementin-id (str (or (:pot2p_id rivi) (:id rivi) (- (count (vals @kohdeosat-atom)))))
+       :valinta-nayta (fn [materiaalirivi]
+                        [:div
+                         [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
+                                                                   :materiaali (pot2-tiedot/rivi->massa-tai-murske materiaalirivi {:massat massat})
+                                                                   :fmt :komponentti}]])
+       :validoi [[:ei-tyhja "Anna arvo"]]}
+      (r/wrap (:materiaali rivi)
+              #(do
+                 (e! (pot2-tiedot/->Pot2Muokattu))
+                 (println "swap päivitä tässä riviä " (pr-str rivi))
+                 (println "swap päivitä tässä valittu materiaali atomiin " (pr-str %))
+                 (let [uusi-rivi (assoc rivi  :materiaali %)]
+                   (println "uusi rivi " uusi-rivi))))]]))
+
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot] :as app}
@@ -80,10 +115,10 @@
                                            {:ikoni (ikonit/livicon-arrow-down)
                                             :luokka "btn-xs"}]])])
     :rivi-klikattu #(log "click")}
-   [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys
+   [#_{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys
      :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
      :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
-    {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+    #_#_#_#_#_#_{:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
      :leveys gridin-perusleveys :nimi :tr-numero :validoi (:tr-numero validointi)}
     {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys gridin-perusleveys
      :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
@@ -109,16 +144,9 @@
      :hae #(paallystys/rivin-kohteen-pituus
              (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
     {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tasaa :oikea
-     :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
-     :valinta-nayta (fn [rivi]
-                      [:div
-                       [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
-                                                                 :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                 :fmt :komponentti}]
-                       ;; TODO nätti ratkaisu miten avataan massa overlayihin, kenties ujutetaan kenttätasolle
-                       [:div.inline-block {:on-click #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))}
-                        (ikonit/livicon-external)]])
-     :validoi [[:ei-tyhja "Anna arvo"]]}
+     :tyyppi :komponentti
+     :komponentti (fn [rivi]
+                    [materiaalin-valinta-linkilla e! rivi kohdeosat-atom massat materiaalikoodistot])}
     {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
      :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
     {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea

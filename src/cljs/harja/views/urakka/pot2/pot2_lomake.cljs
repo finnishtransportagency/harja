@@ -199,7 +199,7 @@
                                                                     :materiaalikoodistot materiaalikoodistot
                                                                     :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
-           [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
+           #_[alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)}
             pot2-tiedot/alustarivit-atom]
