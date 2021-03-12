@@ -261,7 +261,9 @@
      (if (= n-kierros n)
        (throw (Exception. "Queryn yrittäminen epäonnistui"))
        (let [tulos (try+
-                    (println "yrita-querya: yritys" n-kierros)
+                      (when (pos? n-kierros)
+                        (println "yrita-querya: yritys" n-kierros))
+                    
                       (if param?
                         (f n-kierros)
                         (f))
