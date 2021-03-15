@@ -36,28 +36,23 @@
     (yllapitokohteet-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
 
 (defn- alustalomakkeen-lisakentat
-  [{:keys [toimenpide
-           massat
-           massatyypit
-           murskeet
-           mursketyypit
-           koodistot] :as alusta}]
-  (let [mukautetut-lisakentat {:murske {:nimi :murske
+  [{:keys [toimenpide massat murskeet koodistot] :as alusta}]
+  (let [{massatyypit :massatyypit
+         mursketyypit :mursketyypit} koodistot
+        mukautetut-lisakentat {:murske {:nimi :murske
                                         :valinta-nayta (fn [murske]
                                                          (if murske
-                                                           (let [[a b] (pot2-domain/murskeen-rikastettu-nimi
-                                                                         mursketyypit
-                                                                         murske)]
-                                                             (str a b))
+                                                           [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit mursketyypit
+                                                                                                     :materiaali murske
+                                                                                                     :fmt :komponentti}]
                                                            "-"))
                                         :valinnat murskeet}
                                :massa {:nimi :massa
                                        :valinta-nayta (fn [massa]
                                                         (if massa
-                                                          (let [[a b] (pot2-domain/massan-rikastettu-nimi
-                                                                        massatyypit
-                                                                        massa)]
-                                                            (str a b))
+                                                          [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
+                                                                                                    :materiaali massa
+                                                                                                    :fmt :komponentti}]
                                                           "-"))
                                        :valinnat massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
@@ -78,8 +73,7 @@
                                                            :valinnat valinnat-ja-nil})))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
-(defn- alustalomakkeen-kentat [{:keys                  [alusta-toimenpiteet
-                                       toimenpide] :as alusta}]
+(defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet toimenpide] :as alusta}]
   (let [toimenpide-kentta [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :palstoja 3
                             :tyyppi :valinta :valinnat alusta-toimenpiteet :valinta-arvo ::pot2-domain/koodi
                             :pakollinen? true
@@ -141,6 +135,7 @@
          [lomake/lomake
           {:luokka " overlay-oikealla"
            :otsikko "Toimenpiteen tiedot"
+           :tarkkaile-ulkopuolisia-muutoksia? true
            :sulje-fn #(e! (pot2-tiedot/->SuljeAlustalomake))
            :muokkaa! #(e! (pot2-tiedot/->PaivitaAlustalomake %))
            :ei-borderia? true
@@ -148,12 +143,12 @@
                         [:span
                          [napit/nappi "Valmis"
                           #(e! (pot2-tiedot/->TallennaAlustalomake data false))
-                          {:disabled false
+                          {:disabled (not (lomake/validi? data))
                            :luokka "nappi-toissijainen"
                            :ikoni (ikonit/check)}]
                          [napit/nappi "Lisää seuraava"
                           #(e! (pot2-tiedot/->TallennaAlustalomake data true))
-                          {:disabled false
+                          {:disabled (not (lomake/validi? data))
                            :luokka "nappi-toissijainen"
                            :ikoni (ikonit/check)}]
                          [napit/peruuta "Peruuta"

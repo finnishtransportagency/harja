@@ -177,10 +177,13 @@
           alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
           ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
           alusta-params-ilman-ylimaaraisia (apply
-                                         dissoc alusta-params ylimaaraiset-avaimet)
+                                             dissoc alusta-params ylimaaraiset-avaimet)
           uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
-      (swap! alustarivit-atom conj uusi-rivi))
-      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
+      (swap! alustarivit-atom conj uusi-rivi)
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
+                (when jatka? (-> alusta-params
+                                 (assoc :tr-ajorata nil :tr-kaista nil
+                                        :tr-alkuosa nil :tr-alkuetaisyys nil :tr-loppuosa nil :tr-loppuetaisyys nil))))))
 
   SuljeAlustalomake
   (process-event [_ app]
