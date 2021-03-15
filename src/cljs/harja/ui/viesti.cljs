@@ -9,6 +9,7 @@
 (def viestin-nayttoaika-keskipitka 5000)
 (def viestin-nayttoaika-pitka 15000)
 (def viestin-oletusnayttoaika viestin-nayttoaika-lyhyt)
+(def viestin-nayttaika-aareton 0)
 
 ;; Viesti on reagent komponentti, joka näytetään.
 ;; Luokka on jokin bootstrapin alert-* luokista (ilman etuliitettä)
@@ -28,9 +29,12 @@
                                 :warning "alert-warning"
                                 :danger "alert-danger"})
 
-(def +toast-viesti-luokat+ {:onnistunut "toast-viesti-onnistunut"
-                            :neutraali "toast-viesti-neutraali"
-                            :varoitus "toast-viesti-varoitus"})
+(defn +toast-viesti-luokat+ [luokka]
+  (case luokka
+    :neutraali "toast-viesti-neutraali"
+    :neutraali-ikoni "toast-viesti-neutraali"
+    :varoitus "toast-viesti-varoitus"
+    "toast-viesti-onnistunut"))
 
 
 (defn viesti-container
@@ -55,15 +59,22 @@
 (defn toast-viesti-container
   "Tämä komponentti sisältää flash viestin ja laitetaan päätason sivuun"
   []
-  (let [{:keys [viesti luokka nakyvissa? kesto]} @toast-viesti-sisalto]
+  (let [{:keys [viesti luokka nakyvissa? kesto]} @toast-viesti-sisalto
+        ikoni (case luokka
+                :onnistunut (harja.ui.ikonit/livicon-check)
+                :varoitus (harja.ui.ikonit/livicon-warning-sign)
+                :neutraali-ikoni (harja.ui.ikonit/livicon-info-sign)
+                nil)]
     (if nakyvissa?
-      (do #_(go (<! (timeout kesto))
-                (swap! toast-viesti-sisalto assoc :nakyvissa? false))
-        ^{:key "viesti"}
-        [:div.toast-viesti-container
-         [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
-                :class (when luokka (+toast-viesti-luokat+ luokka))}
-          viesti]])
+      (do (when (not= kesto viestin-nayttaika-aareton) (go (<! (timeout kesto))
+                                                           (swap! toast-viesti-sisalto assoc :nakyvissa? false)))
+          ^{:key "viesti"}
+          [:div.toast-viesti-container
+           [:div {:on-click #(swap! toast-viesti-sisalto assoc :nakyvissa? false)
+                  :class (when luokka (+toast-viesti-luokat+ luokka))}
+            (if ikoni
+              [harja.ui.ikonit/ikoni-ja-teksti ikoni viesti]
+              viesti)]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 

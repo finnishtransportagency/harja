@@ -38,10 +38,20 @@
 (defrecord TallennaPaikkauskohdeOnnistui [vastaus])
 (defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
 (defrecord TilaaPaikkauskohde [paikkauskohde])
+(defrecord TilaaPaikkauskohdeOnnistui [id])
+(defrecord TilaaPaikkauskohdeEpaonnistui [])
 (defrecord HylkaaPaikkauskohde [paikkauskohde])
+(defrecord HylkaaPaikkauskohdeOnnistui [paikkauskohde])
+(defrecord HylkaaPaikkauskohdeEpaonnistui [paikkauskohde])
 (defrecord PoistaPaikkauskohde [paikkauskohde])
+(defrecord PoistaPaikkauskohdeOnnistui [paikkauskohde])
+(defrecord PoistaPaikkauskohdeEpaonnistui [paikkauskohde])
 (defrecord PeruPaikkauskohteenTilaus [paikkauskohde])
+(defrecord PeruPaikkauskohteenTilausOnnistui [])
+(defrecord PeruPaikkauskohteenTilausEpaonnistui [])
 (defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
+(defrecord PeruPaikkauskohteenHylkaysOnnistui [])
+(defrecord PeruPaikkauskohteenHylkaysEpaonnistui [paikkauskohde])
 (defrecord UploadAttachment [input-html-element])
 
 
@@ -64,11 +74,11 @@
                         :epaonnistui ->HaePaikkauskohteetEpaonnistui
                         :paasta-virhe-lapi? true})))
 
-(defn- tallenna-paikkauskohde [paikkauskohde]
+(defn- tallenna-paikkauskohde [paikkauskohde onnistui epaonnistui]
   (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
                      paikkauskohde
-                     {:onnistui ->TallennaPaikkauskohdeOnnistui
-                      :epaonnistui ->TallennaPaikkauskohdeEpaonnistui
+                     {:onnistui onnistui
+                      :epaonnistui epaonnistui
                       :paasta-virhe-lapi? true}))
 
 (defn validoinnit
@@ -93,6 +103,9 @@
            }))
   ([avain]
    (validoinnit avain {})))
+
+(defn paikkauskohde-id->nimi [app id]
+  (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
 
 (defn lomakkeen-validoinnit [lomake]
   [[:nimi] (validoinnit :nimi lomake)
@@ -236,51 +249,92 @@
                             (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
         (js/console.log "Tallennetaan paikkauskohde" (pr-str paikkauskohde))
-        (tallenna-paikkauskohde paikkauskohde)
-        app)))
-
-  TilaaPaikkauskohde
-  (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "tilattu")]
-      (do
-        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatuksi")
-        (tallenna-paikkauskohde paikkauskohde)
-        app)))
-
-  HylkaaPaikkauskohde
-  (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "hylatty")]
-      (do
-        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätyksi")
-        (tallenna-paikkauskohde paikkauskohde)
-        app)))
-
-  PoistaPaikkauskohde
-  (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (assoc paikkauskohde :poistettu true)]
-      (do
-        (js/console.log "Merkitään paikkauskohde " (:nimi paikkauskohde) "poistetuksi")
-        (tallenna-paikkauskohde paikkauskohde)
+        (tallenna-paikkauskohde paikkauskohde ->TallennaPaikkauskohdeOnnistui ->TallennaPaikkauskohdeEpaonnistui)
         app)))
 
   TallennaPaikkauskohdeOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (let [_ (js/console.log "Paikkauskohteen tallennus onnistui" (pr-str vastaus))
-          _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
           _ (modal/piilota!)]
-      (viesti/nayta-toast! "Paikkauskohteen tallennus onnistui."
-                     :success viesti/viestin-nayttoaika-pitka)
+      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app id) " lisätty")
+                           :success viesti/viestin-nayttoaika-pitka)
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str vastaus))
-      (viesti/nayta! "Paikkauskohteen tallennus epäonnistui" viesti/viestin-nayttoaika-keskipitka :danger)
-      ;;TODO: tämä antaa warningin
-      ;(harja.ui.yleiset/virheviesti-sailio "Paikkauskohteen tallennus epäonnistui")
-      #_(dissoc app :lomake)
+      (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttaika-aareton)
       app))
+
+  TilaaPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "tilattu")]
+      (do
+        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatuksi")
+        (tallenna-paikkauskohde paikkauskohde ->TilaaPaikkauskohdeOnnistui ->TilaaPaikkauskohdeEpaonnistui)
+        app)))
+
+  TilaaPaikkauskohdeOnnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id id)) " tilattu"))
+      (dissoc app :lomake)))
+
+  TilaaPaikkauskohdeEpaonnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " tilaamisessa tapahtui virhe!")
+                           :varoitus viesti/viestin-nayttaika-aareton)
+      (dissoc app :lomake)))
+
+  HylkaaPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "hylatty")]
+      (do
+        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätyksi")
+        (tallenna-paikkauskohde paikkauskohde ->HylkaaPaikkauskohdeOnnistui ->HylkaaPaikkauskohdeEpaonnistui)
+        app)))
+
+  HylkaaPaikkauskohdeOnnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id id)) " hylätty"))
+      (dissoc app :lomake)))
+
+  HylkaaPaikkauskohdeEpaonnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäämisessä tapahtui virhe!")
+                           :varoitus viesti/viestin-nayttaika-aareton)
+      (dissoc app :lomake)))
+
+  PoistaPaikkauskohde
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (let [paikkauskohde (assoc paikkauskohde :poistettu true)]
+      (do
+        (js/console.log "Merkitään paikkauskohde " (:nimi paikkauskohde) "poistetuksi")
+        (tallenna-paikkauskohde paikkauskohde ->PoistaPaikkauskohdeOnnistui ->PoistaPaikkauskohdeEpaonnistui)
+        app)))
+
+  PoistaPaikkauskohdeOnnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id id)) " poistettu"))
+      (dissoc app :lomake)))
+
+  PoistaPaikkauskohdeEpaonnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " poistamisessa tapahtui virhe!")
+                           :varoitus viesti/viestin-nayttaika-aareton)
+      (dissoc app :lomake)))
 
   ;; TODO: Mieti siistimisen yhteydessä, yhdistetäänkö nämä kaksi yhdeksi. Ainoa ero on logitus tällä hetkellä
   PeruPaikkauskohteenTilaus
@@ -288,16 +342,47 @@
     (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
       (do
         (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatusta ehdotetuksi")
-        (tallenna-paikkauskohde paikkauskohde)
+        (tallenna-paikkauskohde paikkauskohde ->PeruPaikkauskohteenTilausOnnistui ->PeruPaikkauskohteenTilausEpaonnistui)
         app)))
+
+  PeruPaikkauskohteenTilausOnnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " tilaus peruttu"))
+      (dissoc app :lomake)))
+
+  PeruPaikkauskohteenTilausEpaonnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " tilauksen perumisessa tapahtui virhe!")
+                           :varoitus viesti/viestin-nayttaika-aareton)
+      (dissoc app :lomake)))
 
   PeruPaikkauskohteenHylkays
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
       (do
         (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] hylätystä ehdotetuksi")
-        (tallenna-paikkauskohde paikkauskohde)
+        (tallenna-paikkauskohde paikkauskohde ->PeruPaikkauskohteenHylkaysOnnistui ->PeruPaikkauskohteenHylkaysEpaonnistui)
         app)))
+
+  PeruPaikkauskohteenHylkaysOnnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäys peruttu"))
+      (dissoc app :lomake)))
+
+  PeruPaikkauskohteenHylkaysEpaonnistui
+  (process-event [{id :id} app]
+    (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          _ (modal/piilota!)]
+      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäyksen perumisessa tapahtui virhe!")
+                           :varoitus viesti/viestin-nayttaika-aareton)
+      (dissoc app :lomake)))
+
   )
 
 (def tyomenetelmat
