@@ -126,13 +126,14 @@
                   ["667"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :massamenekki)
-                  ["PETAR BLA BLA"]))
+                  ["PETAR masamenekki"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali :kaista)
-                  "kaka"))
-
+                  "petar kaista"))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
-                  "koko"))
-
+                  "petar uusi-paallyste"))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :kiviainesesiintyman-nimi)
+                  "petar materiaali-kiviainesesiintyman-nimi"))
 
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
