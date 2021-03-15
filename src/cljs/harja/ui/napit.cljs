@@ -327,8 +327,11 @@
 (defn sulje-ruksi
   [sulje!]
   [:button.close {:on-click sulje!
-                  :type     "button"}
-   [ikonit/remove]])
+                  :style {:color "black"
+                          :margin "15px"
+                          :opacity 1}
+                  :type "button"}
+   [ikonit/close-svg]])
 
 (defn poista
   ([teksti toiminto] (poista teksti toiminto {}))

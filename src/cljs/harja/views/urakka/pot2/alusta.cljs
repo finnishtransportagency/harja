@@ -125,33 +125,47 @@
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
-  [lomake/lomake
-   {:luokka " overlay-oikealla"
-    :otsikko "Toimenpiteen tiedot"
-    :muokkaa! #(e! (pot2-tiedot/->PaivitaAlustalomake %))
-    :ei-borderia? true
-    :footer-fn (fn [data]
-                 [:span
-                  [napit/nappi "Valmis"
-                   #(e! (pot2-tiedot/->TallennaAlustalomake data false))
-                   {:disabled false
-                    :luokka "nappi-toissijainen"
-                    :ikoni (ikonit/check)}] ;; todo: validointi oltava kunnossa
-                  [napit/nappi "Lisää seuraava"
-                   #(e! (pot2-tiedot/->TallennaAlustalomake data true))
-                   {:disabled false
-                    :luokka "nappi-toissijainen"
-                    :ikoni (ikonit/check)}]
-                  [napit/peruuta "Peruuta"
-                   #(e! (pot2-tiedot/->SuljeAlustalomake))
-                   {:disabled false}]])}
-   (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
-                            :toimenpide (:toimenpide alustalomake)
-                            :murske (:murske alustalomake)
-                            :massat massat
-                            :murskeet murskeet
-                            :koodistot materiaalikoodistot})
-   alustalomake])
+  (let [saa-sulkea? (atom false)]
+    (komp/luo
+      (komp/piirretty #(do
+                         (js/setTimeout (fn []
+                                          (reset! saa-sulkea? true))
+                                        ;; jos ei timeria, menee lomake kiinni avausklikissä
+                                        ;; stopPropagation napissa ei jostain syystä toiminut
+                                        100)))
+      (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
+                                     (e! (pot2-tiedot/->SuljeAlustalomake)))
+                                  {:tarkista-komponentti? true})
+      (fn [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
+        [:div.alustalomake {:on-click #(.stopPropagation %)}
+         [lomake/lomake
+          {:luokka " overlay-oikealla"
+           :otsikko "Toimenpiteen tiedot"
+           :sulje-fn #(e! (pot2-tiedot/->SuljeAlustalomake))
+           :muokkaa! #(e! (pot2-tiedot/->PaivitaAlustalomake %))
+           :ei-borderia? true
+           :footer-fn (fn [data]
+                        [:span
+                         [napit/nappi "Valmis"
+                          #(e! (pot2-tiedot/->TallennaAlustalomake data false))
+                          {:disabled false
+                           :luokka "nappi-toissijainen"
+                           :ikoni (ikonit/check)}]
+                         [napit/nappi "Lisää seuraava"
+                          #(e! (pot2-tiedot/->TallennaAlustalomake data true))
+                          {:disabled false
+                           :luokka "nappi-toissijainen"
+                           :ikoni (ikonit/check)}]
+                         [napit/peruuta "Peruuta"
+                          #(e! (pot2-tiedot/->SuljeAlustalomake))
+                          {:disabled false}]])}
+          (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
+                                   :toimenpide (:toimenpide alustalomake)
+                                   :murske (:murske alustalomake)
+                                   :massat massat
+                                   :murskeet murskeet
+                                   :koodistot materiaalikoodistot})
+          alustalomake]]))))
 
 (def gridin-perusleveys 2)
 

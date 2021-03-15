@@ -511,6 +511,10 @@
 (defn oi-trash []
   [:img {:src "open-iconic/svg/trash.svg" :alt "trash"}])
 
+;; Uudet Väyläikonit
+(defn close-svg []
+  [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
+
 ;; Livin ikonit
 
 (defn livicon-ban []
