@@ -124,17 +124,16 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelymenetelma)
                   ["667"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :massamenekki)
-                  ["PETAR masamenekki"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
+                  ["333"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali :kaista)
-                  "petar kaista"))
+                  ["11"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
-                  "petar uusi-paallyste"))
+                  ["1"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :kiviainesesiintyman-nimi)
-                  "petar materiaali-kiviainesesiintyman-nimi"))
-
+                                                  {:tagi :materiaali :positio 0} :sideainetyyppi)
+                  ["12"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1066"]))

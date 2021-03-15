@@ -159,16 +159,29 @@ SELECT
     pot2p.id as "pot2p_id",
     pot2p.kohdeosa_id as "kohdeosa-id",
     pot2p.toimenpide,
-    pot2p.materiaali,
+    pot2p.materiaali as "paallystetyyppi",
     pot2p.leveys,
     pot2p.massamenekki,
     pot2p.pinta_ala,
     pot2p.kokonaismassamaara,
     pot2p.piennar,
     pot2p.lisatieto,
-    pot2p.jarjestysnro
+    pot2p.jarjestysnro,
+    um.nimen_tarkenne as "nimen-tarkenne",
+    um.tyyppi as "sideainetyyppi",
+    ypko.tr_ajorata as "tr-ajorata",
+    ypko.tr_kaista as "tr-kaista",
+    NULL as "karttapaivamaara",
+    ypko.tr_numero as "tr-numero",
+    ypko.tr_alkuosa as "tr-akluosa",
+    ypko.tr_alkuetaisyys as "tr-alkuetaisyys",
+    ypko.tr_loppuosa as "tr-loppuosa",
+    ypko.tr_loppuetaisyys as "tr-loppuetaisyys"
 FROM pot2_paallystekerros pot2p
-WHERE pot2_id = :pot2_id;
+    LEFT JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+    LEFT JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id
+WHERE pot2p.pot2_id = :pot2_id;
+
 
 -- name: hae-pot2-alustarivit
 SELECT
