@@ -94,7 +94,6 @@
                                 (if (s/valid? ::suunniteltu-hinta (:suunniteltu-hinta kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
-                                ;; Pois käytöstä kunnes excel-pohja korjataan.
                                 (if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
                                     virheet
                                     (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
@@ -294,10 +293,11 @@
                           (tallenna-paikkauskohde! db kayttaja p)
 
                           (catch [:type "Validaatiovirhe"] e
+                            ;; TODO: Tarkista, että validaatiovirheiden ja olemassa olevien virheiden formaatti on sama
                             {:error (get-in e [:virheet :viesti])
                              :paikkauskohde p}))
-                        {:error {:message "Urakalta löytyy jo kohde samalla nimellä"
-                                 :paikkauskohde p}})))
+                        {:error {:message "Urakalta löytyy jo kohde samalla nimellä"}
+                         :pikkauskohde p})))
                   paikkauskohteet)
         tallennetut (filter #(nil? (:error %)) kohteet)
         virheet (filter #(some? (:error %)) kohteet)
