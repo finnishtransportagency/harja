@@ -87,7 +87,8 @@
                               [tagi 0]
                               [(:tagi tagi) (:positio tagi)])
         elementit (filter #(= tagi-nimi (:tag %)) luettu-xml)]
-    (nth elementit positio)))
+    (when (seq elementit)
+      (nth elementit positio))))
 
 (defn luetun-tagin-sisalto
   "Ottaa Clojure-muotoon muunnetun XML-tagin ja palauttaa sen sisällön"
