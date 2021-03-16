@@ -213,6 +213,7 @@
                               :B "Ryhmä B"
                               :C "Ryhmä C"
                               :muistutus "Muistutus"
+                              :lupaussanktio "Lupaussanktio"
                               :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                               :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
                               :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
@@ -255,7 +256,7 @@
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
             :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
-            :valinnat ["MAKU 2015" "MAKU 2010" "MAKU 2005"]
+            :valinnat sanktio-domain/hoidon-indeksivalinnat
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1})
 

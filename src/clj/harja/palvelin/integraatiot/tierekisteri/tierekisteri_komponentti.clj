@@ -42,7 +42,7 @@
   (laheta-varustetoteuma [this varusteoteuma-id]))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
-                           "tl522" "tl513" "tl519" "tl520" "tl505"
+                           "tl522" "tl513" "tl520" "tl505"
                            "tl504" "tl518" "tl514" "tl509"
                            "tl515" "tl503" "tl510" "tl512" "tl516"
                            "tl511" "tl524"})

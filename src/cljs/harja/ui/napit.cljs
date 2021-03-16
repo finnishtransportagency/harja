@@ -223,8 +223,7 @@
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-positive-text"
                                             vayla-tyyli? "button-positive-default"
-                                            :else "nappi-myonteinen") " " luokka)
-                             :ikoni  (ikonit/check)})]))
+                                            :else "nappi-ensisijainen") " " luokka)})]))
 
 (defn peruuta
   ([toiminto] (peruuta "Peruuta" toiminto {}))
@@ -236,8 +235,7 @@
                                             (and vayla-tyyli?
                                                  teksti-nappi?) "button-negative-text"
                                             vayla-tyyli? "button-negative-default"
-                                            :else "nappi-kielteinen") " " luokka)
-                             :ikoni  (ikonit/livicon-ban)})]))
+                                            :else "nappi-toissijainen") " " luokka)})]))
 
 (defn yleinen
   ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))

@@ -37,6 +37,7 @@
 (defrecord SuljeAlustalomake [])
 (defrecord NaytaMateriaalilomake [rivi])
 (defrecord SuljeMateriaalilomake [])
+(defrecord Pot2Muokattu [])
 
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
@@ -78,7 +79,8 @@
     (first (filter #(when (= (::pot2-domain/murske-id %) (:murske rivi))
                       %)
                    murskeet))
-    (first (filter #(when (= (::pot2-domain/massa-id %) (::pot2-domain/massa-id rivi))
+    (first (filter #(when (= (::pot2-domain/massa-id %) (or (::pot2-domain/massa-id rivi)
+                                                            (:massa rivi)))
                       %)
                    massat))))
 
@@ -202,7 +204,10 @@
 
   SuljeMateriaalilomake
   (process-event [_ app]
-    (println "SuljeMateriaalilomake ")
     (-> app
         (assoc :pot2-massa-lomake nil
-               :pot2-murske-lomake nil))))
+               :pot2-murske-lomake nil)))
+
+  Pot2Muokattu
+  (process-event [_ app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true)))
