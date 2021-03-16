@@ -179,8 +179,9 @@
      [grid/muokkaus-grid
       {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true
        :voi-kumota? false :voi-lisata? false
+       :rivi-klikattu #(e! (pot2-tiedot/->AvaaAlustalomake %))
        :custom-toiminto {:teksti "Lisää toimenpide"
-                         :toiminto #(e! (pot2-tiedot/->LisaaAlustaToimenpide))
+                         :toiminto #(e! (pot2-tiedot/->AvaaAlustalomake {}))
                          :opts {:ikoni (ikonit/livicon-plus)
                                 :luokka "nappi-toissijainen"}}
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
@@ -198,8 +199,7 @@
                                                [napit/yleinen-ensisijainen "Lisää osa"
                                                 #(reset! alustarivit-atom (yllapitokohteet/lisaa-uusi-kohdeosa @alustarivit-atom 1 (get-in app [:perustiedot :tr-osoite])))
                                                 {:ikoni (ikonit/livicon-arrow-down)
-                                                 :luokka "btn-xs"}]])])
-       :rivi-klikattu #(log "click")}
+                                                 :luokka "btn-xs"}]])])}
       [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys 3 :muokattava? (constantly false)
         :tyyppi :string
         :hae (fn [rivi]
