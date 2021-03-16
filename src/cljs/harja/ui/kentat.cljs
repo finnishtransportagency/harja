@@ -663,7 +663,7 @@
                 :pakollinen?           pakollinen?
                 :vayla-tyyli?          vayla-tyyli?
                 :elementin-id elementin-id}]
-      (if-not (and linkki-fn linkki-icon)
+      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
         [livi-pudotusvalikko opts
          valinnat]
         [:div.valinta-ja-linkki-container
