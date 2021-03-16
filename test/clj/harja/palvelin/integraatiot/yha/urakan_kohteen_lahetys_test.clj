@@ -124,6 +124,9 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelymenetelma)
                   ["667"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
+                  ["4"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
                   ["333"]))
