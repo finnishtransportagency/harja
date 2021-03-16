@@ -13,6 +13,26 @@
             [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn virhe-modal [virhe otsikko]
+  (modal/nayta!
+    {:otsikko otsikko
+     :otsikko-tyyli :virhe}
+    (when virhe
+      (doall
+        (for [rivi virhe]
+          ^{:key (hash rivi)}
+          [:div
+           [:b (get rivi "paikkauskohde")]
+           (if (vector? (get rivi "virhe"))
+             (doall
+               (for [v (get rivi "virhe")]
+                 ^{:key (str (hash v) (hash rivi))}
+                 [:p (str v)]
+                 ))
+             [:p (str (get rivi "virhe"))])
+           ]))
+      )))
+
 (defn- fmt-aikataulu [alkupvm loppupvm tila]
   (str
     (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkupvm)
@@ -29,7 +49,7 @@
 (defrecord FiltteriValitseTila [uusi-tila])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma])
-(defrecord LiiteLisatty [liite])
+(defrecord TiedostoLadattu [vastaus])
 (defrecord HaePaikkauskohteet [])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
@@ -125,10 +145,10 @@
 (extend-protocol tuck/Event
 
   UploadAttachment
-  (process-event  [{input-html-element :input-html-element} app]
+  (process-event [{input-html-element :input-html-element} app]
     (let [urakka-id (-> @tila/yleiset :urakka :id)
           ;; TODO: siirrä tämä jotenki pois letistä ehkä.
-          _ (k/laheta-excel! "lue-paikkauskohteet-excelista" input-html-element urakka-id)]
+          #_(k/laheta-tiedosto! "lue-paikkauskohteet-excelista" input-html-element urakka-id)]
 
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app)
                            (:valittu-vuosi app) (:valittu-tyomenetelma app))
@@ -162,15 +182,26 @@
     (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) uusi-menetelma)
     (assoc app :valittu-tyomenetelma uusi-menetelma))
 
-  LiiteLisatty
-  (process-event [{{:keys [kuvaus nimi id tyyppi koko]} :liite} app]
-    (update-in app
-               [:lomake :liitteet]
-               conj
-               {:liite-id     id
-                :liite-nimi   nimi
-                :liite-tyyppi tyyppi
-                :liite-koko   koko}))
+  TiedostoLadattu
+  (process-event [{vastaus :vastaus} app]
+    (do
+      ;(js/console.log "TiedostoLadattu :: error?" (pr-str (:status vastaus)) (pr-str (get-in vastaus [:response "virheet"])))
+
+      ;; Excelissä voi mahdollisesti olla virheitä, jos näin on, niin avataan modaali, johon virheet kirjoitetaan
+      ;; Jos taas kaikki sujui kuten Strömssössä, niin näytetään onnistumistoasti
+      (if (not= 200 (:status vastaus))
+        (do
+          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
+                                 :danger viesti/viestin-nayttoaika-lyhyt)
+          (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
+          (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
+        (do
+          ;; Ladataan uudet paikkauskohteet
+          (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app)
+                               (:valittu-vuosi app) (:valittu-tyomenetelma app))
+          (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
+                                 :success viesti/viestin-nayttoaika-lyhyt)
+          (dissoc app :excel-virhe)))))
 
   HaePaikkauskohteet
   (process-event [_ app]
@@ -189,12 +220,12 @@
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
                                vastaus)
-          zoomattavat-geot  (into [] (concat (mapv (fn [p]
-                                                     (when (and
-                                                             (not (nil? (:sijainti p)))
-                                                             (not (empty? (:sijainti p))))
-                                                       (harja.geo/extent (:sijainti p))))
-                                                   paikkauskohteet)))
+          zoomattavat-geot (into [] (concat (mapv (fn [p]
+                                                    (when (and
+                                                            (not (nil? (:sijainti p)))
+                                                            (not (empty? (:sijainti p))))
+                                                      (harja.geo/extent (:sijainti p))))
+                                                  paikkauskohteet)))
           _ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
           ;_ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
           ]
@@ -203,7 +234,6 @@
                    (not (empty? paikkauskohteet))
                    (not (nil? zoomattavat-geot))
                    (not (empty? zoomattavat-geot)))
-          (js/console.log "reset ja keskitys")
           (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
           (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot))
         (-> app
@@ -269,7 +299,7 @@
           _ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
           _ (modal/piilota!)]
       (viesti/nayta-toast! "Paikkauskohteen tallennus onnistui."
-                     :success viesti/viestin-nayttoaika-pitka)
+                           :success viesti/viestin-nayttoaika-pitka)
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui

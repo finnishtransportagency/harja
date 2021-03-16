@@ -224,55 +224,29 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (.send xhr form-data)
     ch))
 
-(defn laheta-excel!
-  "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
-  Kun liite on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
-  [url input-elementti urakka-id]
-  (let [ch (chan)
-        xhr (doto (js/XMLHttpRequest.)
-              (.open "POST" (str +polku+ "_/" url)))
-        siirto (.-upload xhr)
-        form-data (js/FormData.)
-        tiedostot (.-files input-elementti)]
+(defn- response-handler! [handler]
+  (fn [& args]
+    (when handler
+      (apply handler args))))
+
+(defn- anti-csrf-token-header []
+  {"X-CSRF-Token" (.getAttribute js/document.body "data-anti-csrf-token")})
+
+(defn laheta-tiedosto!
+  "Lähettää tiedoston palvelimelle. Palauttaa kanavan, josta voi lukea edistymisen.
+  Kun tiedosto on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
+  [url input-elementti urakka-id onnistui-fn epaonnistui-fn]
+  (let [form-data (js/FormData.)
+        files (.-files input-elementti)]
+    (.append form-data "file" (aget files 0))
     (.append form-data "urakka-id" urakka-id)
-    (.append form-data "file" (aget tiedostot 0))
-
-    (set! (.-onload xhr)
-          (fn [event]
-            (let [request (.-target event)]
-              (case (.-status request)
-                200 (let [transit-json (.-responseText request)
-                          transit (transit/lue-transit transit-json)]
-                      (put! ch transit))
-                413 (do
-                      (log "Tiedoston epäonnistui: " (pr-str (.-responseText request)))
-                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
-                500 (let [txt (.-responseText request)]
-                      (log "Tiedoston epäonnistui: " txt)
-                      (put! ch {:error :liitteen-lahetys-epaonnistui
-                                :viesti (if (= txt "Virus havaittu")
-                                          txt
-                                          "tiedostotyyppi ei ole sallittu")}))
-                0 (kasittele-yhteyskatkos :tallenna-liite (.-responseText request))
-                (do
-                  (log "Tiedoston epäonnistui: " (pr-str (.-responseText request)))
-                  (put! ch {:error :liitteen-lahetys-epaonnistui})))
-              (close! ch))))
-
-    (set! (.-onerror xhr)
-          (fn [event]
-            (let [request (.-target event)]
-              (let [txt (.-responseText request)]
-                (log "Tiedoston epäonnistui: " txt)
-                (put! ch {:error :liitteen-lahetys-epaonnistui})))))
-
-    (set! (.-onprogress siirto)
-          (fn [e]
-            (when (.-lengthComputable e)
-              (put! ch (* 100 (/ (.-loaded e) (.-total e)))))))
-
-    (.send xhr form-data)
-    ch))
+    (POST (str +polku+ "_/" url)
+          {:headers (anti-csrf-token-header)
+           :body form-data
+           :handler (response-handler! onnistui-fn)
+           :error-handler (response-handler! epaonnistui-fn)
+           :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                      :raw true})})))
 
 (defn liite-url [liite-id]
   (str (polku) "lataa-liite?id=" liite-id))

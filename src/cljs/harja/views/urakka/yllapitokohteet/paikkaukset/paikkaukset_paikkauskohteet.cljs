@@ -15,6 +15,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
+            [harja.ui.liitteet :as liitteet]
             [harja.ui.debug :as debug]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
@@ -176,10 +177,13 @@
        [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Kohde Asdasads on luotu")]
        [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
        [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-       [napit/uusi "Tuo kohteet excelistä" #(js/console.log "Tuodaan Excelistä") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-       ;; TODO: Voisko olla enää kamalampi? Mut tällä oli nopee testata
-       [:div [:input {:name "file" :type "file" :size "20" :on-change #(e! (t-paikkauskohteet/->UploadAttachment (.-target %)))}]]
-
+       [liitteet/lataa-tiedosto
+        (-> @tila/tila :yleiset :urakka :id)
+        {:nappi-teksti "Tuo kohteet excelistä"
+         :nappi-luokka "napiton-nappi"
+         :url "lue-paikkauskohteet-excelista"
+         :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
+         :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
        [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
    [:div.row [paikkauskohteet-taulukko e! app]]]
   )
@@ -191,7 +195,7 @@
         valittu-tyomenetelma (:valittu-tyomenetelma app)]
     [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
      [:div.row
-      #_ [:div.col-xs-2 "vastuuykiskkö"]
+      #_[:div.col-xs-2 "vastuuykiskkö"]
       [:div.col-xs-2
 
        [:span.alasvedon-otsikko "Tila"]
@@ -222,11 +226,23 @@
          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
          :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma %))}
         t-paikkauskohteet/tyomenetelmat]]
-      #_ [:div.col-xs-2 "hae"]
+      #_[:div.col-xs-2 "hae"]
       ]]))
+
+(defn- excel-virheet [e! app]
+  (if (nil? (:excel-virhe app))
+    [:div " Ei oo tarvetta näyttää excelvirheitä"]
+    #_ [:div (str (:excel-virhe app))]
+     (modal/nayta!
+      {:otsikko "Excelistä tulleet paikkauskohteet"
+       :footer [napit/sulje #(modal/piilota!)]}
+      [:div "Näytäppä kaikki virheet excelistä "])
+
+    #_[:div "Näytäppä kaikki virheet excelissä " (str (:excel-virhe app))]))
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
+   #_ [excel-virheet e! app]
    [filtterit e! app]
    [kartta/kartan-paikka]
    [debug/debug app]

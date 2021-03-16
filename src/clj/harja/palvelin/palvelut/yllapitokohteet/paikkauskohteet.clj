@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet
   (:require [com.stuartsierra.component :as component]
+            [cheshire.core :as cheshire]
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure.spec.alpha :as s]
             [dk.ative.docjure.spreadsheet :as xls]
@@ -95,8 +96,8 @@
                                   virheet
                                   (conj virheet "Paikkauskohteen suunnitellussa hinnassa virhe"))
                                 (if (s/valid? ::suunniteltu-maara (:suunniteltu-maara kohde))
-                                    virheet
-                                    (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
+                                  virheet
+                                  (conj virheet "Paikkauskohteen suunnitellussa määrässä virhe"))
                                 (if (s/valid? ::yksikko (:yksikko kohde))
                                   virheet
                                   (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
@@ -159,7 +160,7 @@
                                                                  :loppupvm loppupvm
                                                                  :tyomenetelmat menetelmat}))
         urakan-paikkauskohteet (siivoa-paikkauskohteet urakan-paikkauskohteet)
-        _ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
+        ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
         urakan-paikkauskohteet (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id tiedot) user)
@@ -266,15 +267,9 @@
       ;; Palautetaan poistettu paikkauskohde
       (assoc poistettava :poistettu true))))
 
-(defn vastaanota-excel [db req]
-  (let [_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
-        ;; TODO: Tarkista oikeudet
-        urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
-        kayttaja (:kayttaja req)
-
-        workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+(defn- kasittele-excel [db urakka-id kayttaja req]
+  (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         paikkauskohteet (p-exel/erottele-paikkauskohteet workbook)
-
         _ (println "Excelin data" (pr-str paikkauskohteet))
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
         kohteet (keep
@@ -294,27 +289,49 @@
 
                           (catch [:type "Validaatiovirhe"] e
                             ;; TODO: Tarkista, että validaatiovirheiden ja olemassa olevien virheiden formaatti on sama
-                            {:error (get-in e [:virheet :viesti])
-                             :paikkauskohde p}))
-                        {:error {:message "Urakalta löytyy jo kohde samalla nimellä"}
-                         :pikkauskohde p})))
+                            {:virhe (get-in e [:virheet :viesti])
+                             :paikkauskohde (:nimi p)}))
+                        {:virhe "Urakalta löytyy jo kohde samalla nimellä"
+                         :paikkauskohde (:nimi p)})))
                   paikkauskohteet)
-        tallennetut (filter #(nil? (:error %)) kohteet)
-        virheet (filter #(some? (:error %)) kohteet)
+        tallennetut (filterv #(nil? (:virhe %)) kohteet)
+        virheet (filterv #(some? (:virhe %)) kohteet)
         _ (println "kohteet" (pr-str kohteet))
         _ (println "tallennetut" tallennetut)
-        _ (println "virheet" virheet)]
-
+        _ (println "virheet" virheet)
+        body (cheshire/encode (if (> (count tallennetut) 0)
+                                (merge {:message "OK"}
+                                       (when (> (count virheet) 10000)
+                                         {:virheet virheet}))
+                                #_ {:message "ERROR" :virheet virheet}
+                                {:virheet virheet}))
+        _ (println "Body " (pr-str body))]
     ;; Vielä ei selvää, halutaanko tallentaa mitään, jos seassa virheellisiä.
     ;; Oletetaan toistaiseksi, että halutaan tallentaa ne, joissa ei ole virheitä
     ;; ja palautetaan tieto myös virheellistä kohteista.
     (if (> (count tallennetut) 0)
       {:status 200
-       :body (merge {:message "OK"}
-                    (when (> (count virheet) 0)
-                      {:virheet virheet}))}
-      {:status 500
-       :body {:message "ERROR" :virheet virheet}})))
+       :headers {"Content-Type" "application/json; charset=UTF-8"}
+       :body body}
+      {:status 400
+       :headers {"Content-Type" "application/json; charset=UTF-8"}
+       :body body}))
+  )
+
+(defn vastaanota-excel [db req]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
+                                  (:kayttaja req)
+                                  (Integer/parseInt (get (:params req) "urakka-id")))
+  (let [_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
+        ;; TODO: Tarkista oikeudet
+        urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
+        kayttaja (:kayttaja req)]
+    ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
+    (if (and (not (nil? urakka-id))
+             (not (nil? kayttaja)))
+      (kasittele-excel db urakka-id kayttaja req)
+      (throw+ {:type "Error"
+               :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 (defrecord Paikkauskohteet []
   component/Lifecycle
