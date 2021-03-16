@@ -52,7 +52,7 @@
    ["Muu päällysteiden paikkaustyö" ""]])
 
 (def paikkauskohteet-otsikot
-  ["Nro" "Kohde" "Tienro" "Ajr" "Aosa"
+  ["Nro." "Kohde" "Tienro" "Ajr" "Aosa"
    "Aet" "Losa" "Let" "Pituus" "Arvioitu aloitus pvm"
    "Arvioitu lopetus pvm" "Työmenetelmä" "Määrä"
    "Yksikkö" "Kustannusarvio" "Lisätiedot"])
@@ -67,11 +67,15 @@
                                 lahtotiedot-sisalto
                                 )
         ps (xls/select-sheet "Paikkaukset" wb)
-        _ (.addMergedRegion ps (new CellRangeAddress 0, 1, 0, 10))
-        _ (doall (map #(.autoSizeColumn ps %) (range 16)))
         _ (do
+            (doall (map #(.autoSizeColumn ps %) (range 16)))
             (xls/set-cell-style! (xls/select-cell "A1" ps)
-                                 (xls/create-cell-style! wb {:font {:size 14}
-                                                             :valign :center})))
+                                 (xls/create-cell-style! wb {:font {:size 14 :name "Arial" :bold true}
+                                                             :valign :center}))
+            (xls/set-row-style! (nth (xls/row-seq ps) 3) (xls/create-cell-style! wb {:font {:name "Arial" :bold true :size 10}
+                                                                                     :border-bottom :thin
+                                                                                     :border-top :thin
+                                                                                     :border-left :thin
+                                                                                     :border-right :thin})))
         file (xls/save-workbook-into-file! tiedostonimi wb)]
     file))

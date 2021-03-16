@@ -222,8 +222,28 @@ tr.uusitehtavakoodi td {
     &:extend(.toast-viesti);
     background: @green-lighter;
     border: 1px solid @green-light;
+    span.livicon-check {
+      color: @green-dark;
+    }
   }
 
+  &-neutraali {
+    &:extend(.toast-viesti);
+    background: @lemon-light;
+    border: 1px solid @lemon-default;
+    span.livicon-check {
+      color: @harmaa2;
+    }
+  }
+
+  &-varoitus {
+    &:extend(.toast-viesti);
+    background: @red-lighter;
+    border: 1px solid @red-light;
+    span.livicon-exclamation-triangle{
+      color: @red-dark;
+    }
+  }
 }
 
 .hoitokauden-kustannukset {
