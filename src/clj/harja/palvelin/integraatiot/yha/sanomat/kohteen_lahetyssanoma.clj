@@ -33,7 +33,6 @@
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
                             lisaaineet poistettu] :as alikohde}]
-  (println "petar alikohde je " (pr-str alikohde))
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
@@ -129,11 +128,10 @@
     [:tunnus yhatunnus]
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
-(defn muodosta [urakka kohteet]                             ; petar ovo pravi veliki xml
+(defn muodosta [urakka kohteet]
   (let [sisalto (muodosta-sanoma urakka kohteet)
-        _ (println "petar medjukorak " (pr-str sisalto))
         xml (xml/tee-xml-sanoma sisalto)]
-    (println "petar evo ga XML " (pr-str xml))
+    (log/debug "Muodostettu XML sanoma: " (pr-str xml))
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)

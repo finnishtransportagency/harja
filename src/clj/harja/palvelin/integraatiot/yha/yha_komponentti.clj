@@ -150,7 +150,7 @@
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (if (= (:versio paallystysilmoitus) 2)
-                    (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})       ; petar citaj iz pot2_paallystys
+                    (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)})
                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)
@@ -259,7 +259,6 @@
                                      :sampoid (yhaan-lahetettava-sampoid urakka))
                 kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
                 url (str url "toteumatiedot")
-                _ (println "petar evo ovo ce da muodosta " (pr-str kohteet))
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
                 otsikot {"Content-Type" "text/xml; charset=utf-8"}
                 http-asetukset {:metodi :POST

@@ -79,7 +79,7 @@
         (is (true? (:lahetys_onnistunut lahetystiedot))) "Lähetys on merkitty onnistuneeksi")
       (tyhjenna-kohteen-lahetystiedot kohde-id))))
 
-(deftest tarkista-yllapitokohteen-lahetys-pot2                   ;; petar ovo je pot2 test
+(deftest tarkista-yllapitokohteen-lahetys-pot2
   (let [kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
         urakka-id (hae-utajarven-paallystysurakan-id)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
@@ -102,9 +102,6 @@
                alikohteet (xml/luetun-xmln-tagien-sisalto kohde :alikohteet)
                tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
 
-
-           (println "petar da vidimo " (pr-str (xml/luetun-xmln-tagien-sisalto kohde :alikohteet :alikohde)))
-
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
@@ -116,8 +113,6 @@
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str vuosi-nyt "-06-24")]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2024-12-31"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["0"]))
-           (println "petar alustatoimeet " (pr-str alustatoimeet))
-
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelymenetelma)
                   ["23"]))
