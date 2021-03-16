@@ -49,7 +49,7 @@
 (defrecord FiltteriValitseTila [uusi-tila])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma])
-(defrecord LiiteLisatty [liite])
+(defrecord TiedostoLadattu [vastaus])
 (defrecord HaePaikkauskohteet [])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
