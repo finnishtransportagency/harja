@@ -36,6 +36,7 @@
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMurskeLomake (ui-lomake/ilman-lomaketietoja %)))
        :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
+       :sulje-fn (when sivulle? #(e! (mk-tiedot/->SuljeMurskeLomake)))
        :otsikko-komp (fn [data]
                        [:div.lomake-otsikko-pieni (cond
                                                     (false? voi-muokata?)
@@ -50,8 +51,8 @@
                     [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
                                                                :validointivirheet []
                                                                :tallenna-fn #(e! (mk-tiedot/->TallennaMurskeLomake data))
-                                                               :voi-tallentaa?      (not (ui-lomake/voi-tallentaa? data))
-                                                               :peruuta-fn #(e! (mk-tiedot/->TyhjennaMurskeLomake data))
+                                                               :voi-tallentaa? (not (ui-lomake/voi-tallentaa? data))
+                                                               :peruuta-fn #(e! (mk-tiedot/->SuljeMurskeLomake))
                                                                :poista-fn #(e! (mk-tiedot/->TallennaMurskeLomake (merge data {::pot2-domain/poistettu? true})))
                                                                :tyyppi :murske
                                                                :id murske-id

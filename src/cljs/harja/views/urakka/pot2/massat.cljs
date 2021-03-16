@@ -254,11 +254,10 @@
         muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
         materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
     [:div.massa-lomake
-     (when sivulle?
-       [:div.pull-right [napit/sulje-ruksi #(e! (pot2-tiedot/->SuljeMateriaalilomake))]])
      [ui-lomake/lomake
       {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
        :luokka (when sivulle? "overlay-oikealla overlay-leveampi") :voi-muokata? voi-muokata?
+       :sulje-fn (when sivulle? #(e! (pot2-tiedot/->SuljeMateriaalilomake)))
        :otsikko-komp (fn [data]
                        [:div.lomake-otsikko-pieni (cond
                                                     (false? voi-muokata?)
@@ -273,8 +272,8 @@
                     [mm-yhteiset/tallennus-ja-puutelistaus e! {:data data
                                                                :validointivirheet muut-validointivirheet
                                                                :tallenna-fn #(e! (mk-tiedot/->TallennaLomake data))
-                                                               :voi-tallentaa?  (or (not (ui-lomake/voi-tallentaa? data))
-                                                                                    (not (empty? muut-validointivirheet)))
+                                                               :voi-tallentaa? (or (not (ui-lomake/voi-tallentaa? data))
+                                                                                   (not (empty? muut-validointivirheet)))
                                                                :peruuta-fn #(e! (mk-tiedot/->TyhjennaLomake data))
                                                                :poista-fn #(e! (mk-tiedot/->TallennaLomake (merge data {::pot2-domain/poistettu? true})))
                                                                :tyyppi :massa

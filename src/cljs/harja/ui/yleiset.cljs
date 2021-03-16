@@ -9,7 +9,6 @@
             [harja.ui.dom :as dom]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
