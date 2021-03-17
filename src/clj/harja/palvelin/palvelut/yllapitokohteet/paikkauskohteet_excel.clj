@@ -1,6 +1,10 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel
   "Luetaan paikkauskohteet excelistä tiedot ulos"
-  (:require [dk.ative.docjure.spreadsheet :as xls])
+  (:require [dk.ative.docjure.spreadsheet :as xls]
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.kyselyt.paikkaus :as q]
+            [harja.kyselyt.urakat :as q-urakat]
+            [harja.pvm :as pvm])
   (:import (org.apache.poi.ss.util CellRangeAddress)))
 
 (defn erottele-paikkauskohteet [workbook]
@@ -11,18 +15,6 @@
                                         :H :let :I :pituus :J :alkupvm :K :loppupvm :L :tyomenetelma
                                         :M :suunniteltu-maara :N :yksikko :O :suunniteltu-hinta :P :lisatiedot}
                                        sivu)
-        ;; TODO: Katsotaan tarviiko tätä, riippuu miten halutaan hoitaa virheiden hallinta
-        ;; Säästetään vain ne rivit, joille on annettu tarpeeksi data
-        ;; Paitsi että ei, jotta voidaan antaa validointivirheet
-        #_#_paikkauskohteet (keep
-                              (fn [rivi]
-                                (when (and (:nimi rivi)
-                                           (:tyomenetelma rivi)
-                                           (:yksikko rivi)
-                                           (:suunniteltu-hinta rivi)
-                                           (number? (:suunniteltu-hinta rivi)))
-                                  rivi))
-                              raaka-data)
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
@@ -53,7 +45,7 @@
 
 (def paikkauskohteet-otsikot
   ["Nro." "Kohde" "Tienro" "Ajr" "Aosa"
-   "Aet" "Losa" "Let" "Pituus" "Arvioitu aloitus pvm"
+   "Aet" "Losa" "Let" "Arvioitu aloitus pvm"
    "Arvioitu lopetus pvm" "Työmenetelmä" "Määrä"
    "Yksikkö" "Kustannusarvio" "Lisätiedot"])
 
@@ -79,3 +71,69 @@
                                                                                      :border-right :thin})))
         file (xls/save-workbook-into-file! tiedostonimi wb)]
     file))
+
+(defn- rivita-kohteet [kohteet]
+  (concat
+    (when (> (count kohteet) 0)
+      (mapcat
+        (fn [rivi]
+          (let [suunniteltu-summa (or (:suunniteltu-hinta rivi) 0)]
+            [{:rivi [(str (:nro rivi))
+                     (:nimi rivi)
+                     (:tie rivi)
+                     nil
+                     (:aosa rivi)
+                     (:aet rivi)
+                     (:losa rivi)
+                     (:let rivi)
+                     (pvm/pvm-opt (:alkupvm rivi))
+                     (pvm/pvm-opt (:loppupvm rivi))
+                     (or (:tyomenetelma rivi) nil)
+                     (:suunniteltu-maara rivi)
+                     (:yksikko rivi)
+                     suunniteltu-summa
+                     (:lisatiedot rivi)]
+              :lihavoi? false}]))
+        kohteet))))
+
+(defn paikkauskohteet-excel
+  [db workbook user tiedot]
+  ;;TODO: Tarkistetaanko oikeudet tässä?
+  (let [urakka (first (q-urakat/hae-urakka db (:urakka-id tiedot)))
+        _ (println "urakka" (pr-str urakka))
+        kohteet (q/paikkauskohteet db user tiedot)
+        sarakkeet [{:otsikko "Nro." :tasaa :oikea}
+                   {:otsikko "Kohde"}
+                   {:otsikko "Tienro"}
+                   {:otsikko "Ajr"}
+                   {:otsikko "Aosa"}
+                   {:otsikko "Aet"}
+                   {:otsikko "Losa"}
+                   {:otsikko "Let"}
+                   {:otsikko "Arvioitu aloitus pvm" :tasaa :oikea}
+                   {:otsikko "Arvioitu lopetus pvm" :tasaa :oikea}
+                   {:otsikko "Työmenetelmä"}
+                   {:otsikko "Määrä"}
+                   {:otsikko "Yksikkö" :tasaa :oikea}
+                   {:otsikko "Kustannusarvio" :tasaa :oikea}
+                   {:otsikko "Lisätiedot"}]
+
+        rivit (rivita-kohteet kohteet)
+        optiot {:nimi "Paikkauskohteet"
+                :sheet-nimi "Paikkauskohteet"
+                :tyhja (if (empty? kohteet) "Ei paikkauskohteita.")
+                :lista-tyyli? true
+                :rivi-ennen [{:teksti "Paikkauskohteet" :sarakkeita 2}
+                             {:teksti (str (pvm/pvm-opt (:alkupvm tiedot)) " - " (pvm/pvm-opt (:loppupvm tiedot))) :sarakkeita 7}]}
+        taulukot [[:taulukko optiot sarakkeet
+                   rivit]]
+        tiedostonimi (str (:nimi urakka) "-Paikkauskohteet-" (pvm/vuosi (:alkupvm tiedot)))
+        ;; Nimi: <urakkan_nimi>-Paikkauskohteet-<vuosi>
+        taulukko (concat
+                   [:raportti {:nimi tiedostonimi
+                               :orientaatio :landscape}]
+                   (if (empty? taulukot)
+                     [[:taulukko optiot nil [["Ei paikkauskohteita"]]]]
+                     taulukot))]
+    (excel/muodosta-excel (vec taulukko)
+                          workbook)))

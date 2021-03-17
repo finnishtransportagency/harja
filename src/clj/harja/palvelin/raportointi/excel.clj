@@ -138,9 +138,31 @@
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
-                                              (or (:sheet-nimi optiot) nimi))) 0])
-          sarake-tyyli (excel/create-cell-style! workbook {:background :blue
-                                                           :font {:color :white}})
+                                               (or (:sheet-nimi optiot) nimi))) 0])
+          sarake-tyyli (if (:lista-tyyli? optiot)
+                         (excel/create-cell-style! workbook {:border-bottom :thin
+                                                             :border-top :thin
+                                                             :border-left :thin
+                                                             :border-right :thin
+                                                             :font {:color :black
+                                                                    :size 14
+                                                                    :name "Arial"
+                                                                    :bold true}})
+                         (excel/create-cell-style! workbook {:background :blue
+                                                             :font {:color :white}}))
+
+          rivi-ennen-sarake-tyyli (if (:lista-tyyli? optiot)
+                                    (excel/create-cell-style! workbook {:border-bottom :thin
+                                                                        :border-top :thin
+                                                                        :border-left :thin
+                                                                        :border-right :thin
+                                                                        :font {:color :black
+                                                                               :size 18
+                                                                               :name "Arial"
+                                                                               :bold true}})
+                                    (excel/create-cell-style! workbook {:background :blue
+                                                                        :font {:color :white}}))
+
           rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
           rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
@@ -159,7 +181,7 @@
         (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
                   (let [solu (.createCell rivi-ennen-rivi sarake-nro)]
                     (excel/set-cell! solu teksti)
-                    (excel/set-cell-style! solu sarake-tyyli)
+                    (excel/set-cell-style! solu rivi-ennen-sarake-tyyli)
                     (CellUtil/setAlignment solu
                                            (case tasaa
                                              :keskita HorizontalAlignment/CENTER
@@ -245,7 +267,14 @@
                    (if-let [kaava (:excel sarake)]
                      (aseta-kaava! kaava cell rivi-nro sarake-nro)
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
-                   (excel/set-cell-style! cell tyyli)))
+                   (excel/set-cell-style! cell tyyli)
+                   (when (:tasaa sarake)
+                     (CellUtil/setAlignment cell
+                                            (case (:tasaa sarake)
+                                              :keskita HorizontalAlignment/CENTER
+                                              :oikea HorizontalAlignment/RIGHT
+                                              HorizontalAlignment/LEFT)))
+                   ))
               sarakkeet))))
         data))
 

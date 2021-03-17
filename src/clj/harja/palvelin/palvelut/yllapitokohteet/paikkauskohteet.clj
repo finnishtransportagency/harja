@@ -17,7 +17,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-exel]))
+            [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -108,71 +109,6 @@
                                 (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
-
-(defn- hae-urakkatyyppi [db urakka-id]
-  (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
-
-(defn- siivoa-paikkauskohteet [paikkauskohteet]
-  (map (fn [p]
-         (-> p
-             (assoc :sijainti (geo/pg->clj (:geometria p)))
-             (dissoc :geometria)))
-       paikkauskohteet))
-
-(defn- hae-paikkauskohteet-geometrialla [db urakka-id tila alkupvm loppupvm menetelmat]
-  (let [;ely (q-urakat/hae-urakan-ely db {:urakkaid urakka-id})
-        ;; ELYllä on olemassa aluegeometria, jota voidaan hyödyntää haussa,
-        ;; mutta ely on myös merkittynä paikkauskohteen omistavan urakan hallintayksiköksi, joten
-        ;; tarvittavat paikkauskohteet saadaan myös tätä kautta
-        ;; hox tästä nyt puuttuu tuo elyn käyttö haussa.
-
-        ;; Haetaan paikkauskohteet hoito ja teiden-hoito tyyppisille urakoille näiden urakoiden geometrian perusteella
-        paikkauskohteet (q/paikkauskohteet-geometrialla db {:urakka-id urakka-id
-                                                            :tila tila
-                                                            :alkupvm alkupvm
-                                                            :loppupvm loppupvm
-                                                            :tyomenetelmat menetelmat})]
-    paikkauskohteet))
-
-(defn paikkauskohteet [db user {:keys [vastuuyksikko tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
-  (println oikeudet/urakat-paikkaukset-paikkauskohteet)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
-  (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
-
-        ;; Paikkauskohteiden hakeminen on eri urakkatyypeille vaihtelee.
-        ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
-        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito) haetaan paikkauskohteita,
-        ;; niin silloin turvaudutaan paikkauskohteen maantieteelliseen
-        ;; sijaintiin eikä urakan-id:seen.
-        urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
-
-        tila (if (or (nil? tila) (= "kaikki" (str/lower-case tila)))
-               nil ;; kaikkia haettaessa käytetään nil arvoa
-               tila)
-        menetelmat (disj tyomenetelmat "Kaikki")
-        menetelmat (when (> (count menetelmat) 0)
-                     menetelmat)
-        urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi))
-                                 (hae-paikkauskohteet-geometrialla db urakka-id tila alkupvm loppupvm menetelmat)
-                                 (q/paikkauskohteet-urakalle db {:urakka-id urakka-id
-                                                                 :tila tila
-                                                                 :alkupvm alkupvm
-                                                                 :loppupvm loppupvm
-                                                                 :tyomenetelmat menetelmat}))
-        urakan-paikkauskohteet (siivoa-paikkauskohteet urakan-paikkauskohteet)
-        ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
-        ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
-        ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
-        urakan-paikkauskohteet (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id tiedot) user)
-                                 ;; True - on oikeudet kustannuksiin
-                                 urakan-paikkauskohteet
-                                 ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
-                                 (map (fn [kohde]
-                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta))
-                                      urakan-paikkauskohteet))
-        ]
-    urakan-paikkauskohteet))
-
 
 (defn tallenna-paikkauskohde! [db user kohde]
   (println "tallenna-paikkauskohde! voi voi-lukea? " (pr-str (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)) (pr-str (roolit/osapuoli user)))
@@ -269,7 +205,7 @@
 
 (defn- kasittele-excel [db urakka-id kayttaja req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
-        paikkauskohteet (p-exel/erottele-paikkauskohteet workbook)
+        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
         _ (println "Excelin data" (pr-str paikkauskohteet))
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
         kohteet (keep
@@ -338,10 +274,11 @@
   (start [this]
     (let [http (:http-palvelin this)
           ;email (:sonja-sahkoposti this)
-          db (:db this)]
+          db (:db this)
+          excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle
                         (fn [user tiedot]
-                          (paikkauskohteet db user tiedot)))
+                          (q/paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
                           (tallenna-paikkauskohde! db user kohde)))
@@ -351,6 +288,8 @@
       (julkaise-palvelu http :lue-paikkauskohteet-excelista
                         (wrap-multipart-params (fn [req] (vastaanota-excel db req)))
                         {:ring-kasittelija? true})
+      (when excel
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/paikkauskohteet-excel db)))
       this))
 
   (stop [this]
@@ -359,5 +298,7 @@
       :paikkauskohteet-urakalle
       :tallenna-paikkauskohde-urakalle
       :poista-paikkauskohde
-      :lue-paikkauskohteet-excelista)
+      :lue-paikkauskohteet-excelista
+      (when (:excel-vienti this)
+        (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paikkauskohteet-urakalle-excel)))
     this))

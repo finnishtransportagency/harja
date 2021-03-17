@@ -2,11 +2,16 @@
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [specql.op :as op]
+            [harja.geo :as geo]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
+            [clojure.string :as str]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.pvm :as pvm]
             [harja.kyselyt.tieverkko :as q-tr]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.id :refer [id-olemassa?]]
             [taoensso.timbre :as log]))
 
@@ -335,4 +340,67 @@ paikkauskohteet))
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})]
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
+
+;; HAetaan paikkauskohteet täällä, jottei tule konfliktia
+(defn- hae-paikkauskohteet-geometrialla [db urakka-id tila alkupvm loppupvm menetelmat]
+  (let [;ely (q-urakat/hae-urakan-ely db {:urakkaid urakka-id})
+        ;; ELYllä on olemassa aluegeometria, jota voidaan hyödyntää haussa,
+        ;; mutta ely on myös merkittynä paikkauskohteen omistavan urakan hallintayksiköksi, joten
+        ;; tarvittavat paikkauskohteet saadaan myös tätä kautta
+        ;; hox tästä nyt puuttuu tuo elyn käyttö haussa.
+
+        ;; Haetaan paikkauskohteet hoito ja teiden-hoito tyyppisille urakoille näiden urakoiden geometrian perusteella
+        paikkauskohteet (paikkauskohteet-geometrialla db {:urakka-id urakka-id
+                                                            :tila tila
+                                                            :alkupvm alkupvm
+                                                            :loppupvm loppupvm
+                                                            :tyomenetelmat menetelmat})]
+    paikkauskohteet))
+
+
+(defn- hae-urakkatyyppi [db urakka-id]
+  (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
+
+(defn- siivoa-paikkauskohteet [paikkauskohteet]
+  (map (fn [p]
+         (-> p
+             (assoc :sijainti (geo/pg->clj (:geometria p)))
+             (dissoc :geometria)))
+       paikkauskohteet))
+
+(defn paikkauskohteet [db user {:keys [vastuuyksikko tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
+  (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
+        ;; Paikkauskohteiden hakeminen on eri urakkatyypeille vaihtelee.
+        ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
+        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito) haetaan paikkauskohteita,
+        ;; niin silloin turvaudutaan paikkauskohteen maantieteelliseen
+        ;; sijaintiin eikä urakan-id:seen.
+        urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
+
+        tila (if (or (nil? tila) (= "kaikki" (str/lower-case tila)))
+               nil ;; kaikkia haettaessa käytetään nil arvoa
+               tila)
+        menetelmat (disj tyomenetelmat "Kaikki")
+        menetelmat (when (> (count menetelmat) 0)
+                     menetelmat)
+        urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi))
+                                 (hae-paikkauskohteet-geometrialla db urakka-id tila alkupvm loppupvm menetelmat)
+                                 (paikkauskohteet-urakalle db {:urakka-id urakka-id
+                                                                 :tila tila
+                                                                 :alkupvm alkupvm
+                                                                 :loppupvm loppupvm
+                                                                 :tyomenetelmat menetelmat}))
+        urakan-paikkauskohteet (siivoa-paikkauskohteet urakan-paikkauskohteet)
+        ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
+        ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
+        ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
+        urakan-paikkauskohteet (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id tiedot) user)
+                                 ;; True - on oikeudet kustannuksiin
+                                 urakan-paikkauskohteet
+                                 ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
+                                 (map (fn [kohde]
+                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta))
+                                      urakan-paikkauskohteet))]
+    urakan-paikkauskohteet))
 

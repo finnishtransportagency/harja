@@ -10,6 +10,8 @@
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as komm]
+            [harja.transit :as transit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
@@ -171,12 +173,25 @@
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
     [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
     (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-      [:div.col-xs-12.col-md-8.col-lg-8 {:style {:text-align "end"}}
+      [:div.col-xs-12.col-md-8.col-lg-8.inline-block {:style {:text-align "end" }}
        ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
        ;TODO: Napeista puuttuu myös kulmien pyöristys
        [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Kohde Asdasads on luotu" :neutraali-ikoni)]
        [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
-       [napit/laheta "Vie Exceliin" #(js/console.log "Viedään exceliin") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+       [:span.inline-block
+        [:form {:style {:margin-left "auto"}
+                :target "_blank" :method "POST"
+                :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                                                :tila (:valittu-tila app)
+                                                :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
+                                                :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
+                                                :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
+         [:button {:type "submit"
+                   :class #{"nappi-ensisijainen napiton-nappi"}}
+          [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]]
+
        [liitteet/lataa-tiedosto
         (-> @tila/tila :yleiset :urakka :id)
         {:nappi-teksti "Tuo kohteet excelistä"
@@ -229,20 +244,8 @@
       #_[:div.col-xs-2 "hae"]
       ]]))
 
-(defn- excel-virheet [e! app]
-  (if (nil? (:excel-virhe app))
-    [:div " Ei oo tarvetta näyttää excelvirheitä"]
-    #_ [:div (str (:excel-virhe app))]
-     (modal/nayta!
-      {:otsikko "Excelistä tulleet paikkauskohteet"
-       :footer [napit/sulje #(modal/piilota!)]}
-      [:div "Näytäppä kaikki virheet excelistä "])
-
-    #_[:div "Näytäppä kaikki virheet excelissä " (str (:excel-virhe app))]))
-
 (defn- paikkauskohteet-sivu [e! app]
   [:div
-   #_ [excel-virheet e! app]
    [filtterit e! app]
    [kartta/kartan-paikka]
    [debug/debug app]
