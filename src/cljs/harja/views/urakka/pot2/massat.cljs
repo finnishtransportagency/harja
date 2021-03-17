@@ -245,12 +245,7 @@
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
   (let [saa-sulkea? (atom false)]
     (komp/luo
-      (komp/piirretty #(do
-                         (js/setTimeout (fn []
-                                          (reset! saa-sulkea? true))
-                                        ;; jos ei timeria, menee lomake kiinni avausklikissä
-                                        ;; stopPropagation napissa ei toimi koska tapahtuu unmount liian äkkiä
-                                        10)))
+      (komp/piirretty #(yleiset/fn-viiveella (fn [] (reset! saa-sulkea? true))))
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (pot2-tiedot/->SuljeMateriaalilomake)))
                                   {:tarkista-komponentti? true})

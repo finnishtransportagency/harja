@@ -757,3 +757,12 @@ jatkon."
    (valitys-vertical "2rem"))
   ([korkeus]
    [:div {:style {:margin-top (or korkeus "2rem")}}]))
+
+;; Toisinaan tarpeen ajaa esim. erilaisia click handlereitä pienellä viiveellä, jos klikin
+;; lähde-elementti unmountataan
+(defn fn-viiveella
+  "Ajaa funktion viiveellä, käyttäen js/setTimeoutia. Default viive 10ms"
+  ([fn-to-run]
+   (fn-viiveella fn-to-run 10))
+  ([fn-to-run ms]
+   (js/setTimeout (fn [] (fn-to-run)) ms)))

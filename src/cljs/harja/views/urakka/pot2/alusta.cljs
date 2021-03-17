@@ -121,12 +121,8 @@
   [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
   (let [saa-sulkea? (atom false)]
     (komp/luo
-      (komp/piirretty #(do
-                         (js/setTimeout (fn []
-                                          (reset! saa-sulkea? true))
-                                        ;; jos ei timeria, menee lomake kiinni avausklikissä
-                                        ;; stopPropagation napissa ei jostain syystä toiminut
-                                        10)))
+      (komp/piirretty #(yleiset/fn-viiveella (fn []
+                                               (reset! saa-sulkea? true))))
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (pot2-tiedot/->SuljeAlustalomake)))
                                   {:tarkista-komponentti? true})
