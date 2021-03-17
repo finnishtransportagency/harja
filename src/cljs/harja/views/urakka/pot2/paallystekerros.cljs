@@ -78,8 +78,7 @@
                                           [napit/yleinen-ensisijainen "Lisää osa"
                                            #(reset! kohdeosat-atom (yllapitokohteet/lisaa-uusi-kohdeosa @kohdeosat-atom 1 (get-in app [:perustiedot :tr-osoite])))
                                            {:ikoni (ikonit/livicon-arrow-down)
-                                            :luokka "btn-xs"}]])])
-    :rivi-klikattu #(log "click")}
+                                            :luokka "btn-xs"}]])])}
    [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys
      :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
      :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}

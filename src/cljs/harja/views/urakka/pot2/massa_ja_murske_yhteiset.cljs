@@ -187,4 +187,9 @@
   {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3
    :piilota-label? true
    :komponentti (fn [rivi]
-                  [napit/muokkaa "Muokkaa" muokkaa-fn {:luokka "napiton-nappi"}])})
+                  [napit/muokkaa "Muokkaa"  #(js/setTimeout (fn []
+                                                              (muokkaa-fn))
+                                                            ;; jos ei timeria, menee lomake kiinni kun klikataan Muokkaa
+                                                            ;; Muuten stopPropagation eventtiä ei keretä käsitellä ennen unmountia
+                                                            10)
+                   {:luokka "napiton-nappi"}])})

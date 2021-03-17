@@ -126,7 +126,7 @@
                                           (reset! saa-sulkea? true))
                                         ;; jos ei timeria, menee lomake kiinni avausklikissä
                                         ;; stopPropagation napissa ei jostain syystä toiminut
-                                        100)))
+                                        10)))
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (pot2-tiedot/->SuljeAlustalomake)))
                                   {:tarkista-komponentti? true})
