@@ -59,6 +59,8 @@
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
                                                 {:nimi :massamaara :pakollinen? false}]
+                                               2            ;; AB
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                3            ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]
