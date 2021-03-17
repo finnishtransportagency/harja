@@ -5,7 +5,7 @@
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def viestin-nayttoaika-lyhyt 1500)
+(def viestin-nayttoaika-lyhyt 2500)
 (def viestin-nayttoaika-keskipitka 5000)
 (def viestin-nayttoaika-pitka 15000)
 (def viestin-oletusnayttoaika viestin-nayttoaika-lyhyt)

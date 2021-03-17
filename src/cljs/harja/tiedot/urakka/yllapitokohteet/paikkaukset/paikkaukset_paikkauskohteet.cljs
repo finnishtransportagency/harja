@@ -193,7 +193,7 @@
       (if (not= 200 (:status vastaus))
         (do
           (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
-                                 :danger viesti/viestin-nayttoaika-lyhyt)
+                               :varoitus viesti/viestin-nayttoaika-lyhyt)
           (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
           (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
         (do
@@ -201,7 +201,7 @@
           (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app)
                                (:valittu-vuosi app) (:valittu-tyomenetelma app))
           (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
-                                 :success viesti/viestin-nayttoaika-lyhyt)
+                                 :onnistui viesti/viestin-nayttoaika-lyhyt)
           (dissoc app :excel-virhe)))))
 
   HaePaikkauskohteet
