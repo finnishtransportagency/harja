@@ -84,6 +84,10 @@
                                                 {:nimi :sideaine2 :otsikko "Sideaine 2"}
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
+                                               21           ;; ABK
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               22           ;; ABS
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                23           ;; MS
                                                [:lisatty-paksuus
                                                 {:nimi :massamaara :pakollinen? false}
