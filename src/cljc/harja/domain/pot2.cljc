@@ -59,6 +59,11 @@
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
                                                 {:nimi :massamaara :pakollinen? false}]
+                                               3            ;; Verkko
+                                               [:verkon-tyyppi :verkon-sijainti
+                                                {:nimi :verkon-tarkoitus :pakollinen? false}]
+                                               4            ;; REM-TAS
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
@@ -105,12 +110,7 @@
                                                [:kasittelysyvyys
                                                 :leveys :pinta-ala]
                                                43           ;; RJYR
-                                               []
-                                               666          ;; REM-TAS
-                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
-                                               667          ;; Verkko
-                                               [:verkon-tyyppi :verkon-sijainti
-                                                {:nimi :verkon-tarkoitus :pakollinen? false}]}
+                                               []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
         luo-metadata-ja-oletusarvot (fn [avain-tai-metadata]
                                       (let [toimenpide-spesifinen-kentta-metadata (if (keyword? avain-tai-metadata)
