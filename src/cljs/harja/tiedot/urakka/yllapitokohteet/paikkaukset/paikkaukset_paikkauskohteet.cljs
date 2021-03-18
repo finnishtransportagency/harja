@@ -201,7 +201,7 @@
           (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app)
                                (:valittu-vuosi app) (:valittu-tyomenetelma app))
           (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
-                                 :onnistui viesti/viestin-nayttoaika-lyhyt)
+                               :onnistui viesti/viestin-nayttoaika-lyhyt)
           (dissoc app :excel-virhe)))))
 
   HaePaikkauskohteet
@@ -334,28 +334,29 @@
 
   PoistaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (assoc paikkauskohde :poistettu true)]
-      (do
-        (js/console.log "Merkitään paikkauskohde " (:nimi paikkauskohde) "poistetuksi")
-        (tallenna-paikkauskohde paikkauskohde ->PoistaPaikkauskohdeOnnistui ->PoistaPaikkauskohdeEpaonnistui)
-        app)))
+    (do
+      (tuck-apurit/post! :poista-paikkauskohde
+                         (siivoa-ennen-lahetysta paikkauskohde)
+                         {:onnistui ->PoistaPaikkauskohdeOnnistui
+                          :epaonnistui ->PoistaPaikkauskohdeEpaonnistui
+                          :paasta-virhe-lapi? true})
+      app))
 
   PoistaPaikkauskohdeOnnistui
-  (process-event [{id :id} app]
+  (process-event [{paikkauskohde :paikkauskohde} app]
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
           _ (modal/piilota!)]
-      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id id)) " poistettu"))
+      (viesti/nayta-toast! (str "Kohde " (:nimi paikkauskohde) " poistettu"))
       (dissoc app :lomake)))
 
   PoistaPaikkauskohdeEpaonnistui
-  (process-event [{id :id} app]
+  (process-event [{paikkauskohde :paikkauskohde} app]
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
           _ (modal/piilota!)]
-      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " poistamisessa tapahtui virhe!")
+      (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " poistamisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttaika-aareton)
       (dissoc app :lomake)))
 
-  ;; TODO: Mieti siistimisen yhteydessä, yhdistetäänkö nämä kaksi yhdeksi. Ainoa ero on logitus tällä hetkellä
   PeruPaikkauskohteenTilaus
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "ehdotettu")]
