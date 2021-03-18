@@ -146,16 +146,14 @@
               :tyhja "Ei tietoja"
               :rivi-klikattu (fn [kohde]
                                (do
-                                 ;(js/console.log "rivi-klikattu :: kohde" (pr-str kohde))
                                  ;; Näytä valittu rivi kartalla
                                  (when (not (nil? (:sijainti kohde)))
-                                   ;(js/console.log "rivi-klikattu :: zoomataan" (pr-str (harja.geo/extent (:sijainti kohde))))
                                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
                                    (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
                                    )
-                                 ;; avaa lomake
-
-                                 (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu})))))
+                                 ;; avaa lomake, jos käyttäjällä on kirjoitusoikeudet
+                                 (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet (:urakka-id kohde))
+                                   (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
               }
              (when (> (count paikkauskohteet) 0)
                {:rivi-jalkeen-fn (fn [rivit]
@@ -206,8 +204,7 @@
          :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
        [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/Paikkausehdotukset_pohja.xlsx" "_blank") {:luokka "napiton-nappi"}]
        [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
-   [:div.row [paikkauskohteet-taulukko e! app]]]
-  )
+   [:div.row [paikkauskohteet-taulukko e! app]]])
 
 (defn- filtterit [e! app]
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
@@ -268,7 +265,10 @@
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
-   [filtterit e! app]
+   ;; Filtterit näytetään kaikille muille käyttäjille paitsi aluevastaaville eli, joiden rooli on ELY_Urakanvalvoja
+   (when (not
+           (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja"))
+     [filtterit e! app])
    [kartta/kartan-paikka]
    [debug/debug app]
    (when (:lomake app)

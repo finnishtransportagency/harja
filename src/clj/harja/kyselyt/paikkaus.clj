@@ -351,10 +351,10 @@ paikkauskohteet))
 
         ;; Haetaan paikkauskohteet hoito ja teiden-hoito tyyppisille urakoille näiden urakoiden geometrian perusteella
         paikkauskohteet (paikkauskohteet-geometrialla db {:urakka-id urakka-id
-                                                            :tila tila
-                                                            :alkupvm alkupvm
-                                                            :loppupvm loppupvm
-                                                            :tyomenetelmat menetelmat})]
+                                                          :tila tila
+                                                          :alkupvm alkupvm
+                                                          :loppupvm loppupvm
+                                                          :tyomenetelmat menetelmat})]
     paikkauskohteet))
 
 
@@ -400,12 +400,12 @@ paikkauskohteet))
         ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
-        urakan-paikkauskohteet (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id tiedot) user)
-                                 ;; True - on oikeudet kustannuksiin
-                                 urakan-paikkauskohteet
-                                 ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
-                                 (map (fn [kohde]
-                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta))
-                                      urakan-paikkauskohteet))]
+        urakan-paikkauskohteet (map (fn [kohde]
+                                      (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
+                                        ;; True - on oikeudet kustannuksiin
+                                        kohde
+                                        ;; False - ei ole oikeuksia kustannuksiin, joten poistetaan ne
+                                        (dissoc kohde :suunniteltu-hinta :toteutunut-hinta)))
+                                    urakan-paikkauskohteet)]
     urakan-paikkauskohteet))
 
