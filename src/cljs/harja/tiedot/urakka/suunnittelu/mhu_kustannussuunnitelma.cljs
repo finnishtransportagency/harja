@@ -1868,6 +1868,7 @@ vaihtelua-teksti "vaihtelua/kk")
           urakka (-> @tiedot/tila :yleiset :urakka)
           {:keys [hoitovuosi]} parametrit
           payload {:urakka-id urakka}]
+      (println "tilan tallennus")
       (laheta-ja-odota-vastaus app
                                {:palvelu palvelu
                                 :payload payload
@@ -2262,6 +2263,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                                :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
           tilan-tyyppi (tilan-tyyppi tallennettava-asia)]
+      (println "tallenna hankintojen arvot")
       (laheta-ja-odota-vastaus app
                                {:palvelu :tallenna-suunnitelman-osalle-tila
                                 :payload {:tyyppi tilan-tyyppi
@@ -2333,6 +2335,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                      :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
           tilan-tyyppi (tilan-tyyppi tallennettava-asia)]
+      (println "Tallenna kustannusarvioitu")
       (when-not onko-tila?
         (laheta-ja-odota-vastaus app
                                  {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -2401,6 +2404,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                   (when oman-rivin-maksukausi
                                     {:maksukausi oman-rivin-maksukausi}))
           onko-tila? (hae-tila app :johto-ja-hallintokorvaukset paivitettavat-hoitokauden-numerot)]
+      (println "Tallenna Johoto")
       (when-not onko-tila?
         (laheta-ja-odota-vastaus app
                                  {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -2440,6 +2444,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                               :hoitovuodet paivitettavat-hoitokauden-numerot}
                                     :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                     :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+      (println "Tallenna toimenkuva")
       (laheta-ja-odota-vastaus app
                                {:palvelu :tallenna-toimenkuva
                                 :payload lahetettava-data
@@ -2465,6 +2470,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                              :tavoitehinta summa
                                                              :kattohinta (* summa kattohinnan-kerroin)})
                                                           yhteenvedot))}]
+      (println "Tallenna kattohinta")
       (laheta-ja-odota-vastaus app
                                {:palvelu :tallenna-budjettitavoite
                                 :payload lahetettava-data
@@ -2553,14 +2559,23 @@ vaihtelua-teksti "vaihtelua/kk")
                                         :tee-kun-vahvistettu nil}))
   TarkistaTarvitaankoVahvistus
   (process-event [{:keys [asia hoitovuosi toiminto-fn!]} app]
-    (let [tarvitaan-vahvistus? (pitaako-vahvistaa? app asia hoitovuosi)
+    (let [hoitovuosi (or hoitovuosi
+                         (get-in app [:suodattimet :hoitokauden-numero]))
+          tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
+                         :akilliset-hoitotyot :hankintakustannukset
+                         :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
+                         :toimistokulut :johto-ja-hallintokorvaus}
+          tarvitaan-vahvistus? (pitaako-vahvistaa? app (or (tyyppi->avain asia)
+                                                           asia) hoitovuosi)
           e! (tuck/current-send-function)]
-      (println "tarvitaanko? " asia hoitovuosi tarvitaan-vahvistus?)
+      (println "tarvitaanko? " (tyyppi->avain asia) asia (or (tyyppi->avain asia)
+                                                             asia) hoitovuosi tarvitaan-vahvistus?)
       (if tarvitaan-vahvistus?
         (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? true
-                                            :tee-kun-vahvistettu (fn []
+                                            :asia (or (tyyppi->avain asia) asia)
+                                            :tee-kun-vahvistettu (fn [e!]
                                                                    (e! (->SuljeVahvistus))
-                                                                   (toiminto-fn!))})
+                                                                   (toiminto-fn! e!))})
         (do
-          (toiminto-fn!)
+          (toiminto-fn! e!)
           app)))))
