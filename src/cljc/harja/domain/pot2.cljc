@@ -362,9 +362,9 @@
 (defn murskeen-rikastettu-nimi [mursketyypit murske]
   ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
-                  (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))
-        tarkennukset (rivin-avaimet->str murske #{::rakeisuus ::iskunkestavyys} ", ")
-        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+                  (rivin-avaimet->str murske #{::nimen-tarkenne}))
+        tarkennukset (rivin-avaimet->str murske #{::dop-nro} ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))
 
 (def asfalttirouheen-tyypin-id 2)
@@ -384,10 +384,8 @@
   (let [massa (assoc massa ::rc% (massan-rc-pitoisuus massa))
         ydin (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi massa))
                   (rivin-avaimet->str massa [::max-raekoko
-                                             ::nimen-tarkenne
-                                             ::dop-nro]))
+                                             ::nimen-tarkenne]))
 
-        tarkennukset (rivin-avaimet->str massa [::kuulamyllyluokka
-                                                ::rc%] ", ")
-        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+        tarkennukset (rivin-avaimet->str massa [::dop-nro] ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))

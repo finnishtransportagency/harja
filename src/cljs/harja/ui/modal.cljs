@@ -3,7 +3,8 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.dom :as dom]
             [harja.loki :refer [log logt]]
-            [harja.asiakas.tapahtumat :as t]))
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.ikonit :as ikonit]))
 
 (defn- avaa-modal-linkki
   "Jostain merkillisestä syystä modalissa esiintyvä <a> linkki ei toimi oikein, joten
@@ -60,9 +61,7 @@
                              :style content-tyyli}
          (when otsikko
            [:div.modal-header
-            [:button.close {:on-click sulje!
-                            :type "button" :data-dismiss "modal" :aria-label "Sulje"}
-             [:span {:aria-hidden "true"} "×"]]
+            [ikonit/sulje-ruksi sulje! {:style {:margin 0}}]
             [:h2.modal-title {:class (when (= otsikko-tyyli :virhe)
                                        "modal-otsikko-virhe")}
              otsikko]])

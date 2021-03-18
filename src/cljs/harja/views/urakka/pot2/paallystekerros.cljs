@@ -78,8 +78,7 @@
                                           [napit/yleinen-ensisijainen "Lisää osa"
                                            #(reset! kohdeosat-atom (yllapitokohteet/lisaa-uusi-kohdeosa @kohdeosat-atom 1 (get-in app [:perustiedot :tr-osoite])))
                                            {:ikoni (ikonit/livicon-arrow-down)
-                                            :luokka "btn-xs"}]])])
-    :rivi-klikattu #(log "click")}
+                                            :luokka "btn-xs"}]])])}
    [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys gridin-perusleveys
      :tyyppi :valinta :valinnat (:paallystekerros-toimenpiteet materiaalikoodistot) :valinta-arvo ::pot2-domain/koodi
      :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]}
@@ -108,16 +107,16 @@
      :muokattava? (constantly false)
      :hae #(paallystys/rivin-kohteen-pituus
              (paallystys/tien-osat-riville % paallystys/tr-osien-tiedot) %) :validoi [[:ei-tyhja "Anna arvo"]]}
-    {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3 :tasaa :oikea
+    {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys 3
      :tyyppi :valinta :valinnat massat :valinta-arvo ::pot2-domain/massa-id
+     :linkki-fn (fn [arvo]
+                  (e! (pot2-tiedot/->NaytaMateriaalilomake {::pot2-domain/massa-id arvo})))
+     :linkki-icon (ikonit/livicon-external)
      :valinta-nayta (fn [rivi]
                       [:div
                        [mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit (:massatyypit materiaalikoodistot)
                                                                  :materiaali (pot2-tiedot/rivi->massa-tai-murske rivi {:massat massat})
-                                                                 :fmt :komponentti}]
-                       ;; TODO nätti ratkaisu miten avataan massa overlayihin, kenties ujutetaan kenttätasolle
-                       [:div.inline-block {:on-click #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))}
-                        (ikonit/livicon-external)]])
+                                                                 :fmt :komponentti}]])
      :validoi [[:ei-tyhja "Anna arvo"]]}
     {:otsikko "Leveys (m)" :nimi :leveys :tyyppi :positiivinen-numero :tasaa :oikea
      :leveys gridin-perusleveys :validoi [[:ei-tyhja "Anna arvo"]]}
