@@ -55,8 +55,8 @@
 (defrecord HaePaikkauskohteetEpaonnistui [vastaus])
 (defrecord PaivitaLomake [lomake])
 (defrecord TallennaPaikkauskohde [paikkauskohde])
-(defrecord TallennaPaikkauskohdeOnnistui [vastaus])
-(defrecord TallennaPaikkauskohdeEpaonnistui [vastaus])
+(defrecord TallennaPaikkauskohdeOnnistui [paikkauskohde muokattu])
+(defrecord TallennaPaikkauskohdeEpaonnistui [paikkauskohde muokattu])
 (defrecord TilaaPaikkauskohde [paikkauskohde])
 (defrecord TilaaPaikkauskohdeOnnistui [id])
 (defrecord TilaaPaikkauskohdeEpaonnistui [])
@@ -92,12 +92,17 @@
                         :epaonnistui ->HaePaikkauskohteetEpaonnistui
                         :paasta-virhe-lapi? true})))
 
-(defn- tallenna-paikkauskohde [paikkauskohde onnistui epaonnistui]
-  (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
-                     paikkauskohde
-                     {:onnistui onnistui
-                      :epaonnistui epaonnistui
-                      :paasta-virhe-lapi? true}))
+(defn- tallenna-paikkauskohde
+  ([paikkauskohde onnistui epaonnistui]
+   (tallenna-paikkauskohde paikkauskohde onnistui epaonnistui nil))
+  ([paikkauskohde onnistui epaonnistui parametrit]
+   (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
+                      paikkauskohde
+                      {:onnistui onnistui
+                       :onnistui-parametrit parametrit
+                       :epaonnistui epaonnistui
+                       :epaonnistui-parametrit parametrit
+                       :paasta-virhe-lapi? true})))
 
 (defn validoinnit
   ([avain lomake]
@@ -268,22 +273,30 @@
                             (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id)))]
       (do
         (js/console.log "Tallennetaan paikkauskohde" (pr-str paikkauskohde))
-        (tallenna-paikkauskohde paikkauskohde ->TallennaPaikkauskohdeOnnistui ->TallennaPaikkauskohdeEpaonnistui)
+        (tallenna-paikkauskohde paikkauskohde
+                                ->TallennaPaikkauskohdeOnnistui
+                                ->TallennaPaikkauskohdeEpaonnistui
+                                [(not (nil? (:id paikkauskohde)))])
         app)))
 
   TallennaPaikkauskohdeOnnistui
-  (process-event [{id :id} app]
+  (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) (:valittu-tila app) (:valittu-vuosi app) (:valittu-tyomenetelma app))
-          _ (modal/piilota!)]
-      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app id) " lisätty")
-                           :success viesti/viestin-nayttoaika-pitka)
+          _ (modal/piilota!) ]
+      (viesti/nayta-toast!
+        (if muokattu
+          "Muutokset tallennettu"
+          (str "Kohde " (paikkauskohde-id->nimi app (:id paikkauskohde)) " lisätty"))
+        :success viesti/viestin-nayttoaika-pitka)
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (do
-      (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str vastaus))
-      (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttaika-aareton)
+      (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
+      (if muokattu
+        (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttaika-aareton)
+        (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttaika-aareton))
       app))
 
   TilaaPaikkauskohde
