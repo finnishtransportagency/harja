@@ -118,7 +118,7 @@
                   ["23"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelymenetelma)
-                  ["667"]))
+                  ["3"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
                   ["4"]))

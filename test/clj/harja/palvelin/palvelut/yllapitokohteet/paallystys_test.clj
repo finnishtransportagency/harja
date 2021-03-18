@@ -929,7 +929,7 @@
     :kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske 1, :massamaara 100}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 2500,
     :materiaali      1, :pituus 500,
-    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 667,
+    :tr-alkuetaisyys 2000, :tr-numero 20, :toimenpide 3,
     :verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}])
 
 (defn- tallenna-pot2-testi-paallystysilmoitus
