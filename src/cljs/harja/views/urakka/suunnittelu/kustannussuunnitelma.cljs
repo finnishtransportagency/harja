@@ -1404,12 +1404,12 @@
                                                                                   4 {:osa :maksukausi})
                                                                                 :omanimi nimi))
                                                                             (range 5)))})
-        blur-tallenna! (fn [tallenna-kaikki? etsittava-osa]
+        blur-tallenna! (fn [solu tallenna-kaikki? etsittava-osa]
                          (if tallenna-kaikki?
                            (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                                                         :tunniste-rajapinnan-dataan)
                                                                                                       (grid/hae-grid
-                                                                                                        (get (grid/hae-grid (grid/etsi-osa (grid/root solu/*this*) etsittava-osa)
+                                                                                                        (get (grid/hae-grid (grid/etsi-osa (grid/root solu) etsittava-osa)
                                                                                                                             :lapset)
                                                                                                              1)
                                                                                                         :lapset))))
@@ -1448,9 +1448,9 @@
                                 :osat [{:tyyppi :teksti
                                         :luokat #{"table-default"}}
                                        (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
-                                                    :blur-tallenna! (partial blur-tallenna! false nil)})
+                                                    :blur-tallenna! (partial blur-tallenna! solu/*this* false nil)})
                                        (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
-                                                    :blur-tallenna! (partial blur-tallenna! false nil)})
+                                                    :blur-tallenna! (partial blur-tallenna! solu/*this* false nil)})
                                        {:tyyppi :teksti
                                         :luokat #{"table-default"}
                                         :fmt yhteenveto-format}
@@ -1487,9 +1487,9 @@
                                                 :auki-alussa? false
                                                 :luokat #{"table-default"}}
                                                (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
-                                                            :blur-tallenna! (partial blur-tallenna! true (str toimenkuva "-" maksukausi "-taulukko"))})
+                                                            :blur-tallenna! (partial blur-tallenna! solu/*this* true (str toimenkuva "-" maksukausi "-taulukko"))})
                                                (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
-                                                            :blur-tallenna! (partial blur-tallenna! true (str toimenkuva "-" maksukausi "-taulukko"))})
+                                                            :blur-tallenna! (partial blur-tallenna! solu/*this* true (str toimenkuva "-" maksukausi "-taulukko"))})
                                                {:tyyppi :teksti
                                                 :luokat #{"table-default"}
                                                 :fmt yhteenveto-format}
@@ -1513,7 +1513,7 @@
                                                                           :fmt aika-tekstilla-fmt}
                                                                          (syote-solu {:nappi? true :fmt summa-formatointi-uusi :paivitettava-asia :aseta-tunnit!
                                                                                       :solun-index 1
-                                                                                      :blur-tallenna! (partial blur-tallenna! false (str toimenkuva "-" maksukausi "-taulukko"))
+                                                                                      :blur-tallenna! (partial blur-tallenna! solu/*this* false (str toimenkuva "-" maksukausi "-taulukko"))
                                                                                       :nappia-painettu-tallenna! nappia-painettu-tallenna!})
                                                                          {:tyyppi :tyhja}
                                                                          {:tyyppi :tyhja}
@@ -1595,11 +1595,11 @@
                                                      :auki-alussa? false
                                                      :luokat #{"table-default"}}
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
-                                                                 :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
+                                                                 :blur-tallenna! (partial blur-tallenna! solu/*this* true rivin-nimi)
                                                                  :nappia-painettu-tallenna! nappia-painettu-tallenna!
                                                                  #_#_:parametrit {:disabled? true}})
                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-jh-yhteenveto!
-                                                                 :blur-tallenna! (partial blur-tallenna! true rivin-nimi)
+                                                                 :blur-tallenna! (partial blur-tallenna! solu/*this* true rivin-nimi)
                                                                  :nappia-painettu-tallenna! nappia-painettu-tallenna!
                                                                  #_#_:parametrit {:disabled? true}})
                                                     {:tyyppi :teksti
@@ -1646,7 +1646,7 @@
                                                                                :fmt aika-tekstilla-fmt}
                                                                               (syote-solu {:nappi? true :fmt summa-formatointi-uusi :paivitettava-asia :aseta-tunnit!
                                                                                            :solun-index 1
-                                                                                           :blur-tallenna! (partial blur-tallenna! false rivin-nimi)
+                                                                                           :blur-tallenna! (partial blur-tallenna! solu/*this* false rivin-nimi)
                                                                                            :nappia-painettu-tallenna! nappia-painettu-tallenna!})
                                                                               {:tyyppi :tyhja}
                                                                               {:tyyppi :tyhja}
