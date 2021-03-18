@@ -261,15 +261,20 @@
      (if (= n-kierros n)
        (throw (Exception. "Queryn yrittäminen epäonnistui"))
        (let [tulos (try+
+                      (when (> n-kierros 0)
+                        (println "yrita-querya: yritys" n-kierros))
+                    
                       (if param?
                         (f n-kierros)
                         (f))
                       (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+                        (println "yrita-querya: virhe kannan tappamisesssa:" viesti)
                         (Thread/sleep 500)
                         (when log?
                           (log/warn viesti))
                         ::virhe)
                       (catch PSQLException e
+                        (println "yrita-querya: psql:" e)
                         (Thread/sleep 500)
                         (when log?
                           (log/warn e "- yritetään uudelleen, yritys" n-kierros))
@@ -281,6 +286,8 @@
 
 (defonce ^:private testikannan-luonti-lukko (Object.))
 
+
+(def testikanta-yritysten-lkm 15)
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
@@ -288,13 +295,13 @@
     (with-open [c (.getConnection temppidb)
                 ps (.createStatement c)]
 
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) 5)
-      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) 5)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [n]
                       (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-                    5
+                    testikanta-yritysten-lkm
                     true
                     true))
     (luo-kannat-uudelleen)
