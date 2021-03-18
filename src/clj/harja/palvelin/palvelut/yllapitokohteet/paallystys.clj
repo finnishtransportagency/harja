@@ -243,7 +243,7 @@
         (:kohdeosat paallystysilmoitus)))
 
 
-(defn- pot2-alusta
+(defn pot2-alusta
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
   [db paallystysilmoitus]
   (into []

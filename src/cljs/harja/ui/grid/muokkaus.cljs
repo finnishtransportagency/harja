@@ -159,7 +159,8 @@
                                     (cond
                                       (not (empty? kentan-virheet)) " sisaltaa-virheen"
                                       (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                      (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
+                                      (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
+                   :on-click #(.stopPropagation %)}
               (when (case nayta-virheet?
                       :fokus @fokus?
                       :aina true)
@@ -235,12 +236,18 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
                              nayta-virheet? i voi-muokata? tulevat-rivit
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
-                             disabloi-rivi? voi-poistaa? toimintonappi-fn] :as rivi-asetukset}]
+                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu] :as rivi-asetukset}]
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
-    [:tr.muokataan {:class (str (if (even? (+ i 1))
-                                  "parillinen "
-                                  "pariton ")
-                                (when rivi-disabloitu? "disabloitu-rivi"))}
+    [:tr.muokataan {:class (y/luokat
+                             (if (even? (+ i 1))
+                               "parillinen "
+                               "pariton ")
+                             (when rivi-disabloitu? "disabloitu-rivi")
+                             (when rivi-klikattu "klikattava"))
+                    :on-click #(when rivi-klikattu
+                                 (.stopPropagation %)
+                                 (rivi-klikattu (merge rivi
+                                                       {:muokkaus-grid-id id})))}
      (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
                          (+ i 1)])
      (doall
@@ -292,7 +299,8 @@
       (fn [{:keys [muokatut skeema tyhja virheet varoitukset huomautukset valiotsikot ohjaus vetolaatikot disable-input?
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                   vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args]}]
+                   vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
+                   rivi-klikattu]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -355,7 +363,8 @@
                                                                 :piilota-toiminnot? piilota-toiminnot?
                                                                 :skeema skeema :voi-poistaa? voi-poistaa?
                                                                 :toimintonappi-fn toimintonappi-fn
-                                                                :gridin-tietoja gridin-tietoja}]
+                                                                :gridin-tietoja gridin-tietoja
+                                                                :rivi-klikattu rivi-klikattu}]
                                                  ^{:key (str i "-" id "veto")}
                                                  [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan]]))]
                         (recur (inc i)
@@ -618,7 +627,7 @@
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
                              :toimintonappi-fn (or toimintonappi-fn nil-fn) :tyhja-komponentti? tyhja-komponentti?
-                             :tyhja-args tyhja-args}]]
+                             :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))
        :UNSAFE_component-will-receive-props (fn [this new-argv]

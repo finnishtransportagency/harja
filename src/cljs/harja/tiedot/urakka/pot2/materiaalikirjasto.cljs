@@ -38,7 +38,7 @@
 (defrecord TallennaMurskeLomake [data])
 (defrecord TallennaMurskeOnnistui [vastaus])
 (defrecord TallennaMurskeEpaonnistui [vastaus])
-(defrecord TyhjennaMurskeLomake [data])
+(defrecord SuljeMurskeLomake [])
 (defrecord PaivitaMurskeLomake [data])
 
 
@@ -327,9 +327,8 @@
     (viesti/nayta! "Murskeen tallennus epäonnistui!" :danger)
     app)
 
-  TyhjennaMurskeLomake
-  (process-event [{data :data} app]
-    (js/console.log "TyhjennaLomake" (pr-str data))
+  SuljeMurskeLomake
+  (process-event [_ app]
     (-> app
         (assoc :pot2-murske-lomake nil)))
 

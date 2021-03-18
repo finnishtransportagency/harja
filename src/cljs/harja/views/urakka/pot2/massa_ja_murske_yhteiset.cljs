@@ -27,9 +27,8 @@
       :style {:cursor "pointer"}}
      [:span.bold ydin]
      ;; Toistaiseksi Tean kanssa sovittu 23.2.2021 ettei näytetä tarkennuksia suluissa
-     #_[:span tarkennukset]]
-    (str ydin ;tarkennukset
-         )))
+     [:span tarkennukset]]
+    (str ydin tarkennukset)))
 
 (defn materiaalin-rikastettu-nimi
   "Formatoi massan tai murskeen nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
@@ -150,14 +149,14 @@
 (defn materiaalin-tiedot [materiaali {:keys [materiaalikoodistot]} toiminto-fn]
   (when (or (::pot2-domain/massa-id materiaali)
             (::pot2-domain/murske-id materiaali))
-    [:div.pot2-materiaalin-tiedot
+    [:div.pot2-materiaalin-tiedot.valinta-ja-linkki-container
+     [napit/nappi "" toiminto-fn {:luokka "nappi-ikoni valinnan-vierusnappi napiton-nappi"
+                                  :ikoni (ikonit/livicon-external)}]
      [materiaalin-rikastettu-nimi {:tyypit ((if (::pot2-domain/murske-id materiaali)
                                               :mursketyypit
                                               :massatyypit) materiaalikoodistot)
                                    :materiaali materiaali
-                                   :fmt :komponentti :toiminto-fn toiminto-fn}]
-     [napit/nappi "" toiminto-fn {:luokka "napiton-nappi"
-                                  :ikoni (ikonit/livicon-external)}]]))
+                                   :fmt :komponentti :toiminto-fn toiminto-fn}]]))
 
 (defn materiaalirivin-toiminnot [e! rivi]
   (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
@@ -188,4 +187,6 @@
   {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3
    :piilota-label? true
    :komponentti (fn [rivi]
-                  [napit/muokkaa "Muokkaa" muokkaa-fn {:luokka "napiton-nappi"}])})
+                  [napit/muokkaa "Muokkaa"
+                   #(yleiset/fn-viiveella muokkaa-fn)
+                   {:luokka "napiton-nappi"}])})
