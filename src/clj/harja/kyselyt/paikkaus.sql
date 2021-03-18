@@ -169,7 +169,8 @@ FROM paikkauskohde pk, urakka u, organisaatio o
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
    AND (:tyomenetelmat::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
    AND u.id = pk."urakka-id"
-   AND o.id = u.urakoitsija;
+   AND o.id = u.urakoitsija
+ORDER BY pk.muokattu ASC, pk.luotu ASC;
 
 --name: paikkauskohteet-geometrialla
 -- Haetaan alueurakan (hoito,teiden-hoito) alueella olevat paikkauskohteet
@@ -221,7 +222,8 @@ WHERE st_intersects(a.alue, (SELECT *
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
   AND (:tyomenetelmat::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
-  AND o.id = u.urakoitsija;
+  AND o.id = u.urakoitsija
+ORDER BY pk.muokattu ASC, pk.luotu ASC;
 
 --name:paivita-paikkauskohde!
 UPDATE paikkauskohde

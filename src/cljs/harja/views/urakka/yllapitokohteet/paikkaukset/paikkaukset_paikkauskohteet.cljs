@@ -59,7 +59,11 @@
                                                          oikeudet/urakat-paikkaukset-paikkauskohteet
                                                          (-> @tila/tila :yleiset :urakka :id)
                                                          @istunto/kayttaja)))
-        skeema [{:otsikko "NRO"
+        skeema [{:otsikko "Muokattu"
+                 :leveys 2
+                 :nimi :muokattu
+                 :fmt pvm/pvm-aika-opt}
+                {:otsikko "NRO"
                  :leveys 2
                  :nimi :nro}
                 {:otsikko "Nimi"
