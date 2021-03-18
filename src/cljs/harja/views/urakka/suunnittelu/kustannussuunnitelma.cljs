@@ -805,9 +805,9 @@
                                                                                 (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
                                                                           rivit-alla))))
                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))
-        tallenna-fn! (fn [hoitokauden-numero e!]
+        tallenna-fn! (fn [hoitokauden-numero solu e!]
                        (println "vahvistus homma :hankintakustannukset")
-                       (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                       (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]))
                        (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))
         g (hankintojen-pohja "suunnittellut-hankinnat-taulukko"
                              (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnittellut-hankinnat :grid] g)))
@@ -856,7 +856,7 @@
 
                                (tarkista-vaaditaanko-vahvistus
                                  :hankintakustannukset
-                                 (r/partial tallenna-fn! hoitokauden-numero)
+                                 (r/partial tallenna-fn! hoitokauden-numero solu/*this*)
                                  hoitokauden-numero)))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/suunnittellut-hankinnat-rajapinta
@@ -929,9 +929,9 @@
                                                                                 (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
                                                                           rivit-alla))))
                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))
-        tallenna-fn! (fn [hoitokauden-numero e!]
+        tallenna-fn! (fn [hoitokauden-numero solu e!]
                        (println "vahvistus homma toinen ")
-                       (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                       (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]))
                        (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))
         g (hankintojen-pohja "suunnittellut-hankinnat-laskutukseen-perustuen-taulukko"
                              (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :laskutukseen-perustuvat-hankinnat :grid] g)))
@@ -979,7 +979,7 @@
                                                      :hankinnat)
                                (tarkista-vaaditaanko-vahvistus
                                  :hankintakustannukset
-                                 (r/partial tallenna-fn! hoitokauden-numero)
+                                 (r/partial tallenna-fn! hoitokauden-numero solu/*this*)
                                  hoitokauden-numero)))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/laskutukseen-perustuvat-hankinnat-rajapinta
@@ -1935,9 +1935,9 @@
 (defn maarataulukko
   ([nimi yhteenvedot-polku] (maarataulukko nimi yhteenvedot-polku true true))
   ([nimi yhteenvedot-polku paivita-kattohinta? indeksikorjaus?]
-   (let [toiminto-fn! (fn [polun-osa e!]
+   (let [toiminto-fn! (fn [polun-osa solu e!]
                         (println "toiminto-fn" polun-osa)
-                        (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
+                        (let [vanhempiosa (grid/osa-polusta solu [:.. :..])
                               tallennettavien-arvojen-osat (if (= ::data-rivi (grid/hae-osa vanhempiosa :nimi))
                                                              (grid/hae-grid (grid/osa-polusta vanhempiosa [1]) :lapset)
                                                              (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
@@ -1957,9 +1957,9 @@
                                                                            rivit-alla))))
                               (when paivita-kattohinta?
                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-         toiminto-kk-fn! (fn [polun-osa e!]
+         toiminto-kk-fn! (fn [polun-osa solu e!]
                              (println "toiminto-fn" polun-osa)
-                             (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                             (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]))
                              (when paivita-kattohinta?
                                (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
          polun-osa (keyword nimi)
@@ -2017,7 +2017,7 @@
                                   (println aseta-avain)
                                   (tarkista-vaaditaanko-vahvistus
                                     polun-osa
-                                    (r/partial toiminto-fn! polun-osa)))
+                                    (r/partial toiminto-fn! polun-osa solu/*this*)))
                                 (fn [rivit-alla arvo]
                                   (when (not (empty? rivit-alla))
                                     (doseq [rivi rivit-alla
@@ -2048,7 +2048,7 @@
                                   (println aseta-avain)
                                   (tarkista-vaaditaanko-vahvistus
                                     polun-osa
-                                    (r/partial toiminto-kk-fn! polun-osa))))
+                                    (r/partial toiminto-kk-fn! polun-osa solu/*this*))))
          rajapinta (t/maarataulukon-rajapinta polun-osa aseta-yhteenveto-avain aseta-avain)]
      (grid/rajapinta-grid-yhdistaminen! g
                                         rajapinta
