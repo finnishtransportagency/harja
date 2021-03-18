@@ -169,6 +169,10 @@ SELECT
     pot2p.jarjestysnro,
     um.nimen_tarkenne as "nimen-tarkenne",
     um.tyyppi as "sideainetyyppi",
+    mr.esiintyma,
+    mr.kuulamyllyarvo as "km-arvo",
+    mr.litteysluku as "muotoarvo",
+    ms.pitoisuus,
     ypko.tr_ajorata as "tr-ajorata",
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
@@ -179,6 +183,8 @@ SELECT
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys"
 FROM pot2_paallystekerros pot2p
     JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+    JOIN pot2_mk_massan_runkoaine mr ON um.id = mr.pot2_massa_id
+    JOIN pot2_mk_massan_sideaine ms ON um.id = ms.pot2_massa_id
     JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id
 WHERE pot2p.pot2_id = :pot2_id;
 

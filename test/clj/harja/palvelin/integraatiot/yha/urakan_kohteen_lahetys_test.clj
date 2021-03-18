@@ -132,6 +132,21 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :sideainetyyppi)
                   ["12"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :kiviainesesiintyman-nimi)
+                  ["Kaiskakallio"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :kiviaineksen-km-arvo)
+                  ["10.0"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
+                  ["9.5"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :sideainepitoisuus)
+                  ["4.8"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :lisa-aineet)
+                  ["12 lisa aineet"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1066"]))
