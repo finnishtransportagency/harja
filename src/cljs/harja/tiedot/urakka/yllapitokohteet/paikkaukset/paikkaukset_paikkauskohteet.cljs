@@ -369,14 +369,14 @@
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
-      (viesti/nayta-toast! (str "Kohde " (paikkauskohde-id->nimi app (:id id)) " poistettu"))
+      (viesti/nayta-toast! (str "Kohde " (:nimi paikkauskohde) " poistettu"))
       (dissoc app :lomake)))
 
   PoistaPaikkauskohdeEpaonnistui
   (process-event [{paikkauskohde :paikkauskohde} app]
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
-      (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " poistamisessa tapahtui virhe!")
+      (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " poistamisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttaika-aareton)
       (dissoc app :lomake)))
 
