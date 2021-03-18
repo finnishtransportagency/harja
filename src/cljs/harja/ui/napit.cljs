@@ -324,11 +324,8 @@
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)})]))
 
-(defn sulje-ruksi
-  [sulje!]
-  [:button.close {:on-click sulje!
-                  :type     "button"}
-   [ikonit/remove]])
+;; cyclic dependencies modal-napit-model.. siksi toteutus ikonitns:sään
+(def sulje-ruksi ikonit/sulje-ruksi)
 
 (defn poista
   ([teksti toiminto] (poista teksti toiminto {}))
