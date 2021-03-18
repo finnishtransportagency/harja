@@ -205,7 +205,9 @@
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valittu-tila "kaikki"
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
-                                               :valittu-tyomenetelma "Kaikki"}})
+                                               :valittu-tyomenetelma "Kaikki"
+                                               :valittu-ely {:id 0 :elynumero 0 :nimi "Kaikki"}
+                                               }})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)

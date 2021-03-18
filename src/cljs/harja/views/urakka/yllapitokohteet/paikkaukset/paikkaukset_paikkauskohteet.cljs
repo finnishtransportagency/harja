@@ -21,6 +21,7 @@
             [harja.ui.debug :as debug]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila]
@@ -177,7 +178,7 @@
    [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
     [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
     (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-      [:div.col-xs-12.col-md-8.col-lg-8.inline-block {:style {:text-align "end" }}
+      [:div.col-xs-12.col-md-8.col-lg-8.inline-block {:style {:text-align "end"}}
        ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
        ;TODO: Napeista puuttuu myös kulmien pyöristys
        [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Kohde Asdasads on luotu" :neutraali-ikoni)]
@@ -211,10 +212,26 @@
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-tila (:valittu-tila app)
         valittu-vuosi (:valittu-vuosi app)
-        valittu-tyomenetelma (:valittu-tyomenetelma app)]
+        valittu-tyomenetelma (:valittu-tyomenetelma app)
+        valittu-ely (:valittu-ely app)
+        hallintayksikot (conj
+                          (map (fn [h]
+                                 (dissoc h :alue :type :liikennemuoto))
+                               @hal/vaylamuodon-hallintayksikot)
+                          {:id 0 :nimi "Kaikki" :elynumero 0})]
     [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
      [:div.row
-      #_[:div.col-xs-2 "vastuuykiskkö"]
+      [:div.col-xs-2
+       [:span.alasvedon-otsikko "ELY"]
+       [yleiset/livi-pudotusvalikko {:valinta valittu-ely
+                                     :vayla-tyyli? true
+                                     :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseEly %))
+                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+                                     :format-fn (fn [val]
+                                                  (if (= (:nimi val) "Kaikki")
+                                                    "Kaikki"
+                                                    (str (:elynumero val) " " (:nimi val))))}
+        hallintayksikot]]
       [:div.col-xs-2
 
        [:span.alasvedon-otsikko "Tila"]

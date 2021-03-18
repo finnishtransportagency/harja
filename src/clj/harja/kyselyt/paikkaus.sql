@@ -170,6 +170,16 @@ FROM paikkauskohde pk, urakka u, organisaatio o
    AND (:tyomenetelmat::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
    AND u.id = pk."urakka-id"
    AND o.id = u.urakoitsija
+   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
+   AND (:elyt::INT IS NULL OR
+        st_intersects( ST_UNION(ARRAY( select e.alue FROM organisaatio e WHERE e.id in (:elyt)))  , (SELECT *
+                               FROM tierekisteriosoitteelle_viiva(
+                                       CAST((pk.tierekisteriosoite).tie AS INTEGER),
+                                       CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
+                                       CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER))))
+
+
+     )
 ORDER BY pk.muokattu ASC, pk.luotu ASC;
 
 --name: paikkauskohteet-geometrialla

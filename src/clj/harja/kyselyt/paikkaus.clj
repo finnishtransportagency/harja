@@ -368,7 +368,7 @@ paikkauskohteet))
              (dissoc :geometria)))
        paikkauskohteet))
 
-(defn paikkauskohteet [db user {:keys [vastuuyksikko tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
+(defn paikkauskohteet [db user {:keys [elyt tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         ;; Paikkauskohteiden hakeminen on eri urakkatyypeille vaihtelee.
@@ -384,13 +384,18 @@ paikkauskohteet))
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
+        ;; Valitut elykeskukset
+        elyt (disj elyt {:id 0 :nimi "Kaikki" :elynumero 0})
+        elyt (when (> (count elyt) 0)
+               (into #{} (map :id elyt))) ;; Tee setti ely mäppien id:stä
         urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi))
                                  (hae-paikkauskohteet-geometrialla db urakka-id tila alkupvm loppupvm menetelmat)
                                  (paikkauskohteet-urakalle db {:urakka-id urakka-id
-                                                                 :tila tila
-                                                                 :alkupvm alkupvm
-                                                                 :loppupvm loppupvm
-                                                                 :tyomenetelmat menetelmat}))
+                                                               :tila tila
+                                                               :alkupvm alkupvm
+                                                               :loppupvm loppupvm
+                                                               :tyomenetelmat menetelmat
+                                                               :elyt elyt}))
         urakan-paikkauskohteet (siivoa-paikkauskohteet urakan-paikkauskohteet)
         ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
