@@ -794,6 +794,13 @@
                     <xs:documentation>ei tietoa</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+            <xs:enumeration value="667">
+                <xs:annotation>
+                    <xs:documentation>
+                        PETAR DELETE ME
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
 
