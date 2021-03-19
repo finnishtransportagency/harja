@@ -136,7 +136,8 @@
         yht-tot-hinta (reduce (fn [summa kohde]
                                 (+ summa (:toteutunut-hinta kohde)))
                               0
-                              paikkauskohteet)]
+                              paikkauskohteet)
+        rivi-valittu #(= (:id (:lomake app)) (:id %))]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
@@ -144,6 +145,7 @@
      [grid/grid
       (merge {:tunniste :id
               :tyhja "Ei tietoja"
+              :rivin-luokka #(str "paikkauskohderivi" (when (rivi-valittu %) " valittu"))
               :rivi-klikattu (fn [kohde]
                                (do
                                  ;; Näytä valittu rivi kartalla
