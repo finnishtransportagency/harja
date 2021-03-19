@@ -173,6 +173,10 @@ SELECT
     mr.kuulamyllyarvo as "km-arvo",
     mr.litteysluku as "muotoarvo",
     ms.pitoisuus,
+    (SELECT array_to_string(array_agg(p2ml.nimi||': '||ml.pitoisuus||'%'), ', ')
+     FROM pot2_mk_massan_lisaaine ml
+     JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
+     WHERE ml.pot2_massa_id = pot2p.materiaali) as "lisaaineet",
     ypko.tr_ajorata as "tr-ajorata",
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
@@ -182,11 +186,14 @@ SELECT
     ypko.tr_loppuosa as "tr-loppuosa",
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys"
 FROM pot2_paallystekerros pot2p
-    JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
-    JOIN pot2_mk_massan_runkoaine mr ON um.id = mr.pot2_massa_id
-    JOIN pot2_mk_massan_sideaine ms ON um.id = ms.pot2_massa_id
-    JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id
-WHERE pot2p.pot2_id = :pot2_id;
+        JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+        JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id,
+     pot2_mk_massan_runkoaine mr, pot2_mk_massan_sideaine ms
+WHERE pot2p.pot2_id = :pot2_id AND
+      mr.id = (SELECT p2mmr.id FROM pot2_mk_massan_runkoaine p2mmr WHERE p2mmr.pot2_massa_id = um.id
+               ORDER BY p2mmr.massaprosentti DESC LIMIT 1) AND
+      ms.id = (SELECT p2mms.id FROM pot2_mk_massan_sideaine p2mms WHERE p2mms.pot2_massa_id = um.id
+               ORDER BY p2mms.pitoisuus DESC LIMIT 1);
 
 
 -- name: hae-pot2-alustarivit
