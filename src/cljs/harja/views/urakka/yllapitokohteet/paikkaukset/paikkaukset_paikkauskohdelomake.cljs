@@ -144,11 +144,11 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat (rest t-paikkauskohteet/tyomenetelmat) ;; TODO: Tähän tulee väylävirastolta valmiit valinnat(?)
+    :valinnat (rest t-paikkauskohteet/tyomenetelmat)
     :vayla-tyyli? true
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
-    ::lomake/col-luokka "col-sm-6"}
+    ::lomake/col-luokka "col-sm-12"}
    (when muu-menetelma?
      {:otsikko "Menetelmän kuvaus"
       :nimi :menetelman-kuvaus
