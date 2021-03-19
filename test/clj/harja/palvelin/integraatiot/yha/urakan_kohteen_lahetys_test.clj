@@ -146,7 +146,7 @@
                   ["4.8"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :lisa-aineet)
-                  ["12 lisa aineet"]))
+                  ["Tartuke: 0.5%"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1066"]))
