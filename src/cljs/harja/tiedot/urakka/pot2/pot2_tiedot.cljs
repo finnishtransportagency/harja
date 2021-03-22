@@ -40,9 +40,8 @@
 (defrecord Pot2Muokattu [])
 
 
-(defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
-  (= koodi 667))
-
+(defn onko-alustatoimenpide-verkko? [koodi]
+  (= koodi 3))
 
 (defn toimenpiteen-tiedot
   [{:keys [koodistot]} rivi]
