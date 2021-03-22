@@ -62,7 +62,7 @@
      (when pitoisuus [:sideainepitoisuus pitoisuus])
      [:lisa-aineet lisaaineet]]]])
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
                                               verkon-sijainti toimenpide kasittelysyvyys]}
                                       kohteen-tienumero karttapvm]
@@ -83,7 +83,7 @@
     [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
    (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus 1)]
      [:kasittelypaksuus kasittelysyvyys])
-   (when verkkotyyppi
+   (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
      [:verkkotyyppi verkkotyyppi])
    (when verkon-tarkoitus
      [:verkon-tarkoitus verkon-tarkoitus])
