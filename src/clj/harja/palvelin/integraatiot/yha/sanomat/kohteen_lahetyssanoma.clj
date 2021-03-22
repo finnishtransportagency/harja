@@ -89,7 +89,7 @@
      [:verkon-tarkoitus verkon-tarkoitus])
    (when verkon-sijainti
      [:verkon-sijainti verkon-sijainti])
-   (when-not (contains? #{42 41 32 31 666} toimenpide)      ;; LJYR TJYR TAS TASK REM-TAS
+   (when-not (contains? #{42 41 32 31 4} toimenpide)      ;; LJYR TJYR TAS TASK REM-TAS
      [:tekninen-toimenpide 4])])                            ;; "Kevyt rakenteen parantaminen"
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
