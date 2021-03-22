@@ -1649,6 +1649,7 @@ vaihtelua-teksti "vaihtelua/kk")
         args (-> args
                  (assoc :onnistui! onnistui! :epaonnistui! epaonnistui!)
                  (dissoc :onnistui :epaonnistui))]
+    (println "palvelujono" palvelujono-tyhja? "tallennusjono?" @tallennus-jono)
     (if palvelujono-tyhja?
       (swap! tallennus-jono assoc palvelu [args])
       (swap! tallennus-jono update palvelu conj args))
@@ -1857,6 +1858,7 @@ vaihtelua-teksti "vaihtelua/kk")
                           :paasta-virhe-lapi? true})))
   TallennaKustannussuunnitelmanOsalleTilaOnnistui
   (process-event [{:keys [vastaus]} app]
+    (println "vastaus" vastaus)
     (assoc-in app [:domain :tilat] vastaus))
   TallennaKustannussuunnitelmanOsalleTilaEpaonnistui
   (process-event [_ app]

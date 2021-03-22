@@ -83,12 +83,15 @@
 (defn tallenna-suunnitelman-osalle-tila
   [db user {:keys [urakka-id hoitovuodet tyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (doseq [hv hoitovuodet]
-    (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
-                                     :hoitovuosi hv
-                                     :osio (tyyppi tyyppi->osio)
-                                     :luoja (:id user)
-                                     :vahvistettu false})))
+  (jdbc/with-db-transaction
+    [db db]
+    (doseq [hv hoitovuodet]
+      (q/lisaa-suunnitelmalle-tila db {:urakka urakka-id
+                                       :hoitovuosi hv
+                                       :osio (tyyppi tyyppi->osio)
+                                       :luoja (:id user)
+                                       :vahvistettu false}))
+     (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id})))
 
 (defn tallenna-suunnitelman-muutos
   [db user {:keys [selite muutoksen-syy]}])
