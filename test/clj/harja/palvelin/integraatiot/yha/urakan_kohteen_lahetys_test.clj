@@ -117,8 +117,20 @@
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelymenetelma)
                   ["23"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelypaksuus)
+                  ["10"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelymenetelma)
                   ["3"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 1} :verkkotyyppi)
+                  ["1"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 1} :verkon-tarkoitus)
+                  ["1"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 1} :verkon-sijainti)
+                  ["1"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
                   ["4"]))
