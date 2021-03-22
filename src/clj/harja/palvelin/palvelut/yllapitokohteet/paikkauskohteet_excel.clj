@@ -40,6 +40,7 @@
    ["Reunapalkin ja päällysteen välisen sauman tiivistäminen" ""]
    ["Reunapalkin liikuntasauman tiivistäminen" ""]
    ["Käsin tehtävät paikkaukset pikapaikkausmassalla" ""]
+   ["AB-paikkaus käsin" ""]
    ["PAB-paikkaus käsin" ""]
    ["Muu päällysteiden paikkaustyö" ""]])
 

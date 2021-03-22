@@ -29,7 +29,7 @@
   (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
            (>= loppuosa alkuosa))
     validointivirheet
-    (conj validointivirheet "Tierekisterissä virhe.")))
+    (conj validointivirheet "Tierekisteriosoitteessa virhe.")))
 
 (defn- sallittu-tilamuutos? [uusi vanha rooli]
   (let [ehdotettu? #(= "ehdotettu" %)

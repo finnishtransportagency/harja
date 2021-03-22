@@ -37,18 +37,16 @@
 }
 
 .tilattu-bg:extend(.tila-bg) {
-  background-color: #FFFFFF;
+  background-color: transparent;
 }
 
 .valmis-bg:extend(.tila-bg) {
-  background: #FFFFFF;
+  background: transparent;
 }
 
 .hylatty-bg:extend(.tila-bg) {
   background: #F8D7D1;
 }
-
-
 
 
 /* Sivupalkkilomakkeen ominaisuuksia */
@@ -75,6 +73,7 @@
 span.prosessi-kesken {
   color: @harmaa4;
 }
+
 div.kohdelistaus {
   margin-left: -15px !important;
   margin-right: -15px !important;
@@ -83,4 +82,15 @@ div.kohdelistaus {
 /* Filtterit */
 .filtterit {
   background-color: @gray240;
+}
+
+.paikkauskohderivi {
+
+  &:hover {
+    background-color: @blue-lighter !important;
+  }
+
+  &.valittu {
+    background-color: @blue-lighter;
+  }
 }

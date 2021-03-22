@@ -313,7 +313,7 @@
   TallennaPaikkauskohdeOnnistui
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-          _ (modal/piilota!) ]
+          _ (modal/piilota!)]
       (viesti/nayta-toast!
         (if muokattu
           "Muutokset tallennettu"
@@ -446,9 +446,14 @@
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäyksen perumisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttaika-aareton)
       (dissoc app :lomake)))
-
   )
 
 (def tyomenetelmat
-  ["Kaikki" "MPA" "KTVA" "SIPA" "SIPU" "REPA" "UREM" "Muu"])
+  ["Kaikki" "AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "KT-valuasfalttipaikkaus (KTVA)"
+   "Konetiivistetty reikävaluasfalttipaikkaus (REPA)" "Sirotepuhalluspaikkaus (SIPU)"
+   "Sirotepintauksena tehty lappupaikkaus (SIPA)" "Urapaikkaus (UREM/RREM)" "Kannukaatosaumaus" "KT-valuasfalttisaumaus"
+   "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"
+   "Reunapalkin ja päällysteen välisen sauman tiivistäminen" "Reunapalkin liikuntasauman tiivistäminen"
+   "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"
+   "Muu päällysteiden paikkaustyö"])
 
