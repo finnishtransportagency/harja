@@ -62,8 +62,8 @@
      (when pitoisuus [:sideainepitoisuus pitoisuus])
      [:lisa-aineet lisaaineet]]]])
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                                              tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus
+(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                              tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
                                               verkon-sijainti toimenpide kasittelysyvyys]}
                                       kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
@@ -81,15 +81,15 @@
     [:ajorata tr-ajorata]
     [:kaista tr-kaista]]
     [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
-   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys 1)]
+   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus 1)]
      [:kasittelypaksuus kasittelysyvyys])
-   (when verkkotyyppi
+   (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
      [:verkkotyyppi verkkotyyppi])
    (when verkon-tarkoitus
      [:verkon-tarkoitus verkon-tarkoitus])
    (when verkon-sijainti
      [:verkon-sijainti verkon-sijainti])
-   (when-not (contains? #{42 41 32 31 666} toimenpide)      ;; LJYR TJYR TAS TASK REM-TAS
+   (when-not (contains? #{42 41 32 31 4} toimenpide)      ;; LJYR TJYR TAS TASK REM-TAS
      [:tekninen-toimenpide 4])])                            ;; "Kevyt rakenteen parantaminen"
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
