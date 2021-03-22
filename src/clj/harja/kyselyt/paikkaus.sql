@@ -167,19 +167,18 @@ FROM paikkauskohde pk, urakka u, organisaatio o
    AND (:tila::TEXT IS NULL OR pk."paikkauskohteen-tila" = :tila::paikkauskohteen_tila)
    AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-   AND (:tyomenetelmat::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
+   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
    AND u.id = pk."urakka-id"
    AND o.id = u.urakoitsija
    -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
-   AND (:elyt::INT IS NULL OR
-        st_intersects( ST_UNION(ARRAY( select e.alue FROM organisaatio e WHERE e.id in (:elyt)))  , (SELECT *
-                               FROM tierekisteriosoitteelle_viiva(
-                                       CAST((pk.tierekisteriosoite).tie AS INTEGER),
-                                       CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
-                                       CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER))))
-
-
-     )
+   AND ((:elyt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
+                                                (SELECT *  FROM tierekisteriosoitteelle_viiva(
+                                                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite).aosa AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite).aet AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite).losa AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite).let AS INTEGER)))))
+       )
 ORDER BY pk.muokattu ASC, pk.luotu ASC;
 
 --name: paikkauskohteet-geometrialla
@@ -230,7 +229,7 @@ WHERE st_intersects(a.alue, (SELECT *
   AND (:tila::TEXT IS NULL OR pk."paikkauskohteen-tila" = :tila::paikkauskohteen_tila)
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-  AND (:tyomenetelmat::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
 ORDER BY pk.muokattu ASC, pk.luotu ASC;

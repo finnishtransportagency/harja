@@ -49,7 +49,7 @@
 (defrecord FiltteriValitseTila [uusi-tila])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma])
-(defrecord FiltteriValitseEly [uusi-ely])
+(defrecord FiltteriValitseEly [uusi-ely valittu?])
 (defrecord TiedostoLadattu [vastaus])
 (defrecord HaePaikkauskohteet [])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
@@ -80,7 +80,7 @@
           :harja.tiedot.urakka.urakka/validi?
           :harja.tiedot.urakka.urakka/validius))
 
-(defn- hae-paikkauskohteet [urakka-id {:keys [valittu-tila valittu-vuosi valittu-menetelma valittu-ely] :as app}]
+(defn- hae-paikkauskohteet [urakka-id {:keys [valittu-tila valittu-vuosi valittu-tyomenetelma valitut-elyt] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -88,8 +88,8 @@
                         :tila valittu-tila
                         :alkupvm alkupvm
                         :loppupvm loppupvm
-                        :tyomenetelmat #{valittu-menetelma}
-                        :elyt #{valittu-ely}}
+                        :tyomenetelmat #{valittu-tyomenetelma}
+                        :elyt valitut-elyt}
                        {:onnistui ->HaePaikkauskohteetOnnistui
                         :epaonnistui ->HaePaikkauskohteetEpaonnistui
                         :paasta-virhe-lapi? true})))
@@ -194,8 +194,29 @@
       app))
 
   FiltteriValitseEly
-  (process-event [{uusi-ely :uusi-ely} app]
-    (let [app (assoc app :valittu-ely uusi-ely)]
+  (process-event [{uusi-ely :uusi-ely valittu? :valittu?} app]
+    (let [_ (js/console.log "FiltteriValitseEly" (pr-str uusi-ely) (pr-str valittu?))
+          app (assoc app :valittu-ely uusi-ely)
+          valitut-elyt (:valitut-elyt app)
+          elyt (cond
+                 ;; Valitaan joku muu kuin "kaikki"
+                 (and valittu? (not= 0 (:id uusi-ely)))
+                 (-> valitut-elyt
+                     (conj (:id uusi-ely))
+                     (disj 0))
+
+                 ;; Valitaan "kaikki"
+                 (and valittu? (= 0 (:id uusi-ely)))
+                 #{0} ;; Palautetaan kaikki valinnalla
+
+                 ;; Poistetaan "kaikki" valinta
+                 (and (not valittu?) (= 0 (:id uusi-ely)))
+                 (disj valitut-elyt 0)
+
+                 ;; Poistetaan joku muu kuin "kaikki" valinta
+                 (and (not valittu?) (not= 0 (:id uusi-ely)))
+                 (disj valitut-elyt (:id uusi-ely)))
+          app (assoc app :valitut-elyt elyt)]
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
       app))
 

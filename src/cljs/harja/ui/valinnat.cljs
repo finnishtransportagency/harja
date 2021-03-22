@@ -521,10 +521,11 @@
   ([valinnat on-change teksti asetukset]
    (let [idn-alku-label (gensym "label")
          idn-alku-cb (gensym "cb")]
-     (fn [valinnat on-change teksti {kaikki-valinta-fn :kaikki-valinta-fn}]
+     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn] :as asetukset}]
        [:div.checkbox-pudotusvalikko
         [livi-pudotusvalikko
          (merge
+           asetukset
            {:naytettava-arvo (let [valittujen-valintojen-maara (count (filter :valittu? valinnat))
                                    valintojen-maara (count valinnat)
                                    naytettava-teksti (cond
@@ -536,14 +537,30 @@
            (when kaikki-valinta-fn
              {:class "pudotusvalikko"}))
          (map (fn [{:keys [id nimi valittu?] :as valinta}]
-                [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
-                                                :id (str idn-alku-label id)}
-                 nimi
-                 [:input {:id (str idn-alku-cb id)
-                          :type "checkbox"
-                          :checked valittu?
-                          :on-change #(let [valittu? (-> % .-target .-checked)]
-                                        (on-change valinta valittu?))}]])
+                (if (:vayla-tyyli? asetukset)
+                  [:div.flex-row
+                   [:input.vayla-checkbox
+                    {:id (str idn-alku-cb id)
+                     :class "check"
+                     :type "checkbox"
+                     :checked valittu?
+                     :on-change #(let [valittu? (-> % .-target .-checked)]
+                                   (on-change valinta valittu?))}]
+                   [:label {:on-click #(.stopPropagation %)
+                            :for (str idn-alku-cb id)}
+                    nimi]]
+                  [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
+                                                  :id (str idn-alku-label id)}
+                   nimi
+                   [:input
+                    (merge
+                      (when (:vayla-tyyli? asetukset)
+                        {:class "vayla-checkbox"})
+                      {:id (str idn-alku-cb id)
+                       :type "checkbox"
+                       :checked valittu?
+                       :on-change #(let [valittu? (-> % .-target .-checked)]
+                                     (on-change valinta valittu?))})]]))
               valinnat)]
         (when kaikki-valinta-fn
           [napit/yleinen-ensisijainen (if (some :valittu? valinnat)

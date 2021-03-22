@@ -1,7 +1,6 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
-            [harja.geo :as geo]
             [cljs-time.core :as time-core]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -14,12 +13,11 @@
             [harja.transit :as transit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.lomake :as lomake]
+            [harja.ui.valinnat :as valinnat]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.debug :as debug]
-            [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
@@ -212,27 +210,34 @@
         valittu-vuosi (:valittu-vuosi app)
         valittu-tyomenetelma (:valittu-tyomenetelma app)
         valittu-ely (:valittu-ely app)
+        valitut-elyt (:valitut-elyt app)
         hallintayksikot (conj
                           (map (fn [h]
                                  (dissoc h :alue :type :liikennemuoto))
                                @hal/vaylamuodon-hallintayksikot)
-                          {:id 0 :nimi "Kaikki" :elynumero 0})]
+                          {:id 0 :nimi "Kaikki" :elynumero 0})
+        valittavat-elyt (conj
+                          (map (fn [h]
+                                 (-> h
+                                     (dissoc h :alue :type :liikennemuoto)
+                                     (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                                          false))))
+                               @hal/vaylamuodon-hallintayksikot)
+                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+        _ (js/console.log "valittavat-elyt" (pr-str valittavat-elyt))]
     [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
      [:div.row
       [:div.col-xs-2
-       [:span.alasvedon-otsikko "ELY"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-ely
-                                     :vayla-tyyli? true
-                                     :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseEly %))
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-                                     :format-fn (fn [val]
-                                                  (if (= (:nimi val) "Kaikki")
-                                                    "Kaikki"
-                                                    (str (:elynumero val) " " (:nimi val))))}
-        hallintayksikot]]
+       [:span.alasvedon-otsikko-vayla "ELY"]
+       [valinnat/checkbox-pudotusvalikko
+        valittavat-elyt
+        (fn [ely valittu?]
+          (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+        [" ELY valittu" " ELYä valittu"]
+        {:vayla-tyyli? true}]]
       [:div.col-xs-2
 
-       [:span.alasvedon-otsikko "Tila"]
+       [:span.alasvedon-otsikko-vayla "Tila"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-tila
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseTila %))
@@ -245,7 +250,7 @@
                                                     val))}
         paikkauskohteiden-tilat]]
       [:div.col-xs-2
-       [:span.alasvedon-otsikko "Vuosi"]
+       [:span.alasvedon-otsikko-vayla "Vuosi"]
        [yleiset/livi-pudotusvalikko
         {:valinta valittu-vuosi
          :vayla-tyyli? true
@@ -253,7 +258,7 @@
          :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
         vuodet]]
       [:div.col-xs-2
-       [:span.alasvedon-otsikko "Työmenetelmä"]
+       [:span.alasvedon-otsikko-vayla "Työmenetelmä"]
        [yleiset/livi-pudotusvalikko
         {:valinta valittu-tyomenetelma
          :vayla-tyyli? true

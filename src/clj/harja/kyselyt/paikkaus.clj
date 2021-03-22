@@ -385,9 +385,9 @@ paikkauskohteet))
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
         ;; Valitut elykeskukset
-        elyt (disj elyt {:id 0 :nimi "Kaikki" :elynumero 0})
+        elyt (disj elyt 0) ;; Poistetaan potentiaalinen "kaikki" valinta
         elyt (when (> (count elyt) 0)
-               (into #{} (map :id elyt))) ;; Tee setti ely mäppien id:stä
+               (vec elyt))
         urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi))
                                  (hae-paikkauskohteet-geometrialla db urakka-id tila alkupvm loppupvm menetelmat)
                                  (paikkauskohteet-urakalle db {:urakka-id urakka-id
