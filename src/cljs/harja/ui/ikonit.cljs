@@ -606,7 +606,8 @@
    {:on-click toiminto}
    (livicon-trash)])
 
-;; Ikoni + jotain muuta -tyyppiset apurit
+(defn nelio-info []
+  [:img {:src "images/harja-icons/status/info.svg" :alt "info"}])
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
