@@ -199,7 +199,7 @@
       [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :leveys 3 :muokattava? (constantly false)
         :tyyppi :string
         :hae (fn [rivi]
-               (if (pot2-tiedot/onko-toimenpide-verkko? alusta-toimenpiteet (:toimenpide rivi))
+               (if (pot2-tiedot/onko-alustatoimenpide-verkko? (:toimenpide rivi))
                  (pot2-domain/ainetyypin-koodi->nimi (:verkon-tyypit materiaalikoodistot) (:verkon-tyyppi rivi))
                  (pot2-domain/ainetyypin-koodi->lyhenne alusta-toimenpiteet (:toimenpide rivi))))
         :validoi [[:ei-tyhja "Anna arvo"]]}
