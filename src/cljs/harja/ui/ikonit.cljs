@@ -511,6 +511,10 @@
 (defn oi-trash []
   [:img {:src "open-iconic/svg/trash.svg" :alt "trash"}])
 
+;; Uudet Väyläikonit
+(defn close-svg []
+  [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
+
 ;; Livin ikonit
 
 (defn livicon-ban []
@@ -626,3 +630,16 @@
    ikoni])
 
 (maarittele-svg-spritet 24 24 "livicons-24.svg")
+
+(defn sulje-ruksi
+  ([sulje!]
+   [sulje-ruksi sulje! {}])
+  ([sulje! {:keys [style]}]
+   [:button.close {:on-click sulje!
+                   :style (merge
+                            {:color "black"
+                             :margin "15px"
+                             :opacity 1}
+                            style)
+                   :type "button"}
+    [close-svg]]))

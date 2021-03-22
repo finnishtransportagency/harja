@@ -30,13 +30,14 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
-(defrecord LisaaAlustaToimenpide [])
+(defrecord AvaaAlustalomake [lomake])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
 (defrecord SuljeAlustalomake [])
 (defrecord NaytaMateriaalilomake [rivi])
 (defrecord SuljeMateriaalilomake [])
+(defrecord Pot2Muokattu [])
 
 
 (defn onko-toimenpide-verkko? [alustatoimenpiteet koodi]
@@ -151,9 +152,9 @@
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
 
-  LisaaAlustaToimenpide
-  (process-event [_ app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] {}))
+  AvaaAlustalomake
+  (process-event [{lomake :lomake} app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake))
 
   ValitseAlustatoimenpide
   (process-event [{toimenpide :toimenpide} app]
@@ -170,16 +171,20 @@
                    jatka? :jatka?} app]
     (let [idt (keys @alustarivit-atom)
           pienin-id (apply min idt)
-          uusi-id (if (pos? pienin-id)
-                    -1
-                    (dec pienin-id))
+          uusi-id (or (:muokkaus-grid-id alustalomake)
+                      (if (pos? pienin-id)
+                        -1
+                        (dec pienin-id)))
           alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
           ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
           alusta-params-ilman-ylimaaraisia (apply
-                                         dissoc alusta-params ylimaaraiset-avaimet)
+                                             dissoc alusta-params ylimaaraiset-avaimet)
           uusi-rivi {uusi-id alusta-params-ilman-ylimaaraisia}]
-      (swap! alustarivit-atom conj uusi-rivi))
-      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] (when jatka? {})))
+      (swap! alustarivit-atom conj uusi-rivi)
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
+                (when jatka? (-> alusta-params
+                                 (assoc :tr-ajorata nil :tr-kaista nil
+                                        :tr-alkuosa nil :tr-alkuetaisyys nil :tr-loppuosa nil :tr-loppuetaisyys nil))))))
 
   SuljeAlustalomake
   (process-event [_ app]
@@ -205,4 +210,8 @@
   (process-event [_ app]
     (-> app
         (assoc :pot2-massa-lomake nil
-               :pot2-murske-lomake nil))))
+               :pot2-murske-lomake nil)))
+
+  Pot2Muokattu
+  (process-event [_ app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true)))
