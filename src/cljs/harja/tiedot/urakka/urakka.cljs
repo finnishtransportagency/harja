@@ -205,7 +205,7 @@
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valittu-tila "kaikki"
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
-                                               :valittu-tyomenetelma "Kaikki"
+                                               :valitut-tyomenetelmat #{"Kaikki"}
                                                :valitut-elyt #{0}
                                                }})
 

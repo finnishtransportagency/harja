@@ -48,7 +48,7 @@
 (defrecord SuljeLomake [])
 (defrecord FiltteriValitseTila [uusi-tila])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
-(defrecord FiltteriValitseTyomenetelma [uusi-menetelma])
+(defrecord FiltteriValitseTyomenetelma [uusi-menetelma valittu?])
 (defrecord FiltteriValitseEly [uusi-ely valittu?])
 (defrecord TiedostoLadattu [vastaus])
 (defrecord HaePaikkauskohteet [])
@@ -80,7 +80,7 @@
           :harja.tiedot.urakka.urakka/validi?
           :harja.tiedot.urakka.urakka/validius))
 
-(defn- hae-paikkauskohteet [urakka-id {:keys [valittu-tila valittu-vuosi valittu-tyomenetelma valitut-elyt] :as app}]
+(defn- hae-paikkauskohteet [urakka-id {:keys [valittu-tila valittu-vuosi valitut-tyomenetelmat valitut-elyt] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -88,7 +88,7 @@
                         :tila valittu-tila
                         :alkupvm alkupvm
                         :loppupvm loppupvm
-                        :tyomenetelmat #{valittu-tyomenetelma}
+                        :tyomenetelmat valitut-tyomenetelmat
                         :elyt valitut-elyt}
                        {:onnistui ->HaePaikkauskohteetOnnistui
                         :epaonnistui ->HaePaikkauskohteetEpaonnistui
@@ -188,16 +188,33 @@
       app))
 
   FiltteriValitseTyomenetelma
-  (process-event [{uusi-menetelma :uusi-menetelma} app]
-    (let [app (assoc app :valittu-tyomenetelma uusi-menetelma)]
+  (process-event [{uusi-menetelma :uusi-menetelma valittu? :valittu?} app]
+    (let [valitut-tyomenetelmat (:valitut-tyomenetelmat app)
+          menetelmat (cond
+                       ;; Valitaan joku muu kuin "kaikki"
+                       (and valittu? (not= "Kaikki" (:nimi uusi-menetelma)))
+                       (-> valitut-tyomenetelmat
+                           (conj (:nimi uusi-menetelma))
+                           (disj "Kaikki"))
+
+                       ;; Valitaan "kaikki"
+                       (and valittu? (= "Kaikki" (:nimi uusi-menetelma)))
+                       #{"Kaikki"} ;; Palautetaan kaikki valinnalla
+
+                       ;; Poistetaan "kaikki" valinta
+                       (and (not valittu?) (= "Kaikki" (:nimi uusi-menetelma)))
+                       (disj valitut-tyomenetelmat "Kaikki")
+
+                       ;; Poistetaan joku muu kuin "kaikki" valinta
+                       (and (not valittu?) (not= "Kaikki" (:nimi uusi-menetelma)))
+                       (disj valitut-tyomenetelmat (:nimi uusi-menetelma)))
+          app (assoc app :valitut-tyomenetelmat menetelmat)]
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
       app))
 
   FiltteriValitseEly
   (process-event [{uusi-ely :uusi-ely valittu? :valittu?} app]
-    (let [_ (js/console.log "FiltteriValitseEly" (pr-str uusi-ely) (pr-str valittu?))
-          app (assoc app :valittu-ely uusi-ely)
-          valitut-elyt (:valitut-elyt app)
+    (let [valitut-elyt (:valitut-elyt app)
           elyt (cond
                  ;; Valitaan joku muu kuin "kaikki"
                  (and valittu? (not= 0 (:id uusi-ely)))

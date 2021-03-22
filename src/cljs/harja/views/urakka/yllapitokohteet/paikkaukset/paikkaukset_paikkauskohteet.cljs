@@ -210,14 +210,8 @@
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-tila (:valittu-tila app)
         valittu-vuosi (:valittu-vuosi app)
-        valittu-tyomenetelma (:valittu-tyomenetelma app)
-        valittu-ely (:valittu-ely app)
         valitut-elyt (:valitut-elyt app)
-        hallintayksikot (conj
-                          (map (fn [h]
-                                 (dissoc h :alue :type :liikennemuoto))
-                               @hal/vaylamuodon-hallintayksikot)
-                          {:id 0 :nimi "Kaikki" :elynumero 0})
+        valitut-tyomenetelmat (:valitut-tyomenetelmat app)
         valittavat-elyt (conj
                           (map (fn [h]
                                  (-> h
@@ -226,7 +220,11 @@
                                                           false))))
                                @hal/vaylamuodon-hallintayksikot)
                           {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
-        _ (js/console.log "valittavat-elyt" (pr-str valittavat-elyt))]
+        valittavat-tyomenetelmat (map (fn [t]
+                                     {:nimi t
+                                      :valittu? (or (some #(= t %) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
+                                                    false)})
+                                   t-paikkauskohteet/tyomenetelmat)]
     [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
      [:div.row
       [:div.col-xs-2
@@ -238,7 +236,6 @@
         [" ELY valittu" " ELYä valittu"]
         {:vayla-tyyli? true}]]
       [:div.col-xs-2
-
        [:span.alasvedon-otsikko-vayla "Tila"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-tila
                                      :vayla-tyyli? true
@@ -259,14 +256,14 @@
          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
          :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
         vuodet]]
-      [:div.col-xs-2
+      [:div.col-xs-4
        [:span.alasvedon-otsikko-vayla "Työmenetelmä"]
-       [yleiset/livi-pudotusvalikko
-        {:valinta valittu-tyomenetelma
-         :vayla-tyyli? true
-         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-         :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma %))}
-        t-paikkauskohteet/tyomenetelmat]]
+       [valinnat/checkbox-pudotusvalikko
+        valittavat-tyomenetelmat
+        (fn [tyomenetelma valittu?]
+          (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
+        [" Työmenetelmä valittu" " Työmentelmää valittu"]
+        {:vayla-tyyli? true}]]
       #_[:div.col-xs-2 "hae"]
       ]]))
 

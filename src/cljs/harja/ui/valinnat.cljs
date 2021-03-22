@@ -529,7 +529,14 @@
            {:naytettava-arvo (let [valittujen-valintojen-maara (count (filter :valittu? valinnat))
                                    valintojen-maara (count valinnat)
                                    naytettava-teksti (cond
-                                                       (= valittujen-valintojen-maara valintojen-maara) "Kaikki valittu"
+                                                       (= valittujen-valintojen-maara valintojen-maara)
+                                                       "Kaikki valittu"
+                                                       (and
+                                                         (= "Kaikki" (:nimi (first valinnat)))
+                                                         (:valittu? (first valinnat))) "Kaikki valittu"
+                                                       (and
+                                                         (= 0 (:id (first valinnat)))
+                                                         (:valittu? (first valinnat))) "Kaikki valittu"
                                                        (= valittujen-valintojen-maara 1) (str "1" (first teksti))
                                                        :else (str valittujen-valintojen-maara (second teksti)))]
                                naytettava-teksti)
@@ -540,14 +547,14 @@
                 (if (:vayla-tyyli? asetukset)
                   [:div.flex-row
                    [:input.vayla-checkbox
-                    {:id (str idn-alku-cb id)
+                    {:id (str idn-alku-cb (or id (hash nimi)))
                      :class "check"
                      :type "checkbox"
                      :checked valittu?
                      :on-change #(let [valittu? (-> % .-target .-checked)]
                                    (on-change valinta valittu?))}]
                    [:label {:on-click #(.stopPropagation %)
-                            :for (str idn-alku-cb id)}
+                            :for (str idn-alku-cb (or id (hash nimi)))}
                     nimi]]
                   [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
                                                   :id (str idn-alku-label id)}

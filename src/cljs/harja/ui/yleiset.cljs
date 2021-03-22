@@ -208,7 +208,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
            pakollinen?] :as kaka}]
   [:ul (if vayla-tyyli?
-         {:style (merge {:z-index "1000"
+         {:style (merge {:padding-top "4px"
+                         :z-index "1000"
                          :display (if @auki?
                                     "block"
                                     "none")}
