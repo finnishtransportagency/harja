@@ -363,8 +363,7 @@
       (viesti/nayta-toast!
         (if muokattu
           "Muutokset tallennettu"
-          (str "Kohde " (paikkauskohde-id->nimi app (:id paikkauskohde)) " lisätty"))
-        :success viesti/viestin-nayttoaika-pitka)
+          (str "Kohde " (paikkauskohde-id->nimi app (:id paikkauskohde)) " lisätty")))
       (dissoc app :lomake)))
 
   TallennaPaikkauskohdeEpaonnistui
@@ -372,8 +371,8 @@
     (do
       (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
       (if muokattu
-        (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttaika-aareton)
-        (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttaika-aareton))
+        (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
+        (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
       app))
 
   TilaaPaikkauskohde
@@ -396,7 +395,7 @@
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " tilaamisessa tapahtui virhe!")
-                           :varoitus viesti/viestin-nayttaika-aareton)
+                           :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :lomake)))
 
   HylkaaPaikkauskohde
@@ -419,7 +418,7 @@
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäämisessä tapahtui virhe!")
-                           :varoitus viesti/viestin-nayttaika-aareton)
+                           :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :lomake)))
 
   PoistaPaikkauskohde
@@ -444,7 +443,7 @@
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (:nimi paikkauskohde) " poistamisessa tapahtui virhe!")
-                           :varoitus viesti/viestin-nayttaika-aareton)
+                           :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :lomake)))
 
   PeruPaikkauskohteenTilaus
@@ -467,7 +466,7 @@
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " tilauksen perumisessa tapahtui virhe!")
-                           :varoitus viesti/viestin-nayttaika-aareton)
+                           :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :lomake)))
 
   PeruPaikkauskohteenHylkays
@@ -490,7 +489,7 @@
     (let [_ (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäyksen perumisessa tapahtui virhe!")
-                           :varoitus viesti/viestin-nayttaika-aareton)
+                           :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :lomake)))
   )
 

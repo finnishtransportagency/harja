@@ -10,7 +10,8 @@
             [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.ui.leijuke :as leijuke]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord ^:private Otsikko [otsikko optiot])
@@ -521,7 +522,7 @@ ja kaikki pakolliset kentät on täytetty"
   :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
   :data                 validoitu data
   "
-  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata?]} skeema data]
+  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata? sulje-fn]} skeema data]
   (let [fokus (atom nil)
         validoi-avaimet (fn [skeema]
                           (reduce (fn [skeema skeeman-osa]
@@ -576,6 +577,7 @@ ja kaikki pakolliset kentät on täytetty"
                                               ::skeema skeema))
                                  header)]
                [:div.row header])
+             (when sulje-fn [napit/sulje-ruksi sulje-fn])
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (when otsikko-komp

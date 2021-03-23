@@ -59,6 +59,13 @@
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske
                                                 {:nimi :massamaara :pakollinen? false}]
+                                               2            ;; AB
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               3            ;; Verkko
+                                               [:verkon-tyyppi :verkon-sijainti
+                                                {:nimi :verkon-tarkoitus :pakollinen? false}]
+                                               4            ;; REM-TAS
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}
@@ -84,6 +91,10 @@
                                                 {:nimi :sideaine2 :otsikko "Sideaine 2"}
                                                 {:nimi :murske :pakollinen? false}
                                                 {:nimi :massamaara :jos :murske}]
+                                               21           ;; ABK
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               22           ;; ABS
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
                                                23           ;; MS
                                                [:lisatty-paksuus
                                                 {:nimi :massamaara :pakollinen? false}
@@ -101,12 +112,7 @@
                                                [:kasittelysyvyys
                                                 :leveys :pinta-ala]
                                                43           ;; RJYR
-                                               []
-                                               666          ;; REM-TAS
-                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
-                                               667          ;; Verkko
-                                               [:verkon-tyyppi :verkon-sijainti
-                                                {:nimi :verkon-tarkoitus :pakollinen? false}]}
+                                               []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
         luo-metadata-ja-oletusarvot (fn [avain-tai-metadata]
                                       (let [toimenpide-spesifinen-kentta-metadata (if (keyword? avain-tai-metadata)
@@ -356,9 +362,9 @@
 (defn murskeen-rikastettu-nimi [mursketyypit murske]
   ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
   (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
-                  (rivin-avaimet->str murske #{::nimen-tarkenne ::dop-nro}))
-        tarkennukset (rivin-avaimet->str murske #{::rakeisuus ::iskunkestavyys} ", ")
-        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+                  (rivin-avaimet->str murske #{::nimen-tarkenne}))
+        tarkennukset (rivin-avaimet->str murske #{::dop-nro} ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))
 
 (def asfalttirouheen-tyypin-id 2)
@@ -378,10 +384,8 @@
   (let [massa (assoc massa ::rc% (massan-rc-pitoisuus massa))
         ydin (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi massa))
                   (rivin-avaimet->str massa [::max-raekoko
-                                             ::nimen-tarkenne
-                                             ::dop-nro]))
+                                             ::nimen-tarkenne]))
 
-        tarkennukset (rivin-avaimet->str massa [::kuulamyllyluokka
-                                                ::rc%] ", ")
-        tarkennukset-teksti (when (seq tarkennukset) (str "(" tarkennukset ")"))]
+        tarkennukset (rivin-avaimet->str massa [::dop-nro] ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))

@@ -179,7 +179,7 @@
       [:div.col-xs-12.col-md-8.col-lg-8.inline-block {:style {:text-align "end"}}
        ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
        ;TODO: Napeista puuttuu myös kulmien pyöristys
-       [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Kohde Asdasads on luotu" :neutraali-ikoni)]
+       [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
        [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
        [:span.inline-block
         [:form {:style {:margin-left "auto"}
