@@ -187,7 +187,7 @@ ja palauttaa käyttäjätiedot"
                        db
                        (assoc kayttaja
                          :organisaatio (:id organisaatio)))]
-     (log/info "SÄHKE HEADERIT: " headerit
+     (log/info "SÄHKE HEADERIT, oam_groups: " ryhmat
                "; KÄYTTÄJÄ ID: " kayttaja-id
                "; ORGANISAATIO: " organisaatio)
      (merge (assoc kayttaja
