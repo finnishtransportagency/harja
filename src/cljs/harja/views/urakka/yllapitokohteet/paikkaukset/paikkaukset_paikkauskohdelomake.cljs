@@ -59,7 +59,7 @@
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Yksikkö"
       :tyyppi :valinta
-      :valinnat ["m²" "t" "kpl" "jm"]
+      :valinnat ["m2" "t" "kpl" "jm"]
       :nimi :yksikko
       :pakollinen? true
       :vayla-tyyli? true
@@ -127,7 +127,7 @@
       :virhe? (nayta-virhe? [:let] lomake)
       :nimi :let})])
 
-(defn nimi-numero-ja-tp-kentat [muu-menetelma? lomake]
+(defn nimi-numero-ja-tp-kentat [lomake]
   [{:otsikko "Nimi"
     :tyyppi :string
     :nimi :nimi
@@ -148,17 +148,11 @@
     :vayla-tyyli? true
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
-    ::lomake/col-luokka "col-sm-12"}
-   (when muu-menetelma?
-     {:otsikko "Menetelmän kuvaus"
-      :nimi :menetelman-kuvaus
-      :pakollinen? :true
-      :tyyppi :string
-      ::lomake/col-luokka "col-sm-6"})])
+    ::lomake/col-luokka "col-sm-12"}])
 
-(defn paikkauskohde-skeema [e! muu-menetelma? voi-muokata? lomake]
+(defn paikkauskohde-skeema [e! voi-muokata? lomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
-                         (nimi-numero-ja-tp-kentat muu-menetelma? lomake))
+                         (nimi-numero-ja-tp-kentat lomake))
         sijainti (when voi-muokata?
                    (sijainnin-kentat lomake))
         suunnitelma (when voi-muokata?
@@ -171,7 +165,6 @@
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                         (= :uusi-paikkauskohde (:tyyppi lomake)))
-        muu-menetelma? (= "Muu" (:tyomenetelma lomake))
         kayttajarooli (roolit/osapuoli @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
         voi-tilata? (or (and
@@ -410,7 +403,7 @@
                             "Sulje"
                             #(e! (t-paikkauskohteet/->SuljeLomake))]]])
                        ]))}
-      (paikkauskohde-skeema e! muu-menetelma? muokkaustila? lomake) ;;TODO: korjaa päivitys
+      (paikkauskohde-skeema e! muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
 
 (defn testilomake
