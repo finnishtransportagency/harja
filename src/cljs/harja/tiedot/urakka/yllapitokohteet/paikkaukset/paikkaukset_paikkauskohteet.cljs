@@ -108,13 +108,14 @@
   ([paikkauskohde onnistui epaonnistui]
    (tallenna-paikkauskohde paikkauskohde onnistui epaonnistui nil))
   ([paikkauskohde onnistui epaonnistui parametrit]
-   (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
-                      paikkauskohde
-                      {:onnistui onnistui
-                       :onnistui-parametrit parametrit
-                       :epaonnistui epaonnistui
-                       :epaonnistui-parametrit parametrit
-                       :paasta-virhe-lapi? true})))
+   (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
+     (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
+                        paikkauskohde
+                        {:onnistui onnistui
+                         :onnistui-parametrit parametrit
+                         :epaonnistui epaonnistui
+                         :epaonnistui-parametrit parametrit
+                         :paasta-virhe-lapi? true}))))
 
 (defn validoinnit
   ([avain lomake]
