@@ -150,6 +150,7 @@ SELECT pk.id                        AS id,
        (pk.tierekisteriosoite).aet  AS aet,
        (pk.tierekisteriosoite).losa AS losa,
        (pk.tierekisteriosoite).let  AS let,
+       (pk.tierekisteriosoite).ajorata  AS ajorata,
        CASE
            WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
                (SELECT *
@@ -208,6 +209,7 @@ SELECT pk.id                        AS id,
        (pk.tierekisteriosoite).aet  AS aet,
        (pk.tierekisteriosoite).losa AS losa,
        (pk.tierekisteriosoite).let  AS let,
+       (pk.tierekisteriosoite).ajorata  AS ajorata,
        CASE
            WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
                (SELECT *
@@ -251,7 +253,7 @@ SET "ulkoinen-id"          = :ulkoinen-id,
     loppupvm              = :loppupvm::TIMESTAMP,
     tyomenetelma           = :tyomenetelma,
     tyomenetelma_kuvaus    = :tyomenetelma-kuvaus,
-    tierekisteriosoite = ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite,
+    tierekisteriosoite = ROW(:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
     "paikkauskohteen-tila" = :paikkauskohteen-tila::paikkauskohteen_tila,
     "suunniteltu-hinta" = :suunniteltu-hinta,
     "suunniteltu-maara" = :suunniteltu-maara,
@@ -276,7 +278,7 @@ VALUES (:luoja-id,
         :loppupvm::TIMESTAMP,
         :tyomenetelma,
         :tyomenetelma-kuvaus,
-        ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite,
+        ROW(:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
         :paikkauskohteen-tila::paikkauskohteen_tila,
         :urakka-id,
         :suunniteltu-hinta,
@@ -312,6 +314,7 @@ SELECT pk.id                        AS id,
        (pk.tierekisteriosoite).aet  AS aet,
        (pk.tierekisteriosoite).losa AS losa,
        (pk.tierekisteriosoite).let  AS let,
+       (pk.tierekisteriosoite).ajorata AS ajorata,
        CASE
            WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
                (SELECT *

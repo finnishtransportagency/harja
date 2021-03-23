@@ -311,17 +311,16 @@
                                                             (not (empty? (:sijainti p))))
                                                       (harja.geo/extent (:sijainti p))))
                                                   paikkauskohteet)))
-          _ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
-          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
+          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
+          _ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
           ]
       (do
         (when (and (not (nil? paikkauskohteet))
                    (not (empty? paikkauskohteet))
                    (not (nil? zoomattavat-geot))
                    (not (empty? zoomattavat-geot)))
-          (js/console.log "reset ja keskitys")
-          (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
-          (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot))
+          ;(js/console.log "reset ja keskitys")
+          (reset! paikkauskohteet-kartalle/valitut-kohteet-atom #{}))
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
             (assoc :paikkauskohteet paikkauskohteet)))))
