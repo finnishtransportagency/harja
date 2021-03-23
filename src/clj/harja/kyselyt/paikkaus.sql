@@ -179,7 +179,7 @@ FROM paikkauskohde pk, urakka u, organisaatio o
                                                         CAST((pk.tierekisteriosoite).losa AS INTEGER),
                                                         CAST((pk.tierekisteriosoite).let AS INTEGER)))))
        )
-ORDER BY pk.muokattu ASC, pk.luotu ASC;
+ORDER BY pk.muokattu DESC NULLS LAST, pk.luotu DESC;
 
 --name: paikkauskohteet-geometrialla
 -- Haetaan alueurakan (hoito,teiden-hoito) alueella olevat paikkauskohteet
@@ -232,7 +232,7 @@ WHERE st_intersects(a.alue, (SELECT *
   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
-ORDER BY pk.muokattu ASC, pk.luotu ASC;
+ORDER BY pk.muokattu DESC NULLS LAST, pk.luotu DESC;
 
 --name:paivita-paikkauskohde!
 UPDATE paikkauskohde

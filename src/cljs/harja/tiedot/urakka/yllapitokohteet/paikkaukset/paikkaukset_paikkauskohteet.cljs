@@ -269,23 +269,24 @@
 
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
-    (do
-      ;(js/console.log "TiedostoLadattu :: error?" (pr-str (:status vastaus)) (pr-str (get-in vastaus [:response "virheet"])))
+    (let [_ (js/console.log "TiedostoLadattu :: vastaus" (pr-str vastaus))]
+      (do
+        ;(js/console.log "TiedostoLadattu :: error?" (pr-str (:status vastaus)) (pr-str (get-in vastaus [:response "virheet"])))
 
-      ;; Excelissä voi mahdollisesti olla virheitä, jos näin on, niin avataan modaali, johon virheet kirjoitetaan
-      ;; Jos taas kaikki sujui kuten Strömssössä, niin näytetään onnistumistoasti
-      (if (not= 200 (:status vastaus))
-        (do
-          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
-                               :varoitus viesti/viestin-nayttoaika-lyhyt)
-          (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
-          (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
-        (do
-          ;; Ladataan uudet paikkauskohteet
-          (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
-          (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
-                               :onnistui viesti/viestin-nayttoaika-lyhyt)
-          (dissoc app :excel-virhe)))))
+        ;; Excelissä voi mahdollisesti olla virheitä, jos näin on, niin avataan modaali, johon virheet kirjoitetaan
+        ;; Jos taas kaikki sujui kuten Strömssössä, niin näytetään onnistumistoasti
+        (if (and (not (nil? (:status vastaus))) (not= 200 (:status vastaus)))
+          (do
+            (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe"
+                                 :varoitus viesti/viestin-nayttoaika-lyhyt)
+            (virhe-modal (get-in vastaus [:response "virheet"]) "Virhe ladattaessa kohteita tiedostosta")
+            (assoc app :excel-virhe (get-in vastaus [:response "virheet"])))
+          (do
+            ;; Ladataan uudet paikkauskohteet
+            (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+            (viesti/nayta-toast! "Paikkauskohteet ladattu onnistuneesti"
+                                 :onnistui viesti/viestin-nayttoaika-lyhyt)
+            (dissoc app :excel-virhe))))))
 
   HaePaikkauskohteet
   (process-event [_ app]

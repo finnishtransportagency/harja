@@ -12,8 +12,8 @@
         ;; Esimerkki excelissä paikkauskohteet alkavat vasta viidenneltä riviltä.
         ;; Me emme voi olla tästä kuitenkaan ihan varmoja, niin luetaan varalta kaikki data excelistä ulos
         raaka-data (xls/select-columns {:A :nro, :B :nimi :C :tie :D :ajorata :E :aosa :F :aet :G :losa
-                                        :H :let :I :pituus :J :alkupvm :K :loppupvm :L :tyomenetelma
-                                        :M :suunniteltu-maara :N :yksikko :O :suunniteltu-hinta :P :lisatiedot}
+                                        :H :let :I :alkupvm :J :loppupvm :K :tyomenetelma :L :suunniteltu-maara
+                                        :M :yksikko :N :suunniteltu-hinta :O :lisatiedot}
                                        sivu)
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
@@ -21,7 +21,14 @@
         ;; Ja otetaan otsikon jälkeiset rivit, joissa on nimi. Päästetään tässä vaiheessa myös selvästi virheelliset
         ;; rivit läpi, jotta voidaan palauttaa validaatiovirheet.
         otsikko-idx (first (keep-indexed (fn [idx rivi] (when (and (= "Nro." (:nro rivi)) (= "Kohde" (:nimi rivi))) idx)) raaka-data))
-        paikkauskohteet (remove #(nil? (:nimi %)) (subvec raaka-data (inc otsikko-idx)))]
+        paikkauskohteet (remove #(nil? (:nimi %)) (subvec raaka-data (inc otsikko-idx)))
+        paikkauskohteet (mapv
+                          #(update % :loppupvm (fn [loppupvm]
+                                                 (if (inst? loppupvm)
+                                                   loppupvm
+                                                   (pvm/parsi-paiva-str->inst loppupvm))))
+                          paikkauskohteet)
+        _ (println "erottele-paikkauskohteet :: paikkauskohteet" (pr-str paikkauskohteet))]
     paikkauskohteet))
 
 (def lahtotiedot-sisalto

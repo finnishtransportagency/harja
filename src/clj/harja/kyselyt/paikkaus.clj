@@ -101,7 +101,8 @@
          ::paikkaus/paikkauskohde
          paikkaus/paikkauskohteen-perustiedot
          {::paikkaus/nimi nimi
-          ::paikkaus/urakka-id urakka-id} ))
+          ::paikkaus/urakka-id urakka-id
+          ::muokkaustiedot/poistettu? false} ))
 
 (defn paivita-paikkaukset-poistetuksi
   "Poistaa paikkaukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."

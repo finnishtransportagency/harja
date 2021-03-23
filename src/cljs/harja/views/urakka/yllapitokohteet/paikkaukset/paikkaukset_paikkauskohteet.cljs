@@ -84,13 +84,13 @@
                                                ))}]
                           [:span (str/capitalize arvo)]]])}
                 {:otsikko "Menetelmä"
-                 :leveys 2
+                 :leveys 4
                  :nimi :tyomenetelma}
                 {:otsikko "Sijainti"
-                 :leveys 4
+                 :leveys 3
                  :nimi :formatoitu-sijainti}
                 {:otsikko "Aikataulu"
-                 :leveys 4
+                 :leveys 2
                  :nimi :formatoitu-aikataulu
                  :fmt (fn [arvo]
                         [:span {:class (if (str/includes? arvo "arv")
@@ -179,8 +179,7 @@
       [:div.col-xs-12.col-md-8.col-lg-8.inline-block {:style {:text-align "end"}}
        ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
        ;TODO: Napeista puuttuu myös kulmien pyöristys
-       [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
-       [napit/lataa "Lataa Excel-pohja" #(js/console.log "Ladataan excel-pohja") {:luokka "napiton-nappi"}] ;TODO: Implementoi
+       #_ [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
        [:span.inline-block
         [:form {:style {:margin-left "auto"}
                 :target "_blank" :method "POST"
