@@ -342,7 +342,7 @@ paikkauskohteet))
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
 
 ;; HAetaan paikkauskohteet täällä, jottei tule konfliktia
-(defn- hae-paikkauskohteet-geometrialla [db urakka-id tila alkupvm loppupvm menetelmat]
+(defn- hae-paikkauskohteet-geometrialla [db urakka-id tilat alkupvm loppupvm menetelmat]
   (let [;ely (q-urakat/hae-urakan-ely db {:urakkaid urakka-id})
         ;; ELYllä on olemassa aluegeometria, jota voidaan hyödyntää haussa,
         ;; mutta ely on myös merkittynä paikkauskohteen omistavan urakan hallintayksiköksi, joten
@@ -351,7 +351,7 @@ paikkauskohteet))
 
         ;; Haetaan paikkauskohteet hoito ja teiden-hoito tyyppisille urakoille näiden urakoiden geometrian perusteella
         paikkauskohteet (paikkauskohteet-geometrialla db {:urakka-id urakka-id
-                                                          :tila tila
+                                                          :tilat tilat
                                                           :alkupvm alkupvm
                                                           :loppupvm loppupvm
                                                           :tyomenetelmat menetelmat})]
@@ -368,19 +368,17 @@ paikkauskohteet))
              (dissoc :geometria)))
        paikkauskohteet))
 
-(defn paikkauskohteet [db user {:keys [elyt tila alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
+(defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         ;; Paikkauskohteiden hakeminen on eri urakkatyypeille vaihtelee.
         ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
-        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito) haetaan paikkauskohteita,
-        ;; niin silloin turvaudutaan paikkauskohteen maantieteelliseen
-        ;; sijaintiin eikä urakan-id:seen.
+        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito tyyppinen urakka) haetaan paikkauskohteita,
+        ;; niin silloin turvaudutaan paikkauskohteen maantieteelliseen sijaintiin eikä urakan-id:seen.
         urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
-
-        tila (if (or (nil? tila) (= "kaikki" (str/lower-case tila)))
-               nil ;; kaikkia haettaessa käytetään nil arvoa
-               tila)
+        tilat (disj tilat "kaikki")
+        tilat (when (> (count tilat) 0)
+                (vec tilat))
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
@@ -389,9 +387,9 @@ paikkauskohteet))
         elyt (when (> (count elyt) 0)
                (vec elyt))
         urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi))
-                                 (hae-paikkauskohteet-geometrialla db urakka-id tila alkupvm loppupvm menetelmat)
+                                 (hae-paikkauskohteet-geometrialla db urakka-id tilat alkupvm loppupvm menetelmat)
                                  (paikkauskohteet-urakalle db {:urakka-id urakka-id
-                                                               :tila tila
+                                                               :tilat tilat
                                                                :alkupvm alkupvm
                                                                :loppupvm loppupvm
                                                                :tyomenetelmat menetelmat

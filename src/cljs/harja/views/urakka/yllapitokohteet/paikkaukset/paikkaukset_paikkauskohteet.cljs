@@ -31,7 +31,7 @@
             ))
 
 (def paikkauskohteiden-tilat
-  ["kaikki" "ehdotettu" "hylatty" "tilattu" "valmis"])
+  [{:nimi "Kaikki"} {:nimi "Ehdotettu"} {:nimi "Hylätty"} {:nimi "Tilattu"} {:nimi "Valmis"}])
 
 (defn- urakan-vuodet [alkupvm loppupvm]
   (when (and (not (nil? alkupvm)) (not (nil? loppupvm)))
@@ -208,7 +208,7 @@
 
 (defn- filtterit [e! app]
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
-        valittu-tila (:valittu-tila app)
+        valitut-tilat (:valitut-tilat app)
         valittu-vuosi (:valittu-vuosi app)
         valitut-elyt (:valitut-elyt app)
         valitut-tyomenetelmat (:valitut-tyomenetelmat app)
@@ -221,10 +221,14 @@
                                @hal/vaylamuodon-hallintayksikot)
                           {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
         valittavat-tyomenetelmat (map (fn [t]
-                                     {:nimi t
-                                      :valittu? (or (some #(= t %) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
-                                                    false)})
-                                   t-paikkauskohteet/tyomenetelmat)]
+                                        {:nimi t
+                                         :valittu? (or (some #(= t %) valitut-tyomenetelmat) ;; Onko kyseinen työmenetelmä valittu
+                                                       false)})
+                                      t-paikkauskohteet/tyomenetelmat)
+        valittavat-tilat (map (fn [t]
+                                (assoc t :valittu? (or (some #(= (:nimi t) %) valitut-tilat) ;; Onko kyseinen tila valittu
+                                                       false)))
+                              paikkauskohteiden-tilat)]
     [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
      [:div.row
       [:div.col-xs-2
@@ -237,17 +241,12 @@
         {:vayla-tyyli? true}]]
       [:div.col-xs-2
        [:span.alasvedon-otsikko-vayla "Tila"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-tila
-                                     :vayla-tyyli? true
-                                     :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseTila %))
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-                                     :format-fn (fn [val]
-                                                  (let [val (if (= "hylatty" val)
-                                                              "hylätty"
-                                                              val)
-                                                        val (str/capitalize val)]
-                                                    val))}
-        paikkauskohteiden-tilat]]
+       [valinnat/checkbox-pudotusvalikko
+        valittavat-tilat
+        (fn [tila valittu?]
+          (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
+        [" Tila valittu" " Tilaa valittu"]
+        {:vayla-tyyli? true}]]
       [:div.col-xs-2
        [:span.alasvedon-otsikko-vayla "Vuosi"]
        [yleiset/livi-pudotusvalikko

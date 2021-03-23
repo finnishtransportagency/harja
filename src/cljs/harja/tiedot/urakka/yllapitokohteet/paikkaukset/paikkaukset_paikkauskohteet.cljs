@@ -46,7 +46,7 @@
 
 (defrecord AvaaLomake [lomake])
 (defrecord SuljeLomake [])
-(defrecord FiltteriValitseTila [uusi-tila])
+(defrecord FiltteriValitseTila [uusi-tila valittu?])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma valittu?])
 (defrecord FiltteriValitseEly [uusi-ely valittu?])
@@ -74,18 +74,28 @@
 (defrecord PeruPaikkauskohteenHylkaysOnnistui [])
 (defrecord PeruPaikkauskohteenHylkaysEpaonnistui [paikkauskohde])
 
+(defn- tilat-hakuun [tilat]
+  (let [sql-tilat {"Kaikki" "kaikki",
+                   "Ehdotettu" "ehdotettu",
+                   "Hylätty" "hylatty",
+                   "Tilattu" "tilattu",
+                   "Valmis" "valmis",
+                   "Tarkistettu" "tarkistettu"}
+        tilat (set (mapv #(sql-tilat %) tilat))]
+    tilat))
+
 (defn- siivoa-ennen-lahetysta [lomake]
   (dissoc lomake
           :sijainti
           :harja.tiedot.urakka.urakka/validi?
           :harja.tiedot.urakka.urakka/validius))
 
-(defn- hae-paikkauskohteet [urakka-id {:keys [valittu-tila valittu-vuosi valitut-tyomenetelmat valitut-elyt] :as app}]
+(defn- hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
                        {:urakka-id urakka-id
-                        :tila valittu-tila
+                        :tilat (tilat-hakuun valitut-tilat)
                         :alkupvm alkupvm
                         :loppupvm loppupvm
                         :tyomenetelmat valitut-tyomenetelmat
@@ -176,8 +186,27 @@
     (dissoc app :lomake))
 
   FiltteriValitseTila
-  (process-event [{uusi-tila :uusi-tila} app]
-    (let [app (assoc app :valittu-tila uusi-tila)]
+  (process-event [{uusi-tila :uusi-tila valittu? :valittu?} app]
+    (let [valitut-tilat (:valitut-tilat app)
+          tilat (cond
+                  ;; Valitaan joku muu kuin "kaikki"
+                  (and valittu? (not= "Kaikki" (:nimi uusi-tila)))
+                  (-> valitut-tilat
+                      (conj (:nimi uusi-tila))
+                      (disj "Kaikki"))
+
+                  ;; Valitaan "kaikki"
+                  (and valittu? (= "Kaikki" (:nimi uusi-tila)))
+                  #{"Kaikki"} ;; Palautetaan kaikki valinnalla
+
+                  ;; Poistetaan "kaikki" valinta
+                  (and (not valittu?) (= "Kaikki" (:nimi uusi-tila)))
+                  (disj valitut-tilat "Kaikki")
+
+                  ;; Poistetaan joku muu kuin "kaikki" valinta
+                  (and (not valittu?) (not= "Kaikki" (:nimi uusi-tila)))
+                  (disj valitut-tilat (:nimi uusi-tila)))
+          app (assoc app :valitut-tilat tilat)]
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
       app))
 

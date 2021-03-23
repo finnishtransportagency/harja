@@ -203,7 +203,7 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}})
 
-(def paikkaus-default-arvot {:paikkauskohteet {:valittu-tila "kaikki"
+(def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
                                                :valitut-elyt #{0}

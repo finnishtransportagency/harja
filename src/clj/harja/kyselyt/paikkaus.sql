@@ -164,7 +164,7 @@ FROM paikkauskohde pk, urakka u, organisaatio o
    AND pk.poistettu = false
    -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
    AND pk."paikkauskohteen-tila" IS NOT NULL
-   AND (:tila::TEXT IS NULL OR pk."paikkauskohteen-tila" = :tila::paikkauskohteen_tila)
+   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
    AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
    AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
@@ -226,7 +226,7 @@ WHERE st_intersects(a.alue, (SELECT *
   AND pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
   AND pk."paikkauskohteen-tila" IS NOT NULL
-  AND (:tila::TEXT IS NULL OR pk."paikkauskohteen-tila" = :tila::paikkauskohteen_tila)
+  AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
