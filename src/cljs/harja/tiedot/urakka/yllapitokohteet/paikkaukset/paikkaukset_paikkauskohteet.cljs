@@ -312,7 +312,7 @@
                                                       (harja.geo/extent (:sijainti p))))
                                                   paikkauskohteet)))
           ;_ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
-          _ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
+          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
           ]
       (do
         (when (and (not (nil? paikkauskohteet))

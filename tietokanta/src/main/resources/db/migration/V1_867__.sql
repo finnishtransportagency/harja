@@ -10,7 +10,7 @@ ALTER TABLE paikkauskohde
     ADD COLUMN tilattupvm DATE, -- Tilattu paiva, jotta jää merkintä, milloin kohde on tilattu
     ADD COLUMN tyomenetelma TEXT, -- esim UREM
     ADD COLUMN tyomenetelma_kuvaus TEXT, -- Vapaa kuvaus mitä työmenetelmää käytetään
-    ADD COLUMN tierekisteriosoite tr_osoite_laajennettu, -- tie, alkuetäisyys, alkuosa, loppuetäisyys loppuosa
+    ADD COLUMN tierekisteriosoite_laajennettu tr_osoite_laajennettu, -- tie, alkuetäisyys, alkuosa, loppuetäisyys loppuosa
     ADD COLUMN "paikkauskohteen-tila" paikkauskohteen_tila, -- ehdotettu, hylätty, tilattu, valmis, tarkistettu
     ADD COLUMN "suunniteltu-maara" NUMERIC, -- Arvioitu menekki työmenetelmälle
     ADD COLUMN "suunniteltu-hinta" NUMERIC, -- Paikkauksen arvioitu hinta

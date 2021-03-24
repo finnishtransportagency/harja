@@ -128,103 +128,117 @@ SELECT "ulkoinen-id",
 
 --name: paikkauskohteet-urakalle
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
-SELECT pk.id                        AS id,
-       pk.nimi                      AS nimi,
-       pk.nro                       AS nro,
-       pk.luotu                     AS luotu,
-       pk.muokattu                  AS muokattu,
-       pk."urakka-id"               AS "urakka-id",
-       pk.tyomenetelma              AS tyomenetelma,
-       pk.tyomenetelma_kuvaus       AS "tyomenetelma-kuvaus",
-       pk.alkupvm                   AS alkupvm,
-       pk.loppupvm                  AS loppupvm,
-       pk.tilattupvm                AS tilattupvm,
-       pk."paikkauskohteen-tila"    AS "paikkauskohteen-tila",
-       pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
-       pk."suunniteltu-maara"       AS "suunniteltu-maara",
-       pk.yksikko                   AS yksikko,
-       pk.lisatiedot                AS lisatiedot,
-       o.nimi                       AS urakoitsija,
-       (pk.tierekisteriosoite).tie  AS tie,
-       (pk.tierekisteriosoite).aosa AS aosa,
-       (pk.tierekisteriosoite).aet  AS aet,
-       (pk.tierekisteriosoite).losa AS losa,
-       (pk.tierekisteriosoite).let  AS let,
-       (pk.tierekisteriosoite).ajorata  AS ajorata,
+SELECT pk.id                                       AS id,
+       pk.nimi                                     AS nimi,
+       pk.nro                                      AS nro,
+       pk.luotu                                    AS luotu,
+       pk.muokattu                                 AS muokattu,
+       pk."urakka-id"                              AS "urakka-id",
+       pk.tyomenetelma                             AS tyomenetelma,
+       pk.tyomenetelma_kuvaus                      AS "tyomenetelma-kuvaus",
+       pk.alkupvm                                  AS alkupvm,
+       pk.loppupvm                                 AS loppupvm,
+       pk.tilattupvm                               AS tilattupvm,
+       pk."paikkauskohteen-tila"                   AS "paikkauskohteen-tila",
+       pk."suunniteltu-hinta"                      AS "suunniteltu-hinta",
+       pk."suunniteltu-maara"                      AS "suunniteltu-maara",
+       pk.yksikko                                  AS yksikko,
+       pk.lisatiedot                               AS lisatiedot,
+       o.nimi                                      AS urakoitsija,
+       (pk.tierekisteriosoite_laajennettu).tie     AS tie,
+       (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
+       (pk.tierekisteriosoite_laajennettu).aet     AS aet,
+       (pk.tierekisteriosoite_laajennettu).losa    AS losa,
+       (pk.tierekisteriosoite_laajennettu).let     AS let,
+       (pk.tierekisteriosoite_laajennettu).ajorata AS ajorata,
        CASE
-           WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
+           WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
                 FROM tierekisteriosoitteelle_viiva(
-                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
-                        CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
-                        CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
+                        CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                   AS geometria
-FROM paikkauskohde pk, urakka u, organisaatio o
- WHERE pk."urakka-id" = :urakka-id
-   AND pk.poistettu = false
-   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
-   AND pk."paikkauskohteen-tila" IS NOT NULL
-   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
-   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
+           END                                     AS geometria
+FROM paikkauskohde pk,
+     urakka u,
+     organisaatio o
+WHERE pk."urakka-id" = :urakka-id
+  AND pk.poistettu = false
+  -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
+  AND pk."paikkauskohteen-tila" IS NOT NULL
+  AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
+  AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
-   AND u.id = pk."urakka-id"
-   AND o.id = u.urakoitsija
-   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
-   AND ((:elyt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
-                                                (SELECT *  FROM tierekisteriosoitteelle_viiva(
-                                                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite).aosa AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite).aet AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite).losa AS INTEGER),
-                                                        CAST((pk.tierekisteriosoite).let AS INTEGER)))))
-       )
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
+  AND u.id = pk."urakka-id"
+  AND o.id = u.urakoitsija
+  -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
+  AND ((:elyt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
+                                               (SELECT *
+                                                FROM tierekisteriosoitteelle_viiva(
+                                                        CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                                                        CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))))
+    )
 ORDER BY pk.muokattu DESC NULLS LAST, pk.luotu DESC;
 
 --name: paikkauskohteet-geometrialla
 -- Haetaan alueurakan (hoito,teiden-hoito) alueella olevat paikkauskohteet
 WITH alueurakka AS (
-    select id, alue FROM urakka WHERE id = :urakka-id
+    select id, alue
+    FROM urakka
+    WHERE id = :urakka-id
 )
-SELECT pk.id                        AS id,
-       pk.nimi                      AS nimi,
-       pk.nro                       AS nro,
-       pk.luotu                     AS luotu,
-       pk.muokattu                  AS muokattu,
-       pk."urakka-id"               AS "urakka-id",
-       pk.tyomenetelma              AS tyomenetelma,
-       pk.tyomenetelma_kuvaus       AS "tyomenetelma-kuvaus",
-       pk.alkupvm                   AS alkupvm,
-       pk.loppupvm                  AS loppupvm,
-       pk.tilattupvm                AS tilattupvm,
-       pk."paikkauskohteen-tila"    AS "paikkauskohteen-tila",
-       pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
-       pk."suunniteltu-maara"       AS "suunniteltu-maara",
-       pk.yksikko                   AS yksikko,
-       pk.lisatiedot                AS lisatiedot,
-       o.nimi                       AS urakoitsija,
-       (pk.tierekisteriosoite).tie  AS tie,
-       (pk.tierekisteriosoite).aosa AS aosa,
-       (pk.tierekisteriosoite).aet  AS aet,
-       (pk.tierekisteriosoite).losa AS losa,
-       (pk.tierekisteriosoite).let  AS let,
-       (pk.tierekisteriosoite).ajorata  AS ajorata,
+SELECT pk.id                                       AS id,
+       pk.nimi                                     AS nimi,
+       pk.nro                                      AS nro,
+       pk.luotu                                    AS luotu,
+       pk.muokattu                                 AS muokattu,
+       pk."urakka-id"                              AS "urakka-id",
+       pk.tyomenetelma                             AS tyomenetelma,
+       pk.tyomenetelma_kuvaus                      AS "tyomenetelma-kuvaus",
+       pk.alkupvm                                  AS alkupvm,
+       pk.loppupvm                                 AS loppupvm,
+       pk.tilattupvm                               AS tilattupvm,
+       pk."paikkauskohteen-tila"                   AS "paikkauskohteen-tila",
+       pk."suunniteltu-hinta"                      AS "suunniteltu-hinta",
+       pk."suunniteltu-maara"                      AS "suunniteltu-maara",
+       pk.yksikko                                  AS yksikko,
+       pk.lisatiedot                               AS lisatiedot,
+       o.nimi                                      AS urakoitsija,
+       (pk.tierekisteriosoite_laajennettu).tie     AS tie,
+       (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
+       (pk.tierekisteriosoite_laajennettu).aet     AS aet,
+       (pk.tierekisteriosoite_laajennettu).losa    AS losa,
+       (pk.tierekisteriosoite_laajennettu).let     AS let,
+       (pk.tierekisteriosoite_laajennettu).ajorata AS ajorata,
        CASE
-           WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
+           WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
                 FROM tierekisteriosoitteelle_viiva(
-                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
-                        CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
-                        CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
+                        CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                   AS geometria
-FROM paikkauskohde pk, urakka u, organisaatio o, alueurakka a
+           END                                     AS geometria
+FROM paikkauskohde pk,
+     urakka u,
+     organisaatio o,
+     alueurakka a
 WHERE st_intersects(a.alue, (SELECT *
-                             FROM tierekisteriosoitteelle_viiva(
-                                     CAST((pk.tierekisteriosoite).tie AS INTEGER),
-                                     CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
-                                     CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER))))
+                             FROM tierekisteriosoitteelle_viiva_ajr(
+                                     CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                                     CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER))))
   AND pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
   AND pk."paikkauskohteen-tila" IS NOT NULL
@@ -238,33 +252,34 @@ ORDER BY pk.muokattu DESC NULLS LAST, pk.luotu DESC;
 
 --name:paivita-paikkauskohde!
 UPDATE paikkauskohde
-SET "ulkoinen-id"          = :ulkoinen-id,
-    nimi                   = :nimi,
-    poistettu              = :poistettu,
-    "muokkaaja-id"         = :muokkaaja-id,
-    muokattu               = :muokattu,
-    "yhalahetyksen-tila"   = :yhalahetyksen-tila,
-    virhe                  = :virhe,
-    tarkistettu            = :tarkistettu,
-    "tarkistaja-id"        = :tarkistaja-id,
-    "ilmoitettu-virhe"     = :ilmoitettu-virhe,
-    nro                    = :nro,
-    alkupvm               = :alkupvm::TIMESTAMP,
-    loppupvm              = :loppupvm::TIMESTAMP,
-    tyomenetelma           = :tyomenetelma,
-    tyomenetelma_kuvaus    = :tyomenetelma-kuvaus,
-    tierekisteriosoite = ROW(:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
-    "paikkauskohteen-tila" = :paikkauskohteen-tila::paikkauskohteen_tila,
-    "suunniteltu-hinta" = :suunniteltu-hinta,
-    "suunniteltu-maara" = :suunniteltu-maara,
-    yksikko = :yksikko,
-    lisatiedot = :lisatiedot
-WHERE id = :id RETURNING id;
+SET "ulkoinen-id"                  = :ulkoinen-id,
+    nimi                           = :nimi,
+    poistettu                      = :poistettu,
+    "muokkaaja-id"                 = :muokkaaja-id,
+    muokattu                       = :muokattu,
+    "yhalahetyksen-tila"           = :yhalahetyksen-tila,
+    virhe                          = :virhe,
+    tarkistettu                    = :tarkistettu,
+    "tarkistaja-id"                = :tarkistaja-id,
+    "ilmoitettu-virhe"             = :ilmoitettu-virhe,
+    nro                            = :nro,
+    alkupvm                        = :alkupvm::TIMESTAMP,
+    loppupvm                       = :loppupvm::TIMESTAMP,
+    tyomenetelma                   = :tyomenetelma,
+    tyomenetelma_kuvaus            = :tyomenetelma-kuvaus,
+    tierekisteriosoite_laajennettu = ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
+    "paikkauskohteen-tila"         = :paikkauskohteen-tila::paikkauskohteen_tila,
+    "suunniteltu-hinta"            = :suunniteltu-hinta,
+    "suunniteltu-maara"            = :suunniteltu-maara,
+    yksikko                        = :yksikko,
+    lisatiedot                     = :lisatiedot
+WHERE id = :id
+RETURNING id;
 
 --name: luo-uusi-paikkauskohde<!
 INSERT INTO paikkauskohde ("luoja-id", "ulkoinen-id", nimi, poistettu, luotu,
                            "yhalahetyksen-tila", virhe, nro, alkupvm, loppupvm, tyomenetelma,
-                           "tyomenetelma_kuvaus", tierekisteriosoite, "paikkauskohteen-tila", "urakka-id",
+                           "tyomenetelma_kuvaus", tierekisteriosoite_laajennettu, "paikkauskohteen-tila", "urakka-id",
                            "suunniteltu-hinta", "suunniteltu-maara", yksikko, lisatiedot)
 VALUES (:luoja-id,
         :ulkoinen-id,
@@ -278,53 +293,59 @@ VALUES (:luoja-id,
         :loppupvm::TIMESTAMP,
         :tyomenetelma,
         :tyomenetelma-kuvaus,
-        ROW(:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
+        ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
         :paikkauskohteen-tila::paikkauskohteen_tila,
         :urakka-id,
         :suunniteltu-hinta,
         :suunniteltu-maara,
         :yksikko,
         :lisatiedot)
-        RETURNING id;
+RETURNING id;
 
 --name: poista-paikkauskohde!
-UPDATE paikkauskohde SET poistettu = true WHERE id = :id;
+UPDATE paikkauskohde
+SET poistettu = true
+WHERE id = :id;
 
 --name: hae-paikkauskohde
 -- Haetaan yksittäinen paikkauskohde
-SELECT pk.id                        AS id,
-       pk.nimi                      AS nimi,
-       pk.nro                       AS nro,
-       pk.luotu                     AS luotu,
-       pk.muokattu                  AS muokattu,
-       pk."urakka-id"               AS "urakka-id",
-       pk.tyomenetelma              AS tyomenetelma,
-       pk.tyomenetelma_kuvaus       AS "tyomenetelma-kuvaus",
-       pk.alkupvm                   AS alkupvm,
-       pk.loppupvm                  AS loppupvm,
-       pk.tilattupvm                AS tilattupvm,
-       pk."paikkauskohteen-tila"    AS "paikkauskohteen-tila",
-       pk."suunniteltu-hinta"       AS "suunniteltu-hinta",
-       pk."suunniteltu-maara"       AS "suunniteltu-maara",
-       pk.yksikko                   AS yksikko,
-       pk.lisatiedot                AS lisatiedot,
-       o.nimi                       AS urakoitsija,
-       (pk.tierekisteriosoite).tie  AS tie,
-       (pk.tierekisteriosoite).aosa AS aosa,
-       (pk.tierekisteriosoite).aet  AS aet,
-       (pk.tierekisteriosoite).losa AS losa,
-       (pk.tierekisteriosoite).let  AS let,
-       (pk.tierekisteriosoite).ajorata AS ajorata,
+SELECT pk.id                                       AS id,
+       pk.nimi                                     AS nimi,
+       pk.nro                                      AS nro,
+       pk.luotu                                    AS luotu,
+       pk.muokattu                                 AS muokattu,
+       pk."urakka-id"                              AS "urakka-id",
+       pk.tyomenetelma                             AS tyomenetelma,
+       pk.tyomenetelma_kuvaus                      AS "tyomenetelma-kuvaus",
+       pk.alkupvm                                  AS alkupvm,
+       pk.loppupvm                                 AS loppupvm,
+       pk.tilattupvm                               AS tilattupvm,
+       pk."paikkauskohteen-tila"                   AS "paikkauskohteen-tila",
+       pk."suunniteltu-hinta"                      AS "suunniteltu-hinta",
+       pk."suunniteltu-maara"                      AS "suunniteltu-maara",
+       pk.yksikko                                  AS yksikko,
+       pk.lisatiedot                               AS lisatiedot,
+       o.nimi                                      AS urakoitsija,
+       (pk.tierekisteriosoite_laajennettu).tie     AS tie,
+       (pk.tierekisteriosoite_laajennettu).aosa    AS aosa,
+       (pk.tierekisteriosoite_laajennettu).aet     AS aet,
+       (pk.tierekisteriosoite_laajennettu).losa    AS losa,
+       (pk.tierekisteriosoite_laajennettu).let     AS let,
+       (pk.tierekisteriosoite_laajennettu).ajorata AS ajorata,
        CASE
-           WHEN (pk.tierekisteriosoite).tie IS NOT NULL THEN
+           WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
                (SELECT *
                 FROM tierekisteriosoitteelle_viiva(
-                        CAST((pk.tierekisteriosoite).tie AS INTEGER),
-                        CAST((pk.tierekisteriosoite).aosa AS INTEGER), CAST((pk.tierekisteriosoite).aet AS INTEGER),
-                        CAST((pk.tierekisteriosoite).losa AS INTEGER), CAST((pk.tierekisteriosoite).let AS INTEGER)))
+                        CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                        CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))
            ELSE NULL
-           END                   AS geometria
-FROM paikkauskohde pk, urakka u, organisaatio o
+           END                                     AS geometria
+FROM paikkauskohde pk,
+     urakka u,
+     organisaatio o
 WHERE pk.poistettu = false
   -- paikkauskohteen-tila kentällä määritellään, näkyykö paikkauskohde paikkauskohdelistassa
   AND pk."paikkauskohteen-tila" IS NOT NULL

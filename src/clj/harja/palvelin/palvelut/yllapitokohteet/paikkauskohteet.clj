@@ -117,7 +117,8 @@
         kayttajarooli (roolit/osapuoli user)
         on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
-        vanha-kohde (when kohde-id (first (q/paikkauskohde-urakalle db {:id kohde-id})))
+        vanha-kohde (when kohde-id (first (q/hae-paikkauskohde db {:id kohde-id
+                                                                   :urakka-id (:urakka-id kohde)})))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
         _ (println "tallenna-paikkauskohde! :: validointivirheet" (pr-str validointivirheet))
