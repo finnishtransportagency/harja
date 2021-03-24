@@ -95,37 +95,6 @@ SELECT id
   FROM paikkauskohde
  WHERE "ulkoinen-id" = :ulkoinen-id;
 
---name: paikkauskohde-urakalle
---- Haetaan yksittäinen paikkauskohde päivitystä varten
-SELECT "ulkoinen-id",
-       nimi,
-       poistettu,
-       "muokkaaja-id",
-       muokattu,
-       "yhalahetyksen-tila",
-       virhe,
-       tarkistettu,
-       "tarkistaja-id",
-       "ilmoitettu-virhe",
-       nro,
-       alkupvm,
-       loppupvm,
-       tyomenetelma,
-       tyomenetelma_kuvaus,
-       (tierekisteriosoite).tie  AS tie,
-       (tierekisteriosoite).aosa AS aosa,
-       (tierekisteriosoite).aet  AS aet,
-       (tierekisteriosoite).losa AS losa,
-       (tierekisteriosoite).let  AS let,
-       "paikkauskohteen-tila",
-       "suunniteltu-maara",
-       "suunniteltu-hinta",
-       yksikko,
-       lisatiedot
-  FROM paikkauskohde
- WHERE id = :id;
-
-
 --name: paikkauskohteet-urakalle
 -- Haetaan urakan paikkauskohteet ja mahdollisesti jotain tarkentavaa dataa
 SELECT pk.id                                       AS id,
@@ -185,7 +154,7 @@ WHERE pk."urakka-id" = :urakka-id
                                                         CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
                                                         CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)))))
     )
-ORDER BY pk.muokattu DESC NULLS LAST, pk.luotu DESC;
+ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
 --name: paikkauskohteet-geometrialla
 -- Haetaan alueurakan (hoito,teiden-hoito) alueella olevat paikkauskohteet
@@ -248,7 +217,7 @@ WHERE st_intersects(a.alue, (SELECT *
   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
-ORDER BY pk.muokattu DESC NULLS LAST, pk.luotu DESC;
+ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
 --name:paivita-paikkauskohde!
 UPDATE paikkauskohde
