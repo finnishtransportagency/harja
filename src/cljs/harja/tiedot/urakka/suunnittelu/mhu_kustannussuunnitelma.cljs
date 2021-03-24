@@ -1661,22 +1661,20 @@ vaihtelua-teksti "vaihtelua/kk")
 (defn- tilan-tyyppi
   [asia]
   (case asia
-    :johto-ja-hallintokorvaus :johto-ja-hallintokorvaus
+    (:toimistokulut :johto-ja-hallintokorvaus) :johto-ja-hallintokorvaus
     :erillishankinnat :erillishankinnat
     :hoidonjohtopalkkio :hoidonjohtopalkkio
-    (:hankintakustannus :laskutukseen-perustuva-hankinta) :hankintakustannukset))
+    (:hankintakustannus :laskutukseen-perustuva-hankinta :akilliset-hoitotyot :kolmansien-osapuolten-aiheuttamat-vahingot) :hankintakustannukset
+    :tilaajan-varaukset :tilaajan-rahavaraukset))
 
 (defn- hae-tila
   [app asia hoitovuosilta]
-  (let [asian-tilat (case asia
-                      :johto-ja-hallintokorvaus (get-in app [:domain :tilat :johto-ja-hallintokorvaus])
-                      :erillishankinnat (get-in app [:domain :tilat :erillishankinnat])
-                      :hoidonjohtopalkkio (get-in app [:domain :tilat :hoidonjohtopalkkio])
-                      (:hankintakustannus
-                        :laskutukseen-perustuva-hankinta) (get-in app [:domain :tilat :hankintakustannukset]))
+  (println "haetila" hoitovuosilta asia)
+  (let [asian-tilat (get-in app [:domain :tilat (tilan-tyyppi asia)])
         tarkastettavat (if (number? hoitovuosilta)
                          (get asian-tilat hoitovuosilta)
                          (mapv #(get asian-tilat %) hoitovuosilta))]
+    (println "haetila" tarkastettavat)
     (if (vector? tarkastettavat)
       (every? some? tarkastettavat)
       (some? tarkastettavat))))
@@ -2265,14 +2263,15 @@ vaihtelua-teksti "vaihtelua/kk")
                                                                :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
           tilan-tyyppi (tilan-tyyppi tallennettava-asia)]
-      (println "tallenna hankintojen arvot")
-      (laheta-ja-odota-vastaus app
-                               {:palvelu :tallenna-suunnitelman-osalle-tila
-                                :payload {:tyyppi tilan-tyyppi
-                                          :urakka-id urakka-id
-                                          :hoitovuodet paivitettavat-hoitokauden-numerot}
-                                :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
-                                :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui})
+      (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
+      (when-not onko-tila?
+        (laheta-ja-odota-vastaus app
+                                 {:palvelu :tallenna-suunnitelman-osalle-tila
+                                  :payload {:tyyppi tilan-tyyppi
+                                            :urakka-id urakka-id
+                                            :hoitovuodet paivitettavat-hoitokauden-numerot}
+                                  :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
+                                  :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
       (laheta-ja-odota-vastaus app
                                {:palvelu post-kutsu
                                 :payload (dissoc-nils lahetettava-data)
@@ -2405,8 +2404,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                     {:toimenkuva tunnisteen-toimenkuva})
                                   (when oman-rivin-maksukausi
                                     {:maksukausi oman-rivin-maksukausi}))
-          onko-tila? (hae-tila app :johto-ja-hallintokorvaukset paivitettavat-hoitokauden-numerot)]
-      (println "Tallenna Johoto")
+          onko-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)]
       (when-not onko-tila?
         (laheta-ja-odota-vastaus app
                                  {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -2435,17 +2433,7 @@ vaihtelua-teksti "vaihtelua/kk")
           toimenkuva-nimi (get-in app [:domain :johto-ja-hallintokorvaukset rivin-nimi 0 0 :toimenkuva])
           lahetettava-data {:urakka-id urakka-id
                             :toimenkuva-id toimenkuva-id
-                            :toimenkuva toimenkuva-nimi}
-          ;onko-tila? (hae-tila app :johto-ja-hallintokorvaukset)
-          ]
-      #_(when-not onko-tila?
-          (laheta-ja-odota-vastaus app
-                                   {:palvelu :tallenna-suunnitelman-osalle-tila
-                                    :payload {:tyyppi :johto-ja-hallintokorvaukset
-                                              :urakka-id urakka-id
-                                              :hoitovuodet paivitettavat-hoitokauden-numerot}
-                                    :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
-                                    :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+                            :toimenkuva toimenkuva-nimi}]
       (println "Tallenna toimenkuva")
       (laheta-ja-odota-vastaus app
                                {:palvelu :tallenna-toimenkuva
@@ -2561,23 +2549,30 @@ vaihtelua-teksti "vaihtelua/kk")
                                         :tee-kun-vahvistettu nil}))
   TarkistaTarvitaankoVahvistus
   (process-event [{:keys [asia hoitovuosi toiminto-fn!]} app]
-    (let [hoitovuosi (or hoitovuosi
+    (let [vahvistus-modaali-auki? (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?])
+          hoitovuosi (or hoitovuosi
                          (get-in app [:suodattimet :hoitokauden-numero]))
           tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
                          :akilliset-hoitotyot :hankintakustannukset
                          :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
-                         :toimistokulut :johto-ja-hallintokorvaus}
+                         :toimistokulut :johto-ja-hallintokorvaus
+                         :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus} ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
           tarvitaan-vahvistus? (pitaako-vahvistaa? app (or (tyyppi->avain asia)
                                                            asia) hoitovuosi)
           e! (tuck/current-send-function)]
       (println "tarvitaanko? " (tyyppi->avain asia) asia (or (tyyppi->avain asia)
                                                              asia) hoitovuosi tarvitaan-vahvistus?)
-      (if tarvitaan-vahvistus?
+      (cond
+        vahvistus-modaali-auki?                             ; jos on mahdollista, et modaalin avaaminen triggeröi uuden blur-eventin esim kun vaihdetaan inputtia tabilla toiseen inputtiin ja tällöin uusi blurri ylikirjoittaa edellisen. skipataan siis kaikki, jos tää ikkuna on auki.
+        app
+
+        tarvitaan-vahvistus?
         (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? true
                                             :asia (or (tyyppi->avain asia) asia)
                                             :tee-kun-vahvistettu (fn [e!]
                                                                    (e! (->SuljeVahvistus))
                                                                    (toiminto-fn! e!))})
+        :else
         (do
           (toiminto-fn! e!)
           app)))))
