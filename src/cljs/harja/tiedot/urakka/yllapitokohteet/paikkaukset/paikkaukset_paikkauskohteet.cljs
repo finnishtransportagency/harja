@@ -303,7 +303,8 @@
                                      (assoc :formatoitu-aikataulu
                                             (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
                                      (assoc :formatoitu-sijainti
-                                            (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))))
+                                            (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))
+                                     (assoc :paivays (or (:muokattu kohde) (:luotu kohde)))))
                                vastaus)
           zoomattavat-geot (into [] (concat (mapv (fn [p]
                                                     (when (and
@@ -312,7 +313,7 @@
                                                       (harja.geo/extent (:sijainti p))))
                                                   paikkauskohteet)))
           ;_ (js/console.log "HaePaikkauskohteetOnnistui :: zoomattavat-geot" (pr-str zoomattavat-geot))
-          ;_ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str paikkauskohteet))
+          _ (js/console.log "HaePaikkauskohteetOnnistui :: paikkauskohteet" (pr-str (set (mapv :id paikkauskohteet))) #_ (pr-str paikkauskohteet))
           ]
       (do
         (when (and (not (nil? paikkauskohteet))
@@ -320,7 +321,9 @@
                    (not (nil? zoomattavat-geot))
                    (not (empty? zoomattavat-geot)))
           ;(js/console.log "reset ja keskitys")
-          (reset! paikkauskohteet-kartalle/valitut-kohteet-atom #{}))
+           (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
+          #_ (kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot)
+           (reset! paikkauskohteet-kartalle/valitut-kohteet-atom (set (mapv :id paikkauskohteet))))
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
             (assoc :paikkauskohteet paikkauskohteet)))))
@@ -495,9 +498,9 @@
   )
 
 (def tyomenetelmat
-  ["Kaikki" "AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "KT-valuasfalttipaikkaus (KTVA)"
+  ["Kaikki" "AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KT-valuasfalttipaikkaus (KTVA)"
    "Konetiivistetty reikävaluasfalttipaikkaus (REPA)" "Sirotepuhalluspaikkaus (SIPU)"
-   "Sirotepintauksena tehty lappupaikkaus (SIPA)" "Urapaikkaus (UREM/RREM)" "Kannukaatosaumaus" "KT-valuasfalttisaumaus"
+   "Sirotepintauksena tehty lappupaikkaus (SIPA)" "Urapaikkaus (UREM/RREM)" "Jyrsintä (HJYR/TJYR)" "Kannukaatosaumaus" "KT-valuasfalttisaumaus"
    "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"
    "Reunapalkin ja päällysteen välisen sauman tiivistäminen" "Reunapalkin liikuntasauman tiivistäminen"
    "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"

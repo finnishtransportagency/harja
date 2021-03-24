@@ -23,6 +23,12 @@
        [bs/tabs {:style :tabs :classes "tabs-taso2"
                  :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaukset)}
 
+        "Paikkauskohteet"
+        :paikkauskohteet
+        ;TODO: Lisää luvat roolit.xlxs
+        (when true (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:id ur))
+                   [paikkauskohteet/paikkauskohteet ur])
+
         "Toteumat"
         :toteumat
         (when (oikeudet/urakat-paikkaukset-toteumat (:id ur))
@@ -31,11 +37,4 @@
         "Kustannukset"
         :kustannukset
         (when (oikeudet/urakat-paikkaukset-kustannukset (:id ur))
-          [kustannukset/kustannukset ur])
-
-        "Paikkauskohteet"
-        :paikkauskohteet
-        ;TODO: Lisää luvat roolit.xlxs
-        (when true (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:id ur))
-          [paikkauskohteet/paikkauskohteet ur]
-          )]])))
+          [kustannukset/kustannukset ur])]])))

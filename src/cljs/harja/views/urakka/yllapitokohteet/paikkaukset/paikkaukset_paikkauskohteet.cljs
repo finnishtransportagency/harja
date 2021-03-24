@@ -60,8 +60,10 @@
                                                          @istunto/kayttaja)))
         skeema [{:otsikko "Muokattu"
                  :leveys 2
-                 :nimi :muokattu
-                 :fmt pvm/pvm-aika-opt}
+                 :nimi :paivays
+                 :fmt (fn [arvo]
+                        [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])
+                 }
                 {:otsikko "NRO"
                  :leveys 2
                  :nimi :nro}
@@ -148,8 +150,12 @@
                                (do
                                  ;; Näytä valittu rivi kartalla
                                  (when (not (nil? (:sijainti kohde)))
-                                   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
-                                   (kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
+                                   (let [alue (harja.geo/extent (:sijainti kohde))]
+                                     (do
+                                       (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
+                                       (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200))
+                                     #_(kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
+                                     )
                                    )
                                  ;; avaa lomake, jos käyttäjällä on kirjoitusoikeudet
                                  (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet (:urakka-id kohde))
@@ -160,6 +166,7 @@
                                    ^{:luokka "yhteenveto"}
                                    [{:teksti "Yht."}
                                     {:teksti (str (count paikkauskohteet) " kohdetta")}
+                                    {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}
