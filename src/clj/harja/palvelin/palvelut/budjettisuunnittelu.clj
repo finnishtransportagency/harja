@@ -94,7 +94,9 @@
      (hae-urakan-suunnitelman-tilat db user {:urakka-id urakka-id})))
 
 (defn tallenna-suunnitelman-muutos
-  [db user {:keys [selite muutoksen-syy]}])
+  [db user {:keys [selite muutoksen-syy urakka-id tyo tyon-tyyppi]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  )
 
 (defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]
@@ -561,6 +563,10 @@
             (fn [user tiedot]
               (tallenna-suunnitelman-osalle-tila db user tiedot)))
           (julkaise-palvelu
+            :tallenna-suunnitelman-muutos
+            (fn [user tiedot]
+              (tallenna-suunnitelman-muutos db user tiedot)))
+          (julkaise-palvelu
             :tallenna-toimenkuva
             (fn [user tiedot]
               (tallenna-toimenkuva db user tiedot))
@@ -576,6 +582,7 @@
                      :hae-suunnitelman-tilat
                      :vahvista-kustannussuunnitelman-osa-vuodella
                      :tallenna-suunnitelman-osalle-tila
+                     :tallenna-suunnitelman-muutos
                      :tallenna-budjettitavoite
                      :tallenna-kiinteahintaiset-tyot
                      :tallenna-johto-ja-hallintokorvaukset
