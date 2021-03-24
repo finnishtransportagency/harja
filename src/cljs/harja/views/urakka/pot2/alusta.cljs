@@ -118,7 +118,8 @@
               (when toimenpide lisakentat)))))
 
 (defn alustalomake-nakyma
-  [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
+  [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet
+              materiaalikoodistot voi-muokata?]}]
   (let [saa-sulkea? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn []
@@ -126,28 +127,35 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (pot2-tiedot/->SuljeAlustalomake)))
                                   {:tarkista-komponentti? true})
-      (fn [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet materiaalikoodistot]}]
+      (fn [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet
+                      materiaalikoodistot voi-muokata?]}]
         [:div.alustalomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
           {:luokka " overlay-oikealla"
            :otsikko "Toimenpiteen tiedot"
+           :voi-muokata? voi-muokata?
            :tarkkaile-ulkopuolisia-muutoksia? true
            :sulje-fn #(e! (pot2-tiedot/->SuljeAlustalomake))
            :muokkaa! #(e! (pot2-tiedot/->PaivitaAlustalomake %))
            :ei-borderia? true
            :footer-fn (fn [data]
                         [:span
-                         [napit/nappi "Valmis"
-                          #(e! (pot2-tiedot/->TallennaAlustalomake data false))
-                          {:disabled (not (lomake/validi? data))
-                           :luokka "nappi-toissijainen"
-                           :ikoni (ikonit/check)}]
-                         [napit/nappi "Lisää seuraava"
-                          #(e! (pot2-tiedot/->TallennaAlustalomake data true))
-                          {:disabled (not (lomake/validi? data))
-                           :luokka "nappi-toissijainen"
-                           :ikoni (ikonit/check)}]
-                         [napit/peruuta "Peruuta"
+                         (when-not voi-muokata?
+                           [:div {:style {:margin-bottom "16px"}}
+                            "Päällystysilmoitus lukittu, tietoja ei voi muokata."])
+                         (when voi-muokata?
+                           [napit/nappi "Valmis"
+                            #(e! (pot2-tiedot/->TallennaAlustalomake data false))
+                            {:disabled (not (lomake/validi? data))
+                             :luokka "nappi-toissijainen"
+                             :ikoni (ikonit/check)}])
+                         (when voi-muokata?
+                           [napit/nappi "Lisää seuraava"
+                            #(e! (pot2-tiedot/->TallennaAlustalomake data true))
+                            {:disabled (not (lomake/validi? data))
+                             :luokka "nappi-toissijainen"
+                             :ikoni (ikonit/check)}])
+                         [napit/peruuta (if voi-muokata? "Peruuta" "Sulje")
                           #(e! (pot2-tiedot/->SuljeAlustalomake))
                           {:disabled false}]])}
           (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
@@ -164,16 +172,19 @@
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake massalomake murskelomake] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi]} alustarivit-atom]
-  (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)]
+  (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
+        voi-muokata? (not= :lukittu (:tila perustiedot))]
     [:div
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
                                 :alusta-toimenpiteet alusta-toimenpiteet
                                 :massat massat
                                 :murskeet murskeet
-                                :materiaalikoodistot materiaalikoodistot}])
+                                :materiaalikoodistot materiaalikoodistot
+                                :voi-muokata? voi-muokata?}])
      [grid/muokkaus-grid
       {:otsikko "Alusta" :tunniste :id :piilota-toiminnot? true
+       :voi-muokata? voi-muokata?
        :voi-kumota? false :voi-lisata? false
        :rivi-klikattu #(e! (pot2-tiedot/->AvaaAlustalomake %))
        :custom-toiminto {:teksti "Lisää toimenpide"
@@ -249,6 +260,6 @@
                            {:materiaalikoodistot materiaalikoodistot}
                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys gridin-perusleveys
-        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta]
+        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata?]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       alustarivit-atom]]))

@@ -5,7 +5,7 @@
 
 
 (defn rivin-toiminnot-sarake
-  [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi]
+  [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
   (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")
   (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn]
                              (let [vanhat-kohdeosat @rivit-atom
@@ -19,21 +19,20 @@
         poista-osa-fn (fn [index]
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
-    (fn [rivi {:keys [index]} app kirjoitusoikeus?]
-      (let [yllapitokohde (-> app :paallystysilmoitus-lomakedata
-                              :perustiedot
-                              (select-keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))]
+    (fn [rivi {:keys [index]} osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
+      (let [nappi-disabled? (or (not voi-muokata?)
+                                (not kirjoitusoikeus?))]
         [:span.tasaa-oikealle
          [napit/yleinen-ensisijainen ""
           lisaa-osa-fn
           {:ikoni (ikonit/livicon-plus)
-           :disabled (not kirjoitusoikeus?)
+           :disabled nappi-disabled?
            :luokka "napiton-nappi btn-xs"
            :toiminto-args [index]}]
          [napit/kielteinen ""
           poista-osa-fn
           {:ikoni (ikonit/livicon-trash)
-           :disabled (not kirjoitusoikeus?)
+           :disabled nappi-disabled?
            :luokka "napiton-nappi btn-xs"
            :toiminto-args [index]}]]))))
 
