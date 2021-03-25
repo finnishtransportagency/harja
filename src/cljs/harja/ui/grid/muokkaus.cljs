@@ -69,7 +69,8 @@
 
 (defn- muokkauselementin-tila
   [{:keys [aseta nimi valinta-arvo hae elementin-id]}
-   {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja]}
+   {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja
+           sisalto-kun-rivi-disabloitu]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
    sisalto-kun-rivi-disabloitu
    tulevat-elementit]
@@ -145,7 +146,7 @@
                     komponentti hae kentta-arity-3? komponentti-args] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
-                    muokatut-atom muokkaa! virheet skeema]}
+                    muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu]}
             rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset tulevat-elementit]
          (let [sarake (assoc sarake :rivi rivi)
                hae-fn (or hae #(get % nimi))
