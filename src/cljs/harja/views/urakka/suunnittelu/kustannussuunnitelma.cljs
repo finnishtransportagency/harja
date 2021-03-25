@@ -35,15 +35,6 @@
 
 (defonce e! nil)
 
-(defn- tarkista-vaaditaanko-vahvistus
-  ([asia toiminto-fn]
-   (tarkista-vaaditaanko-vahvistus asia toiminto-fn nil))
-  ([asia toiminto-fn hoitovuosi]
-   (e! (t/->TarkistaTarvitaankoVahvistus
-         asia
-         hoitovuosi
-         toiminto-fn))))
-
 (defn summa-formatointi [teksti]
   (cond
     (= t/vaihtelua-teksti teksti) t/vaihtelua-teksti
@@ -180,22 +171,6 @@
         nil)
     event))
 
-(defn- rahavaraukset-fn
-  ([tallennettava-asia rivit-alla e!]
-   (rahavaraukset-fn tallennettava-asia rivit-alla e! nil))
-  ([tallennettava-asia rivit-alla e! muutos]
-   (println "toiminto-fn rv" tallennettava-asia)
-   (when (some? muutos) "muutos tulossa")
-   (e! (t/->TallennaKustannusarvoitu tallennettava-asia
-                                     (vec (keep (fn [rivi]
-                                                  (let [maara-solu (grid/get-in-grid rivi [1])
-                                                        piillotettu? (grid/piillotettu? rivi)]
-                                                    (when-not piillotettu?
-                                                      (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                rivit-alla))
-                                     muutos))
-   (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-
 (defn tayta-alas-napin-toiminto [asettajan-nimi tallennettava-asia maara-solun-index rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
     (doseq [rivi rivit-alla
@@ -208,9 +183,13 @@
                                :ajettavat-jarejestykset #{:mapit}}
                               true)))
     (when (= asettajan-nimi :aseta-rahavaraukset!)
-      (tarkista-vaaditaanko-vahvistus
-        tallennettava-asia
-        (partial rahavaraukset-fn tallennettava-asia rivit-alla)))))
+      (e! (t/->TallennaKustannusarvoitu tallennettava-asia
+                                        (vec (keep (fn [rivi]
+                                                     (let [maara-solu (grid/get-in-grid rivi [1])
+                                                           piillotettu? (grid/piillotettu? rivi)]
+                                                       (when-not piillotettu?
+                                                         (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                   rivit-alla)))))))
 
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
@@ -227,8 +206,7 @@
   (let [toiminto-fn!
         (fn [paivitettava-asia tallenna! asiat e!]
           (println "toiminto-fn syote" paivitettava-asia asiat)
-          (tallenna! asiat)
-          (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))]
+          (tallenna! asiat))]
     (merge
       {:tyyppi (if nappi?
                  :syote-tayta-alas
@@ -259,9 +237,7 @@
                                                      :ajettavat-jarejestykset true
                                                      :triggeroi-seuranta? true}
                                                     true)
-                              (tarkista-vaaditaanko-vahvistus
-                                paivitettava-asia
-                                (partial toiminto-fn! paivitettava-asia blur-tallenna! solu/*this*)))
+                              (toiminto-fn! paivitettava-asia blur-tallenna! solu/*this*))
                    :on-key-down (fn [event]
                                   (when (= "Enter" (.. event -key))
                                     (.. event -target blur)))}
@@ -287,9 +263,7 @@
                                                           :ajettavat-jarejestykset true
                                                           :triggeroi-seuranta? true}
                                                          true)))
-                               (tarkista-vaaditaanko-vahvistus
-                                 paivitettava-asia
-                                 (partial toiminto-fn! paivitettava-asia nappia-painettu-tallenna! rivit-alla))))
+                               (toiminto-fn! paivitettava-asia nappia-painettu-tallenna! rivit-alla)))
          :nappi-nakyvilla? false}))))
 
 
@@ -798,29 +772,7 @@
                                                       t/hallinnollisten-idt)))))
 
 (defn suunnittellut-hankinnat-grid []
-  (let [tallenna-nappi-fn! (fn -tallenna-nappi-fn
-                             ([hoitokauden-numero rivit-alla e!]
-                              (-tallenna-nappi-fn hoitokauden-numero rivit-alla e! nil))
-                             ([hoitokauden-numero rivit-alla e! muutos]
-                              (println "toiminto-fn :hankintakustannukset")
-                              (e! (t/->TallennaHankintojenArvot :hankintakustannus
-                                                                hoitokauden-numero
-                                                                (vec (keep (fn [rivi]
-                                                                             (let [maara-solu (grid/get-in-grid rivi [1])
-                                                                                   piillotettu? (grid/piillotettu? rivi)]
-                                                                               (when-not piillotettu?
-                                                                                 (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                           rivit-alla))
-                                                                muutos))
-                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-        tallenna-fn! (fn -tallenna-fn
-                       ([hoitokauden-numero solu e!]
-                        (-tallenna-fn hoitokauden-numero solu e! nil))
-                       ([hoitokauden-numero solu e! muutos]
-                        (println "vahvistus homma :hankintakustannukset")
-                        (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu :tunniste-rajapinnan-dataan)] muutos))
-                        (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-        g (hankintojen-pohja "suunnittellut-hankinnat-taulukko"
+  (let [g (hankintojen-pohja "suunnittellut-hankinnat-taulukko"
                              (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnittellut-hankinnat :grid] g)))
                              {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid]))
                               :paivita! (fn [f]
@@ -841,10 +793,14 @@
                                                            true
                                                            hoitokauden-numero
                                                            :hankinnat)))
-                                 (tarkista-vaaditaanko-vahvistus
-                                   :hankintakustannukset
-                                   (partial tallenna-nappi-fn! hoitokauden-numero rivit-alla)
-                                   hoitokauden-numero)))
+                                 (e! (t/->TallennaHankintojenArvot :hankintakustannus
+                                                                   hoitokauden-numero
+                                                                   (vec (keep (fn [rivi]
+                                                                                (let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                      piillotettu? (grid/piillotettu? rivi)]
+                                                                                  (when-not piillotettu?
+                                                                                    (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                                              rivit-alla))))))
                              (fn [hoitokauden-numero arvo]
                                (when arvo
                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
@@ -864,11 +820,7 @@
                                                      true
                                                      hoitokauden-numero
                                                      :hankinnat)
-
-                               (tarkista-vaaditaanko-vahvistus
-                                 :hankintakustannukset
-                                 (partial tallenna-fn! hoitokauden-numero solu/*this*)
-                                 hoitokauden-numero)))]
+                               (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/suunnittellut-hankinnat-rajapinta
                                        (t/suunnittellut-hankinnat-dr)
@@ -929,29 +881,7 @@
                                                       (range 1 6))))))
 
 (defn hankinnat-laskutukseen-perustuen-grid []
-  (let [tallenna-nappi-fn! (fn -tallenna-nappi-fn
-                             ([hoitokauden-numero rivit-alla e!]
-                              (-tallenna-nappi-fn hoitokauden-numero rivit-alla e! nil))
-                             ([hoitokauden-numero rivit-alla e! muutos]
-                              (println "toiminto-fn laskutus :hamlomtalistammilset")
-                              (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta
-                                                                hoitokauden-numero
-                                                                (vec (keep (fn [rivi]
-                                                                             (let [maara-solu (grid/get-in-grid rivi [1])
-                                                                                   piillotettu? (grid/piillotettu? rivi)]
-                                                                               (when-not piillotettu?
-                                                                                 (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                           rivit-alla))
-                                                                muutos))
-                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-        tallenna-fn! (fn -tallenna-fn!
-                       ([hoitokauden-numero solu e!]
-                        (-tallenna-fn! hoitokauden-numero solu e! nil))
-                       ([hoitokauden-numero solu e! muutos]
-                        (println "vahvistus homma toinen ")
-                        (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu :tunniste-rajapinnan-dataan)] muutos))
-                        (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
-        g (hankintojen-pohja "suunnittellut-hankinnat-laskutukseen-perustuen-taulukko"
+  (let [g (hankintojen-pohja "suunnittellut-hankinnat-laskutukseen-perustuen-taulukko"
                              (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :laskutukseen-perustuvat-hankinnat :grid] g)))
                              {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :laskutukseen-perustuvat-hankinnat :grid]))
                               :paivita! (fn [f]
@@ -972,10 +902,14 @@
                                                            true
                                                            hoitokauden-numero
                                                            :hankinnat)))
-                                 (tarkista-vaaditaanko-vahvistus
-                                   :hankintakustannukset
-                                   (partial tallenna-nappi-fn! hoitokauden-numero rivit-alla)
-                                   hoitokauden-numero)))
+                                 (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta
+                                                                   hoitokauden-numero
+                                                                   (vec (keep (fn [rivi]
+                                                                                (let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                      piillotettu? (grid/piillotettu? rivi)]
+                                                                                  (when-not piillotettu?
+                                                                                    (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                                              rivit-alla))))))
                              (fn [hoitokauden-numero arvo]
                                (when arvo
                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
@@ -995,10 +929,7 @@
                                                      true
                                                      hoitokauden-numero
                                                      :hankinnat)
-                               (tarkista-vaaditaanko-vahvistus
-                                 :hankintakustannukset
-                                 (partial tallenna-fn! hoitokauden-numero solu/*this*)
-                                 hoitokauden-numero)))]
+                               (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/laskutukseen-perustuvat-hankinnat-rajapinta
                                        (t/laskutukseen-perustuvat-hankinnat-dr)
@@ -1185,17 +1116,8 @@
                                                                                                                                                                                                         (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))
                                                                                                                                                                          tunnisteet (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                                                                                                                                             :tunniste-rajapinnan-dataan)
-                                                                                                                                                                                          tallennettavien-arvojen-osat)
-                                                                                                                                                                         toiminto-fn! (fn -t-fn!
-                                                                                                                                                                                        ([tyyppi tunnisteet e!]
-                                                                                                                                                                                         (-t-fn! tyyppi tunnisteet e! nil))
-                                                                                                                                                                                        ([tyyppi tunnisteet e! muutos]
-                                                                                                                                                                                         (println "toiminto-fn" tyyppi)
-                                                                                                                                                                                         (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet muutos))
-                                                                                                                                                                                         (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))]
-                                                                                                                                                                     (tarkista-vaaditaanko-vahvistus
-                                                                                                                                                                       (tyyppi->tallennettava-asia tyyppi)
-                                                                                                                                                                       (partial toiminto-fn! tyyppi tunnisteet))))
+                                                                                                                                                                                          tallennettavien-arvojen-osat)]
+                                                                                                                                                                     (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) tunnisteet))))
                                                                                                                                                         :on-key-down (fn [event]
                                                                                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                                                                                          (.. event -target blur)))}
@@ -1255,17 +1177,7 @@
                                                                                                                                                                                                            :ajettavat-jarejestykset true
                                                                                                                                                                                                            :triggeroi-seuranta? true}
                                                                                                                                                                                                           true)
-                                                                                                                                                                                    (let [toiminto-fn!
-                                                                                                                                                                                          (fn -t-fn!
-                                                                                                                                                                                            ([tyyppi e!]
-                                                                                                                                                                                             (-t-fn! tyyppi e! nil))
-                                                                                                                                                                                            ([tyyppi e! muutos]
-                                                                                                                                                                                             (println "toiminto-fn" tyyppi)
-                                                                                                                                                                                             (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)] muutos))
-                                                                                                                                                                                             (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))]
-                                                                                                                                                                                      (tarkista-vaaditaanko-vahvistus
-                                                                                                                                                                                        (tyyppi->tallennettava-asia tyyppi)
-                                                                                                                                                                                        (partial toiminto-fn! tyyppi))))
+                                                                                                                                                                                    (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)])))
                                                                                                                                                                          :on-key-down (fn [event]
                                                                                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                                                                                           (.. event -target blur)))}
@@ -1971,9 +1883,7 @@
   ([nimi yhteenvedot-polku] (maarataulukko nimi yhteenvedot-polku true true))
   ([nimi yhteenvedot-polku paivita-kattohinta? indeksikorjaus?]
    (let [toiminto-fn! (fn -t-fn!
-                        ([polun-osa solu e!]
-                          (-t-fn! polun-osa solu e! nil))
-                        ([polun-osa solu e! muutos]
+                        ([polun-osa solu]
                          (println "toiminto-fn maara" polun-osa)
                          (let [vanhempiosa (grid/osa-polusta solu [:.. :..])
                                tallennettavien-arvojen-osat (if (= ::data-rivi (grid/hae-osa vanhempiosa :nimi))
@@ -1981,14 +1891,11 @@
                                                               (grid/hae-grid (grid/osa-polusta vanhempiosa [:.. 1]) :lapset))]
                            (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                                :tunniste-rajapinnan-dataan)
-                                                                             tallennettavien-arvojen-osat)
-                                                             muutos)))
+                                                                             tallennettavien-arvojen-osat))))
                          (when paivita-kattohinta?
                            (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          toiminto-nappi-fn! (fn -t-nappi-fn!
-                              ([polun-osa rivit-alla e!]
-                                (-t-nappi-fn! polun-osa rivit-alla e! nil))
-                              ([polun-osa rivit-alla e! muutos]
+                              ([polun-osa rivit-alla]
                                (println "toiminto-fn maara nappi" polun-osa)
                                (e! (t/->TallennaKustannusarvoitu polun-osa
                                                                  (vec (keep (fn [rivi]
@@ -1996,16 +1903,13 @@
                                                                                     piillotettu? (grid/piillotettu? rivi)]
                                                                                 (when-not piillotettu?
                                                                                   (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                            rivit-alla))
-                                                                 muutos))
+                                                                            rivit-alla))))
                                (when paivita-kattohinta?
                                  (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          toiminto-kk-fn! (fn -t-kk-fn!
-                           ([polun-osa solu e!]
-                             (-t-kk-fn! polun-osa solu e! nil))
-                           ([polun-osa solu e! muutos]
+                           ([polun-osa solu]
                             (println "toiminto-fn maara kk" polun-osa)
-                            (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu :tunniste-rajapinnan-dataan)] muutos))
+                            (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]))
                             (when paivita-kattohinta?
                               (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
          polun-osa (keyword nimi)
@@ -2060,10 +1964,7 @@
                                                          :ajettavat-jarejestykset #{:mapit}
                                                          :triggeroi-seuranta? true}
                                                         true)
-                                  (println aseta-avain)
-                                  (tarkista-vaaditaanko-vahvistus
-                                    polun-osa
-                                    (partial toiminto-fn! polun-osa solu/*this*)))
+                                  (toiminto-fn! polun-osa solu/*this*))
                                 (fn [rivit-alla arvo]
                                   (when (not (empty? rivit-alla))
                                     (doseq [rivi rivit-alla
@@ -2074,9 +1975,7 @@
                                                              :ajettavat-jarejestykset #{:mapit}
                                                              :triggeroi-seuranta? true}
                                                             true))
-                                    (tarkista-vaaditaanko-vahvistus
-                                      polun-osa
-                                      (partial toiminto-nappi-fn! polun-osa rivit-alla))))
+                                    (toiminto-nappi-fn! polun-osa rivit-alla)))
                                 (fn [arvo]
                                   (when arvo
                                     (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
@@ -2092,9 +1991,7 @@
                                                          :triggeroi-seuranta? true}
                                                         true)
                                   (println aseta-avain)
-                                  (tarkista-vaaditaanko-vahvistus
-                                    polun-osa
-                                    (partial toiminto-kk-fn! polun-osa solu/*this*))))
+                                  (toiminto-kk-fn! polun-osa solu/*this*)))
          rajapinta (t/maarataulukon-rajapinta polun-osa aseta-yhteenveto-avain aseta-avain)]
      (grid/rajapinta-grid-yhdistaminen! g
                                         rajapinta
@@ -2650,8 +2547,9 @@
                 :sulje-fn #(e! (t/->SuljeVahvistus))}
    [:div "Please confirm"
     [:div "vahvistus" [debug/debug vahvistus]]
+    [:input {:type :text :on-blur (r/partial muuta-fn! :syy)}]
     [:input {:type :text :on-blur (r/partial muuta-fn! :selite)}]
-    [:button {:on-click (r/partial laheta-fn! e! {:testi "OK"})} "Klikkeris"]]])
+    [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
 
 (defn vahvista-suunnitelman-osa-komponentti
   [_ _]
@@ -3040,7 +2938,7 @@
                        (when vaaditaan-muutoksen-vahvistus?
                          [selite-modal
                           tee-kun-vahvistettu
-                          (r/partial (fn [polku e] (e! (tuck-apurit/->MuutaTila [:domain :vahvistus polku] (.. e -target -value)))))
+                          (r/partial (fn [polku e] (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot polku] (.. e -target -value)))))
                           (get-in app [:domain :vahvistus])])]))))))
 
 (defn kustannussuunnitelma []

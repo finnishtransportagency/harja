@@ -266,7 +266,7 @@
           [] ajat))
 
 (defn tallenna-kiinteahintaiset-tyot
-  [db user {:keys [urakka-id toimenpide-avain ajat summa]}]
+  [db user {:keys [urakka-id toimenpide-avain ajat summa muutos]}]
   {:pre [(integer? urakka-id)
          (keyword? toimenpide-avain)
          (or (nil? summa)
@@ -299,6 +299,8 @@
                                                                                    olemassa-olevat-kiinteahintaiset-tyot))
                                                                            ajat)]
                               (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+                              (println olemassa-olevat-kiinteahintaiset-tyot)
+                              (println uudet-kiinteahintaiset-tyot-ajat)
                               (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
                                   (update! db ::bs/kiinteahintainen-tyo
@@ -453,6 +455,8 @@
                                                                                      olemassa-olevat-kustannusarvioidut-tyot-vuosille))
                                                                              ajat)]
                               (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+                              (println olemassa-olevat-kustannusarvioidut-tyot)
+                              (println uudet-kustannusarvioidut-tyot-ajat)
                               (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
                                   (update! db ::bs/kustannusarvioitu-tyo
@@ -478,7 +482,7 @@
 
 
 (defn tallenna-kustannusarvioitu-tyo
-  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa ajat vahvistettu?]}]
+  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa ajat muutos]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [tyyppi (mhu/tallennettava-asia->tyyppi tallennettava-asia)

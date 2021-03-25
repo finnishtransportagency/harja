@@ -1683,15 +1683,32 @@ vaihtelua-teksti "vaihtelua/kk")
   [app asia hoitovuosi]
   (get-in app [:domain :tilat asia hoitovuosi]))
 
+(defn- vahvistettavat
+  [app asia hoitovuosilta]
+  (let [asian-tilat (get-in app [:domain :tilat (tilan-tyyppi asia)])
+        tarkastettavat (select-keys asian-tilat (if (number? hoitovuosilta)
+                                                  [hoitovuosilta]
+                                                  hoitovuosilta))]
+    (println "tarkistetaan " tarkastettavat)
+    (into {}
+          (filter #(true? (second %)))
+          tarkastettavat)))
+
+(def tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
+                    :akilliset-hoitotyot :hankintakustannukset
+                    :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
+                    :toimistokulut :johto-ja-hallintokorvaus
+                    :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus}) ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
+
 (defrecord TaulukoidenVakioarvot [])
 (defrecord FiltereidenAloitusarvot [])
-(defrecord TallennaHankintojenArvot [tallennettava-asia hoitokauden-numero tunnisteet muutos])
+(defrecord TallennaHankintojenArvot [tallennettava-asia hoitokauden-numero tunnisteet])
 (defrecord TallennaHankintojenArvotOnnistui [vastaus])
 (defrecord TallennaHankintojenArvotEpaonnistui [vastaus])
-(defrecord TallennaKustannusarvoitu [tallennettava-asia tunnisteet muutos])
+(defrecord TallennaKustannusarvoitu [tallennettava-asia tunnisteet])
 (defrecord TallennaKustannusarvoituOnnistui [vastaus])
 (defrecord TallennaKustannusarvoituEpaonnistui [vastaus])
-(defrecord TallennaJohtoJaHallintokorvaukset [tallennettava-asia tunnisteet muutos])
+(defrecord TallennaJohtoJaHallintokorvaukset [tallennettava-asia tunnisteet])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
 (defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohinta [])
@@ -1725,9 +1742,37 @@ vaihtelua-teksti "vaihtelua/kk")
 (defrecord TallennaSeliteMuutokselle [])
 (defrecord TallennaSeliteMuutokselleOnnistui [])
 (defrecord TallennaSeliteMuutokselleEpaonnistui [])
+(defrecord VahvistaJaTallenna [tiedot])
 (defrecord SuljeVahvistus [])
 (defrecord TarkistaTarvitaankoVahvistus [asia hoitovuosi toiminto-fn!])
 
+(defn- kysy-vahvistus
+  [app asia vahvistettavat-vuodet tiedot]
+  (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? true
+                                      :vahvistettavat-vuodet vahvistettavat-vuodet
+                                      :asia (or (tyyppi->avain asia) asia)
+                                      :tee-kun-vahvistettu (r/partial (fn [tiedot e! muutos]
+                                                                        (e! (->VahvistaJaTallenna (update tiedot :payload merge {:muutos muutos}))))
+                                                                      tiedot)}))
+
+(defn- tallenna-kattohinnat
+  [app]
+  (let [kattohinnan-kerroin 1.1
+        yhteenvedot (tavoitehinnan-summaus (:yhteenvedot app))
+        {urakka-id :id} (:urakka @tiedot/yleiset)
+
+        lahetettava-data {:urakka-id urakka-id
+                          :tavoitteet (vec (map-indexed (fn [index summa]
+                                                          {:hoitokausi (inc index)
+                                                           :tavoitehinta summa
+                                                           :kattohinta (* summa kattohinnan-kerroin)})
+                                                        yhteenvedot))}]
+    (println "Tallenna kattohinta")
+    (laheta-ja-odota-vastaus app
+                             {:palvelu :tallenna-budjettitavoite
+                              :payload lahetettava-data
+                              :onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+                              :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui})))
 
 (defn urakan-ajat []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -2232,7 +2277,7 @@ vaihtelua-teksti "vaihtelua/kk")
     (let [hoitokauden-numero (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])]
       (assoc-in app [:domain :johto-ja-hallintokorvaukset nimi (dec hoitokauden-numero) sarake] arvo)))
   TallennaHankintojenArvot
-  (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet muutos]} app]
+  (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu (case tallennettava-asia
                        :hankintakustannus :tallenna-kiinteahintaiset-tyot
@@ -2258,17 +2303,20 @@ vaihtelua-teksti "vaihtelua/kk")
                              :hankintakustannus {:urakka-id urakka-id
                                                  :toimenpide-avain valittu-toimenpide
                                                  :summa summa
-                                                 :ajat ajat
-                                                 :muutos muutos}
+                                                 :ajat ajat}
                              :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
                                                                :toimenpide-avain valittu-toimenpide
                                                                :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                :summa summa
-                                                               :ajat ajat
-                                                               :muutos muutos})
+                                                               :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-          tilan-tyyppi (tilan-tyyppi tallennettava-asia)]
+          tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+          tiedot {:palvelu post-kutsu
+                  :payload (dissoc-nils lahetettava-data)
+                  :onnistui ->TallennaHankintojenArvotOnnistui
+                  :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
       (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
+
       (when-not onko-tila?
         (laheta-ja-odota-vastaus app
                                  {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -2278,10 +2326,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                   :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
       (laheta-ja-odota-vastaus app
-                               {:palvelu post-kutsu
-                                :payload (dissoc-nils lahetettava-data)
-                                :onnistui ->TallennaHankintojenArvotOnnistui
-                                :epaonnistui ->TallennaHankintojenArvotEpaonnistui})))
+                               tiedot)))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2291,7 +2336,7 @@ vaihtelua-teksti "vaihtelua/kk")
                    :warning viesti/viestin-nayttoaika-pitka)
     app)
   TallennaKustannusarvoitu
-  (process-event [{:keys [tallennettava-asia tunnisteet muutos]} app]
+  (process-event [{:keys [tallennettava-asia tunnisteet]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-kustannusarvioitu-tyo
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
@@ -2330,8 +2375,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                           :toimenpide-avain valittu-toimenpide
                                                           :tallennettava-asia tallennettava-asia
                                                           :summa summa
-                                                          :ajat ajat
-                                                          :muutos muutos}
+                                                          :ajat ajat}
                              (:erillishankinnat
                                :toimistokulut
                                :hoidonjohtopalkkio
@@ -2339,10 +2383,13 @@ vaihtelua-teksti "vaihtelua/kk")
                                                      :toimenpide-avain :mhu-johto
                                                      :tallennettava-asia tallennettava-asia
                                                      :summa summa
-                                                     :ajat ajat
-                                                     :muutos muutos})
+                                                     :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-          tilan-tyyppi (tilan-tyyppi tallennettava-asia)]
+          tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+          tiedot {:palvelu post-kutsu
+                  :payload (dissoc-nils lahetettava-data)
+                  :onnistui ->TallennaKustannusarvoituOnnistui
+                  :epaonnistui ->TallennaKustannusarvoituEpaonnistui}]
       (println "Tallenna kustannusarvioitu")
       (when-not onko-tila?
         (laheta-ja-odota-vastaus app
@@ -2352,11 +2399,9 @@ vaihtelua-teksti "vaihtelua/kk")
                                             :hoitovuodet paivitettavat-hoitokauden-numerot}
                                   :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+
       (laheta-ja-odota-vastaus app
-                               {:palvelu post-kutsu
-                                :payload (dissoc-nils lahetettava-data)
-                                :onnistui ->TallennaKustannusarvoituOnnistui
-                                :epaonnistui ->TallennaKustannusarvoituEpaonnistui})))
+                               tiedot)))
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2366,7 +2411,7 @@ vaihtelua-teksti "vaihtelua/kk")
                    :warning viesti/viestin-nayttoaika-pitka)
     app)
   TallennaJohtoJaHallintokorvaukset
-  (process-event [{:keys [tallennettava-asia tunnisteet muutos]} app]
+  (process-event [{:keys [tallennettava-asia tunnisteet]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-johto-ja-hallintokorvaukset
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
@@ -2410,10 +2455,13 @@ vaihtelua-teksti "vaihtelua/kk")
                                     {:toimenkuva-id toimenkuva-id}
                                     {:toimenkuva tunnisteen-toimenkuva})
                                   (when oman-rivin-maksukausi
-                                    {:maksukausi oman-rivin-maksukausi})
-                                  (when (some? muutos)
-                                    {:muutos muutos}))
-          onko-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)]
+                                    {:maksukausi oman-rivin-maksukausi}))
+          onko-tila? (hae-tila app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
+          vahvistettavat-vuodet (vahvistettavat app :johto-ja-hallintokorvaus paivitettavat-hoitokauden-numerot)
+          tiedot {:palvelu post-kutsu
+                  :payload lahetettava-data
+                  :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
+                  :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui}]
       (when-not onko-tila?
         (laheta-ja-odota-vastaus app
                                  {:palvelu :tallenna-suunnitelman-osalle-tila
@@ -2422,11 +2470,11 @@ vaihtelua-teksti "vaihtelua/kk")
                                             :hoitovuodet paivitettavat-hoitokauden-numerot}
                                   :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
-      (laheta-ja-odota-vastaus app
-                               {:palvelu post-kutsu
-                                :payload lahetettava-data
-                                :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
-                                :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui})))
+      (if (empty? vahvistettavat-vuodet)
+        (-> app
+            (laheta-ja-odota-vastaus tiedot)
+            tallenna-kattohinnat)
+        (kysy-vahvistus app :johto-ja-hallintokorvaus vahvistettavat-vuodet tiedot))))
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2559,20 +2607,28 @@ vaihtelua-teksti "vaihtelua/kk")
   (process-event [_ app])
   TallennaSeliteMuutokselleEpaonnistui
   (process-event [_ app])
+  VahvistaJaTallenna
+  (process-event [{{:keys [palvelu payload onnistui epaonnistui]} :tiedot} app]
+    (tallenna-kattohinnat (:yhteenvedot app))
+    (-> app
+        (assoc-in [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? false
+                                        :tee-kun-vahvistettu nil
+                                        :tiedot {}})
+        (laheta-ja-odota-vastaus
+          {:palvelu palvelu
+           :payload payload
+           :onnistui onnistui
+           :epaonnistui epaonnistui})))
   SuljeVahvistus
   (process-event [_ app]
     (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? false
-                                        :tee-kun-vahvistettu nil}))
+                                        :tee-kun-vahvistettu nil
+                                        :tiedot {}}))
   TarkistaTarvitaankoVahvistus
   (process-event [{:keys [asia hoitovuosi toiminto-fn!]} app]
     (let [vahvistus-modaali-auki? (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?])
           hoitovuosi (or hoitovuosi
                          (get-in app [:suodattimet :hoitokauden-numero]))
-          tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
-                         :akilliset-hoitotyot :hankintakustannukset
-                         :kolmansien-osapuolten-aiheuttamat-vahingot :hankintakustannukset
-                         :toimistokulut :johto-ja-hallintokorvaus
-                         :aseta-jh-yhteenveto! :johto-ja-hallintokorvaus} ; nää muutamat on outoja, koska ne tulee geneerisestä komponentista ja tunnistetaan siellä annetuilla eventtinimillä
           tarvitaan-vahvistus? (pitaako-vahvistaa? app (or (tyyppi->avain asia)
                                                            asia) hoitovuosi)
           e! (tuck/current-send-function)]
