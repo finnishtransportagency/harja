@@ -363,7 +363,10 @@ paikkauskohteet))
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
 (defn- laske-paikkauskohteen-pituus [db kohde]
-  (let [osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
+  (let [ ;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
+         ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
+         ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})
+        osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
                                                                       :aosa (:aosa kohde)
                                                                       :losa (:losa kohde)})]
     (reduce (fn [k rivi]
@@ -385,8 +388,8 @@ paikkauskohteet))
                 (assoc k :pituus (+
                                    (:pituus k) ;; Nykyinen pituus
                                    (:pituus rivi) ;; Osamäpin osan pituus
-                                   )))
-              )
+                                   ))))
+            ;; Annetaan reducelle mäppi, jossa :pituus avaimeen lasketaan annetun tien kohdan pituus.
             {:pituus 0 :aosa (:aosa kohde) :aet (:aet kohde) :losa (:losa kohde) :let (:let kohde)}
             osan-pituudet)))
 
