@@ -26,7 +26,7 @@
     (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
     validointivirheet))
 
-(defn validit-tr_osat? [validointivirheet tie alkuosa alkuetaisyys loppuosa loppuetaisyys]
+(defn validit-tr_osat? [validointivirheet tie alkuosa loppuosa alkuetaisyys loppuetaisyys]
   (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
            (>= loppuosa alkuosa))
     validointivirheet
