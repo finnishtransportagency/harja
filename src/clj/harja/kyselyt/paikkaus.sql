@@ -48,7 +48,7 @@ WHERE pt."urakka-id"=:urakka-id AND
          :loppuosa :: INTEGER IS NULL)) OR
        (pt.tierekisteriosoite).losa < :loppuosa) AND
       (:paikkaus-idt :: INTEGER [] IS NULL OR pk.id = ANY (:paikkaus-idt :: INTEGER [])) AND
-      (:tyomenetelmat :: VARCHAR [] IS NULL OR pt.tyomenetelma = ANY (:tyomenetelmat :: VARCHAR []));
+      (:tyomenetelmat :: VARCHAR [] IS NULL OR pt.tyomenetelma::VARCHAR = ANY (:tyomenetelmat :: VARCHAR []));
 
 --name: paivita-paikkaustoteuma!
 UPDATE paikkaustoteuma
@@ -67,7 +67,7 @@ INSERT INTO paikkaustoteuma("urakka-id", "paikkauskohde-id", "luoja-id", luotu,
                             tyomenetelma, valmistumispvm, tierekisteriosoite)
  VALUES(:urakka, :paikkauskohde, :luoja, NOW(),
         :tyyppi::paikkaustoteumatyyppi, :hinta, NOW(),
-        :tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite);
+        :tyomenetelma::tyomenetelma, :valmistumispvm, ROW(:tie, :aosa, :aet, :losa, :let, NULL)::tr_osoite);
 
 --name: hae-paikkauskohteen-tierekisteriosoite
   WITH tr_alku AS (
@@ -141,7 +141,7 @@ WHERE pk."urakka-id" = :urakka-id
   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma::TEXT IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
@@ -213,7 +213,7 @@ WHERE st_intersects(u.alue, (SELECT *
   AND ((:tilat)::TEXT IS NULL OR pk."paikkauskohteen-tila"::TEXT IN (:tilat))
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
-  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma IN (:tyomenetelmat))
+  AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma::TEXT IN (:tyomenetelmat))
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
@@ -233,7 +233,7 @@ SET "ulkoinen-id"                  = :ulkoinen-id,
     nro                            = :nro,
     alkupvm                        = :alkupvm::TIMESTAMP,
     loppupvm                       = :loppupvm::TIMESTAMP,
-    tyomenetelma                   = :tyomenetelma,
+    tyomenetelma                   = :tyomenetelma::tyomenetelma,
     tyomenetelma_kuvaus            = :tyomenetelma-kuvaus,
     tierekisteriosoite_laajennettu = ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
     "paikkauskohteen-tila"         = :paikkauskohteen-tila::paikkauskohteen_tila,
@@ -259,7 +259,7 @@ VALUES (:luoja-id,
         :nro,
         :alkupvm::TIMESTAMP,
         :loppupvm::TIMESTAMP,
-        :tyomenetelma,
+        :tyomenetelma::tyomenetelma,
         :tyomenetelma-kuvaus,
         ROW (:tie, :aosa, :aet, :losa, :let, :ajorata, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
         :paikkauskohteen-tila::paikkauskohteen_tila,

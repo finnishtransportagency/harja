@@ -4,7 +4,9 @@
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.set :as set]
+            [harja.domain.paikkaus :as paikkaus])
   (:import (org.apache.poi.ss.util CellRangeAddress)))
 
 (defn erottele-paikkauskohteet [workbook]
@@ -15,6 +17,7 @@
                                         :H :let :I :alkupvm :J :loppupvm :K :tyomenetelma :L :suunniteltu-maara
                                         :M :yksikko :N :suunniteltu-hinta :O :lisatiedot}
                                        sivu)
+        ;; Työmenetelmä lyhenteeksi
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
@@ -23,11 +26,13 @@
         otsikko-idx (first (keep-indexed (fn [idx rivi] (when (and (= "Nro." (:nro rivi)) (= "Kohde" (:nimi rivi))) idx)) raaka-data))
         paikkauskohteet (remove #(nil? (:nimi %)) (subvec raaka-data (inc otsikko-idx)))
         paikkauskohteet (mapv
-                          #(update % :loppupvm (fn [loppupvm]
-                                                 (if (inst? loppupvm)
-                                                   loppupvm
-                                                   (pvm/parsi-paiva-str->inst loppupvm))))
+                          #(when (some? (:loppupvm %))
+                             (update % :loppupvm (fn [loppupvm]
+                                                   (if (inst? loppupvm)
+                                                     loppupvm
+                                                     (pvm/parsi-paiva-str->inst loppupvm)))))
                           paikkauskohteet)
+        paikkauskohteet (map (fn [pk] (update-in pk [:tyomenetelma] #((set/map-invert paikkaus/paikkauskohteiden-tyomenetelmat) %))) paikkauskohteet)
         _ (println "erottele-paikkauskohteet :: paikkauskohteet" (pr-str paikkauskohteet))]
     paikkauskohteet))
 
@@ -96,7 +101,7 @@
                      (:let rivi)
                      (pvm/pvm-opt (:alkupvm rivi))
                      (pvm/pvm-opt (:loppupvm rivi))
-                     (or (:tyomenetelma rivi) nil)
+                     (or ((set/map-invert paikkaus/paikkauskohteiden-tyomenetelmat) (:tyomenetelma rivi)) nil)
                      (:suunniteltu-maara rivi)
                      (:yksikko rivi)
                      suunniteltu-summa

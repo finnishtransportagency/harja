@@ -10,7 +10,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkauskohteet-kartalle]
-            [harja.tiedot.urakka.urakka :as tila])
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.domain.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn virhe-modal [virhe otsikko]
@@ -498,11 +499,5 @@
   )
 
 (def tyomenetelmat
-  ["Kaikki" "AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KT-valuasfalttipaikkaus (KTVA)"
-   "Konetiivistetty reikävaluasfalttipaikkaus (REPA)" "Sirotepuhalluspaikkaus (SIPU)"
-   "Sirotepintauksena tehty lappupaikkaus (SIPA)" "Urapaikkaus (UREM/RREM)" "Jyrsintä (HJYR/TJYR)" "Kannukaatosaumaus" "KT-valuasfalttisaumaus"
-   "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"
-   "Reunapalkin ja päällysteen välisen sauman tiivistäminen" "Reunapalkin liikuntasauman tiivistäminen"
-   "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"
-   "Muu päällysteiden paikkaustyö"])
+  (into ["Kaikki"] (vec (vals paikkaus/paikkauskohteiden-tyomenetelmat))))
 

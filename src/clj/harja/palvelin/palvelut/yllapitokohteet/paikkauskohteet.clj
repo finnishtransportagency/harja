@@ -7,6 +7,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]
@@ -72,10 +73,10 @@
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
 ;; TODO: Muuta tarkastamaan, että on yksi sallituista arvoista, kunhan ne päivitetään muutetaan enumeiksi.
-(s/def ::tyomenetelma (s/and string? (complement empty?)))
+(s/def ::tyomenetelma (s/and string? #(not (nil? (paikkaus/paikkauskohteiden-tyomenetelmat %)))))
 (s/def ::suunniteltu-maara (s/and number? pos?))
 (s/def ::suunniteltu-hinta (s/and number? pos?))
-(s/def ::yksikko #{"m2" "t" "kpl" "jm"})
+(s/def ::yksikko paikkaus/paikkauskohteiden-yksikot)
 
 (defn paikkauskohde-validi? [kohde vanha-kohde rooli]
   (let [validointivirheet (as-> #{} virheet
