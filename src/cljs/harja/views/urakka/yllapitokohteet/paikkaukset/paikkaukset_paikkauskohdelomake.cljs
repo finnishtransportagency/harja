@@ -161,6 +161,108 @@
                  sijainti
                  suunnitelma))))
 
+(defn- lomake-lukutila [e! lomake nayta-muokkaus?]
+  [:div
+   [:div {:style {:padding-left "16px" :padding-top "32px"}}
+    [:div.pieni-teksti (:nro lomake)]
+    [:div {:style {:font-size 16 :font-weight "bold"}} (:nimi lomake)]]
+
+   (if (:paikkauskohteen-tila lomake)
+     [:div.row
+      [:div.col-xs-12
+       [:div {:class (str (:paikkauskohteen-tila lomake) "-bg")
+              :style {:display "inline-block"}}
+        [:div
+         [:div {:class (str "circle "
+                            (cond
+                              (= "tilattu" (:paikkauskohteen-tila lomake)) "tila-tilattu"
+                              (= "ehdotettu" (:paikkauskohteen-tila lomake)) "tila-ehdotettu"
+                              (= "valmis" (:paikkauskohteen-tila lomake)) "tila-valmis"
+                              (= "hylatty" (:paikkauskohteen-tila lomake)) "tila-hylatty"
+                              :default "tila-ehdotettu"))}]
+         [:span (str/capitalize (:paikkauskohteen-tila lomake))]]]
+       (when (:tilattupvm lomake)
+         [:span.pieni-teksti {:style {:padding-left "24px"
+                                      :display "inline-block"}}
+          (str "Tilauspvm " (harja.fmt/pvm (:tilattupvm lomake)))])
+       [:span.pieni-teksti {:style {:padding-left "24px"
+                                    :display "inline-block"}}
+        (if (:muokattu lomake)
+          (str "Päivitetty " (harja.fmt/pvm (:muokattu lomake)))
+          "Ei päivitystietoa")]]]
+     [:span "Tila ei tiedossa"])
+   ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
+   (when nayta-muokkaus?
+     [:div.col-xs-12 {:style {:padding-top "24px"}}
+      [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))]])
+
+   [:hr]
+
+   ;; Lukutilassa on kaksi erilaista vaihtoehtoa - tilattu tai valmis  ja muut
+   (if (or (= "tilattu" (:paikkauskohteen-tila lomake))
+           (= "valmis" (:paikkauskohteen-tila lomake)))
+     ;; Tilattu
+     [:div.col-xs-12
+      [lukutila-rivi "Työmenetelmä" (:tyomenetelma lomake)]
+      ;; Sijainti
+      [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
+                                                                (:aet lomake) (:let lomake))]
+      ;; Pituus
+      [lukutila-rivi "Kohteen pituus" (str (:pituus lomake) " m")]
+
+      ;; Lisätiedot
+      [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
+      ;; Harmaisiin laatikoihin
+      [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
+       [:div.col-xs-12
+        [:h4 "AIKATAULU"]]
+       [:div.row
+        [:div.col-xs-6
+         [lukutila-rivi
+          "Arvioitu aikataulu"
+          (if (and (:alkupvm lomake) (:loppupvm lomake))
+            (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
+            "Ei arviota")]]
+        [:div.col-xs-6
+         [lukutila-rivi
+          "Toteutunut aikataulu"
+          nil]]]]
+      [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
+       [:div.col-xs-12
+        [:h4 "MÄÄRÄ"]]
+       [:div.row
+        [:div.col-xs-6
+         [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
+        [:div.col-xs-6
+         [lukutila-rivi "Toteutunut määrä" (str " - ")]]]]
+      (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+        [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
+         [:div.col-xs-12
+          [:h4 "KUSTANNUKSET"]]
+         [:div.row
+          [:div.col-xs-6
+           [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))]] ;; :koostettu-maara
+          [:div.col-xs-6
+           [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
+     ;; Ja muut
+     [:div.col-xs-12
+      [lukutila-rivi "Työmenetelmä" (:tyomenetelma lomake)]
+      ;; Sijainti
+      [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
+                                                                (:aet lomake) (:let lomake))]
+      ;; Pituus
+      [lukutila-rivi "Kohteen pituus" (str (:pituus lomake) " m")]
+      ;; Aikataulu
+      [lukutila-rivi
+       "Suunniteltu aikataulu"
+       (if (and (:alkupvm lomake) (:loppupvm lomake))
+         (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
+         "Suunniteltua aikataulua ei löytynyt")]
+      [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))] ;; :koostettu-maara
+      (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+        [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
+      [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]])])
+
 (defn paikkauskohde-lomake [e! lomake]
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
@@ -197,100 +299,7 @@
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Tarkistetaan muokkaustila
      (when (not muokkaustila?)
-       [:div
-        [:div {:style {:padding-left "16px" :padding-top "32px"}}
-         [:div.pieni-teksti (:nro lomake)]
-         [:div {:style {:font-size 16 :font-weight "bold"}} (:nimi lomake)]]
-
-        (if (:paikkauskohteen-tila lomake)
-          [:div.row
-           [:div.col-xs-12
-            [:div {:class (str (:paikkauskohteen-tila lomake) "-bg")
-                   :style {:display "inline-block"}}
-             [:div
-              [:div {:class (str "circle "
-                                 (cond
-                                   (= "tilattu" (:paikkauskohteen-tila lomake)) "tila-tilattu"
-                                   (= "ehdotettu" (:paikkauskohteen-tila lomake)) "tila-ehdotettu"
-                                   (= "valmis" (:paikkauskohteen-tila lomake)) "tila-valmis"
-                                   (= "hylatty" (:paikkauskohteen-tila lomake)) "tila-hylatty"
-                                   :default "tila-ehdotettu"))}]
-              [:span (str/capitalize (:paikkauskohteen-tila lomake))]]]
-            (when (:tilattupvm lomake)
-              [:span.pieni-teksti {:style {:padding-left "24px"
-                                           :display "inline-block"}}
-               (str "Tilauspvm " (harja.fmt/pvm (:tilattupvm lomake)))])
-            [:span.pieni-teksti {:style {:padding-left "24px"
-                                         :display "inline-block"}}
-             (if (:muokattu lomake)
-               (str "Päivitetty " (harja.fmt/pvm (:muokattu lomake)))
-               "Ei päivitystietoa")]]]
-          [:span "Tila ei tiedossa"])
-        ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
-        (when nayta-muokkaus?
-          [:div.col-xs-12 {:style {:padding-top "24px"}}
-           [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))]])
-
-        [:hr]
-
-        ;; Lukutilassa on kaksi erilaista vaihtoehtoa - tilattu tai valmis  ja muut
-        (if (or (= "tilattu" (:paikkauskohteen-tila lomake))
-                (= "valmis" (:paikkauskohteen-tila lomake)))
-          ;; Tilattu
-          [:div.col-xs-12
-           [lukutila-rivi "Työmenetelmä" (:tyomenetelma lomake)]
-           ;; Sijainti
-           [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
-                                                                     (:aet lomake) (:let lomake))]
-           ;; Lisätiedot
-           [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
-           ;; Harmaisiin laatikoihin
-           [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-            [:div.col-xs-12
-             [:h4 "AIKATAULU"]]
-            [:div.row
-             [:div.col-xs-6
-              [lukutila-rivi
-               "Arvioitu aikataulu"
-               (if (and (:alkupvm lomake) (:loppupvm lomake))
-                 (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
-                 "Ei arviota")]]
-             [:div.col-xs-6
-              [lukutila-rivi
-               "Toteutunut aikataulu"
-               nil]]]]
-           [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-            [:div.col-xs-12
-             [:h4 "MÄÄRÄ"]]
-            [:div.row
-             [:div.col-xs-6
-              [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
-             [:div.col-xs-6
-              [lukutila-rivi "Toteutunut määrä" (str " - ")]]]]
-           (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-             [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
-              [:div.col-xs-12
-               [:h4 "KUSTANNUKSET"]]
-              [:div.row
-               [:div.col-xs-6
-                [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))]] ;; :koostettu-maara
-               [:div.col-xs-6
-                [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
-          ;; Ja muut
-          [:div.col-xs-12
-           [lukutila-rivi "Työmenetelmä" (:tyomenetelma lomake)]
-           ;; Sijainti
-           [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
-                                                                     (:aet lomake) (:let lomake))]
-           [lukutila-rivi
-            "Suunniteltu aikataulu"
-            (if (and (:alkupvm lomake) (:loppupvm lomake))
-              (harja.fmt/pvm-vali [(:alkupvm lomake) (:loppupvm lomake)])
-              "Suunniteltua aikataulua ei löytynyt")]
-           [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))] ;; :koostettu-maara
-           (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-             [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
-           [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]])])
+       [lomake-lukutila e! lomake nayta-muokkaus?])
 
      [lomake/lomake
       {:ei-borderia? true

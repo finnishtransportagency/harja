@@ -362,9 +362,40 @@ paikkauskohteet))
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
-(defn- siivoa-paikkauskohteet [paikkauskohteet]
+(defn- laske-paikkauskohteen-pituus [db kohde]
+  (let [osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
+                                                                      :aosa (:aosa kohde)
+                                                                      :losa (:losa kohde)})]
+    (reduce (fn [k rivi]
+              (cond
+                ;; Alkuosa täsmää, joten ei oteta koko pituutta, vaan pelkästään jäljelle jäävä pituus
+                (= (:aosa k) (:osa rivi))
+                (assoc k :pituus (+
+                                   (:pituus k) ;; Nykyinen pituus
+                                   (- (:pituus rivi) (:aet k)) ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys
+                                   ))
+                ;; Jos loppuosa täsmää osalistan osaan, niin otetaan vain loppuosan etäisyys
+                (= (:losa k) (:osa rivi))
+                (assoc k :pituus (+
+                                   (:pituus k) ;; Nykyinen pituus
+                                   (:let k) ;; Lopposan pituus, eli alusta tähän asti, ei siis koko osan pituutta
+                                   ))
+                ;; alkuosa tai loppuosa ei täsmää, joten otetaan koko osan pituus
+                :else
+                (assoc k :pituus (+
+                                   (:pituus k) ;; Nykyinen pituus
+                                   (:pituus rivi) ;; Osamäpin osan pituus
+                                   )))
+              )
+            {:pituus 0 :aosa (:aosa kohde) :aet (:aet kohde) :losa (:losa kohde) :let (:let kohde)}
+            osan-pituudet)))
+
+(defn- siivoa-paikkauskohteet
+  "Poistetaan käyttämättömät avaimet ja lasketaan pituus"
+  [db paikkauskohteet]
   (map (fn [p]
          (-> p
+             (assoc :pituus (:pituus (laske-paikkauskohteen-pituus db p)))
              (assoc :sijainti (geo/pg->clj (:geometria p)))
              (dissoc :geometria)))
        paikkauskohteet))
@@ -395,7 +426,7 @@ paikkauskohteet))
                                                                :loppupvm loppupvm
                                                                :tyomenetelmat menetelmat
                                                                :elyt elyt}))
-        urakan-paikkauskohteet (siivoa-paikkauskohteet urakan-paikkauskohteet)
+        urakan-paikkauskohteet (siivoa-paikkauskohteet db urakan-paikkauskohteet)
         ;_ (println "paikkauskohteet :: urakan-paikkauskohteet" (pr-str urakan-paikkauskohteet))
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne
