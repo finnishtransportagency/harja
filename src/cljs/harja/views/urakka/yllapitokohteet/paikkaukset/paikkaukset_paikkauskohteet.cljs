@@ -179,38 +179,48 @@
       paikkauskohteet]]))
 
 (defn kohteet [e! app]
-  [:div.kohdelistaus
-   [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
-    [:div.col-xs-12.col-md-4.col-lg-4 [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]]
-    (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
-      [:div.col-xs-12.col-md-8.col-lg-8.inline-block {:style {:text-align "end"}}
-       ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-       ;TODO: Napeista puuttuu myös kulmien pyöristys
-       #_ [napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
-       [:span.inline-block
-        [:form {:style {:margin-left "auto"}
-                :target "_blank" :method "POST"
-                :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
-         [:input {:type "hidden" :name "parametrit"
-                  :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                                                :tila (:valittu-tila app)
-                                                :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
-                                                :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
-                                                :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
-         [:button {:type "submit"
-                   :class #{"nappi-ensisijainen napiton-nappi"}}
-          [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]]
+  (let [loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)]
+    [:div.kohdelistaus
+     (when (not loytyi-kohteita?)
+       [:div.row.col-xs-12 [:h2 "Ei paikkauskohteita valituilla rajauksilla."]])
+     [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
+      (when loytyi-kohteita?
+        [:div.col-xs-12.col-md-4.col-lg-4
+         [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]])
+      (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+        [:div.col-xs-12
+         (when loytyi-kohteita?
+           {:class "col-md-8.col-lg-8 inline-block"
+            :style {:text-align "end"}})
+         ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+         ;TODO: Napeista puuttuu myös kulmien pyöristys
+         #_[napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
+         (when loytyi-kohteita?
+           [:span.inline-block
+            [:form {:style {:margin-left "auto"}
+                    :target "_blank" :method "POST"
+                    :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
+             [:input {:type "hidden" :name "parametrit"
+                      :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                                                    :tila (:valittu-tila app)
+                                                    :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
+                                                    :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
+                                                    :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
+             [:button {:type "submit"
+                       :class #{"nappi-ensisijainen napiton-nappi"}}
+              [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
-       [liitteet/lataa-tiedosto
-        (-> @tila/tila :yleiset :urakka :id)
-        {:nappi-teksti "Tuo kohteet excelistä"
-         :nappi-luokka "napiton-nappi"
-         :url "lue-paikkauskohteet-excelista"
-         :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
-         :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
-       [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/Paikkausehdotukset_pohja.xlsx" "_blank") {:luokka "napiton-nappi"}]
-       [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
-   [:div.row [paikkauskohteet-taulukko e! app]]])
+         [liitteet/lataa-tiedosto
+          (-> @tila/tila :yleiset :urakka :id)
+          {:nappi-teksti "Tuo kohteet excelistä"
+           :nappi-luokka "napiton-nappi"
+           :url "lue-paikkauskohteet-excelista"
+           :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
+           :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
+         [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/Paikkausehdotukset_pohja.xlsx" "_blank") {:luokka "napiton-nappi"}]
+         [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
+     (when loytyi-kohteita?
+       [:div.row [paikkauskohteet-taulukko e! app]])]))
 
 (defn- filtterit [e! app]
   (let [vuodet (urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
