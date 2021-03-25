@@ -269,14 +269,16 @@
                               paikkauskohteiden-tilat)]
     [:div.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
      [:div.row
-      [:div.col-xs-2
-       [:span.alasvedon-otsikko-vayla "ELY"]
-       [valinnat/checkbox-pudotusvalikko
-        valittavat-elyt
-        (fn [ely valittu?]
-          (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-        [" ELY valittu" " ELYä valittu"]
-        {:vayla-tyyli? true}]]
+      ;; Tiemerkintäurakalle ei haluta näyttää elyrajauksia.
+      (when (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+       [:div.col-xs-2
+        [:span.alasvedon-otsikko-vayla "ELY"]
+        [valinnat/checkbox-pudotusvalikko
+         valittavat-elyt
+         (fn [ely valittu?]
+           (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
+         [" ELY valittu" " ELYä valittu"]
+         {:vayla-tyyli? true}]])
       [:div.col-xs-2
        [:span.alasvedon-otsikko-vayla "Tila"]
        [valinnat/checkbox-pudotusvalikko
