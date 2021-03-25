@@ -296,7 +296,7 @@
                         (wrap-multipart-params (fn [req] (vastaanota-excel db req)))
                         {:ring-kasittelija? true})
       (when excel
-        (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/paikkauskohteet-excel db)))
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))
 
   (stop [this]

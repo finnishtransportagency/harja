@@ -89,7 +89,7 @@
             [{:rivi [(str (:nro rivi))
                      (:nimi rivi)
                      (:tie rivi)
-                     nil
+                     (:ajorata rivi)
                      (:aosa rivi)
                      (:aet rivi)
                      (:losa rivi)
@@ -104,11 +104,11 @@
               :lihavoi? false}]))
         kohteet))))
 
-(defn paikkauskohteet-excel
+(defn vie-paikkauskohteet-exceliin
   [db workbook user tiedot]
   ;;TODO: Tarkistetaanko oikeudet tässä?
   (let [urakka (first (q-urakat/hae-urakka db (:urakka-id tiedot)))
-        _ (println "urakka" (pr-str urakka))
+        _ (println "vie-paikkauskohteet-exceliin :: urakka" (pr-str urakka))
         kohteet (q/paikkauskohteet db user tiedot)
         sarakkeet [{:otsikko "Nro." :tasaa :oikea}
                    {:otsikko "Kohde"}
