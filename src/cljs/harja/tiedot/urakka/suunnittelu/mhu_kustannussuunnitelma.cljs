@@ -1685,7 +1685,7 @@ vaihtelua-teksti "vaihtelua/kk")
 
 (defn- vahvistettavat
   [app asia hoitovuosilta]
-  (let [asian-tilat (get-in app [:domain :tilat (tilan-tyyppi asia)])
+  (let [asian-tilat (get-in app [:domain :tilat asia])
         tarkastettavat (select-keys asian-tilat (if (number? hoitovuosilta)
                                                   [hoitovuosilta]
                                                   hoitovuosilta))]
@@ -2311,6 +2311,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                                :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
           tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+          vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload (dissoc-nils lahetettava-data)
                   :onnistui ->TallennaHankintojenArvotOnnistui
@@ -2325,8 +2326,12 @@ vaihtelua-teksti "vaihtelua/kk")
                                             :hoitovuodet paivitettavat-hoitokauden-numerot}
                                   :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
-      (laheta-ja-odota-vastaus app
-                               tiedot)))
+
+      (if (empty? vahvistettavat-vuodet)
+        (do
+          (tallenna-kattohinnat app)
+          (laheta-ja-odota-vastaus app tiedot))
+        (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot))))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2386,6 +2391,7 @@ vaihtelua-teksti "vaihtelua/kk")
                                                      :ajat ajat})
           onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
           tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+          vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
           tiedot {:palvelu post-kutsu
                   :payload (dissoc-nils lahetettava-data)
                   :onnistui ->TallennaKustannusarvoituOnnistui
@@ -2400,8 +2406,11 @@ vaihtelua-teksti "vaihtelua/kk")
                                   :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
 
-      (laheta-ja-odota-vastaus app
-                               tiedot)))
+      (if (empty? vahvistettavat-vuodet)
+        (do
+          (tallenna-kattohinnat app)
+          (laheta-ja-odota-vastaus app tiedot))
+        (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot))))
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2471,9 +2480,9 @@ vaihtelua-teksti "vaihtelua/kk")
                                   :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
       (if (empty? vahvistettavat-vuodet)
-        (-> app
-            (laheta-ja-odota-vastaus tiedot)
-            tallenna-kattohinnat)
+        (do
+            (tallenna-kattohinnat app)
+            (laheta-ja-odota-vastaus app tiedot))
         (kysy-vahvistus app :johto-ja-hallintokorvaus vahvistettavat-vuodet tiedot))))
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]

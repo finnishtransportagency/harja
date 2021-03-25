@@ -204,7 +204,7 @@
   [{:keys [nappi? fmt paivitettava-asia solun-index blur-tallenna!
            nappia-painettu-tallenna! parametrit]}]
   (let [toiminto-fn!
-        (fn [paivitettava-asia tallenna! asiat e!]
+        (fn [paivitettava-asia tallenna! asiat]
           (println "toiminto-fn syote" paivitettava-asia asiat)
           (tallenna! asiat))]
     (merge
@@ -1352,10 +1352,8 @@
                                                                                                          (get (grid/hae-grid (grid/etsi-osa (grid/root solu) etsittava-osa)
                                                                                                                              :lapset)
                                                                                                               1)
-                                                                                                         :lapset))
-                                                                       muutos))
-                            (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus [(grid/solun-asia solu :tunniste-rajapinnan-dataan)]
-                                                                       muutos)))))
+                                                                                                         :lapset))))
+                            (e! (t/->TallennaJohtoJaHallintokorvaukset :johto-ja-hallintokorvaus [(grid/solun-asia solu :tunniste-rajapinnan-dataan)])))))
         nappia-painettu-tallenna! (fn -nappi-tallenna!
                                     ([rivit-alla]
                                      (-nappi-tallenna! rivit-alla nil))
@@ -1367,8 +1365,7 @@
                                                                                                    piillotettu? (grid/piillotettu? rivi)]
                                                                                                (when-not piillotettu?
                                                                                                  (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
-                                                                                           rivit-alla))
-                                                                                muutos))))
+                                                                                           rivit-alla))))))
         rividisable! (fn [g index kuukausitasolla?]
                        (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
                                                (not kuukausitasolla?))
