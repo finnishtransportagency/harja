@@ -23,6 +23,7 @@
 (defonce kohdeosat-atom (atom nil))
 (defonce alustarivit-atom (atom nil))
 (defonce lisatiedot-atom (atom nil))
+(defonce kopioi-kulutuskerros-kaistoille?-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])

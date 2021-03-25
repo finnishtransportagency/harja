@@ -71,6 +71,7 @@
   [{:keys [aseta nimi valinta-arvo hae elementin-id]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
+   sisalto-kun-rivi-disabloitu
    tulevat-elementit]
   (let [grid-tilan-muokkaus-fn (atom (fn [uusi]
                                        (if aseta
@@ -174,8 +175,8 @@
 
               (cond
                 ;; Mikäli rivi on disabloitu, piirretään erikseen määritelty sisältö, jos se on annettu...
-                (and rivi-disabloitu? (:sisalto-kun-rivi-disabloitu sarake))
-                ((:sisalto-kun-rivi-disabloitu sarake) rivi i)
+                (and rivi-disabloitu? sisalto-kun-rivi-disabloitu)
+                (sisalto-kun-rivi-disabloitu sarake i)
 
                 ;; ... tai mikäli sisältöä ei ole määritelty, eikä ole erikseen sallittu muokkausta, ei piirretä mitään
                 (and rivi-disabloitu? (not (:salli-muokkaus-rivin-ollessa-disabloituna? sarake)))
@@ -236,7 +237,8 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
                              nayta-virheet? i voi-muokata? tulevat-rivit
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
-                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu] :as rivi-asetukset}]
+                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu
+                             sisalto-kun-rivi-disabloitu] :as rivi-asetukset}]
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
     [:tr.muokataan {:class (y/luokat
                              (if (even? (+ i 1))
@@ -261,7 +263,8 @@
                                                                    :nayta-virheet? :i :voi-muokata?
                                                                    :muokatut-atom :muokkaa! :disable-input?
                                                                    :virheet :varoitukset :huomautukset :skeema
-                                                                   :gridin-tietoja})
+                                                                   :gridin-tietoja :disabloi-rivi?
+                                                                   :sisalto-kun-rivi-disabloitu})
                  hae (or hae #(get % nimi))
                  tulevat-elementit (when tayta-alas?
                                      (map hae tulevat-rivit))]
@@ -300,7 +303,7 @@
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
-                   rivi-klikattu]}]
+                   rivi-klikattu sisalto-kun-rivi-disabloitu]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -364,7 +367,8 @@
                                                                 :skeema skeema :voi-poistaa? voi-poistaa?
                                                                 :toimintonappi-fn toimintonappi-fn
                                                                 :gridin-tietoja gridin-tietoja
-                                                                :rivi-klikattu rivi-klikattu}]
+                                                                :rivi-klikattu rivi-klikattu
+                                                                :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu}]
                                                  ^{:key (str i "-" id "veto")}
                                                  [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan]]))]
                         (recur (inc i)
@@ -444,7 +448,8 @@
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
-           rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto] :as opts}
+           rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto
+           sisalto-kun-rivi-disabloitu] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -585,7 +590,8 @@
        (fn [{:keys [otsikko yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
-                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto] :as opts} skeema muokatut]
+                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
+                    sisalto-kun-rivi-disabloitu] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -627,7 +633,8 @@
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
                              :toimintonappi-fn (or toimintonappi-fn nil-fn) :tyhja-komponentti? tyhja-komponentti?
-                             :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu}]]
+                             :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu
+                             :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))
        :UNSAFE_component-will-receive-props (fn [this new-argv]
