@@ -77,7 +77,7 @@
   [urakka-id]
   (go (do
         (reset! yhteyshenkilot nil)
-        (let [vastaus (<! (k/post! :hae-urakan-yhteyshenkilot urakka-id))]
+        (let [vastaus (<! (k/post! :hae-paikkauskohteen-yhteyshenkilot urakka-id))]
           (if (k/virhe? vastaus)
             (do
               (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)

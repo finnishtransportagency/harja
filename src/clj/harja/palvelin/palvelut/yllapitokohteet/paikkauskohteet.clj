@@ -17,6 +17,7 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clojure.java.io :as io]
+            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]))
 
@@ -288,6 +289,9 @@
       (julkaise-palvelu http :poista-paikkauskohde
                         (fn [user kohde]
                           (poista-paikkauskohde! db user kohde)))
+      (julkaise-palvelu http :hae-paikkauskohteen-yhteyshenkilot
+                        (fn [user urakka-id]
+                          (yhteyshenkilot/hae-urakan-yhteyshenkilot (:db this) user urakka-id true)))
       (julkaise-palvelu http :lue-paikkauskohteet-excelista
                         (wrap-multipart-params (fn [req] (vastaanota-excel db req)))
                         {:ring-kasittelija? true})
@@ -301,6 +305,7 @@
       :paikkauskohteet-urakalle
       :tallenna-paikkauskohde-urakalle
       :poista-paikkauskohde
+      :hae-paikkauskohteen-yhteyshenkilot
       :lue-paikkauskohteet-excelista
       (when (:excel-vienti this)
         (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paikkauskohteet-urakalle-excel)))

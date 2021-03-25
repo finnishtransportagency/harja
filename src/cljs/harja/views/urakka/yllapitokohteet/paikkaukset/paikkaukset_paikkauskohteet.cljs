@@ -58,12 +58,25 @@
                                                          oikeudet/urakat-paikkaukset-paikkauskohteet
                                                          (-> @tila/tila :yleiset :urakka :id)
                                                          @istunto/kayttaja)))
-        skeema [{:otsikko "Muokattu"
-                 :leveys 2
-                 :nimi :paivays
-                 :fmt (fn [arvo]
-                        [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])
-                 }
+        skeema [
+                (cond
+                  ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
+                  (or (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+                      (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja"))
+                  {:otsikko "Arv. Valm. pvm"
+                   :leveys 2
+                   :nimi :loppupvm
+                   :fmt pvm/pvm-opt}
+                  ;; Päällysteurakalle näytetään muokkauspäivä
+                  (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                  {:otsikko "Muokattu"
+                   :leveys 2
+                   :nimi :paivays
+                   :fmt (fn [arvo]
+                          [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])}
+                  ;; Defaulttina eli esim alueurakoitsijalle ei näytetä koko kenttää
+                  :else nil
+                  )
                 {:otsikko "NRO"
                  :leveys 2
                  :nimi :nro}
@@ -99,21 +112,30 @@
                                          "prosessi-kesken"
                                          "")} arvo])}
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
-                (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+                ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
+                ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
+                ;; Ja että käyttäjä on :paallystys urakoitsija
+                (when (and
+                        (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                        (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
                   {:otsikko "Suun. hinta"
                    :leveys 2
                    :nimi :suunniteltu-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
-                (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+                (when (and
+                        (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                        (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
                   {:otsikko "Tot. hinta"
                    :leveys 2
                    :nimi :toteutunut-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin näytetään yhteystiedot
-                (when (false? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                (when (or
+                        (not= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                        (false? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))))
                   {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
                    :leveys 3
                    :nimi :yhteystiedot
@@ -284,7 +306,7 @@
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
-   ;; Filtterit näytetään kaikille muille käyttäjille paitsi aluevastaaville eli, joiden rooli on ELY_Urakanvalvoja
+   ;; Filtterit näytetään kaikille muille käyttäjille paitsi aluevastava (yksikkömuoto, jotta haku toimii) eli, joiden rooli on ELY_Urakanvalvoja
    (when (not
            (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja"))
      [filtterit e! app])

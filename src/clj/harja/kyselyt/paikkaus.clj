@@ -387,7 +387,7 @@ paikkauskohteet))
         elyt (disj elyt 0) ;; Poistetaan potentiaalinen "kaikki" valinta
         elyt (when (> (count elyt) 0)
                (vec elyt))
-        urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi))
+        urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi) (= :tiemerkinta urakan-tyyppi))
                                  (hae-paikkauskohteet-geometrialla db urakka-id tilat alkupvm loppupvm menetelmat)
                                  (paikkauskohteet-urakalle db {:urakka-id urakka-id
                                                                :tilat tilat

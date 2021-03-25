@@ -199,10 +199,9 @@ SELECT pk.id                                       AS id,
            END                                     AS geometria
 FROM paikkauskohde pk,
      urakka u,
-     organisaatio o,
-     alueurakka a
-WHERE st_intersects(a.alue, (SELECT *
-                             FROM tierekisteriosoitteelle_viiva_ajr(
+     organisaatio o
+WHERE st_intersects(u.alue, (SELECT *
+                             FROM tierekisteriosoitteelle_viiva(
                                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),

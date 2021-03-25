@@ -25,16 +25,17 @@
 
         "Paikkauskohteet"
         :paikkauskohteet
-        ;TODO: Lisää luvat roolit.xlxs
-        (when true (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:id ur))
-                   [paikkauskohteet/paikkauskohteet ur])
+        (when (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur))
+          [paikkauskohteet/paikkauskohteet ur])
 
         "Toteumat"
         :toteumat
-        (when (oikeudet/urakat-paikkaukset-toteumat (:id ur))
+        (when (and (= :paallystys (:tyyppi ur))
+                   (oikeudet/urakat-paikkaukset-toteumat (:id ur)))
           [toteumat/toteumat ur])
 
         "Kustannukset"
         :kustannukset
-        (when (oikeudet/urakat-paikkaukset-kustannukset (:id ur))
+        (when (and (= :paallystys (:tyyppi ur))
+                   (oikeudet/urakat-paikkaukset-kustannukset (:id ur)))
           [kustannukset/kustannukset ur])]])))
