@@ -102,7 +102,15 @@
         virhelaatikon-max-koon-asetus (fn [_]
                                         (when-let [grid-node (:grid-node @gridin-tietoja)]
                                           (reset! virhelaatikon-max-koko (- (-> grid-node .-offsetWidth)
-                                                                            (.-offsetLeft @this-node)))))]
+                                                                            (.-offsetLeft @this-node)))))
+        sisalto-kun-rivi-disabloitu-oletus-fn (fn [{:keys [nimi valinta-arvo valinta-nayta valinnat rivi]
+                                                    :as sarake}
+                                                   i]
+                                                (let [arvo (nimi rivi)
+                                                      valinta (some #(when (= (valinta-arvo %) arvo) %) valinnat)]
+                                                  (if valinta-nayta
+                                                    (valinta-nayta valinta)
+                                                    arvo)))]
     (r/create-class
       {:display-name "Muokkauselementin-tila"
        :UNSAFE_component-will-mount (fn [this]
@@ -177,7 +185,9 @@
               (cond
                 ;; Mikäli rivi on disabloitu, piirretään erikseen määritelty sisältö, jos se on annettu...
                 (and rivi-disabloitu? sisalto-kun-rivi-disabloitu)
-                (sisalto-kun-rivi-disabloitu sarake i)
+                ((if (keyword? sisalto-kun-rivi-disabloitu)
+                   sisalto-kun-rivi-disabloitu-oletus-fn
+                   sisalto-kun-rivi-disabloitu) sarake i)
 
                 ;; ... tai mikäli sisältöä ei ole määritelty, eikä ole erikseen sallittu muokkausta, ei piirretä mitään
                 (and rivi-disabloitu? (not (:salli-muokkaus-rivin-ollessa-disabloituna? sarake)))
