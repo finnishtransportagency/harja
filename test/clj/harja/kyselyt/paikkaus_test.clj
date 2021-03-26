@@ -32,7 +32,7 @@
 
 (def testipaikkaus
   {::paikkaus/alkuaika #inst"2018-02-06T10:47:24.183975000-00:00"
-   ::paikkaus/tyomenetelma "massapintaus"
+   ::paikkaus/tyomenetelma "SMA" ;; TODO: Tämä oli massapintaus, mihin pitää oikeasti vaihtaa?
    ::paikkaus/paikkauskohde-id 1
    ::paikkaus/raekoko 1
    ::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id

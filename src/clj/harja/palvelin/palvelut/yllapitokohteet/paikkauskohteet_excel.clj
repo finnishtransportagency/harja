@@ -4,7 +4,9 @@
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.set :as set]
+            [harja.domain.paikkaus :as paikkaus])
   (:import (org.apache.poi.ss.util CellRangeAddress)
            (java.util Date)))
 
@@ -67,7 +69,13 @@
                        :yksikko (nth rivi 12)
                        :suunniteltu-hinta (nth rivi 13)
                        :lisatiedot (nth rivi 14)}))
-                  (subvec raaka-data (inc otsikko-idx)))]
+                  (subvec raaka-data (inc otsikko-idx)))
+        kohteet (map
+                  (fn [pk]
+                    (update-in pk [:tyomenetelma]
+                               #((set/map-invert paikkaus/paikkauskohteiden-tyomenetelmat) %)))
+                  kohteet)
+        _ (println "erottele-paikkauskohteet :: paikkauskohteet" (pr-str kohteet))]
     kohteet))
 
 (def lahtotiedot-sisalto
@@ -135,7 +143,7 @@
                      (:let rivi)
                      (pvm/pvm-opt (:alkupvm rivi))
                      (pvm/pvm-opt (:loppupvm rivi))
-                     (or (:tyomenetelma rivi) nil)
+                     (or ((set/map-invert paikkaus/paikkauskohteiden-tyomenetelmat) (:tyomenetelma rivi)) nil)
                      (:suunniteltu-maara rivi)
                      (:yksikko rivi)
                      suunniteltu-summa

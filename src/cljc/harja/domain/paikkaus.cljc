@@ -6,8 +6,8 @@
     [harja.pvm :as pvm]
 
     #?@(:clj  [
-    [harja.kyselyt.specql-db :refer [define-tables]]
-    ]
+               [harja.kyselyt.specql-db :refer [define-tables]]
+               ]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
@@ -116,8 +116,8 @@
     ::valmistumispvm})
 
 (s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
-                              :date  #(instance? #?(:cljs js/Date
-                                                    :clj  java.util.Date) %))))
+                              :date #(instance? #?(:cljs js/Date
+                                                   :clj  java.util.Date) %))))
 
 (s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
@@ -145,3 +145,27 @@
 
 (defn pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelma]
   (boolean (tyomenetelmat-jotka-lahetetaan-yhaan tyomenetelma)))
+
+(def paikkauskohteiden-tyomenetelmat
+  {"ABPL" "AB-paikkaus levittäjällä"
+   "PABPL" "PAB-paikkaus levittäjällä"
+   "SMA" "SMA-paikkaus levittäjällä"
+   "KTVA" "KT-valuasfalttipaikkaus (KTVA)"
+   "REPA" "Konetiivistetty reikävaluasfalttipaikkaus (REPA)"
+   "SIPU" "Sirotepuhalluspaikkaus (SIPU)"
+   "SIPA" "Sirotepintauksena tehty lappupaikkaus (SIPA)"
+   "UREM" "Urapaikkaus (UREM/RREM)"
+   "HJYR" "Jyrsintä (HJYR/TJYR)"
+   "KKSA" "Kannukaatosaumaus"
+   "KTVASA" "KT-valuasfalttisaumaus"
+   "AVSA" "Avarrussaumaus"
+   "SKPPK" "Sillan kannen päällysteen päätysauman korjaukset"
+   "RPVST" "Reunapalkin ja päällysteen välisen sauman tiivistäminen"
+   "RLSAT" "Reunapalkin liikuntasauman tiivistäminen"
+   "KTPP" "Käsin tehtävät paikkaukset pikapaikkausmassalla"
+   "ABPK" "AB-paikkaus käsin"
+   "PABPK" "PAB-paikkaus käsin"
+   "MPA" "Muu päällysteiden paikkaustyö"})
+
+(def paikkauskohteiden-yksikot
+  #{"m2" "t" "kpl" "jm"})

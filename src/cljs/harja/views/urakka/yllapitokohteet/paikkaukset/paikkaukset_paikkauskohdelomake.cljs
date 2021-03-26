@@ -12,7 +12,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
-            [harja.ui.modal :as modal]))
+            [harja.ui.modal :as modal]
+            [harja.domain.paikkaus :as paikkaus]))
 
 (defn nayta-virhe? [polku lomake]
   (let [validi? (if (::tila/validius lomake)
@@ -30,7 +31,6 @@
     [:span {:style {:font-weight 400 :font-size "14px" :line-height "20px" :color "black"}} arvo]]])
 
 (defn suunnitelman-kentat [lomake]
-
   [(lomake/ryhma
      {:otsikko "Alustava suunnitelma"
       :ryhman-luokka "lomakeryhman-otsikko-tausta"}
@@ -59,7 +59,7 @@
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Yksikkö"
       :tyyppi :valinta
-      :valinnat ["m2" "t" "kpl" "jm"]
+      :valinnat (vec paikkaus/paikkauskohteiden-yksikot)
       :nimi :yksikko
       :pakollinen? true
       :vayla-tyyli? true
@@ -144,7 +144,9 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat (rest t-paikkauskohteet/tyomenetelmat)
+    :valinnat paikkaus/paikkauskohteiden-tyomenetelmat
+    :valinta-arvo first
+    :valinta-nayta second
     :vayla-tyyli? true
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
@@ -203,7 +205,7 @@
            (= "valmis" (:paikkauskohteen-tila lomake)))
      ;; Tilattu
      [:div.col-xs-12
-      [lukutila-rivi "Työmenetelmä" (:tyomenetelma lomake)]
+      [lukutila-rivi "Työmenetelmä" (paikkaus/paikkauskohteiden-tyomenetelmat (:tyomenetelma lomake))]
       ;; Sijainti
       [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
                                                                 (:aet lomake) (:let lomake))]
@@ -246,7 +248,7 @@
            [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
      ;; Ja muut
      [:div.col-xs-12
-      [lukutila-rivi "Työmenetelmä" (:tyomenetelma lomake)]
+      [lukutila-rivi "Työmenetelmä" (paikkaus/paikkauskohteiden-tyomenetelmat (:tyomenetelma lomake))]
       ;; Sijainti
       [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
                                                                 (:aet lomake) (:let lomake))]

@@ -301,7 +301,7 @@
         valittavat-tyomenetelmat
         (fn [tyomenetelma valittu?]
           (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
-        [" Työmenetelmä valittu" " Työmentelmää valittu"]
+        [" Työmenetelmä valittu" " Työmenetelmää valittu"]
         {:vayla-tyyli? true}]]
       #_[:div.col-xs-2 "hae"]
       ]]))
