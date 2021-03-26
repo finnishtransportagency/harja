@@ -97,7 +97,7 @@
                                                (= "hylatty" arvo) "tila-hylatty"
                                                :default "tila-ehdotettu"
                                                ))}]
-                          [:span (str/capitalize arvo)]]])}
+                          [:span (paikkaus/fmt-tila arvo)]]])}
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma

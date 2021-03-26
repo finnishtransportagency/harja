@@ -1,6 +1,7 @@
 (ns harja.domain.paikkaus
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as str]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
     [harja.pvm :as pvm]
@@ -145,6 +146,10 @@
 
 (defn pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelma]
   (boolean (tyomenetelmat-jotka-lahetetaan-yhaan tyomenetelma)))
+
+(defn fmt-tila [tila]
+  (let [tila (if (= tila "hylatty") "hylätty" tila)]
+    (str/capitalize tila)))
 
 (def paikkauskohteiden-tyomenetelmat
   {"ABPL" "AB-paikkaus levittäjällä"
