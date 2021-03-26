@@ -210,7 +210,9 @@
       (when loytyi-kohteita?
         [:div.col-xs-12.col-md-4.col-lg-4
          [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]])
-      (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
+      (when (and
+              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
+              (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
         [:div.col-xs-12
          (when loytyi-kohteita?
            {:class "col-md-8.col-lg-8 inline-block"

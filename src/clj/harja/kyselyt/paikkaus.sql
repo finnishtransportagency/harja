@@ -145,7 +145,7 @@ WHERE pk."urakka-id" = :urakka-id
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
-  AND ((:elyt)::TEXT IS NULL OR (st_overlaps(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
+  AND ((:elyt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
                                                (SELECT *
                                                 FROM tierekisteriosoitteelle_viiva(
                                                         CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
@@ -199,8 +199,9 @@ SELECT pk.id                                       AS id,
            END                                     AS geometria
 FROM paikkauskohde pk,
      urakka u,
-     organisaatio o
-WHERE st_overlaps(u.alue, (SELECT *
+     organisaatio o,
+     alueurakka a
+WHERE st_intersects(a.alue, (SELECT *
                              FROM tierekisteriosoitteelle_viiva(
                                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
                                      CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),

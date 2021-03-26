@@ -10,6 +10,7 @@
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :as debug]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
             [harja.ui.modal :as modal]
@@ -328,7 +329,7 @@
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
                            [napit/tallenna
-                            "Tallenna"
+                            "Tallenna muutokset"
                             #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))
                             {:disabled (not voi-tallentaa?)}]
                            [napit/yleinen-toissijainen
@@ -338,7 +339,7 @@
                           (when (:id lomake)
                             [:div.col-xs-6 {:style {:text-align "end"}}
                              [napit/yleinen-toissijainen
-                              "Poista"
+                              "Poista kohde"
                               (fn [] (modal/nayta!
                                        {:modal-luokka "harja-modal-keskitetty"
                                         :luokka "modal-dialog-keskitetty"}
@@ -365,7 +366,8 @@
                                            :width "100%"
                                            :justify-content "center"}}
                                          [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
-                                         [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!]]]))]])])
+                                         [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!]]]))
+                              {:ikoni  (ikonit/livicon-trash)}]])])
                        (when (and voi-tilata? (not muokkaustila?))
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
