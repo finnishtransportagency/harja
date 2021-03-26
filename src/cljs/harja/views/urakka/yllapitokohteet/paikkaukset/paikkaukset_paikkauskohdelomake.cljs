@@ -190,7 +190,7 @@
                               (= "valmis" (:paikkauskohteen-tila lomake)) "tila-valmis"
                               (= "hylatty" (:paikkauskohteen-tila lomake)) "tila-hylatty"
                               :default "tila-ehdotettu"))}]
-         [:span (str/capitalize (:paikkauskohteen-tila lomake))]]]
+         [:span (paikkaus/fmt-tila (:paikkauskohteen-tila lomake))]]]
        (when (:tilattupvm lomake)
          [:span.pieni-teksti {:style {:padding-left "24px"
                                       :display "inline-block"}}
