@@ -105,6 +105,7 @@
       :valinta-arvo first
       :valinta-nayta second
       :nimi :ajorata
+      :vayla-tyyli? true
       :pakollinen? false})
    (lomake/rivi
      {:otsikko "A-osa"
@@ -333,36 +334,38 @@
                            [napit/yleinen-toissijainen
                             "Peruuta"
                             #(e! (t-paikkauskohteet/->SuljeLomake))]]
-                          [:div.col-xs-6 {:style {:text-align "end"}}
-                           [napit/yleinen-toissijainen
-                            "Poista"
-                            (fn [] (modal/nayta!
-                                     {:modal-luokka "harja-modal-keskitetty"
-                                      :luokka "modal-dialog-keskitetty"}
-                                     [:div
-                                      {:style
-                                       {:display :flex
-                                        :flex-direction :column
-                                        :align-items :center}}
-                                      [:div
-                                       {:style
-                                        {:margin-top "3rem"
-                                         :font-size "16px"
-                                         :font-weight "bold"}}
-                                       "Poistetaanko kohde \"" (:nimi lomake) "\"?"]
-                                      [:div
-                                       {:style
-                                        {:margin-top "1rem"}}
-                                       "Toimintoa ei voi perua."]
-                                      [:div
-                                       {:style
-                                        {:margin-top "3rem"
-                                         :margin-bottom "3rem"
-                                         :display :flex
-                                         :width "100%"
-                                         :justify-content "center"}}
-                                       [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
-                                       [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!]]]))]]])
+                          ;; Paikkauskohde on pakko olla tietokannassa, ennenkuin sen voi poistaa
+                          (when (:id lomake)
+                            [:div.col-xs-6 {:style {:text-align "end"}}
+                             [napit/yleinen-toissijainen
+                              "Poista"
+                              (fn [] (modal/nayta!
+                                       {:modal-luokka "harja-modal-keskitetty"
+                                        :luokka "modal-dialog-keskitetty"}
+                                       [:div
+                                        {:style
+                                         {:display :flex
+                                          :flex-direction :column
+                                          :align-items :center}}
+                                        [:div
+                                         {:style
+                                          {:margin-top "3rem"
+                                           :font-size "16px"
+                                           :font-weight "bold"}}
+                                         "Poistetaanko kohde \"" (:nimi lomake) "\"?"]
+                                        [:div
+                                         {:style
+                                          {:margin-top "1rem"}}
+                                         "Toimintoa ei voi perua."]
+                                        [:div
+                                         {:style
+                                          {:margin-top "3rem"
+                                           :margin-bottom "3rem"
+                                           :display :flex
+                                           :width "100%"
+                                           :justify-content "center"}}
+                                         [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
+                                         [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!]]]))]])])
                        (when (and voi-tilata? (not muokkaustila?))
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
