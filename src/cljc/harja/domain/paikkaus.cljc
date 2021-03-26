@@ -155,7 +155,7 @@
    "SIPU" "Sirotepuhalluspaikkaus (SIPU)"
    "SIPA" "Sirotepintauksena tehty lappupaikkaus (SIPA)"
    "UREM" "Urapaikkaus (UREM/RREM)"
-   "HJYR" "Jyrsintä (HJYR/TJYR)"
+   "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
    "KKSA" "Kannukaatosaumaus"
    "KTVASA" "KT-valuasfalttisaumaus"
    "AVSA" "Avarrussaumaus"
@@ -165,7 +165,7 @@
    "KTPP" "Käsin tehtävät paikkaukset pikapaikkausmassalla"
    "ABPK" "AB-paikkaus käsin"
    "PABPK" "PAB-paikkaus käsin"
-   "MPA" "Muu päällysteiden paikkaustyö"})
+   "MUU" "Muu päällysteiden paikkaustyö"})
 
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})

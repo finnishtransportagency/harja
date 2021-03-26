@@ -28,7 +28,7 @@
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as paikkauskohdelomake]
-            ))
+            [harja.domain.paikkaus :as paikkaus]))
 
 (def paikkauskohteiden-tilat
   [{:nimi "Kaikki"} {:nimi "Ehdotettu"} {:nimi "Hylätty"} {:nimi "Tilattu"} {:nimi "Valmis"}])
@@ -100,7 +100,8 @@
                           [:span (str/capitalize arvo)]]])}
                 {:otsikko "Menetelmä"
                  :leveys 4
-                 :nimi :tyomenetelma}
+                 :nimi :tyomenetelma
+                 :fmt #(paikkaus/paikkauskohteiden-tyomenetelmat %)}
                 {:otsikko "Sijainti"
                  :leveys 3
                  :nimi :formatoitu-sijainti}
