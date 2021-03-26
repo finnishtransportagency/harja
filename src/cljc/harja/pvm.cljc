@@ -1071,10 +1071,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:clj
    (defn parsi-paiva-str->inst
      "Parsi 12.01.2000 muotoinen str päiväksi."
-     [date]
-     (let [[paiva kuukausi vuosi]
+     [paiva-str]
+     (let [_ (println "parsi-paiva-str->inst :: paiva" (pr-str paiva-str))
+           [paiva kuukausi vuosi]
            (map #(Integer/parseInt %)
-                (str/split date #"\."))]
+                (str/split paiva-str #"\."))]
        (-> (java.time.LocalDate/of vuosi kuukausi paiva)
            (.atStartOfDay (java.time.ZoneId/of "Europe/Helsinki"))
            .toInstant

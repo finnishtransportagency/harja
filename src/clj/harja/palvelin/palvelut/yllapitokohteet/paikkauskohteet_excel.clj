@@ -5,31 +5,70 @@
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm])
-  (:import (org.apache.poi.ss.util CellRangeAddress)))
+  (:import (org.apache.poi.ss.util CellRangeAddress)
+           (java.util Date)))
 
 (defn erottele-paikkauskohteet [workbook]
   (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
         ;; Esimerkki excelissä paikkauskohteet alkavat vasta viidenneltä riviltä.
         ;; Me emme voi olla tästä kuitenkaan ihan varmoja, niin luetaan varalta kaikki data excelistä ulos
-        raaka-data (xls/select-columns {:A :nro, :B :nimi :C :tie :D :ajorata :E :aosa :F :aet :G :losa
-                                        :H :let :I :alkupvm :J :loppupvm :K :tyomenetelma :L :suunniteltu-maara
-                                        :M :yksikko :N :suunniteltu-hinta :O :lisatiedot}
-                                       sivu)
+        raaka-data (->> sivu
+                        xls/row-seq
+                        (remove nil?)
+                        (map xls/cell-seq)
+                        (mapv
+                          (fn [rivi]
+                            (map-indexed (fn [indeksi arvo]
+                                           (if (or
+                                                 (= indeksi 8)
+                                                 (= indeksi 9))
+                                             (try
+                                               (.getDateCellValue arvo)
+                                               (catch Exception e
+                                                 ;(println "Saatiin virhe päivämäärän luvusta, ei välitetä" (pr-str e))
+                                                 (xls/read-cell arvo)))
+                                             (xls/read-cell arvo)))
+                                         rivi))))
+        _ (println "raaka-data" (pr-str raaka-data))
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
         ;; Ja otetaan otsikon jälkeiset rivit, joissa on nimi. Päästetään tässä vaiheessa myös selvästi virheelliset
         ;; rivit läpi, jotta voidaan palauttaa validaatiovirheet.
-        otsikko-idx (first (keep-indexed (fn [idx rivi] (when (and (= "Nro." (:nro rivi)) (= "Kohde" (:nimi rivi))) idx)) raaka-data))
-        paikkauskohteet (remove #(nil? (:nimi %)) (subvec raaka-data (inc otsikko-idx)))
-        paikkauskohteet (mapv
-                          #(update % :loppupvm (fn [loppupvm]
-                                                 (if (inst? loppupvm)
-                                                   loppupvm
-                                                   (pvm/parsi-paiva-str->inst loppupvm))))
-                          paikkauskohteet)
-        _ (println "erottele-paikkauskohteet :: paikkauskohteet" (pr-str paikkauskohteet))]
-    paikkauskohteet))
+        otsikko-idx (first (keep-indexed
+                             (fn [idx rivi]
+                               (when
+                                 (and
+                                   ;; Annetaan hieman vapauksia kenttien nimille
+                                   (or (= "Nro." (first rivi))
+                                       (= "Nro" (first rivi)))
+                                   (or (= "Kohde" (second rivi))
+                                       (= "Kohteen nimi *" (second rivi))))
+                                 idx))
+                             raaka-data))
+        kohteet (keep
+                  ;; Poistetaan rivi kokonaan, mikäli nimikenttä (Kohteen nimi) on nil. Eli oletetaan että rivillä ei ole
+                  ;; annettu muutenkaan paikkauskohteisiin liittyvää tietoa vaan rivi liittyy otsikointiin tms.
+                  (fn [rivi]
+                    (if (nil? (second rivi))
+                      nil
+                      {:nro (nth rivi 0)
+                       :nimi (nth rivi 1)
+                       :tie (nth rivi 2)
+                       :ajorata (nth rivi 3)
+                       :aosa (nth rivi 4)
+                       :aet (nth rivi 5)
+                       :losa (nth rivi 6)
+                       :let (nth rivi 7)
+                       :alkupvm (nth rivi 8)
+                       :loppupvm (nth rivi 9)
+                       :tyomenetelma (nth rivi 10)
+                       :suunniteltu-maara (nth rivi 11)
+                       :yksikko (nth rivi 12)
+                       :suunniteltu-hinta (nth rivi 13)
+                       :lisatiedot (nth rivi 14)}))
+                  (subvec raaka-data (inc otsikko-idx)))]
+    kohteet))
 
 (def lahtotiedot-sisalto
   [["Paikkausmenetelmät" "Yksikkö"]

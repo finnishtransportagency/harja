@@ -210,41 +210,49 @@
 (defn- kasittele-excel [db urakka-id kayttaja req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
-        _ (println "Excelin data" (pr-str paikkauskohteet))
+        ;_ (println "Excelin data" (pr-str paikkauskohteet))
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
-        kohteet (keep
-                  (fn [p]
-                    (let [;; Excelistä ei aseteta paikkauskohteelle tilaa, joten asetetaan se "ehdotettu" tilaan tässä
-                          p (-> p
-                                (assoc :urakka-id urakka-id)
-                                (assoc :paikkauskohteen-tila "ehdotettu"))
-                          kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
-                          ;_ (println "kohde" (pr-str kohde) (pr-str p))
-                          ]
-                      (if (empty? kohde)
-                        ;(println "Tallennetaan kohde!")
-                        (try+
+        kohteet (when (not (empty? paikkauskohteet))
+                  (keep
+                    (fn [p]
+                      (let [;; Excelistä ei aseteta paikkauskohteelle tilaa, joten asetetaan se "ehdotettu" tilaan tässä
+                            _ (println "rivi 219" (pr-str p))
+                            p (-> p
+                                  (assoc :urakka-id urakka-id)
+                                  (assoc :paikkauskohteen-tila "ehdotettu"))
+                            kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
+                            ;_ (println "kohde" (pr-str kohde) (pr-str p))
+                            ]
+                        (if (empty? kohde)
+                          ;(println "Tallennetaan kohde!")
+                          (try+
 
-                          (tallenna-paikkauskohde! db kayttaja p)
+                            (tallenna-paikkauskohde! db kayttaja p)
 
-                          (catch [:type "Validaatiovirhe"] e
-                            ;; TODO: Tarkista, että validaatiovirheiden ja olemassa olevien virheiden formaatti on sama
-                            {:virhe (get-in e [:virheet :viesti])
-                             :paikkauskohde (:nimi p)}))
-                        {:virhe "Urakalta löytyy jo kohde samalla nimellä"
-                         :paikkauskohde (:nimi p)})))
-                  paikkauskohteet)
+                            (catch [:type "Validaatiovirhe"] e
+                              ;; TODO: Tarkista, että validaatiovirheiden ja olemassa olevien virheiden formaatti on sama
+                              {:virhe (get-in e [:virheet :viesti])
+                               :paikkauskohde (:nimi p)}))
+                          {:virhe "Urakalta löytyy jo kohde samalla nimellä"
+                           :paikkauskohde (:nimi p)})))
+                    paikkauskohteet))
         tallennetut (filterv #(nil? (:virhe %)) kohteet)
         virheet (filterv #(some? (:virhe %)) kohteet)
         _ (println "kohteet" (pr-str kohteet))
         _ (println "tallennetut" tallennetut)
         _ (println "virheet" virheet)
-        body (cheshire/encode (if (> (count tallennetut) 0)
+        body (cheshire/encode (cond
+                                ;; Löytyy enemmän kuin 0 tallennettua kohdetta
+                                (> (count tallennetut) 0)
                                 (merge {:message "OK"}
                                        (when (> (count virheet) 10000)
                                          {:virheet virheet}))
-                                #_ {:message "ERROR" :virheet virheet}
-                                {:virheet virheet}))
+                                ;; Löytyy enemmän kuin 0 virhettä
+                                (> (count virheet) 0)
+                                {:virheet virheet}
+                                ;; Muussa tapauksessa excelistä ei löydy paikkauskohteita
+                                :else
+                                {:virheet [{:virhe "Excelistä ei löydetty paikkauskohteita!"}]}))
         _ (println "Body " (pr-str body))]
     ;; Vielä ei selvää, halutaanko tallentaa mitään, jos seassa virheellisiä.
     ;; Oletetaan toistaiseksi, että halutaan tallentaa ne, joissa ei ole virheitä
@@ -262,7 +270,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
                                   (:kayttaja req)
                                   (Integer/parseInt (get (:params req) "urakka-id")))
-  (let [_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
+  (let [ ;_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
         ;; TODO: Tarkista oikeudet
         urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
         kayttaja (:kayttaja req)]
