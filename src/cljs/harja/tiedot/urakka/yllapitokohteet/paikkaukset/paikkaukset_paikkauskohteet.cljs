@@ -87,10 +87,14 @@
     tilat))
 
 (defn- siivoa-ennen-lahetysta [lomake]
-  (dissoc lomake
-          :sijainti
-          :harja.tiedot.urakka.urakka/validi?
-          :harja.tiedot.urakka.urakka/validius))
+  (-> lomake
+      (update :ajorata (fn [nykyinen-arvo]
+                         (if (= "Ei ajorataa" nykyinen-arvo)
+                           nil
+                           nykyinen-arvo)))
+      (dissoc :sijainti
+              :harja.tiedot.urakka.urakka/validi?
+              :harja.tiedot.urakka.urakka/validius)))
 
 (defn- hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))

@@ -97,7 +97,13 @@
       :rivi-luokka "lomakeryhman-rivi-tausta"}
      {:otsikko "Ajorata"
       :tyyppi :valinta
-      :valinnat [0 1 2 3] ; TODO: Hae jostain?
+      :valinnat {nil "Ei ajorataa"
+                 0 0
+                 1 1
+                 2 2
+                 3 3} ; TODO: Hae jostain?
+      :valinta-arvo first
+      :valinta-nayta second
       :nimi :ajorata
       :pakollinen? false})
    (lomake/rivi
@@ -140,6 +146,7 @@
    {:otsikko "Lask.nro"
     :tyyppi :string
     :nimi :nro
+    :vayla-tyyli? true
     ::lomake/col-luokka "col-sm-3"}
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
