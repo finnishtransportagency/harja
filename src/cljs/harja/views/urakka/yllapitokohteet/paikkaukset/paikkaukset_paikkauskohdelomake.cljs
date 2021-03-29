@@ -76,6 +76,8 @@
       :nimi :loppupvm
       :pakollinen? true
       :vayla-tyyli? true
+      :pvm-tyhjana #(:alkupvm %)
+      :rivi lomake
       :virhe? (nayta-virhe? [:loppupvm] lomake)
       ::lomake/col-luokka "col-sm-6"})
    (lomake/rivi
