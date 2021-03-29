@@ -16,6 +16,35 @@
             [harja.ui.modal :as modal]
             [harja.domain.paikkaus :as paikkaus]))
 
+(defn- nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
+  (fn [] (modal/nayta!
+           {:modal-luokka "harja-modal-keskitetty"
+            :luokka "modal-dialog-keskitetty"}
+           [:div
+            {:style
+             {:display :flex
+              :flex-direction :column
+              :align-items :center}}
+            [:div
+             {:style
+              {:margin-top "3rem"
+               :font-size "16px"
+               :font-weight "bold"}}
+             otsikko]
+            [:div
+             {:style
+              {:margin-top "1rem"}}
+             viesti]
+            [:div
+             {:style
+              {:margin-top "3rem"
+               :margin-bottom "3rem"
+               :display :flex
+               :width "100%"
+               :justify-content "center"}}
+             ok-nappi
+             peruuta-nappi]])))
+
 (defn nayta-virhe? [polku lomake]
   (let [validi? (if (::tila/validius lomake)
                   (get-in lomake [::tila/validius polku :validi?])
@@ -135,12 +164,12 @@
       :virhe? (nayta-virhe? [:let] lomake)
       :nimi :let}
      {:otsikko "Pituus (m)"
-      :tyyppi :positiivinen-numero
+      :tyyppi :numero
       :vayla-tyyli? true
       :disabled? true
       :nimi :pituus
       :tarkkaile-ulkopuolisia-muutoksia? true
-      :voi-muokata? false
+      :muokattava? (constantly false)
       ;:yksikko "m"
       })])
 
@@ -349,65 +378,29 @@
                             [:div.col-xs-6 {:style {:text-align "end"}}
                              [napit/yleinen-toissijainen
                               "Poista kohde"
-                              (fn [] (modal/nayta!
-                                       {:modal-luokka "harja-modal-keskitetty"
-                                        :luokka "modal-dialog-keskitetty"}
-                                       [:div
-                                        {:style
-                                         {:display :flex
-                                          :flex-direction :column
-                                          :align-items :center}}
-                                        [:div
-                                         {:style
-                                          {:margin-top "3rem"
-                                           :font-size "16px"
-                                           :font-weight "bold"}}
-                                         "Poistetaanko kohde \"" (:nimi lomake) "\"?"]
-                                        [:div
-                                         {:style
-                                          {:margin-top "1rem"}}
-                                         "Toimintoa ei voi perua."]
-                                        [:div
-                                         {:style
-                                          {:margin-top "3rem"
-                                           :margin-bottom "3rem"
-                                           :display :flex
-                                           :width "100%"
-                                           :justify-content "center"}}
-                                         [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
-                                         [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!]]]))
-                              {:ikoni  (ikonit/livicon-trash)}]])])
+                              (nayta-modal
+                                (str "Poistetaanko kohde \"" (:nimi lomake) "\"?")
+                                "Toimintoa ei voi perua."
+                                [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
+                                [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!])
+                              {:ikoni (ikonit/livicon-trash)}]])])
                        (when (and voi-tilata? (not muokkaustila?))
                          [:div.row
                           [:div.col-xs-6 {:style {:padding-left "0"}}
                            [napit/tallenna
                             "Tilaa"
-                            #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))]
+                            (nayta-modal
+                              (str "Tilataanko kohde \"" (:nimi lomake) "\"?")
+                              ""
+                              [napit/yleinen-toissijainen "Tilaa kohde" #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))]
+                              [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]
                            [napit/yleinen-toissijainen
                             "Hylkää"
-                            (fn [] (modal/nayta!
-                                     {:modal-luokka "harja-modal-keskitetty"
-                                      :luokka "modal-dialog-keskitetty"}
-                                     [:div
-                                      {:style
-                                       {:display :flex
-                                        :flex-direction :column
-                                        :align-items :center}}
-                                      [:div
-                                       {:style
-                                        {:margin-top "3rem"
-                                         :font-size "16px"
-                                         :font-weight "bold"}}
-                                       "Hylätäänkö kohde " (:nimi lomake) "?"]
-                                      [:div
-                                       {:style
-                                        {:margin-top "3rem"
-                                         :margin-bottom "3rem"
-                                         :display :flex
-                                         :width "100%"
-                                         :justify-content "center"}}
-                                       [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
-                                       [napit/yleinen-toissijainen "Kumoa" modal/piilota!]]]))]]
+                            (nayta-modal
+                              (str "Hylätäänkö kohde " (:nimi lomake) "?")
+                              ""
+                              [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
+                              [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]]
                           [:div.col-xs-6 {:style {:text-align "end"}}
                            [napit/yleinen-toissijainen
                             "Sulje"
@@ -421,11 +414,19 @@
                            (if (= (:paikkauskohteen-tila lomake) "tilattu")
                              [napit/nappi
                               "Peru tilaus"
-                              #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus lomake-ilman-lomaketietoja))
+                              (nayta-modal
+                                (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
+                                ""
+                                [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus lomake-ilman-lomaketietoja))]
+                                [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
                               {:luokka "napiton-nappi punainen"}]
                              [napit/nappi
                               "Peru hylkäys"
-                              #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays lomake-ilman-lomaketietoja))
+                              (nayta-modal
+                                (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
+                                ""
+                                [napit/yleinen-toissijainen "Peru hylkäys" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays lomake-ilman-lomaketietoja))]
+                                [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
                               {:luokka "napiton-nappi punainen"}])]])
                        ;; Tämä on ainut tilanne, missä tulee vain yksi nappi
                        (when (and (not muokkaustila?) (not voi-tilata?) (not voi-perua?))

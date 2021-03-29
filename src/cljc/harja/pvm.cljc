@@ -371,7 +371,7 @@
   (formatoi (luo-format "d.M.") aika))
 
 (defn fmt-p-k-v-lyhyt [aika]
-  (formatoi (luo-format "d.M.yy") aika))
+  (formatoi (luo-format "d.M.yyyy") aika))
 
 #?(:clj (def pgobject-format
           (luo-format "yyyy-MM-dd HH:mm:ss")))
