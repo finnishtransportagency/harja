@@ -62,8 +62,6 @@
     :uusi-rivi (fn [rivi]
                  (assoc rivi
                    :tr-numero (:tr-numero perustiedot)))
-    :sisalto-kun-rivi-disabloitu :oletus
-    :disabloi-rivi? (fn [rivi] (= (:tr-kaista rivi) 11))
     :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
     :piilota-toiminnot? true
     :rivi-validointi (:rivi validointi)

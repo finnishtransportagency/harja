@@ -23,7 +23,6 @@
 (defonce kohdeosat-atom (atom nil))
 (defonce alustarivit-atom (atom nil))
 (defonce lisatiedot-atom (atom nil))
-(defonce kopioi-kulutuskerros-kaistoille?-atom (atom nil))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -31,7 +30,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
-(defrecord KopioiPaallystyskerrosToimenpiteet [kopioi-toimenpiteet?])
+(defrecord KopioiPaallystyskerrosToimenpiteet [toimenpiteet-taulukko])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
@@ -178,11 +177,21 @@
                           :paasta-virhe-lapi? true})))
 
   KopioiPaallystyskerrosToimenpiteet
-  (process-event [{kopioi-toimenpiteet? :kopioi-toimenpiteet?} app]
-    (println "petar evo sad sam u eventu " (pr-str kopioi-toimenpiteet?) (pr-str @kohdeosat-atom))
-    (when kopioi-toimenpiteet?
-          (reset! kohdeosat-atom (kopioi-toimenpiteet @kohdeosat-atom (kaikki-kaistat app)))
-          (merkitse-muokattu app))
+  (process-event [{toimenpiteet-taulukko :toimenpiteet-taulukko} app]
+    (let [kaistat (kaikki-kaistat app)
+          ensimmainen-kaista (first kaistat)
+          ensimmaisen-kaistan-rivit (->> @toimenpiteet-taulukko
+                                        vals
+                                        (filter #(= ensimmainen-kaista (:tr-kaista %))))
+          muut-kaistan-rivit (fn [kaista]
+                               (map #(assoc % :tr-kaista kaista) ensimmaisen-kaistan-rivit))
+          kaikki-rivit (->> kaistat
+                            (map muut-kaistan-rivit)
+                            flatten
+                            (zipmap (drop 1 (range))))]
+      (when toimenpiteet-taulukko
+          (reset! toimenpiteet-taulukko kaikki-rivit)
+          (merkitse-muokattu app)))
     app)
 
   AvaaAlustalomake

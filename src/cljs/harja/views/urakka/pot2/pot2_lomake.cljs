@@ -124,16 +124,18 @@
                                 (reset! lisatiedot-atom %)))]])
 
 (defn kopioi-toimenpiteet
-  [e! kopioi-toimenpiteet-atom]
+  [e! {nimi :nimi tietoja-muokattu? :tietoja-muokattu?} toimenpiteet-taulukko-atom]
   [:span
-   [kentat/tee-kentta {:teksti "Sama toimenpide ajoradan kaikilla kaistoilla"
-                       :nimi :valmis-kasiteltavaksi
-                       :nayta-rivina? true
-                       ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-                       :tyyppi :checkbox}
-    (r/wrap @kopioi-toimenpiteet-atom #(do
-                                (e! (pot2-tiedot/->KopioiPaallystyskerrosToimenpiteet %))
-                                (reset! kopioi-toimenpiteet-atom %)))]])
+   [napit/muokkaa
+    (str nimi " - kopiointi")
+    #(when tietoja-muokattu?
+       (varmista-kayttajalta/varmista-kayttajalta
+         {:otsikko "Kopioi toimenpiteet"
+          :sisalto (str "Jos painat 'kopioi', ensimmäisen kaistan rivit kopioivat muille kaistoille. Muiden kaistojen vanha sisältö häviää.")
+          :hyvaksy "Kopioi"
+          :peruuta-txt "Älä muutu mitään"
+          :toiminto-fn (fn []
+                         (e! (pot2-tiedot/->KopioiPaallystyskerrosToimenpiteet toimenpiteet-taulukko-atom)))}))]])
 
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
@@ -207,11 +209,12 @@
            [:hr]
            [toimenpiteet-ja-materiaalit-otsikkorivi e!]
            [yleiset/valitys-vertical]
-           [kopioi-toimenpiteet e! pot2-tiedot/kopioi-kulutuskerros-kaistoille?-atom]
+           [kopioi-toimenpiteet e! {:nimi "Kulutuskerros" :tietoja-muokattu? tietoja-muokattu?} pot2-tiedot/kohdeosat-atom]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
                                                                     :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
+           [kopioi-toimenpiteet e! {:nimi "Alusta" :tietoja-muokattu? tietoja-muokattu?} pot2-tiedot/alustarivit-atom]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)}
