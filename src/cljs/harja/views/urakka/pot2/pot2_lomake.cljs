@@ -132,7 +132,7 @@
                        ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
                        :tyyppi :checkbox}
     (r/wrap @kopioi-toimenpiteet-atom #(do
-                                (e! (pot2-tiedot/->Pot2Muokattu))
+                                (e! (pot2-tiedot/->KopioiPaallystyskerrosToimenpiteet %))
                                 (reset! kopioi-toimenpiteet-atom %)))]])
 
 (defn pot2-lomake
@@ -207,7 +207,7 @@
            [:hr]
            [toimenpiteet-ja-materiaalit-otsikkorivi e!]
            [yleiset/valitys-vertical]
-           [kopioi-toimenpiteet e! (atom nil)]
+           [kopioi-toimenpiteet e! pot2-tiedot/kopioi-kulutuskerros-kaistoille?-atom]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
                                                                     :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]

@@ -420,7 +420,7 @@
   :voi-kumota?                    jos false, kumoa-nappia ei näytetä
   :voi-poistaa?                   funktio, joka palauttaa true tai false.
   :sisalto-kun-rivi-disabloitu    funktio, joka muodosta saraken sisältö jos rivi on disabloitu. Voi olla myös keyword,
-                                  jos on keyword, sarakkeille tulevat normaali arvot, mutta read-only.
+                                  jos on keyword (esim. :oletus), sarakkeille tulevat normaali arvot, mutta read-only.
                                   Jos parametri ei ole annettu, sarakkeet ovat tyhjät kun rivi on disabloitu.
   :disabloi-rivi?                 funktio, joka päättää onko rivi disabloitu tai ei. Palauta true jos on disabloitu
   :rivinumerot?                   Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä

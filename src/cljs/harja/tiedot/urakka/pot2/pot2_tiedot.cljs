@@ -31,6 +31,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
+(defrecord KopioiPaallystyskerrosToimenpiteet [kopioi-toimenpiteet?])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
@@ -70,6 +71,30 @@
              (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
                                  (filter kuuluu-kentalle?)
                                  (map muotoile-kentta))))))])))
+
+(defn kaikki-kaistat [app]
+  (let [tr-numero (get-in app [:paallystysilmoitus-lomakedata :perustiedot :tr-numero])
+        osien-tiedot (get-in app [:paallystysilmoitus-lomakedata :tr-osien-tiedot tr-numero])
+        kaistat (->> osien-tiedot
+                     (filter #(= tr-numero (:tr-numero %)))
+                     (map #(:pituudet %))
+                     (map #(:ajoradat %))
+                     flatten
+                     (map #(:osiot %))
+                     flatten
+                     (map #(:kaistat %))
+                     flatten
+                     (map #(:tr-kaista %))
+                     distinct
+                     sort)]
+    kaistat))
+
+(defn merkitse-muokattu [app]
+  (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true))
+
+(defn kopioi-toimenpiteet [kohdeosat kaistat]
+  (let [ensimmainen-kaista (first kaistat)])
+  )
 
 (defn rivi->massa-tai-murske
   "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
@@ -152,6 +177,14 @@
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
 
+  KopioiPaallystyskerrosToimenpiteet
+  (process-event [{kopioi-toimenpiteet? :kopioi-toimenpiteet?} app]
+    (println "petar evo sad sam u eventu " (pr-str kopioi-toimenpiteet?) (pr-str @kohdeosat-atom))
+    (when kopioi-toimenpiteet?
+          (reset! kohdeosat-atom (kopioi-toimenpiteet @kohdeosat-atom (kaikki-kaistat app)))
+          (merkitse-muokattu app))
+    app)
+
   AvaaAlustalomake
   (process-event [{lomake :lomake} app]
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] lomake))
@@ -214,4 +247,4 @@
 
   Pot2Muokattu
   (process-event [_ app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true)))
+    (merkitse-muokattu app)))
