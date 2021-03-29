@@ -153,11 +153,11 @@
   ([avain lomake]
    (avain {:nimi [tila/ei-nil tila/ei-tyhja]
            :tyomenetelma [tila/ei-nil tila/ei-tyhja]
-           :tie [tila/ei-nil tila/ei-tyhja tila/numero]
-           :aosa [tila/ei-nil tila/ei-tyhja tila/numero]
-           :losa [tila/ei-nil tila/ei-tyhja tila/numero]
-           :aet [tila/ei-nil tila/ei-tyhja tila/numero]
-           :let [tila/ei-nil tila/ei-tyhja tila/numero]
+           :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+           :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+           :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+           :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+           :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
            :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
            :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
                       (tila/silloin-kun #(not (nil? (:alkupvm lomake)))

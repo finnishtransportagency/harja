@@ -46,9 +46,9 @@
              peruuta-nappi]])))
 
 (defn nayta-virhe? [polku lomake]
-  (let [validi? (if (::tila/validius lomake)
-                  (get-in lomake [::tila/validius polku :validi?])
-                  false)]
+  (let [validi? (if (nil? (get-in lomake polku))
+                  true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
+                  (get-in lomake [::tila/validius polku :validi?]))]
     ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
     ;; boolean ympäri
     (not validi?)))

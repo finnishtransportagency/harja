@@ -55,6 +55,10 @@
     (number? (-> arvo js/parseFloat))
     arvo))
 
+(defn maksimiarvo [maksimi arvo]
+  (when (< arvo maksimi)
+    arvo))
+
 (defn paivamaara [arvo]
   (when
     (pvm/pvm? arvo)
