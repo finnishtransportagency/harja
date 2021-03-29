@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.data :refer [diff]]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :refer [log]]
@@ -13,6 +14,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.domain.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(def lomakkeen-pituuskentat (atom {:pituus nil :tie nil :aosa nil :aet nil :losa nil :let nil}))
 
 (defn virhe-modal [virhe otsikko]
   (modal/nayta!
@@ -75,6 +78,8 @@
 (defrecord PeruPaikkauskohteenHylkays [paikkauskohde])
 (defrecord PeruPaikkauskohteenHylkaysOnnistui [])
 (defrecord PeruPaikkauskohteenHylkaysEpaonnistui [paikkauskohde])
+(defrecord LaskePituusOnnistui [vastaus])
+(defrecord LaskePituusEpaonnistui [vastaus])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -93,8 +98,29 @@
                            nil
                            nykyinen-arvo)))
       (dissoc :sijainti
+              :pituus
               :harja.tiedot.urakka.urakka/validi?
               :harja.tiedot.urakka.urakka/validius)))
+
+(defn- laske-paikkauskohteen-pituus [lomake]
+  (let [;; Tarkistetaan ensin, että onko pituuskentät muuttuneet, jos ei niin ei lasketa pituutta
+        nykyiset-pituuskentat {:pituus (:pituus lomake)
+                               :tie (:tie lomake)
+                               :aosa (:aosa lomake)
+                               :aet (:aet lomake)
+                               :losa (:losa lomake)
+                               :let (:let lomake)}
+        pituus-diff (diff @lomakkeen-pituuskentat nykyiset-pituuskentat)
+        _ (when (or (not (nil? (first pituus-diff)))
+                        (not (nil? (second pituus-diff))))
+            (do
+              (reset! lomakkeen-pituuskentat nykyiset-pituuskentat)
+              (tuck-apurit/post! :laske-paikkauskohteen-pituus
+                                 nykyiset-pituuskentat
+                                 {:onnistui ->LaskePituusOnnistui
+                                  :epaonnistui ->LaskePituusEpaonnistui
+                                  :paasta-virhe-lapi? true})))]
+    lomake))
 
 (defn- hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
@@ -342,7 +368,8 @@
 
   PaivitaLomake
   (process-event [{lomake :lomake} app]
-    (let [{:keys [validoi] :as validoinnit} (validoi-lomake lomake)
+    (let [lomake (laske-paikkauskohteen-pituus lomake)
+          {:keys [validoi] :as validoinnit} (validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)]
       (-> app
           (assoc :lomake lomake)
@@ -501,6 +528,21 @@
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:id id)) " hylkäyksen perumisessa tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :lomake)))
+
+  LaskePituusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [app (assoc-in app [:lomake :pituus] (:pituus vastaus))
+          pituuskentat (merge @lomakkeen-pituuskentat
+                              {:pituus (:pituus vastaus)})
+          _ (reset! lomakkeen-pituuskentat pituuskentat)]
+      app))
+
+  LaskePituusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Kohteen pituutta ei voitu laskea
+    (do
+      (js/console.log "Pituutta ei voitu laskea: vastaus" (pr-str vastaus))
+      app))
   )
 
 (def tyomenetelmat

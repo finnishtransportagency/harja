@@ -295,6 +295,9 @@
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
                           (tallenna-paikkauskohde! db user kohde)))
+      (julkaise-palvelu http :laske-paikkauskohteen-pituus
+                        (fn [user kohde]
+                          (q/laske-paikkauskohteen-pituus db kohde)))
       (julkaise-palvelu http :poista-paikkauskohde
                         (fn [user kohde]
                           (poista-paikkauskohde! db user kohde)))
@@ -313,6 +316,7 @@
       (:http-palvelin this)
       :paikkauskohteet-urakalle
       :tallenna-paikkauskohde-urakalle
+      :laske-paikkauskohteen-pituus
       :poista-paikkauskohde
       :hae-paikkauskohteen-yhteyshenkilot
       :lue-paikkauskohteet-excelista

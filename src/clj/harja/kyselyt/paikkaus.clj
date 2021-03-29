@@ -362,7 +362,7 @@ paikkauskohteet))
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
-(defn- laske-paikkauskohteen-pituus [db kohde]
+(defn laske-paikkauskohteen-pituus [db kohde]
   (let [ ;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
          ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
          ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})

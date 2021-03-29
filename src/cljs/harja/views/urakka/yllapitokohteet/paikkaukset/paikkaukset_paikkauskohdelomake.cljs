@@ -133,7 +133,16 @@
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (nayta-virhe? [:let] lomake)
-      :nimi :let})])
+      :nimi :let}
+     {:otsikko "Pituus (m)"
+      :tyyppi :positiivinen-numero
+      :vayla-tyyli? true
+      :disabled? true
+      :nimi :pituus
+      :tarkkaile-ulkopuolisia-muutoksia? true
+      :voi-muokata? false
+      ;:yksikko "m"
+      })])
 
 (defn nimi-numero-ja-tp-kentat [lomake]
   [{:otsikko "Nimi"

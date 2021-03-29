@@ -400,7 +400,7 @@ ja kaikki pakolliset kentät on täytetty"
   {2 "col-xs-6 col-md-5 col-lg-3"
    3 "col-xs-3 col-sm-2 col-md-3"
    4 "col-xs-3"
-   5 "col-xs-1"})
+   5 "col-xs-2"})
 
 (defn- nayta-palsta [palsta {:keys [voi-muokata? data aseta-fokus! nykyinen-fokus
                                     muokkaa muokkaa-kenttaa-fn
