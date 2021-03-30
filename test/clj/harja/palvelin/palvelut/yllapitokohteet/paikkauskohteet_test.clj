@@ -285,5 +285,6 @@
                                                              :paikkauskohteet-urakalle
                                                              +kayttaja-jvh+
                                                              {:urakka-id urakka-id})]
+    ;;TODO: Rikki, testi odottaa clojure-mappia, saa enkoodatun tekstin.
     (is (= "Paikkauskohteen työmenetelmässä virhe" (-> vastaus :body :virheet first :error first)))
     (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))))))

@@ -70,11 +70,6 @@
                        :suunniteltu-hinta (nth rivi 13)
                        :lisatiedot (nth rivi 14)}))
                   (subvec raaka-data (inc otsikko-idx)))
-        kohteet (map
-                  (fn [pk]
-                    (update-in pk [:tyomenetelma]
-                               #((set/map-invert paikkaus/paikkauskohteiden-tyomenetelmat) %)))
-                  kohteet)
         _ (println "erottele-paikkauskohteet :: paikkauskohteet" (pr-str kohteet))]
     kohteet))
 
@@ -143,7 +138,7 @@
                      (:let rivi)
                      (pvm/pvm-opt (:alkupvm rivi))
                      (pvm/pvm-opt (:loppupvm rivi))
-                     (or ((set/map-invert paikkaus/paikkauskohteiden-tyomenetelmat) (:tyomenetelma rivi)) nil)
+                     (:tyomenetelma rivi)
                      (:suunniteltu-maara rivi)
                      (:yksikko rivi)
                      suunniteltu-summa

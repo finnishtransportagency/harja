@@ -546,5 +546,5 @@
   )
 
 (def tyomenetelmat
-  (into ["Kaikki"] (vec (vals paikkaus/paikkauskohteiden-tyomenetelmat))))
+  (into ["Kaikki"] paikkaus/kuvaillut-tyomenetelmat))
 

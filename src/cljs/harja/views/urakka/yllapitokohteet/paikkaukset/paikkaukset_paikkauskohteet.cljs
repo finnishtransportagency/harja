@@ -117,7 +117,7 @@
                 {:otsikko "Menetelmä"
                  :leveys 4
                  :nimi :tyomenetelma
-                 :fmt #(paikkaus/paikkauskohteiden-tyomenetelmat %)}
+                 :fmt #(paikkaus/kuvaile-tyomenetelma %)}
                 {:otsikko "Sijainti"
                  :leveys 3
                  :nimi :formatoitu-sijainti}

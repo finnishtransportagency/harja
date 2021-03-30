@@ -193,9 +193,7 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat paikkaus/paikkauskohteiden-tyomenetelmat
-    :valinta-arvo first
-    :valinta-nayta second
+    :valinnat paikkaus/kuvaillut-tyomenetelmat
     :vayla-tyyli? true
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
@@ -254,7 +252,7 @@
            (= "valmis" (:paikkauskohteen-tila lomake)))
      ;; Tilattu
      [:div.col-xs-12
-      [lukutila-rivi "Työmenetelmä" (paikkaus/paikkauskohteiden-tyomenetelmat (:tyomenetelma lomake))]
+      [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
       ;; Sijainti
       [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
                                                                 (:aet lomake) (:let lomake))]
@@ -297,7 +295,7 @@
            [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
      ;; Ja muut
      [:div.col-xs-12
-      [lukutila-rivi "Työmenetelmä" (paikkaus/paikkauskohteiden-tyomenetelmat (:tyomenetelma lomake))]
+      [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
       ;; Sijainti
       [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
                                                                 (:aet lomake) (:let lomake))]
