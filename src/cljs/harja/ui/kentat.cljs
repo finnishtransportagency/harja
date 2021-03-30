@@ -641,7 +641,9 @@
 
     (let [nykyinen-arvo @data
           valinnat (or valinnat (valinnat-fn rivi))
-          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa))
+          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                                                 (when (and linkki-fn linkki-icon)
+                                                   "linkin-vieressa"))
                 :valinta               (if valinta-arvo
                                          (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                                          nykyinen-arvo)

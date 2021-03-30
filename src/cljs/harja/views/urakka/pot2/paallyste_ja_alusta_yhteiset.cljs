@@ -19,7 +19,7 @@
         poista-osa-fn (fn [index]
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))))]
-    (fn [rivi {:keys [index]} osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
+    (fn [rivi {:keys [index]} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata?]
       (let [nappi-disabled? (or (not voi-muokata?)
                                 (not kirjoitusoikeus?))]
         [:span.tasaa-oikealle

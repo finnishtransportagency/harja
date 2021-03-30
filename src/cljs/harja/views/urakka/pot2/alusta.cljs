@@ -147,17 +147,16 @@
                            [napit/nappi "Valmis"
                             #(e! (pot2-tiedot/->TallennaAlustalomake data false))
                             {:disabled (not (lomake/validi? data))
-                             :luokka "nappi-toissijainen"
-                             :ikoni (ikonit/check)}])
+                             :luokka "nappi-toissijainen"}])
                          (when voi-muokata?
                            [napit/nappi "Lisää seuraava"
                             #(e! (pot2-tiedot/->TallennaAlustalomake data true))
                             {:disabled (not (lomake/validi? data))
-                             :luokka "nappi-toissijainen"
-                             :ikoni (ikonit/check)}])
+                             :luokka "nappi-toissijainen"}])
                          [napit/peruuta (if voi-muokata? "Peruuta" "Sulje")
                           #(e! (pot2-tiedot/->SuljeAlustalomake))
-                          {:disabled false}]])}
+                          {:disabled false
+                           :luokka "pull-right"}]])}
           (alustalomakkeen-kentat {:alusta-toimenpiteet alusta-toimenpiteet
                                    :toimenpide (:toimenpide alustalomake)
                                    :murske (:murske alustalomake)

@@ -215,6 +215,9 @@
            [yleiset/valitys-vertical]
            [lisatiedot e! pot2-tiedot/lisatiedot-atom]
            [yleiset/valitys-vertical]
+           (when (= :lukittu (get perustiedot :tila))
+             [:div {:style {:margin-bottom "16px"}}
+              "Päällystysilmoitus lukittu, tietoja ei voi muokata."])
            [tallenna e! tallenna-app {:kayttaja kayttaja
                                       :urakka-id (:id urakka)
                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?}]])))))
