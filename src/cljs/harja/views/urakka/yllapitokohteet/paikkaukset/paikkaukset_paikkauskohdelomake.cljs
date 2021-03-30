@@ -106,7 +106,7 @@
       :virhe? (nayta-virhe? [:suunniteltu-hinta] lomake)
       :yksikko "€"})
    (lomake/rivi
-     {:otsikko "Lisatiedot"
+     {:otsikko "Lisätiedot"
       :tyyppi :text
       :nimi :lisatiedot
       :pakollinen? false
@@ -400,7 +400,8 @@
             [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus
                                                              (lomake/ilman-lomaketietoja lomake)))]
             [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
-          {:luokka "napiton-nappi punainen"}]
+          {:luokka "napiton-nappi punainen"
+           :ikoni (ikonit/livicon-back-circle)}]
          [napit/nappi
           "Kumoa hylkäys"
           (nayta-modal
@@ -470,9 +471,9 @@
                        ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
                        ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
                        [:div.row
-                        [:div.col-xs-6 {:style {:padding-left "0"}}
+                        [:div.col-xs-8 {:style {:padding-left "0"}}
                          [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
-                        [:div.col-xs-6
+                        [:div.col-xs-4
                          [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
       (paikkauskohde-skeema e! muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
