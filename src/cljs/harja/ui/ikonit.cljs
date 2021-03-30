@@ -604,6 +604,8 @@
   [:span.livicon-check])
 (defn livicon-kommentti []
   [:span.livicon-comment])
+(defn livicon-back-circle []
+  [:img {:src "images/harja-icons/action/back-circle.svg" :alt "peruuta" :style {:padding-bottom "1px"}}])
 
 (defn klikattava-roskis [toiminto]
   [:span.klikattava

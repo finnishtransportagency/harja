@@ -314,6 +314,106 @@
         [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
       [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]])])
 
+(defn- footer-oikeat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
+  [:div {:style {:text-align "end"}}
+   ;; Lomake on auki
+   (when muokkaustila?
+     [napit/yleinen-toissijainen
+      "Peruuta"
+      #(e! (t-paikkauskohteet/->SuljeLomake))])
+
+   ;; Lukutila, tilaajan näkymä
+   (when (and voi-tilata? (not muokkaustila?))
+     [napit/yleinen-toissijainen
+      "Sulje"
+      #(e! (t-paikkauskohteet/->SuljeLomake))])
+
+   ;; Lukutila, urakoitsijan näkymä
+   (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
+     [napit/yleinen-toissijainen
+      "Sulje"
+      #(e! (t-paikkauskohteet/->SuljeLomake))]
+     )
+   ;; Lukutila - ei voi tilata, eikä voi perua
+   (when (and (not muokkaustila?) (not voi-tilata?) (not voi-perua?))
+     [napit/yleinen-toissijainen
+      "Sulje"
+      #(e! (t-paikkauskohteet/->SuljeLomake))])]
+  )
+
+(defn- footer-vasemmat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
+  (let [voi-tallentaa? (::tila/validi? lomake)
+        _ (js/console.log "voi-tilata?" voi-tilata?)]
+    [:div
+     ;; Lomake on auki
+     (when muokkaustila?
+       [:div
+        [napit/tallenna
+         "Tallenna muutokset"
+         #(e! (t-paikkauskohteet/->TallennaPaikkauskohde (lomake/ilman-lomaketietoja lomake)))
+         {:disabled (not voi-tallentaa?)}]
+        ;; Paikkauskohde on pakko olla tietokannassa, ennenkuin sen voi poistaa
+        ;; Ja sen täytyy olla ehdotettu tai hylatty tilassa. Tilattua tai valmista ei voida poistaa
+        (when (and (:id lomake)
+                   (or (= (:paikkauskohteen-tila lomake) "ehdotettu")
+                       (= (:paikkauskohteen-tila lomake) "hylatty")))
+          [napit/yleinen-toissijainen
+           "Poista kohde"
+           (nayta-modal
+             (str "Poistetaanko kohde \"" (:nimi lomake) "\"?")
+             "Toimintoa ei voi perua."
+             [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde
+                                                               (lomake/ilman-lomaketietoja lomake)))]
+             [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!])
+           {:ikoni (ikonit/livicon-trash)}])])
+
+     ;; Lukutila, tilaajan näkymä
+     (when (and voi-tilata? (not muokkaustila?))
+       [:div
+        [napit/tallenna
+         "Tilaa"
+         (nayta-modal
+           (str "Tilataanko kohde \"" (:nimi lomake) "\"?")
+           ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
+           "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
+           [napit/yleinen-toissijainen "Tilaa kohde" #(e! (t-paikkauskohteet/->TilaaPaikkauskohde
+                                                            (lomake/ilman-lomaketietoja lomake)))]
+           [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]
+        [napit/yleinen-toissijainen
+         "Hylkää"
+         (nayta-modal
+           (str "Hylätäänkö kohde " (:nimi lomake) "?")
+           ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
+           "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
+           [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde
+                                                             (lomake/ilman-lomaketietoja lomake)))]
+           [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]])
+
+     ;; Lukutila, tiljaa voi perua tilauksen tai hylätä peruutuksen
+     (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
+       (if (= (:paikkauskohteen-tila lomake) "tilattu")
+         [napit/nappi
+          "Peru tilaus"
+          (nayta-modal
+            (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
+            ""
+            [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus
+                                                             (lomake/ilman-lomaketietoja lomake)))]
+            [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
+          {:luokka "napiton-nappi punainen"}]
+         [napit/nappi
+          "Kumoa hylkäys"
+          (nayta-modal
+            (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
+            ;;TODO: Vaihda teksti, kun sähköpostinlähetys on toteutettu
+            "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan."
+            ;"Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
+            [napit/yleinen-toissijainen "Peru hylkäys" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays
+                                                              (lomake/ilman-lomaketietoja lomake)))]
+            [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
+          {:luokka "napiton-nappi punainen"
+           :ikoni (ikonit/livicon-back-circle)}]))]))
+
 (defn paikkauskohde-lomake [e! lomake]
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
@@ -344,8 +444,7 @@
                             false ;; Defaulttina estetään muokkaus
                             )
         ;; Pidetään kirjaa validoinnista
-        voi-tallentaa? (::tila/validi? lomake)
-        ]
+        voi-tallentaa? (::tila/validi? lomake)]
     ;; TODO: Korjaa paikkauskohteesta toiseen siirtyminen (avaa paikkauskohde listalta, klikkaa toista paikkauskohdetta)
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
      ;; Tarkistetaan muokkaustila
@@ -363,81 +462,18 @@
                           urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                       [:div.row
                        [:hr]
-                       (when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
-                         [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
-                       (when muokkaustila?
-                         [:div.row
-                          [:div.col-xs-6 {:style {:padding-left "0"}}
-                           [napit/tallenna
-                            "Tallenna muutokset"
-                            #(e! (t-paikkauskohteet/->TallennaPaikkauskohde lomake-ilman-lomaketietoja))
-                            {:disabled (not voi-tallentaa?)}]
-                           [napit/yleinen-toissijainen
-                            "Peruuta"
-                            #(e! (t-paikkauskohteet/->SuljeLomake))]]
-                          ;; Paikkauskohde on pakko olla tietokannassa, ennenkuin sen voi poistaa
-                          (when (:id lomake)
-                            [:div.col-xs-6 {:style {:text-align "end"}}
-                             [napit/yleinen-toissijainen
-                              "Poista kohde"
-                              (nayta-modal
-                                (str "Poistetaanko kohde \"" (:nimi lomake) "\"?")
-                                "Toimintoa ei voi perua."
-                                [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde lomake-ilman-lomaketietoja))]
-                                [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!])
-                              {:ikoni (ikonit/livicon-trash)}]])])
-                       (when (and voi-tilata? (not muokkaustila?))
-                         [:div.row
-                          [:div.col-xs-6 {:style {:padding-left "0"}}
-                           [napit/tallenna
-                            "Tilaa"
-                            (nayta-modal
-                              (str "Tilataanko kohde \"" (:nimi lomake) "\"?")
-                              ""
-                              [napit/yleinen-toissijainen "Tilaa kohde" #(e! (t-paikkauskohteet/->TilaaPaikkauskohde lomake-ilman-lomaketietoja))]
-                              [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]
-                           [napit/yleinen-toissijainen
-                            "Hylkää"
-                            (nayta-modal
-                              (str "Hylätäänkö kohde " (:nimi lomake) "?")
-                              ""
-                              [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde lomake-ilman-lomaketietoja))]
-                              [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]]
-                          [:div.col-xs-6 {:style {:text-align "end"}}
-                           [napit/yleinen-toissijainen
-                            "Sulje"
-                            #(e! (t-paikkauskohteet/->SuljeLomake))]]])
-                       (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
-                         [:div.row
-                          [:div.col-xs-6 {:style {:padding-left "0"}}
-                           [napit/yleinen-toissijainen
-                            "Sulje"
-                            #(e! (t-paikkauskohteet/->SuljeLomake))]
-                           (if (= (:paikkauskohteen-tila lomake) "tilattu")
-                             [napit/nappi
-                              "Peru tilaus"
-                              (nayta-modal
-                                (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
-                                ""
-                                [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus lomake-ilman-lomaketietoja))]
-                                [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
-                              {:luokka "napiton-nappi punainen"}]
-                             [napit/nappi
-                              "Peru hylkäys"
-                              (nayta-modal
-                                (str "Perutaanko kohteen " (:nimi lomake) " hylkäys ?")
-                                ""
-                                [napit/yleinen-toissijainen "Peru hylkäys" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays lomake-ilman-lomaketietoja))]
-                                [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
-                              {:luokka "napiton-nappi punainen"}])]])
-                       ;; Tämä on ainut tilanne, missä tulee vain yksi nappi
-                       (when (and (not muokkaustila?) (not voi-tilata?) (not voi-perua?))
-                         [:div.row
-                          [:div.col-xs-12 {:style {:text-align "end"}}
-                           [napit/yleinen-toissijainen
-                            "Sulje"
-                            #(e! (t-paikkauskohteet/->SuljeLomake))]]])
-                       ]))}
+
+                       ;;TODO: Enabloi tämä, kun sähköpostin lähetys on toteutettu
+                       #_(when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
+                           [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
+
+                       ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
+                       ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
+                       [:div.row
+                        [:div.col-xs-6 {:style {:padding-left "0"}}
+                         [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
+                        [:div.col-xs-6
+                         [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
       (paikkauskohde-skeema e! muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
 

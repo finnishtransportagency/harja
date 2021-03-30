@@ -40,35 +40,51 @@
         (time-core/year (first aika)))
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
+(defn- kayttaja-on-urakoitsija? [urakkaroolit]
+  (let [urakoitsijaroolit #{"Laatupaallikko"
+                            "Kayttaja"
+                            "vastuuhenkilo"
+                            "Laadunvalvoja"
+                            "Kelikeskus"
+                            "Paivystaja"}]
+    (some (fn [rooli]
+            (true?
+              (some #(= rooli %) urakoitsijaroolit)))
+          urakkaroolit)))
+
 (defn- paikkauskohteet-taulukko [e! app]
-  (let [;_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
-        ;_ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
-        ;_
-        #_(js/console.log "voi kirjoittaa kohteisiin" (pr-str (oikeudet/voi-kirjoittaa?
-                                                                oikeudet/urakat-paikkaukset-paikkauskohteet
-                                                                (-> @tila/tila :yleiset :urakka :id)
-                                                                @istunto/kayttaja)))
-        ;_
-        #_(js/console.log "voi kirjoittaa kustannuksiin" (pr-str (oikeudet/voi-kirjoittaa?
-                                                                   oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
-                                                                   (-> @tila/tila :yleiset :urakka :id)
-                                                                   @istunto/kayttaja)))
-        ;_
-        #_(js/console.log "voi lukea kohteita" (pr-str (oikeudet/voi-lukea?
-                                                         oikeudet/urakat-paikkaukset-paikkauskohteet
-                                                         (-> @tila/tila :yleiset :urakka :id)
-                                                         @istunto/kayttaja)))
+  (let [ ;_ (js/console.log "käyttäjän urakan tiedot" (pr-str (-> @tila/tila :yleiset :urakka)))
+  ;      _ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
+  ;      _ (js/console.log "urakkaroolit" (pr-str (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))) )
+  ;      _ (js/console.log "organisaatioroolit" (pr-str (roolit/organisaatioroolit @istunto/kayttaja)) (pr-str (get-in @istunto/kayttaja [:organisaatio :id])))
+  ;      _
+  ;      (js/console.log "voi kirjoittaa kohteisiin" (pr-str (oikeudet/voi-kirjoittaa?
+  ;                                                              oikeudet/urakat-paikkaukset-paikkauskohteet
+  ;                                                              (-> @tila/tila :yleiset :urakka :id)
+  ;                                                              @istunto/kayttaja)))
+  ;      _
+  ;      (js/console.log "voi kirjoittaa kustannuksiin" (pr-str (oikeudet/voi-kirjoittaa?
+  ;                                                                 oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
+  ;                                                                 (-> @tila/tila :yleiset :urakka :id)
+  ;                                                                 @istunto/kayttaja)))
+  ;      _
+  ;      (js/console.log "voi lukea kohteita" (pr-str (oikeudet/voi-lukea?
+  ;                                                       oikeudet/urakat-paikkaukset-paikkauskohteet
+  ;                                                       (-> @tila/tila :yleiset :urakka :id)
+  ;                                                       @istunto/kayttaja)))
+  ;      _ (js/console.log "on urakoitsija?" (pr-str (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
         skeema [
                 (cond
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
-                  (or (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
-                      (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja"))
+                  (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                   {:otsikko "Arv. Valm. pvm"
                    :leveys 2
                    :nimi :loppupvm
                    :fmt pvm/pvm-opt}
-                  ;; Päällysteurakalle näytetään muokkauspäivä
-                  (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                  ;; Päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
+                  ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
+                  (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                       (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
                   {:otsikko "Muokattu"
                    :leveys 2
                    :nimi :paivays
