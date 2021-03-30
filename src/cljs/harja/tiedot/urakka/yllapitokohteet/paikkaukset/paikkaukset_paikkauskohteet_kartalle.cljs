@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [taoensso.timbre :as log]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature kartalla-esitettavaan-muotoon]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]])
@@ -43,13 +44,14 @@
                                                             :color (tila->vari (:paikkauskohteen-tila kohde))}}
                                                   (:sijainti kohde))
                                      :tyyppi-kartalla :paikkaukset-paikkauskohteet
-                                     :selite {:teksti "Paikkauskohde jee"
+                                     :selite {:teksti "Paikkauskohde"
                                               :img (pinni-ikoni "sininen")}
                                      :infopaneelin-tiedot {:nro (:nro kohde)
                                                            :nimi (:nimi kohde)
                                                            :tila (:paikkauskohteen-tila kohde)
-                                                           :menetelma (:tyomenetelma kohde)
-                                                           :aikataulu (:formatoitu-aikataulu kohde)}
+                                                           :menetelma (paikkaus/paikkauskohteiden-tyomenetelmat (:tyomenetelma kohde))
+                                                           :aikataulu (:formatoitu-aikataulu kohde)
+                                                           :alkupvm (:alkupvm kohde)}
                                      :ikonit [{:tyyppi :merkki
                                                :paikka [:loppu]
                                                :zindex 21

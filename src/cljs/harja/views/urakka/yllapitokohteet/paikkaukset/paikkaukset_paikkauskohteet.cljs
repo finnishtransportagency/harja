@@ -7,6 +7,7 @@
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as komm]
@@ -27,8 +28,7 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
             [harja.views.kartta :as kartta]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as paikkauskohdelomake]
-            [harja.domain.paikkaus :as paikkaus]))
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as paikkauskohdelomake]))
 
 (def paikkauskohteiden-tilat
   [{:nimi "Kaikki"} {:nimi "Ehdotettu"} {:nimi "Hylätty"} {:nimi "Tilattu"} {:nimi "Valmis"}])

@@ -833,9 +833,10 @@
                                ::paikkaus/massamenekki)]}))
 
 (defmethod infopaneeli-skeema :paikkaukset-paikkauskohteet [kohde]
-  (let [_ (println "infopaneeli-skeema :: kohde " (pr-str (:infopaneelin-tiedot kohde)) (pr-str kohde))]
+  (let [ ;_ (println "infopaneeli-skeema :: kohde " (pr-str (:infopaneelin-tiedot kohde)) (pr-str kohde))
+        ]
     {:tyyppi :paikkaukset-paikkauskohteet
-     :jarjesta-fn sort                                      ;; mikähän tämä on
+     :jarjesta-fn :alkupvm                                      ;; Järjestetään useampi valittu listalla
      :otsikko (str "Paikkauskohde: " (:nimi (:infopaneelin-tiedot kohde))) ;; Laita tähän vaikka päivämäärä
      :tiedot [{:otsikko "Nro" :tyyppi :string :nimi :nro}
               {:otsikko "Nimi" :tyyppi :string :nimi :nimi}
