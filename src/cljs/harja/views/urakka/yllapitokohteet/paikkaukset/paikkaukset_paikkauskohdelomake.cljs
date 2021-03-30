@@ -243,7 +243,7 @@
    ;; Jos kohde on hylätty, urakoitsija ei voi muokata sitä enää.
    (when nayta-muokkaus?
      [:div.col-xs-12 {:style {:padding-top "24px"}}
-      [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus)))]])
+      [napit/muokkaa "Muokkaa kohdetta" #(e! (t-paikkauskohteet/->AvaaLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]])
 
    [:hr]
 
@@ -318,25 +318,29 @@
    (when muokkaustila?
      [napit/yleinen-toissijainen
       "Peruuta"
-      #(e! (t-paikkauskohteet/->SuljeLomake))])
+      #(e! (t-paikkauskohteet/->SuljeLomake))
+      {:paksu? true}])
 
    ;; Lukutila, tilaajan näkymä
    (when (and voi-tilata? (not muokkaustila?))
      [napit/yleinen-toissijainen
       "Sulje"
-      #(e! (t-paikkauskohteet/->SuljeLomake))])
+      #(e! (t-paikkauskohteet/->SuljeLomake))
+      {:paksu? true}])
 
    ;; Lukutila, urakoitsijan näkymä
    (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
      [napit/yleinen-toissijainen
       "Sulje"
-      #(e! (t-paikkauskohteet/->SuljeLomake))]
+      #(e! (t-paikkauskohteet/->SuljeLomake))
+      {:paksu? true}]
      )
    ;; Lukutila - ei voi tilata, eikä voi perua
    (when (and (not muokkaustila?) (not voi-tilata?) (not voi-perua?))
      [napit/yleinen-toissijainen
       "Sulje"
-      #(e! (t-paikkauskohteet/->SuljeLomake))])]
+      #(e! (t-paikkauskohteet/->SuljeLomake))
+      {:paksu? true}])]
   )
 
 (defn- footer-vasemmat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
@@ -349,7 +353,7 @@
         [napit/tallenna
          "Tallenna muutokset"
          #(e! (t-paikkauskohteet/->TallennaPaikkauskohde (lomake/ilman-lomaketietoja lomake)))
-         {:disabled (not voi-tallentaa?)}]
+         {:disabled (not voi-tallentaa?) :paksu? true}]
         ;; Paikkauskohde on pakko olla tietokannassa, ennenkuin sen voi poistaa
         ;; Ja sen täytyy olla ehdotettu tai hylatty tilassa. Tilattua tai valmista ei voida poistaa
         (when (and (:id lomake)
@@ -361,9 +365,9 @@
              (str "Poistetaanko kohde \"" (:nimi lomake) "\"?")
              "Toimintoa ei voi perua."
              [napit/yleinen-toissijainen "Poista kohde" #(e! (t-paikkauskohteet/->PoistaPaikkauskohde
-                                                               (lomake/ilman-lomaketietoja lomake)))]
-             [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota!])
-           {:ikoni (ikonit/livicon-trash)}])])
+                                                               (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+             [napit/yleinen-toissijainen "Säilytä kohde" modal/piilota! {:paksu? true}])
+           {:ikoni (ikonit/livicon-trash) :paksu? true}])])
 
      ;; Lukutila, tilaajan näkymä
      (when (and voi-tilata? (not muokkaustila?))
@@ -375,8 +379,9 @@
            ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
            "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."
            [napit/yleinen-toissijainen "Tilaa kohde" #(e! (t-paikkauskohteet/->TilaaPaikkauskohde
-                                                            (lomake/ilman-lomaketietoja lomake)))]
-           [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]
+                                                            (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+           [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+         {:paksu? true}]
         [napit/yleinen-toissijainen
          "Hylkää"
          (nayta-modal
@@ -384,8 +389,9 @@
            ;; TODO: Lisää teksti, kunhan sähköpostinlähetys on toteutettu
            "" ;"Urakoitsija saa sähköpostiin ilmoituksen kohteen hylkäyksestä."
            [napit/yleinen-toissijainen "Hylkää kohde" #(e! (t-paikkauskohteet/->HylkaaPaikkauskohde
-                                                             (lomake/ilman-lomaketietoja lomake)))]
-           [napit/yleinen-toissijainen "Kumoa" modal/piilota!])]])
+                                                             (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+           [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
+         {:paksu? true}]])
 
      ;; Lukutila, tiljaa voi perua tilauksen tai hylätä peruutuksen
      (when (and (not muokkaustila?) (not voi-tilata?) voi-perua?)
@@ -396,8 +402,8 @@
             (str "Perutaanko kohteen \"" (:nimi lomake) "\" tilaus ?")
             ""
             [napit/yleinen-toissijainen "Peru tilaus" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenTilaus
-                                                             (lomake/ilman-lomaketietoja lomake)))]
-            [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
+                                                             (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]
          [napit/nappi
@@ -408,8 +414,8 @@
             "Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan."
             ;"Kohde palautetaan hylätty-tilasta takaisin ehdotettu-tilaan. Urakoitsija saa sähköpostiin ilmoituksen kohteen tilan muutoksesta"
             [napit/yleinen-toissijainen "Peru hylkäys" #(e! (t-paikkauskohteet/->PeruPaikkauskohteenHylkays
-                                                              (lomake/ilman-lomaketietoja lomake)))]
-            [napit/yleinen-toissijainen "Kumoa" modal/piilota!])
+                                                              (lomake/ilman-lomaketietoja lomake))) {:paksu? true}]
+            [napit/yleinen-toissijainen "Kumoa" modal/piilota! {:paksu? true}])
           {:luokka "napiton-nappi punainen"
            :ikoni (ikonit/livicon-back-circle)}]))]))
 
@@ -476,15 +482,9 @@
       (paikkauskohde-skeema e! muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
 
-(defn testilomake
-  [e! _lomake]
-  [:div "Kuvittele tähän hieno lomake"
-   [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]])
-
 (defn paikkauslomake [e! lomake] ;; TODO: Parempi nimeäminen
   (case (:tyyppi lomake)
     :uusi-paikkauskohde [paikkauskohde-lomake e! lomake]
     :paikkauskohteen-muokkaus [paikkauskohde-lomake e! lomake]
     :paikkauskohteen-katselu [paikkauskohde-lomake e! lomake]
-    :testilomake [testilomake e! lomake]
     [:div "Lomaketta ei ole vielä tehty" [napit/yleinen-ensisijainen "Debug/Sulje nappi" #(e! (t-paikkauskohteet/->SuljeLomake))]]))
