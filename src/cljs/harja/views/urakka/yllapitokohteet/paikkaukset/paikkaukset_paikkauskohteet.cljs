@@ -211,14 +211,15 @@
               :rivi-klikattu (fn [kohde]
                                (do
                                  ;; Näytä valittu rivi kartalla
-                                 (when (not (nil? (:sijainti kohde)))
+                                 (if (not (nil? (:sijainti kohde)))
+                                   ;; Jos sijainti on annettu, zoomaa valitulle reitille
                                    (let [alue (harja.geo/extent (:sijainti kohde))]
                                      (do
                                        (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
                                        (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200))
-                                     #_(kartta-tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:sijainti kohde)))
                                      )
-                                   )
+                                   ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
+                                   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{}))
                                  ;; avaa lomake, jos käyttäjällä on kirjoitusoikeudet
                                  (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet (:urakka-id kohde))
                                    (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
