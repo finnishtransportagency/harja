@@ -135,7 +135,7 @@
           :hyvaksy "Kopioi"
           :peruuta-txt "Älä muutu mitään"
           :toiminto-fn (fn []
-                         (e! (pot2-tiedot/->KopioiPaallystyskerrosToimenpiteet toimenpiteet-taulukko-atom)))}))]])
+                         (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa toimenpiteet-taulukko-atom)))}))]])
 
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata

@@ -30,7 +30,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
-(defrecord KopioiPaallystyskerrosToimenpiteet [toimenpiteet-taulukko])
+(defrecord KopioiToimenpiteetTaulukossa [toimenpiteet-taulukko])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
@@ -90,10 +90,6 @@
 
 (defn merkitse-muokattu [app]
   (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true))
-
-(defn kopioi-toimenpiteet [kohdeosat kaistat]
-  (let [ensimmainen-kaista (first kaistat)])
-  )
 
 (defn rivi->massa-tai-murske
   "Kaivaa POT2 kulutuskerroksen tai alustarivin pohjalta ko. massan tai murskeen kaikki tiedot"
@@ -176,7 +172,7 @@
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
 
-  KopioiPaallystyskerrosToimenpiteet
+  KopioiToimenpiteetTaulukossa
   (process-event [{toimenpiteet-taulukko :toimenpiteet-taulukko} app]
     (let [kaistat (kaikki-kaistat app)
           ensimmainen-kaista (first kaistat)
