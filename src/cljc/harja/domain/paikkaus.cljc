@@ -151,26 +151,26 @@
   (let [tila (if (= tila "hylatty") "hylätty" tila)]
     (str/capitalize tila)))
 
-(def paikkauskohteiden-tyomenetelmat
-  {"ABPL" "AB-paikkaus levittäjällä"
-   "PABPL" "PAB-paikkaus levittäjällä"
-   "SMA" "SMA-paikkaus levittäjällä"
-   "KTVA" "KT-valuasfalttipaikkaus (KTVA)"
-   "REPA" "Konetiivistetty reikävaluasfalttipaikkaus (REPA)"
-   "SIPU" "Sirotepuhalluspaikkaus (SIPU)"
-   "SIPA" "Sirotepintauksena tehty lappupaikkaus (SIPA)"
-   "UREM" "Urapaikkaus (UREM/RREM)"
-   "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
-   "KKSA" "Kannukaatosaumaus"
-   "KTVASA" "KT-valuasfalttisaumaus"
-   "AVSA" "Avarrussaumaus"
-   "SKPPK" "Sillan kannen päällysteen päätysauman korjaukset"
-   "RPVST" "Reunapalkin ja päällysteen välisen sauman tiivistäminen"
-   "RLSAT" "Reunapalkin liikuntasauman tiivistäminen"
-   "KTPP" "Käsin tehtävät paikkaukset pikapaikkausmassalla"
-   "ABPK" "AB-paikkaus käsin"
-   "PABPK" "PAB-paikkaus käsin"
-   "MUU" "Muu päällysteiden paikkaustyö"})
+;; Osa työmenetelmistä tallennetaan kantaan pelkällä lyhenteellä, tällä funktiolla saadaan niille selkokielinen selitys.
+(defn kuvaile-tyomenetelma [tm]
+  (case tm
+    "KTVA" "KT-valuasfalttipaikkaus (KTVA)"
+    "REPA" "Konetiivistetty reikävaluasfalttipaikkaus (REPA)"
+    "SIPU" "Sirotepuhalluspaikkaus (SIPU)"
+    "SIPA" "Sirotepintauksena tehty lappupaikkaus (SIPA)"
+    "UREM" "Urapaikkaus (UREM/RREM)"
+    "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
+    tm))
+
+(def paikkauskohteiden-tyomenetelmat2
+  ["AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KTVA" "REPA" "SIPU" "SIPA" "UREM"
+   "HJYR" "Kannukaatosaumaus" "KT-valuasfalttisaumaus" "Avarrussaumaus"
+   "Sillan kannen päällysteen päätysauman korjaukset" "Reunapalkin ja päällysteen välisen sauman tiivistäminen"
+   "Reunapalkin liikuntasauman tiivistäminen" "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin"
+   "PAB-paikkaus käsin" "Muu päällysteiden paikkaustyö"])
+
+(def kuvaillut-tyomenetelmat
+  (vec (map #(kuvaile-tyomenetelma %) paikkauskohteiden-tyomenetelmat2)))
 
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})

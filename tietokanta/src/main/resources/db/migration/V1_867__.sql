@@ -20,3 +20,37 @@ ALTER COLUMN "ulkoinen-id" DROP NOT NULL; -- Poistetaan rajoitus, koska nyt koht
 
 ALTER TABLE paikkauskohde
     RENAME COLUMN tila TO "yhalahetyksen-tila";
+
+CREATE TYPE tyomenetelma AS ENUM (
+    'AB-paikkaus levittäjällä',
+    'PAB-paikkaus levittäjällä',
+    'SMA-paikkaus levittäjällä',
+    'KTVA', --'KT-valuasfalttipaikkaus (KTVA)',
+    'REPA', --'Konetiivistetty reikävaluasfalttipaikkaus (REPA)',
+    'SIPU', --'Sirotepuhalluspaikkaus (SIPU)',
+    'SIPA', --'Sirotepintauksena tehty lappupaikkaus (SIPA)',
+    'UREM', --'Urapaikkaus (UREM/RREM)',
+    'HJYR', -- Jyrsintä (HJYR/TJYR)
+    'Kannukaatosaumaus',
+    'KT-valuasfalttisaumaus',
+    'Avarrussaumaus',
+    'Sillan kannen päällysteen päätysauman korjaukset',
+    'Reunapalkin ja päällysteen välisen sauman tiivistämien',
+    'Reunapalkin liikuntasauman tiivistäminen',
+    'Käsin tehtävät paikkaukset pikapaikkausmassalla',
+    'AB-paikkaus käsin',
+    'PAB-paikkaus käsin',
+    'Muu päällysteiden paikkaustyö');
+
+UPDATE paikkauskohde
+SET tyomenetelma = 'UREM'
+WHERE harja.public.paikkauskohde.tyomenetelma IN ('RREM', 'urapaikkaus');
+
+ALTER TABLE paikkauskohde
+    ALTER COLUMN tyomenetelma TYPE tyomenetelma USING tyomenetelma::tyomenetelma;
+
+ALTER TABLE paikkaustoteuma
+    ALTER COLUMN tyomenetelma TYPE tyomenetelma USING tyomenetelma::tyomenetelma;
+
+ALTER TABLE paikkaus
+    ALTER COLUMN tyomenetelma TYPE tyomenetelma USING tyomenetelma::tyomenetelma;

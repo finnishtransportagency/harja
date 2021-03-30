@@ -150,7 +150,7 @@ DO $$ DECLARE
                                            FROM paikkauskohde
                                            WHERE "ulkoinen-id" = 7331
                                            LIMIT 1);
-  tyomenetelmat                TEXT [] := '{"UREM", "MPA", "REPA", "KTVA", "SIPA", "SIPU"}';
+  tyomenetelmat                TEXT [] := '{"UREM", "REPA", "KTVA", "SIPA", "SIPU"}';
 BEGIN
   INSERT INTO paikkaus ("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                         "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
@@ -367,13 +367,13 @@ insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkau
 insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite_laajennettu, tilattupvm, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
 ('Kaislajärven suora osa 1', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-05-01', '2021-05-13', 'tilattu', 000, 'AVSA', 'kuvaus',
+ '2021-05-01', '2021-05-13', 'tilattu', 000, 'Avarrussaumaus', 'kuvaus',
  ROW (926, 6, 2964, 7, 3064, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, '2021-02-17', 200, 200, 'm2');
 
 insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
                            tyomenetelma, tyomenetelma_kuvaus, tierekisteriosoite_laajennettu, "suunniteltu-maara", "suunniteltu-hinta", yksikko) VALUES
 ('Kaislajärven suora osa 2', current_timestamp, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'),
- '2021-01-01', '2021-01-13', 'valmis', 000, 'AVSA', 'kuvaus ',
+ '2021-01-01', '2021-01-13', 'valmis', 000, 'Avarrussaumaus', 'kuvaus ',
  ROW (926, 7, 3164, 8, 3264, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 300, 300, 'kpl');
 
 insert into paikkauskohde (nimi, luotu, "urakka-id", alkupvm, loppupvm, "paikkauskohteen-tila", "ulkoinen-id",
