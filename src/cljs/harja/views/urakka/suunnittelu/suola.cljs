@@ -100,7 +100,7 @@
         pv-rajat (into {}
                        (map (juxt #(str (:pohjavesialue %) " " (:tie %)) identity))
                        (:pohjavesialue-talvisuola @syotettavat-tiedot))]
-    (wrap (into (sorted-map)
+    (wrap (into (sorted-map-by :nimi)
                 (map (fn [pohjavesialue]
                        (let [avain (str (:tunnus pohjavesialue) " " (:tie pohjavesialue))]
                          [avain
