@@ -289,18 +289,18 @@
                                                     :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                     :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
              [:button {:type "submit"
-                       :class #{"nappi-ensisijainen napiton-nappi"}}
+                       :class #{"nappi-toissijainen-paksu napiton-nappi"}}
               [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
          [liitteet/lataa-tiedosto
           (-> @tila/tila :yleiset :urakka :id)
           {:nappi-teksti "Tuo kohteet excelistä"
-           :nappi-luokka "napiton-nappi"
+           :nappi-luokka "napiton-nappi nappi-toissijainen-paksu"
            :url "lue-paikkauskohteet-excelista"
            :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
            :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
-         [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/harja_paikkauskohteet_pohja.xlsx" "_blank") {:luokka "napiton-nappi"}]
-         [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))]])]
+         [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/harja_paikkauskohteet_pohja.xlsx" "_blank") {:luokka "napiton-nappi" :paksu? true}]
+         [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde})) {:paksu? true}]])]
      (when loytyi-kohteita?
        [:div.row [paikkauskohteet-taulukko e! app]])]))
 
