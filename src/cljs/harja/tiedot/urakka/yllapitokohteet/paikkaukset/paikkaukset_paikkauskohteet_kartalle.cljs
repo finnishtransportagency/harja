@@ -49,7 +49,7 @@
                                      :infopaneelin-tiedot {:nro (:nro kohde)
                                                            :nimi (:nimi kohde)
                                                            :tila (:paikkauskohteen-tila kohde)
-                                                           :menetelma (paikkaus/paikkauskohteiden-tyomenetelmat (:tyomenetelma kohde))
+                                                           :menetelma (paikkaus/kuvaile-tyomenetelma (:tyomenetelma kohde))
                                                            :aikataulu (:formatoitu-aikataulu kohde)
                                                            :alkupvm (:alkupvm kohde)}
                                      :ikonit [{:tyyppi :merkki
