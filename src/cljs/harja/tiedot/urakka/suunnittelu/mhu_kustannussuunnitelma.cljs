@@ -19,7 +19,8 @@
             [harja.tyokalut.regex :as re]
             [goog.dom :as dom]
             [harja.ui.modal :as modal]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -1689,9 +1690,11 @@ vaihtelua-teksti "vaihtelua/kk")
         tarkastettavat (select-keys asian-tilat (if (number? hoitovuosilta)
                                                   [hoitovuosilta]
                                                   hoitovuosilta))]
-    (println "tarkistetaan " tarkastettavat)
     (into {}
-          (filter #(true? (second %)))
+          (comp
+            (filter #(true? (second %)))
+            (map (fn [[hoitovuoden-nro tila]] (let [alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)]
+                    [(+ alkuvuosi (dec hoitovuoden-nro)) tila]))))
           tarkastettavat)))
 
 (def tyyppi->avain {:tilaajan-varaukset :tilaajan-rahavaraukset
@@ -1748,12 +1751,14 @@ vaihtelua-teksti "vaihtelua/kk")
 
 (defn- kysy-vahvistus
   [app asia vahvistettavat-vuodet tiedot]
-  (assoc-in app [:domain :vahvistus] {:vaaditaan-muutoksen-vahvistus? true
-                                      :vahvistettavat-vuodet vahvistettavat-vuodet
-                                      :asia (or (tyyppi->avain asia) asia)
-                                      :tee-kun-vahvistettu (r/partial (fn [tiedot e! muutos]
-                                                                        (e! (->VahvistaJaTallenna (update tiedot :payload merge {:muutos muutos}))))
-                                                                      tiedot)}))
+  (let []
+    (assoc-in app [:domain :vahvistus]
+              {:vaaditaan-muutoksen-vahvistus? true
+               :vahvistettavat-vuodet vahvistettavat-vuodet
+               :asia (or (tyyppi->avain asia) asia)
+               :tee-kun-vahvistettu (r/partial (fn [tiedot e! muutos]
+                                                 (e! (->VahvistaJaTallenna (update tiedot :payload merge {:muutos muutos}))))
+                                               tiedot)})))
 
 (defn- tallenna-kattohinnat
   [app]
@@ -2278,60 +2283,62 @@ vaihtelua-teksti "vaihtelua/kk")
       (assoc-in app [:domain :johto-ja-hallintokorvaukset nimi (dec hoitokauden-numero) sarake] arvo)))
   TallennaHankintojenArvot
   (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
-    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
-          post-kutsu (case tallennettava-asia
-                       :hankintakustannus :tallenna-kiinteahintaiset-tyot
-                       :laskutukseen-perustuva-hankinta :tallenna-kustannusarvioitu-tyo)
-          valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
-          kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?])
-          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
-                                              (range hoitokauden-numero 6)
-                                              [hoitokauden-numero])
-          summa (case tallennettava-asia
-                  :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
-                  :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
-          ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
-                              (mapv (fn [hoitokauden-numero]
-                                      (let [polun-osa (case tallennettava-asia
-                                                        :hankintakustannus :suunnittellut-hankinnat
-                                                        :laskutukseen-perustuva-hankinta :laskutukseen-perustuvat-hankinnat)]
-                                        (select-keys (get-in app [:domain polun-osa valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka)])
-                                                     #{:vuosi :kuukausi})))
-                                    paivitettavat-hoitokauden-numerot))
-                            tunnisteet))
-          lahetettava-data (case tallennettava-asia
-                             :hankintakustannus {:urakka-id urakka-id
-                                                 :toimenpide-avain valittu-toimenpide
-                                                 :summa summa
-                                                 :ajat ajat}
-                             :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
-                                                               :toimenpide-avain valittu-toimenpide
-                                                               :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
-                                                               :summa summa
-                                                               :ajat ajat})
-          onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
-          tilan-tyyppi (tilan-tyyppi tallennettava-asia)
-          vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
-          tiedot {:palvelu post-kutsu
-                  :payload (dissoc-nils lahetettava-data)
-                  :onnistui ->TallennaHankintojenArvotOnnistui
-                  :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
-      (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
+    (if-not (get-in app [:domain :vahvistus :vaaditaan-muutoksen-vahvistus?]) ; jos vahvistusikkuna on auki, niin vahvistusikkunan klikkaus triggaa blureventin. se tulee tänne ja me ei haluta sitä, kun sitten tulee väärät tiedot vahvistettavaksi. skipataan siis koko roska.
+      (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+            post-kutsu (case tallennettava-asia
+                         :hankintakustannus :tallenna-kiinteahintaiset-tyot
+                         :laskutukseen-perustuva-hankinta :tallenna-kustannusarvioitu-tyo)
+            valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
+            kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?])
+            paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                (range hoitokauden-numero 6)
+                                                [hoitokauden-numero])
+            summa (case tallennettava-asia
+                    :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                    :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+            ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
+                                (mapv (fn [hoitokauden-numero]
+                                        (let [polun-osa (case tallennettava-asia
+                                                          :hankintakustannus :suunnittellut-hankinnat
+                                                          :laskutukseen-perustuva-hankinta :laskutukseen-perustuvat-hankinnat)]
+                                          (select-keys (get-in app [:domain polun-osa valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka)])
+                                                       #{:vuosi :kuukausi})))
+                                      paivitettavat-hoitokauden-numerot))
+                              tunnisteet))
+            lahetettava-data (case tallennettava-asia
+                               :hankintakustannus {:urakka-id urakka-id
+                                                   :toimenpide-avain valittu-toimenpide
+                                                   :summa summa
+                                                   :ajat ajat}
+                               :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
+                                                                 :toimenpide-avain valittu-toimenpide
+                                                                 :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
+                                                                 :summa summa
+                                                                 :ajat ajat})
+            onko-tila? (hae-tila app tallennettava-asia paivitettavat-hoitokauden-numerot)
+            tilan-tyyppi (tilan-tyyppi tallennettava-asia)
+            vahvistettavat-vuodet (vahvistettavat app tilan-tyyppi paivitettavat-hoitokauden-numerot)
+            tiedot {:palvelu post-kutsu
+                    :payload (dissoc-nils lahetettava-data)
+                    :onnistui ->TallennaHankintojenArvotOnnistui
+                    :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
+        (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
 
-      (when-not onko-tila?
-        (laheta-ja-odota-vastaus app
-                                 {:palvelu :tallenna-suunnitelman-osalle-tila
-                                  :payload {:tyyppi tilan-tyyppi
-                                            :urakka-id urakka-id
-                                            :hoitovuodet paivitettavat-hoitokauden-numerot}
-                                  :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
-                                  :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
+        (when-not onko-tila?
+          (laheta-ja-odota-vastaus app
+                                   {:palvelu :tallenna-suunnitelman-osalle-tila
+                                    :payload {:tyyppi tilan-tyyppi
+                                              :urakka-id urakka-id
+                                              :hoitovuodet paivitettavat-hoitokauden-numerot}
+                                    :onnistui ->TallennaKustannussuunnitelmanOsalleTilaOnnistui
+                                    :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
 
-      (if (empty? vahvistettavat-vuodet)
-        (do
-          (tallenna-kattohinnat app)
-          (laheta-ja-odota-vastaus app tiedot))
-        (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot))))
+        (if (empty? vahvistettavat-vuodet)
+          (do
+            (tallenna-kattohinnat app)
+            (laheta-ja-odota-vastaus app tiedot))
+          (kysy-vahvistus app tilan-tyyppi vahvistettavat-vuodet tiedot)))
+      app))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
@@ -2481,8 +2488,8 @@ vaihtelua-teksti "vaihtelua/kk")
                                   :epaonnistui ->TallennaKustannussuunnitelmanOsalleTilaEpaonnistui}))
       (if (empty? vahvistettavat-vuodet)
         (do
-            (tallenna-kattohinnat app)
-            (laheta-ja-odota-vastaus app tiedot))
+          (tallenna-kattohinnat app)
+          (laheta-ja-odota-vastaus app tiedot))
         (kysy-vahvistus app :johto-ja-hallintokorvaus vahvistettavat-vuodet tiedot))))
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]

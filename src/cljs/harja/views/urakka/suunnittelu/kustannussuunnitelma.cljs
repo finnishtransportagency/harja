@@ -2544,8 +2544,11 @@
                 :sulje-fn #(e! (t/->SuljeVahvistus))}
    [:div "Please confirm"
     [:div "vahvistus" [debug/debug vahvistus]]
-    [:input {:type :text :on-blur (r/partial muuta-fn! :syy)}]
-    [:input {:type :text :on-blur (r/partial muuta-fn! :selite)}]
+    (for [v (keys (:vahvistettavat-vuodet vahvistus))]
+      [:div
+       [:h3 (str "vuosi " v)]
+       [:input {:type :text :on-blur (r/partial muuta-fn! v :muutoksen-syy)}]
+       [:input {:type :text :on-blur (r/partial muuta-fn! v :selite)}]])
     [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
 
 (defn vahvista-suunnitelman-osa-komponentti
@@ -2935,7 +2938,7 @@
                        (when vaaditaan-muutoksen-vahvistus?
                          [selite-modal
                           tee-kun-vahvistettu
-                          (r/partial (fn [polku e] (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot polku] (.. e -target -value)))))
+                          (r/partial (fn [hoitovuosi polku e] (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot hoitovuosi polku] (.. e -target -value)))))
                           (get-in app [:domain :vahvistus])])]))))))
 
 (defn kustannussuunnitelma []
