@@ -85,6 +85,7 @@
 (defrecord PeruPaikkauskohteenHylkaysEpaonnistui [paikkauskohde])
 (defrecord LaskePituusOnnistui [vastaus])
 (defrecord LaskePituusEpaonnistui [vastaus])
+(defrecord JarjestaPaikkauskohteet [jarjestys])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -117,7 +118,7 @@
                                :let (:let lomake)}
         pituus-diff (diff @lomakkeen-pituuskentat nykyiset-pituuskentat)
         _ (when (or (not (nil? (first pituus-diff)))
-                        (not (nil? (second pituus-diff))))
+                    (not (nil? (second pituus-diff))))
             (do
               (reset! lomakkeen-pituuskentat nykyiset-pituuskentat)
               (tuck-apurit/post! :laske-paikkauskohteen-pituus
@@ -207,6 +208,9 @@
                                          [:suunniteltu-maara] (validoinnit :suunniteltu-maara lomake)
                                          [:yksikko] (validoinnit :yksikko lomake)
                                          [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta lomake)]))
+
+(defn- kaanteinen-jarjestaja [a b]
+  (compare b a))
 
 (extend-protocol tuck/Event
 
@@ -549,6 +553,17 @@
     (do
       (js/console.log "Pituutta ei voitu laskea: vastaus" (pr-str vastaus))
       app))
+
+  JarjestaPaikkauskohteet
+  (process-event [{jarjestys :jarjestys} app]
+    (let [vanha-jarjestys (get-in app [:jarjestys :nimi])
+          kaanteinen? (if (= jarjestys vanha-jarjestys)
+                        (not (get-in app [:jarjestys :kaanteinen?]))
+                        false)]
+      (-> app
+          (assoc-in [:jarjestys :nimi] jarjestys)
+          (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
+          (assoc :paikkauskohteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:paikkauskohteet app))))))
   )
 
 (def tyomenetelmat
