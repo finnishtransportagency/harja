@@ -227,7 +227,9 @@
                                  ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
                                  ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
                                  (when (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
-                                           (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
+                                           ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
+                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                                             (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
                                    (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
               :otsikkorivi-klikattu (fn [opts]
                                       (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}
