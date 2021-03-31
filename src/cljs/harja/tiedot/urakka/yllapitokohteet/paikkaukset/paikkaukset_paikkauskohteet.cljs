@@ -46,6 +46,11 @@
     (when-not (= "valmis" tila)
       " (arv.)")))
 
+(defn- fmt-valmistuminen
+  "Tiemerkkarille näytetään arvioitu valmistumispäivämäärä"
+  [loppupvm]
+  (str (pvm/pvm-opt loppupvm) " (arv.) "))
+
 (defn fmt-sijainti [tie alkuosa loppuosa alkuet loppuet]
   (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
 
@@ -336,6 +341,7 @@
                                             (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))
+                                     (assoc :loppupvm-arvio (fmt-valmistuminen (:loppupvm kohde)))
                                      (assoc :paivays (or (:muokattu kohde) (:luotu kohde)))))
                                vastaus)
           zoomattavat-geot (into [] (concat (mapv (fn [p]

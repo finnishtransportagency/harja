@@ -99,10 +99,9 @@
                 (cond
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
                   (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
-                  {:otsikko "Arv. Valm. pvm"
+                  {:otsikko "Valmistuminen"
                    :leveys 2
-                   :nimi :loppupvm
-                   :fmt pvm/pvm-opt}
+                   :nimi :loppupvm-arvio}
                   ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                   ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                   (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
