@@ -380,7 +380,7 @@
 
       [:div.row.filtterit-container
        [:div.col-xs-6.col-md-3.filtteri
-        [:span.alasvedon-otsikko "Hoitovuosi"]
+        [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
@@ -388,7 +388,7 @@
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]
        [:div.col-xs-6.col-md-3.filtteri
-        [:span.alasvedon-otsikko "Kuukausi"]
+        [:label.alasvedon-otsikko-vayla "Kuukausi"]
         [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))

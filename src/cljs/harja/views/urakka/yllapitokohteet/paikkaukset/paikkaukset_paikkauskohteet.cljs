@@ -338,7 +338,7 @@
       ;; Tiemerkintäurakalle ei haluta näyttää elyrajauksia.
       (when (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
         [:div.col-xs-2
-         [:span.alasvedon-otsikko-vayla "ELY"]
+         [:label.alasvedon-otsikko-vayla "ELY"]
          [valinnat/checkbox-pudotusvalikko
           valittavat-elyt
           (fn [ely valittu?]
@@ -346,7 +346,7 @@
           [" ELY valittu" " ELYä valittu"]
           {:vayla-tyyli? true}]])
       [:div.col-xs-2
-       [:span.alasvedon-otsikko-vayla "Tila"]
+       [:label.alasvedon-otsikko-vayla "Tila"]
        [valinnat/checkbox-pudotusvalikko
         valittavat-tilat
         (fn [tila valittu?]
@@ -354,7 +354,7 @@
         [" Tila valittu" " Tilaa valittu"]
         {:vayla-tyyli? true}]]
       [:div.col-xs-2
-       [:span.alasvedon-otsikko-vayla "Vuosi"]
+       [:label.alasvedon-otsikko-vayla "Vuosi"]
        [yleiset/livi-pudotusvalikko
         {:valinta valittu-vuosi
          :vayla-tyyli? true
@@ -362,7 +362,7 @@
          :valitse-fn #(e! (t-paikkauskohteet/->FiltteriValitseVuosi %))}
         vuodet]]
       [:div.col-xs-4
-       [:span.alasvedon-otsikko-vayla "Työmenetelmä"]
+       [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
        [valinnat/checkbox-pudotusvalikko
         valittavat-tyomenetelmat
         (fn [tyomenetelma valittu?]
