@@ -41,7 +41,7 @@
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
 (defn- kayttaja-on-urakoitsija? [urakkaroolit]
-  (let [urakkaroolit (if (seq? urakkaroolit)
+  (let [urakkaroolit (if (set? urakkaroolit)
                        urakkaroolit
                        #{urakkaroolit})
         urakoitsijaroolit #{"Laatupaallikko"
@@ -50,13 +50,18 @@
                             "Laadunvalvoja"
                             "Kelikeskus"
                             "Paivystaja"}]
-    (some (fn [rooli]
-            (true?
-              (some #(= rooli %) urakoitsijaroolit)))
-          urakkaroolit)))
+    ;; Annetut roolit set voi olla kokonaan tyhjä
+    (if (empty? urakkaroolit)
+      ;; Jos tyhjä, ei ole urakoitsija
+      false
+      ;; Jos rooli on annettu, tarkista onko urakoitsija
+      (some (fn [rooli]
+              (true?
+                (some #(= rooli %) urakoitsijaroolit)))
+            urakkaroolit))))
 
 (defn- kayttaja-on-tilaaja? [roolit]
-  (let [roolit (if (seq? roolit)
+  (let [roolit (if (set? roolit)
                  roolit
                  #{roolit})
         tilaajaroolit #{"Jarjestelmavastaava"
@@ -215,14 +220,15 @@
                                    (let [alue (harja.geo/extent (:sijainti kohde))]
                                      (do
                                        (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{(:id kohde)})
-                                       (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200))
-                                     )
+                                       (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
                                    ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
                                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{}))
-                                 ;; avaa lomake, jos käyttäjällä on kirjoitusoikeudet
-                                 (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet (:urakka-id kohde))
-                                   (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
-              }
+
+                                 ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
+                                 ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
+                                 (when (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                           (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
+                                   (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))}
              (when (> (count paikkauskohteet) 0)
                {:rivi-jalkeen-fn (fn [rivit]
                                    ^{:luokka "yhteenveto"}
