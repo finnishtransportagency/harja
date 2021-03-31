@@ -546,7 +546,7 @@
          (map (fn [{:keys [id nimi valittu?] :as valinta}]
                 (if (:vayla-tyyli? asetukset)
                   [:div.flex-row
-                   [:input.vayla-checkbox
+                   [:input.vayla-valikko-checkbox
                     {:id (str idn-alku-cb (or id (hash nimi)))
                      :class "check"
                      :type "checkbox"
