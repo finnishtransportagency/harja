@@ -35,7 +35,7 @@
    [:sampourakkaid urakka-sampoid]
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
    [:urakkavaylamuoto (vaylamuoto urakka-tyyppi)]
-   [:urakkatyyppi (if (= urakka-tyyppi "teiden-hoito") hoito urakka-tyyppi)]
+   [:urakkatyyppi (if (= urakka-tyyppi "teiden-hoito") "hoito" urakka-tyyppi)]
    (when urakka-ely
      [:elyalue (str urakka-ely " ELY")])
    [:alueurakkanro alueurakkanro]
