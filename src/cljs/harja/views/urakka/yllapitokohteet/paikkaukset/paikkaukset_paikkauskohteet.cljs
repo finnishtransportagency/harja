@@ -228,7 +228,9 @@
                                  ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
                                  (when (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                                            (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))
-                                   (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))}
+                                   (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
+              :otsikkorivi-klikattu (fn [opts]
+                                      (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}
              (when (> (count paikkauskohteet) 0)
                {:rivi-jalkeen-fn (fn [rivit]
                                    ^{:luokka "yhteenveto"}
