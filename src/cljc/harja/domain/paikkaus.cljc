@@ -162,7 +162,7 @@
     "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
     tm))
 
-(def paikkauskohteiden-tyomenetelmat2
+(def paikkauskohteiden-tyomenetelmat
   ["AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KTVA" "REPA" "SIPU" "SIPA" "UREM"
    "HJYR" "Kannukaatosaumaus" "KT-valuasfalttisaumaus" "Avarrussaumaus"
    "Sillan kannen päällysteen päätysauman korjaukset" "Reunapalkin ja päällysteen välisen sauman tiivistäminen"
@@ -170,7 +170,7 @@
    "PAB-paikkaus käsin" "Muu päällysteiden paikkaustyö"])
 
 (def kuvaillut-tyomenetelmat
-  (vec (map #(kuvaile-tyomenetelma %) paikkauskohteiden-tyomenetelmat2)))
+  (vec (map #(kuvaile-tyomenetelma %) paikkauskohteiden-tyomenetelmat)))
 
 (def paikkauskohteiden-yksikot
   #{"m2" "t" "kpl" "jm"})
