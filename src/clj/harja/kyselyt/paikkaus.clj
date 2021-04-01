@@ -342,23 +342,6 @@ paikkauskohteet))
                                           {::paikkaus/urakka-id urakka-id})]
     (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
 
-;; HAetaan paikkauskohteet täällä, jottei tule konfliktia
-(defn- hae-paikkauskohteet-geometrialla [db urakka-id tilat alkupvm loppupvm menetelmat]
-  (let [;ely (q-urakat/hae-urakan-ely db {:urakkaid urakka-id})
-        ;; ELYllä on olemassa aluegeometria, jota voidaan hyödyntää haussa,
-        ;; mutta ely on myös merkittynä paikkauskohteen omistavan urakan hallintayksiköksi, joten
-        ;; tarvittavat paikkauskohteet saadaan myös tätä kautta
-        ;; hox tästä nyt puuttuu tuo elyn käyttö haussa.
-
-        ;; Haetaan paikkauskohteet hoito ja teiden-hoito tyyppisille urakoille näiden urakoiden geometrian perusteella
-        paikkauskohteet (paikkauskohteet-geometrialla db {:urakka-id urakka-id
-                                                          :tilat tilat
-                                                          :alkupvm alkupvm
-                                                          :loppupvm loppupvm
-                                                          :tyomenetelmat menetelmat})]
-    paikkauskohteet))
-
-
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
