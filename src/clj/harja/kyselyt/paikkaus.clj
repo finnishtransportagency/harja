@@ -406,10 +406,10 @@ paikkauskohteet))
 (defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
-        ;; Paikkauskohteiden hakeminen on eri urakkatyypeille vaihtelee.
+        ;; Paikkauskohteiden hakeminen eri urakkatyypeille vaihtelee.
         ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
-        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito tyyppinen urakka) haetaan paikkauskohteita,
-        ;; niin silloin turvaudutaan paikkauskohteen maantieteelliseen sijaintiin eikä urakan-id:seen.
+        ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito tyyppinen urakka) sekä tiemerkintä urakalle
+        ;; haetaan paikkauskohteita, niin silloin turvaudutaan paikkauskohteen maantieteelliseen sijaintiin eikä urakan-id:seen.
         urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
         tilat (disj tilat "kaikki")
         tilat (when (> (count tilat) 0)
@@ -421,8 +421,12 @@ paikkauskohteet))
         elyt (disj elyt 0) ;; Poistetaan potentiaalinen "kaikki" valinta
         elyt (when (> (count elyt) 0)
                (vec elyt))
-        urakan-paikkauskohteet (if (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi) (= :tiemerkinta urakan-tyyppi))
-                                 (hae-paikkauskohteet-geometrialla db urakka-id tilat alkupvm loppupvm menetelmat)
+        urakan-paikkauskohteet (cond
+                                 (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi) )
+                                 (paikkauskohteet-urakan-alueella db urakka-id tilat alkupvm loppupvm menetelmat)
+                                 (= :tiemerkinta urakan-tyyppi)
+                                 (paikkauskohteet-elyn-alueella db urakka-id tilat alkupvm loppupvm menetelmat)
+                                 :else
                                  (paikkauskohteet-urakalle db {:urakka-id urakka-id
                                                                :tilat tilat
                                                                :alkupvm alkupvm
