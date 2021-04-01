@@ -73,7 +73,7 @@
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::paikkauskohteen-tila (s/and string? #(validi-paikkauskohteen-tila? %)))
 ;; TODO: Muuta tarkastamaan, että on yksi sallituista arvoista, kunhan ne päivitetään muutetaan enumeiksi.
-(s/def ::tyomenetelma (s/and string? (fn [tm] (some #(= tm %) paikkaus/paikkauskohteiden-tyomenetelmat2))))
+(s/def ::tyomenetelma (s/and string? (fn [tm] (some #(= tm %) paikkaus/paikkauskohteiden-tyomenetelmat))))
 (s/def ::suunniteltu-maara (s/and number? pos?))
 (s/def ::suunniteltu-hinta (s/and number? pos?))
 (s/def ::yksikko paikkaus/paikkauskohteiden-yksikot)
