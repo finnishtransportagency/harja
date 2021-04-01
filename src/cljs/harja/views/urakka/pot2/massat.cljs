@@ -251,13 +251,16 @@
                                   {:tarkista-komponentti? true})
       (fn [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
         (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
-              voi-muokata? (if (contains? pot2-massa-lomake :voi-muokata?)
-                             (:voi-muokata? pot2-massa-lomake)
-                             true)
               sivulle? (:sivulle? pot2-massa-lomake)
               massa-id (::pot2-domain/massa-id pot2-massa-lomake)
               muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
-              materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
+              materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)
+              materiaali-lukittu? (some #(= (:tila %) "lukittu") materiaali-kaytossa)
+              voi-muokata? (and
+                             (not materiaali-lukittu?)
+                             (if (contains? pot2-massa-lomake :voi-muokata?)
+                               (:voi-muokata? pot2-massa-lomake)
+                               true))]
           [:div.massa-lomake
            [ui-lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
@@ -294,7 +297,8 @@
                       (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
                                                                 :materiaali rivi
                                                                 :fmt :string})))}
-            (when-not voi-muokata?
+            (when (and (not voi-muokata?)
+                       (not materiaali-lukittu?))
               (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-massa-lomake))))
             (when-not voi-muokata? (ui-lomake/lomake-spacer {}))
             (ui-lomake/rivi
