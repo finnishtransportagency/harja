@@ -251,13 +251,16 @@
                                   {:tarkista-komponentti? true})
       (fn [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
         (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
-              voi-muokata? (if (contains? pot2-massa-lomake :voi-muokata?)
-                             (:voi-muokata? pot2-massa-lomake)
-                             true)
               sivulle? (:sivulle? pot2-massa-lomake)
               massa-id (::pot2-domain/massa-id pot2-massa-lomake)
               muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
-              materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)]
+              materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)
+              materiaali-lukittu? (some #(= (:tila %) "lukittu") materiaali-kaytossa)
+              voi-muokata? (and
+                             (not materiaali-lukittu?)
+                             (if (contains? pot2-massa-lomake :voi-muokata?)
+                               (:voi-muokata? pot2-massa-lomake)
+                               true))]
           [:div.massa-lomake
            [ui-lomake/lomake
             {:muokkaa! #(e! (mk-tiedot/->PaivitaMassaLomake (ui-lomake/ilman-lomaketietoja %)))
@@ -294,7 +297,8 @@
                       (mm-yhteiset/materiaalin-rikastettu-nimi {:tyypit massatyypit
                                                                 :materiaali rivi
                                                                 :fmt :string})))}
-            (when-not voi-muokata?
+            (when (and (not voi-muokata?)
+                       (not materiaali-lukittu?))
               (mm-yhteiset/muokkaa-nappi #(e! (mk-tiedot/->AloitaMuokkaus :pot2-massa-lomake))))
             (when-not voi-muokata? (ui-lomake/lomake-spacer {}))
             (ui-lomake/rivi
@@ -360,40 +364,12 @@
 
 (defn- massan-runkoaineet
   [rivi ainetyypit]
-  [:span
-   (for [{:runkoaine/keys [kuulamyllyarvo
-                           litteysluku] :as aine}
-         (reverse
-           (sort-by :runkoaine/massaprosentti
-                    (:harja.domain.pot2/runkoaineet rivi)))
-         :let [aineen-otsikko (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
-                                   (if (:runkoaine/esiintyma aine)
-                                     (yleiset/str-suluissa-opt (:runkoaine/esiintyma aine))
-                                     (when (= 7 (:runkoaine/tyyppi aine))
-                                       (yleiset/str-suluissa-opt (:runkoaine/kuvaus aine)))))
-               otsikko-rivitettyna (let [[aine tiedot] (str/split aineen-otsikko #"\(")
-                                         tiedot (if (and tiedot (str/includes? tiedot ")"))
-                                                  (str "(" tiedot)
-                                                  tiedot)]
-                                     [:div [:div aine] [:div tiedot]])]]
-     ^{:key (:runkoaine/id aine)}
-     [:span
-      [:div
-       (when (or kuulamyllyarvo litteysluku)
-         [yleiset/wrap-if true
-          [yleiset/tooltip {} :%
-           [yleiset/avain-arvo-tooltip otsikko-rivitettyna
-            {:width "300px"}
-            "KM-arvo" kuulamyllyarvo
-            "Litteysluku" litteysluku]]
-          [:span {:style {:color "#004D99"
-                          :margin-right "8px"
-                          :position "relative"
-                          :top "1px"}}
-           [ikonit/livicon-info-circle]]])
-       [:span
-        aineen-otsikko
-        [:span.pull-right (str (:runkoaine/massaprosentti aine) "%")]]]])])
+  [:div
+   (str/join ", " (map (fn [aine]
+                         (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine)))
+                       (reverse
+                         (sort-by :runkoaine/massaprosentti
+                                  (:harja.domain.pot2/runkoaineet rivi)))))])
 
 (defn- massan-side-tai-lisa-aineet [rivi ainetyypit tyyppi]
   (let [aineet-key (if (= tyyppi :lisaaineet)

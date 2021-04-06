@@ -579,6 +579,10 @@
     (assoc app :paallystysilmoitukset paallystysilmoitukset))
   YHAVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (virhe-modal [{:virhe-kohteen-lahetyksessa [vastaus]}]
-                 "Vienti YHA:an epäonnistui!")
+    (modal/nayta!
+      {:otsikko "Vienti YHA:an epäonnistui!"
+       :otsikko-tyyli :virhe}
+      (let [virhe (:virhe vastaus)]
+        (first virhe)))
+
     (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))
