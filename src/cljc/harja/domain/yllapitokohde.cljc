@@ -471,6 +471,17 @@ yllapitoluokkanimi->numero
        (kohde-tiedon-mukainen kohde kohteen-tiedot)
        (kohde-tiedon-mukainen kohde kohteen-tiedot false)))))
 
+
+
+
+(defn kaikki-kaistat                                        ; petar pomeri negde kasnije
+  [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde} kohteen-tiedot]
+  [])
+
+
+
+
+
 (defn validoi-kohde
   "Tarkistaa, että annettu pääkohde on validi."
   ([kohde kohteen-tiedot] (validoi-kohde kohde kohteen-tiedot {}))

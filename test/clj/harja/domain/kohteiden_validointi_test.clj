@@ -360,6 +360,39 @@
                            {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
 
+
+(deftest loyda-kaikki-kaistat
+  (testing "ei löydä mitään jos ei ole täysin sisällä"
+    (is (= [] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                               :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 15 :tr-loppuetaisyys 1}
+                                              tr-tieto)))
+    (is (= [] (yllapitokohteet/kaikki-kaistat {:tr-numero 20 :tr-ajorata 1
+                                               :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1}
+                                              tr-tieto))))
+  (testing "löydä kaikki kaistat yhden osan sisällä"
+    (is (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                    :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                    :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                                                   tr-tieto))
+        (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                    :tr-alkuosa 4 :tr-alkuetaisyys 0
+                                                    :tr-loppuosa 4 :tr-loppuetaisyys 500}
+                                                   tr-tieto))
+        (= [11] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                 :tr-alkuosa 4 :tr-alkuetaisyys 100
+                                                 :tr-loppuosa 4 :tr-loppuetaisyys 501}
+                                                tr-tieto))))
+  (testing "löydä kaikki kaistat yhden osan sisällä"
+    (is (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                    :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                    :tr-loppuosa 4 :tr-loppuetaisyys 500}
+                                                   tr-tieto)))
+    (is (= [11] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                 :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                 :tr-loppuosa 4 :tr-loppuetaisyys 501}
+                                                tr-tieto)))))
+
+
 (deftest kohde-tiedon-mukainen
   (testing "Pääkohde"
     ;; Testataan, että osan vaihtaminen onnistuu

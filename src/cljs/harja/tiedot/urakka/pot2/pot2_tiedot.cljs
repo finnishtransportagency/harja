@@ -30,7 +30,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
-(defrecord KopioiToimenpiteetTaulukossa [toimenpiteet-taulukko])
+(defrecord KopioiToimenpiteetTaulukossa [toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
@@ -71,14 +71,18 @@
                                  (filter kuuluu-kentalle?)
                                  (map muotoile-kentta))))))])))
 
-(defn kaikki-kaistat [app]
-  (let [tr-numero (get-in app [:paallystysilmoitus-lomakedata :perustiedot :tr-numero])
-        osien-tiedot (get-in app [:paallystysilmoitus-lomakedata :tr-osien-tiedot tr-numero])
-        kaistat (->> osien-tiedot
-                     (filter #(= tr-numero (:tr-numero %)))
+(defn kaikki-kaistat
+  [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} app]
+  (let [osien-tiedot (get-in app [:paallystysilmoitus-lomakedata :tr-osien-tiedot tr-numero])
+        ajoradat (->> osien-tiedot
+                     (filter #(and (= tr-numero (:tr-numero %))
+                                   (= tr-alkuosa (:tr-osa %))))
                      (map #(:pituudet %))
                      (map #(:ajoradat %))
-                     flatten
+                     flatten)
+        _ (println "petar ajoradat " (pr-str ajoradat))
+        kaistat (->> ajoradat
+                     (filter #(= tr-ajorata (:tr-ajorata %)))
                      (map #(:osiot %))
                      flatten
                      (map #(:kaistat %))
@@ -173,10 +177,11 @@
                           :paasta-virhe-lapi? true})))
 
   KopioiToimenpiteetTaulukossa
-  (process-event [{toimenpiteet-taulukko :toimenpiteet-taulukko} app]
-    (let [kaistat (kaikki-kaistat app)
+  (process-event [{toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
+    (println "petar atom " (pr-str @toimenpiteet-taulukko-atom))
+    (let [kaistat (kaikki-kaistat {} app)
           ensimmainen-kaista (first kaistat)
-          ensimmaisen-kaistan-rivit (->> @toimenpiteet-taulukko
+          ensimmaisen-kaistan-rivit (->> @toimenpiteet-taulukko-atom
                                         vals
                                         (filter #(= ensimmainen-kaista (:tr-kaista %))))
           muut-kaistan-rivit (fn [kaista]
@@ -185,8 +190,8 @@
                             (map muut-kaistan-rivit)
                             flatten
                             (zipmap (drop 1 (range))))]
-      (when toimenpiteet-taulukko
-          (reset! toimenpiteet-taulukko kaikki-rivit)
+      (when toimenpiteet-taulukko-atom
+          (reset! toimenpiteet-taulukko-atom kaikki-rivit)
           (merkitse-muokattu app)))
     app)
 
