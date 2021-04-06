@@ -273,17 +273,16 @@
     [:div.kohdelistaus
      (when (not loytyi-kohteita?)
        [:div.row.col-xs-12 [:h2 "Ei paikkauskohteita valituilla rajauksilla."]])
-     [:div.row #_{:style {:display "flex"}} ;TODO: tähän class, mistä ja mikä?
+     [:div.flex-row.tasaa-alas 
       (when loytyi-kohteita?
-        [:div.col-xs-12.col-md-4.col-lg-4
+        [:div.col-mimic
          [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]])
       (when (and
               (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
               (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-        [:div.col-xs-12
+        [:div.col-mimic
          (when loytyi-kohteita?
-           {:class "col-md-8.col-lg-8 inline-block"
-            :style {:text-align "end"}})
+           {:style {:text-align "end"}})
          ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
          ;TODO: Napeista puuttuu myös kulmien pyöristys
          #_[napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
