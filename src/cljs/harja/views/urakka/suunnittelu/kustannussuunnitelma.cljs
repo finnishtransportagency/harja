@@ -2548,7 +2548,8 @@
       [:div
        [:h3 (str "vuosi " v)]
        [:input {:type :text :on-blur (r/partial muuta-fn! v :muutoksen-syy)}]
-       [:input {:type :text :on-blur (r/partial muuta-fn! v :selite)}]])
+       [:input {:type :text :on-blur (r/partial muuta-fn! v :selite)}]
+       [:input {:type :text :on-blur (r/partial muuta-fn! v :maara)}]])
     [:button {:on-click (r/partial laheta-fn! e! (:tiedot vahvistus))} "Klikkeris"]]])
 
 (defn vahvista-suunnitelman-osa-komponentti
@@ -2938,7 +2939,13 @@
                        (when vaaditaan-muutoksen-vahvistus?
                          [selite-modal
                           tee-kun-vahvistettu
-                          (r/partial (fn [hoitovuosi polku e] (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot hoitovuosi polku] (.. e -target -value)))))
+                          (r/partial (fn [hoitovuosi polku e]
+                                       (let [arvo (.. e -target -value)
+                                             numero? (-> arvo js/Number js/isNaN not)
+                                             arvo (if numero?
+                                                    (js/Number arvo)
+                                                    arvo)]
+                                         (e! (tuck-apurit/->MuutaTila [:domain :vahvistus :tiedot hoitovuosi polku] arvo)))))
                           (get-in app [:domain :vahvistus])])]))))))
 
 (defn kustannussuunnitelma []
