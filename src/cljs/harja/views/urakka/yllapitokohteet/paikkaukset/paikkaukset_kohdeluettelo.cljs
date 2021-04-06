@@ -28,9 +28,10 @@
 
         "Paikkauskohteet"
         :paikkauskohteet
-        ;; Jos käyttäjä on urakanvalvoja eli aluevastaava ei näytetä tabia tässä kohtaa
-        (when (and (not (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja"))
-                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
+        ;; Jos urakan tyyppi on päällystys, niin aina näytetään päällystyskohteet tabi
+        (when (and
+                (= :paallystys (:tyyppi ur))
+                (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
           [paikkauskohteet/paikkauskohteet ur])
 
         "Toteumat"
@@ -47,8 +48,13 @@
 
         "Päällystyurakoiden paikkaukset"
         :paikkauskohteet
-        ;; Jos käyttäjä on urakanvalvoja eli aluevastaava näytetään tabi viimeisenä ja eri tekstillä
-        (when (and (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
-                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
+        ;; Tiemerkkareille ja aluevastaaville näytetään muiden paikkauksia. Tarkistetaan siis, että
+        ;; urakkana ei ole päällystys ja roolina on tiemerkkari tai aluevastaava
+        (when (and
+                (not= :paallystys (:tyyppi ur))
+                (or
+                  (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
+                  (= :tiemerkinta (:tyyppi ur)))
+                (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
           [paikkauskohteet/paikkauskohteet ur])
         ]])))

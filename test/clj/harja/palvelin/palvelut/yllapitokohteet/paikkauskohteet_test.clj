@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [clojure.data.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -281,10 +282,11 @@
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         filtteroi-testin-kohteet (fn [pkt] (filter #(= "Virheellinen, työmenetelmä puuttuu" (:lisatiedot %)) pkt))
         vastaus (vastaanota-excel urakka-id +kayttaja-jvh+ "test/resurssit/excel/Paikkausehdotukset_yksi_virhe.xlsx")
+        vastaus-body (json/read-str (:body vastaus)) ;; Vastaus tulee jsonina joten parsitaan se ymmärrettävämpään muotoon
         paikkauskohteet-tallennuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                                              :paikkauskohteet-urakalle
                                                              +kayttaja-jvh+
-                                                             {:urakka-id urakka-id})]
-    ;;TODO: Rikki, testi odottaa clojure-mappia, saa enkoodatun tekstin.
-    (is (= "Paikkauskohteen työmenetelmässä virhe" (-> vastaus :body :virheet first :error first)))
+                                                             {:urakka-id urakka-id})
+        ]
+    (is (= "Paikkauskohteen työmenetelmässä virhe" (first (get (first (get vastaus-body "virheet")) "virhe"))))
     (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))))))

@@ -254,7 +254,8 @@ SELECT pk.id                                       AS id,
 FROM paikkauskohde pk,
      urakka u,
      organisaatio o,
-     organisaatio urakoitsija
+     organisaatio urakoitsija,
+     urakka pk_urakka
 WHERE st_intersects(o.alue, (SELECT *
                              FROM tierekisteriosoitteelle_viiva(
                                      CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
@@ -270,9 +271,9 @@ WHERE st_intersects(o.alue, (SELECT *
   AND ((:alkupvm :: DATE IS NULL AND :loppupvm :: DATE IS NULL)
     OR pk.alkupvm BETWEEN :alkupvm AND :loppupvm)
   AND ((:tyomenetelmat)::TEXT IS NULL OR pk.tyomenetelma::TEXT IN (:tyomenetelmat))
-  --AND u.id = pk."urakka-id"
   AND o.id = u.hallintayksikko -- Haetaan tiemerkintäurakan hallintoyksikön alueen perusteella.
-  AND urakoitsija.id = urakoitsija -- Lisäksi organisaatioista tarvitaan urakoitsija
+  AND pk_urakka.id = pk."urakka-id" -- Lisäksi organisaatioista tarvitaan urakoitsija, joten haetaan ensin urakka
+  AND pk_urakka.urakoitsija = urakoitsija.id
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
 --name:paivita-paikkauskohde!
