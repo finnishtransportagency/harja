@@ -71,8 +71,11 @@
                         "Tilaajan_laadunvalvoja"
                         "Tilaajan_turvallisuusvastaava"
                         "Tilaajan_Rakennuttajakonsultti"}]
-    ;; Järjestelmävastaava on aina tilaaja
-    (if (roolit/jvh? @istunto/kayttaja)
+    ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
+    ;; myös aina tilaaja
+    (if (or
+          (roolit/jvh? @istunto/kayttaja)
+          (= :tilaaja (roolit/osapuoli @istunto/kayttaja)))
       true
       (some (fn [rooli]
               (true?
@@ -99,7 +102,9 @@
         ;                                                       oikeudet/urakat-paikkaukset-paikkauskohteet
         ;                                                       (-> @tila/tila :yleiset :urakka :id)
         ;                                                       @istunto/kayttaja)))
-        ;      _ (js/console.log "on urakoitsija?" (pr-str (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
+        ;_ (js/console.log "on urakoitsija?" (pr-str (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
+        ;_
+        ; (js/console.log "on tilaaja?" (pr-str (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja) (-> @tila/tila :yleiset :urakka :tyyppi))))
         skeema [
                 (cond
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
