@@ -108,7 +108,8 @@
         urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
-                            (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito)) ))
+                            (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
+                                 (not (:hae-aluekohtaiset-paikkauskohteet? app))))
                         (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
         skeema [
                 (cond
