@@ -1079,6 +1079,14 @@ SET yksikko = 'kpl'
 WHERE taso = 4
   AND nimi in ('Valvontakameratolppien puhdistus/tarkistus keväisin');
 
+-- Tehtäviin ei suunnitella määriä tehtävä- ja määräluettelossa
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = null
+WHERE nimi like ('%Äkillinen hoitotyö%');
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = null
+WHERE nimi like ('%Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen%');
+
 -- Siivotaan suunnitteluyksikkö. Kun arvo on null, ei Tehtävä- ja määräluettelossa suunnitella tehtävän määriä.
 UPDATE toimenpidekoodi
 SET suunnitteluyksikko = null
