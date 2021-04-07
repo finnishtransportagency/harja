@@ -127,8 +127,8 @@
                                   :epaonnistui ->LaskePituusEpaonnistui
                                   :paasta-virhe-lapi? true})))]
     lomake))
-
-(defn- hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt] :as app}]
+;;	926 - 9/3364 - 12/3964
+(defn- hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
     (tuck-apurit/post! :paikkauskohteet-urakalle
@@ -137,7 +137,8 @@
                         :alkupvm alkupvm
                         :loppupvm loppupvm
                         :tyomenetelmat valitut-tyomenetelmat
-                        :elyt valitut-elyt}
+                        :elyt valitut-elyt
+                        :hae-alueen-kohteet? hae-aluekohtaiset-paikkauskohteet?}
                        {:onnistui ->HaePaikkauskohteetOnnistui
                         :epaonnistui ->HaePaikkauskohteetEpaonnistui
                         :paasta-virhe-lapi? true})))

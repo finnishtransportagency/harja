@@ -17,7 +17,7 @@
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman."
-)
+  )
 
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
@@ -102,7 +102,7 @@
          paikkaus/paikkauskohteen-perustiedot
          {::paikkaus/nimi nimi
           ::paikkaus/urakka-id urakka-id
-          ::muokkaustiedot/poistettu? false} ))
+          ::muokkaustiedot/poistettu? false}))
 
 (defn paivita-paikkaukset-poistetuksi
   "Poistaa paikkaukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
@@ -168,12 +168,12 @@
 
 (defn paivita-paikkauskohteen-tila
   "Päivittää paikkauskohteen tilan harjan sisäisen id:n perusteella (lähetetty, virhe)."
-    [db paikkauskohde]
-    (let [id (::paikkaus/id paikkauskohde)
-          ehdot (if (id-olemassa? id)
-                  {::paikkaus/id id})]
-      (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
-      (first (hae-paikkaukset db ehdot))))
+  [db paikkauskohde]
+  (let [id (::paikkaus/id paikkauskohde)
+        ehdot (if (id-olemassa? id)
+                {::paikkaus/id id})]
+    (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
+    (first (hae-paikkaukset db ehdot))))
 
 (defn- paivita-paikkaus
   "Päivittää paikkauksen tiedot, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
@@ -251,12 +251,12 @@
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db urakka-id ulkoinen-tunniste kayttaja-id)
         (update! db ::paikkaus/paikkauskohde
-                    (assoc kohde ::muokkaustiedot/poistettu? false
-                                 ::muokkaustiedot/muokkaaja-id kayttaja-id
-                                 ::muokkaustiedot/muokattu (pvm/nyt))
-                    {::paikkaus/urakka-id urakka-id
-                     ::paikkaus/ulkoinen-id ulkoinen-tunniste
-                     ::muokkaustiedot/luoja-id kayttaja-id})
+                 (assoc kohde ::muokkaustiedot/poistettu? false
+                              ::muokkaustiedot/muokkaaja-id kayttaja-id
+                              ::muokkaustiedot/muokattu (pvm/nyt))
+                 {::paikkaus/urakka-id urakka-id
+                  ::paikkaus/ulkoinen-id ulkoinen-tunniste
+                  ::muokkaustiedot/luoja-id kayttaja-id})
         (insert! db ::paikkaus/paikkauskohde
                  (assoc kohde ::paikkaus/urakka-id urakka-id
                               ::muokkaustiedot/luoja-id kayttaja-id
@@ -309,11 +309,11 @@
   (let [ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
         paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde toteuma)))
         tallennettava-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                            ::muokkaustiedot/luoja-id kayttaja-id)
-                             ::paikkaus/materiaalit
-                             ::paikkaus/tienkohdat
-                             ::paikkaus/paikkauskohde)]
-        (luo-paikkaustoteuma db tallennettava-toteuma)))
+                                                     ::muokkaustiedot/luoja-id kayttaja-id)
+                                      ::paikkaus/materiaalit
+                                      ::paikkaus/tienkohdat
+                                      ::paikkaus/paikkauskohde)]
+    (luo-paikkaustoteuma db tallennettava-toteuma)))
 
 (defn hae-urakan-paikkaukset [db urakka-id]
   (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
@@ -333,7 +333,7 @@
                                                (first (hae-paikkauskohteen-tierekisteriosoite db {:kohde (::paikkaus/id %)}))))
                                 (map #(dissoc % ::paikkaus/paikkaukset)))
                               paikkauskohteet)]
-paikkauskohteet))
+    paikkauskohteet))
 
 (defn hae-urakan-tyomenetelmat [db urakka-id]
   (let [paikkauksien-tyomenetelmat (fetch db
@@ -346,9 +346,9 @@ paikkauskohteet))
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
 (defn laske-paikkauskohteen-pituus [db kohde]
-  (let [ ;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
-         ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
-         ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})
+  (let [;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
+        ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
+        ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})
         osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
                                                                       :aosa (:aosa kohde)
                                                                       :losa (:losa kohde)})]
@@ -386,13 +386,14 @@ paikkauskohteet))
              (dissoc :geometria)))
        paikkauskohteet))
 
-(defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id] :as tiedot}]
+(defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id hae-alueen-kohteet?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
         ;; Paikkauskohteiden hakeminen eri urakkatyypeille vaihtelee.
         ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
         ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito tyyppinen urakka) sekä tiemerkintä urakalle
         ;; haetaan paikkauskohteita, niin silloin turvaudutaan paikkauskohteen maantieteelliseen sijaintiin eikä urakan-id:seen.
+        ;; Hoitourakoille voidaan myös hakea kohteet id:n perusteella käyttäen hae-urakan-kohteet?-lippua.
         urakan-tyyppi (hae-urakkatyyppi db (:urakka-id tiedot))
         tilat (disj tilat "kaikki")
         tilat (when (> (count tilat) 0)
@@ -405,7 +406,7 @@ paikkauskohteet))
         elyt (when (> (count elyt) 0)
                (vec elyt))
         urakan-paikkauskohteet (cond
-                                 (or (= :hoito urakan-tyyppi) (= :teiden-hoito urakan-tyyppi) )
+                                 hae-alueen-kohteet?
                                  (paikkauskohteet-urakan-alueella db urakka-id tilat alkupvm loppupvm menetelmat)
                                  (= :tiemerkinta urakan-tyyppi)
                                  (paikkauskohteet-elyn-alueella db urakka-id tilat alkupvm loppupvm menetelmat)

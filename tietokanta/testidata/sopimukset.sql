@@ -94,3 +94,7 @@ VALUES
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Kemin alueurakka opimus', '2019-10-01', '2023-09-30', '1337133-LAP1',
         (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'));
+-- Kuvitteellinen Kemin hoitourakka
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Kemin hoitourakka sopimus', '2019-10-01', '2023-09-30', '133337-LAP1',
+        (SELECT id FROM urakka WHERE nimi = 'Kemin hoitourakka'));

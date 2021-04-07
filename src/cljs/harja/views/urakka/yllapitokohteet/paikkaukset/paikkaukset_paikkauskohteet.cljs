@@ -105,6 +105,11 @@
         ;_ (js/console.log "on urakoitsija?" (pr-str (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
         ;_
         ; (js/console.log "on tilaaja?" (pr-str (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja) (-> @tila/tila :yleiset :urakka :tyyppi))))
+        urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
+        nayta-hinnat? (and
+                        (or (= urakkatyyppi :paallystys)
+                            (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito)) ))
+                        (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
         skeema [
                 (cond
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
@@ -163,28 +168,21 @@
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
                 ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
                 ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
-                ;; Ja että käyttäjä on :paallystys urakoitsija
-                (when (and
-                        (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                        (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                (when nayta-hinnat?
                   {:otsikko "Suun. hinta"
                    :leveys 2
                    :nimi :suunniteltu-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
-                (when (and
-                        (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                        (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                (when nayta-hinnat?
                   {:otsikko "Tot. hinta"
                    :leveys 2
                    :nimi :toteutunut-hinta
                    :fmt fmt/euro-opt
                    :tasaa :oikea})
                 ;; Jos ei ole oikeuksia nähdä hintatietoja, niin näytetään yhteystiedot
-                (when (or
-                        (not= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                        (false? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))))
+                (when (not nayta-hinnat?)
                   {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
                    :leveys 3
                    :nimi :yhteystiedot
@@ -208,7 +206,8 @@
                                 (+ summa (:toteutunut-hinta kohde)))
                               0
                               paikkauskohteet)
-        rivi-valittu #(= (:id (:lomake app)) (:id %))]
+        rivi-valittu #(= (:id (:lomake app)) (:id %))
+        aluekohtaisissa? (:hae-aluekohtaiset-paikkauskohteet? app)]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
@@ -231,10 +230,11 @@
 
                                  ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
                                  ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
-                                 (when (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
-                                           ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
-                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                             (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
+                                 (when (and (not aluekohtaisissa?)
+                                            (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                                ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
+                                                (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                                                     (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                                    (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
               :otsikkorivi-klikattu (fn [opts]
                                       (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}
@@ -274,47 +274,49 @@
       paikkauskohteet]]))
 
 (defn kohteet [e! app]
-  (let [loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)]
+  (let [loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)
+        piilota-napit? (:hae-aluekohtaiset-paikkauskohteet? app)]
     [:div.kohdelistaus
      (when (not loytyi-kohteita?)
        [:div.row.col-xs-12 [:h2 "Ei paikkauskohteita valituilla rajauksilla."]])
-     [:div.flex-row.tasaa-alas 
-      (when loytyi-kohteita?
-        [:div.col-mimic
-         [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]])
-      (when (and
-              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
-              (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-        [:div.col-mimic
-         (when loytyi-kohteita?
-           {:style {:text-align "end"}})
-         ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
-         ;TODO: Napeista puuttuu myös kulmien pyöristys
-         #_[napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
-         (when loytyi-kohteita?
-           [:span.inline-block
-            [:form {:style {:margin-left "auto"}
-                    :target "_blank" :method "POST"
-                    :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
-             [:input {:type "hidden" :name "parametrit"
-                      :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                                                    :tila (:valittu-tila app)
-                                                    :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
-                                                    :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
-                                                    :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
-             [:button {:type "submit"
-                       :class #{"nappi-toissijainen-paksu napiton-nappi"}}
-              [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
+     (when-not piilota-napit?
+       [:div.flex-row.tasaa-alas
+        (when loytyi-kohteita?
+          [:div.col-mimic
+           [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]])
+        (when (and
+                (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
+                (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+          [:div.col-mimic
+           (when loytyi-kohteita?
+             {:style {:text-align "end"}})
+           ;TODO: Tee parempi luokka taustattomille napeille, nykyisessä teksti liian ohut ja tausta on puhtaan valkoinen. vs #fafafa taustassa
+           ;TODO: Napeista puuttuu myös kulmien pyöristys
+           #_[napit/yleinen-ensisijainen "Näytä nappi DEBUG" #(harja.ui.viesti/nayta-toast! "Toast-notifiikaatio testi" :varoitus)]
+           (when loytyi-kohteita?
+             [:span.inline-block
+              [:form {:style {:margin-left "auto"}
+                      :target "_blank" :method "POST"
+                      :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
+               [:input {:type "hidden" :name "parametrit"
+                        :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                                                      :tila (:valittu-tila app)
+                                                      :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
+                                                      :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
+                                                      :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
+               [:button {:type "submit"
+                         :class #{"nappi-toissijainen-paksu napiton-nappi"}}
+                [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
-         [liitteet/lataa-tiedosto
-          (-> @tila/tila :yleiset :urakka :id)
-          {:nappi-teksti "Tuo kohteet excelistä"
-           :nappi-luokka "napiton-nappi nappi-toissijainen-paksu"
-           :url "lue-paikkauskohteet-excelista"
-           :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
-           :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
-         [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/harja_paikkauskohteet_pohja.xlsx" "_blank") {:luokka "napiton-nappi" :paksu? true}]
-         [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde})) {:paksu? true}]])]
+           [liitteet/lataa-tiedosto
+            (-> @tila/tila :yleiset :urakka :id)
+            {:nappi-teksti "Tuo kohteet excelistä"
+             :nappi-luokka "napiton-nappi nappi-toissijainen-paksu"
+             :url "lue-paikkauskohteet-excelista"
+             :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
+             :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
+           [napit/lataa "Lataa Excel-pohja" #(.open js/window "/excel/harja_paikkauskohteet_pohja.xlsx" "_blank") {:luokka "napiton-nappi" :paksu? true}]
+           [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde})) {:paksu? true}]])])
      (when loytyi-kohteita?
        [:div.row [paikkauskohteet-taulukko e! app]])]))
 
@@ -403,14 +405,30 @@
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [e! app]
+      (println "paikkauskohteet* aluekohtaiset" (:hae-aluekohtaiset-paikkauskohteet? app))
       [:div.row
        [paikkauskohteet-sivu e! app]])))
 
 (defn paikkauskohteet [ur]
   (komp/luo
     (komp/sisaan #(do
+                    (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)
                     (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
                     (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [_]
       [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))
+
+;; Hoitourakoille voidaan näyttää joko alue-tai urakkakohtaiset paikkauskohteet, joten erottelu täytyy tehdä frontissa.
+;; Tämän komponentin ainoa ero on, että paikkauskohteita hakiessa backendille läheteään lippu, jolla tiedetään,
+;; kumpia paikkauskohteita halutaan hakea.
+(defn aluekohtaiset-paikkauskohteet [ur]
+  (komp/luo
+    (komp/sisaan #(do
+                    (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
+                    (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
+                    (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
+                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
+    (fn [_]
+      [tuck/tuck tila/paikkauskohteet paikkauskohteet*])))
+
