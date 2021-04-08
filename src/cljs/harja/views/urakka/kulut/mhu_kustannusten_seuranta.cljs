@@ -20,8 +20,7 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.tyokalut.big :as big]
-            [harja.fmt :as fmt])
+            [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
