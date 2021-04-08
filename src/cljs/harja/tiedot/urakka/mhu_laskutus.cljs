@@ -569,8 +569,7 @@
 
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
-    (let [
-          app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
+    (let [app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
           lomake (:lomake app)
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
@@ -701,11 +700,10 @@
   AsetaHakukuukausi
   (process-event
     [{:keys [kuukausi]} app]
-    (let []
-      (-> app
-          (assoc-in [:parametrit :haun-alkupvm] nil)
-          (assoc-in [:parametrit :haun-loppupvm] nil)
-          (assoc-in [:parametrit :haun-kuukausi] kuukausi))))
+    (-> app
+        (assoc-in [:parametrit :haun-alkupvm] nil)
+        (assoc-in [:parametrit :haun-loppupvm] nil)
+        (assoc-in [:parametrit :haun-kuukausi] kuukausi)))
 
   AsetaHakuparametri
   (process-event
