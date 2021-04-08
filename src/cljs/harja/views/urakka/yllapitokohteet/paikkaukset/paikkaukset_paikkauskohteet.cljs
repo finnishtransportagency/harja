@@ -264,12 +264,9 @@
                                     {:teksti ""}
                                     {:teksti ""}
                                     {:teksti ""}
-                                    (when (and
-                                            (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                            (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                                    (when nayta-hinnat?
                                       {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]})
-                                    (when (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                               (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                                    (when nayta-hinnat?
                                       {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}))
       skeema
       paikkauskohteet]]))
@@ -397,16 +394,12 @@
 
 (defn paikkauskohteet* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(do
-                         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
-                         (kartta-tasot/taso-paalle! :organisaatio)
-                         (e! (t-paikkauskohteet/->HaePaikkauskohteet))
-                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true))
-                      #(do
-                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
+    (komp/sisaan #(do
+                    (kartta-tasot/taso-pois! :paikkaukset-toteumat)
+                    (kartta-tasot/taso-paalle! :organisaatio)
+                    (e! (t-paikkauskohteet/->HaePaikkauskohteet))
+                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
     (fn [e! app]
-      (println "paikkauskohteet* aluekohtaiset" (:hae-aluekohtaiset-paikkauskohteet? app))
       [:div.row
        [paikkauskohteet-sivu e! app]])))
 

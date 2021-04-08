@@ -10,7 +10,8 @@
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat :as toteumat]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kustannukset :as kustannukset]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as paikkauskohteet]
-            ))
+            [harja.views.kartta.tasot :as kartta-tasot]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle]))
 
 (defn paikkaukset
   [ur]
@@ -20,6 +21,9 @@
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M))
       #(do
+         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)
+         (kartta-tasot/taso-pois! :paikkaukset-toteumat)
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [ur]
       (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))]
@@ -31,20 +35,20 @@
           :paikkauskohteet
           ;; Jos urakan tyyppi on päällystys, niin aina näytetään päällystyskohteet tabi
           ;; Hoitourakoiden urakanvalvojille (aluevastaava) näytetään sekä Paikkauskohteet että Päällystysurakoiden paikkauskohteet.
-          ;; Aluevastaavallse haetaan tällä välilehdellä aluekohtaiset paikkauskohteet.
+          ;; Aluevastaavallse haetaan tällä välilehdellä urakkakohtauset paikkauskohteet.
           (when (and
                   (or (= :paallystys (:tyyppi ur)) hoitourakka?)
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
-            (if (and
-                  (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
-                   hoitourakka?)
-              [paikkauskohteet/aluekohtaiset-paikkauskohteet ur]
-              [paikkauskohteet/paikkauskohteet ur]))
+            [paikkauskohteet/paikkauskohteet ur])
 
           "Toteumat"
           :toteumat
-          (when (and (= :paallystys (:tyyppi ur))
-                     (oikeudet/urakat-paikkaukset-toteumat (:id ur)))
+          (when (and (oikeudet/urakat-paikkaukset-toteumat (:id ur))
+                     (or (= :paallystys (:tyyppi ur))
+                         (and hoitourakka?
+                              (contains?
+                                (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                                "ELY_Urakanvalvoja"))))
             [toteumat/toteumat ur])
 
           "Kustannukset"
@@ -57,12 +61,12 @@
           :paallystysurakoiden-paikkauskohteet
           ;; Tiemerkkareille ja aluevastaaville näytetään muiden paikkauksia. Tarkistetaan siis, että
           ;; urakkana ei ole päällystys ja roolina on tiemerkkari tai aluevastaava
-          ;; Hoitourakoilla halutaan tälle välilehdelle hakea urakalle kuuluvat paikkauskohteet.
+          ;; Hoitourakoilla halutaan tälle välilehdelle hakea alueelle kuuluvat paikkauskohteet.
           (when (and
                   hoitourakka?
                   (or
                     (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")
                     (= :tiemerkinta (:tyyppi ur)))
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
-            [paikkauskohteet/paikkauskohteet ur])
+            [paikkauskohteet/aluekohtaiset-paikkauskohteet ur])
           ]]))))

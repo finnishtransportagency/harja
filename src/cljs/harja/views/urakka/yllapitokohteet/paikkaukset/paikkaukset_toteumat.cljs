@@ -31,7 +31,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as t-paikkauskohteet-kartalle])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -395,6 +396,8 @@
   (komp/luo
     (komp/sisaan #(do
                     (yhteiset-tiedot/nakyman-urakka ur)
-                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)))
+                    (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+                    (kartta-tasot/taso-paalle! :paikkaukset-toteumat)
+                    (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? false)))
     (fn [_]
       [tuck/tuck tiedot/app toteumat*])))
