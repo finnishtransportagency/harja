@@ -808,11 +808,6 @@
               :luokka "suuri"}]]
 
            [:div.flex-row {:style {:justify-content "flex-start"}}
-            #_[kentat/vayla-lomakekentta
-               "Kirjoita tähän halutessasi lisätietoa"
-               "Kirjoita tähän halutessasi lisätietoa"
-               :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
-               :arvo hakuteksti]
             [valinnat/kuukausi {:nil-valinta yleiset/valitse-text
                                 :vayla-tyyli? true
                                 :valitse-fn #(do
