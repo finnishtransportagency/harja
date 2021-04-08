@@ -193,7 +193,7 @@ WHERE pot2p.pot2_id = :pot2_id AND
       mr.id = (SELECT p2mmr.id FROM pot2_mk_massan_runkoaine p2mmr WHERE p2mmr.pot2_massa_id = um.id
                ORDER BY p2mmr.massaprosentti DESC LIMIT 1) AND
       ms.id = (SELECT p2mms.id FROM pot2_mk_massan_sideaine p2mms WHERE p2mms.pot2_massa_id = um.id
-               ORDER BY p2mms.pitoisuus DESC LIMIT 1);
+                                                                    AND p2mms."lopputuote?" IS TRUE LIMIT 1);
 
 
 -- name: hae-pot2-alustarivit
