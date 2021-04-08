@@ -75,7 +75,7 @@ INSERT INTO yhatiedot (urakka, yhaid, yhatunnus)
            WHERE nimi = 'Muhoksen päällystysurakka'), 76745, 'YHA34434'),
           ((SELECT id
             FROM urakka
-            WHERE nimi = 'Utajärven päällystysurakka'), 1337, 'YHA7331');
+            WHERE nimi = 'Utajärven päällystysurakka'), 521048475, 'YHA7331');
 
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija, urakkanro)
 VALUES ('4242566-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id

@@ -62,9 +62,9 @@
      (when pitoisuus [:sideainepitoisuus pitoisuus])
      [:lisa-aineet lisaaineet]]]])
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                                              tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
-                                              verkon-sijainti]}
+(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                              tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
+                                              verkon-sijainti toimenpide kasittelysyvyys]}
                                       kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
    [:tierekisteriosoitevali
@@ -80,16 +80,17 @@
     [:let tr-loppuetaisyys]
     [:ajorata tr-ajorata]
     [:kaista tr-kaista]]
-   [:kasittelymenetelma kasittelymenetelma]
-   [:kasittelypaksuus paksuus]
-   (when verkkotyyppi
+    [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
+   (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus 1)]
+     [:kasittelypaksuus kasittelysyvyys])
+   (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
      [:verkkotyyppi verkkotyyppi])
    (when verkon-tarkoitus
      [:verkon-tarkoitus verkon-tarkoitus])
    (when verkon-sijainti
      [:verkon-sijainti verkon-sijainti])
-   (when tekninen-toimenpide
-     [:tekninen-toimenpide tekninen-toimenpide])])
+   (when-not (contains? #{42 41 32 31 4} toimenpide)      ;; LJYR TJYR TAS TASK REM-TAS
+     [:tekninen-toimenpide 4])])                            ;; "Kevyt rakenteen parantaminen"
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
                          karttapvm nimi tunnus] :as kohde}
@@ -130,6 +131,7 @@
 (defn muodosta [urakka kohteet]
   (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
+    (log/debug "Muodostettu XML sanoma: " (pr-str xml))
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)

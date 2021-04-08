@@ -45,7 +45,8 @@
   #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
     :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
-    :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio})
+    :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
+    :yha-tr-osoite})
 
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
@@ -578,6 +579,10 @@
     (assoc app :paallystysilmoitukset paallystysilmoitukset))
   YHAVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (virhe-modal [{:virhe-kohteen-lahetyksessa [vastaus]}]
-                 "Vienti YHA:an epäonnistui!")
+    (modal/nayta!
+      {:otsikko "Vienti YHA:an epäonnistui!"
+       :otsikko-tyyli :virhe}
+      (let [virhe (:virhe vastaus)]
+        (first virhe)))
+
     (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))

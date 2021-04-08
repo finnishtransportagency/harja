@@ -7,68 +7,123 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
+            [harja.validointi :as v]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-                      ]))
+            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(def +alustamenetelmat+
-  "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä ja
-   :koodi 24 on asiakkaan jälkeenpäin pyytämä."
-  [{:nimi "Massanvaihto" :lyhenne "MV" :koodi 1}
-   {:nimi "Bitumiemusiostabilointi" :lyhenne "BEST" :koodi 11}
-   {:nimi "Vaahtobitumistabilointi" :lyhenne "VBST" :koodi 12}
-   {:nimi "Remix-stabilointi" :lyhenne "REST" :koodi 13}
-   {:nimi "Sementtistabilointi" :lyhenne "SST" :koodi 14}
-   {:nimi "Masuunihiekkastabilointi" :lyhenne "MHST" :koodi 15}
-   {:nimi "Komposiittistabilointi" :lyhenne "KOST" :koodi 16}
-   {:nimi "Kantavan kerroksen AB" :lyhenne "ABK" :koodi 21}
-   {:nimi "Sidekerroksen AB" :lyhenne "ABS" :koodi 22}
-   {:nimi "Murske" :lyhenne "MS" :koodi 23}
-   {:nimi "Sekoitusjyrsintä" :lyhenne "SJYR" :koodi 24}
-   {:nimi "Kuumennustasaus" :lyhenne "TASK" :koodi 31}
-   {:nimi "Massatasaus" :lyhenne "TAS" :koodi 32}
-   {:nimi "Tasausjyrsintä" :lyhenne "TJYR" :koodi 41}
-   {:nimi "Laatikkojyrsintä" :lyhenne "LJYR" :koodi 42}
-   {:nimi "Reunajyrsintä" :lyhenne "RJYR" :koodi 43}])
-
-(def +alustamenetelmat-ja-nil+
-  (conj +alustamenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
-
-(def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
-  (apply schema/enum (map :koodi +alustamenetelmat-ja-nil+)))
-
-(defn alustamenetelma-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
-
 (def alusta-toimenpide-kaikki-lisaavaimet
-  [:lisatty-paksuus
-   :massamaara
-   :murske
-   :kasittelysyvyys
-   :leveys
-   :pinta-ala
-   :kokonaismassamaara
-   :massa
-   :sideaine
-   :sideainepitoisuus
-   :sideaine2
-   :verkon-tyyppi
-   :verkon-sijainti
-   :verkon-tarkoitus])
+  {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
+                     :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m2"
+                :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :murske {:nimi :murske :otsikko "Murske"
+            :tyyppi :valinta
+            :valinta-arvo ::murske-id}
+   :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"
+                     :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
+            :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta ala" :yksikko "m2"
+               :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
+                        :tyyppi :positiivinen-numero :kokonaisluku? true}
+   :massa {:nimi :massa :otsikko "Massa"
+           :tyyppi :valinta
+           :valinta-arvo  ::massa-id}
+   :sideaine {:nimi :sideaine :otsikko "Sideaine"
+              :tyyppi :valinta :valinnat-koodisto :sideainetyypit
+              :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
+                       :tyyppi :positiivinen-numero :desimaalien-maara 1
+                       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
+   :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
+               :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine
+               :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :verkon-tyyppi {:nimi :verkon-tyyppi :otsikko "Verkon tyyppi"
+                   :tyyppi :valinta :valinnat-koodisto :verkon-tyypit
+                   :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :verkon-sijainti {:nimi :verkon-sijainti :otsikko "Verkon sijainti"
+                     :tyyppi :valinta :valinnat-koodisto :verkon-sijainnit
+                     :valinta-arvo ::koodi :valinta-nayta ::nimi}
+   :verkon-tarkoitus {:nimi :verkon-tarkoitus :otsikko "Verkon tarkoitus"
+                      :tyyppi :valinta :valinnat-koodisto :verkon-tarkoitukset
+                      :valinta-arvo ::koodi :valinta-nayta ::nimi}})
 
-(def alusta-toimenpidespesifit-lisaavaimet
-  {23 [:lisatty-paksuus :massamaara :murske]
-   667 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti]})
-
-(defn alusta-toimenpide-lisaavaimet
+(defn alusta-toimenpidespesifit-metadata
   [toimenpide]
-  (if-let [avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)]
-    avaimet
-    []))
+  "Palauta alusta toimenpide metadata lisäkenteistä"
+  (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
+                                               [:kasittelysyvyys :lisatty-paksuus :murske
+                                                {:nimi :massamaara :pakollinen? false}]
+                                               2            ;; AB
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               3            ;; Verkko
+                                               [:verkon-tyyppi :verkon-sijainti
+                                                {:nimi :verkon-tarkoitus :pakollinen? false}]
+                                               4            ;; REM-TAS
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
+                                               11           ;; BEST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
+                                               12           ;; VBST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
+                                               13           ;; REST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
+                                               14           ;; SST
+                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
+                                               15           ;; MHST
+                                               [:kasittelysyvyys :sideaine2 :sideainepitoisuus
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
+                                               16           ;; KOST
+                                               [:kasittelysyvyys :sideaine :sideainepitoisuus
+                                                {:nimi :sideaine2 :otsikko "Sideaine 2"}
+                                                {:nimi :murske :pakollinen? false}
+                                                {:nimi :massamaara :jos :murske}]
+                                               21           ;; ABK
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               22           ;; ABS
+                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               23           ;; MS
+                                               [:lisatty-paksuus
+                                                {:nimi :massamaara :pakollinen? false}
+                                                :murske]
+                                               24           ;; SJYR
+                                               [:kasittelysyvyys
+                                                {:nimi :murske :pakollinen? false}]
+                                               31           ;; TASK
+                                               []
+                                               32           ;; TAS
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
+                                               41           ;; TJYR
+                                               []
+                                               42           ;; LJYR
+                                               [:kasittelysyvyys
+                                                :leveys :pinta-ala]
+                                               43           ;; RJYR
+                                               []}
+        avaimet (get alusta-toimenpidespesifit-lisaavaimet toimenpide)
+        luo-metadata-ja-oletusarvot (fn [avain-tai-metadata]
+                                      (let [toimenpide-spesifinen-kentta-metadata (if (keyword? avain-tai-metadata)
+                                                                                    {:nimi avain-tai-metadata :pakollinen? true}
+                                                                                    (let [pakollinen? (:pakollinen? avain-tai-metadata)]
+                                                                                      (if (nil? pakollinen?)
+                                                                                        (assoc avain-tai-metadata :pakollinen? true)
+                                                                                        avain-tai-metadata)))
+                                            kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))]
+                                        (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
+    (map luo-metadata-ja-oletusarvot avaimet)))
 
 (defn alusta-kaikki-lisaparams
   "Palauta mappi jossa kaikki non-nil alustan lisäkentät"
@@ -77,69 +132,37 @@
                     (into {} (filter
                                (fn [[_ arvo]] (some? arvo))
                                params)))
-        lisaparams (select-keys alusta alusta-toimenpide-kaikki-lisaavaimet)
+        lisaparams (select-keys alusta (keys alusta-toimenpide-kaikki-lisaavaimet))
         annetut-lisaparams (keep-some lisaparams)]
     annetut-lisaparams))
 
+(defn alusta-sallitut-ja-pakolliset-lisaavaimet
+  "Palauta vain sallttut avaimet"
+  [alusta]
+  (let [relevantti-metadata (->> (alusta-toimenpidespesifit-metadata (:toimenpide alusta))
+                                 (filter (fn [{:keys [jos]}]
+                                           (or (nil? jos)
+                                               (and (some? jos)
+                                                    (some? (get alusta jos)))))))
+        sallitut (->> relevantti-metadata
+                      (map #(:nimi %))
+                      set)
+        pakolliset (->> relevantti-metadata
+                        (filter #(:pakollinen? %))
+                        (map #(:nimi %))
+                        set)]
+    [sallitut pakolliset]))
+
 (defn alusta-ylimaaraiset-lisaparams-avaimet
-  "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen"
+  "Palauta vector jossa kaikki non-nil lisäparametrien avaimet jotka eivät kuulu toimenpiteeseen.
+  Voi sisältää myös pakolliset-ehdolliset avaimet, jotka eivät kuuluu annetulle alustalle"
   [{:keys [toimenpide] :as alusta}]
   (let [annettu-lisaparams (alusta-kaikki-lisaparams alusta)
+        [sallitut-lisaavaimet _] (alusta-sallitut-ja-pakolliset-lisaavaimet alusta)
         ylimaaraiset-avaimet (set/difference
                                (set (keys annettu-lisaparams))
-                               (set (alusta-toimenpide-lisaavaimet toimenpide)))]
+                               sallitut-lisaavaimet)]
     (vec ylimaaraiset-avaimet)))
-
-(def +tekniset-toimenpiteet+
-  "Tekniset toimenpidetyypit POT-lomake Excelistä"
-  [{:nimi "Rakentaminen" :koodi 1}
-   {:nimi "Suuntauksen parantaminen" :koodi 2}
-   {:nimi "Raskas rakenteen parantaminen" :koodi 3}
-   {:nimi "Kevyt rakenteen parantaminen" :koodi 4}])
-
-(def +tekniset-toimenpiteet-ja-nil+
-  (conj +tekniset-toimenpiteet+ {:nimi "Ei toimenpidettä" :koodi nil}))
-
-(def +tekninen-toimenpide-tai-nil+ "Teknisen toimenpiteen valinta koodilla"
-  (apply schema/enum (map :koodi +tekniset-toimenpiteet-ja-nil+)))
-
-(defn tekninentoimenpide-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet-ja-nil+))))
-
-(def +ajoradat-tekstina+
-  "Ajoratavalinnat"
-  [{:nimi "Yksiajoratainen" :koodi 0}
-   {:nimi "Kaksiajorataisen ensimmäinen" :koodi 1}
-   {:nimi "Kaksiajorataisen toinen ajorata" :koodi 2}])
-
-(def +ajoradat-numerona+
-  "Ajoratavalinnat"
-  [{:nimi "0" :koodi 0}
-   {:nimi "1" :koodi 1}
-   {:nimi "2" :koodi 2}])
-
-(def +kaistat+
-  "Kaistavalinnat"
-  [{:nimi "1" :koodi 1}
-   {:nimi "11" :koodi 11}
-   {:nimi "12" :koodi 12}
-   {:nimi "13" :koodi 13}
-   {:nimi "21" :koodi 21}
-   {:nimi "22" :koodi 22}
-   {:nimi "23" :koodi 23}
-   {:nimi "14" :koodi 14}
-   {:nimi "15" :koodi 15}
-   {:nimi "16" :koodi 16}
-   {:nimi "17" :koodi 17}
-   {:nimi "18" :koodi 18}
-   {:nimi "19" :koodi 19}
-   {:nimi "24" :koodi 24}
-   {:nimi "25" :koodi 25}
-   {:nimi "26" :koodi 26}
-   {:nimi "27" :koodi 27}
-   {:nimi "28" :koodi 28}
-   {:nimi "29" :koodi 29}
-   {:nimi "31" :koodi 31}])
 
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
@@ -157,7 +180,7 @@
   (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
 
 (define-tables
-  ["pot2_mk_kulutuskerros_toimenpide" ::pot2-mk-kulutuskerros-toimenpide
+  ["pot2_mk_paallystekerros_toimenpide" ::pot2-mk-paallystekerros-toimenpide
    {"koodi" ::koodi
     "nimi" ::nimi
     "lyhenne" ::lyhenne}]
@@ -185,6 +208,7 @@
   ["pot2_mk_runkoainetyyppi" ::pot2-mk-runkoainetyyppi]
   ["pot2_mk_sideainetyyppi" ::pot2-mk-sideainetyyppi]
   ["pot2_mk_lisaainetyyppi" ::pot2-mk-lisaainetyyppi]
+  ["pot2_mk_sidotun_kantavan_kerroksen_sideaine" ::pot2-mk-sidotun-kantavan-kerroksen-sideaine]
   ["pot2_mk_massan_runkoaine" ::pot2-mk-massan-runkoaine
    {"id" :runkoaine/id
     "pot2_massa_id" ::massa-id
@@ -328,3 +352,40 @@
 
 (defn ainetyypin-koodi->nimi [ainetyypit koodi]
   (::nimi (ainetyyppi-koodilla ainetyypit koodi)))
+
+(defn rivin-avaimet->str
+  ([rivi avaimet] (rivin-avaimet->str rivi avaimet " "))
+  ([rivi avaimet separator]
+   (str/join separator
+             (remove nil? (mapv val (select-keys rivi avaimet))))))
+
+(defn murskeen-rikastettu-nimi [mursketyypit murske]
+  ; (str ydin (when-not (empty? tarkennukset) (str "(" tarkennukset ")")))
+  (let [ydin (str (ainetyypin-koodi->lyhenne mursketyypit (::tyyppi murske)) " "
+                  (rivin-avaimet->str murske #{::nimen-tarkenne}))
+        tarkennukset (rivin-avaimet->str murske #{::dop-nro} ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
+    [ydin tarkennukset-teksti]))
+
+(def asfalttirouheen-tyypin-id 2)
+
+(defn massan-rc-pitoisuus
+  "Palauttaa massan RC-pitoisuuden jos sellainen on (=asfalttirouheen massaprosentti)"
+  [rivi]
+  (when-let [runkoaineet (::runkoaineet rivi)]
+    (when-let [asfalttirouhe (first (filter #(= (:runkoaine/tyyppi %) asfalttirouheen-tyypin-id)
+                                            runkoaineet))]
+      (str "RC" (:runkoaine/massaprosentti asfalttirouhe)))))
+
+(defn massan-rikastettu-nimi
+  "Formatoi massan nimen. Jos haluat Reagent-komponentin, anna fmt = :komponentti, muuten anna :string"
+  [massatyypit massa]
+  ;; esim AB16 (AN15, RC40, 2020/09/1234) tyyppi (raekoko, nimen tarkenne, DoP, Kuulamyllyluokka, RC%)
+  (let [massa (assoc massa ::rc% (massan-rc-pitoisuus massa))
+        ydin (str (ainetyypin-koodi->lyhenne massatyypit (::tyyppi massa))
+                  (rivin-avaimet->str massa [::max-raekoko
+                                             ::nimen-tarkenne]))
+
+        tarkennukset (rivin-avaimet->str massa [::dop-nro] ", ")
+        tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
+    [ydin tarkennukset-teksti]))

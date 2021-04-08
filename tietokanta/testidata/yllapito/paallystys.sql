@@ -7,6 +7,7 @@
 
 INSERT INTO yllapitokohde
 (yllapitoluokka, urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
+ yha_tr_osoite,
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,
  suorittava_tiemerkintaurakka, vuodet, keskimaarainen_vuorokausiliikenne, poistettu)
 VALUES
@@ -20,6 +21,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       3, 'L03', 'Leppäjärven ramppi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 1233534,
+      ROW(20, 1, 0, 3, 0, NULL)::tr_osoite,
       20, 1, 0, 3, 0, 1, 11, (SELECT id
                              FROM urakka
                              WHERE nimi =
@@ -35,6 +37,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       308, '308a', 'Oulun ohitusramppi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 54523243,
+      NULL,
       20, 4, 334, 10, 10, 0, 11, (SELECT id
                                  FROM urakka
                                  WHERE nimi =
@@ -50,6 +53,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       308, '308b', 'Nakkilan ramppi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 265257,
+      NULL,
       20, 12, 1, 19, 2, null, null, (SELECT id
                                FROM urakka
                                WHERE nimi =
@@ -65,6 +69,7 @@ VALUES
                         WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
        310, '310', 'Oulaisten ohitusramppi', 'paallyste' :: yllapitokohdetyyppi,
        'paallystys' ::yllapitokohdetyotyyppi, 456896958,
+       NULL,
        20, 19, 5, 21, 15, 0, 1, NULL, '{2017}', 900, FALSE),
   (2, (SELECT id
        FROM urakka
@@ -76,6 +81,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       666, '666', 'Kuusamontien testi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 456896959,
+      NULL,
       20, 26, 1, 41, 15, 0, 1, NULL, '{2017}', 66, FALSE),
   (2, (SELECT id
        FROM urakka
@@ -86,6 +92,7 @@ VALUES
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       3456, '3456', 'Ei YHA-kohde', 'paallyste' :: yllapitokohdetyyppi, 'paallystys' ::yllapitokohdetyotyyppi,
+      NULL,
       NULL,
       20, 26, 1, 41, 15, 0, 1, NULL, '{2017}', 66, FALSE),
   (2, (SELECT id
@@ -98,6 +105,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       3457, '3457', 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, NULL,
+      NULL,
       20, 26, 1, 41, 15, 0, 1, NULL, '{2017}', 66, TRUE);
 
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
@@ -828,6 +836,7 @@ VALUES (10006, (SELECT id
 -- Päällystyskohteet 2020 (vielä pot1)
 INSERT INTO yllapitokohde
 (urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
+ yha_tr_osoite,
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,
  suorittava_tiemerkintaurakka, vuodet, poistettu)
 VALUES
@@ -841,6 +850,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    111, 'L11', 'Ouluntie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13371,
+   NULL,
    22, 12, 4336, 12, 9477, NULL, NULL, NULL, '{2020}', FALSE),
   ((SELECT id
     FROM urakka
@@ -852,6 +862,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    112, 'L12', 'Kirkkotie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13372,
+   NULL,
    18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2020}', FALSE),
   ((SELECT id
     FROM urakka
@@ -863,6 +874,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    113, 'L13', 'Puolangalle menevä (EI SAA NÄKYÄ)', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13373,
+   NULL,
    837, 1, 136, 1, 546, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), TRUE),
   ((SELECT id
     FROM urakka
@@ -874,6 +886,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13375,
+   NULL,
    837, 2, 0, 2, 1000, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE),
   ((SELECT id
     FROM urakka
@@ -885,6 +898,7 @@ VALUES
                      WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
+    NULL,
     22, 13, 0, 13, 3888, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE),
   -- Päällystyskohteet 2021 (pot2)
   ((SELECT id
@@ -896,7 +910,8 @@ VALUES
                        FROM urakka
                       WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    116, 'L42', 'Tärkeä kohde mt20', 'paallyste' :: yllapitokohdetyyppi,
-   'paallystys' ::yllapitokohdetyotyyppi, 13376,
+   'paallystys' ::yllapitokohdetyotyyppi, 527523069,
+   ROW(20, 1, 1066, 1, 3827, NULL)::tr_osoite,
    20, 1, 1066, 1, 3827, NULL, NULL, NULL, '{2021}', FALSE),
   ((SELECT id
       FROM urakka
@@ -908,6 +923,7 @@ VALUES
                       WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    117, 'L43', 'Aloittamaton kohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13377,
+   NULL,
    20, 3, 1, 3, 5000, NULL, NULL, NULL, '{2021}', FALSE);
 
 INSERT INTO yllapitokohteen_aikataulu
@@ -992,11 +1008,11 @@ VALUES ((SELECT id
        ((SELECT id
            FROM yllapitokohde
           WHERE nimi = 'Tärkeä kohde mt20'), 'Tärkeä kohdeosa kaista 11', 20, 1, 1066, 1, 3827, 1, 11, ST_GeomFromText(
-                'MULTILINESTRING((471625.9775238041 7183117.168444241,471664.159 7183132.629999999,471694.99700000044 7183139.478,471713.3289999999 7183140.567000002,471733.5800000001 7183141.305,471752.41700000037 7183140.903000001,471767.02300000004 7183138.855,471783.01099999994 7183135.147999998,471803.7999999998 7183128.613000002,471831.01499999966 7183116.688000001,471862.45799999963 7183101.9690000005,471888.83100000024 7183085.998,471899.0650000004 7183077.710000001,471912.5049999999 7183063.421999998,471945.79200000037 7183022.590999998,471972.80399999954 7182989.798999999,471996.6179999998 7182959.302000001,472015.95461845584 7182930.261998949))'), 8, 2, FALSE, 1231238),
+                'MULTILINESTRING((471625.9775238041 7183117.168444241,471664.159 7183132.629999999,471694.99700000044 7183139.478,471713.3289999999 7183140.567000002,471733.5800000001 7183141.305,471752.41700000037 7183140.903000001,471767.02300000004 7183138.855,471783.01099999994 7183135.147999998,471803.7999999998 7183128.613000002,471831.01499999966 7183116.688000001,471862.45799999963 7183101.9690000005,471888.83100000024 7183085.998,471899.0650000004 7183077.710000001,471912.5049999999 7183063.421999998,471945.79200000037 7183022.590999998,471972.80399999954 7182989.798999999,471996.6179999998 7182959.302000001,472015.95461845584 7182930.261998949))'), 8, 2, FALSE, 527523070),
        ((SELECT id
            FROM yllapitokohde
           WHERE nimi = 'Tärkeä kohde mt20'), 'Tärkeä kohdeosa kaista 12', 20, 1, 1066, 1, 3827, 1, 12, ST_GeomFromText(
-                'MULTILINESTRING((471625.9775238041 7183117.168444241,471664.159 7183132.629999999,471694.99700000044 7183139.478,471713.3289999999 7183140.567000002,471733.5800000001 7183141.305,471752.41700000037 7183140.903000001,471767.02300000004 7183138.855,471783.01099999994 7183135.147999998,471803.7999999998 7183128.613000002,471831.01499999966 7183116.688000001,471862.45799999963 7183101.9690000005,471888.83100000024 7183085.998,471899.0650000004 7183077.710000001,471912.5049999999 7183063.421999998,471945.79200000037 7183022.590999998,471972.80399999954 7182989.798999999,471996.6179999998 7182959.302000001,472015.95461845584 7182930.261998949))'), 8, 2, FALSE, 1231239),
+                'MULTILINESTRING((471625.9775238041 7183117.168444241,471664.159 7183132.629999999,471694.99700000044 7183139.478,471713.3289999999 7183140.567000002,471733.5800000001 7183141.305,471752.41700000037 7183140.903000001,471767.02300000004 7183138.855,471783.01099999994 7183135.147999998,471803.7999999998 7183128.613000002,471831.01499999966 7183116.688000001,471862.45799999963 7183101.9690000005,471888.83100000024 7183085.998,471899.0650000004 7183077.710000001,471912.5049999999 7183063.421999998,471945.79200000037 7183022.590999998,471972.80399999954 7182989.798999999,471996.6179999998 7182959.302000001,472015.95461845584 7182930.261998949))'), 8, 2, FALSE, 527523071),
        ((SELECT id
            FROM yllapitokohde
           WHERE nimi = 'Aloittamaton kohde mt20'), 'Kohdeosa kaista 11', 20, 3, 1, 3, 5000, 1, 11, ST_GeomFromText(

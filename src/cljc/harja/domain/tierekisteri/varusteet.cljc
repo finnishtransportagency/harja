@@ -23,7 +23,6 @@
    "tl506" "Liikennemerkki"
    "tl522" "Reunakivet"
    "tl513" "Reunapaalut"
-   "tl519" "Huoltoaukot"
    "tl520" "Puomit"
    "tl505" "Jätehuolto"
    "tl504" "WC"
@@ -45,7 +44,6 @@
    "Liikennemerkki" "tl506"
    "Reunakivet" "tl522"
    "Reunapaalut" "tl513"
-   "Huoltoaukot" "tl519"
    "Puomit" "tl520"
    "Jätehuolto" "tl505"
    "WC" "tl504"
@@ -83,7 +81,6 @@
     "tl509" [1 2 9]
     "tl522" [1 2 3 8]
     "tl513" [1 2 3]
-    "tl519" [1 2 3]
     "tl520" [1 2 3 9]
     "tl505" [1 2 7 9]
     "tl504" [1 2 7 9]
@@ -123,7 +120,6 @@
                "tl512",
                "tl516",
                "tl517",
-               "tl519",
                "tl520",
                "tl523",
                "tl524",

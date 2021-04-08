@@ -10,7 +10,8 @@
             [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.ui.leijuke :as leijuke]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord ^:private Otsikko [otsikko])
@@ -320,14 +321,13 @@ ja kaikki pakolliset kentät on täytetty"
                                (do (reset! arvo (if-let [hae (:valinta-arvo s)]
                                                   (hae (first (:valinnat s)))
                                                   (first (:valinnat s))))
-                                   [:div.form-control-static
+                                   [:div {:class (str "form-control-static lomake-arvo")}
                                     ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
                                     (nayta-arvo s arvo)])
 
                                (do (have #(contains? % :tyyppi) s)
                                    [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
-                             [:div {:class (str "form-control-static "
-                                                (or kentan-arvon-luokka ""))}
+                             [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
                                                               get-in
@@ -347,9 +347,9 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia?] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
-   muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli?] :as opts}]
+   muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   [:div.form-group {:class (str (or
                                   ;; salli skeeman ylikirjoittaa ns-avaimella
                                   (::col-luokka s)
@@ -358,7 +358,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
                                     2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
                                     3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
-                                (when pakollinen?
+                                (when (and pakollinen? muokattava?)
                                   " required")
                                 (when-not (empty? virheet)
                                   " sisaltaa-virheen")
@@ -366,8 +366,10 @@ ja kaikki pakolliset kentät on täytetty"
                                   " sisaltaa-varoituksen")
                                 (when-not (empty? huomautukset)
                                   " sisaltaa-huomautuksen"))}
-   [:div {:class (when sisallon-leveys?
-                   "sisallon-leveys lomake-kentan-leveys")}
+   [:div {:class (str
+                   (when sisallon-leveys?
+                     "sisallon-leveys lomake-kentan-leveys ")
+                   (when kaariva-luokka kaariva-luokka))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
       [:label.control-label {:for nimi}
@@ -516,7 +518,7 @@ ja kaikki pakolliset kentät on täytetty"
   :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
   :data                 validoitu data
   "
-  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata?]} skeema data]
+  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata? sulje-fn]} skeema data]
   (let [fokus (atom nil)
         validoi-avaimet (fn [skeema]
                           (reduce (fn [skeema skeeman-osa]
@@ -560,7 +562,8 @@ ja kaikki pakolliset kentät on täytetty"
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
              (merge
-               {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
+               {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia ")
+                            (when-not voi-muokata? "lukutila ")
                             luokka)}
                (when data-cy
                  {:data-cy data-cy}))
@@ -569,10 +572,11 @@ ja kaikki pakolliset kentät on täytetty"
                                               ::skeema skeema))
                                  header)]
                [:div.row header])
+             (when sulje-fn [napit/sulje-ruksi sulje-fn])
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (when otsikko-komp
-               [otsikko-komp])
+               [otsikko-komp (assoc validoitu-data ::skeema skeema)])
              (doall
                (map-indexed
                  (fn [i skeemat]
@@ -654,3 +658,6 @@ ja kaikki pakolliset kentät on täytetty"
                  :top (or top "0px")}}
    [komponentti]])
 
+(defn lomake-spacer [{:keys [palstoja]}]
+  {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja (or palstoja 3)
+   :komponentti (fn [rivi] [:hr])})

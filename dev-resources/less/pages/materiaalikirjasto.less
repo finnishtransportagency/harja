@@ -1,64 +1,7 @@
 .materiaalikirjasto-modal {
-    ul.runkoaineen-tiedot {
-        list-style-position: inside;
-        list-style-type: disc;
-        padding-inline-start: 0;
-
-    }
-    .lomake {
-        border: none;
-        .ainevalinta {
-            background-color: @gray240;
-            border-bottom: solid 4px @white;
-            .checkbox {
-                margin: 0;
-            }
-            &.valittu, .lisaa-sideaine, .poista-sideaine {
-                background-color: @gray225;
-            }
-            .kentat-haitari {
-                margin-top: -12px;
-                margin-left: 35px;
-                margin-bottom: 5px;
-            }
-
-        }
-    }
-    .livi-grid {
+    .livi-grid.panel.panel-default {
         .panel-heading, .panel-body {
             background-color: @white;
-        }
-        table {
-            border: none;
-
-            thead {
-                background-color: @table-bg-hover;
-                color: @black;
-                tr {
-                    background-color: @table-bg-hover;
-                    color: @black;
-                }
-            }
-            tr {
-                background-color: @white;
-                border: none;
-                > th {
-                    border: none;
-                    font-weight: normal;
-                    text-transform: uppercase;
-                    &:not(:first-child) {
-                        padding-left: 1rem;
-                    }
-
-                }
-                > td {
-                    border: none;
-                    vertical-align: top;
-                    &:not(:first-child) {
-                        padding-left: 1rem;
-                    }
-                }
-            }
         }
     }
     .tooltip {
@@ -72,3 +15,71 @@
         }
     }
 }
+// POT2:sta avaamme massa- ja murskelomakkeen myös sivulle overlayhin ilman materiaalikirjaston modaalia
+.massa-lomake, .murske-lomake {
+    .lomake {
+        border: none;
+        input {
+            height: 40px;
+        }
+        .ainevalinta {
+            background-color: @gray240;
+            border-bottom: solid 4px @white;
+            max-width: 650px;
+            .checkbox {
+                margin: 0;
+            }
+            &.valittu, .lisaa-sideaine, .poista-sideaine {
+                background-color: @gray225;
+            }
+            .kentat-haitari {
+                margin-top: -12px;
+                margin-left: 35px;
+                margin-bottom: 5px;
+            }
+        }
+        .lukutila {
+            &.mk-aine {
+                background-color: @white-dark;
+                margin-bottom: 8px;
+                > label {
+                    margin-bottom: 12px;
+                    > span > .kentan-label {
+                        color: @black-default;
+                        text-transform: uppercase;
+                    }
+                }
+            }
+            .ainevalinta-kentat {
+                .aineiden-lukutila.runkoaineet,
+                .aineiden-lukutila.sideaineet {
+                    &:not(:last-child) {
+                        margin-bottom: 16px;
+                    }
+                }
+            }
+            padding: 16px;
+            .aineen-pitoisuus-ja-nimi {
+                .fontti-14();
+                .pitoisuus {
+                    display: inline-block;
+                    margin-right: 8px;
+                    vertical-align: top;
+                    width: 50px;
+                }
+                .nimi-ja-yksityiskohdat {
+                    display: inline-block;
+                    .massan-yksityiskohdat {
+                        .fontti-12();
+                        color: @black-light;
+                        .yksityiskohta:not(:last-child):after {
+                            content: " \2022  ";
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+

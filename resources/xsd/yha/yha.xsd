@@ -379,7 +379,7 @@
         <xs:sequence>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelypaksuus" type="xs:short" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kasittelypaksuus" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: senttimetri
@@ -390,6 +390,13 @@
             <xs:element name="verkon-tarkoitus" type="alustan-verkon-tarkoitus" nillable="true" minOccurs="0" maxOccurs="1"/>
             <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="true" minOccurs="0" maxOccurs="1"/>
             <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="massamenekki" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: kg/m2
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
         </xs:sequence>
     </xs:complexType>
 
@@ -712,6 +719,21 @@
             <xs:enumeration value="1">
                 <xs:annotation>
                     <xs:documentation>Massanvaihto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>AB</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>Verkko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>REM-TAS</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="11">

@@ -38,7 +38,13 @@ FROM urakka u
 WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
-      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+      AND (:urakkatyyppi::urakkatyyppi IS NULL OR
+           CASE
+               WHEN (:urakkatyyppi::urakkatyyppi = 'hoito' OR :urakkatyyppi::urakkatyyppi = 'teiden-hoito') THEN
+                       u.tyyppi IN ('hoito', 'teiden-hoito')
+               ELSE
+                       u.tyyppi = :urakkatyyppi::urakkatyyppi
+               END)
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
@@ -58,7 +64,13 @@ WHERE s.poistettu IS NOT TRUE
       AND (s.alkupvm, s.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
       AND (:urakka::integer IS NULL OR s.urakka = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
-      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+      AND (:urakkatyyppi::urakkatyyppi IS NULL OR
+           CASE
+               WHEN (:urakkatyyppi::urakkatyyppi = 'hoito' OR :urakkatyyppi::urakkatyyppi = 'teiden-hoito') THEN
+                       u.tyyppi IN ('hoito', 'teiden-hoito')
+               ELSE
+                       u.tyyppi = :urakkatyyppi::urakkatyyppi
+               END)
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-materiaalit

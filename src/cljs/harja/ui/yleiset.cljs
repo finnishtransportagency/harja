@@ -9,7 +9,6 @@
             [harja.ui.dom :as dom]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -179,7 +178,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn lista-item
   [{:keys [li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-           vaihtoehto disabled-vaihtoehdot valittu-arvo vayla-tyyli? auki?]}]
+           vaihtoehto disabled-vaihtoehdot valittu-arvo vayla-tyyli? auki?] :as kaka}]
   (let [disabled? (and disabled-vaihtoehdot
                        (contains? disabled-vaihtoehdot vaihtoehto))
         linkin-cond (cond
@@ -205,7 +204,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn alasvetolista
   [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
            li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-           vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo]}]
+           vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
+           pakollinen?] :as kaka}]
   [:ul (if vayla-tyyli?
          {:style (merge {:display (if @auki?
                                     "block"
@@ -227,8 +227,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                          :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])])
        (for [vaihtoehto vaihtoehdot]
          ^{:key (hash vaihtoehto)}
-         [lista-item  {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
-                       :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
+         [lista-item {:li-luokka-fn (when li-luokka-fn (r/partial li-luokka-fn)) :itemit-komponentteja? itemit-komponentteja? :format-fn format-fn :valitse-fn valitse-fn
+                      :vaihtoehto vaihtoehto :disabled-vaihtoehdot disabled-vaihtoehdot :valittu-arvo valittu-arvo :vayla-tyyli? vayla-tyyli? :auki? auki?}])))])
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
@@ -296,7 +296,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   {:tarkista-komponentti? true})
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
+                   pakollinen?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -335,6 +336,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                           :disabled-vaihtoehdot :vayla-tyyli? :skrollattava?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
+                                  :pakollinen? pakollinen?
                                   :valittu-arvo valinta
                                   :auki?     auki?})]])))))
 
@@ -755,3 +757,12 @@ jatkon."
    (valitys-vertical "2rem"))
   ([korkeus]
    [:div {:style {:margin-top (or korkeus "2rem")}}]))
+
+;; Toisinaan tarpeen ajaa esim. erilaisia click handlereitä pienellä viiveellä, jos klikin
+;; lähde-elementti unmountataan
+(defn fn-viiveella
+  "Ajaa funktion viiveellä, käyttäen js/setTimeoutia. Default viive 10ms"
+  ([fn-to-run]
+   (fn-viiveella fn-to-run 10))
+  ([fn-to-run ms]
+   (js/setTimeout (fn [] (fn-to-run)) ms)))

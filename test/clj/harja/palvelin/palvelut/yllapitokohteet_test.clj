@@ -525,11 +525,13 @@
                                                 :tr-loppuosa 3
                                                 :tr-loppuetaisyys 0
                                                 :tr-ajorata 1
-                                                :tr-kaista 1}]})]
-
+                                                :tr-kaista 1}]})
+            yha-tr-osoite-jalkeen (ffirst (q (str "SELECT yha_tr_osoite FROM yllapitokohde WHERE nimi='Leppäjärven ramppi (päivitetty)'")))]
         (is (not= (:status vastaus) :validointiongelma)
             "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampin päälle.
-             Samalla tallennetaan kuitenkin myös uusi Leppäjärven ramppi, jossa tieosoite siirtyy. Ei tule Herjaa.")))
+             Samalla tallennetaan kuitenkin myös uusi Leppäjärven ramppi, jossa tieosoite siirtyy. Ei tule Herjaa.")
+        (is (= {:numero 20, :alkuosa 1, :alkuetaisyys 0, :loppuosa 3, :loppuetaisyys 0}
+               (konv/lue-tr-osoite yha-tr-osoite-jalkeen)) "Päivittäminen ei koske yha-tr-osoite")))
 
     (testing "Päällekkäin menevät kohteet eri vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
