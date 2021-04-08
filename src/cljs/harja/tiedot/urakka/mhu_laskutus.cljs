@@ -35,7 +35,7 @@
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
-(defrecord HaeUrakanLaskutJaTiedot [hakuparametrit])
+(defrecord HaeUrakanToimenpiteetJaMaksuerat [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
 
 (defrecord KutsuEpaonnistui [tulos parametrit])
@@ -509,7 +509,7 @@
 
   ;; HAUT
 
-  HaeUrakanLaskutJaTiedot
+  HaeUrakanToimenpiteetJaMaksuerat
   (process-event [{:keys [hakuparametrit]} app]
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet

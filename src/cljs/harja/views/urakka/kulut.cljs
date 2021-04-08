@@ -758,7 +758,7 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
+                      (e! (tiedot/->HaeUrakanToimenpiteetJaMaksuerat (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
                       (e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
                                                      :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                                      :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
