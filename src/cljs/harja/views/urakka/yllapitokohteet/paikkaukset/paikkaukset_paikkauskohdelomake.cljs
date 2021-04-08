@@ -193,7 +193,8 @@
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
     :nimi :tyomenetelma
-    :valinnat paikkaus/kuvaillut-tyomenetelmat
+    :valinnat paikkaus/paikkauskohteiden-tyomenetelmat
+    :valinta-nayta paikkaus/kuvaile-tyomenetelma
     :vayla-tyyli? true
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true

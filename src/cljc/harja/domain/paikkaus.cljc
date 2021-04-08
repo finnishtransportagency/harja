@@ -164,10 +164,10 @@
 
 (def paikkauskohteiden-tyomenetelmat
   ["AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KTVA" "REPA" "SIPU" "SIPA" "UREM"
-   "HJYR" "Kannukaatosaumaus" "KT-valuasfalttisaumaus" "Avarrussaumaus"
-   "Sillan kannen päällysteen päätysauman korjaukset" "Reunapalkin ja päällysteen välisen sauman tiivistäminen"
-   "Reunapalkin liikuntasauman tiivistäminen" "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin"
-   "PAB-paikkaus käsin" "Muu päällysteiden paikkaustyö"])
+   "HJYR" "Kannukaatosaumaus" "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"
+   "Reunapalkin ja päällysteen välisen sauman tiivistäminen" "Reunapalkin liikuntasauman tiivistäminen"
+   "Käsin tehtävät paikkaukset pikapaikkausmassalla" "AB-paikkaus käsin" "PAB-paikkaus käsin"
+   "Muu päällysteiden paikkaustyö"])
 
 (def kuvaillut-tyomenetelmat
   (vec (map #(kuvaile-tyomenetelma %) paikkauskohteiden-tyomenetelmat)))
