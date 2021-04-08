@@ -120,9 +120,12 @@
                    :nimi :loppupvm-arvio}
                   ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                   ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
-                  (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
-                      (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                           (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
+                  ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
+                  ;; ei näytetä muokkaustietoa.
+                  (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
+                       (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                                (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
                    :leveys 2
                    :nimi :paivays
@@ -398,6 +401,7 @@
                     (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                     (kartta-tasot/taso-paalle! :organisaatio)
                     (e! (t-paikkauskohteet/->HaePaikkauskohteet))
+                    ;; komp/lippu katso myöhemmin
                     (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)))
     (fn [e! app]
       [:div.row

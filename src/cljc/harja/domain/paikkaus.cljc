@@ -162,6 +162,16 @@
     "HJYR" "Jyrsintäkorjaukset (HJYR/TJYR)"
     tm))
 
+(defn lyhenna-tyomenetelma [tm]
+  (case tm
+    "KT-valuasfalttipaikkaus (KTVA)" "KTVA"
+    "Konetiivistetty reikävaluasfalttipaikkaus (REPA)" "REPA"
+    "Sirotepuhalluspaikkaus (SIPU)" "SIPU"
+    "Sirotepintauksena tehty lappupaikkaus (SIPA)" "SIPA"
+    "Urapaikkaus (UREM/RREM)" "UREM"
+    "Jyrsintäkorjaukset (HJYR/TJYR)" "HJYR"
+    tm))
+
 (def paikkauskohteiden-tyomenetelmat
   ["AB-paikkaus levittäjällä" "PAB-paikkaus levittäjällä" "SMA-paikkaus levittäjällä" "KTVA" "REPA" "SIPU" "SIPA" "UREM"
    "HJYR" "Kannukaatosaumaus" "Avarrussaumaus" "Sillan kannen päällysteen päätysauman korjaukset"

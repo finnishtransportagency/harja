@@ -6,6 +6,7 @@
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
             [clojure.set :as set]
+            [clojure.string :refer [trim]]
             [harja.domain.paikkaus :as paikkaus])
   (:import (org.apache.poi.ss.util CellRangeAddress)
            (java.util Date)))
@@ -62,9 +63,9 @@
                        :aet (nth rivi 5)
                        :losa (nth rivi 6)
                        :let (nth rivi 7)
-                       :alkupvm (nth rivi 8)
-                       :loppupvm (nth rivi 9)
-                       :tyomenetelma (nth rivi 10)
+                       :alkupvm (pvm/->pvm (nth rivi 8))
+                       :loppupvm (pvm/->pvm (nth rivi 9))
+                       :tyomenetelma (paikkaus/lyhenna-tyomenetelma (trim (nth rivi 10)))
                        :suunniteltu-maara (nth rivi 11)
                        :yksikko (nth rivi 12)
                        :suunniteltu-hinta (nth rivi 13)

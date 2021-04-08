@@ -215,7 +215,6 @@
                   (keep
                     (fn [p]
                       (let [;; Excelistä ei aseteta paikkauskohteelle tilaa, joten asetetaan se "ehdotettu" tilaan tässä
-                            _ (println "rivi 219" (pr-str p))
                             p (-> p
                                   (assoc :urakka-id urakka-id)
                                   (assoc :paikkauskohteen-tila "ehdotettu"))
