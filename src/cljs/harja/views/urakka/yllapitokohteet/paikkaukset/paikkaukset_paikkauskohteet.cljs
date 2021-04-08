@@ -385,9 +385,10 @@
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
-   ;; Filtterit näytetään kaikille muille käyttäjille paitsi aluevastava (yksikkömuoto, jotta haku toimii) eli, joiden rooli on ELY_Urakanvalvoja
+   ;; Filttereitä ei näytetä aluevastaavalle, joka katselee aluekohtaisia paikkauskohteita.
    (when (not
-           (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja"))
+           (and (:hae-aluekohtaiset-paikkauskohteet? app)
+                (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")))
      [filtterit e! app])
    [kartta/kartan-paikka]
    [debug/debug app]

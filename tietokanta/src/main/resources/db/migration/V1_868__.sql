@@ -34,7 +34,7 @@ CREATE TYPE tyomenetelma AS ENUM (
     'KT-valuasfalttisaumaus',
     'Avarrussaumaus',
     'Sillan kannen päällysteen päätysauman korjaukset',
-    'Reunapalkin ja päällysteen välisen sauman tiivistämien',
+    'Reunapalkin ja päällysteen välisen sauman tiivistäminen',
     'Reunapalkin liikuntasauman tiivistäminen',
     'Käsin tehtävät paikkaukset pikapaikkausmassalla',
     'AB-paikkaus käsin',
