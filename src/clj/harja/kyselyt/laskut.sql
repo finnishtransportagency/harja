@@ -122,30 +122,6 @@ where l.urakka = :urakka
   and l.laskun_numero = :laskun-numero
   and l.poistettu is not true;
 
--- name: hae-kaikki-urakan-laskuerittelyt
--- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
-SELECT l.id                   as "id",
-       l.kokonaissumma        as "kokonaissumma",
-       l.erapaiva             as "erapaiva",
-       l.tyyppi               as "tyyppi",
-       l.laskun_numero        as "laskun-numero",
-       l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
-       l.lisatieto            as "lisatieto",
-       lk.id                  as "kohdistus-id",
-       lk.rivi                as "rivi",
-       lk.summa               as "summa",
-       lk.toimenpideinstanssi as "toimenpideinstanssi",
-       lk.tehtavaryhma        as "tehtavaryhma",
-       lk.tehtava             as "tehtava",
-       lk.suoritus_alku       as "suoritus-alku",
-       lk.suoritus_loppu      as "suoritus-loppu",
-       lk.lisatyon_lisatieto  as "lisatyon-lisatieto",
-       lk.maksueratyyppi      as "maksueratyyppi"
-from lasku l
-       JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
-WHERE l.urakka = :urakka
-  AND l.poistettu IS NOT TRUE;
-
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT l.id                   as "id",
@@ -168,8 +144,9 @@ SELECT l.id                   as "id",
 from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
 WHERE l.urakka = :urakka
-  AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
-  AND l.poistettu IS NOT TRUE;
+    AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= l.erapaiva)
+    AND (:loppupvm::DATE IS NULL OR l.erapaiva <= :loppupvm::DATE)
+    AND l.poistettu IS NOT TRUE;
 
 -- name: linkita-lasku-ja-liite<!
 -- Linkittää liitteen ja laskun

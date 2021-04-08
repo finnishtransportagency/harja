@@ -3,7 +3,8 @@
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
-            [harja.palvelin.palvelut.laskut :as laskut]))
+            [harja.palvelin.palvelut.laskut :as laskut]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -249,3 +250,55 @@
         (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :laskuerittely (assoc uusi-lasku :erapaiva #inst "2021-12-01T00:00:00.000+02:00")})]))
+
+(def odotettu-kulu-id-7
+  {:id 7, :tyyppi "laskutettava", :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00", :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi", :liitteet [], :kohdistukset [{:suoritus-alku #inst "2019-09-30T21:00:00.000000000-00:00", :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo", :suoritus-loppu #inst "2019-10-30T22:00:00.000000000-00:00", :tehtava nil, :summa 400.77M, :kohdistus-id 10, :laskun-numero nil, :toimenpideinstanssi 47, :tehtavaryhma 47, :lisatieto nil, :rivi 1}]})
+
+(deftest hae-aikavalilla-kaikki-laskuerittelyt
+  (testing "hae-aikavalilla-kaikki-laskuerittelyt"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          alkupvm (pvm/->pvm "1.1.2019")
+          loppupvm (pvm/->pvm "30.9.2024")
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :laskuerittelyt
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :alkupvm alkupvm
+                                   :loppupvm loppupvm})
+          odotettu-count 26
+          kulu-id-7 (first (filter #(= 7 (:id %))
+                                   vastaus))]
+      (is (= odotettu-count (count vastaus)))
+      (is (= odotettu-kulu-id-7 kulu-id-7)))))
+
+(deftest hae-kaikki-laskuerittelyt-pvmt-nil
+  (testing "hae-kaikki-laskuerittelyt-pvmt-nil"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :laskuerittelyt
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :alkupvm nil
+                                   :loppupvm nil})
+          odotettu-count 26
+          kulu-id-7 (first (filter #(= 7 (:id %))
+                                   vastaus))]
+      (is (= odotettu-count (count vastaus)))
+      (is (= odotettu-kulu-id-7 kulu-id-7)))))
+
+(deftest hae-hoitokauden-laskuerittelyt
+  (testing "hae-hoitokauden-laskuerittelyt"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          hoitokauden-alkupvm (pvm/->pvm "1.10.2019")
+          hoitokauden-loppupvm (pvm/->pvm "30.9.2024")
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :laskuerittelyt
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :alkupvm hoitokauden-alkupvm
+                                   :loppupvm hoitokauden-loppupvm})
+          odotettu-count 25 ;; yksi lasku on päivätty ennen hoitokauden alkua
+          kulu-id-7 (first (filter #(= 7 (:id %))
+                                   vastaus))]
+      (is (= odotettu-count (count vastaus)))
+      (is (= odotettu-kulu-id-7 kulu-id-7)))))

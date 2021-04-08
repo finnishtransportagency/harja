@@ -677,3 +677,6 @@
     :tekniset-laitteet "tekniset laitteet"
 
     "Ei vielä formatointia ko. urakkatyypille"))
+
+(def fin-hk-alkupvm "01.10.")
+(def fin-hk-loppupvm "30.09.")

@@ -24,6 +24,7 @@
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
+(defrecord AsetaHakukuukausi [kuukausi])
 (defrecord AsetaHakuparametri [polku arvo])
 
 (defrecord LiiteLisatty [liite])
@@ -495,11 +496,6 @@
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
-      (tuck-apurit/post! :kaikki-laskuerittelyt
-                         {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                         {:onnistui           ->LaskuhakuOnnistui
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :paasta-virhe-lapi? true})
       (assoc app
         :toimenpiteet toimenpiteet
         :tehtavaryhmat tehtavaryhmat)))
@@ -528,19 +524,19 @@
                           :epaonnistui        ->KutsuEpaonnistui
                           :epaonnistui-parametrit [{:viesti "Urakan maksuerien haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
-    (update-in app [:parametrit :haetaan] + 2))
+    (update-in app [:parametrit :haetaan] + 1))
   HaeUrakanLaskut
-  (process-event [{{:keys [id alkupvm loppupvm]} :hakuparametrit} app]
-    (tuck-apurit/post! (if (and alkupvm loppupvm)
-                         :laskuerittelyt
-                         :kaikki-laskuerittelyt)
-                       (cond-> {:urakka-id id}
-                               (and alkupvm loppupvm) (assoc :alkupvm alkupvm
-                                                             :loppupvm loppupvm))
-                       {:onnistui           ->LaskuhakuOnnistui
-                        :epaonnistui        ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:viesti "Urakan laskujen haku epäonnistui"}]
-                        :paasta-virhe-lapi? true})
+  (process-event [{{:keys [id alkupvm loppupvm kuukausi]} :hakuparametrit} app]
+    (let [alkupvm (or alkupvm (first kuukausi))
+          loppupvm (or loppupvm (second kuukausi))]
+      (tuck-apurit/post! :laskuerittelyt
+                         {:urakka-id id
+                          :alkupvm alkupvm
+                          :loppupvm loppupvm}
+                         {:onnistui ->LaskuhakuOnnistui
+                          :epaonnistui ->KutsuEpaonnistui
+                          :epaonnistui-parametrit [{:viesti "Urakan laskujen haku epäonnistui"}]
+                          :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] inc))
   HaeUrakanToimenpiteetJaTehtavaryhmat
   (process-event
@@ -702,15 +698,26 @@
                         :epaonnistui ->KutsuEpaonnistui
                         :epaonnistui-parametrit [{:viesti "Aliurakoitsijan luonti epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
+  AsetaHakukuukausi
+  (process-event
+    [{:keys [kuukausi]} app]
+    (let []
+      (-> app
+          (assoc-in [:parametrit :haun-alkupvm] nil)
+          (assoc-in [:parametrit :haun-loppupvm] nil)
+          (assoc-in [:parametrit :haun-kuukausi] kuukausi))))
+
   AsetaHakuparametri
   (process-event
     [{:keys [polku arvo]} app]
     (let [arvo (if (nil? arvo)
                  (-> @tila/yleiset :urakka polku)
                  arvo)]
-      (assoc-in app [:parametrit (case polku
-                                   :alkupvm :haun-alkupvm
-                                   :loppupvm :haun-loppupvm)] arvo)))
+      (-> app
+          (assoc-in [:parametrit :haun-kuukausi] nil)
+          (assoc-in [:parametrit (case polku
+                                       :alkupvm :haun-alkupvm
+                                       :loppupvm :haun-loppupvm)] arvo))))
 
   ;; FORMITOIMINNOT
 

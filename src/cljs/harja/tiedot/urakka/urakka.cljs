@@ -212,7 +212,8 @@
 (def kustannusten-seuranta-nakymassa? (atom false))
 
 
-(def kulut-default {:parametrit  {:haetaan 0}
+(def kulut-default {:parametrit  {:haetaan 0
+                                  :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
                     :taulukko    nil
                     :lomake      kulut-lomake-default
                     :kulut       []

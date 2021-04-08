@@ -20,7 +20,8 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.tyokalut.big :as big])
+            [harja.tyokalut.big :as big]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -355,13 +356,11 @@
                              2019
                              (:hoitokauden-alkuvuosi app))
         valittu-kuukausi (:valittu-kuukausi app)
-        fin-hk-alkupvm "01.10."
-        fin-hk-loppupvm "30.09."
         db-hk-alkupvm "-10-01"
         db-hk-loppupvm "-09-30"
         hoitokauden-kuukaudet (pvm/aikavalin-kuukausivalit
-                                [(pvm/->pvm (str fin-hk-alkupvm valittu-hoitokausi))
-                                 (pvm/->pvm (str fin-hk-loppupvm (inc valittu-hoitokausi)))])
+                                [(pvm/->pvm (str fmt/fin-hk-alkupvm valittu-hoitokausi))
+                                 (pvm/->pvm (str fmt/fin-hk-loppupvm (inc valittu-hoitokausi)))])
         haun-alkupvm (if valittu-kuukausi
                        (first valittu-kuukausi)
                        (str valittu-hoitokausi db-hk-alkupvm))
@@ -384,7 +383,7 @@
         [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                       :vayla-tyyli? true
                                       :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                      :format-fn #(str fin-hk-alkupvm % "-" fin-hk-loppupvm (inc %))
+                                      :format-fn #(str fmt/fin-hk-alkupvm % "-" fmt/fin-hk-loppupvm (inc %))
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]
        [:div.col-xs-6.col-md-3.filtteri
