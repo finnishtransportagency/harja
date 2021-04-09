@@ -568,5 +568,5 @@
   )
 
 (def tyomenetelmat
-  (into ["Kaikki"] paikkaus/kuvaillut-tyomenetelmat))
+  (into ["Kaikki"] paikkaus/paikkauskohteiden-tyomenetelmat))
 

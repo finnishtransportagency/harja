@@ -379,7 +379,8 @@
         (fn [tyomenetelma valittu?]
           (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
         [" Työmenetelmä valittu" " Työmenetelmää valittu"]
-        {:vayla-tyyli? true}]]
+        {:vayla-tyyli? true
+         :fmt paikkaus/kuvaile-tyomenetelma}]]
       #_[:div.col-xs-2 "hae"]
       ]]))
 
