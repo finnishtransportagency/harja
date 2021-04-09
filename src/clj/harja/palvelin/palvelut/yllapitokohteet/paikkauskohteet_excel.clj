@@ -155,6 +155,9 @@
   (let [urakka (first (q-urakat/hae-urakka db (:urakka-id tiedot)))
         _ (println "vie-paikkauskohteet-exceliin :: urakka" (pr-str urakka))
         kohteet (q/paikkauskohteet db user tiedot)
+        ;; Muokkaa työmenetelmä tekstimuotoon
+        kohteet (mapv (fn [k]
+                        (update k :tyomenetelma #(paikkaus/kuvaile-tyomenetelma %))) kohteet)
         sarakkeet [{:otsikko "Nro." :tasaa :oikea}
                    {:otsikko "Kohde"}
                    {:otsikko "Tienro"}
