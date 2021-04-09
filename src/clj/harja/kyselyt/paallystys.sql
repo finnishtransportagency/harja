@@ -168,11 +168,15 @@ SELECT
     pot2p.lisatieto,
     pot2p.jarjestysnro,
     um.nimen_tarkenne as "nimen-tarkenne",
-    um.tyyppi as "sideainetyyppi",
+    (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
+            asfrouhe.pot2_massa_id = um.id AND
+            pot2p.pot2_id = :pot2_id AND
+            asfrouhe.tyyppi = (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe')) as "rc%",
     mr.esiintyma,
     mr.kuulamyllyarvo as "km-arvo",
     mr.litteysluku as "muotoarvo",
     ms.pitoisuus,
+    ms.tyyppi as "sideainetyyppi",
     (SELECT array_to_string(array_agg(p2ml.nimi||': '||ml.pitoisuus||'%'), ', ')
      FROM pot2_mk_massan_lisaaine ml
      JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
