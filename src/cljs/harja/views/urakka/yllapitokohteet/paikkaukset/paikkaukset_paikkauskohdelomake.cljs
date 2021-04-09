@@ -98,7 +98,9 @@
       :virhe? (nayta-virhe? [:yksikko] lomake)
       ::lomake/col-luokka "col-sm-2"}
      {:otsikko "Suunniteltu hinta"
-      :tyyppi :positiivinen-numero
+      :tyyppi :numero
+      :desimaalien-maara 2
+      :piilota-yksikko-otsikossa? true
       :nimi :suunniteltu-hinta
       ::lomake/col-luokka "col-sm-6"
       :pakollinen? true
