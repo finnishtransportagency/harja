@@ -2,15 +2,13 @@
   "UI controlleri kustannusten seurantaan"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log tarkkaile!]]
             [tuck.core :refer [process-event] :as tuck]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.pvm :as pvm]
-            [harja.ui.lomake :as ui-lomake]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -117,8 +115,8 @@
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
     (let [valittu-kuukausi (if (= "Kaikki" kuukausi)
-                     [(pvm/->pvm (str fin-hk-alkupvm vuosi))
-                      (pvm/->pvm (str fin-hk-loppupvm (inc vuosi)))]
+                     [(pvm/hoitokauden-alkupvm vuosi)
+                      (pvm/hoitokauden-loppupvm (inc vuosi))]
                      kuukausi)]
       (do
         ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
