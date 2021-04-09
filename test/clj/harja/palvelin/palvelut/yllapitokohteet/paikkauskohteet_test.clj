@@ -5,6 +5,7 @@
             [clojure.data.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
+            [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
@@ -290,3 +291,34 @@
         ]
     (is (= "Paikkauskohteen työmenetelmässä virhe" (first (get (first (get vastaus-body "virheet")) "virhe"))))
     (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))))))
+
+(deftest laske-tien-osien-pituudet
+  (let [keksityt-osat '({:osa 1 :pituus 100}
+                        {:osa 2 :pituus 100}
+                        {:osa 3 :pituus 100}
+                        {:osa 4 :pituus 100})
+        keksitty-kohde1 {:tie 1 :aosa 1 :aet 0 :losa 2 :let 10}
+        laskettu1 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde1)
+
+        keksitty-kohde2 {:tie 1 :aosa 1 :aet 0 :losa 3 :let 50}
+        laskettu2 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde2)
+
+        keksitty-kohde3 {:tie 1 :aosa 2 :aet 20 :losa 2 :let 80}
+        laskettu3 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde3)
+
+        keksitty-kohde4 {:tie 1 :aosa 20 :aet 20 :losa 2 :let 80}
+        laskettu4 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde4)
+        ]
+    ;; Perus case, otetaan osasta 1 loput ja osan 2 alku
+    (is (= 110 (:pituus laskettu1)))
+
+    ;; Perus case 2, otetaan osasta 1 loput ja osan 2 alku
+    (is (= 250 (:pituus laskettu2)))
+    
+    ;; Vaikeampi tapaus - otetaan osasta 2 osaan 2, niin että vain väliin jäävä pätkä lasketaan
+    ;; Esim jos osa 2 on 100m pitkä ja otetaan kohdasta 20 kohtaan 80 tulee 60m
+    (is (= 60 (:pituus laskettu3)))
+
+    ;; Vielä härömpi tapaus, missä alkuosa alkaa myöhemmin kuin loppuosa.
+    ;; Nyt tuloksena pitäisi olla nil
+    (is (= nil (:pituus laskettu4)))))
