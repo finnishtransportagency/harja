@@ -386,11 +386,7 @@
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
-   ;; Filttereitä ei näytetä aluevastaavalle, joka katselee aluekohtaisia paikkauskohteita.
-   (when (not
-           (and (:hae-aluekohtaiset-paikkauskohteet? app)
-                (contains? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)) "ELY_Urakanvalvoja")))
-     [filtterit e! app])
+   [filtterit e! app]
    [kartta/kartan-paikka]
    [debug/debug app]
    (when (:lomake app)
