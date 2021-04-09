@@ -768,3 +768,5 @@ jatkon."
    (fn-viiveella fn-to-run 10))
   ([fn-to-run ms]
    (js/setTimeout (fn [] (fn-to-run)) ms)))
+
+(def valitse-text "-valitse-")

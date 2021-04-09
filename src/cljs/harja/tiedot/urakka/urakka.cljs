@@ -216,13 +216,15 @@
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                                   (pvm/vuosi (pvm/nyt))
-                                                                                  (dec (pvm/vuosi (pvm/nyt))))}})
+                                                                                  (dec (pvm/vuosi (pvm/nyt))))
+                                           :valittu-kuukausi "Kaikki"}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
 
 
-(def kulut-default {:parametrit  {:haetaan 0}
+(def kulut-default {:parametrit  {:haetaan 0
+                                  :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
                     :taulukko    nil
                     :lomake      kulut-lomake-default
                     :kulut       []

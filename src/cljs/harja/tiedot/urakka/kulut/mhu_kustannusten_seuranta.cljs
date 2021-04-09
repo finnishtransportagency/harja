@@ -15,6 +15,8 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def fin-hk-alkupvm "01.10.")
+(def fin-hk-loppupvm  "30.09.")
 (declare hae-kustannukset)
 
 (defrecord HaeKustannukset [hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
@@ -114,14 +116,18 @@
 
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
-    (do
-      ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
-      (tuck/action!
-        (fn [e!]
-          (e! (->HaeBudjettitavoite))))
-      (hae-kustannukset urakka vuosi (first kuukausi) (second kuukausi))
-      (-> app
-          (assoc-in [:valittu-kuukausi] kuukausi)))))
+    (let [valittu-kuukausi (if (= "Kaikki" kuukausi)
+                     [(pvm/->pvm (str fin-hk-alkupvm vuosi))
+                      (pvm/->pvm (str fin-hk-loppupvm (inc vuosi)))]
+                     kuukausi)]
+      (do
+        ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
+        (tuck/action!
+          (fn [e!]
+            (e! (->HaeBudjettitavoite))))
+        (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
+        (-> app
+            (assoc-in [:valittu-kuukausi] kuukausi))))))
 
 (defn- muuta-hoitokausivuosi-jarjestysnumeroksi
   "Otetaan urakan loppupäivämäärän vuosi (esim 2025) ja vähennetään siitä saatu vuosi (esim 2021) ja muutetaan

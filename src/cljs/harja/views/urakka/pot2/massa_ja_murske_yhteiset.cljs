@@ -56,7 +56,8 @@
                                 lukitut-kohteet
                                 materiaali-kaytossa)]
       [:div
-       [:h3 (if (not (empty? lukitut-kohteet))
+       [:div {:style {:margin "16px 0 8px"}}
+        (if (not (empty? lukitut-kohteet))
               "Materiaalia on kirjattu päällystysilmoitukseen jonka tila on lukittu. Muokkaamista tai poistamista ei enää sallita. Lukitut kohteet: "
               (str "Materiaalia on kirjattu seuraavissa päällystysilmoituksissa: "))]
        [:ul
