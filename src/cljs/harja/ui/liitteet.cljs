@@ -368,4 +368,8 @@
          [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
          [:input.upload
           {:type "file"
-           :on-change #(k/laheta-tiedosto! url (.-target %) urakka-id tiedosto-ladattu lataus-epaonnistui)}]]]])))
+           :on-input #(do
+                        (k/laheta-tiedosto! url (.-target %) urakka-id tiedosto-ladattu lataus-epaonnistui)
+                        ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
+                        ;; uudestaan.
+                        (set! (.-value (.-target %)) nil))}]]]])))
