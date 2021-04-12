@@ -1,7 +1,7 @@
 -- Paikkauskohde tauluun lisätään paikkauskohteen-tila kenttä, jonka arvot on tässä
 create type paikkauskohteen_tila as enum ('ehdotettu', 'hylatty', 'tilattu', 'valmis', 'tarkistettu');
 
--- Paikkauskohde taulussa ei ole ihan kaikkiakenttiä, mitä paikkauskohteen hallinta vaatii.
+-- Paikkauskohde taulussa ei ole ihan kaikkia kenttiä, mitä paikkauskohteen hallinta vaatii.
 -- Lisätään puuttuvat kentät
 ALTER TABLE paikkauskohde
     ADD COLUMN nro TEXT, -- Laskun numero tai muu numero, minkä urakoitsijat voivat paikkauskohteelle antaa.
