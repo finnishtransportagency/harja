@@ -2339,6 +2339,7 @@
        ^{:key "hankintakustannusten-loader"}
        [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
      [:h3 "Suunnitellut hankinnat"]
+     (println "petar filteri " (pr-str suodattimet))
      [hankintojen-filter suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid (:hankinnat suodattimet)]
      (if suunnitellut-hankinnat-taulukko-valmis?
        [grid/piirra suunnittellut-hankinnat-grid]
@@ -2504,7 +2505,7 @@
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
 (defn kustannussuunnitelma
-  [app]
+  [e! app]
   (let [nakyman-setup (cljs.core/atom {:lahdetty-nakymasta? false})]
     (komp/luo
       (komp/piirretty (fn [_]
@@ -2576,9 +2577,8 @@
                          (gridien-siivous!)
                          (log "[kustannussuunnitelma] SIIVOTTU")
                          (reset! lopeta-taulukkojen-luonti? false)))))
-      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
-        (set! e! e*!)
-        (println "petar evo renderujem " gridit-vanhentuneet? (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
+      (fn [e! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
+        (println "petar evo renderujem, jarno " app gridit-vanhentuneet? (pr-str suodattimet) (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma

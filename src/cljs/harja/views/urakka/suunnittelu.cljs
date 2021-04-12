@@ -46,7 +46,7 @@
     (komp/luo
       (komp/piirretty (fn [_]
                         (e! (t/->YleisSuodatinArvot)))))
-      (fn [_ app]
+      (fn [e! app]
         (let [ur @nav/valittu-urakka
               id (:id ur)]
 
@@ -60,7 +60,7 @@
                        (valilehti-mahdollinen? :kustannussuunnitelma ur)
                        (istunto/ominaisuus-kaytossa? :mhu-urakka))
               ^{:key "kustannussuunnitelma"}
-              [kustannussuunnitelma/kustannussuunnitelma app])
+              [kustannussuunnitelma/kustannussuunnitelma e! app])
 
             "Tehtävät ja määrät"
             :tehtavat
@@ -68,7 +68,7 @@
                        (valilehti-mahdollinen? :tehtavat ur)
                        (istunto/ominaisuus-kaytossa? :mhu-urakka))
               ^{:key "tehtavat"}
-              [tehtavat/tehtavat app])
+              [tehtavat/tehtavat e! app])
 
             "Kokonaishintaiset työt"
             :kokonaishintaiset
