@@ -42,7 +42,7 @@ select SUM(toteumat.maara)           as toteuma,
 from toimenpideinstanssi tpi
        join urakka u on tpi.urakka = u.id
        join toimenpidekoodi emo on emo.id = tpi.toimenpide
-       join toimenpidekoodi tehtava on tehtava.emo = tpi.toimenpide AND tehtava.yksikko NOT ILIKE 'euro%'
+       join toimenpidekoodi tehtava on tehtava.emo = tpi.toimenpide AND tehtava.yksikko NOT ILIKE 'euro%' AND tehtava."raportoi-tehtava?" = TRUE
        left join tyot on tyot.tehtava = tehtava.id and tyot.urakka = u.id
        join organisaatio o on o.id = u.hallintayksikko
        left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko

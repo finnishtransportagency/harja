@@ -65,7 +65,7 @@ from toimenpideinstanssi tpi
        join organisaatio o
             on o.id = u.hallintayksikko
             on u.id = tpi.urakka
-       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%'
+       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%' AND tpk."raportoi-tehtava?" = TRUE
        join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
                  on suunnitelmat.tehtava = tpk.id
