@@ -137,13 +137,19 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
                   ["333"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :rc-prosentti)
+                  nil))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :rc-prosentti)
+                  ["5"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali :kaista)
                   ["11"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
                   ["1"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :sideainetyyppi)
-                  ["12"]))
+                  ["6"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :kiviainesesiintyman-nimi)
                   ["Kaiskakallio"]))
