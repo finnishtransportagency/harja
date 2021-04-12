@@ -2503,8 +2503,8 @@
                  Tämän avulla tarkastetaan, että taulukkojen tila on ok."}
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
-(defn kustannussuunnitelma*
-  [_ app]
+(defn kustannussuunnitelma
+  [app]
   (let [nakyman-setup (cljs.core/atom {:lahdetty-nakymasta? false})]
     (komp/luo
       (komp/piirretty (fn [_]
@@ -2524,7 +2524,6 @@
                                                     (loop [[event & events] [(t/->Hoitokausi)
                                                                              (t/->TaulukoidenVakioarvot)
                                                                              (t/->FiltereidenAloitusarvot)
-                                                                             (t/->YleisSuodatinArvot)
                                                                              (t/->Oikeudet)
                                                                              (t/->HaeKustannussuunnitelma)]]
                                                       (when (and (not (:lahdetty-nakymasta? @nakyman-setup))
@@ -2643,6 +2642,3 @@
             (get-in app [:gridit :tilaajan-varaukset :grid])
             (dissoc suodattimet :hankinnat)
             (:kantahaku-valmis? app)]])))))
-
-(defn kustannussuunnitelma []                               ; petar ovo je komponenta koja odgovara tabu
-  [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

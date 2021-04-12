@@ -1777,7 +1777,7 @@
                                     (pvm/vuosi urakan-alkupvm))
                                1
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
-      (println "petar evo sad postavljam default " (pr-str default-hoitokausi))
+      (println "petar evo sad postavljam default " (pr-str (get-in app [:suodattimet])))
       (-> app
           (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
           (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))
