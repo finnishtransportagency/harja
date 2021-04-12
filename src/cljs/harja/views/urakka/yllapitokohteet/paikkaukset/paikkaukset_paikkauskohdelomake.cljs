@@ -1,20 +1,18 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake
-  (:require [tuck.core :as tuck]
-            [harja.pvm :as pvm]
-            [harja.loki :refer [log]]
+  (:require [harja.loki :refer [log]]
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka.urakka :as tila]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
+            [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.debug :as debug]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
-            [harja.ui.modal :as modal]
-            [harja.domain.paikkaus :as paikkaus]))
+            [harja.ui.kentat :as kentat]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
 
 (defn- nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
   (fn [] (modal/nayta!
@@ -88,7 +86,9 @@
       :vayla-tyyli? true
       :virhe? (nayta-virhe? [:suunniteltu-maara] lomake)
       ::lomake/col-luokka "col-sm-4"
-      :rivi-luokka "lomakeryhman-rivi-tausta"}
+      :rivi-luokka "lomakeryhman-rivi-tausta"
+      :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
+                   true)}
      {:otsikko "Yksikkö"
       :tyyppi :valinta
       :valinnat (vec paikkaus/paikkauskohteiden-yksikot)
@@ -96,7 +96,9 @@
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (nayta-virhe? [:yksikko] lomake)
-      ::lomake/col-luokka "col-sm-2"}
+      ::lomake/col-luokka "col-sm-2"
+      :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
+                   true)}
      {:otsikko "Suunniteltu hinta"
       :tyyppi :numero
       :desimaalien-maara 2
@@ -106,7 +108,9 @@
       :pakollinen? true
       :vayla-tyyli? true
       :virhe? (nayta-virhe? [:suunniteltu-hinta] lomake)
-      :yksikko "€"})
+      :yksikko "€"
+      :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
+                   true)})
    (lomake/rivi
      {:otsikko "Lisätiedot"
       :tyyppi :text
@@ -191,6 +195,7 @@
     :tyyppi :string
     :nimi :nro
     :vayla-tyyli? true
+    :pakollinen? true
     ::lomake/col-luokka "col-sm-3"}
    {:otsikko "Työmenetelmä"
     :tyyppi :valinta
@@ -200,9 +205,11 @@
     :vayla-tyyli? true
     :virhe? (nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
-    ::lomake/col-luokka "col-sm-12"}])
+    ::lomake/col-luokka "col-sm-12"
+    :disabled? (when (= "tilattu" (:paikkauskohteen-tila lomake))
+                 true)}])
 
-(defn paikkauskohde-skeema [e! voi-muokata? lomake]
+(defn paikkauskohde-skeema [voi-muokata? lomake]
   (let [nimi-nro-ja-tp (when voi-muokata?
                          (nimi-numero-ja-tp-kentat lomake))
         sijainti (when voi-muokata?
@@ -250,7 +257,7 @@
 
    [:hr]
 
-   ;; Lukutilassa on kaksi erilaista vaihtoehtoa - tilattu tai valmis  ja muut
+   ;; Lukutilassa on kaksi erilaista vaihtoehtoa - tilattu tai valmis ja muut
    (if (or (= "tilattu" (:paikkauskohteen-tila lomake))
            (= "valmis" (:paikkauskohteen-tila lomake)))
      ;; Tilattu
@@ -264,6 +271,8 @@
 
       ;; Lisätiedot
       [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
+      [:div {:style {:padding-bottom "16px"}}]
+
       ;; Harmaisiin laatikoihin
       [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
        [:div.col-xs-12
@@ -286,7 +295,7 @@
         [:div.col-xs-6
          [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))]] ;; :koostettu-maara
         [:div.col-xs-6
-         [lukutila-rivi "Toteutunut määrä" (str " - ")]]]]
+         [lukutila-rivi "Toteutunut määrä" (str " ")]]]]
       (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
         [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "4px"}}
          [:div.col-xs-12
@@ -296,6 +305,7 @@
            [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))]] ;; :koostettu-maara
           [:div.col-xs-6
            [lukutila-rivi "Toteutunut hinta" (fmt/euro-opt (:toteutunut-hinta lomake))]]]])]
+
      ;; Ja muut
      [:div.col-xs-12
       [lukutila-rivi "Työmenetelmä" (paikkaus/kuvaile-tyomenetelma (:tyomenetelma lomake))]
@@ -313,7 +323,8 @@
       [lukutila-rivi "Suunniteltu määrä" (str (:suunniteltu-maara lomake) " " (:yksikko lomake))] ;; :koostettu-maara
       (when (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))
         [lukutila-rivi "Suunniteltu hinta" (fmt/euro-opt (:suunniteltu-hinta lomake))])
-      [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]])])
+      [lukutila-rivi "Lisätiedot" (:lisatiedot lomake)]
+      [:div {:style {:padding-bottom "16px"}}]])])
 
 (defn- footer-oikeat-napit [e! lomake muokkaustila? voi-tilata? voi-perua?]
   [:div {:style {:text-align "end"}}

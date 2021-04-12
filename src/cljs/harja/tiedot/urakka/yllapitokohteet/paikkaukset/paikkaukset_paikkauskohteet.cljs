@@ -363,9 +363,7 @@
                    (not (empty? paikkauskohteet))
                    (not (nil? zoomattavat-geot))
                    (not (empty? zoomattavat-geot)))
-          ;(js/console.log "reset ja keskitys")
           (reset! paikkauskohteet-kartalle/karttataso-paikkauskohteet paikkauskohteet)
-          #_(kartta-tiedot/keskita-kartta-alueeseen! zoomattavat-geot)
           (reset! paikkauskohteet-kartalle/valitut-kohteet-atom (set (mapv :id paikkauskohteet))))
         (-> app
             (assoc :lomake nil) ;; Sulje mahdollinen lomake
