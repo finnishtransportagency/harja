@@ -23,7 +23,10 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
             [harja.pvm :as pvm]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.urakka :as u]
+            [harja.fmt :as fmt])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn- hallinnollisen-otsikointi [ryhma]
@@ -755,64 +758,77 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
+                      (e! (tiedot/->HaeUrakanToimenpiteetJaMaksuerat (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
+                      (e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
+                                                     :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
+                                                     :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
-    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-alkupvm haun-loppupvm]} :parametrit lomake :lomake tehtavaryhmat :tehtavaryhmat :as app}]
-      [:div#vayla
-       (if syottomoodi
-         [:div
-          [kulujen-syottolomake e! app]]
-         [:div
-          [:div.flex-row
-           [:h2 "Kulujen kohdistus"]
-           ^{:key "raporttixls"}
-           [:form {:style  {:margin-left "auto"}
-                   :target "_blank" :method "POST"
-                   :action (k/excel-url :kulut)}
-            [:input {:type  "hidden" :name "parametrit"
-                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
-                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
-                                             :alkupvm     haun-alkupvm
-                                             :loppupvm    haun-loppupvm})}]
-            [:button {:type  "submit"
-                      :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
-           ^{:key "raporttipdf"}
-           [:form {:style  {:margin-left  "16px"
+    (fn [e! {taulukko :taulukko syottomoodi :syottomoodi {:keys [hakuteksti haun-kuukausi haun-alkupvm haun-loppupvm]} :parametrit lomake :lomake tehtavaryhmat :tehtavaryhmat :as app}]
+      (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
+            kuukaudet (pvm/aikavalin-kuukausivalit
+                        [hk-alkupvm
+                         hk-loppupvm])]
+        [:div#vayla
+         [debug/debug app]
+        (if syottomoodi
+          [:div
+           [kulujen-syottolomake e! app]]
+          [:div
+           [:div.flex-row
+            [:h2 "Kulujen kohdistus"]
+            ^{:key "raporttixls"}
+            [:form {:style {:margin-left "auto"}
+                    :target "_blank" :method "POST"
+                    :action (k/excel-url :kulut)}
+             [:input {:type "hidden" :name "parametrit"
+                      :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                                              :urakka-nimi (-> @tila/yleiset :urakka :nimi)
+                                              :kuukausi haun-kuukausi
+                                              :alkupvm haun-alkupvm
+                                              :loppupvm haun-loppupvm})}]
+             [:button {:type "submit"
+                       :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
+            ^{:key "raporttipdf"}
+            [:form {:style {:margin-left "16px"
                             :margin-right "64px"}
-                   :target "_blank" :method "POST"
-                   :action (k/pdf-url :kulut)}
-            [:input {:type  "hidden" :name "parametrit"
-                     :value (t/clj->transit {:urakka-id   (-> @tila/yleiset :urakka :id)
-                                             :urakka-nimi (-> @tila/yleiset :urakka :nimi)
-                                             :alkupvm     haun-alkupvm
-                                             :loppupvm    haun-loppupvm})}]
-            [:button {:type  "submit"
-                      :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
-           [napit/yleinen-ensisijainen
-            "Uusi kulu"
-            #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-            {:vayla-tyyli? true
-             :luokka       "suuri"}]]
+                    :target "_blank" :method "POST"
+                    :action (k/pdf-url :kulut)}
+             [:input {:type "hidden" :name "parametrit"
+                      :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                                              :urakka-nimi (-> @tila/yleiset :urakka :nimi)
+                                              :kuukausi haun-kuukausi
+                                              :alkupvm haun-alkupvm
+                                              :loppupvm haun-loppupvm})}]
+             [:button {:type "submit"
+                       :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
+            [napit/yleinen-ensisijainen
+             "Uusi kulu"
+             #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+             {:vayla-tyyli? true
+              :luokka "suuri"}]]
 
-          [:div.flex-row
-           #_[kentat/vayla-lomakekentta
-              "Kirjoita tähän halutessasi lisätietoa"
-              :on-change #(e! (tiedot/->AsetaHakuTeksti (-> % .-target .-value)))
-              :arvo hakuteksti]
-           [kentat/aikavali
-            {:valinta-fn               #(e! (tiedot/->AsetaHakuparametri %1 %2))
-             :pvm-alku                 (or haun-alkupvm
-                                           (-> @tila/yleiset :urakka :alkupvm))
-             :rajauksen-alkupvm        (-> @tila/yleiset :urakka :alkupvm)
-             :rajauksen-loppupvm       (-> @tila/yleiset :urakka :loppupvm)
-             :pvm-loppu                (or haun-loppupvm
-                                           (-> @tila/yleiset :urakka :loppupvm))
-             :ikoni                    ikonit/calendar
-             :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id       (-> @tila/yleiset :urakka :id)
-                                                                       :alkupvm  %1
-                                                                       :loppupvm %2}))}]]
-          (when taulukko
-            [p/piirra-taulukko taulukko])])])))
+           [:div.flex-row {:style {:justify-content "flex-start"}}
+            [valinnat/kuukausi {:nil-valinta yleiset/valitse-text
+                                :vayla-tyyli? true
+                                :valitse-fn #(do
+                                               (e! (tiedot/->AsetaHakukuukausi %))
+                                               (e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
+                                                                              :kuukausi %})))}
+             kuukaudet haun-kuukausi]
+            [:div.label-ja-alasveto.aikavali
+             [:span.alasvedon-otsikko "Aikaväli"]
+             [kentat/aikavali
+              {:valinta-fn #(e! (tiedot/->AsetaHakuparametri %1 %2))
+               :pvm-alku haun-alkupvm
+               :rajauksen-alkupvm (-> @tila/yleiset :urakka :alkupvm)
+               :rajauksen-loppupvm (-> @tila/yleiset :urakka :loppupvm)
+               :pvm-loppu haun-loppupvm
+               :ikoni ikonit/calendar
+               :sumeutus-kun-molemmat-fn #(e! (tiedot/->HaeUrakanLaskut {:id (-> @tila/yleiset :urakka :id)
+                                                                         :alkupvm %1
+                                                                         :loppupvm %2}))}]]]
+           (when taulukko
+             [p/piirra-taulukko taulukko])])]))))
 
 (defn kohdistetut-kulut
   []

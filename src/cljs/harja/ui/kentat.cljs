@@ -8,7 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
             [harja.ui.sijaintivalitsin :as sijaintivalitsin]
-            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px]]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
@@ -1660,6 +1660,9 @@
   :rajauksen-alkupvm / -loppupvm antavat maksimi raja-arvot päivämäärille
   "
   [{:keys [ikoni rajauksen-alkupvm rajauksen-loppupvm] :as _optiot}]
+  ;; TODO: Tämä aikavali-kentta on käytössä vain yhdessä paikassa Harjaa (kulut). Muualla (12 usages) käytetään harja.ui.valinnat/aikavali komponenttia
+  ;; Tavoitteena pitäisi olla yhdistää nämä kaksi maailmaa siten, että jäljelle jää yksi komponentti ja sille halutun kaltainen toiminnallisuus
+  ;; Jos tähän komponenttiin alkaa kohdistua bugeja tai muutostarpeita, kannattaa mielestäni lähteä maksamaan tämä tekninen velka samalla
   (let [auki? (r/atom false)
         fokus-vaerit {:outline-color  "#0068B3"
                       :outline-width  "3px"
@@ -1739,9 +1742,11 @@
         (let [{:keys [valittu-pvm syottobufferi koskettu?]} @sisaiset]
           [:div.aikavali
            [vayla-lomakekentta
-            "Aikaväli"
+            ""
+            :tyylit {:kontti #{"aikavalikentta"}}
+            :otsikko-tag :span
             :ikoni ikoni
-            :placeholder "-valitse-"
+            :placeholder yleiset/valitse-text
             :value (or (when (and pvm-alku pvm-loppu)
                          (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
                        "")
