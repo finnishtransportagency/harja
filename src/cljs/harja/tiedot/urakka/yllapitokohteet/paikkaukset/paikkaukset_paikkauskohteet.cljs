@@ -6,10 +6,10 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.domain.paikkaus :as paikkaus])
@@ -86,6 +86,7 @@
 (defrecord LaskePituusOnnistui [vastaus])
 (defrecord LaskePituusEpaonnistui [vastaus])
 (defrecord JarjestaPaikkauskohteet [jarjestys])
+(defrecord AsetaToteumatyyppi [uusi-tyyppi])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -347,7 +348,10 @@
                                      (assoc :formatoitu-sijainti
                                             (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))
                                      (assoc :loppupvm-arvio (fmt-valmistuminen (:loppupvm kohde)))
-                                     (assoc :paivays (or (:muokattu kohde) (:luotu kohde)))))
+                                     (assoc :paivays (or (:muokattu kohde) (:luotu kohde)))
+                                     (assoc :toteumatyyppi (cond
+                                                             (true? (:pot? kohde)) :pot
+                                                             :else :normaali))))
                                vastaus)
           zoomattavat-geot (into [] (concat (mapv (fn [p]
                                                     (when (and
@@ -423,9 +427,16 @@
 
   TilaaPaikkauskohde
   (process-event [{paikkauskohde :paikkauskohde} app]
-    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "tilattu")]
+    (let [paikkauskohde (assoc paikkauskohde :paikkauskohteen-tila "tilattu")
+          paikkauskohde (if (get-in app [:lomake :toteumatyyppi])
+                          (-> paikkauskohde
+                              (assoc :pot? (cond
+                                             (= :pot (get-in app [:lomake :toteumatyyppi])) true
+                                             (= :normaali (get-in app [:lomake :toteumatyyppi])) false
+                                             :else false))
+                              (dissoc :toteumatyyppi))
+                          paikkauskohde)]
       (do
-        (println "Merkitään paikkauskohde [" (:nimi paikkauskohde) "] tilatuksi")
         (tallenna-paikkauskohde paikkauskohde ->TilaaPaikkauskohdeOnnistui ->TilaaPaikkauskohdeEpaonnistui)
         app)))
 
@@ -563,8 +574,54 @@
           (assoc-in [:jarjestys :nimi] jarjestys)
           (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
           (assoc :paikkauskohteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:paikkauskohteet app))))))
+
+  AsetaToteumatyyppi
+  (process-event [{uusi-tyyppi :uusi-tyyppi} app]
+    (assoc-in app [:lomake :toteumatyyppi] uusi-tyyppi))
   )
 
 (def tyomenetelmat
   (into ["Kaikki"] paikkaus/paikkauskohteiden-tyomenetelmat))
+
+(defn kayttaja-on-urakoitsija? [urakkaroolit]
+  (let [urakkaroolit (if (set? urakkaroolit)
+                       urakkaroolit
+                       #{urakkaroolit})
+        urakoitsijaroolit #{"Laatupaallikko"
+                            "Kayttaja"
+                            "vastuuhenkilo"
+                            "Laadunvalvoja"
+                            "Kelikeskus"
+                            "Paivystaja"}]
+    ;; Annetut roolit set voi olla kokonaan tyhjä
+    (if (empty? urakkaroolit)
+      ;; Jos tyhjä, ei ole urakoitsija
+      false
+      ;; Jos rooli on annettu, tarkista onko urakoitsija
+      (some (fn [rooli]
+              (true?
+                (some #(= rooli %) urakoitsijaroolit)))
+            urakkaroolit))))
+
+(defn kayttaja-on-tilaaja? [roolit]
+  (let [roolit (if (set? roolit)
+                 roolit
+                 #{roolit})
+        tilaajaroolit #{"Jarjestelmavastaava"
+                        "Tilaajan_Asiantuntija"
+                        "Tilaajan_Kayttaja"
+                        "Tilaajan_Urakanvalvoja"
+                        "Tilaajan_laadunvalvoja"
+                        "Tilaajan_turvallisuusvastaava"
+                        "Tilaajan_Rakennuttajakonsultti"}]
+    ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
+    ;; myös aina tilaaja
+    (if (or
+          (roolit/jvh? @istunto/kayttaja)
+          (= :tilaaja (roolit/osapuoli @istunto/kayttaja)))
+      true
+      (some (fn [rooli]
+              (true?
+                (some #(= rooli %) tilaajaroolit)))
+            roolit))))
 

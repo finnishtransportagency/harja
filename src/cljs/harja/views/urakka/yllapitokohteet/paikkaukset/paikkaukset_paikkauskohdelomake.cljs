@@ -220,6 +220,19 @@
                  sijainti
                  suunnitelma))))
 
+(defn- nayta-pot-valinta?
+  " Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
+  Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
+  Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
+  [lomake]
+  (let [
+        nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                    (= "ehdotettu" (:paikkauskohteen-tila lomake))
+                    (or (= "AB-paikkaus levittäjällä" (:tyomenetelma lomake))
+                        (= "PAB-paikkaus levittäjällä" (:tyomenetelma lomake))
+                        (= "SMA-paikkaus levittäjällä" (:tyomenetelma lomake))))]
+    nayta?))
+
 (defn- lomake-lukutila [e! lomake nayta-muokkaus?]
   [:div
    [:div {:style {:padding-left "16px" :padding-top "32px"}}
@@ -437,6 +450,7 @@
   (let [muokkaustila? (or
                         (= :paikkauskohteen-muokkaus (:tyyppi lomake))
                         (= :uusi-paikkauskohde (:tyyppi lomake)))
+        toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
         kayttajarooli (roolit/osapuoli @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
         voi-tilata? (or (and
@@ -477,10 +491,29 @@
                   (if (:id lomake) "Muokkaa paikkauskohdetta" "Ehdota paikkauskohdetta"))
        :muokkaa! #(e! (t-paikkauskohteet/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
        :footer-fn (fn [lomake]
-                    (let [lomake-ilman-lomaketietoja (lomake/ilman-lomaketietoja lomake)
-                          urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
+                    (let [urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
                       [:div.row
                        [:hr]
+
+                       ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
+                       ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
+                       (when (and (not muokkaustila?)
+                               (nayta-pot-valinta? lomake))
+                         [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
+                          [:div.row
+                           [:div.col-xs-12
+                            [:h4 "RAPORTOINTITAPA"]]]
+                          [:div.row {:style {:padding-left "16px"}}
+                           [kentat/tee-kentta {:tyyppi :radio-group
+                                               :nimi :toteumatyyppi
+                                               :otsikko ""
+                                               :vaihtoehdot [:normaali :pot]
+                                               :nayta-rivina? true
+                                               :vayla-tyyli? true
+                                               :vaihtoehto-nayta {:pot "POT-lomake"
+                                                                  :normaali "Toteumat"}
+                                               :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppi %))}
+                            toteumatyyppi-arvo]]])
 
                        ;;TODO: Enabloi tämä, kun sähköpostin lähetys on toteutettu
                        #_(when (and (not urakoitsija?) voi-tilata? (not muokkaustila?))
@@ -493,7 +526,7 @@
                          [footer-vasemmat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]
                         [:div.col-xs-4
                          [footer-oikeat-napit e! lomake muokkaustila? voi-tilata? voi-perua?]]]]))}
-      (paikkauskohde-skeema e! muokkaustila? lomake) ;;TODO: korjaa päivitys
+      (paikkauskohde-skeema muokkaustila? lomake) ;;TODO: korjaa päivitys
       lomake]]))
 
 (defn paikkauslomake [e! lomake] ;; TODO: Parempi nimeäminen

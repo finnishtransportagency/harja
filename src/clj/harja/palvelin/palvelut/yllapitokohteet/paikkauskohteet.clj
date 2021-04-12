@@ -9,15 +9,10 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
-            [harja.geo :as geo]
             [harja.kyselyt.paikkaus :as q]
-            [harja.kyselyt.urakat :as q-urakat]
-            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
             [clojure.string :as str]
-            [clojure.java.io :as io]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]))
@@ -113,7 +108,6 @@
     validointivirheet))
 
 (defn tallenna-paikkauskohde! [db user kohde]
-  (println "tallenna-paikkauskohde! voi voi-lukea? " (pr-str (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)) (pr-str (roolit/osapuoli user)))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
   (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kayttajarooli (roolit/osapuoli user)
@@ -123,7 +117,6 @@
                                                                    :urakka-id (:urakka-id kohde)})))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
-        _ (println "tallenna-paikkauskohde! :: validointivirheet" (pr-str validointivirheet))
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)
                 (if kohde-id
@@ -147,6 +140,7 @@
                                                  :alkupvm (:alkupvm kohde)
                                                  :loppupvm (:loppupvm kohde)
                                                  :tyomenetelma (or (:tyomenetelma kohde) nil)
+                                                 :pot? (:pot? kohde)
                                                  :tie (:tie kohde)
                                                  :aosa (:aosa kohde)
                                                  :losa (:losa kohde)
@@ -158,33 +152,32 @@
                                                  :yksikko (:yksikko kohde)
                                                  :lisatiedot (:lisatiedot kohde)}))
                     kohde)
-                  (do
-                    (println "Tallennettiin uusi :: antamalla " (pr-str kohde))
-                    (q/luo-uusi-paikkauskohde<! db
-                                                (merge
-                                                  (when on-kustannusoikeudet?
-                                                    {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
-                                                  {:luoja-id (:id user)
-                                                   :ulkoinen-id (:ulkoinen-id kohde)
-                                                   :nimi (:nimi kohde)
-                                                   :urakka-id (:urakka-id kohde)
-                                                   :luotu (or (:luotu kohde) (pvm/nyt))
-                                                   :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
-                                                   :virhe (:virhe kohde)
-                                                   :nro (:nro kohde)
-                                                   :alkupvm (:alkupvm kohde)
-                                                   :loppupvm (:loppupvm kohde)
-                                                   :tyomenetelma (:tyomenetelma kohde)
-                                                   :tie (:tie kohde)
-                                                   :aosa (:aosa kohde)
-                                                   :losa (:losa kohde)
-                                                   :aet (:aet kohde)
-                                                   :let (:let kohde)
-                                                   :ajorata (:ajorata kohde)
-                                                   :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                                                   :suunniteltu-maara (:suunniteltu-maara kohde)
-                                                   :yksikko (:yksikko kohde)
-                                                   :lisatiedot (:lisatiedot kohde)})))))
+                  (q/luo-uusi-paikkauskohde<! db
+                                              (merge
+                                                (when on-kustannusoikeudet?
+                                                  {:suunniteltu-hinta (:suunniteltu-hinta kohde)})
+                                                {:luoja-id (:id user)
+                                                 :ulkoinen-id (:ulkoinen-id kohde)
+                                                 :nimi (:nimi kohde)
+                                                 :urakka-id (:urakka-id kohde)
+                                                 :luotu (or (:luotu kohde) (pvm/nyt))
+                                                 :yhalahetyksen-tila (:yhalahetyksen-tila kohde)
+                                                 :virhe (:virhe kohde)
+                                                 :nro (:nro kohde)
+                                                 :alkupvm (:alkupvm kohde)
+                                                 :loppupvm (:loppupvm kohde)
+                                                 :tyomenetelma (:tyomenetelma kohde)
+                                                 :pot? (:pot? kohde)
+                                                 :tie (:tie kohde)
+                                                 :aosa (:aosa kohde)
+                                                 :losa (:losa kohde)
+                                                 :aet (:aet kohde)
+                                                 :let (:let kohde)
+                                                 :ajorata (:ajorata kohde)
+                                                 :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                                                 :suunniteltu-maara (:suunniteltu-maara kohde)
+                                                 :yksikko (:yksikko kohde)
+                                                 :lisatiedot (:lisatiedot kohde)}))))
 
         _ (println "kohde: " (pr-str kohde))
         ]
@@ -209,7 +202,6 @@
 (defn- kasittele-excel [db urakka-id kayttaja req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
-        ;_ (println "Excelin data" (pr-str paikkauskohteet))
         ;; Urakalla ei saa olla kahta saman nimistä paikkauskohdetta. Niinpä varmistetaan, ettei näin ole ja jos ei ole, niin tallennetaan paikkauskohde kantaan
         kohteet (when (not (empty? paikkauskohteet))
                   (keep
@@ -218,11 +210,8 @@
                             p (-> p
                                   (assoc :urakka-id urakka-id)
                                   (assoc :paikkauskohteen-tila "ehdotettu"))
-                            kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)
-                            ;_ (println "kohde" (pr-str kohde) (pr-str p))
-                            ]
+                            kohde (q/onko-kohde-olemassa-nimella? db (:nimi p) urakka-id)]
                         (if (empty? kohde)
-                          ;(println "Tallennetaan kohde!")
                           (try+
 
                             (tallenna-paikkauskohde! db kayttaja p)
@@ -236,9 +225,9 @@
                     paikkauskohteet))
         tallennetut (filterv #(nil? (:virhe %)) kohteet)
         virheet (filterv #(some? (:virhe %)) kohteet)
-        _ (println "kohteet" (pr-str kohteet))
-        _ (println "tallennetut" tallennetut)
-        _ (println "virheet" virheet)
+        ;_ (println "kohteet" (pr-str kohteet))
+        ;_ (println "tallennetut" tallennetut)
+        ;_ (println "virheet" virheet)
         body (cheshire/encode (cond
                                 ;; Löytyy enemmän kuin 0 tallennettua kohdetta
                                 (> (count tallennetut) 0)
@@ -250,8 +239,7 @@
                                 {:virheet virheet}
                                 ;; Muussa tapauksessa excelistä ei löydy paikkauskohteita
                                 :else
-                                {:virheet [{:virhe "Excelistä ei löydetty paikkauskohteita!"}]}))
-        _ (println "Body " (pr-str body))]
+                                {:virheet [{:virhe "Excelistä ei löydetty paikkauskohteita!"}]}))]
     ;; Vielä ei selvää, halutaanko tallentaa mitään, jos seassa virheellisiä.
     ;; Oletetaan toistaiseksi, että halutaan tallentaa ne, joissa ei ole virheitä
     ;; ja palautetaan tieto myös virheellistä kohteista.
@@ -261,16 +249,13 @@
        :body body}
       {:status 400
        :headers {"Content-Type" "application/json; charset=UTF-8"}
-       :body body}))
-  )
+       :body body})))
 
 (defn vastaanota-excel [db req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
                                   (:kayttaja req)
                                   (Integer/parseInt (get (:params req) "urakka-id")))
-  (let [ ;_ (println "Tuli bäkkäriin !!! upload-file" (pr-str req))
-        ;; TODO: Tarkista oikeudet
-        urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
+  (let [urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
         kayttaja (:kayttaja req)]
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and (not (nil? urakka-id))

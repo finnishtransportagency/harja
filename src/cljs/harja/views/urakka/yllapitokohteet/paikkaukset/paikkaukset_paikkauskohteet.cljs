@@ -40,48 +40,6 @@
         (time-core/year (first aika)))
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
-(defn- kayttaja-on-urakoitsija? [urakkaroolit]
-  (let [urakkaroolit (if (set? urakkaroolit)
-                       urakkaroolit
-                       #{urakkaroolit})
-        urakoitsijaroolit #{"Laatupaallikko"
-                            "Kayttaja"
-                            "vastuuhenkilo"
-                            "Laadunvalvoja"
-                            "Kelikeskus"
-                            "Paivystaja"}]
-    ;; Annetut roolit set voi olla kokonaan tyhjä
-    (if (empty? urakkaroolit)
-      ;; Jos tyhjä, ei ole urakoitsija
-      false
-      ;; Jos rooli on annettu, tarkista onko urakoitsija
-      (some (fn [rooli]
-              (true?
-                (some #(= rooli %) urakoitsijaroolit)))
-            urakkaroolit))))
-
-(defn- kayttaja-on-tilaaja? [roolit]
-  (let [roolit (if (set? roolit)
-                 roolit
-                 #{roolit})
-        tilaajaroolit #{"Jarjestelmavastaava"
-                        "Tilaajan_Asiantuntija"
-                        "Tilaajan_Kayttaja"
-                        "Tilaajan_Urakanvalvoja"
-                        "Tilaajan_laadunvalvoja"
-                        "Tilaajan_turvallisuusvastaava"
-                        "Tilaajan_Rakennuttajakonsultti"}]
-    ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
-    ;; myös aina tilaaja
-    (if (or
-          (roolit/jvh? @istunto/kayttaja)
-          (= :tilaaja (roolit/osapuoli @istunto/kayttaja)))
-      true
-      (some (fn [rooli]
-              (true?
-                (some #(= rooli %) tilaajaroolit)))
-            roolit))))
-
 (defn- paikkauskohteet-taulukko [e! app]
   (let [;_ (js/console.log "käyttäjän urakan tiedot" (pr-str (-> @tila/tila :yleiset :urakka)))
         ;_ (js/console.log "roolit" (pr-str (roolit/osapuoli @istunto/kayttaja)))
@@ -102,9 +60,9 @@
         ;                                                       oikeudet/urakat-paikkaukset-paikkauskohteet
         ;                                                       (-> @tila/tila :yleiset :urakka :id)
         ;                                                       @istunto/kayttaja)))
-        ;_ (js/console.log "on urakoitsija?" (pr-str (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
+        ;_ (js/console.log "on urakoitsija?" (pr-str (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
         ;_
-        ; (js/console.log "on tilaaja?" (pr-str (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja) (-> @tila/tila :yleiset :urakka :tyyppi))))
+        ; (js/console.log "on tilaaja?" (pr-str (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja) (-> @tila/tila :yleiset :urakka :tyyppi))))
         urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
@@ -116,18 +74,18 @@
                   ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
                   (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                   {:otsikko "Valmistuminen"
-                   :leveys 2
+                   :leveys 1.5
                    :nimi :loppupvm-arvio}
                   ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                   ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                   ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
                   ;; ei näytetä muokkaustietoa.
                   (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
-                       (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
+                                (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
-                   :leveys 2
+                   :leveys 1.5
                    :nimi :paivays
                    :fmt (fn [arvo]
                           [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])}
@@ -135,7 +93,7 @@
                   :else nil
                   )
                 {:otsikko "NRO"
-                 :leveys 2
+                 :leveys 1.5
                  :nimi :nro}
                 {:otsikko "Nimi"
                  :leveys 4
@@ -235,10 +193,10 @@
                                  ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
                                  ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
                                  (when (and (not aluekohtaisissa?)
-                                            (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                            (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                                                 ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
                                                 (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                                     (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
+                                                     (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                                    (e! (t-paikkauskohteet/->AvaaLomake (merge kohde {:tyyppi :paikkauskohteen-katselu}))))))
               :otsikkorivi-klikattu (fn [opts]
                                       (e! (t-paikkauskohteet/->JarjestaPaikkauskohteet (:nimi opts))))}
@@ -255,9 +213,9 @@
                                       ;; Päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                                       ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                                       ;; Joten yhteenvetoriville tyhjä column
-                                      (or (kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
+                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/osapuoli @istunto/kayttaja))
                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                               (kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
+                                               (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
                                       {:teksti ""}
                                       ;; Defaulttina eli esim alueurakoitsijalle ei näytetä koko kenttää
                                       ;; Joten ei tyhjää riviä

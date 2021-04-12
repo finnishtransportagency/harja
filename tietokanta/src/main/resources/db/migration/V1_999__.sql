@@ -15,6 +15,7 @@ ALTER TABLE paikkauskohde
     ADD COLUMN "suunniteltu-hinta" NUMERIC, -- Paikkauksen arvioitu hinta
     ADD COLUMN yksikko TEXT, -- Suunnitellun määrän yksikkö
     ADD COLUMN lisatiedot TEXT, -- Paikkauskohteelle voi antaa ehdotusta tehdessä lisätietoja
+    ADD COLUMN "pot?" BOOLEAN DEFAULT FALSE, -- Muutamalla työmenetelmällä voi valita, että toteutukset menevätkin pot lomakkeen kautta
     ALTER COLUMN "ulkoinen-id" DROP NOT NULL; -- Poistetaan rajoitus, koska nyt kohteet eivät enää tule aina ulkoa.
 
 ALTER TABLE paikkauskohde
