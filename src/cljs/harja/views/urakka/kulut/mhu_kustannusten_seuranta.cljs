@@ -355,18 +355,16 @@
                              2019
                              (:hoitokauden-alkuvuosi app))
         valittu-kuukausi (:valittu-kuukausi app)
-        db-hk-alkupvm "-10-01"
-        db-hk-loppupvm "-09-30"
         hoitokauden-kuukaudet (vec (pvm/aikavalin-kuukausivalit
-                                     [(pvm/->pvm (str kustannusten-seuranta-tiedot/fin-hk-alkupvm valittu-hoitokausi))
-                                      (pvm/->pvm (str kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc valittu-hoitokausi)))]))
+                                     [(pvm/hoitokauden-alkupvm valittu-hoitokausi)
+                                      (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))]))
         hoitokauden-kuukaudet (into ["Kaikki"] hoitokauden-kuukaudet)
         haun-alkupvm (if valittu-kuukausi
                        (first valittu-kuukausi)
-                       (str valittu-hoitokausi db-hk-alkupvm))
+                       (pvm/iso8601 (pvm/hoitokauden-alkupvm valittu-hoitokausi)))
         haun-loppupvm (if valittu-kuukausi
                         (second valittu-kuukausi)
-                        (str (inc valittu-hoitokausi) db-hk-loppupvm))]
+                        (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))]
     [:div.kustannusten-seuranta
      [debug/debug app]
      [:div
