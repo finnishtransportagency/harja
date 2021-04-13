@@ -524,6 +524,13 @@
      ""
      (desimaaliluku luku tarkkuus ryhmitelty?))))
 
+(defn kokonaisluku-opt
+  [luku]
+  (assert (number? luku) "Luvun on oltava numerotyyppinen.")
+  (if luku
+    (int luku)
+    ""))
+
 (defn pyorista-ehka-kolmeen [arvo]
   (let [desimaalit-seq (s/split (str arvo) #"\.")
         desimaalit (if (> (count desimaalit-seq) 1)

@@ -124,6 +124,7 @@
   (case fmt
     ;; Jos halutaan tukea erityyppisiä sarakkeita,
     ;; pitää tänne lisätä formatter.
+    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)

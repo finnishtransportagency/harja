@@ -61,6 +61,7 @@
 
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
+    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
