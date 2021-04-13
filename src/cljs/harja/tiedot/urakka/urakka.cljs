@@ -247,7 +247,7 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 
-(defonce suunnittelu (cursor tila [:suunnitelu]))
+(defonce suunnittelu (cursor tila [:suunnittelu]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
                                                              :toteutuneet-maarat    nil

@@ -60,7 +60,7 @@
                        (valilehti-mahdollinen? :kustannussuunnitelma ur)
                        (istunto/ominaisuus-kaytossa? :mhu-urakka))
               ^{:key "kustannussuunnitelma"}
-              [kustannussuunnitelma/kustannussuunnitelma e! app])
+              [kustannussuunnitelma/kustannussuunnitelma e! (:kustannussuunnitelma app)])
 
             "Tehtävät ja määrät"
             :tehtavat
@@ -68,7 +68,7 @@
                        (valilehti-mahdollinen? :tehtavat ur)
                        (istunto/ominaisuus-kaytossa? :mhu-urakka))
               ^{:key "tehtavat"}
-              [tehtavat/tehtavat e! app])
+              [tehtavat/tehtavat e! (:tehtavat app)])
 
             "Kokonaishintaiset työt"
             :kokonaishintaiset
