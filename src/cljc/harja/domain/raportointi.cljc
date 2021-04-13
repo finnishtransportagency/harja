@@ -121,4 +121,4 @@
     #?(:clj (catch Exception _ arvo))))
 
 (defn numero-fmt? [fmt]
-  (boolean (#{:numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
+  (boolean (#{:kokonaisluku :numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))

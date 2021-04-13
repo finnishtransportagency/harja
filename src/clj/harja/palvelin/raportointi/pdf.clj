@@ -208,23 +208,30 @@
                       (when viimeinen-rivi-yhteenveto?
                         "Yhteenveto on laskettu kaikista riveistä"))]]]))
 
-(defn taulukko-header [optiot sarakkeet]
-  [:fo:table-header
-   (when-let [rivi-ennen (:rivi-ennen optiot)]
-     [:fo:table-row
-      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
-                         :color "#ffffff"
-                         :number-columns-spanned (or sarakkeita 1)
-                         :text-align (tasaus tasaa)}
-         [:fo:block teksti]])])
+(defn taulukko-header [{:keys [oikealle-tasattavat-kentat] :as optiot} sarakkeet]
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+    [:fo:table-header
+     (when-let [rivi-ennen (:rivi-ennen optiot)]
+       [:fo:table-row
+        (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+          [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
+                           :color "#ffffff"
+                           :number-columns-spanned (or sarakkeita 1)
+                           :text-align (tasaus tasaa)}
+           [:fo:block teksti]])])
 
-   [:fo:table-row
-    (for [otsikko (map :otsikko sarakkeet)]
-      [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
-                       :color "#ffffff"
-                       :font-weight "normal" :padding "1mm"}
-       [:fo:block (cdata otsikko)]])]])
+     [:fo:table-row
+      (map-indexed
+        (fn [i {:keys [otsikko fmt tasaa] :as rivi}]
+          [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
+                           :color "#ffffff"
+                           :text-align (if (or (oikealle-tasattavat-kentat i)
+                                               (raportti-domain/numero-fmt? fmt))
+                                         "right"
+                                         (tasaus tasaa))
+                           :font-weight "normal" :padding "1mm"}
+           [:fo:block (cdata otsikko)]])
+        sarakkeet)]]))
 
 (defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja] :as optiot}]
   (let [rivien-maara (count data)
