@@ -126,6 +126,7 @@
     ;; pitää tänne lisätä formatter.
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
+    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
