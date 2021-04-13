@@ -69,9 +69,6 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn- numero-fmt? [fmt]
-  (boolean (#{:numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
-
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                tyhja
@@ -108,7 +105,7 @@
                              :komponentti
                              :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
-                                  (numero-fmt? (:fmt sarake)))
+                                  (raportti-domain/numero-fmt? (:fmt sarake)))
                             :oikea
                             (:tasaa sarake))}
                  (when raporttielementteja?

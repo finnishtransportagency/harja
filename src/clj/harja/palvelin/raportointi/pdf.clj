@@ -183,7 +183,8 @@
                                (border-tyyli sarake)
                                {:padding "1mm"
                                 :font-weight "normal"
-                                :text-align (if (oikealle-tasattavat-kentat i)
+                                :text-align (if (or (oikealle-tasattavat-kentat i)
+                                                    (raportti-domain/numero-fmt? (:fmt sarake)))
                                               "right"
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?

@@ -223,7 +223,7 @@
                       :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma" :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
-                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1 :fmt :numero}])}))
+                     {:otsikko "Toteutunut materiaali\u00ADmäärä" :leveys 1 :fmt :numero}])}))
 
 (defn db-haku-fn
   [db params]
