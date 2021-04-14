@@ -52,13 +52,9 @@
   HaeKustannukset
   (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi
                    aikavali-alkupvm :aikavali-alkupvm aikavali-loppupvm :aikavali-loppupvm} app]
-    (let [alkupvm (when aikavali-alkupvm
-                    (pvm/iso8601 aikavali-alkupvm))
-          loppupvm (when aikavali-loppupvm
-                     (pvm/iso8601 aikavali-loppupvm))
-          urakka-id (-> @tila/yleiset :urakka :id)]
-      (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm))
-    app)
+    (do
+      (hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm)
+      app))
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]

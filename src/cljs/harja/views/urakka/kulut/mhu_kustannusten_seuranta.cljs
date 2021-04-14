@@ -422,7 +422,12 @@
                       (do
                         (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset (:hoitokauden-alkuvuosi app)
-                                                                            nil nil)))))
+                                                                            (if (= "Kaikki" (:valittu-kuukausi app))
+                                                                              nil
+                                                                              (first (:valittu-kuukausi app)))
+                                                                            (if (= "Kaikki" (:valittu-kuukausi app))
+                                                                              nil
+                                                                              (second (:valittu-kuukausi app))))))))
     (fn [e! app]
       [:div {:id "vayla"}
        [:div

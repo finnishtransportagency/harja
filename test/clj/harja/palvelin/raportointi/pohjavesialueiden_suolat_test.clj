@@ -54,6 +54,12 @@
         v (+ (.getYear nyt) 1900)
         kk (inc (.getMonth nyt))
         p (.getDate nyt)
+        str-p (if (= 1 (count (str p)))
+            (str "0" p)
+            p)
+        str-kk (if (= 1 (count (str kk)))
+            (str "0" kk)
+            kk)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
@@ -71,7 +77,7 @@
 
       (is (= vastaus
              [:raportti
-              {:nimi "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta 13.04.2020 - 13.04.2022"
+              {:nimi (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta "str-p"."str-kk".2020 - "str-p"."str-kk".2022")
                :orientaatio :landscape}
               [:taulukko
                {:otsikko "11244001-Kempeleenharju"
