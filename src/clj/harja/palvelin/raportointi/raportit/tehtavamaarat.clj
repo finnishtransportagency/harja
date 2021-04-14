@@ -108,8 +108,7 @@
   [m]
   (let [arvot (vals
                 (select-keys m
-                             [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara]))
-        _ (println "ota-tarvittavat-arvot :: arvot " (pr-str arvot))]
+                             [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara]))]
     arvot))
 
 (defn- muodosta-otsikot
