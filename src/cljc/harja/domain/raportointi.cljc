@@ -119,3 +119,6 @@
     (apply (partial fn arvo) args)
     #?(:cljs (catch js/Object _ arvo))
     #?(:clj (catch Exception _ arvo))))
+
+(defn numero-fmt? [fmt]
+  (boolean (#{:kokonaisluku :numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))

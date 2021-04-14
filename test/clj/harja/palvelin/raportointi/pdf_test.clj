@@ -38,8 +38,7 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
-    (log/debug "Palautus: " fo)
-    (is (= fo `[:fo:block
+    (is (= fo ` [:fo:block
                 {:space-before "1em", :font-size "8pt", :font-weight "bold"}
                 "Taulukko"
                 [:fo:table
@@ -54,21 +53,24 @@
                       :background-color "#0066cc",
                       :color "#ffffff",
                       :font-weight "normal",
-                      :padding "1mm"}
+                      :padding "1mm"
+                      :text-align "left"}
                      [:fo:block "<![CDATA[Eka]]>"]]
                     [:fo:table-cell
                      {:border "solid 0.1mm black",
                       :background-color "#0066cc",
                       :color "#ffffff",
                       :font-weight "normal",
-                      :padding "1mm"}
+                      :padding "1mm"
+                      :text-align "left"}
                      [:fo:block "<![CDATA[Toka]]>"]]
                     [:fo:table-cell
                      {:border "solid 0.1mm black",
                       :background-color "#0066cc",
                       :color "#ffffff",
                       :font-weight "normal",
-                      :padding "1mm"}
+                      :padding "1mm"
+                      :text-align "left"}
                      [:fo:block "<![CDATA[Kolmas]]>"]])]]
                  [:fo:table-body
                   nil
