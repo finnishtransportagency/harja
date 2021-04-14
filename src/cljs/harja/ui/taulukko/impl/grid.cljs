@@ -219,6 +219,7 @@
   nil)
 
 (defn root [osa]
+  (println "petar root = " (pr-str (::root-id osa)))
   ((get-in @taulukko-konteksti [(::root-id osa) :root-fn])))
 
 (defn paivita-root! [osa f]
@@ -984,6 +985,7 @@
 
 
 (defn aseta-gridin-polut [gridi]
+  (println "petar podesava staze, ovo je sigurno pogresno " (pr-str gridi))
   (let [index-polut (grid-index-polut gridi)
         nimi-polut (grid-nimi-polut gridi)]
     (paivita-kaikki-lapset! (assoc gridi
@@ -1208,6 +1210,8 @@
   p/IGridDataYhdistaminen
   (-rajapinta-grid-yhdistaminen! [this rajapinta datan-kasittelija grid-kasittelija]
     (swap! taulukko-konteksti assoc-in [(gop/id this) :datan-kasittelija] datan-kasittelija)
+    (println "petar this = " (pr-str (keys this)))
+    (println "petar konteksti = " (pr-str (keys @taulukko-konteksti)))
     (let [this (aseta-gridin-polut (root this))
           grid-rajapintakasittelijat (reduce-kv (fn [m polku kasittelija]
                                                   (assoc m polku (rajapinnan-grid-kasittelija this polku kasittelija)))

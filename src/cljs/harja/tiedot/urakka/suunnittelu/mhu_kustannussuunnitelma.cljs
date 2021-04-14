@@ -1762,6 +1762,7 @@
                                                    :kuukausitasolla? false}))))
   FiltereidenAloitusarvot
   (process-event [_ app]
+    (println "petar process event he ovo " (pr-str (keys app)))
     (-> app
         (assoc-in [:suodattimet :hankinnat :toimenpide] :talvihoito)))
   Hoitokausi
@@ -1777,7 +1778,7 @@
                                     (pvm/vuosi urakan-alkupvm))
                                1
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
-      (println "petar evo sad postavljam default " (pr-str (get-in app [:suodattimet])))
+      (println "petar evo sad postavljam default " default-hoitokausi)
       (-> app
           (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
           (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))

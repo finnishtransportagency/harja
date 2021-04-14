@@ -66,6 +66,7 @@
     (assert (vector? (:rivit this)) (str "TAULUKON: " taulukon-id " RIVIT EI OLE VEKTORI"))
     (let [luokat (-> this :parametrit :class)
           dom-id (-> this :parametrit :id)]
+      (print "petar taulukko " (pr-str (keys this)))
       [:div.taulukko {:data-cy "taulukko"
                       :id      dom-id
                       :class   (apply str (interpose " " luokat))}

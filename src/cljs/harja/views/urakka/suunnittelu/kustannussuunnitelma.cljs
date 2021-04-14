@@ -2505,11 +2505,12 @@
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
 (defn kustannussuunnitelma
-  [e! app]
+  [e*! app]
+  (set! e! e*!)
   (let [nakyman-setup (cljs.core/atom {:lahdetty-nakymasta? false})]
     (komp/luo
       (komp/piirretty (fn [_]
-                        (println "petar evo valjda kreiram view, a komponenta je " (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
+                        (println "petar evo valjda kreiram view, a komponenta je ")
                         (swap! nakyman-setup
                                (fn [{:keys [lahdetty-nakymasta?] :as setup}]
                                  (assoc setup
@@ -2522,7 +2523,7 @@
                                             :else (do
                                                     (log "[kustannussuunnitelma] TILAN ALUSTUS")
                                                     (swap! tila/suunnittelu-kustannussuunnitelma (fn [_] tila/kustannussuunnitelma-default))
-                                                    (loop [[event & events] [(t/->Hoitokausi)
+                                                    #_(loop [[event & events] [(t/->Hoitokausi)
                                                                              (t/->TaulukoidenVakioarvot)
                                                                              (t/->FiltereidenAloitusarvot)
                                                                              (t/->Oikeudet)
@@ -2577,8 +2578,9 @@
                          (gridien-siivous!)
                          (log "[kustannussuunnitelma] SIIVOTTU")
                          (reset! lopeta-taulukkojen-luonti? false)))))
-      (fn [e! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
-        (println "petar evo renderujem, jarno " app gridit-vanhentuneet? (pr-str suodattimet) (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
+      (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
+        (set! e! e*!)
+        (println "petar evo renderujem, jarno " gridit-vanhentuneet? (pr-str suodattimet) (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma

@@ -41,74 +41,78 @@
             :kustannussuunnitelma (= tyyppi  :teiden-hoito )))
 
 (defn suunnittelu* [e! app]
-  (let [ur @nav/valittu-urakka
-        valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
-    (komp/luo
-      (komp/piirretty (fn [_]
-                        (e! (t/->YleisSuodatinArvot)))))
-      (fn [e! app]
-        (let [ur @nav/valittu-urakka
-              id (:id ur)]
+  (komp/luo
+    (komp/piirretty (fn [_]
+                      (e! (t/->YleisSuodatinArvot))
+                      (e! (t/->Hoitokausi))
+                      (e! (t/->TaulukoidenVakioarvot))
+                      (e! (t/->FiltereidenAloitusarvot))
+                      (e! (t/->Oikeudet))
+                      (e! (t/->HaeKustannussuunnitelma))))
+    (fn [e! app]
+      (let [ur @nav/valittu-urakka
+            valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)
+            id (:id ur)]
 
-          [:span.suunnittelu
-           [bs/tabs {:style :tabs :classes "tabs-taso2"
-                     :active (nav/valittu-valilehti-atom :suunnittelu)}
+        [:span.suunnittelu
+         [bs/tabs {:style :tabs :classes "tabs-taso2"
+                   :active (nav/valittu-valilehti-atom :suunnittelu)}
 
-            "Kustannussuunnitelma"
-            :kustannussuunnitelma
-            (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                       (valilehti-mahdollinen? :kustannussuunnitelma ur)
-                       (istunto/ominaisuus-kaytossa? :mhu-urakka))
-              ^{:key "kustannussuunnitelma"}
-              [kustannussuunnitelma/kustannussuunnitelma e! (:kustannussuunnitelma app)])
+          "Kustannussuunnitelma"
+          :kustannussuunnitelma
+          (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
+                     (valilehti-mahdollinen? :kustannussuunnitelma ur)
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
+            ^{:key "kustannussuunnitelma"}
+            [kustannussuunnitelma/kustannussuunnitelma e! (:kustannussuunnitelma app)])
 
-            "Tehtävät ja määrät"
-            :tehtavat
-            (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                       (valilehti-mahdollinen? :tehtavat ur)
-                       (istunto/ominaisuus-kaytossa? :mhu-urakka))
-              ^{:key "tehtavat"}
-              [tehtavat/tehtavat e! (:tehtavat app)])
+          "Tehtävät ja määrät"
+          :tehtavat
+          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                     (valilehti-mahdollinen? :tehtavat ur)
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
+            ^{:key "tehtavat"}
+            [tehtavat/tehtavat e! (:tehtavat app)])
 
-            "Kokonaishintaiset työt"
-            :kokonaishintaiset
-            (when (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
-                       (valilehti-mahdollinen? :kokonaishintaiset ur))
-              ^{:key "kokonaishintaiset-tyot"}
-              [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
+          "Kokonaishintaiset työt"
+          :kokonaishintaiset
+          (when (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
+                     (valilehti-mahdollinen? :kokonaishintaiset ur))
+            ^{:key "kokonaishintaiset-tyot"}
+            [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
 
-            "Yksikköhintaiset työt"
-            :yksikkohintaiset
-            (when (and (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
-                       (valilehti-mahdollinen? :yksikkohintaiset ur))
-              ^{:key "yksikkohintaiset-tyot"}
-              [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset])
+          "Yksikköhintaiset työt"
+          :yksikkohintaiset
+          (when (and (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
+                     (valilehti-mahdollinen? :yksikkohintaiset ur))
+            ^{:key "yksikkohintaiset-tyot"}
+            [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset])
 
-            "Muutos- ja lisätyöt"
-            :muut
-            (when (and (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
-                       (valilehti-mahdollinen? :muut ur))
-              ^{:key "muut-tyot"}
-              [muut-tyot/muut-tyot ur])
+          "Muutos- ja lisätyöt"
+          :muut
+          (when (and (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
+                     (valilehti-mahdollinen? :muut ur))
+            ^{:key "muut-tyot"}
+            [muut-tyot/muut-tyot ur])
 
-            "Suola" :suola
-            (when (and (oikeudet/urakat-suunnittelu-suola id)
-                       (valilehti-mahdollinen? :suola ur))
-              [suola/suola])
+          "Suola" :suola
+          (when (and (oikeudet/urakat-suunnittelu-suola id)
+                     (valilehti-mahdollinen? :suola ur))
+            [suola/suola])
 
-            "Materiaalit"
-            :materiaalit
-            (when (and (oikeudet/urakat-suunnittelu-materiaalit id)
-                       (valilehti-mahdollinen? :materiaalit ur))
-              ^{:key "materiaalit"}
-              [mat/materiaalit ur])
+          "Materiaalit"
+          :materiaalit
+          (when (and (oikeudet/urakat-suunnittelu-materiaalit id)
+                     (valilehti-mahdollinen? :materiaalit ur))
+            ^{:key "materiaalit"}
+            [mat/materiaalit ur])
 
-            "Kiintiöt"
-            :kiintiot
-            (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
-                       (valilehti-mahdollinen? :kiintiot ur))
-              ^{:key "kiintiöt"}
-              [kiintiot/kiintiot])]]))))
+          "Kiintiöt"
+          :kiintiot
+          (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
+                     (valilehti-mahdollinen? :kiintiot ur))
+            ^{:key "kiintiöt"}
+            [kiintiot/kiintiot])]]))))
 
 (defn suunnittelu []
   [tuck/tuck tila/suunnittelu suunnittelu*])
