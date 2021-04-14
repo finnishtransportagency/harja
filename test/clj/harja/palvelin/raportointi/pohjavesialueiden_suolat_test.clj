@@ -39,15 +39,15 @@
 (defn tarkista-sarakkeet [taulukko]
   (apurit/tarkista-taulukko-sarakkeet
     taulukko
-    {:otsikko "Tie"}
-    {:otsikko "Alkuosa"}
-    {:otsikko "Alkuetäisyys"}
-    {:otsikko "Loppuosa"}
-    {:otsikko "Loppuetäisyys"}
-    {:otsikko "Pituus"}
-    {:otsikko "Toteutunut talvisuola yhteensä t"}
-    {:otsikko "Toteutunut talvisuola t/km"}
-    {:otsikko "Käyttöraja t/km"}))
+    {:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
+    {:leveys 2 :fmt :kokonaisluku :otsikko "Alku\u00ADosa"}
+    {:leveys 2 :fmt :kokonaisluku :otsikko "Alku\u00ADetäisyys"}
+    {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu\u00ADosa"}
+    {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu\u00ADetäisyys"}
+    {:leveys 3 :fmt :numero :otsikko "Pituus"}
+    {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
+    {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
+    {:leveys 5 :fmt :numero :otsikko "Käyttö\u00ADraja (t/km)"}))
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [nyt (java.util.Date.)
@@ -71,26 +71,63 @@
 
       (is (= vastaus
              [:raportti
-              {:orientaatio :landscape,
-               :nimi
-               (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta "
-                    (apply str (interpose "."
-                                          [(format "%02d" p) (format "%02d" kk) (dec v)]))
-                    " - "
-                    (apply str (interpose "."
-                                          [(format "%02d" p) (format "%02d" kk) (inc v)])))}
+              {:nimi "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta 13.04.2020 - 13.04.2022"
+               :orientaatio :landscape}
               [:taulukko
-               {:otsikko "11244001-Kempeleenharju",
+               {:otsikko "11244001-Kempeleenharju"
+                :tyhja nil
                 :viimeinen-rivi-yhteenveto? true}
-               [{:leveys 3, :otsikko "Tie"}
-                {:leveys 2, :otsikko "Alkuosa"}
-                {:leveys 2, :otsikko "Alkuetäisyys"}
-                {:leveys 2, :otsikko "Loppuosa"}
-                {:leveys 2, :otsikko "Loppuetäisyys"}
-                {:leveys 3, :otsikko "Pituus"}
-                {:leveys 5, :otsikko "Toteutunut talvisuola yhteensä t"}
-                {:leveys 5, :otsikko "Toteutunut talvisuola t/km"}
-                {:leveys 5, :otsikko "Käyttöraja t/km"}]
-               [["846" "1" "0" "1" "1016" "1389,3" "3,0" "2,2" ""]
-                ["18637" "1" "0" "1" "8953" "9324,4" "5,0" "0,5" ""]
-                ["Yhteensä" "" "" "" "" "" "8,0" "" ""]]]])))))
+               [{:fmt :kokonaisluku
+                 :leveys 3
+                 :otsikko "Tie"}
+                {:fmt :kokonaisluku
+                 :leveys 2
+                 :otsikko "Alku­osa"}
+                {:fmt :kokonaisluku
+                 :leveys 2
+                 :otsikko "Alku­etäisyys"}
+                {:fmt :kokonaisluku
+                 :leveys 2
+                 :otsikko "Loppu­osa"}
+                {:fmt :kokonaisluku
+                 :leveys 2
+                 :otsikko "Loppu­etäisyys"}
+                {:fmt :numero
+                 :leveys 3
+                 :otsikko "Pituus"}
+                {:fmt :numero
+                 :leveys 5
+                 :otsikko "Tot. talvisuola yhteensä (t)"}
+                {:fmt :numero
+                 :leveys 5
+                 :otsikko "Tot. talvisuola (t/km)"}
+                {:fmt :numero
+                 :leveys 5
+                 :otsikko "Käyttö­raja (t/km)"}]
+               [["846"
+                 "1"
+                 "0"
+                 "1"
+                 "1016"
+                 "1389,3"
+                 "3,0"
+                 "2,2"
+                 ""]
+                ["18637"
+                 "1"
+                 "0"
+                 "1"
+                 "8953"
+                 "9324,4"
+                 "5,0"
+                 "0,5"
+                 ""]
+                ["Yhteensä"
+                 ""
+                 ""
+                 ""
+                 ""
+                 ""
+                 "8,0"
+                 ""
+                 ""]]]])))))
