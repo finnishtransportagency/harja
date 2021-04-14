@@ -119,13 +119,14 @@
                                     (:summa %)])))
         rivit-hoitokauden-alusta (into [] rivin-muodostaja kaikki-rivit-alusta)
         rivit-tassa-kuussa (into [] rivin-muodostaja kaikki-rivit-kuussa)
-
+        aikavalin-otsikko (if kuukausi-valittu?
+                            (pvm/koko-kuukausi-ja-vuosi alkupvm-valittu-kuu-tai-vali true)
+                            (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))
         otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-                 {:leveys 1 :fmt :raha :otsikko (str "Hoitokauden alusta " (pvm/pvm alkupvm-hoitokausi) "-" (pvm/pvm loppupvm-hoitokausi))
-                  }
-                 {:leveys 1 :fmt :raha :otsikko (cond
-                                                  kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm-valittu-kuu-tai-vali)) " " (pvm/vuosi alkupvm-valittu-kuu-tai-vali))
-                                                  :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
+                 {:leveys 1 :fmt :raha
+                  :otsikko (str "Hoitokauden alusta " (pvm/pvm alkupvm-hoitokausi) "-"
+                                (pvm/pvm loppupvm-hoitokausi))}
+                 {:leveys 1 :fmt :raha :otsikko aikavalin-otsikko}]
         rivit (loop [rivit-hoitokausi rivit-hoitokauden-alusta
                      rivit-kuukausi rivit-tassa-kuussa
                      kaikki {}]
