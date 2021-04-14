@@ -5,7 +5,8 @@
              [tehtavamaarat :as tm-q]
              [hallintayksikot :as hallinta-q]]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.math RoundingMode)))
 
 (defn- sama-tehtava-ja-ely?
   [e t]
@@ -61,26 +62,33 @@
        :urakka urakka-id
        :hallintayksikko hallintayksikko-id})))
 
+(defn pyorista-kahteen-decimaaliin [arvo]
+  (when (not (nil? arvo))
+    (.setScale
+      (with-precision 2 (bigdec arvo)) 2 RoundingMode/HALF_UP)))
+
 (defn- laske-toteuma-% ;:TODO voisko olla sql:ssä?
   [rivi]
   (let [[_ _ suunniteltu toteuma toteutunut-materiaalimaara] rivi
-        valiotsikko? (-> rivi
-                         count
-                         (> 1))
-        toteuma-% (when valiotsikko?
+        tehtava-rivi? (-> rivi
+                          count
+                          (> 1))
+        toteuma-% (when tehtava-rivi?
                     (cond
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
-                      :default (* (with-precision 2 (/ toteuma suunniteltu)) 100)))
+                      :default (.setScale (* 100 (with-precision 2 (/ toteuma suunniteltu))) 0 RoundingMode/HALF_UP)))
+        suunniteltu (pyorista-kahteen-decimaaliin suunniteltu)
+        toteuma (pyorista-kahteen-decimaaliin toteuma)
         rivi-toteumaprosentilla (filter some?
-                                        (conj (into [] (take 4 rivi)) toteuma-% toteutunut-materiaalimaara))]
+                                        (conj (into [] (take 2 rivi)) suunniteltu toteuma toteuma-% toteutunut-materiaalimaara))]
 
     rivi-toteumaprosentilla))
 
 (defn- null->0
   [kvp]
   (let [[avain arvo] kvp]
-    [avain (if (nil? arvo) 0 arvo)]))
+    [avain (if (nil? arvo) 0M arvo)]))
 
 (defn- null-arvot-nollaksi-rivilla
   [rivi]
@@ -94,13 +102,14 @@
     (let [rivi (select-keys rivi [:nimi :toteuma :yksikko :toteutunut-materiaalimaara])]
       (if (= yksikko suunnitteluyksikko)
         (assoc rivi :suunniteltu suunniteltu)
-        (assoc rivi :suunniteltu 0)))))
+        (assoc rivi :suunniteltu 0M)))))
 
 (defn- ota-tarvittavat-arvot
   [m]
-  (vals
-    (select-keys m
-                 [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara])))
+  (let [arvot (vals
+                (select-keys m
+                             [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara]))]
+    arvot))
 
 (defn- muodosta-otsikot
   [vemtr? hyt m]
@@ -223,7 +232,7 @@
                       :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma" :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
-                     {:otsikko "Toteutunut materiaalimäärä" :leveys 1 :fmt :numero}])}))
+                     {:otsikko "Toteutunut materiaali\u00ADmäärä" :leveys 1 :fmt :numero}])}))
 
 (defn db-haku-fn
   [db params]

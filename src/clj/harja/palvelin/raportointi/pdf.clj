@@ -124,8 +124,10 @@
   (case fmt
     ;; Jos halutaan tukea erityyppisiä sarakkeita,
     ;; pitää tänne lisätä formatter.
+    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
+    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
@@ -183,7 +185,8 @@
                                (border-tyyli sarake)
                                {:padding "1mm"
                                 :font-weight "normal"
-                                :text-align (if (oikealle-tasattavat-kentat i)
+                                :text-align (if (or (oikealle-tasattavat-kentat i)
+                                                    (raportti-domain/numero-fmt? (:fmt sarake)))
                                               "right"
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
@@ -207,23 +210,30 @@
                       (when viimeinen-rivi-yhteenveto?
                         "Yhteenveto on laskettu kaikista riveistä"))]]]))
 
-(defn taulukko-header [optiot sarakkeet]
-  [:fo:table-header
-   (when-let [rivi-ennen (:rivi-ennen optiot)]
-     [:fo:table-row
-      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
-                         :color "#ffffff"
-                         :number-columns-spanned (or sarakkeita 1)
-                         :text-align (tasaus tasaa)}
-         [:fo:block teksti]])])
+(defn taulukko-header [{:keys [oikealle-tasattavat-kentat] :as optiot} sarakkeet]
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+    [:fo:table-header
+     (when-let [rivi-ennen (:rivi-ennen optiot)]
+       [:fo:table-row
+        (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+          [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
+                           :color "#ffffff"
+                           :number-columns-spanned (or sarakkeita 1)
+                           :text-align (tasaus tasaa)}
+           [:fo:block teksti]])])
 
-   [:fo:table-row
-    (for [otsikko (map :otsikko sarakkeet)]
-      [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
-                       :color "#ffffff"
-                       :font-weight "normal" :padding "1mm"}
-       [:fo:block (cdata otsikko)]])]])
+     [:fo:table-row
+      (map-indexed
+        (fn [i {:keys [otsikko fmt tasaa] :as rivi}]
+          [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
+                           :color "#ffffff"
+                           :text-align (if (or (oikealle-tasattavat-kentat i)
+                                               (raportti-domain/numero-fmt? fmt))
+                                         "right"
+                                         (tasaus tasaa))
+                           :font-weight "normal" :padding "1mm"}
+           [:fo:block (cdata otsikko)]])
+        sarakkeet)]]))
 
 (defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja] :as optiot}]
   (let [rivien-maara (count data)

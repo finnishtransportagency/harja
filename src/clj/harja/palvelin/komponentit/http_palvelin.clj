@@ -360,7 +360,6 @@
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _
-                         (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
                          {:status 403 :body "Todennusvirhe"})
 
                        (finally

@@ -61,6 +61,7 @@
 
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
+    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
@@ -68,9 +69,6 @@
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
-
-(defn- numero-fmt? [fmt]
-  (boolean (#{:numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
@@ -108,7 +106,7 @@
                              :komponentti
                              :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
-                                  (numero-fmt? (:fmt sarake)))
+                                  (raportti-domain/numero-fmt? (:fmt sarake)))
                             :oikea
                             (:tasaa sarake))}
                  (when raporttielementteja?
