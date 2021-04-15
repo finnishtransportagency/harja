@@ -39,20 +39,21 @@
      "")])
 
 (defn sarakkeet []
-  [{:leveys 3 :otsikko "Tie"}
-   {:leveys 2 :otsikko "Alkuosa"}
-   {:leveys 2 :otsikko "Alkuetäisyys"}
-   {:leveys 2 :otsikko "Loppuosa"}
-   {:leveys 2 :otsikko "Loppuetäisyys"}
-   {:leveys 3 :otsikko "Pituus"}
-   {:leveys 5 :otsikko "Toteutunut talvisuola yhteensä t"}
-   {:leveys 5 :otsikko "Toteutunut talvisuola t/km"}
-   {:leveys 5 :otsikko "Käyttöraja t/km"}])
+  [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
+   {:leveys 2 :fmt :kokonaisluku :otsikko "Alku\u00ADosa"}
+   {:leveys 2 :fmt :kokonaisluku :otsikko "Alku\u00ADetäisyys"}
+   {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu\u00ADosa"}
+   {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu\u00ADetäisyys"}
+   {:leveys 3 :fmt :numero :otsikko "Pituus"}
+   {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
+   {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
+   {:leveys 5 :fmt :numero :otsikko "Käyttö\u00ADraja (t/km)"}])
 
 (defn pohjavesialueen-taulukko [rivit]
   (let [eka (first rivit)]
     [:taulukko {:otsikko (str (:tunnus eka) "-" (:nimi eka))
-                :viimeinen-rivi-yhteenveto? true}
+                :viimeinen-rivi-yhteenveto? true
+                :tyhja (if (empty? rivit) "Ei raportoitavia suolatoteumia.")}
      (sarakkeet)
      (into [] (map rivi-xf (loppusumma rivit)))]))
 
@@ -78,11 +79,12 @@
         otsikko (raportin-otsikko
                   (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                   raportin-nimi alkupvm loppupvm)]
-    (log/debug "löytyi " (count tulos) " toteumaa")
     (vec
      (concat
       [:raportti {:orientaatio :landscape
                   :nimi otsikko}]
-      (mapv pohjavesialueen-taulukko (sort-by #(->> % first :nimi)
-                                              (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
-                                                   (vals (group-by :tunnus tulos)))))))))
+      (if (empty? tulos)
+        [:teksti yleinen/ei-tuloksia-aikavalilla-str]
+        (mapv pohjavesialueen-taulukko (sort-by #(->> % first :nimi)
+                                                (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
+                                                     (vals (group-by :tunnus tulos))))))))))

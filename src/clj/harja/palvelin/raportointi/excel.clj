@@ -139,8 +139,8 @@
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
                                               (or (:sheet-nimi optiot) nimi))) 0])
-          sarake-tyyli (excel/create-cell-style! workbook {:background :blue
-                                                           :font {:color :white}})
+          sarake-tyyli (excel/create-cell-style! workbook {:background :grey_25_percent
+                                                           :font {:color :black}})
           rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
           rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
