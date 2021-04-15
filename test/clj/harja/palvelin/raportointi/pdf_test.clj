@@ -50,24 +50,24 @@
                   [:fo:table-row
                    ([:fo:table-cell
                      {:border "solid 0.1mm black",
-                      :background-color "#0066cc",
-                      :color "#ffffff",
+                      :background-color "#f0f0f0",
+                      :color "black",
                       :font-weight "normal",
                       :padding "1mm"
                       :text-align "left"}
                      [:fo:block "<![CDATA[Eka]]>"]]
                     [:fo:table-cell
                      {:border "solid 0.1mm black",
-                      :background-color "#0066cc",
-                      :color "#ffffff",
+                      :background-color "#f0f0f0",
+                      :color "black",
                       :font-weight "normal",
                       :padding "1mm"
                       :text-align "left"}
                      [:fo:block "<![CDATA[Toka]]>"]]
                     [:fo:table-cell
                      {:border "solid 0.1mm black",
-                      :background-color "#0066cc",
-                      :color "#ffffff",
+                      :background-color "#f0f0f0",
+                      :color "black",
                       :font-weight "normal",
                       :padding "1mm"
                       :text-align "left"}
@@ -76,27 +76,27 @@
                   nil
                   ([:fo:table-row
                     ([:fo:table-cell
-                      {:border-bottom "solid 0.1mm #0066cc",
-                       :border-right "solid 0.1mm #0066cc",
-                       :border-left "solid 0.1mm #0066cc",
+                      {:border-bottom "solid 0.1mm #f0f0f0",
+                       :border-right "solid 0.1mm #f0f0f0",
+                       :border-left "solid 0.1mm #f0f0f0",
                        :padding "1mm",
                        :font-weight "normal",
                        :text-align "left"}
                       nil
                       [:fo:block "<![CDATA[eka]]>"]]
                      [:fo:table-cell
-                      {:border-bottom "solid 0.1mm #0066cc",
-                       :border-right "solid 0.1mm #0066cc",
-                       :border-left "solid 0.1mm #0066cc",
+                      {:border-bottom "solid 0.1mm #f0f0f0",
+                       :border-right "solid 0.1mm #f0f0f0",
+                       :border-left "solid 0.1mm #f0f0f0",
                        :padding "1mm",
                        :font-weight "normal",
                        :text-align "left"}
                       nil
                       [:fo:block "<![CDATA[toka]]>"]]
                      [:fo:table-cell
-                      {:border-bottom "solid 0.1mm #0066cc",
-                       :border-right "solid 0.1mm #0066cc",
-                       :border-left "solid 0.1mm #0066cc",
+                      {:border-bottom "solid 0.1mm #f0f0f0",
+                       :border-right "solid 0.1mm #f0f0f0",
+                       :border-left "solid 0.1mm #f0f0f0",
                        :padding "1mm",
                        :font-weight "normal",
                        :text-align "left"}

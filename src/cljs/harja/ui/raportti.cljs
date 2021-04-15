@@ -48,7 +48,7 @@
                  desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
                  fmt (fmt arvo)
                  :else arvo)]
-   [:span.yksikko (str yksikko)]])
+   [:span.yksikko (str "\u00A0" yksikko)]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
