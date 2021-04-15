@@ -516,6 +516,11 @@
      ""
      (desimaaliluku luku tarkkuus ryhmitelty?))))
 
+(defn piste->pilkku [luku]
+  (if luku
+    (clojure.string/replace (str luku) "." ",")
+    luku))
+
 (defn kokonaisluku-opt
   [luku]
   (assert (number? luku) "Luvun on oltava numerotyyppinen.")
