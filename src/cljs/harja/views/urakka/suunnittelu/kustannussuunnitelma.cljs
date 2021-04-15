@@ -3,7 +3,6 @@
             [clojure.string :as clj-str]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
-            [harja.ui.debug :refer [debug]]                 ; petar deleteme
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.urakka :as tila]
@@ -82,7 +81,6 @@
                       [:gridit :toimistokulut :grid]
                       [:gridit :hoidonjohtopalkkio :grid]
                       [:gridit :tilaajan-varaukset :grid]]]
-    (println "petar cisti grid")
     (grid/siivoa-grid! (get-in @tila/suunnittelu-kustannussuunnitelma grid-polku)))
   (grid/poista-data-kasittelija! tila/suunnittelu-kustannussuunnitelma))
 
@@ -2339,7 +2337,6 @@
        ^{:key "hankintakustannusten-loader"}
        [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
      [:h3 "Suunnitellut hankinnat"]
-     (println "petar filteri " (pr-str suodattimet))
      [hankintojen-filter suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid (:hankinnat suodattimet)]
      (if suunnitellut-hankinnat-taulukko-valmis?
        [grid/piirra suunnittellut-hankinnat-grid]
@@ -2378,7 +2375,6 @@
      [:h3 {:id (str (get t/hallinnollisten-idt :erillishankinnat) "-osio")} "Erillishankinnat"]
      [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi kantahaku-valmis?]
      [yleis-suodatin suodattimet]
-     "petar ovde prikaze a mozda i ne prikaze grid"
      (when nayta-erillishankinnat-grid?
        [grid/piirra erillishankinnat-grid])
      [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]]))
@@ -2461,7 +2457,7 @@
                        erillishankinnat-yhteensa
                        hoidonjohtopalkkio-yhteensa)]
       [:div.summa-ja-indeksilaskuri
-       [hintalaskuri {:otsikko "Yhteenveto petar"
+       [hintalaskuri {:otsikko "Yhteenveto"
                       :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
                       :hinnat hinnat}
         kuluva-hoitokausi]
@@ -2504,13 +2500,11 @@
                  Tämän avulla tarkastetaan, että taulukkojen tila on ok."}
          lopeta-taulukkojen-luonti? (cljs.core/atom false))
 
-(defn kustannussuunnitelma
-  [e*! app]
-  (set! e! e*!)
+(defn kustannussuunnitelma*
+  [_ app]
   (let [nakyman-setup (cljs.core/atom {:lahdetty-nakymasta? false})]
     (komp/luo
       (komp/piirretty (fn [_]
-                        (println "petar evo valjda kreiram view, a komponenta je ")
                         (swap! nakyman-setup
                                (fn [{:keys [lahdetty-nakymasta?] :as setup}]
                                  (assoc setup
@@ -2523,16 +2517,16 @@
                                             :else (do
                                                     (log "[kustannussuunnitelma] TILAN ALUSTUS")
                                                     (swap! tila/suunnittelu-kustannussuunnitelma (fn [_] tila/kustannussuunnitelma-default))
-                                                    #_(loop [[event & events] [(t/->Hoitokausi)
+                                                    (loop [[event & events] [(t/->Hoitokausi)
                                                                              (t/->TaulukoidenVakioarvot)
                                                                              (t/->FiltereidenAloitusarvot)
+                                                                             (t/->YleisSuodatinArvot)
                                                                              (t/->Oikeudet)
                                                                              (t/->HaeKustannussuunnitelma)]]
                                                       (when (and (not (:lahdetty-nakymasta? @nakyman-setup))
                                                                  (not (nil? event)))
                                                         (e! event)
                                                         (recur events)))
-                                                    (println "petar posle svih tukova " (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
                                                     (loop [[tf & tfs] [[suunnitelmien-tila-grid true nil]
                                                                        [suunnittellut-hankinnat-grid true nil]
                                                                        [hankinnat-laskutukseen-perustuen-grid true nil]
@@ -2580,11 +2574,9 @@
                          (reset! lopeta-taulukkojen-luonti? false)))))
       (fn [e*! {:keys [suodattimet gridit-vanhentuneet?] :as app}]
         (set! e! e*!)
-        (println "petar evo renderujem, jarno " gridit-vanhentuneet? (pr-str suodattimet) (pr-str (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])))
         (if gridit-vanhentuneet?
           [yleiset/ajax-loader]
           [:div#kustannussuunnitelma
-           [debug app {:otsikko "PETAR TUCK STATE"}]
            [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten. Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa." ]
                   [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä kuluna Sampon maksuerään."[:br]
                    "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lasketaan mukaan maksueriin eräpäivän mukaan."]
@@ -2644,3 +2636,6 @@
             (get-in app [:gridit :tilaajan-varaukset :grid])
             (dissoc suodattimet :hankinnat)
             (:kantahaku-valmis? app)]])))))
+
+(defn kustannussuunnitelma []
+  [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

@@ -229,7 +229,7 @@
            {:for "kopioi-tuleville-vuosille"}
            "Samat suunnitellut määrät tuleville hoitokausille"]]]))))
 
-(defn tehtavat
+(defn tehtavat*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
@@ -246,3 +246,6 @@
          (if taulukon-tehtavat
            [p/piirra-taulukko taulukon-tehtavat]
            [p/piirra-taulukko (noudetaan-taulukko)])]))))
+
+(defn tehtavat []
+  (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))

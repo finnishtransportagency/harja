@@ -123,7 +123,6 @@
 
   PaivitaTila
   (process-event [{:keys [polku f]} app]
-    (println "petar menjam stanje " polku)
     (update-in app polku f))
   AloitaViivastettyjenEventtienKuuntelu
   (process-event [{:keys [viive kanava]} app]

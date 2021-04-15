@@ -223,5 +223,4 @@
                               otsikko-ja-data)})
         g (grid/aseta-root-fn! g root-asetukset)]
     (root-asetus! g)
-    (println "petar GRID " (pr-str (keys g)))
     g))

@@ -1116,11 +1116,7 @@
                                                                                                                 [hoitokauden-numero])
                                                                             valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
                                                                             vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)]
-                                                                        (print "petar ovde ce da kopira " (pr-str paivitettavat-hoitokauden-numerot) (pr-str vuoden-maarat-yhteensa)
-                                                                               (pr-str valitun-vuoden-maarat))
                                                                         (reduce (fn [tila hoitokauden-numero]
-                                                                                  (println "petar stanje bez petra " (pr-str yhteenvedot-polku) (pr-str polun-osa)
-                                                                                           (pr-str (get-in tila (vec (concat yhteenvedot-polku [:summat polun-osa])))))
                                                                                   (assoc-in tila (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)])) vuoden-maarat-yhteensa))
                                                                                 tila
                                                                                 paivitettavat-hoitokauden-numerot)))}
@@ -1762,7 +1758,6 @@
                                                    :kuukausitasolla? false}))))
   FiltereidenAloitusarvot
   (process-event [_ app]
-    (println "petar process event he ovo " (pr-str (keys app)))
     (-> app
         (assoc-in [:suodattimet :hankinnat :toimenpide] :talvihoito)))
   Hoitokausi
@@ -1778,7 +1773,6 @@
                                     (pvm/vuosi urakan-alkupvm))
                                1
                                (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))]
-      (println "petar evo sad postavljam default " default-hoitokausi)
       (-> app
           (assoc-in [:suodattimet :hoitokauden-numero] default-hoitokausi)
           (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true))))
@@ -1933,7 +1927,6 @@
                                                                             :maara summa)
                                                                      (dissoc :summa))))))
               erillishankinnat (maara-kk-taulukon-data hoidon-johto-kustannukset :erillishankinnat)
-              _ (println "petar evo ovde cita pogresno erillishankinnat")
               jh-toimistokulut (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut)
               johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
               tilaajan-varaukset (maara-kk-taulukon-data hoidon-johto-kustannukset :tilaajan-varaukset)
@@ -2061,7 +2054,6 @@
               toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn jh-toimistokulut)
               hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn johtopalkkio)
               tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn tilaajan-varaukset)]
-          (println "petar da li ikada dolazi ovde?????")
           (-> app
               (assoc-in [:domain :suunnittellut-hankinnat] hankinnat-hoitokausille)
               (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
@@ -2100,7 +2092,7 @@
                                                                                                                 toimenpiteen-rahavaraukset))))
                                                                                             {}
                                                                                             rahavaraukset-hoitokausille))
-              (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat] (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain)) ; petar ovde se postavlja suma
+              (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat] (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
               (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut] (mapv #(summaa-mapin-arvot % :maara) toimistokulut-hoitokausittain))
               (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio] (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
               (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta] toimenpiteet-joilla-laskutukseen-perustuvia-suunnitelmia)

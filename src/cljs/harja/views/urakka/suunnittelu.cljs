@@ -20,9 +20,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
             [harja.domain.urakka :as ur]
-            [tuck.core :as tuck]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t])
+            [tuck.core :as tuck])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -40,19 +38,10 @@
             :yksikkohintaiset (not= tyyppi  :teiden-hoito )
             :kustannussuunnitelma (= tyyppi  :teiden-hoito )))
 
-(defn suunnittelu* [e! app]
-  (komp/luo
-    (komp/piirretty (fn [_]
-                      (e! (t/->YleisSuodatinArvot))
-                      (e! (t/->Hoitokausi))
-                      (e! (t/->TaulukoidenVakioarvot))
-                      (e! (t/->FiltereidenAloitusarvot))
-                      (e! (t/->Oikeudet))
-                      (e! (t/->HaeKustannussuunnitelma))))
-    (fn [e! app]
-      (let [ur @nav/valittu-urakka
-            valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)
-            id (:id ur)]
+(defn suunnittelu [ur]
+  (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
+    (komp/luo
+      (fn [{:keys [id] :as ur}]
 
         [:span.suunnittelu
          [bs/tabs {:style :tabs :classes "tabs-taso2"
@@ -64,7 +53,7 @@
                      (valilehti-mahdollinen? :kustannussuunnitelma ur)
                      (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "kustannussuunnitelma"}
-            [kustannussuunnitelma/kustannussuunnitelma e! (:kustannussuunnitelma app)])
+            [kustannussuunnitelma/kustannussuunnitelma])
 
           "Tehtävät ja määrät"
           :tehtavat
@@ -72,7 +61,7 @@
                      (valilehti-mahdollinen? :tehtavat ur)
                      (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "tehtavat"}
-            [tehtavat/tehtavat e! (:tehtavat app)])
+            [tehtavat/tehtavat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -110,9 +99,6 @@
           "Kiintiöt"
           :kiintiot
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
-                     (valilehti-mahdollinen? :kiintiot ur))
+                  (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
             [kiintiot/kiintiot])]]))))
-
-(defn suunnittelu []
-  [tuck/tuck tila/suunnittelu suunnittelu*])

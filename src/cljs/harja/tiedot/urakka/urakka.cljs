@@ -247,8 +247,6 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 
-(defonce suunnittelu (cursor tila [:suunnittelu]))
-
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
                                                              :toteutuneet-maarat    nil
                                                              :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
