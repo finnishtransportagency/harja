@@ -239,10 +239,8 @@
      :debug suunnitellut-ryhmissa
      :otsikot (take (if vemtr? 6 5)
                     [{:otsikko "Tehtävä" :leveys 6}
-                     {:otsikko (str "Suunniteltu määrä "
-                                    (if (> (count hoitokaudet) 1)
-                                      (str "hoito\u00ADkausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
-                                      (str "hoito\u00ADkaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
+                     {:otsikko (str "Suunniteltu 1.10." (-> hoitokaudet first)
+                                    "\u00AD-30.9." (-> hoitokaudet last inc))
                       :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma" :leveys 1 :fmt :numero} ;;TODO: TÄHÄN FMT jolla yksikkö frontille ja PDF mutta vain raaka luku exceliin
                      {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
