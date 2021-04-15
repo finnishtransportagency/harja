@@ -94,8 +94,14 @@
                           (filter some?
                                  (vec
                                    [tehtava
-                                    (when suunniteltu (str suunniteltu yksikko))
-                                    (when toteuma (str toteuma yksikko))
+                                    (when suunniteltu [:arvo-ja-yksikko
+                                                       {:arvo suunniteltu
+                                                        :yksikko yksikko
+                                                        :fmt :numero}])
+                                    (when toteuma [:arvo-ja-yksikko
+                                                   {:arvo toteuma
+                                                    :yksikko yksikko
+                                                    :fmt :numero}])
                                     toteuma-% toteutunut-materiaalimaara])))]
 
     rivi-yksikoilla))
@@ -240,9 +246,9 @@
      :otsikot (take (if vemtr? 6 5)
                     [{:otsikko "Tehtävä" :leveys 6}
                      {:otsikko (str "Suunniteltu 1.10." (-> hoitokaudet first)
-                                    "\u00AD-30.9." (-> hoitokaudet last inc))
+                                    " - 30.9." (-> hoitokaudet last inc))
                       :leveys 1 :fmt :numero}
-                     {:otsikko "Toteuma" :leveys 1 :fmt :numero} ;;TODO: TÄHÄN FMT jolla yksikkö frontille ja PDF mutta vain raaka luku exceliin
+                     {:otsikko "Toteuma" :leveys 1 :fmt :numero}
                      {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
                      {:otsikko "Toteutunut materiaali\u00ADmäärä" :leveys 1 :fmt :numero}])}))
 
@@ -261,5 +267,5 @@
        :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]
-     [:teksti (str "Mikäli suunnitellun määrän yksikkö on eri kuin saman tehtävän toteutuneen määrän yksikkö, näytetään tällä raportilla toteutunut määrä, mutta ei suunniteltua määrää. Yksikkö-sarakkeessa näkyy tällöin toteutuneen määrän yksikkö. Tällaisia tehtäviä ovat esimerkiksi monet liukkaudentorjuntaan liittyvät työt, joihin Tehtävä- ja määräluettelossa suunnitellaan materiaalimääriä.")]
+     [:teksti (str "Mikäli suunnitellun määrän yksikkö on eri kuin saman tehtävän toteutuneen määrän yksikkö, näytetään tällä raportilla toteutunut määrä, mutta ei suunniteltua määrää. Tällaisia tehtäviä ovat esimerkiksi monet liukkaudentorjuntaan liittyvät työt, joihin Tehtävä- ja määräluettelossa suunnitellaan materiaalimääriä.")]
      [:teksti (str "Toteutuneita materiaalimääriä voi tarkastella materiaali- ja ympäristöraportilla.")]]))

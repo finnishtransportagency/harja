@@ -72,7 +72,7 @@
                  desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
                  fmt (fmt arvo)
                  :else arvo)]
-   [:fo:inline (str yksikko)]])
+   [:fo:inline (str "\u00A0" yksikko)]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
