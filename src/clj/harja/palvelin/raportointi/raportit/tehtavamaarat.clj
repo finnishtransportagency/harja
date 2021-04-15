@@ -85,6 +85,21 @@
 
     rivi-toteumaprosentilla))
 
+(defn- yksikko-lukujen-peraan
+  [rivi]
+  (let [[tehtava yksikko suunniteltu toteuma toteuma-% toteutunut-materiaalimaara] rivi
+        tehtava-rivi? (> (count rivi) 1)
+        rivi-yksikoilla (if-not tehtava-rivi?
+                          rivi
+                          (filter some?
+                                 (vec
+                                   [tehtava
+                                    (when suunniteltu (str suunniteltu yksikko))
+                                    (when toteuma (str toteuma yksikko))
+                                    toteuma-% toteutunut-materiaalimaara])))]
+
+    rivi-yksikoilla))
+
 (defn- null->0
   [kvp]
   (let [[avain arvo] kvp]
@@ -94,9 +109,8 @@
   [rivi]
   (into {} (map null->0 rivi)))
 
-(defn- nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko
+(defn- nayta-suunniteltu-jos-sama-yksikko-kuin-toteumalla
   [{:keys [yksikko suunniteltu suunnitteluyksikko] :as rivi}]
-
   (if (= 1 (count (keys rivi))) ;; Tarkistetaan onko väliotsikkorivi
     rivi
     (let [rivi (select-keys rivi [:nimi :toteuma :yksikko :toteutunut-materiaalimaara])]
@@ -210,10 +224,11 @@
                                                   (conj hallintayksikot hallintayksikko) ;; Hallintayksikkö set
                                                   kaikki-rivit)))) ;; Pidetään kirjaa kaikista riveistä, joita raporttiin laitetaan
         muodosta-rivi (comp
-                        (map nayta-vain-toteuma-suunnitteluyksikko-!=-yksikko)
+                        (map nayta-suunniteltu-jos-sama-yksikko-kuin-toteumalla)
                         (map null-arvot-nollaksi-rivilla)
                         (map ota-tarvittavat-arvot)
                         (map laske-toteuma-%)
+                        (map yksikko-lukujen-peraan)
                         (map (partial vemtrille-puuttuvat-tyhjat-sarakkeet
                                       vemtr?))
                         (map (partial muodosta-otsikot
@@ -224,13 +239,12 @@
      :debug suunnitellut-ryhmissa
      :otsikot (take (if vemtr? 6 5)
                     [{:otsikko "Tehtävä" :leveys 6}
-                     {:otsikko "Yksikkö" :leveys 1}
                      {:otsikko (str "Suunniteltu määrä "
                                     (if (> (count hoitokaudet) 1)
-                                      (str "hoitokausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
-                                      (str "hoitokaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
+                                      (str "hoito\u00ADkausilla 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet last inc))
+                                      (str "hoito\u00ADkaudella 1.10." (-> hoitokaudet first) "-30.9." (-> hoitokaudet first inc))))
                       :leveys 1 :fmt :numero}
-                     {:otsikko "Toteuma" :leveys 1 :fmt :numero}
+                     {:otsikko "Toteuma" :leveys 1 :fmt :numero} ;;TODO: TÄHÄN FMT jolla yksikkö frontille ja PDF mutta vain raaka luku exceliin
                      {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
                      {:otsikko "Toteutunut materiaali\u00ADmäärä" :leveys 1 :fmt :numero}])}))
 
