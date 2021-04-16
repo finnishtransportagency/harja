@@ -452,7 +452,7 @@ FROM osa_toteumat ot
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
-         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
+         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::INT IS NULL OR tr.id = :tehtavaryhma)
 GROUP BY ot.toimenpidekoodi, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 UNION
 -- Pelkästään suunnitellut tehtavat pitää hakea erikseen, koska niitä ei voida hakea toteuman kautta
@@ -467,7 +467,7 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
-         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr.otsikko = :tehtavaryhma)
+         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::INT IS NULL OR tr.id = :tehtavaryhma)
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
   AND ut.poistettu IS NOT TRUE
@@ -589,11 +589,9 @@ SELECT t.id        AS toteuma_id,
 
 -- name: listaa-urakan-toteutumien-toimenpiteet
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
-SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko,
-                                tr.id
+SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
     FROM tehtavaryhma tr
-    WHERE tr.emo IS NULL
-      AND tr.tyyppi = 'ylataso'
+    WHERE tr.tyyppi = 'alataso' -- Wait what? Onko toimenpide sama kuin tehtäväryhmä?
     ORDER BY otsikko ASC, tr.id ASC;
 
 -- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
@@ -603,19 +601,15 @@ SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
 FROM toimenpidekoodi tk,
-     tehtavaryhma tr1,
-     tehtavaryhma tr2,
-     tehtavaryhma tr3,
+     tehtavaryhma tr,
      urakka u
-WHERE tk.tehtavaryhma = tr3.id
-  and tr2.emo = tr1.id
-  and tr3.emo = tr2.id
+WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
   AND tk.kasin_lisattava_maara = true
-  AND (:tehtavaryhma::INTEGER IS NULL OR tr1.id = :tehtavaryhma)
+  AND (:tehtavaryhma::INTEGER IS NULL OR tr.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
 -- name: luo-erilliskustannus<!

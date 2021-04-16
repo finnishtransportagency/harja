@@ -181,7 +181,8 @@
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
 
-(def toteumat-default-arvot {:maarien-toteumat {:syottomoodi           false
+(def toteumat-default-arvot {:maarien-toteumat {:toimenpiteet-lataa true
+                                                :syottomoodi           false
                                                 :toimenpiteet          nil
                                                 :toteutuneet-maarat    nil
                                                 :valittu-toimenpide    {:otsikko "Kaikki" :id 0}

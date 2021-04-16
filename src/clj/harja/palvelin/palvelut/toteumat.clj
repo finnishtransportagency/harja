@@ -385,7 +385,7 @@
 
 (defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id toimenpide hoitokauden-alkuvuosi] :as tiedot}]
   (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
-    (let [t (if (= "Kaikki" toimenpide) nil toimenpide)
+    (let [t (if (or (= "Kaikki" toimenpide) (= 0 toimenpide)) nil toimenpide)
           alkupvm (str hoitokauden-alkuvuosi "-10-01")
           loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
           vastaus (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
