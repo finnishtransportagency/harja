@@ -28,7 +28,9 @@
 (def taulukon-fonttikoko-yksikko "pt")
 (def otsikon-fonttikoko "10pt")
 
-(def raportin-tehostevari "#0066cc")
+(def raportin-tehostevari "#f0f0f0")
+(def korostettu-vari "#004D99")
+(def hennosti-korostettu-vari "#E0EDF9")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -70,7 +72,7 @@
                  desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
                  fmt (fmt arvo)
                  :else arvo)]
-   [:fo:inline (str yksikko)]])
+   [:fo:inline (str "\u00A0" yksikko)]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
@@ -154,10 +156,10 @@
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
-                         {:background-color "#ff9900"
-                          :color "black"})
+                         {:background-color korostettu-vari
+                          :color "white"})
               korosta-hennosti? (when korosta-hennosti?
-                                  {:background-color "#dee7fb"
+                                  {:background-color hennosti-korostettu-vari
                                    :color "black"})
               lihavoi? (when lihavoi-rivi?
                          {:font-weight "bold"})]
@@ -216,8 +218,9 @@
      (when-let [rivi-ennen (:rivi-ennen optiot)]
        [:fo:table-row
         (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-          [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
-                           :color "#ffffff"
+          [:fo:table-cell {:border reunan-tyyli
+                           :background-color raportin-tehostevari
+                           :color "black"
                            :number-columns-spanned (or sarakkeita 1)
                            :text-align (tasaus tasaa)}
            [:fo:block teksti]])])
@@ -225,8 +228,9 @@
      [:fo:table-row
       (map-indexed
         (fn [i {:keys [otsikko fmt tasaa] :as rivi}]
-          [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
-                           :color "#ffffff"
+          [:fo:table-cell {:border "solid 0.1mm black"
+                           :background-color raportin-tehostevari
+                           :color "black"
                            :text-align (if (or (oikealle-tasattavat-kentat i)
                                                (raportti-domain/numero-fmt? fmt))
                                          "right"

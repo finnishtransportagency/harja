@@ -1,6 +1,9 @@
 (ns harja.domain.raportointi
   (:require [harja.domain.roolit :as roolit]))
 
+;; API to colors that can be used in Excel:
+;; https://poi.apache.org/apidocs/4.0/org/apache/poi/ss/usermodel/IndexedColors.html
+
 (def virhetyylit
   {:virhe    "rgb(221,0,0)"
    :varoitus "rgb(255,153,0)"
@@ -37,11 +40,11 @@
             (merge {:font {:bold true}})
 
             korosta?
-            (deep-merge (merge rajat-excel {:background :yellow
-                                            :font       {:color :black}}))
+            (deep-merge (merge rajat-excel {:background :dark_blue
+                                            :font       {:color :white}}))
 
             korosta-hennosti?
-            (deep-merge {:background :light_turquoise
+            (deep-merge {:background :pale_blue
                          :font       {:color :black}}))))
 
 (defn varillinen-teksti [tyyli teksti]
