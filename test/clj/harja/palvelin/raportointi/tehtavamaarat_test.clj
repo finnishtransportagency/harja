@@ -82,16 +82,94 @@
     :suunnitteluyksikko "kg"
     :toimenpide-jarjestys 3}])
 
-(def pitais-tulla
-  [{:rivi ["Pohjois-Pohjanmaa" "" "" "" "" ""] :korosta? true :lihavoi? true}
-   {:rivi ["Toimenpide1" "" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
-   ["Tehtava1" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]
-   ["Tehtava2" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]
-   {:rivi ["Toimenpide2" "" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
-   ["Tehtava3" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]
-   ["Tehtava4" "mm" 0 (bigdec 1) "!" 0]
-   {:rivi ["Toimenpide3" "" "" "" "" ""] :korosta-hennosti? true :lihavoi? true}
-   ["Tehtava5" "kg" (bigdec 1) (bigdec 1) (* (.divide (bigdec 1) (bigdec 1) 4 RoundingMode/HALF_UP) 100) 0]])
+(def odotettu
+  [{:korosta? true
+    :lihavoi? true
+    :rivi (list "Pohjois-Pohjanmaa"
+            ""
+            ""
+            ""
+            ""
+            "")}
+   {:korosta-hennosti? true
+    :lihavoi? true
+    :rivi (list "Toimenpide1"
+            ""
+            ""
+            ""
+            ""
+            "")}
+   ["Tehtava1"
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    100M
+    0]
+   ["Tehtava2"
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    100M
+    0]
+   {:korosta-hennosti? true
+    :lihavoi? true
+    :rivi (list "Toimenpide2"
+            ""
+            ""
+            ""
+            ""
+            "")}
+   ["Tehtava3"
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    100M
+    0]
+   ["Tehtava4"
+    [:arvo-ja-yksikko
+     {:arvo 0.00M
+      :fmt :numero
+      :yksikko "mm"}]
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "mm"}]
+    "!"
+    0]
+   {:korosta-hennosti? true
+    :lihavoi? true
+    :rivi (list "Toimenpide3"
+            ""
+            ""
+            ""
+            ""
+            "")}
+   ["Tehtava5"
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    [:arvo-ja-yksikko
+     {:arvo 1.00M
+      :fmt :numero
+      :yksikko "kg"}]
+    100M
+    0]])
 
 (deftest tehtavamaarien-riviprosessointiharvelien-testit
   (testing "Rivien yhdistelyhärveli yhdistää saman tehtävän ja hallintayksikön sisältävät rivit"
@@ -126,7 +204,7 @@
             (= 12 (:suunniteltu (some #(when (= (:nimi %) "Sama2") %) kombotetut)))
             (= 6 (:toteuma (some #(when (= (:nimi %) "Sama2") %) kombotetut))))
           "Onko yhdistetyt rivit laskettu oikein?")
-      (is (= pitais-tulla
+      (is (= odotettu
              (:rivit taulukko))
           "Tuleeko taulukko"))))
 
@@ -182,7 +260,7 @@
                                  ely-taulukko
                                  ely-raportti)) "Palautuneet asiat näyttävät raportilta"))))
 
-#_(deftest tehtavamaara-raportti-ikavat-jutut
+(deftest tehtavamaara-raportti-ikavat-jutut
     (testing "Määrien haku raportilla ei toimi"
       (let [[_ _ [_ _ _ rivit]]
             (kutsu-palvelua (:http-palvelin jarjestelma)

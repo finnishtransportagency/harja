@@ -8,13 +8,12 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
             [harja.ui.sijaintivalitsin :as sijaintivalitsin]
-            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px]]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
             [clojure.string :as str]
-            [clojure.set :as s]
             [goog.string :as gstr]
             [goog.events.EventType :as EventType]
             [cljs.core.async :refer [<! >! chan] :as async]
@@ -250,13 +249,13 @@
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
-(defn- normalisoi-numero [str]
-  (-> str
+(defn- normalisoi-numero [n]
+  (when n (-> n
       ;; Poistetaan whitespace
       (str/replace #"\s" "")
 
       ;; Poistetaan mahd. euromerkki lopusta
-      (str/replace #"€$" "")))
+      (str/replace #"€$" ""))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
@@ -641,7 +640,9 @@
 
     (let [nykyinen-arvo @data
           valinnat (or valinnat (valinnat-fn rivi))
-          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa))
+          opts {:class                 (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                                                 (when (and linkki-fn linkki-icon)
+                                                   "linkin-vieressa"))
                 :valinta               (if valinta-arvo
                                          (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                                          nykyinen-arvo)
@@ -1658,6 +1659,9 @@
   :rajauksen-alkupvm / -loppupvm antavat maksimi raja-arvot päivämäärille
   "
   [{:keys [ikoni rajauksen-alkupvm rajauksen-loppupvm] :as _optiot}]
+  ;; TODO: Tämä aikavali-kentta on käytössä vain yhdessä paikassa Harjaa (kulut). Muualla (12 usages) käytetään harja.ui.valinnat/aikavali komponenttia
+  ;; Tavoitteena pitäisi olla yhdistää nämä kaksi maailmaa siten, että jäljelle jää yksi komponentti ja sille halutun kaltainen toiminnallisuus
+  ;; Jos tähän komponenttiin alkaa kohdistua bugeja tai muutostarpeita, kannattaa mielestäni lähteä maksamaan tämä tekninen velka samalla
   (let [auki? (r/atom false)
         fokus-vaerit {:outline-color  "#0068B3"
                       :outline-width  "3px"
@@ -1737,9 +1741,11 @@
         (let [{:keys [valittu-pvm syottobufferi koskettu?]} @sisaiset]
           [:div.aikavali
            [vayla-lomakekentta
-            "Aikaväli"
+            ""
+            :tyylit {:kontti #{"aikavalikentta"}}
+            :otsikko-tag :span
             :ikoni ikoni
-            :placeholder "-valitse-"
+            :placeholder yleiset/valitse-text
             :value (or (when (and pvm-alku pvm-loppu)
                          (str (pvm/pvm pvm-alku) "-" (pvm/pvm pvm-loppu)))
                        "")

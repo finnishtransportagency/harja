@@ -38,8 +38,7 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
-    (log/debug "Palautus: " fo)
-    (is (= fo `[:fo:block
+    (is (= fo ` [:fo:block
                 {:space-before "1em", :font-size "8pt", :font-weight "bold"}
                 "Taulukko"
                 [:fo:table
@@ -51,50 +50,53 @@
                   [:fo:table-row
                    ([:fo:table-cell
                      {:border "solid 0.1mm black",
-                      :background-color "#0066cc",
-                      :color "#ffffff",
+                      :background-color "#f0f0f0",
+                      :color "black",
                       :font-weight "normal",
-                      :padding "1mm"}
+                      :padding "1mm"
+                      :text-align "left"}
                      [:fo:block "<![CDATA[Eka]]>"]]
                     [:fo:table-cell
                      {:border "solid 0.1mm black",
-                      :background-color "#0066cc",
-                      :color "#ffffff",
+                      :background-color "#f0f0f0",
+                      :color "black",
                       :font-weight "normal",
-                      :padding "1mm"}
+                      :padding "1mm"
+                      :text-align "left"}
                      [:fo:block "<![CDATA[Toka]]>"]]
                     [:fo:table-cell
                      {:border "solid 0.1mm black",
-                      :background-color "#0066cc",
-                      :color "#ffffff",
+                      :background-color "#f0f0f0",
+                      :color "black",
                       :font-weight "normal",
-                      :padding "1mm"}
+                      :padding "1mm"
+                      :text-align "left"}
                      [:fo:block "<![CDATA[Kolmas]]>"]])]]
                  [:fo:table-body
                   nil
                   ([:fo:table-row
                     ([:fo:table-cell
-                      {:border-bottom "solid 0.1mm #0066cc",
-                       :border-right "solid 0.1mm #0066cc",
-                       :border-left "solid 0.1mm #0066cc",
+                      {:border-bottom "solid 0.1mm #f0f0f0",
+                       :border-right "solid 0.1mm #f0f0f0",
+                       :border-left "solid 0.1mm #f0f0f0",
                        :padding "1mm",
                        :font-weight "normal",
                        :text-align "left"}
                       nil
                       [:fo:block "<![CDATA[eka]]>"]]
                      [:fo:table-cell
-                      {:border-bottom "solid 0.1mm #0066cc",
-                       :border-right "solid 0.1mm #0066cc",
-                       :border-left "solid 0.1mm #0066cc",
+                      {:border-bottom "solid 0.1mm #f0f0f0",
+                       :border-right "solid 0.1mm #f0f0f0",
+                       :border-left "solid 0.1mm #f0f0f0",
                        :padding "1mm",
                        :font-weight "normal",
                        :text-align "left"}
                       nil
                       [:fo:block "<![CDATA[toka]]>"]]
                      [:fo:table-cell
-                      {:border-bottom "solid 0.1mm #0066cc",
-                       :border-right "solid 0.1mm #0066cc",
-                       :border-left "solid 0.1mm #0066cc",
+                      {:border-bottom "solid 0.1mm #f0f0f0",
+                       :border-right "solid 0.1mm #f0f0f0",
+                       :border-left "solid 0.1mm #f0f0f0",
                        :padding "1mm",
                        :font-weight "normal",
                        :text-align "left"}

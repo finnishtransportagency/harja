@@ -2,19 +2,19 @@
   "UI controlleri kustannusten seurantaan"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log tarkkaile!]]
             [tuck.core :refer [process-event] :as tuck]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.pvm :as pvm]
-            [harja.ui.lomake :as ui-lomake]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def fin-hk-alkupvm "01.10.")
+(def fin-hk-loppupvm  "30.09.")
 (declare hae-kustannukset)
 
 (defrecord HaeKustannukset [hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm])
@@ -52,13 +52,9 @@
   HaeKustannukset
   (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi
                    aikavali-alkupvm :aikavali-alkupvm aikavali-loppupvm :aikavali-loppupvm} app]
-    (let [alkupvm (when aikavali-alkupvm
-                    (pvm/iso8601 aikavali-alkupvm))
-          loppupvm (when aikavali-loppupvm
-                     (pvm/iso8601 aikavali-loppupvm))
-          urakka-id (-> @tila/yleiset :urakka :id)]
-      (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm))
-    app)
+    (do
+      (hae-kustannukset (-> @tila/yleiset :urakka :id) hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm)
+      app))
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -114,14 +110,18 @@
 
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
-    (do
-      ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
-      (tuck/action!
-        (fn [e!]
-          (e! (->HaeBudjettitavoite))))
-      (hae-kustannukset urakka vuosi (first kuukausi) (second kuukausi))
-      (-> app
-          (assoc-in [:valittu-kuukausi] kuukausi)))))
+    (let [valittu-kuukausi (if (= "Kaikki" kuukausi)
+                     [(pvm/hoitokauden-alkupvm vuosi)
+                      (pvm/hoitokauden-loppupvm (inc vuosi))]
+                     kuukausi)]
+      (do
+        ;; Päivitetään myös Tavoitehinta ja kattohinta kaiken varalta
+        (tuck/action!
+          (fn [e!]
+            (e! (->HaeBudjettitavoite))))
+        (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
+        (-> app
+            (assoc-in [:valittu-kuukausi] kuukausi))))))
 
 (defn- muuta-hoitokausivuosi-jarjestysnumeroksi
   "Otetaan urakan loppupäivämäärän vuosi (esim 2025) ja vähennetään siitä saatu vuosi (esim 2021) ja muutetaan
