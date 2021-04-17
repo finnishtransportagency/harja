@@ -123,20 +123,6 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
-(defn kopioi-toimenpiteet
-  [e! {nimi :nimi tietoja-muokattu? :tietoja-muokattu?} toimenpiteet-taulukko-atom]
-  [:span
-   [napit/muokkaa
-    (str nimi " - kopiointi")
-    #(when tietoja-muokattu?
-       (varmista-kayttajalta/varmista-kayttajalta
-         {:otsikko "Kopioi toimenpiteet"
-          :sisalto (str "Jos painat 'kopioi', ensimmäisen kaistan rivit kopioivat muille kaistoille. Muiden kaistojen vanha sisältö häviää.")
-          :hyvaksy "Kopioi"
-          :peruuta-txt "Älä muutu mitään"
-          :toiminto-fn (fn []
-                         (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa toimenpiteet-taulukko-atom)))}))]])
-
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
@@ -209,12 +195,10 @@
            [:hr]
            [toimenpiteet-ja-materiaalit-otsikkorivi e!]
            [yleiset/valitys-vertical]
-           [kopioi-toimenpiteet e! {:nimi "Kulutuskerros" :tietoja-muokattu? tietoja-muokattu?} pot2-tiedot/kohdeosat-atom]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
                                                                     :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
-           [kopioi-toimenpiteet e! {:nimi "Alusta" :tietoja-muokattu? tietoja-muokattu?} pot2-tiedot/alustarivit-atom]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)}

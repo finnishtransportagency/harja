@@ -474,12 +474,31 @@ yllapitoluokkanimi->numero
 
 
 
-(defn kaikki-kaistat                                        ; petar pomeri negde kasnije
+#_(defn kaikki-kaistat                                        ; petar pomeri negde kasnije
   [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde} kohteen-tiedot]
   [])
 
-
-
+(defn kaikki-kaistat                                        ;; petar todo ovo ne koristimo, nego
+  [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} app]
+  (println "petar evo sam u srednje delu " (pr-str tr-numero " " tr-ajorata))
+  (let [osien-tiedot (get-in app [:paallystysilmoitus-lomakedata :tr-osien-tiedot tr-numero])
+        ajoradat (->> osien-tiedot
+                      (filter #(and (= tr-numero (:tr-numero %))
+                                    (= tr-alkuosa (:tr-osa %))))
+                      (map #(:pituudet %))
+                      (map #(:ajoradat %))
+                      flatten)
+        _ (println "petar ajoradat " (pr-str ajoradat))
+        kaistat (->> ajoradat
+                     (filter #(= tr-ajorata (:tr-ajorata %)))
+                     (map #(:osiot %))
+                     flatten
+                     (map #(:kaistat %))
+                     flatten
+                     (map #(:tr-kaista %))
+                     distinct
+                     sort)]
+    kaistat))
 
 
 (defn validoi-kohde

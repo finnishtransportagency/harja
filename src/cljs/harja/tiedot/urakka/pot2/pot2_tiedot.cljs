@@ -4,6 +4,7 @@
     [tuck.core :refer [process-event] :as tuck]
     [clojure.string :as str]
     [harja.domain.pot2 :as pot2-domain]
+    [harja.domain.yllapitokohde :as yllapitokohde]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
@@ -30,7 +31,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord TallennaPot2Tiedot [])
-(defrecord KopioiToimenpiteetTaulukossa [toimenpiteet-taulukko-atom])
+(defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord ValitseAlustatoimenpide [toimenpide])
 (defrecord PaivitaAlustalomake [alustalomake])
@@ -70,27 +71,6 @@
              (str/join ", " (->> (pot2-domain/alusta-toimenpidespesifit-metadata toimenpide)
                                  (filter kuuluu-kentalle?)
                                  (map muotoile-kentta))))))])))
-
-(defn kaikki-kaistat
-  [{:keys [tr-numero tr-ajorata tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} app]
-  (let [osien-tiedot (get-in app [:paallystysilmoitus-lomakedata :tr-osien-tiedot tr-numero])
-        ajoradat (->> osien-tiedot
-                     (filter #(and (= tr-numero (:tr-numero %))
-                                   (= tr-alkuosa (:tr-osa %))))
-                     (map #(:pituudet %))
-                     (map #(:ajoradat %))
-                     flatten)
-        _ (println "petar ajoradat " (pr-str ajoradat))
-        kaistat (->> ajoradat
-                     (filter #(= tr-ajorata (:tr-ajorata %)))
-                     (map #(:osiot %))
-                     flatten
-                     (map #(:kaistat %))
-                     flatten
-                     (map #(:tr-kaista %))
-                     distinct
-                     sort)]
-    kaistat))
 
 (defn merkitse-muokattu [app]
   (assoc-in app [:paallystysilmoitus-lomakedata :muokattu?] true))
@@ -177,21 +157,25 @@
                           :paasta-virhe-lapi? true})))
 
   KopioiToimenpiteetTaulukossa
-  (process-event [{toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
+  (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
     (println "petar atom " (pr-str @toimenpiteet-taulukko-atom))
-    (let [kaistat (kaikki-kaistat {} app)
-          ensimmainen-kaista (first kaistat)
-          ensimmaisen-kaistan-rivit (->> @toimenpiteet-taulukko-atom
-                                        vals
-                                        (filter #(= ensimmainen-kaista (:tr-kaista %))))
-          muut-kaistan-rivit (fn [kaista]
-                               (map #(assoc % :tr-kaista kaista) ensimmaisen-kaistan-rivit))
-          kaikki-rivit (->> kaistat
-                            (map muut-kaistan-rivit)
-                            flatten
-                            (zipmap (drop 1 (range))))]
+    (println "petar rivi " (pr-str rivi))
+    (let [kaistat (yllapitokohde/kaikki-kaistat rivi app)
+          kaistat [11 12 13 14]
+          rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
+          kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          avain-ja-rivi (fn [rivi]
+                          {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
+                                              :tr-alkuosa :tr-alkuetaisyys
+                                              :tr-loppuosa :tr-loppuetaisyys])
+                           rivi})
+          haettavat-rivit (map avain-ja-rivi (concat rivi-ja-sen-kopiot kaikki-rivit))
+          rivit-ja-kopiot (->> haettavat-rivit
+                               (into {})
+                               vals
+                               (zipmap (drop 1 (range))))]
       (when toimenpiteet-taulukko-atom
-          (reset! toimenpiteet-taulukko-atom kaikki-rivit)
+          (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
           (merkitse-muokattu app)))
     app)
 

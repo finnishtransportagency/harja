@@ -373,12 +373,12 @@
     (is (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
                                                     :tr-alkuosa 1 :tr-alkuetaisyys 100
                                                     :tr-loppuosa 1 :tr-loppuetaisyys 200}
-                                                   tr-tieto))
-        (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                   tr-tieto)))
+    (is (= [11 12] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
                                                     :tr-alkuosa 4 :tr-alkuetaisyys 0
                                                     :tr-loppuosa 4 :tr-loppuetaisyys 500}
-                                                   tr-tieto))
-        (= [11] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
+                                                   tr-tieto)))
+    (is (= [11] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1
                                                  :tr-alkuosa 4 :tr-alkuetaisyys 100
                                                  :tr-loppuosa 4 :tr-loppuetaisyys 501}
                                                 tr-tieto))))
@@ -391,7 +391,6 @@
                                                  :tr-alkuosa 1 :tr-alkuetaisyys 100
                                                  :tr-loppuosa 4 :tr-loppuetaisyys 501}
                                                 tr-tieto)))))
-
 
 (deftest kohde-tiedon-mukainen
   (testing "Pääkohde"

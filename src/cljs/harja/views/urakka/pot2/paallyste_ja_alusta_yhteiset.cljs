@@ -1,6 +1,7 @@
 (ns harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset
   (:require [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]))
 
 
@@ -35,5 +36,12 @@
            :disabled nappi-disabled?
            :luokka "napiton-nappi btn-xs"
            :toiminto-args [index]}]]))))
+
+(defn kopioi-toimenpiteet-nappi
+  [rivi osa e! toimenpiteet-taulukko-atom]
+  [:span.klikattava {:on-click
+                     #(do (.preventDefault %)
+                          (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi toimenpiteet-taulukko-atom)))}
+   (ikonit/copy-lane-svg)])
 
 

@@ -258,6 +258,11 @@
                                                             nil)
                            {:materiaalikoodistot materiaalikoodistot}
                            #(e! (pot2-tiedot/->NaytaMateriaalilomake rivi))])))}
+       {:otsikko "petar" :nimi :kopioi-muille-kaistoille
+        :tyyppi :reagent-komponentti :tasaa :oikea
+        :komponentti-args [e! pot2-tiedot/alustarivit-atom]
+        :komponentti pot2-yhteiset/kopioi-toimenpiteet-nappi
+        :leveys gridin-perusleveys}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys gridin-perusleveys
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata?]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

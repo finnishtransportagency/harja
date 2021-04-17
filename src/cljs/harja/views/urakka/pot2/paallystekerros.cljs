@@ -132,6 +132,11 @@
       ;; Jätetään tietokantaan kuitenkin valmius, ja palataan tähän kun POT2 on saatu otettua käyttöön
       #_{:otsikko "Pien\u00ADnar" :nimi :piennar :leveys 1 :tyyppi :checkbox :hae (fn [rivi]
                                                                                     (boolean (:piennar rivi)))}
+      {:otsikko "petar" :nimi :kopioi-muille-kaistoille
+       :tyyppi :reagent-komponentti :tasaa :oikea
+       :komponentti-args [e! pot2-tiedot/kohdeosat-atom]
+       :komponentti pot2-yhteiset/kopioi-toimenpiteet-nappi
+       :leveys gridin-perusleveys}
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys gridin-perusleveys
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata?]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
