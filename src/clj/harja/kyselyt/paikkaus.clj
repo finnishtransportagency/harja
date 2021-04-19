@@ -421,7 +421,7 @@
 
 (defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id hae-alueen-kohteet?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
-  (let [_ (println "paikkauskohteet :: tiedot" (pr-str tiedot))
+  (let [_ (log/debug "paikkauskohteet :: tiedot" (pr-str tiedot))
         ;; Paikkauskohteiden hakeminen eri urakkatyypeille vaihtelee.
         ;; Paikkaus ja Päällystys urakoille haetaan normaalisti vain paikkauskohteet, mutta
         ;; Jos alueurakalle (jolla siis tarkoitetaan hoito ja teiden-hoito tyyppinen urakka) sekä tiemerkintä urakalle

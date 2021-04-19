@@ -1,15 +1,21 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel
   "Luetaan paikkauskohteet excelistä tiedot ulos"
   (:require [dk.ative.docjure.spreadsheet :as xls]
+            [clojure.set :as set]
+            [clojure.string :refer [trim]]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
-            [clojure.set :as set]
-            [clojure.string :refer [trim]]
             [harja.domain.paikkaus :as paikkaus])
   (:import (org.apache.poi.ss.util CellRangeAddress)
            (java.util Date)))
+
+(defn- kasittele-tyomenetelma [menetelma]
+  ;; Käsittele työmenetelmä vain, jos se on olemassa
+  (when menetelma
+    (paikkaus/lyhenna-tyomenetelma (trim menetelma))))
 
 (defn erottele-paikkauskohteet [workbook]
   (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
@@ -32,7 +38,6 @@
                                                  (xls/read-cell arvo)))
                                              (xls/read-cell arvo)))
                                          rivi))))
-        _ (println "raaka-data" (pr-str raaka-data))
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
@@ -67,13 +72,12 @@
                          :let (nth rivi 7)
                          :alkupvm (or (pvm/->pvm alkupvm) alkupvm)
                          :loppupvm (or (pvm/->pvm loppupvm) loppupvm)
-                         :tyomenetelma (paikkaus/lyhenna-tyomenetelma (trim (nth rivi 10)))
+                         :tyomenetelma (kasittele-tyomenetelma (nth rivi 10))
                          :suunniteltu-maara (nth rivi 11)
                          :yksikko (nth rivi 12)
                          :suunniteltu-hinta (nth rivi 13)
                          :lisatiedot (nth rivi 14)})))
-                  (subvec raaka-data (inc otsikko-idx)))
-        _ (println "erottele-paikkauskohteet :: paikkauskohteet" (pr-str kohteet))]
+                  (subvec raaka-data (inc otsikko-idx)))]
     kohteet))
 
 (def lahtotiedot-sisalto
@@ -151,10 +155,14 @@
 
 (defn vie-paikkauskohteet-exceliin
   [db workbook user tiedot]
-  ;;TODO: Tarkistetaanko oikeudet tässä?
   (let [urakka (first (q-urakat/hae-urakka db (:urakka-id tiedot)))
-        _ (println "vie-paikkauskohteet-exceliin :: urakka" (pr-str urakka))
         kohteet (q/paikkauskohteet db user tiedot)
+        kohteet (keep
+                  (fn [kohde]
+                    (if (oikeudet/voi-lukea? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
+                      kohde
+                      nil)) ;; Poistetaan ne kohteet, joihin käyttäjällä ei ole oikeutta
+                  kohteet)
         ;; Muokkaa työmenetelmä tekstimuotoon
         kohteet (mapv (fn [k]
                         (update k :tyomenetelma #(paikkaus/kuvaile-tyomenetelma %))) kohteet)

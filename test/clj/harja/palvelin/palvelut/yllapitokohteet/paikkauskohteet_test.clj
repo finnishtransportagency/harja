@@ -246,9 +246,7 @@
 
 (deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
   (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
-        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)
-        _ (println "paikkauskohteet" (pr-str paikkauskohteet))
-        ]
+        paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)]
     ;; Tallennetaan kantaan - mikä ei onnistu koska tieto on puutteellista
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-paikkauskohde-urakalle

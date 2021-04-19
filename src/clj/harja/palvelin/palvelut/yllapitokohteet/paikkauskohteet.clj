@@ -109,7 +109,7 @@
 
 (defn tallenna-paikkauskohde! [db user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
-  (let [_ (println "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
+  (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kayttajarooli (roolit/osapuoli user)
         on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
@@ -179,7 +179,7 @@
                                                  :yksikko (:yksikko kohde)
                                                  :lisatiedot (:lisatiedot kohde)}))))
 
-        _ (println "kohde: " (pr-str kohde))
+        _ (log/debug "kohde: " (pr-str kohde))
         ]
     (if (empty? validointivirheet)
       kohde
@@ -188,8 +188,7 @@
 
 (defn poista-paikkauskohde! [db user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
-  (let [_ (println "poista-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
-        id (:id kohde)
+  (let [id (:id kohde)
         ;; Tarkistetaan, että haluttu paikkauskohde on olemassa eikä sitä ole vielä poistettu
         poistettava (first (q/hae-paikkauskohde db {:id (:id kohde) :urakka-id (:urakka-id kohde)}))
         _ (q/poista-paikkauskohde! db id)]
@@ -225,9 +224,6 @@
                     paikkauskohteet))
         tallennetut (filterv #(nil? (:virhe %)) kohteet)
         virheet (filterv #(some? (:virhe %)) kohteet)
-        ;_ (println "kohteet" (pr-str kohteet))
-        ;_ (println "tallennetut" tallennetut)
-        ;_ (println "virheet" virheet)
         body (cheshire/encode (cond
                                 ;; Löytyy enemmän kuin 0 tallennettua kohdetta
                                 (> (count tallennetut) 0)
