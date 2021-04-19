@@ -31,9 +31,18 @@
 (defn alustan-validointi [rivi taulukko]
   (let [{:keys [tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
         alikohteet (vals @pot2-tiedot/kohdeosat-atom)
+        toiset-alustatoimenpiteet (remove
+                                    #(= rivi %)
+                                    (vals @pot2-tiedot/alustarivit-atom))
         vuosi (pvm/vuosi (pvm/nyt))
-        validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet [] rivi [] (get tr-osien-tiedot (:tr-numero rivi)) [] vuosi)]
-    (yllapitokohteet-domain/validoi-alustatoimenpide-teksti (dissoc validoitu :alustatoimenpide-paallekkyys))))
+        validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet
+                                                                   []
+                                                                   rivi
+                                                                   toiset-alustatoimenpiteet
+                                                                   (get tr-osien-tiedot (:tr-numero rivi))
+                                                                   []
+                                                                   vuosi)]
+    (yllapitokohteet-domain/validoi-alustatoimenpide-teksti validoitu)))
 
 (defn- alustalomakkeen-lisakentat
   [{:keys [toimenpide massat murskeet koodistot] :as alusta}]
