@@ -41,16 +41,12 @@
                    (+ %1)) 0 hoitokaudet))))
 
 (def piste->pilkku
-  (comp (map str)
+  (map identity)
+  #_(comp (map str)
         (map #(cstr/replace % #"(\d+)\.(\d+)" "$1,$2"))))
 
-(def muuta-pilkut-ja-poista-id
-  (map (fn [k]
-         (rest
-           (transduce
-             piste->pilkku
-             conj
-             k)))))
+(def poista-id
+  (map rest))
 
 (defn- kulut-urakalle
   [db {:keys [alkupvm urakka-id loppupvm]}]
@@ -131,8 +127,8 @@
         rivit-tassa-kuussa (into [] rivin-muodostaja kaikki-rivit-kuussa)
 
         otsikot [{:leveys 1 :otsikko "Tehtäväryhmä"}
-                 {:leveys 1 :otsikko (str "Hoitokauden alusta " (pvm/pvm alkupvm-hoitokausi) "-" (pvm/pvm loppupvm-hoitokausi))}
-                 {:leveys 1 :otsikko (cond
+                 {:leveys 1 :fmt :numero :otsikko (str "Hoitokauden alusta " (pvm/pvm alkupvm-hoitokausi) "-" (pvm/pvm loppupvm-hoitokausi))}
+                 {:leveys 1 :fmt :numero :otsikko (cond
                                        kuukausi-valittu? (str (pvm/kuukauden-nimi (pvm/kuukausi alkupvm-valittu-kuu-tai-vali)) " " (pvm/vuosi alkupvm-valittu-kuu-tai-vali))
                                        :else (str "Jaksolla " (pvm/pvm alkupvm-valittu-kuu-tai-vali) "-" (pvm/pvm loppupvm-valittu-kuu-tai-vali)))}]
         rivit (loop [rivit-hoitokausi rivit-hoitokauden-alusta
@@ -165,7 +161,7 @@
                              (+ (nth %1 2) (nth %2 3))])
                          ["Yhteensä" 0 0]
                          rivit)
-        rivit (into [] muuta-pilkut-ja-poista-id rivit)]
+        rivit (into [] poista-id rivit)]
     {:otsikot  otsikot
      :yhteensa yhteensa
      :rivit    rivit}))
@@ -187,20 +183,15 @@
       {:viimeinen-rivi-yhteenveto? true
        :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
       otsikot
-      (conj rivit (transduce piste->pilkku
-                             conj
-                             yhteensa))]
+      (conj rivit yhteensa)]
      [:taulukko
       {:otsikko                    "Urakkavuoden alusta"
        :viimeinen-rivi-yhteenveto? true}
-      [{:leveys 1 :otsikko ""} {:leveys 1 :otsikko ""}]
-      (map #(transduce piste->pilkku
-                       conj
-                       %)
-           [["Urakkavuoden alusta tav.hintaan kuuluvia: " (str yhteensa-hoitokauden-alusta)]
-            ["Tavoitehinta: " (if (some? tavoitehinta)
-                                (str tavoitehinta)
-                                "Tavoitehintaa ei saatu")]
-            ["Jäljellä: " (if (some? tavoitehinta)
-                            (str (- tavoitehinta yhteensa-hoitokauden-alusta))
-                            "Tavoitehintaa ei saatu - jäljellä olevaa ei voitu laskea")]])]]))
+      [{:leveys 1 :otsikko ""} {:leveys 1 :otsikko "" :fmt :numero}]
+      [["Urakkavuoden alusta tav.hintaan kuuluvia: " (str yhteensa-hoitokauden-alusta)]
+       ["Tavoitehinta: " (if (some? tavoitehinta)
+                           (str tavoitehinta)
+                           "Tavoitehintaa ei saatu")]
+       ["Jäljellä: " (if (some? tavoitehinta)
+                       (str (- tavoitehinta yhteensa-hoitokauden-alusta))
+                       "Tavoitehintaa ei saatu - jäljellä olevaa ei voitu laskea")]]]]))
