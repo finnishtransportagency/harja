@@ -228,12 +228,12 @@
 
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-hoitotyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-akillinen-toteuma +kayttaja-jvh+
+                                        :hae-maarien-toteuma +kayttaja-jvh+
                                         {:id (first tallennettu-hoitotyo)})
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-hoitotyo (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
         muokattu (lisaa-toteuma muokattava)
         haettu-muokattu-hoitotyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                 :hae-akillinen-toteuma +kayttaja-jvh+
+                                                 :hae-maarien-toteuma +kayttaja-jvh+
                                                  {:id (first muokattu)})
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -277,12 +277,12 @@
   (let [tallennettu-lisatyo (lisaa-toteuma default-lisatyo)
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :hae-akillinen-toteuma +kayttaja-jvh+
+                                       :hae-maarien-toteuma +kayttaja-jvh+
                                        {:id (first tallennettu-lisatyo)})
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-lisatyo (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
         muokattu (lisaa-toteuma muokattava)
         haettu-muokattu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-akillinen-toteuma +kayttaja-jvh+
+                                                :hae-maarien-toteuma +kayttaja-jvh+
                                                 {:id (first muokattu)})
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
