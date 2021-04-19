@@ -14,7 +14,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
             [clojure.string :as str]
-            [clojure.set :as s]
             [goog.string :as gstr]
             [goog.events.EventType :as EventType]
             [cljs.core.async :refer [<! >! chan] :as async]
@@ -250,13 +249,13 @@
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
-(defn- normalisoi-numero [str]
-  (-> str
+(defn- normalisoi-numero [n]
+  (when n (-> n
       ;; Poistetaan whitespace
       (str/replace #"\s" "")
 
       ;; Poistetaan mahd. euromerkki lopusta
-      (str/replace #"€$" "")))
+      (str/replace #"€$" ""))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 

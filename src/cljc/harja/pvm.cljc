@@ -28,6 +28,11 @@
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
 
+(def +kuukaudet-pitka-muoto+
+  ["Tammikuu" "Helmikuu" "Maaliskuu" "Huhtikuu"
+   "Toukokuu" "Kesäkuu" "Heinäkuu" "Elokuu"
+   "Syyskuu" "Lokakuu" "Marraskuu" "Joulukuu"])
+
 (defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
 
@@ -431,6 +436,8 @@
   (formatoi iso8601-aikaleimalla pvm))
 
 (defn iso8601
+  "Palauttaa tekstimuodossa päivämäärän, joka sopii esim tietokantahakuihin. Päivämäärä
+  palautetaan siis esimerkiksi muodossa 2030-01-15"
   [pvm]
   (formatoi iso8601-format pvm))
 
@@ -572,6 +579,16 @@
   [vuosi]
   (luo-pvm vuosi 8 30))
 
+(defn hoitokauden-alkupvm-str
+  "Palauttaa hoitokauden alkupvm:n tekstimuodossa esim: 1.10.<annettu vuosi>"
+  [vuosi]
+  (formatoi fi-pvm (hoitokauden-alkupvm vuosi)))
+
+(defn hoitokauden-loppupvm-str
+  "Palauttaa hoitokauden alkupvm:n tekstimuodossa esim: 30.09.<annettu vuosi>"
+  [vuosi]
+  (formatoi fi-pvm (hoitokauden-loppupvm vuosi)))
+
 (defn vesivaylien-hoitokauden-alkupvm
   "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
   [vuosi]
@@ -603,8 +620,13 @@
 
 (defn koko-kuukausi-ja-vuosi
   "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
-  [pvm]
-  (str (nth +kuukaudet+ (dec (kuukausi pvm))) " " (vuosi pvm)))
+  ([pvm]
+   (koko-kuukausi-ja-vuosi pvm false))
+  ([pvm pitka-muoto?]
+   (str (nth (if pitka-muoto?
+               +kuukaudet-pitka-muoto+
+               +kuukaudet+)
+             (dec (kuukausi pvm))) " " (vuosi pvm))))
 
 (defn paiva
   "Palauttaa annetun DateTime päivän."

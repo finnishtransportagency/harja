@@ -91,12 +91,10 @@
    ;; urakkatyypit: teiden-hoito = mh eli mhu, hoito = vanhan tyyliset
    {:nimi :vemtr
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    ;; fixme: takrkista konteksti
     :konteksti #{"hallintayksikko" "koko maa"}
     :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
     :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
-    ;; fixme: tarkista urakkatyyyppi
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :laaduntarkastusraportti

@@ -148,8 +148,8 @@
                                                                     :size 14
                                                                     :name "Arial"
                                                                     :bold true}})
-                         (excel/create-cell-style! workbook {:background :blue
-                                                             :font {:color :white}}))
+                         (excel/create-cell-style! workbook {:background :grey_25_percent
+                                                             :font {:color :black}}))
 
           rivi-ennen-sarake-tyyli (if (:lista-tyyli? optiot)
                                     (excel/create-cell-style! workbook {:border-bottom :thin
@@ -160,8 +160,8 @@
                                                                                :size 18
                                                                                :name "Arial"
                                                                                :bold true}})
-                                    (excel/create-cell-style! workbook {:background :blue
-                                                                        :font {:color :white}}))
+                                    (excel/create-cell-style! workbook {:background :grey_25_percent
+                                                                        :font {:color :black}}))
 
           rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
