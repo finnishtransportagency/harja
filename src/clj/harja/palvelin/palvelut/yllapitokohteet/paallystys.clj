@@ -451,7 +451,9 @@
     (log/debug "Päällystysilmoitus päivitetty!")
     (:id paallystysilmoitus-kannassa)
     (catch Throwable t
-      [(:error (ex-data t))])))
+      (if (instance? clojure.lang.ExceptionInfo t)
+        [(:error (ex-data t))]
+        (throw t)))))
 
 (defn tallenna-paallystysilmoituksen-kommentti [db user uusi-paallystysilmoitus paallystysilmoitus-id]
   (when-let [uusi-kommentti (get-in uusi-paallystysilmoitus [:perustiedot :uusi-kommentti])]
