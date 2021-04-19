@@ -1110,3 +1110,18 @@ UPDATE toimenpidekoodi SET suunnitteluyksikko = 'tonni' WHERE suunnitteluyksikko
 -- Poistetaan isolla kirjoitettu, ylimääräinen versio (Puhtaanapito). Kantaan jää pienellä kirjoitettu.
 DELETE from tehtavaryhma where nimi like ('%Tie-, levähdys- ja liitännäisalueiden Puhtaanapito ja kalusteiden hoito%');
 
+-- Äkilliset hoitotyöt ja vahinkojen korjaukset, karsiminen MH-urakoita varten
+UPDATE toimenpidekoodi
+SET voimassaolo_loppuvuosi = 2018,
+    tehtavaryhma = null
+WHERE nimi IN ('Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
+               'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)',
+               'Äkillinen hoitotyö (talvihoito)',
+               'Äkillinen hoitotyö (soratiet)');
+
+-- Poistetaan käytöstä poistetut tehtäväryhmät
+DELETE FROM tehtavaryhma
+WHERE nimi IN ('Äkilliset hoitotyöt, Talvihoito (T1)',
+               'Äkilliset hoitotyöt, Soratiet (T1)',
+               'Vahinkojen korjaukset, Talvihoito (T2)',
+               'Vahinkojen korjaukset, Soratiet (T2)');
