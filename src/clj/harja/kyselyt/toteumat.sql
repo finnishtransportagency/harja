@@ -560,39 +560,6 @@ SELECT t.id        AS toteuma_id,
       AND t.luoja = k.id
       AND tr1.id = tk.tehtavaryhma;
 
--- name: hae-akillinen-toteuma
--- Hae yksittäinen äkillinen hoitottyö toteuma muokkaukseen
-SELECT t.id        AS toteuma_id,
-       CASE
-           WHEN EXTRACT(MONTH FROM t.alkanut) >= 10 THEN EXTRACT(YEAR FROM t.alkanut)::INT
-           WHEN EXTRACT(MONTH FROM t.alkanut) <= 9 THEN (EXTRACT(YEAR FROM t.alkanut)-1)::INT
-           END AS "hoitokauden-alkuvuosi",
-       tk.nimi                    AS tehtava,
-       tk.id                      AS tehtava_id,
-       tt.maara                   AS toteutunut,
-       t.alkanut                  AS toteuma_aika,
-       tk.suunnitteluyksikko      AS yksikko,
-       tr.otsikko                 AS toimenpide_otsikko,
-       tr.id                      AS toimenpide_id,
-       tt.id                      AS toteuma_tehtava_id,
-       tt.lisatieto               AS lisatieto,
-       t.tyyppi                   AS tyyppi,
-       t.tr_numero                as sijainti_numero,
-       t.tr_alkuosa               as sijainti_alku,
-       t.tr_alkuetaisyys          as sijainti_alkuetaisyys,
-       t.tr_loppuosa              as sijainti_loppu,
-       t.tr_loppuetaisyys         as sijainti_loppuetaisyys
-    FROM toteuma_tehtava tt,
-         toimenpidekoodi tk,
-         toteuma t,
-         tehtavaryhma tr
-    WHERE t.id = :id
-      AND tk.id = tt.toimenpidekoodi
-      AND t.id = tt.toteuma
-      AND t.poistettu IS NOT TRUE
-      AND tr.id = tk.tehtavaryhma;
-
-
 -- name: listaa-urakan-toteutumien-toimenpiteet
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
 SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
@@ -608,12 +575,14 @@ SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
 FROM toimenpidekoodi tk,
-     tehtavaryhma tr,
+     tehtavaryhma tr
+     JOIN tehtavaryhma valitaso ON tr.emo = valitaso.id
+     JOIN tehtavaryhma ylataso ON valitaso.emo = ylataso.id,
      urakka u
 WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
   AND tk.kasin_lisattava_maara = true
-  AND (:tehtavaryhma::INTEGER IS NULL OR tr.id = :tehtavaryhma)
+  AND (:tehtavaryhma::INTEGER IS NULL OR ylataso.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
