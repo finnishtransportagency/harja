@@ -437,7 +437,7 @@ WITH osa_toteumat AS
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi)
 SELECT ot.toimenpidekoodi       AS toimenpidekoodi_id,
-       tr.otsikko               AS toimenpide,
+       tr_ylataso.otsikko       AS toimenpide,
        tk.nimi                  AS tehtava,
        sum(ot.maara)            AS maara,
        sum(ot.materiaalimaara)  AS materiaalimaara,
@@ -452,12 +452,15 @@ FROM osa_toteumat ot
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
-         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::INT IS NULL OR tr.id = :tehtavaryhma)
-GROUP BY ot.toimenpidekoodi, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
+         JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
+                                     AND (:tehtavaryhma::INT IS NULL OR tr_ylataso.id = :tehtavaryhma)
+GROUP BY ot.toimenpidekoodi, tk.nimi, tr_ylataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 UNION
 -- Pelkästään suunnitellut tehtavat pitää hakea erikseen, koska niitä ei voida hakea toteuman kautta
 SELECT ut.tehtava               AS toimenpidekoodi_id,
-       tr.otsikko               AS toimenpide,
+       tr_ylataso.otsikko               AS toimenpide,
        tk.nimi                  AS tehtava,
        0                        AS maara,
        0                        AS materiaalimaara,
@@ -467,7 +470,10 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
-         JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma AND (:tehtavaryhma::INT IS NULL OR tr.id = :tehtavaryhma)
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
+         JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
+    AND (:tehtavaryhma::INT IS NULL OR tr_ylataso.id = :tehtavaryhma)
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
   AND ut.poistettu IS NOT TRUE
@@ -476,7 +482,7 @@ WHERE ut.urakka = :urakka
                     FROM osa_toteumat ot
                              JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
                              JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma)
-GROUP BY ut.tehtava, tr.nimi, tk.nimi, tr.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko;
+GROUP BY ut.tehtava, tk.nimi, tr_ylataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko;
 
 -- name: listaa-tehtavan-toteumat
 -- Haetaan yksittäiselle tehtavalle kaikki toteumat.
@@ -591,7 +597,8 @@ SELECT t.id        AS toteuma_id,
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
 SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
     FROM tehtavaryhma tr
-    WHERE tr.tyyppi = 'alataso' -- Wait what? Onko toimenpide sama kuin tehtäväryhmä?
+    WHERE tr.emo IS NULL
+      AND tr.tyyppi = 'ylataso'
     ORDER BY otsikko ASC, tr.id ASC;
 
 -- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
