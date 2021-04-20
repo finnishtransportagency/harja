@@ -2132,4 +2132,21 @@ INSERT INTO tr_osoitteet ("tr-numero", "tr-ajorata", "tr-kaista", "tr-osa", "tr-
 	     (5555, 1, 11 ,     10,      0,     13200,  1),
 	     (7777, 1, 11 ,     10,      0,     13200,  1);
 
+-- testi YHA:ssa Utajärven urakkaan voi hakea kohteita tieltä 79
+-- laitetaan sen osalta osat ja kaistat samaan tilaan kuin tuotannossa oikeasti
+-- koska muuten YHA:lta palautuva kontentti tökkää Harjan validointiin
+DELETE FROM tr_osoitteet where "tr-numero" = 79;
+INSERT INTO public.tr_osoitteet (id, "tr-numero", "tr-ajorata", "tr-kaista", "tr-osa", "tr-alkuetaisyys", "tr-loppuetaisyys", tietyyppi)
+VALUES
+(89096251, 79, 1, 11, 1, 0, 624, 1),
+(89104816, 79, 1, 12, 1, 0, 573, 1),
+(89109741, 79, 0, 22, 1, 2490, 2565, 1),
+(89110849, 79, 2, 23, 1, 0, 105, 1),
+(89116155, 79, 2, 22, 1, 0, 573, 1),
+(89135440, 79, 0, 11, 1, 624, 5812, 1),
+(89136844, 79, 2, 21, 1, 0, 624, 1),
+(89143147, 79, 0, 21, 1, 624, 5812, 1),
+(89144005, 79, 0, 21, 3, 0, 6524, 1),
+(89144200, 79, 0, 11, 3, 0, 6524, 1);
+
 SELECT paivita_tr_tiedot();
