@@ -369,6 +369,7 @@
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "Haku epäonnistui, vastaus " (pr-str vastaus))
+      (viesti/nayta-toast! "Paikkauskohteiden haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
       app))
 
   PaivitaLomake

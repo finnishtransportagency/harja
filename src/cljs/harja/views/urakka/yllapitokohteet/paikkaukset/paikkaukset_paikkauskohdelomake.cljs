@@ -138,8 +138,7 @@
       :valinnat {nil "Ei ajorataa"
                  0 0
                  1 1
-                 2 2
-                 3 3} ; TODO: Hae jostain?
+                 2 2}
       :valinta-arvo first
       :valinta-nayta second
       :nimi :ajorata
